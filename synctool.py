@@ -885,8 +885,8 @@ def read_config(filename):
 #	keyword: host
 #
 		if keyword == 'host':
-			if len(arr) < 3:
-				stderr("%s:%d: 'host' requires at least 2 arguments: hostname and logical group name" % (filename, lineno))
+			if len(arr) < 2:
+				stderr("%s:%d: 'host' requires at least 1 argument: the hostname" % (filename, lineno))
 				errors = errors + 1
 				continue
 
