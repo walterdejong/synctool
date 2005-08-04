@@ -949,7 +949,7 @@ def main():
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hc:l:s:fvqx", ['help', 'conf=', 'log=', 'symlink-mode=', 'fix', 'verbose', 'quiet', 'unix'])
+		opts, args = getopt.getopt(sys.argv[1:], "hc:l:s:fvqx", ['help', 'conf=', 'log=', 'symlink=', 'fix', 'verbose', 'quiet', 'unix'])
 
 	except getopt.error, (reason):
 		print '%s: %s' % (progname, reason)
