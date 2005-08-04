@@ -1109,6 +1109,10 @@ def main():
 			usage()
 			sys.exit(1)
 
+		if DIFF_FILE and not DRY_RUN:
+			stderr("options '--diff' and '--fix' cannot be combined")
+			sys.exit(1)
+
 	cfg = read_config(CONF_FILE)
 
 	if cfg.has_key('symlink_mode'):
