@@ -951,8 +951,6 @@ def usage():
 	print '  -q, --quiet           Suppress informational startup messages'
 	print '  -x, --unix            Output actions as unix shell commands'
 	print '  -l, --log=logfile     Log taken actions to logfile'
-	print '  -s, --symlink=mode    Set mode for symbolic links'
-	print '                        Default is 0%o, linux likes 0777' % SYMLINK_MODE
 	print
 	print 'synctool can help you administer your cluster of machines'
 	print 'Note that by default, it does a dry-run, unless you specify --fix'
