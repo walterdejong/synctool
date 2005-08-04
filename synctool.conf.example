@@ -1,0 +1,23 @@
+#
+#	synctool.conf
+#
+
+masterdir /usr/local/sara/dist/synctool
+
+host jumbo jumbo
+host p2 p2
+
+host p1 teras 
+host p4 teras batch
+host p5 teras batch
+host p6 teras batch
+host p7 teras batch
+
+on_update	/etc/jlimits.in					/usr/etc/genlimits -i /etc/jlimits.in -l
+on_update	/etc/inetd.conf					hup_daemon.sh /usr/etc/inetd
+on_update	/etc/syslog.conf				hup_daemon.sh /usr/etc/syslogd
+on_update	/var/spool/cron/crontabs/root	hup_daemon.sh /sbin/cron
+on_update	/etc/ntpd.conf					/etc/init.d/ntpd stop ; /etc/init.d/ntpd start
+
+# EOB
+
