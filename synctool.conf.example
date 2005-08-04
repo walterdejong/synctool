@@ -4,6 +4,7 @@
 
 masterdir /usr/local/sara/dist/synctool
 symlink_mode 0755
+diff_cmd /usr/bin/diff -u
 
 host p1 teras 
 host p4 teras batch

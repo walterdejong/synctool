@@ -26,6 +26,7 @@ QUIET=0
 UNIX_CMD=0
 LOGFILE=None
 LOGFD=None
+DIFF_FILE=None
 
 #
 #	default symlink mode
@@ -696,6 +697,63 @@ def always_run(cfg):
 		run_command(cfg, cmd)
 
 
+def diff_files(cfg):
+	'''do a diff of a file'''
+
+	global DIFF_FILE
+
+	if not cfg.has_key('diff_cmd'):
+		stderr('error: diff_cmd is undefined in %s' % CONF_FILE)
+		return
+
+	hostname = cfg['hostname']
+	masterdir = cfg['masterdir']
+	groups = cfg['host'][hostname]
+	all_groups = make_all_groups(cfg)
+
+	master_len = len(masterdir)
+
+	base_path = os.path.join(masterdir, 'overlay')
+	if not os.path.isdir(base_path):
+		stderr('error: overlay directory %s does not exist' % base_path)
+		return
+
+	dest = DIFF_FILE
+
+	if dest[0] == '/':
+		src = os.path.join(base_path, dest[1:])
+	else:
+		src = os.path.join(base_path, dest)
+#
+#	see if there are any overrides for this file
+#
+	full_path = None
+	for group in groups:
+		override = '%s.%s' % (src, group)
+
+		if os.path.exists(override):
+			if full_path != override:
+				verbose('override by $masterdir%s' % override[master_len:])
+				full_path = override
+			break
+
+	if not full_path:
+		if not os.path.isfile(src):
+			stderr('%s is not in the synctool tree' % dest)
+			return
+
+		full_path = src
+
+	if not compare_files(full_path, dest):
+		stdout('files are identical')
+
+	if UNIX_CMD:
+		unix_out('%s %s %s' % (cfg['diff_cmd'], dest, full_path))
+	else:
+		verbose('%s %s %s' % (cfg['diff_cmd'], dest, full_path))
+		os.system('%s %s %s' % (cfg['diff_cmd'], dest, full_path))
+
+
 def read_config(filename):
 	'''read the config file and return cfg structure'''
 
@@ -893,6 +951,29 @@ def read_config(filename):
 			cfg['always_run'].append(cmd)
 			continue
 
+#
+#	keyword: diff_cmd
+#
+		if keyword == 'diff_cmd':
+			if len(arr) < 2:
+				stderr("%s:%d: 'diff_cmd' requires an argument: the full path to the 'diff' command" % (filename, lineno))
+				errors = errors + 1
+				continue
+
+			if cfg.has_key('diff_cmd'):
+				stderr("%s:%d: redefinition of diff_cmd" % (filename, lineno))
+				errors = errors + 1
+				continue
+
+			cmd = arr[1]
+			if not os.path.isfile(cmd):
+				stderr("%s:%d: no such command '%s'" % (filename, lineno, cmd))
+				errors = errors + 1
+				continue
+
+			cfg['diff_cmd'] = string.join(arr[1:])
+			continue
+
 		stderr("%s:%d: unknown keyword '%s'" % (filename, lineno, keyword))
 		errors = errors + 1
 
@@ -959,65 +1040,74 @@ def usage():
 
 
 def main():
-	global CONF_FILE, DRY_RUN, VERBOSE, QUIET, UNIX_CMD, LOGFILE, SYMLINK_MODE
+	global CONF_FILE, DRY_RUN, VERBOSE, QUIET, UNIX_CMD, LOGFILE, SYMLINK_MODE, DIFF_FILE
 
 	progname = os.path.basename(sys.argv[0])
 
-	if len(sys.argv) <= 1:
-		usage()
-		sys.exit(1)
-
-	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hc:l:fvqx", ['help', 'conf=', 'log=', 'fix', 'verbose', 'quiet', 'unix'])
-
-	except getopt.error, (reason):
-		print '%s: %s' % (progname, reason)
-		usage()
-		sys.exit(1)
-
-	except getopt.GetoptError, (reason):
-		print '%s: %s' % (progname, reason)
-		usage()
-		sys.exit(1)
-
-	except:
-		usage()
-		sys.exit(1)
-
-	for opt, arg in opts:
-		if opt in ('-h', '--help', '-?'):
+	if len(sys.argv) > 1:
+		try:
+			opts, args = getopt.getopt(sys.argv[1:], "hc:l:d:fvqx", ['help', 'conf=', 'log=', 'diff=', 'fix', 'verbose', 'quiet', 'unix'])
+		except getopt.error, (reason):
+			print '%s: %s' % (progname, reason)
 			usage()
 			sys.exit(1)
 
-		if opt in ('-c', '--conf'):
-			CONF_FILE=arg
-			continue
+		except getopt.GetoptError, (reason):
+			print '%s: %s' % (progname, reason)
+			usage()
+			sys.exit(1)
+
+		except:
+			usage()
+			sys.exit(1)
+
+		errors = 0
+
+		for opt, arg in opts:
+			if opt in ('-h', '--help', '-?'):
+				usage()
+				sys.exit(1)
+
+			if opt in ('-c', '--conf'):
+				CONF_FILE=arg
+				continue
 
 # dry run already is default
 #
-#		if opt in ('-n', '--dry-run'):
-#			DRY_RUN=1
-#			continue
+#			if opt in ('-n', '--dry-run'):
+#				DRY_RUN=1
+#				continue
 
-		if opt in ('-f', '--fix'):
-			DRY_RUN=0
-			continue
+			if opt in ('-f', '--fix'):
+				DRY_RUN=0
+				continue
 
-		if opt in ('-v', '--verbose'):
-			VERBOSE=1
-			continue
+			if opt in ('-v', '--verbose'):
+				VERBOSE=1
+				continue
 
-		if opt in ('-q', '--quiet'):
-			QUIET=1
-			continue
+			if opt in ('-q', '--quiet'):
+				QUIET=1
+				continue
 
-		if opt in ('-x', '--unix'):
-			UNIX_CMD=1
-			continue
+			if opt in ('-x', '--unix'):
+				UNIX_CMD=1
+				continue
 
-		if opt in ('-l', '--log'):
-			LOGFILE=arg
-			continue
+			if opt in ('-l', '--log'):
+				LOGFILE=arg
+				continue
+
+			if opt in ('-d', '--diff'):
+				DIFF_FILE=arg
+				continue
+
+			stderr("unknown command line option '%s'" % opt)
+			errors = errors + 1
+
+		if errors:
+			usage()
+			sys.exit(1)
 
 	cfg = read_config(CONF_FILE)
 
@@ -1070,9 +1160,12 @@ def main():
 
 	os.putenv('MASTERDIR', cfg['masterdir'])
 
-	overlay_files(cfg)
-	delete_files(cfg)
-	always_run(cfg)
+	if not DIFF_FILE:
+		overlay_files(cfg)
+		delete_files(cfg)
+		always_run(cfg)
+	else:
+		diff_files(cfg)
 
 	unix_out('# EOB')
 
