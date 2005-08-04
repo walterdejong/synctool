@@ -26,7 +26,6 @@ QUIET=0
 UNIX_CMD=0
 LOGFILE=None
 LOGFD=None
-DIFF_FILE=None
 
 #
 #	default symlink mode
@@ -697,14 +696,13 @@ def always_run(cfg):
 		run_command(cfg, cmd)
 
 
-def diff_files(cfg):
-	'''do a diff of a file'''
+def single_files(cfg, filename):
+	'''check/update a single file'''
+	'''returns (1, path_in_synctree) if file is different'''
 
-	global DIFF_FILE
-
-	if not cfg.has_key('diff_cmd'):
-		stderr('error: diff_cmd is undefined in %s' % CONF_FILE)
-		return
+	if not filename:
+		stderr('missing filename')
+		return (0, None)
 
 	hostname = cfg['hostname']
 	masterdir = cfg['masterdir']
@@ -716,9 +714,9 @@ def diff_files(cfg):
 	base_path = os.path.join(masterdir, 'overlay')
 	if not os.path.isdir(base_path):
 		stderr('error: overlay directory %s does not exist' % base_path)
-		return
+		return (0, None)
 
-	dest = DIFF_FILE
+	dest = filename
 
 	if dest[0] == '/':
 		src = os.path.join(base_path, dest[1:])
@@ -740,18 +738,37 @@ def diff_files(cfg):
 	if not full_path:
 		if not os.path.isfile(src):
 			stderr('%s is not in the synctool tree' % dest)
-			return
+			return (0, None)
 
 		full_path = src
 
-	if not compare_files(full_path, dest):
+	changed = compare_files(full_path, dest)
+	if not changed:
 		stdout('files are identical')
 
+	return (changed, full_path)
+
+
+def diff_files(cfg, filename):
+	'''display a diff of the file'''
+
+	global DRY_RUN, UNIX_CMD
+
+	if not cfg.has_key('diff_cmd'):
+		stderr('error: diff_cmd is undefined in %s' % CONF_FILE)
+		return
+
+	DRY_RUN=1							# be sure that it doesn't do any updates
+
+	(changed, sync_path) = single_files(cfg, filename)
+	if not changed:
+		return
+
 	if UNIX_CMD:
-		unix_out('%s %s %s' % (cfg['diff_cmd'], dest, full_path))
+		unix_out('%s %s %s' % (cfg['diff_cmd'], filename, sync_path))
 	else:
-		verbose('%s %s %s' % (cfg['diff_cmd'], dest, full_path))
-		os.system('%s %s %s' % (cfg['diff_cmd'], dest, full_path))
+		verbose('%s %s %s' % (cfg['diff_cmd'], filename, sync_path))
+		os.system('%s %s %s' % (cfg['diff_cmd'], filename, sync_path))
 
 
 def read_config(filename):
@@ -1029,6 +1046,7 @@ def usage():
 #	print '  -n, --dry-run         Show what would have been updated'
 	print '  -d, --diff=file       Show diff for file'
 	print '  -f, --fix             Perform updates (otherwise, do dry-run)'
+	print '  -1, --single=file     Update a single file'
 	print '  -v, --verbose         Be verbose'
 	print '  -q, --quiet           Suppress informational startup messages'
 	print '  -x, --unix            Output actions as unix shell commands'
@@ -1041,13 +1059,16 @@ def usage():
 
 
 def main():
-	global CONF_FILE, DRY_RUN, VERBOSE, QUIET, UNIX_CMD, LOGFILE, SYMLINK_MODE, DIFF_FILE
+	global CONF_FILE, DRY_RUN, VERBOSE, QUIET, UNIX_CMD, LOGFILE, SYMLINK_MODE
 
 	progname = os.path.basename(sys.argv[0])
 
+	diff_file = None
+	single_file = None
+
 	if len(sys.argv) > 1:
 		try:
-			opts, args = getopt.getopt(sys.argv[1:], "hc:l:d:fvqx", ['help', 'conf=', 'log=', 'diff=', 'fix', 'verbose', 'quiet', 'unix'])
+			opts, args = getopt.getopt(sys.argv[1:], "hc:l:d:1:fvqx", ['help', 'conf=', 'log=', 'diff=', 'single=', 'fix', 'verbose', 'quiet', 'unix'])
 		except getopt.error, (reason):
 			print '%s: %s' % (progname, reason)
 			usage()
@@ -1100,7 +1121,11 @@ def main():
 				continue
 
 			if opt in ('-d', '--diff'):
-				DIFF_FILE=arg
+				diff_file=arg
+				continue
+
+			if opt in ('-1', '--single'):
+				single_file=arg
 				continue
 
 			stderr("unknown command line option '%s'" % opt)
@@ -1110,7 +1135,12 @@ def main():
 			usage()
 			sys.exit(1)
 
-		if DIFF_FILE and not DRY_RUN:
+		if diff_file and single_file:
+			if diff_file != single_file:
+				stderr("options '--diff' and '--single' cannot be combined")
+				sys.exit(1)
+
+		if diff_file and not DRY_RUN:
 			stderr("options '--diff' and '--fix' cannot be combined")
 			sys.exit(1)
 
@@ -1165,12 +1195,16 @@ def main():
 
 	os.putenv('MASTERDIR', cfg['masterdir'])
 
-	if not DIFF_FILE:
+	if diff_file:
+		diff_files(cfg, diff_file)
+
+	elif single_file:
+		single_files(cfg, single_file)
+
+	else:
 		overlay_files(cfg)
 		delete_files(cfg)
 		always_run(cfg)
-	else:
-		diff_files(cfg)
 
 	unix_out('# EOB')
 
