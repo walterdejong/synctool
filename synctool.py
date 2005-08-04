@@ -1045,8 +1045,8 @@ def usage():
 	print '  -c, --conf=dir/file   Use this config file (default: %s)' % DEFAULT_CONF
 #	print '  -n, --dry-run         Show what would have been updated'
 	print '  -d, --diff=file       Show diff for file'
-	print '  -f, --fix             Perform updates (otherwise, do dry-run)'
 	print '  -1, --single=file     Update a single file'
+	print '  -f, --fix             Perform updates (otherwise, do dry-run)'
 	print '  -v, --verbose         Be verbose'
 	print '  -q, --quiet           Suppress informational startup messages'
 	print '  -x, --unix            Output actions as unix shell commands'
