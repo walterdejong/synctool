@@ -27,6 +27,8 @@ UNIX_CMD=0
 LOGFILE=None
 LOGFD=None
 
+UPDATE_CACHE={}
+
 #
 #	default symlink mode
 #	Linux makes them 0777 no matter what umask you have ...
@@ -170,7 +172,10 @@ def checksum_files(file1, file2):
 def compare_files(src_path, dest_path):
 	'''see what the differences are between src and dest, and fix it'''
 
-	global SYMLINK_MODE
+	global SYMLINK_MODE, UPDATE_CACHE
+
+	if UPDATE_CACHE.has_key(dest_path):
+		return 1
 
 	changed = 0
 
@@ -221,6 +226,7 @@ def compare_files(src_path, dest_path):
 
 				unix_out('')
 
+		UPDATE_CACHE[dest_path] = 1;
 		return 1
 
 #
@@ -240,6 +246,8 @@ def compare_files(src_path, dest_path):
 				symlink_file(src_link, dest_path)
 
 				unix_out('')
+
+				UPDATE_CACHE[dest_path] = 1;
 				return 1
 
 			if (dest_stat[stat.ST_MODE] & 07777) != SYMLINK_MODE:
@@ -248,6 +256,8 @@ def compare_files(src_path, dest_path):
 				symlink_file(src_link, dest_path)
 
 				unix_out('')
+
+				UPDATE_CACHE[dest_path] = 1;
 				return 1
 
 			return 0
@@ -258,6 +268,8 @@ def compare_files(src_path, dest_path):
 			symlink_file(src_link, dest_path)
 
 			unix_out('')
+
+			UPDATE_CACHE[dest_path] = 1;
 			return 1
 
 	else:
@@ -276,6 +288,8 @@ def compare_files(src_path, dest_path):
 			set_permissions(dest_path, src_stat[stat.ST_MODE])
 
 			unix_out('')
+
+			UPDATE_CACHE[dest_path] = 1;
 			return 1
 
 
@@ -292,6 +306,8 @@ def compare_files(src_path, dest_path):
 			set_permissions(dest_path, src_stat[stat.ST_MODE])
 
 			unix_out('')
+
+			UPDATE_CACHE[dest_path] = 1;
 			return 1
 
 #
@@ -314,6 +330,8 @@ def compare_files(src_path, dest_path):
 			set_permissions(dest_path, src_stat[stat.ST_MODE])
 
 			unix_out('')
+
+			UPDATE_CACHE[dest_path] = 1;
 			return 1
 
 #	if src_stat[stat.ST_CTIME] != dest_stat[stat.ST_CTIME]:
@@ -335,6 +353,9 @@ def compare_files(src_path, dest_path):
 		set_permissions(dest_path, src_stat[stat.ST_MODE])
 		unix_out('')
 		changed = 1
+
+	if changed:
+		UPDATE_CACHE[dest_path] = 1;
 
 	return changed
 
