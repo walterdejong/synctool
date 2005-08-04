@@ -32,6 +32,8 @@ LOGFD=None
 #	Linux makes them 0777 no matter what umask you have ...
 #	but how do you like them on a different platform?
 #
+#	The symlink mode can be set in the config file with keyword symlink_mode
+#
 SYMLINK_MODE=0755
 
 MONTHS = ( 'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec' )
@@ -765,6 +767,25 @@ def read_config(filename):
 			continue
 
 #
+#	keyword: symlink_mode
+#
+		if keyword == 'symlink_mode':
+			if cfg.has_key('symlink_mode'):
+				stderr("%s:%d: redefinition of symlink_mode" % (filename, lineno))
+				errors = errors + 1
+				continue
+
+			try:
+				mode = int(arr[1], 8)
+			except ValueError:
+				stderr("%s:%d: invalid argument for symlink_mode" % (filename, lineno))
+				errors = errors + 1
+				continue
+
+			cfg['symlink_mode'] = mode
+			continue
+
+#
 #	keyword: host
 #
 		if keyword == 'host':
@@ -949,7 +970,7 @@ def main():
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hc:l:s:fvqx", ['help', 'conf=', 'log=', 'symlink=', 'fix', 'verbose', 'quiet', 'unix'])
+		opts, args = getopt.getopt(sys.argv[1:], "hc:l:fvqx", ['help', 'conf=', 'log=', 'fix', 'verbose', 'quiet', 'unix'])
 
 	except getopt.error, (reason):
 		print '%s: %s' % (progname, reason)
@@ -1000,16 +1021,10 @@ def main():
 			LOGFILE=arg
 			continue
 
-		if opt in ('-s', '--symlink'):
-			try:
-				SYMLINK_MODE=int(arg, 8)
-			except ValueError:
-				stderr("invalid argument for option '%s'" % opt)
-				sys.exit(-1)
-
-			continue
-
 	cfg = read_config(CONF_FILE)
+
+	if cfg.has_key('symlink_mode'):
+		SYMLINK_MODE = cfg['symlink_mode']
 
 	if UNIX_CMD:
 		import time
@@ -1040,7 +1055,7 @@ def main():
 		if not QUIET:
 			stdout('my hostname: %s' % cfg['hostname'])
 			stdout('masterdir: %s' % cfg['masterdir'])
-			stdout('symlink mode: 0%o' % SYMLINK_MODE)
+			verbose('symlink_mode: 0%o' % SYMLINK_MODE)
 
 			if LOGFILE != None and not DRY_RUN:
 				stdout('logfile: %s' % LOGFILE)

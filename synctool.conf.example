@@ -3,6 +3,7 @@
 #
 
 masterdir /usr/local/sara/dist/synctool
+symlink_mode 0755
 
 host p1 teras 
 host p4 teras batch
