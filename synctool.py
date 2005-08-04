@@ -1043,16 +1043,13 @@ def read_config(filename):
 	if errors > 0:
 		sys.exit(-1)
 
-# implicitly add 'hostname' as final group
+# implicitly add 'hostname' as first group
 	if not hostname in cfg['host'][hostname]:
-		cfg['host'][hostname].append(hostname)
+		cfg['host'][hostname].insert(0, hostname)
 
 	for host in cfg['host'].keys():
 		if not host in cfg['host'][host]:
-			cfg['host'][host].append(host)
-
-# reverse the group list (for overlays)
-		cfg['host'][host].reverse()
+			cfg['host'][host].insert(0, host)
 
 	return cfg
 
