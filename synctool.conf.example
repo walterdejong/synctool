@@ -4,9 +4,6 @@
 
 masterdir /usr/local/sara/dist/synctool
 
-host jumbo jumbo
-host p2 p2
-
 host p1 teras 
 host p4 teras batch
 host p5 teras batch

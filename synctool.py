@@ -17,7 +17,6 @@ import grp
 import time
 import md5
 
-
 DEFAULT_CONF='synctool.conf'
 
 CONF_FILE=DEFAULT_CONF
@@ -35,9 +34,7 @@ LOGFD=None
 #
 SYMLINK_MODE=0755
 
-
 MONTHS = ( 'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec' )
-
 
 
 def verbose(str):
@@ -933,6 +930,8 @@ def usage():
 	print '  -q, --quiet           Suppress informational startup messages'
 	print '  -x, --unix            Output actions as unix shell commands'
 	print '  -l, --log=logfile     Log taken actions to logfile'
+	print '  -s, --symlink=mode    Set mode for symbolic links'
+	print '                        Default is 0%o, linux likes 0777' % SYMLINK_MODE
 	print
 	print 'synctool can help you administer your cluster of machines'
 	print 'Note that by default, it does a dry-run, unless you specify --fix'
@@ -941,7 +940,7 @@ def usage():
 
 
 def main():
-	global CONF_FILE, DRY_RUN, VERBOSE, QUIET, UNIX_CMD, LOGFILE
+	global CONF_FILE, DRY_RUN, VERBOSE, QUIET, UNIX_CMD, LOGFILE, SYMLINK_MODE
 
 	progname = os.path.basename(sys.argv[0])
 
@@ -950,7 +949,7 @@ def main():
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hc:l:fvqx", ['help', 'conf=', 'log=', 'fix', 'verbose', 'quiet', 'unix'])
+		opts, args = getopt.getopt(sys.argv[1:], "hc:l:s:fvqx", ['help', 'conf=', 'log=', 'symlink-mode=', 'fix', 'verbose', 'quiet', 'unix'])
 
 	except getopt.error, (reason):
 		print '%s: %s' % (progname, reason)
@@ -975,6 +974,8 @@ def main():
 			CONF_FILE=arg
 			continue
 
+# dry run already is default
+#
 #		if opt in ('-n', '--dry-run'):
 #			DRY_RUN=1
 #			continue
@@ -999,6 +1000,15 @@ def main():
 			LOGFILE=arg
 			continue
 
+		if opt in ('-s', '--symlink'):
+			try:
+				SYMLINK_MODE=int(arg, 8)
+			except ValueError:
+				stderr("invalid argument for option '%s'" % opt)
+				sys.exit(-1)
+
+			continue
+
 	cfg = read_config(CONF_FILE)
 
 	if UNIX_CMD:
@@ -1013,6 +1023,7 @@ def main():
 		unix_out('#')
 		unix_out('# HOSTNAME=%s' % cfg['hostname'])
 		unix_out('# MASTERDIR=%s' % cfg['masterdir'])
+		unix_out('# SYMLINK_MODE=0%o' % SYMLINK_MODE)
 		unix_out('#')
 
 		if DRY_RUN:
@@ -1029,6 +1040,7 @@ def main():
 		if not QUIET:
 			stdout('my hostname: %s' % cfg['hostname'])
 			stdout('masterdir: %s' % cfg['masterdir'])
+			stdout('symlink mode: 0%o' % SYMLINK_MODE)
 
 			if LOGFILE != None and not DRY_RUN:
 				stdout('logfile: %s' % LOGFILE)
