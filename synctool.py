@@ -948,7 +948,7 @@ def single_files(cfg, filename):
 
 	changed = compare_files(full_path, dest)
 	if not changed:
-		stdout('files are identical')
+		stdout('%s is up to date' % dest)
 
 	return (changed, full_path)
 
