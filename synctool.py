@@ -169,6 +169,76 @@ def checksum_files(file1, file2):
 	return sum1.digest(), sum2.digest()
 
 
+def stat_islink(stat_struct):
+	'''returns if a file is a symbolic link'''
+	'''this function is needed because os.path.islink() returns False for dead symlinks, which is not what I want ...'''
+
+	if not stat_struct:
+		return 0
+
+	return stat.S_ISLNK(stat_struct[stat.ST_MODE])
+
+
+def stat_isdir(stat_struct):
+	'''returns if a file is a directory'''
+	'''this function is needed because os.path.isdir() returns True for symlinks to directories ...'''
+
+	if not stat_struct:
+		return 0
+
+	return stat.S_ISDIR(stat_struct[stat.ST_MODE])
+
+
+def stat_isfile(stat_struct):
+	'''returns if a file is a regular file'''
+	'''this function is needed because os.path.isfile() returns True for symlinks to files ...'''
+
+	if not stat_struct:
+		return 0
+
+	return stat.S_ISREG(stat_struct[stat.ST_MODE])
+
+
+def stat_exists(stat_struct):
+	'''returns if a path exists'''
+
+	if not stat_struct:
+		return 0
+
+	return 1
+
+
+def stat_path(path):
+	'''lstat() a path'''
+
+	try:
+		stat_struct = os.lstat(path)
+	except OSError, (err, reason):
+		if err != errno.ENOENT:
+			stderr("lstat('%s') failed: %s" % (path, reason))
+			return 0
+
+		stat_struct = None
+
+	return stat_struct
+
+
+def path_islink(path):
+	return stat_islink(stat_path(path))
+
+
+def path_isdir(path):
+	return stat_isdir(stat_path(path))
+
+
+def path_isfile(path):
+	return stat_isdir(stat_path(path))
+
+
+def path_exists(path):
+	return stat_exists(stat_path(path))
+
+
 def compare_files(src_path, dest_path):
 	'''see what the differences are between src and dest, and fix it if not a dry run
 
@@ -177,6 +247,9 @@ def compare_files(src_path, dest_path):
 
 	UPDATE_CACHE is a name cache of files that have been updated
 	it helps avoiding duplicate checks for files that have multiple classes
+
+	done is a local boolean saying if a path has been checked
+	need_update is a local boolean saying if a path needs to be updated
 
 	return value is 0 when file is not changed, 1 when file is updated
 
@@ -191,12 +264,14 @@ def compare_files(src_path, dest_path):
 			check if dest is symlink
 			check if dest is dir
 			treat dest as file
+			fix if needed
 
 		if src is directory:
 			check if dest exists
 			check if dest is symlink
 			check if dest is dir
 			treat dest as file
+			fix if needed
 
 		if src is file:
 			check if dest exists
@@ -205,6 +280,7 @@ def compare_files(src_path, dest_path):
 			treat dest as file
 			check filesize
 			do md5 checksum
+			fix if needed
 
 		don't know what type src is
 
@@ -219,41 +295,36 @@ def compare_files(src_path, dest_path):
 		verbose('%s was already updated' % dest_path)
 		return 1
 
-	try:
-		src_stat = os.lstat(src_path)
-	except OSError, (err, reason):
-		stderr('lstat(%s) failed: %d %s' % (src_path, err, reason))
+	src_stat = stat_path(src_path)
+	if not src_stat:
 		return 0
 
-	try:
-		dest_stat = os.lstat(dest_path)
-	except OSError, (err, reason):
-		if err != errno.ENOENT:
-			stderr('lstat(%s) failed: %d %s' % (src_path, err, reason))
-			return 0
+	dest_stat = stat_path(dest_path)
+#	if not dest_path:
+#		pass					# destination does not exist
+
+	done = 0
+	need_update = 0
 
 #
 #	is source is a symbolic link ...
 #
-	if os.path.islink(src_path):
+	if not done and stat_islink(src_stat):
+		need_update = 0
 		try:
 			src_link = os.readlink(src_path)
 		except OSError, reason:
 			stderr('failed to readlink %s : %s' % (src_path, reason))
 			return 0
 
-		if not os.path.exists(dest_path):
+		if not stat_exists(dest_stat):
+			done = 1
 			stdout('symbolic link %s does not exist' % dest_path)
 			unix_out('# create symbolic link %s' % dest_path)
+			need_update = 1
 
-			symlink_file(src_link, dest_path)
-
-			unix_out('')
-
-			UPDATE_CACHE[dest_path] = 1
-			return 1
-
-		if os.path.islink(dest_path):
+		if stat_islink(dest_stat):
+			done = 1
 			try:
 				dest_link = os.readlink(dest_path)
 			except OSError, reason:
@@ -262,207 +333,164 @@ def compare_files(src_path, dest_path):
 
 			if src_link != dest_link:
 				stdout('%s should point to %s, but points to %s' % (dest_path, src_link, dest_link))
-
 				unix_out('# relink symbolic link %s' % dest_path)
 				delete_file(dest_path)
-				symlink_file(src_link, dest_path)
-
-				unix_out('')
-
-				UPDATE_CACHE[dest_path] = 1
-				return 1
+				need_update = 1
 
 			if (dest_stat[stat.ST_MODE] & 07777) != SYMLINK_MODE:
 				stdout('%s should have mode %04o (symlink), but has %04o' % (dest_path, SYMLINK_MODE, dest_stat[stat.ST_MODE] & 07777))
 				unix_out('# fix permissions of symbolic link %s' % dest_path)
+				need_update = 1
 
-				symlink_file(src_link, dest_path)
-
-				unix_out('')
-
-				UPDATE_CACHE[dest_path] = 1
-				return 1
-
-		if os.path.isdir(dest_path):
+		elif stat_isdir(dest_stat):
+			done = 1
 			stdout('%s should be a symbolic link' % dest_path)
 			unix_out('# target should be a symbolic link')
-
 			move_dir(dest_path)
+			need_update = 1
+
+#
+#	treat as file ...
+#
+		if not done:
+			stdout('%s should be a symbolic link' % dest_path)
+			unix_out('# target should be a symbolic link')
+			delete_file(dest_path)
+			need_update = 1
+
+#
+#	(re)create the symbolic link
+#
+		if need_update:
 			symlink_file(src_link, dest_path)
-
 			unix_out('')
-
 			UPDATE_CACHE[dest_path] = 1
 			return 1
 
-# if os.path.isfile(dest_path) ...
-		stdout('%s should be a symbolic link' % dest_path)
-		unix_out('# target should be a symbolic link')
-
-		delete_file(dest_path)
-		symlink_file(src_link, dest_path)
-
-		unix_out('')
-
-		UPDATE_CACHE[dest_path] = 1
-		return 1
+		done = 1
 
 #
 #	if the source is a directory ...
 #
-	if os.path.isdir(src_path):
-		if not os.path.exists(dest_path):
+	if not done and stat_isdir(src_stat):
+		if not stat_exists(dest_stat):
+			done = 1
 			stdout('%s/ does not exist' % dest_path)
 			unix_out('# make directory %s' % dest_path)
+			need_update = 1
 
+		if stat_islink(dest_stat):
+			done = 1
+			stdout('%s is a symbolic link, but should be a directory' % dest_path)
+			unix_out('# target should be a directory instead of a symbolic link')
+			delete_file(dest_path)
+			need_update = 1
+
+#
+#	treat as a regular file
+#
+		if not done and not stat_isdir(dest_stat):
+			done = 1
+			stdout('%s should be a directory' % dest_path)
+			unix_out('# target should be a directory')
+			delete_file(dest_path)
+			need_update = 1
+
+#
+#	make the directory
+#
+		if need_update:
 			make_dir(dest_path)
 			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
 			set_permissions(dest_path, src_stat[stat.ST_MODE])
-
 			unix_out('')
-
 			UPDATE_CACHE[dest_path] = 1
 			return 1
 
-		if os.path.islink(dest_path):
-			stdout('%s is a symbolic link, but should be a directory' % dest_path)
-			unix_out('# target should be a directory instead of a symbolic link')
-
-			delete_file(dest_path)
-			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
-			set_permissions(dest_path, src_stat[stat.ST_MODE])
-
-			unix_out('')
-
-			UPDATE_CACHE[dest_path] = 1
-			return 1
-
-# if os.path.isfile(dest_path) ...
-		stdout('%s should be a directory' % dest_path)
-		unix_out('# target should be a directory')
-
-		delete_file(dest_path)
-		make_dir(dest_path)
-		set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
-		set_permissions(dest_path, src_stat[stat.ST_MODE])
-
-		unix_out('')
-
-		UPDATE_CACHE[dest_path] = 1
-		return 1
+	done = 1
 
 #
 #	if source is a file ...
 #
-	if os.path.isfile(src_path):
-		if not os.path.exists(dest_path):
+	if not done and stat_isfile(src_stat):
+		if not exists(dest_stat):
+			done = 1
 			stdout('%s does not exist' % dest_path)
 			unix_out('# copy file %s' % dest_path)
+			need_update = 1
 
-			copy_file(src_path, dest_path)
-			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
-			set_permissions(dest_path, src_stat[stat.ST_MODE])
-
-			unix_out('')
-
-			UPDATE_CACHE[dest_path] = 1
-			return 1
-
-		if os.path.islink(dest_path):
+		if stat_islink(dest_stat):
+			done = 1
 			stdout('%s is a symbolic link, but should not be' % dest_path)
 			unix_out('# target should be a file instead of a symbolic link')
-
 			delete_file(dest_path)
-			copy_file(src_path, dest_path)
-			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
-			set_permissions(dest_path, src_stat[stat.ST_MODE])
+			need_update = 1
 
-			unix_out('')
-
-			UPDATE_CACHE[dest_path] = 1
-			return 1
-
-		if os.path.isdir(dest_path):
+		if stat_isdir(dest_stat):
+			done = 1
 			stdout('%s is a directory, but should not be' % dest_path)
 			unix_out('# target should be a file instead of a directory')
-
 			move_dir(dest_path)
-			copy_file(src_path, dest_path)
-			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
-			set_permissions(dest_path, src_stat[stat.ST_MODE])
+			need_update = 1
 
-			unix_out('')
-
-			UPDATE_CACHE[dest_path] = 1
-			return 1
 #
 #	check file size
 #
-		if os.path.isfile(dest_path):
+		if stat_isfile(dest_stat):
 			if src_stat[stat.ST_SIZE] != dest_stat[stat.ST_SIZE]:
+				done = 1
 				stdout('%s updated (file size mismatch)' % dest_path)
 				unix_out('# updating file %s' % dest_path)
-
-				copy_file(src_path, dest_path)
-				set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
-				set_permissions(dest_path, src_stat[stat.ST_MODE])
-
-				unix_out('')
-
-				UPDATE_CACHE[dest_path] = 1
-				return 1
+				need_update = 1
+			else:
 #
 #	check file contents (SHA1 or MD5 checksum)
 #
-			try:
-				src_sum, dest_sum = checksum_files(src_path, dest_path)
-			except IOError, (err, reason):
-				stderr('error: %s' % reason)
-				return 0
+				try:
+					src_sum, dest_sum = checksum_files(src_path, dest_path)
+				except IOError, (err, reason):
+					stderr('error: %s' % reason)
+					return 0
 
-			if src_sum != dest_sum:
-#				stdout('%s updated (SHA1 mismatch)' % dest_path)
-				stdout('%s updated (MD5 mismatch)' % dest_path)
+				if src_sum != dest_sum:
+					done = 1
+#					stdout('%s updated (SHA1 mismatch)' % dest_path)
+					stdout('%s updated (MD5 mismatch)' % dest_path)
+					unix_out('# updating file %s' % dest_path)
+					need_update = 1
 
-				unix_out('# updating file %s' % dest_path)
-
-				copy_file(src_path, dest_path)
-				set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
-				set_permissions(dest_path, src_stat[stat.ST_MODE])
-
-				unix_out('')
-
-				UPDATE_CACHE[dest_path] = 1
-				return 1
-
-		else:
+		elif not done:
+			done = 1
 			stdout('%s should be a regular file' % dest_path)
 			unix_out('# target should be a regular file')
+			need_update = 1
 
+		if need_update:
 			copy_file(src_path, dest_path)
 			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
 			set_permissions(dest_path, src_stat[stat.ST_MODE])
-
 			unix_out('')
-
 			UPDATE_CACHE[dest_path] = 1
 			return 1
-	else:
+
+		done = 1
+
+	elif not done:
 #
 #	source is not a symbolic link, not a directory, and not a regular file
 #
 		stderr("be advised: don't know how to handle %s" % src_path)
 
-		if not os.path.exists(dest_path):
+		if not stat_exists(dest_stat):
 			return 0
 
-		if os.path.islink(dest_path):
+		if stat_islink(dest_stat):
 			stdout('%s should not be a symbolic link' % dest_path)
 		else:
-			if os.path.isdir(dest_path):
+			if stat_isdir(dest_stat):
 				stdout('%s should not be a directory' % dest_path)
 			else:
-				if os.path.isfile(dest_path):
+				if stat_isfile(dest_stat):
 					stdout('%s should not be a regular file' % dest_path)
 				else:
 					stderr("don't know how to handle %s" % dest_path)
@@ -470,30 +498,31 @@ def compare_files(src_path, dest_path):
 #
 #	check mode and owner/group of files and/or directories
 #
-	if src_stat[stat.ST_UID] != dest_stat[stat.ST_UID] or src_stat[stat.ST_GID] != dest_stat[stat.ST_GID]:
-		stdout('%s should have owner %s.%s (%d.%d), but has %s.%s (%d.%d)' % (dest_path, ascii_uid(src_stat[stat.ST_UID]), ascii_gid(src_stat[stat.ST_GID]), src_stat[stat.ST_UID], src_stat[stat.ST_GID], ascii_uid(dest_stat[stat.ST_UID]), ascii_gid(dest_stat[stat.ST_GID]), dest_stat[stat.ST_UID], dest_stat[stat.ST_GID]))
-		unix_out('# changing ownership on %s' % dest_path)
+	if stat_exists(dest_stat):
+		if src_stat[stat.ST_UID] != dest_stat[stat.ST_UID] or src_stat[stat.ST_GID] != dest_stat[stat.ST_GID]:
+			stdout('%s should have owner %s.%s (%d.%d), but has %s.%s (%d.%d)' % (dest_path, ascii_uid(src_stat[stat.ST_UID]), ascii_gid(src_stat[stat.ST_GID]), src_stat[stat.ST_UID], src_stat[stat.ST_GID], ascii_uid(dest_stat[stat.ST_UID]), ascii_gid(dest_stat[stat.ST_GID]), dest_stat[stat.ST_UID], dest_stat[stat.ST_GID]))
+			unix_out('# changing ownership on %s' % dest_path)
 
-		set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
+			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
 
-		unix_out('')
-		UPDATE_CACHE[dest_path] = 1
-		return 1
+			unix_out('')
+			UPDATE_CACHE[dest_path] = 1
+			return 1
 
-	if (src_stat[stat.ST_MODE] & 07777) != (dest_stat[stat.ST_MODE] & 07777) :
-		stdout('%s should have mode %04o, but has %04o' % (dest_path, src_stat[stat.ST_MODE] & 07777, dest_stat[stat.ST_MODE] & 07777))
-		unix_out('# changing permissions on %s' % dest_path)
+		if (src_stat[stat.ST_MODE] & 07777) != (dest_stat[stat.ST_MODE] & 07777) :
+			stdout('%s should have mode %04o, but has %04o' % (dest_path, src_stat[stat.ST_MODE] & 07777, dest_stat[stat.ST_MODE] & 07777))
+			unix_out('# changing permissions on %s' % dest_path)
 
-		set_permissions(dest_path, src_stat[stat.ST_MODE])
+			set_permissions(dest_path, src_stat[stat.ST_MODE])
 
-		unix_out('')
-		UPDATE_CACHE[dest_path] = 1
-		return 1
+			unix_out('')
+			UPDATE_CACHE[dest_path] = 1
+			return 1
 
-#	if src_stat[stat.ST_MTIME] != dest_stat[stat.ST_MTIME]:
-#		stdout('%s should have mtime %d, but has %d' % (dest_path, src_stat[stat.ST_MTIME], dest_stat[stat.ST_MTIME]))
-#	if src_stat[stat.ST_CTIME] != dest_stat[stat.ST_CTIME]:
-#		stdout('%s should have ctime %d, but has %d' % (dest_path, src_stat[stat.ST_CTIME], dest_stat[stat.ST_CTIME]))
+#		if src_stat[stat.ST_MTIME] != dest_stat[stat.ST_MTIME]:
+#			stdout('%s should have mtime %d, but has %d' % (dest_path, src_stat[stat.ST_MTIME], dest_stat[stat.ST_MTIME]))
+#		if src_stat[stat.ST_CTIME] != dest_stat[stat.ST_CTIME]:
+#			stdout('%s should have ctime %d, but has %d' % (dest_path, src_stat[stat.ST_CTIME], dest_stat[stat.ST_CTIME]))
 
 	return 0
 
@@ -501,14 +530,14 @@ def compare_files(src_path, dest_path):
 def copy_file(src, dest):
 	global DRY_RUN
 
-	if os.path.isfile(dest):
+	if path_isfile(dest):
 		unix_out('mv %s %s.saved' % (dest, dest))
 
 	unix_out('umask 077')
 	unix_out('cp %s %s' % (src, dest))
 
 	if not DRY_RUN:
-		if os.path.isfile(dest):
+		if path_isfile(dest):
 			verbose('  saving %s as %s.saved' % (dest, dest))
 			try:
 				os.rename(dest, '%s.saved' % dest)
@@ -525,7 +554,7 @@ def copy_file(src, dest):
 
 		os.umask(old_umask)
 	else:
-		if os.path.isfile(dest):
+		if path_isfile(dest):
 			verbose('  saving %s as %s.saved' % (dest, dest))
 
 		verbose('  cp %s %s             # dry run, update not performed' % (src, dest))
@@ -534,14 +563,14 @@ def copy_file(src, dest):
 def symlink_file(oldpath, newpath):
 	global DRY_RUN
 
-	if os.path.exists(newpath):
+	if path_exists(newpath):
 		unix_out('mv %s %s.saved' % (newpath, newpath))
 
 	unix_out('umask 022')
 	unix_out('ln -s %s %s' % (oldpath, newpath))
 
 	if not DRY_RUN:
-		if os.path.exists(newpath):
+		if path_exists(newpath):
 			verbose('saving %s as %s.saved' % (newpath, newpath))
 			try:
 				os.rename(newpath, '%s.saved' % newpath)
@@ -679,7 +708,7 @@ def treewalk_overlay(args, dir, files):
 
 	for file in files:
 		full_path = os.path.join(dir, file)
-#		if os.path.isdir(full_path):
+#		if path_isdir(full_path):
 #			continue
 
 		verbose('checking $masterdir%s' % full_path[master_len:])
@@ -702,7 +731,7 @@ def treewalk_overlay(args, dir, files):
 		for group in groups:
 			override = os.path.join(masterdir, 'overlay', "%s.%s" % (dest[1:], group))
 
-			if os.path.exists(override):
+			if path_exists(override):
 				if full_path != override:
 					verbose('override by $masterdir%s' % override[master_len:])
 					full_path = override
@@ -837,7 +866,7 @@ def treewalk_delete(args, dir, files):
 			full_path = string.join(arr[:-1], '.')		# strip the 'group' or 'host' extension
 
 		dest = full_path[delete_len:]
-		if os.path.exists(dest):
+		if path_exists(dest):
 			stdout('deleting $masterdir%s : %s' % (full_path[master_len:], dest))
 			hard_delete_file(dest)
 
@@ -904,14 +933,14 @@ def single_files(cfg, filename):
 	for group in groups:
 		override = '%s.%s' % (src, group)
 
-		if os.path.exists(override):
+		if path_exists(override):
 			if full_path != override:
 				verbose('override by $masterdir%s' % override[master_len:])
 				full_path = override
 			break
 
 	if not full_path:
-		if not os.path.isfile(src):
+		if not path_exists(src):
 			stderr('%s is not in the synctool tree' % dest)
 			return (0, None)
 
@@ -1227,7 +1256,7 @@ def usage():
 	print 'synctool can help you administer your cluster of machines'
 	print 'Note that by default, it does a dry-run, unless you specify --fix'
 	print
-	print 'Written by Walter de Jong <walter@sara.nl> (c) 2003'
+	print 'Written by Walter de Jong <walter@sara.nl> (c) 2003-2005'
 
 
 def main():
