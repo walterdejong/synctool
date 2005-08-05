@@ -18,5 +18,7 @@ on_update	/etc/syslog.conf				hup_daemon.sh /usr/etc/syslogd
 on_update	/var/spool/cron/crontabs/root	hup_daemon.sh /sbin/cron
 on_update	/etc/ntpd.conf					/etc/init.d/ntpd stop ; /etc/init.d/ntpd start
 
+# always_run /bin/date
+
 # EOB
 
