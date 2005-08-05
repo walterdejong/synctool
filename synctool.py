@@ -498,7 +498,11 @@ def compare_files(src_path, dest_path):
 #
 #	check mode and owner/group of files and/or directories
 #
-	if stat_exists(dest_stat):
+#	os.chmod() and os.chown() don't work well with symbolic links as they work on the destination
+#	python lacks an os.lchmod() and os.lchown() as they are not portable
+#	anyway, symbolic links have been dealt with already ...
+#
+	if stat_exists(dest_stat) and not stat_islink(dest_stat):
 		if src_stat[stat.ST_UID] != dest_stat[stat.ST_UID] or src_stat[stat.ST_GID] != dest_stat[stat.ST_GID]:
 			stdout('%s should have owner %s.%s (%d.%d), but has %s.%s (%d.%d)' % (dest_path, ascii_uid(src_stat[stat.ST_UID]), ascii_gid(src_stat[stat.ST_GID]), src_stat[stat.ST_UID], src_stat[stat.ST_GID], ascii_uid(dest_stat[stat.ST_UID]), ascii_gid(dest_stat[stat.ST_GID]), dest_stat[stat.ST_UID], dest_stat[stat.ST_GID]))
 			unix_out('# changing ownership on %s' % dest_path)
@@ -509,7 +513,7 @@ def compare_files(src_path, dest_path):
 			UPDATE_CACHE[dest_path] = 1
 			return 1
 
-		if (src_stat[stat.ST_MODE] & 07777) != (dest_stat[stat.ST_MODE] & 07777) :
+		if (src_stat[stat.ST_MODE] & 07777) != (dest_stat[stat.ST_MODE] & 07777):
 			stdout('%s should have mode %04o, but has %04o' % (dest_path, src_stat[stat.ST_MODE] & 07777, dest_stat[stat.ST_MODE] & 07777))
 			unix_out('# changing permissions on %s' % dest_path)
 
@@ -565,6 +569,11 @@ def symlink_file(oldpath, newpath):
 
 	if path_exists(newpath):
 		unix_out('mv %s %s.saved' % (newpath, newpath))
+
+#
+#	actually, if we want the ownership of the symlink to be correct, we should do setuid() here
+#	matching ownerships of symbolic links is not yet implemented
+#
 
 	unix_out('umask 022')
 	unix_out('ln -s %s %s' % (oldpath, newpath))
@@ -949,6 +958,7 @@ def single_files(cfg, filename):
 	changed = compare_files(full_path, dest)
 	if not changed:
 		stdout('%s is up to date' % dest)
+		unix_out('# %s is up to date\n' % dest)
 
 	return (changed, full_path)
 
