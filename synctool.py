@@ -407,7 +407,7 @@ def compare_files(src_path, dest_path):
 			UPDATE_CACHE[dest_path] = 1
 			return 1
 
-	done = 1
+		done = 1
 
 #
 #	if source is a file ...
