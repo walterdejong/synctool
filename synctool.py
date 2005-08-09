@@ -413,7 +413,7 @@ def compare_files(src_path, dest_path):
 #	if source is a file ...
 #
 	if not done and stat_isfile(src_stat):
-		if not exists(dest_stat):
+		if not stat_exists(dest_stat):
 			done = 1
 			stdout('%s does not exist' % dest_path)
 			unix_out('# copy file %s' % dest_path)
