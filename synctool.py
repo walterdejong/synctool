@@ -1410,7 +1410,9 @@ def main():
 		diff_files(cfg, diff_file)
 
 	elif single_file:
-		single_files(cfg, single_file)
+		(changed, full_path) = single_files(cfg, single_file)
+		if changed:
+			on_update(cfg, full_path)
 
 	else:
 		overlay_files(cfg)
