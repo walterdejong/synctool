@@ -24,6 +24,7 @@ DRY_RUN=1
 VERBOSE=0
 QUIET=0
 UNIX_CMD=0
+RUN_TASKS=0
 LOGFILE=None
 LOGFD=None
 
@@ -439,7 +440,10 @@ def compare_files(src_path, dest_path):
 		if stat_isfile(dest_stat):
 			if src_stat[stat.ST_SIZE] != dest_stat[stat.ST_SIZE]:
 				done = 1
-				stdout('%s updated (file size mismatch)' % dest_path)
+				if DRY_RUN:
+					stdout('%s mismatch (file size)' % dest_path)
+				else:
+					stdout('%s updated (file size mismatch)' % dest_path)
 				unix_out('# updating file %s' % dest_path)
 				need_update = 1
 			else:
@@ -454,8 +458,13 @@ def compare_files(src_path, dest_path):
 
 				if src_sum != dest_sum:
 					done = 1
-#					stdout('%s updated (SHA1 mismatch)' % dest_path)
-					stdout('%s updated (MD5 mismatch)' % dest_path)
+					if DRY_RUN:
+#						stdout('%s mismatch (SHA1 checksum)' % dest_path)
+						stdout('%s mismatch (MD5 checksum)' % dest_path)
+					else:
+#						stdout('%s updated (SHA1 mismatch)' % dest_path)
+						stdout('%s updated (MD5 mismatch)' % dest_path)
+
 					unix_out('# updating file %s' % dest_path)
 					need_update = 1
 
@@ -770,33 +779,36 @@ def on_update(cfg, dest):
 
 		if update.has_key(dest):
 			cmd = update[dest]
-			if cmd[0] == '/':
-				stdout('running command %s' % cmd)
-			else:
-				stdout('running command $masterdir/scripts/%s' % cmd)
-
 			run_command(cfg, cmd)
 
 
 def run_command(cfg, cmd):
 	'''run a shell command'''
 
-	global DRY_RUN
+	global DRY_RUN, QUIET
 
 	masterdir = cfg['masterdir']
 	master_len = len(masterdir)
 
-	cmd1 = cmd
+	if DRY_RUN:
+		not_str = 'not '
+	else:
+		not_str = ''
+
+# a command can have arguments
 	arr = string.split(cmd)
 	if not arr:
 		cmdfile = cmd
 	else:
 		cmdfile = arr[0]
 
+# cmd1 is the pretty printed version of the command
+	cmd1 = cmdfile
+	if cmd1[0] != '/':
+		cmd1 = '$masterdir/scripts/%s' % cmd1
 #
 #	if relative path, use script_path
 #
-	if cmdfile[0] != '/':
 		script_path = os.path.join(masterdir, 'scripts')
 		if not os.path.isdir(script_path):
 			stderr('error: no such directory $masterdir/scripts')
@@ -804,12 +816,20 @@ def run_command(cfg, cmd):
 
 		cmdfile = os.path.join(script_path, cmdfile)
 
-		if not os.path.isfile(cmdfile):
-			stderr("error: command $masterdir%s not found" % cmdfile[master_len:])
-			return
-
 		arr[0] = cmdfile
 		cmd = string.join(arr)
+
+	elif len(cmd1) > master_len and cmd1[:master_len] == masterdir:
+		cmd1 = '$masterdir%s' % cmd1[master_len:]
+
+	if not os.path.isfile(cmdfile):
+		stderr('error: command %s not found' % cmd1)
+		return
+
+	arr[0] = cmd1
+	cmd1 = string.join(arr)
+	if not QUIET:
+		stdout('%srunning command %s' % (not_str, cmd1))
 
 	unix_out('# run command %s' % cmd1)
 	unix_out(cmd)
@@ -894,6 +914,68 @@ def delete_files(cfg):
 	os.path.walk(delete_path, treewalk_delete, (cfg, delete_path, groups, all_groups))
 
 
+def treewalk_tasks(args, dir, files):
+	'''scan the tasks directory and run the necessary tasks'''
+
+	(cfg, base_path, groups, all_groups) = args
+	base_len = len(base_path)
+
+	masterdir = cfg['masterdir']
+	master_len = len(masterdir)
+
+	dest_dir = dir[base_len:]
+	if not dest_dir:
+		dest_dir = '/'
+
+	for file in files:
+		full_path = os.path.join(dir, file)
+		if path_isdir(full_path):
+			continue
+
+		verbose('checking $masterdir%s' % full_path[master_len:])
+
+		dest = os.path.join(dest_dir, file)
+
+		arr = string.split(dest, '.')
+		if len(arr) > 1 and arr[-1] in all_groups:
+			if not arr[-1] in groups:
+				verbose('skipping $masterdir%s, it is not one of my groups' % full_path[master_len:])
+				continue
+
+			dest = string.join(arr[:-1], '.')		# strip the 'group' or 'host' extension
+
+#
+#	is this file overridden by another group for this host?
+#
+		override = None
+
+		for group in groups:
+			override = os.path.join(masterdir, 'tasks', "%s.%s" % (dest[1:], group))
+
+			if path_exists(override):
+				if full_path != override:
+					verbose('override by $masterdir%s' % override[master_len:])
+					full_path = override
+				break
+
+# run the task
+		run_command(cfg, full_path)
+
+
+def run_tasks(cfg):
+	hostname = cfg['hostname']
+	masterdir = cfg['masterdir']
+	groups = cfg['host'][hostname]
+	all_groups = make_all_groups(cfg)
+
+	tasks_path = os.path.join(masterdir, 'tasks')
+	if not os.path.isdir(tasks_path):
+		verbose('skipping $masterdir/tasks, no such directory')
+		return
+
+	os.path.walk(tasks_path, treewalk_tasks, (cfg, tasks_path, groups, all_groups))
+
+
 def always_run(cfg):
 	'''always run these commands'''
 
@@ -901,11 +983,6 @@ def always_run(cfg):
 		return
 
 	for cmd in cfg['always_run']:
-		if cmd[0] == '/':
-			stdout('running command %s' % cmd)
-		else:
-			stdout('running command $masterdir/scripts/%s' % cmd)
-
 		run_command(cfg, cmd)
 
 
@@ -1257,6 +1334,7 @@ def usage():
 #	print '  -n, --dry-run         Show what would have been updated'
 	print '  -d, --diff=file       Show diff for file'
 	print '  -1, --single=file     Update a single file'
+	print '  -t, --tasks           Run the scripts in the tasks/ directory'
 	print '  -f, --fix             Perform updates (otherwise, do dry-run)'
 	print '  -v, --verbose         Be verbose'
 	print '  -q, --quiet           Suppress informational startup messages'
@@ -1266,11 +1344,11 @@ def usage():
 	print 'synctool can help you administer your cluster of machines'
 	print 'Note that by default, it does a dry-run, unless you specify --fix'
 	print
-	print 'Written by Walter de Jong <walter@sara.nl> (c) 2003-2005'
+	print 'Written by Walter de Jong <walter@sara.nl> (c) 2003-2006'
 
 
 def main():
-	global CONF_FILE, DRY_RUN, VERBOSE, QUIET, UNIX_CMD, LOGFILE, SYMLINK_MODE
+	global CONF_FILE, DRY_RUN, VERBOSE, QUIET, UNIX_CMD, LOGFILE, SYMLINK_MODE, RUN_TASKS
 
 	progname = os.path.basename(sys.argv[0])
 
@@ -1279,7 +1357,7 @@ def main():
 
 	if len(sys.argv) > 1:
 		try:
-			opts, args = getopt.getopt(sys.argv[1:], "hc:l:d:1:fvqx", ['help', 'conf=', 'log=', 'diff=', 'single=', 'fix', 'verbose', 'quiet', 'unix'])
+			opts, args = getopt.getopt(sys.argv[1:], "hc:l:d:1:tfvqx", ['help', 'conf=', 'log=', 'diff=', 'single=', 'tasks', 'fix', 'verbose', 'quiet', 'unix'])
 		except getopt.error, (reason):
 			print '%s: %s' % (progname, reason)
 			usage()
@@ -1337,6 +1415,10 @@ def main():
 
 			if opt in ('-1', '--single'):
 				single_file=arg
+				continue
+
+			if opt in ('-t', '--task', '--tasks'):
+				RUN_TASKS=1
 				continue
 
 			stderr("unknown command line option '%s'" % opt)
@@ -1418,6 +1500,9 @@ def main():
 		overlay_files(cfg)
 		delete_files(cfg)
 		always_run(cfg)
+
+	if RUN_TASKS:
+		run_tasks(cfg)
 
 	unix_out('# EOB')
 
