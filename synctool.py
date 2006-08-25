@@ -747,16 +747,18 @@ def treewalk_overlay(args, dir, files):
 		override = None
 
 		for group in groups:
-			override = os.path.join(masterdir, 'overlay', "%s.%s" % (dest[1:], group))
+			possible_override = os.path.join(masterdir, 'overlay', "%s.%s" % (dest[1:], group))
 
-			if path_exists(override):
-				if full_path != override:
-					verbose('override by $masterdir%s' % override[master_len:])
-					full_path = override
+			if path_exists(possible_override):
+				override = possible_override
 				break
 
+		if override and full_path != override:
+			verbose('overridden by $masterdir%s' % override[master_len:])
+			continue
+
 #
-#	if files is updated, run the appropriate on_update command
+#	if file is updated, run the appropriate on_update command
 #
 		if compare_files(full_path, dest):
 			on_update(cfg, dest)
@@ -957,13 +959,15 @@ def treewalk_tasks(args, dir, files):
 		override = None
 
 		for group in groups:
-			override = os.path.join(masterdir, 'tasks', "%s.%s" % (dest[1:], group))
+			possible_override = os.path.join(masterdir, 'tasks', "%s.%s" % (dest[1:], group))
 
-			if path_exists(override):
-				if full_path != override:
-					verbose('override by $masterdir%s' % override[master_len:])
-					full_path = override
+			if path_exists(possible_override):
+				override = possible_override
 				break
+
+		if override and full_path != override:
+			verbose('overridden by $masterdir%s' % override[master_len:])
+			continue
 
 # run the task
 		run_command(cfg, full_path)
