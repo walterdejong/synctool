@@ -290,7 +290,7 @@ def compare_files(src_path, dest_path):
 		return 0
 '''
 
-	global SYMLINK_MODE, UPDATE_CACHE
+	global SYMLINK_MODE, UPDATE_CACHE, DRY_RUN
 
 	if UPDATE_CACHE.has_key(dest_path):
 		verbose('%s was already updated' % dest_path)
@@ -876,6 +876,8 @@ def overlay_files(cfg):
 
 
 def treewalk_delete(args, dir, files):
+	global DRY_RUN
+
 	(cfg, delete_path, groups, all_groups) = args
 
 	delete_len = len(delete_path)
@@ -896,7 +898,12 @@ def treewalk_delete(args, dir, files):
 
 		dest = full_path[delete_len:]
 		if path_exists(dest):
-			stdout('deleting $masterdir%s : %s' % (full_path[master_len:], dest))
+			if DRY_RUN:
+				not_str = 'not '
+			else:
+				not_str = ''
+
+			stdout('%sdeleting $masterdir%s : %s' % (not_str, full_path[master_len:], dest))
 			hard_delete_file(dest)
 
 
