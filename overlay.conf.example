@@ -1,0 +1,16 @@
+#
+#	overlay.conf
+#
+
+masterdir /var/lib/synctool
+
+rsync_cmd /usr/bin/rsync -a -e /usr/bin/ssh
+
+host p1 teras 
+host p4 batch teras
+host p5 batch teras
+host p6 batch teras
+host p7 batch teras
+
+# EOB
+
