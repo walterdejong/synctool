@@ -541,20 +541,24 @@ def main():
 	masterdir = cfg['masterdir']
 	dest_path = os.path.join(masterdir, '.overlay.%d' % os.getpid())
 
-	for host in cfg['host']:
-		unix_out('#')
-		unix_out('#   host %s' % host)
-		unix_out('#')
+	try:
+		for host in cfg['host'].keys():
+			unix_out('#')
+			unix_out('#   host %s' % host)
+			unix_out('#')
 
-		verbose('')
-		verbose('overlaying host %s' % host)
-		verbose('')
+			verbose('')
+			verbose('overlaying host %s' % host)
+			verbose('')
 
-		stdout('')
+			stdout('')
 
-		overlay_files(cfg, host, dest_path)
-		run_command('%s %s %s/ %s:/' % (cfg['rsync_cmd'], RSYNC_OPTS, dest_path, host))
-		unlink_dir(dest_path)
+			overlay_files(cfg, host, dest_path)
+			run_command('%s %s %s/ %s:/' % (cfg['rsync_cmd'], RSYNC_OPTS, dest_path, host))
+			unlink_dir(dest_path)
+	except:								# on error, cleanup temp dir
+		if path_isdir(dest_path):
+			unlink_dir(dest_path)
 
 	unix_out('# EOB')
 
