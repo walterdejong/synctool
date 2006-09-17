@@ -191,9 +191,6 @@ def run_command(cmd):
 	arr = string.split(cmd)
 	(path, cmd1) = os.path.split(arr[0])
 
-	if not QUIET:
-		stdout('running command %s' % cmd1)
-
 	unix_out('# run command %s' % cmd1)
 	unix_out(cmd)
 	unix_out('')
@@ -541,8 +538,11 @@ def main():
 	masterdir = cfg['masterdir']
 	dest_path = os.path.join(masterdir, '.overlay.%d' % os.getpid())
 
+	hosts = cfg['host'].keys()
+	hosts.sort()
+
 	try:
-		for host in cfg['host'].keys():
+		for host in hosts:
 			unix_out('#')
 			unix_out('#   host %s' % host)
 			unix_out('#')
@@ -551,9 +551,11 @@ def main():
 			verbose('overlaying host %s' % host)
 			verbose('')
 
-			stdout('')
-
 			overlay_files(cfg, host, dest_path)
+
+			if not QUIET:
+				stdout('rsyncing to %s' % host)
+
 			run_command('%s %s %s/ %s:/' % (cfg['rsync_cmd'], RSYNC_OPTS, dest_path, host))
 			unlink_dir(dest_path)
 	except:								# on error, cleanup temp dir
