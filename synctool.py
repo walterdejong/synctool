@@ -857,6 +857,7 @@ def make_all_groups(cfg):
 			if not group in all_groups:
 				all_groups.append(group)
 
+	all_groups.extend(cfg['ignore_groups'])		# although ignored, they are existing groups
 	return all_groups
 
 
@@ -1082,6 +1083,7 @@ def read_config(filename):
 		filename = os.path.join('.', DEFAULT_CONF)
 
 	cfg = {}
+	cfg['ignore_groups'] = []
 
 	if os.path.isdir(filename):
 		filename = os.path.join(filename, DEFAULT_CONF)
@@ -1183,6 +1185,30 @@ def read_config(filename):
 				continue
 
 			cfg['host'][host] = groups
+			continue
+
+#
+#	keyword: ignore_host
+#
+		if keyword == 'ignore_host':
+			if len(arr) < 2:
+				stderr("%s:%d: 'ignore_host' requires 1 argument: the hostname to ignore" % (filename, lineno))
+				errors = errors + 1
+				continue
+
+			cfg['ignore_groups'].append(arr[1])
+			continue
+
+#
+#	keyword: ignore_group
+#
+		if keyword == 'ignore_group':
+			if len(arr) < 2:
+				stderr("%s:%d: 'ignore_group' requires at least 1 argument: the group to ignore" % (filename, lineno))
+				errors = errors + 1
+				continue
+
+			cfg['ignore_groups'].extend(arr[1:])
 			continue
 
 #
@@ -1307,19 +1333,23 @@ def read_config(filename):
 	hostname = socket.gethostname()
 	arr = string.split(hostname, '.')
 
-	if cfg['host'].has_key(hostname):
-		cfg['hostname'] = hostname
-
-		if len(arr) > 0 and arr[0] != hostname and cfg['host'].has_key(arr[0]):
-			stderr("%s: conflict; host %s and %s are both defined" % (filename, hostname, arr[0]))
-			errors = errors + 1
+	if arr[0] in cfg['ignore_groups']:
+		stderr('host %s is disabled in the config file' % arr[0])
+		errors = errors + 1
 	else:
-		if len(arr) > 0 and cfg['host'].has_key(arr[0]):
-			cfg['hostname'] = arr[0]
-			hostname = arr[0]
+		if cfg['host'].has_key(hostname):
+			cfg['hostname'] = hostname
+
+			if len(arr) > 0 and arr[0] != hostname and cfg['host'].has_key(arr[0]):
+				stderr("%s: conflict; host %s and %s are both defined" % (filename, hostname, arr[0]))
+				errors = errors + 1
 		else:
-			stderr('%s: no entry for host %s defined' % (filename, hostname))
-			errors = errors + 1
+			if len(arr) > 0 and cfg['host'].has_key(arr[0]):
+				cfg['hostname'] = arr[0]
+				hostname = arr[0]
+			else:
+				stderr('%s: no entry for host %s defined' % (filename, hostname))
+				errors = errors + 1
 
 	if errors > 0:
 		sys.exit(-1)
@@ -1331,6 +1361,17 @@ def read_config(filename):
 	for host in cfg['host'].keys():
 		if not host in cfg['host'][host]:
 			cfg['host'][host].insert(0, host)
+
+# remove ignored groups from all hosts
+		changed = 0
+		groups = cfg['host'][host]
+		for ignore in cfg['ignore_groups']:
+			if ignore in groups:
+				groups.remove(ignore)
+				changed = 1
+
+		if changed:
+			cfg['host'][host] = groups
 
 	return cfg
 
