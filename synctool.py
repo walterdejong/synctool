@@ -233,7 +233,7 @@ def path_isdir(path):
 
 
 def path_isfile(path):
-	return stat_isdir(stat_path(path))
+	return stat_isfile(stat_path(path))
 
 
 def path_exists(path):
