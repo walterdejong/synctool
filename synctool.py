@@ -45,8 +45,6 @@ MONTHS = ( 'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','De
 def verbose(str):
 	'''do conditional output based on the verbose command line parameter'''
 
-	global VERBOSE
-
 	if VERBOSE:
 		print str
 
@@ -54,15 +52,11 @@ def verbose(str):
 def unix_out(str):
 	'''output as unix shell command'''
 
-	global UNIX_CMD
-
 	if UNIX_CMD:
 		print str
 
 
 def stdout(str):
-	global UNIX_CMD, LOGFD, DRY_RUN
-
 	if not UNIX_CMD:
 		print str
 
@@ -99,8 +93,6 @@ def closelog():
 
 
 def log(str):
-	global DRY_RUN, LOGFD
-
 	if not DRY_RUN and LOGFD != None:
 		t = time.localtime(time.time())
 		LOGFD.write('%s %02d %02d:%02d:%02d %s\n' % (MONTHS[t[1]-1], t[2], t[3], t[4], t[5], str))
@@ -135,6 +127,8 @@ def ascii_gid(gid):
 def checksum_files(file1, file2):
 	'''do a quick checksum of 2 files'''
 
+	err = None
+	reason = None
 	try:
 		f1 = open(file1, 'r')
 	except IOError(err, reason):
@@ -290,7 +284,7 @@ def compare_files(src_path, dest_path):
 		return 0
 '''
 
-	global SYMLINK_MODE, UPDATE_CACHE, DRY_RUN
+	global UPDATE_CACHE
 
 	if UPDATE_CACHE.has_key(dest_path):
 		verbose('%s was already updated' % dest_path)
@@ -541,8 +535,6 @@ def compare_files(src_path, dest_path):
 
 
 def copy_file(src, dest):
-	global DRY_RUN
-
 	if path_isfile(dest):
 		unix_out('mv %s %s.saved' % (dest, dest))
 
@@ -574,8 +566,6 @@ def copy_file(src, dest):
 
 
 def symlink_file(oldpath, newpath):
-	global DRY_RUN
-
 	if path_exists(newpath):
 		unix_out('mv %s %s.saved' % (newpath, newpath))
 
@@ -610,8 +600,6 @@ def symlink_file(oldpath, newpath):
 
 
 def set_permissions(file, mode):
-	global DRY_RUN
-
 	unix_out('chmod 0%o %s' % (mode & 07777, file))
 
 	if not DRY_RUN:
@@ -625,8 +613,6 @@ def set_permissions(file, mode):
 
 
 def set_owner(file, uid, gid):
-	global DRY_RUN
-
 	unix_out('chown %s.%s %s' % (ascii_uid(uid), ascii_gid(gid), file))
 
 	if not DRY_RUN:
@@ -640,8 +626,6 @@ def set_owner(file, uid, gid):
 
 
 def delete_file(file):
-	global DRY_RUN
-
 	unix_out('mv %s %s.saved' % (file, file))
 
 	if not DRY_RUN:
@@ -661,8 +645,6 @@ def delete_file(file):
 
 
 def hard_delete_file(file):
-	global DRY_RUN
-
 	unix_out('rm -f %s' % file)
 
 	if not DRY_RUN:
@@ -676,8 +658,6 @@ def hard_delete_file(file):
 
 
 def make_dir(path):
-	global DRY_RUN
-
 	unix_out('umask 077')
 	unix_out('mkdir %s' % path)
 
@@ -696,8 +676,6 @@ def make_dir(path):
 
 
 def move_dir(dir):
-	global DRY_RUN
-
 	unix_out('mv %s %s.saved' % (dir, dir))
 
 	if not DRY_RUN:
@@ -786,8 +764,6 @@ def on_update(cfg, dest):
 
 def run_command(cfg, cmd):
 	'''run a shell command'''
-
-	global DRY_RUN, QUIET
 
 	masterdir = cfg['masterdir']
 	master_len = len(masterdir)
@@ -879,8 +855,6 @@ def overlay_files(cfg):
 
 
 def treewalk_delete(args, dir, files):
-	global DRY_RUN
-
 	(cfg, delete_path, groups, all_groups) = args
 
 	delete_len = len(delete_path)
@@ -1055,7 +1029,7 @@ def single_files(cfg, filename):
 def diff_files(cfg, filename):
 	'''display a diff of the file'''
 
-	global DRY_RUN, UNIX_CMD
+	global DRY_RUN
 
 	if not cfg.has_key('diff_cmd'):
 		stderr('error: diff_cmd is undefined in %s' % CONF_FILE)
@@ -1076,8 +1050,6 @@ def diff_files(cfg, filename):
 
 def read_config(filename):
 	'''read the config file and return cfg structure'''
-
-	global DEFAULT_CONF
 
 	if not filename:
 		filename = os.path.join('.', DEFAULT_CONF)
@@ -1377,8 +1349,6 @@ def read_config(filename):
 
 
 def usage():
-	global DEFAULT_CONF
-
 	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
 	print 'options:'
 	print '  -h, --help            Display this information'
@@ -1565,4 +1535,3 @@ if __name__ == '__main__':
 	main()
 
 # EOB
-
