@@ -689,6 +689,28 @@ def move_dir(dir):
 		verbose('moving %s to %s.saved             # dry run, update not performed' % (dir, dir))
 
 
+def strip_group_dir(path, cfg, all_groups, groups):
+	'''strip the group extension and return the basename, None on error'''
+
+	arr = string.split(path, '.')
+	if len(arr) > 1 and arr[-1][0] == '_':
+		group_ext = arr[-1][1:]
+
+		if not group_ext in all_groups:
+			master_len = len(cfg['masterdir'])
+			stderr('warning: unknown group on directory $masterdir%s/, skipping' % path[master_len:])
+			return None
+
+		if not group_ext in groups:
+			master_len = len(cfg['masterdir'])
+			verbose('skipping directory $masterdir%s/, it is not one of my groups' % path[master_len:])
+			return None
+
+		return string.join(arr[:-1], '.')		# strip the 'group' or 'host' extension
+
+	return path
+
+
 def treewalk_overlay(args, dir, files):
 	'''scan the overlay directory and check against the live system'''
 
@@ -701,19 +723,9 @@ def treewalk_overlay(args, dir, files):
 #
 #	first see if this directory is for specific groups only
 #
-	arr = string.split(dir, '.')
-	if len(arr) > 1 and arr[-1][0] == '_':
-		group_ext = arr[-1][1:]
-
-		if not group_ext in all_groups:
-			stderr('warning: unknown group on $masterdir%s/, skipping' % dir[master_len:])
-			return
-
-		if not group_ext in groups:
-			verbose('skipping $masterdir%s/, it is not one of my groups' % dir[master_len:])
-			return
-
-		dir = string.join(arr[:-1], '.')		# strip the 'group' or 'host' extension
+	dir = strip_group_dir(dir, cfg, all_groups, groups)
+	if not dir:
+		return
 
 	dest_dir = dir[base_len:]
 	if not dest_dir:
