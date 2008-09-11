@@ -744,6 +744,24 @@ def strip_group_file(filename, full_path, cfg, all_groups, groups):
 	return string.join(arr[:-1], '.')		# strip the 'group' or 'host' extension
 
 
+def check_overrides(path, full_path, cfg, groups):
+	override = None
+
+	for group in groups:
+		possible_override = '%s._%s' % (path, group)
+
+		if path_exists(possible_override):
+			override = possible_override
+			break
+
+	if override and full_path != override:
+		master_len = len(cfg['masterdir'])
+		verbose('overridden by $masterdir%s' % override[master_len:])
+		return 1
+
+	return 0
+
+
 def treewalk_overlay(args, dir, files):
 	'''scan the overlay directory and check against the live system'''
 
@@ -783,19 +801,9 @@ def treewalk_overlay(args, dir, files):
 #	is this file overridden by another group for this host?
 #
 #	NB. This only works for this directory, there may still be another directory tree
-#	    that overrides this file
+#	    that overrides this file (TODO: fix this NB)
 #
-		override = None
-
-		for group in groups:
-			possible_override = os.path.join(masterdir, 'overlay', "%s._%s" % (dest[1:], group))
-
-			if path_exists(possible_override):
-				override = possible_override
-				break
-
-		if override and full_path != override:
-			verbose('overridden by $masterdir%s' % override[master_len:])
+		if check_overrides(os.path.join(masterdir, 'overlay', dest[1:]), full_path, cfg, groups):
 			continue
 
 #
@@ -986,17 +994,7 @@ def treewalk_tasks(args, dir, files):
 #
 #	is this file overridden by another group for this host?
 #
-		override = None
-
-		for group in groups:
-			possible_override = os.path.join(masterdir, 'tasks', "%s._%s" % (dest[1:], group))
-
-			if path_exists(possible_override):
-				override = possible_override
-				break
-
-		if override and full_path != override:
-			verbose('overridden by $masterdir%s' % override[master_len:])
+		if check_overrides(os.path.join(masterdir, 'tasks', dest[1:]), full_path, cfg, groups):
 			continue
 
 # run the task
@@ -1058,7 +1056,7 @@ def single_files(cfg, filename):
 #
 	full_path = None
 	for group in groups:
-		override = '%s.%s' % (src, group)
+		override = '%s._%s' % (src, group)
 
 		if path_exists(override):
 			if full_path != override:
