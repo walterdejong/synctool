@@ -698,6 +698,23 @@ def treewalk_overlay(args, dir, files):
 	masterdir = cfg['masterdir']
 	master_len = len(masterdir)
 
+#
+#	first see if this directory is for specific groups only
+#
+	arr = string.split(dir, '.')
+	if len(arr) > 1 and arr[-1][0] == '_':
+		group_ext = arr[-1][1:]
+
+		if not group_ext in all_groups:
+			stderr('warning: unknown group on $masterdir%s/, skipping' % dir[master_len:])
+			return
+
+		if not group_ext in groups:
+			verbose('skipping $masterdir%s/, it is not one of my groups' % dir[master_len:])
+			return
+
+		dir = string.join(arr[:-1], '.')		# strip the 'group' or 'host' extension
+
 	dest_dir = dir[base_len:]
 	if not dest_dir:
 		dest_dir = '/'
