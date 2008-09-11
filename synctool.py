@@ -989,7 +989,7 @@ def treewalk_tasks(args, dir, files):
 		override = None
 
 		for group in groups:
-			possible_override = os.path.join(masterdir, 'tasks', "%s.%s" % (dest[1:], group))
+			possible_override = os.path.join(masterdir, 'tasks', "%s._%s" % (dest[1:], group))
 
 			if path_exists(possible_override):
 				override = possible_override
