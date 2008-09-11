@@ -689,7 +689,7 @@ def move_dir(dir):
 		verbose('moving %s to %s.saved             # dry run, update not performed' % (dir, dir))
 
 
-def strip_group_dir(dir, cfg, all_groups, groups):
+def strip_group_dir(dir, full_path, cfg, all_groups, groups):
 	'''strip the group extension and return the basename, None on error'''
 
 	arr = string.split(dir, '.')
@@ -698,12 +698,12 @@ def strip_group_dir(dir, cfg, all_groups, groups):
 
 		if not group_ext in all_groups:
 			master_len = len(cfg['masterdir'])
-			stderr('warning: unknown group on directory $masterdir%s/, skipping' % dir[master_len:])
+			stderr('warning: unknown group on directory $masterdir%s/, skipping' % full_path[master_len:])
 			return None
 
 		if not group_ext in groups:
 			master_len = len(cfg['masterdir'])
-			verbose('skipping directory $masterdir%s/, it is not one of my groups' % dir[master_len:])
+			verbose('skipping directory $masterdir%s/, it is not one of my groups' % full_path[master_len:])
 			return None
 
 		return string.join(arr[:-1], '.')		# strip the 'group' or 'host' extension
@@ -715,7 +715,7 @@ def strip_group_file(filename, full_path, cfg, all_groups, groups):
 	'''strip group extension and return basename, None on error'''
 
 	if path_isdir(full_path):
-		return strip_group_dir(full_path, cfg, all_groups, groups)
+		return strip_group_dir(filename, full_path, cfg, all_groups, groups)
 
 	arr = string.split(filename, '.')
 
@@ -771,21 +771,17 @@ def treewalk_overlay(args, dir, files):
 	masterdir = cfg['masterdir']
 	master_len = len(masterdir)
 
-#
-#	first see if this directory is for specific groups only
-#
-	dir = strip_group_dir(dir, cfg, all_groups, groups)
-	if not dir:
-		return
-
 	dest_dir = dir[base_len:]
 	if not dest_dir:
 		dest_dir = '/'
 
-	for file in files:
+	n = 0
+	nr_files = len(files)
+
+	while n < nr_files:
+		file = files[n]
+
 		full_path = os.path.join(dir, file)
-#		if path_isdir(full_path):
-#			continue
 
 		verbose('checking $masterdir%s' % full_path[master_len:])
 
@@ -795,16 +791,19 @@ def treewalk_overlay(args, dir, files):
 #
 		dest = strip_group_file(dest, full_path, cfg, all_groups, groups)
 		if not dest:
+			files.remove(file)			# this is important for directories
+			nr_files = nr_files - 1
 			continue
 
 #
-#	is this file overridden by another group for this host?
-#
-#	NB. This only works for this directory, there may still be another directory tree
-#	    that overrides this file (TODO: fix this NB)
+#	is this file/dir overridden by another group for this host?
 #
 		if check_overrides(os.path.join(masterdir, 'overlay', dest[1:]), full_path, cfg, groups):
+			files.remove(file)			# this is important for directories
+			nr_files = nr_files - 1
 			continue
+
+		n = n + 1
 
 #
 #	if file is updated, run the appropriate on_update command
@@ -931,16 +930,49 @@ def treewalk_delete(args, dir, files):
 	delete_len = len(delete_path)
 	master_len = len(cfg['masterdir'])
 
-	for f in files:
-		full_path = os.path.join(dir, f)
-		if os.path.isdir(full_path):
+	dest_dir = dir[delete_len:]
+	if not dest_dir:
+		dest_dir = '/'
+
+	n = 0
+	nr_files = len(files)
+
+	while n < nr_files:
+		file = files[n]
+
+		full_path = os.path.join(dir, file)
+
+		verbose('checking $masterdir%s' % full_path[master_len:])
+
+		dest = os.path.join(dest_dir, file)
+#
+#	check for valid group
+#
+		dest = strip_group_file(dest, full_path, cfg, all_groups, groups)
+		if not dest:
+			print 'TD remove %s' % file
+			files.remove(file)			# this is important for directories
+			print 'TD', files
+			nr_files = nr_files - 1
 			continue
 
-		full_path = strip_group_file(full_path, full_path, cfg, all_groups, groups)
-		if not full_path:
+#
+#	is this file/dir overridden by another group for this host?
+#
+		if check_overrides(os.path.join(delete_path, dest[1:]), full_path, cfg, groups):
+			print 'TD remove 2 %s' % file
+			files.remove(file)			# this is important for directories
+			print 'TD', files
+			nr_files = nr_files - 1
 			continue
 
-		dest = full_path[delete_len:]
+		n = n + 1
+
+		if os.path.isdir(dest):			# do not delete directories
+			continue
+
+		print 'TD dest ==', dest
+
 		if path_exists(dest):
 			if DRY_RUN:
 				not_str = 'not '
@@ -978,10 +1010,13 @@ def treewalk_tasks(args, dir, files):
 	if not dest_dir:
 		dest_dir = '/'
 
-	for file in files:
+	n = 0
+	nr_files = len(files)
+
+	while n < nr_files:
+		file = files[n]
+
 		full_path = os.path.join(dir, file)
-		if path_isdir(full_path):
-			continue
 
 		verbose('checking $masterdir%s' % full_path[master_len:])
 
@@ -989,16 +1024,25 @@ def treewalk_tasks(args, dir, files):
 
 		dest = strip_group_file(dest, full_path, cfg, all_groups, groups)
 		if not dest:
+			files.remove(file)
+			nr_files = nr_files - 1
 			continue
 
 #
 #	is this file overridden by another group for this host?
 #
 		if check_overrides(os.path.join(masterdir, 'tasks', dest[1:]), full_path, cfg, groups):
+			files.remove(file)
+			nr_files = nr_files - 1
+			continue
+
+		n = n + 1
+
+		if path_isdir(dest):
 			continue
 
 # run the task
-		run_command(cfg, full_path)
+		run_command(cfg, dest)
 
 
 def run_tasks(cfg):
