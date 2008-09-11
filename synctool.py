@@ -689,26 +689,59 @@ def move_dir(dir):
 		verbose('moving %s to %s.saved             # dry run, update not performed' % (dir, dir))
 
 
-def strip_group_dir(path, cfg, all_groups, groups):
+def strip_group_dir(dir, cfg, all_groups, groups):
 	'''strip the group extension and return the basename, None on error'''
 
-	arr = string.split(path, '.')
+	arr = string.split(dir, '.')
 	if len(arr) > 1 and arr[-1][0] == '_':
 		group_ext = arr[-1][1:]
 
 		if not group_ext in all_groups:
 			master_len = len(cfg['masterdir'])
-			stderr('warning: unknown group on directory $masterdir%s/, skipping' % path[master_len:])
+			stderr('warning: unknown group on directory $masterdir%s/, skipping' % dir[master_len:])
 			return None
 
 		if not group_ext in groups:
 			master_len = len(cfg['masterdir'])
-			verbose('skipping directory $masterdir%s/, it is not one of my groups' % path[master_len:])
+			verbose('skipping directory $masterdir%s/, it is not one of my groups' % dir[master_len:])
 			return None
 
 		return string.join(arr[:-1], '.')		# strip the 'group' or 'host' extension
 
-	return path
+	return dir
+
+
+def strip_group_file(filename, full_path, cfg, all_groups, groups):
+	'''strip group extension and return basename, None on error'''
+
+	if path_isdir(full_path):
+		return strip_group_dir(full_path, cfg, all_groups, groups)
+
+	arr = string.split(filename, '.')
+
+	if len(arr) <= 1:
+		master_len = len(cfg['masterdir'])
+		stderr('warning: no extension on $masterdir%s, skipping' % full_path[master_len:])
+		return None
+
+	if arr[-1][0] != '_':
+		master_len = len(cfg['masterdir'])
+		stderr('warning: no underscored extension on $masterdir%s, skipping' % full_path[master_len:])
+		return None
+
+	group_ext = arr[-1][1:]
+
+	if not group_ext in all_groups:
+		master_len = len(cfg['masterdir'])
+		stderr('warning: unknown group on $masterdir%s, skipping' % full_path[master_len:])
+		return None
+
+	if not group_ext in groups:
+		master_len = len(cfg['masterdir'])
+		verbose('skipping $masterdir%s, it is not one of my groups' % full_path[master_len:])
+		return None
+
+	return string.join(arr[:-1], '.')		# strip the 'group' or 'host' extension
 
 
 def treewalk_overlay(args, dir, files):
@@ -739,33 +772,18 @@ def treewalk_overlay(args, dir, files):
 		verbose('checking $masterdir%s' % full_path[master_len:])
 
 		dest = os.path.join(dest_dir, file)
-
-		arr = string.split(dest, '.')
-
-		if not path_isdir(full_path):
-			if len(arr) <= 1:
-				stderr('warning: no extension on $masterdir%s, skipping' % full_path[master_len:])
-				continue
-
-			if arr[-1][0] != '_':
-				stderr('warning: no underscored extension on $masterdir%s, skipping' % full_path[master_len:])
-				continue
-
-		if len(arr) > 1 and arr[-1][0] == '_':
-			group_ext = arr[-1][1:]
-
-			if not group_ext in all_groups:
-				stderr('warning: unknown group on $masterdir%s, skipping' % full_path[master_len:])
-				continue
-
-			if not group_ext in groups:
-				verbose('skipping $masterdir%s, it is not one of my groups' % full_path[master_len:])
-				continue
-
-			dest = string.join(arr[:-1], '.')		# strip the 'group' or 'host' extension
+#
+#	check for valid group
+#
+		dest = strip_group_file(dest, full_path, cfg, all_groups, groups)
+		if not dest:
+			continue
 
 #
 #	is this file overridden by another group for this host?
+#
+#	NB. This only works for this directory, there may still be another directory tree
+#	    that overrides this file
 #
 		override = None
 
@@ -910,28 +928,9 @@ def treewalk_delete(args, dir, files):
 		if os.path.isdir(full_path):
 			continue
 
-		arr = string.split(full_path, '.')
-
-		if len(arr) <= 1:
-			stderr('warning: no extension on $masterdir%s, skipping' % full_path[master_len:])
+		full_path = strip_group_file(full_path, full_path, cfg, all_groups, groups)
+		if not full_path:
 			continue
-
-		if arr[-1][0] != '_':
-			stderr('warning: no underscored extension on $masterdir%s, skipping' % full_path[master_len:])
-			continue
-
-		if len(arr) > 1 and arr[-1][0] == '_':
-			group_ext = arr[-1][1:]
-
-			if not group_ext in all_groups:
-				stderr('warning: unknown group on $masterdir%s, skipping' % full_path[master_len:])
-				continue
-
-			if not group_ext in groups:
-				verbose('skipping $masterdir%s, it is not one of my groups' % full_path[master_len:])
-				continue
-
-			full_path = string.join(arr[:-1], '.')		# strip the 'group' or 'host' extension
 
 		dest = full_path[delete_len:]
 		if path_exists(dest):
@@ -980,28 +979,9 @@ def treewalk_tasks(args, dir, files):
 
 		dest = os.path.join(dest_dir, file)
 
-		arr = string.split(dest, '.')
-
-		if len(arr) <= 1:
-			stderr('warning: no extension on $masterdir%s, skipping' % full_path[master_len:])
+		dest = strip_group_file(dest, full_path, cfg, all_groups, groups)
+		if not dest:
 			continue
-
-		if arr[-1][0] != '_':
-			stderr('warning: no underscored extension on $masterdir%s, skipping' % full_path[master_len:])
-			continue
-
-		if len(arr) > 1 and arr[-1][0] == '_':
-			group_ext = arr[-1][1:]
-
-			if not group_ext in all_groups:
-				stderr('warning: unknown group on $masterdir%s, skipping' % full_path[master_len:])
-				continue
-
-			if not group_ext in groups:
-				verbose('skipping $masterdir%s, it is not one of my groups' % full_path[master_len:])
-				continue
-
-			dest = string.join(arr[:-1], '.')		# strip the 'group' or 'host' extension
 
 #
 #	is this file overridden by another group for this host?
