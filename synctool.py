@@ -762,6 +762,31 @@ def check_overrides(path, full_path, cfg, groups):
 	return 0
 
 
+def compose_path(path):
+	'''return a full destination path without any group extensions in subdirectory names'''
+	'''e.g. /etc/sysconfig._group1/ifcfg-eth0._host1 => /etc/sysconfig/ifcfg-eth0'''
+
+	arr = string.split(path, '/')
+
+	newarr = []
+
+#
+#	we already know that this path is not going to be overridden any more, so
+#	we can do this a bit hackish and simply strip all/any group extensions
+#
+	for part in arr:
+		arr2 = string.split(part, '.')
+		if len(arr2) > 1 and arr2[-1][0] == '_':
+			newpart = string.join(arr2[:-1], '.')
+			newarr.append(newpart)
+		else:
+			newarr.append(part)
+
+	newpath = string.join(newarr, '/')
+#	verbose('compose_path(%s) => %s' % (path, newpath))
+	return newpath
+
+
 def treewalk_overlay(args, dir, files):
 	'''scan the overlay directory and check against the live system'''
 
@@ -804,6 +829,8 @@ def treewalk_overlay(args, dir, files):
 			continue
 
 		n = n + 1
+
+		dest = compose_path(dest)
 
 #
 #	if file is updated, run the appropriate on_update command
@@ -950,9 +977,7 @@ def treewalk_delete(args, dir, files):
 #
 		dest = strip_group_file(dest, full_path, cfg, all_groups, groups)
 		if not dest:
-			print 'TD remove %s' % file
 			files.remove(file)			# this is important for directories
-			print 'TD', files
 			nr_files = nr_files - 1
 			continue
 
@@ -960,18 +985,16 @@ def treewalk_delete(args, dir, files):
 #	is this file/dir overridden by another group for this host?
 #
 		if check_overrides(os.path.join(delete_path, dest[1:]), full_path, cfg, groups):
-			print 'TD remove 2 %s' % file
 			files.remove(file)			# this is important for directories
-			print 'TD', files
 			nr_files = nr_files - 1
 			continue
 
 		n = n + 1
 
+		dest = compose_path(dest)
+
 		if os.path.isdir(dest):			# do not delete directories
 			continue
-
-		print 'TD dest ==', dest
 
 		if path_exists(dest):
 			if DRY_RUN:
@@ -1037,6 +1060,8 @@ def treewalk_tasks(args, dir, files):
 			continue
 
 		n = n + 1
+
+		dest = compose_path(dest)
 
 		if path_isdir(dest):
 			continue
