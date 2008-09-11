@@ -882,8 +882,23 @@ def treewalk_delete(args, dir, files):
 			continue
 
 		arr = string.split(full_path, '.')
-		if len(arr) > 1 and arr[-1] in all_groups:
-			if not arr[-1] in groups:
+
+		if len(arr) <= 1:
+			stderr('warning: no extension on $masterdir%s, skipping' % full_path[master_len:])
+			continue
+
+		if arr[-1][0] != '_':
+			stderr('warning: no underscored extension on $masterdir%s, skipping' % full_path[master_len:])
+			continue
+
+		if len(arr) > 1 and arr[-1][0] == '_':
+			group_ext = arr[-1][1:]
+
+			if not group_ext in all_groups:
+				stderr('warning: unknown group on $masterdir%s, skipping' % full_path[master_len:])
+				continue
+
+			if not group_ext in groups:
 				verbose('skipping $masterdir%s, it is not one of my groups' % full_path[master_len:])
 				continue
 
