@@ -1102,6 +1102,12 @@ def single_files(cfg, filename):
 		stderr('missing filename')
 		return (0, None)
 
+#
+#	make an absolute path
+#
+	if filename[0] != '/':
+		filename = os.path.join(os.getcwd(), filename)
+
 	hostname = cfg['hostname']
 	masterdir = cfg['masterdir']
 	groups = cfg['host'][hostname]
@@ -1115,30 +1121,36 @@ def single_files(cfg, filename):
 		return (0, None)
 
 	dest = filename
+	full_path = base_path
 
-	if dest[0] == '/':
-		src = os.path.join(base_path, dest[1:])
-	else:
-		src = os.path.join(base_path, dest)
+	for part in string.split(filename, '/'):
+		if not part:				# it started with a '/'
+			continue
+
+		overridden = 0
+		for group in groups:
+			src = os.path.join(full_path, '%s._%s' % (part, group))
+			if path_exists(src):
+				overridden = 1
+				break
+
+		if overridden:
+			full_path = src
+			continue
+
 #
-#	see if there are any overrides for this file
+#	Mind that files in the synctree must end with a group extension
+#	So it is correct to use path_isdir() here
 #
-	full_path = None
-	for group in groups:
-		override = '%s._%s' % (src, group)
-
-		if path_exists(override):
-			if full_path != override:
-				verbose('override by $masterdir%s' % override[master_len:])
-				full_path = override
-			break
-
-	if not full_path:
-		if not path_exists(src):
+		src = os.path.join(full_path, part)
+		if not path_isdir(src):
+			verbose('checking against %s' % src)
 			stderr('%s is not in the synctool tree' % dest)
 			return (0, None)
 
 		full_path = src
+
+	verbose('checking against %s' % full_path)
 
 	changed = compare_files(full_path, dest)
 	if not changed:
