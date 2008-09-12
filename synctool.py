@@ -1507,7 +1507,7 @@ def usage():
 	print 'synctool can help you administer your cluster of machines'
 	print 'Note that by default, it does a dry-run, unless you specify --fix'
 	print
-	print 'Written by Walter de Jong <walter@sara.nl> (c) 2003-2006'
+	print 'Written by Walter de Jong <walter@sara.nl> (c) 2003-2008'
 
 
 def main():
