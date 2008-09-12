@@ -3,6 +3,14 @@
 #	overlay	WJ106
 #
 
+'''WdJ: overlay is no longer functionally compatible with synctool.'''
+'''     The main reason for this is that synctool now works with'''
+'''     underscored group extensions, and supports group extensions'''
+'''     on directories.'''
+
+'''This code is still provided as proof-of-concept.'''
+
+
 import sys
 import os
 import os.path
@@ -566,6 +574,15 @@ def main():
 
 
 if __name__ == '__main__':
+	print 'WdJ: overlay is no longer functionally compatible with synctool.'
+	print '     The main reason for this is that synctool now works with'
+	print '     underscored group extensions, and supports group extensions'
+	print '     on directories.'
+	print
+	print "(maybe I'll fix this later, but I don't think so ... use synctool instead)"
+
+	sys.exit(1)
+
 	main()
 
 # EOB
