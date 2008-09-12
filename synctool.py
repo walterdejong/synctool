@@ -1094,13 +1094,18 @@ def always_run(cfg):
 		run_command(cfg, cmd)
 
 
-def single_files(cfg, filename):
-	'''check/update a single file'''
-	'''returns (1, path_in_synctree) if file is different'''
+def find_synctree(cfg, filename):
+	'''helper function for single_files() and diff_files()'''
+	'''find the path in the synctree for a given filename'''
 
-	if not filename:
-		stderr('missing filename')
-		return (0, None)
+	hostname = cfg['hostname']
+	masterdir = cfg['masterdir']
+	groups = cfg['host'][hostname]
+
+	base_path = os.path.join(masterdir, 'overlay')
+	if not os.path.isdir(base_path):
+		stderr('error: overlay directory %s does not exist' % base_path)
+		return None
 
 #
 #	make an absolute path
@@ -1108,19 +1113,6 @@ def single_files(cfg, filename):
 	if filename[0] != '/':
 		filename = os.path.join(os.getcwd(), filename)
 
-	hostname = cfg['hostname']
-	masterdir = cfg['masterdir']
-	groups = cfg['host'][hostname]
-	all_groups = make_all_groups(cfg)
-
-	master_len = len(masterdir)
-
-	base_path = os.path.join(masterdir, 'overlay')
-	if not os.path.isdir(base_path):
-		stderr('error: overlay directory %s does not exist' % base_path)
-		return (0, None)
-
-	dest = filename
 	full_path = base_path
 
 	for part in string.split(filename, '/'):
@@ -1145,17 +1137,32 @@ def single_files(cfg, filename):
 		src = os.path.join(full_path, part)
 		if not path_isdir(src):
 			verbose('checking against %s' % src)
-			stderr('%s is not in the synctool tree' % dest)
-			return (0, None)
+			stderr('%s is not in the synctool tree' % filename)
+			return None
 
 		full_path = src
 
+	return full_path
+
+
+def single_files(cfg, filename):
+	'''check/update a single file'''
+	'''returns (1, path_in_synctree) if file is different'''
+
+	if not filename:
+		stderr('missing filename')
+		return (0, None)
+
+	full_path = find_synctree(cfg, filename)
+	if not full_path:
+		return (0, None)
+
 	verbose('checking against %s' % full_path)
 
-	changed = compare_files(full_path, dest)
+	changed = compare_files(full_path, filename)
 	if not changed:
-		stdout('%s is up to date' % dest)
-		unix_out('# %s is up to date\n' % dest)
+		stdout('%s is up to date' % filename)
+		unix_out('# %s is up to date\n' % filename)
 
 	return (changed, full_path)
 
@@ -1171,8 +1178,8 @@ def diff_files(cfg, filename):
 
 	DRY_RUN=1							# be sure that it doesn't do any updates
 
-	(changed, sync_path) = single_files(cfg, filename)
-	if not changed:
+	sync_path = find_synctree(cfg, filename)
+	if not sync_path:
 		return
 
 	if UNIX_CMD:
