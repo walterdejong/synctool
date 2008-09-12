@@ -1,0 +1,6 @@
+Here are some helper scripts that are handy when using synctool.
+
+Mind that they require a tool known as 'checkconfig' -- checkconfig
+behaves like IRIX chkconfig. If you don't have it, simply comment-out
+the lines since it is only used as an added safety.
+
