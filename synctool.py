@@ -692,13 +692,18 @@ def move_dir(dir):
 def strip_group_dir(dir, full_path, cfg, all_groups, groups):
 	'''strip the group extension and return the basename, None on error'''
 
-	arr = string.split(dir, '.')
+	parts = string.split(dir, '/')
+	if not parts:
+		arr = string.split(dir, '.')
+	else:
+		arr = string.split(parts[-1], '.')
+
 	if len(arr) > 1 and arr[-1][0] == '_':
 		group_ext = arr[-1][1:]
 
 		if not group_ext in all_groups:
 			master_len = len(cfg['masterdir'])
-			stderr('warning: unknown group on directory $masterdir%s/, skipping' % full_path[master_len:])
+			stderr('warning: unknown group %s on directory $masterdir%s/, skipping' % (group_ext, full_path[master_len:]))
 			return None
 
 		if not group_ext in groups:
@@ -706,8 +711,13 @@ def strip_group_dir(dir, full_path, cfg, all_groups, groups):
 			verbose('skipping directory $masterdir%s/, it is not one of my groups' % full_path[master_len:])
 			return None
 
-		return string.join(arr[:-1], '.')		# strip the 'group' or 'host' extension
+		if not parts:
+			dir = string.join(arr[:-1], '.')
+		else:
+			dir = string.join(arr[:-1], '.')
+			dir = string.join(parts[:-1], '/') + '/' + dir
 
+#	stderr('TD returning dir == %s' % dir)
 	return dir
 
 
@@ -757,6 +767,10 @@ def check_overrides(path, full_path, cfg, groups):
 	if override and full_path != override:
 		master_len = len(cfg['masterdir'])
 		verbose('overridden by $masterdir%s' % override[master_len:])
+
+		if path_isdir(override):
+			return 2
+
 		return 1
 
 	return 0
@@ -823,8 +837,11 @@ def treewalk_overlay(args, dir, files):
 #
 #	is this file/dir overridden by another group for this host?
 #
-		if check_overrides(os.path.join(masterdir, 'overlay', dest[1:]), full_path, cfg, groups):
-			files.remove(file)			# this is important for directories
+		val = check_overrides(os.path.join(masterdir, 'overlay', dest[1:]), full_path, cfg, groups)
+		if val:
+			if val != 2:				# do not prune directories
+				files.remove(file)
+
 			nr_files = nr_files - 1
 			continue
 
@@ -1507,7 +1524,7 @@ def usage():
 	print 'synctool can help you administer your cluster of machines'
 	print 'Note that by default, it does a dry-run, unless you specify --fix'
 	print
-	print 'Written by Walter de Jong <walter@sara.nl> (c) 2003-2008'
+	print 'Written by Walter de Jong <walter@sara.nl> (c) 2003-2006'
 
 
 def main():
