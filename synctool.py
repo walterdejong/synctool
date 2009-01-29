@@ -753,7 +753,7 @@ def strip_group_file(filename, full_path, cfg, all_groups, groups):
 
 	if len(arr) > 2 and arr[-2] == 'post':
 		master_len = len(cfg['masterdir'])
-		stderr('warning: skipping post script $masterdir%s' % full_path[master_len:])
+#		stderr('warning: skipping post script $masterdir%s' % full_path[master_len:])
 		return None
 
 	return string.join(arr[:-1], '.')		# strip the 'group' or 'host' extension
