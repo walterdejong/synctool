@@ -1,0 +1,370 @@
+#!/usr/bin/perl -w
+
+#
+# rsynctool-upload, last update: Nov 25 2008, Huub Stoffers
+#
+#	HJS, 20081125:
+#		1. Added dirsuffix and dirdepth functionality
+#		2. Added check for "destination directory does not exist yet"
+#		3. Added check against shell wildcar usage
+#
+#	HJS, 20081114:
+#		1. Adapted from .$Suffix to new ._$suffix convention.
+#		   scp over the management net.
+#		2. Adapted to new interface specification in synctool.conf
+#		3. Added a default distrib (suse10).
+#
+
+
+use strict;
+use Getopt::Long;
+
+my ($PROGNAM, $DISTROOT, $DEFAULT_DISTRIB, $SCP, $POLICY, $SUFFIX, $DIRSUFFIX, $DIRDEPTH, $SUFFIXGLUE, %VALIDTAG, %INTERFACE, $DRYRUN);
+
+$PROGNAM = $0;
+$PROGNAM =~ s/^.*\///;
+
+#
+# $DISTROOT is the directory where synctool distributions are
+# rooted - every distribution in its own subdirectory directly 
+# under the $DISTROOT.
+#
+$DISTROOT="/var/lib/synctool";
+$DEFAULT_DISTRIB="suse10";
+
+#
+# Absolute path to the scp command to
+#
+$SCP="/usr/bin/scp";
+
+#
+# The default policy is "HOSTSUFFIX", depending on the
+# specification of commandline arguments this can be
+# changed into "NOSUFFIX" or "SUFFIX" (a specific fixed
+# suffix or "tag", for all upload items. If $POLICY is set
+# to "SUFFIX", the $SUFFIX variable contains the
+# fixed "tag".  If the policy is not "SUFFIX", the
+# $SUFFIX variable is not used.
+#
+$POLICY="HOSTSUFFIX";
+$SUFFIXGLUE="._";
+
+#
+# By default we just do a "dry run".
+#
+$DRYRUN = 1;
+
+#
+# Default dirdepth (for dirsuffix) is 1, just the parent directory, not the grandparent or deeper.
+#
+$DIRDEPTH=1;
+
+
+sub usage {
+die <<EOT
+usage:	$PROGNAM [ --apply ]  [ --distrib <dist> ]
+		 [ --suffix <tag> | --nosuffix ]
+                 [ --dirsuffix < tag> [ --dirdepth <n> ] ] <host>:/<file> ..
+
+	By means of scp, $PROGNAM uploads the item(s) specified in terms
+	an of absolute path  -  <host>:/<file>  -  to the appropriate
+	place(s) in the "overlay" section of the synctool distribution.
+	The scp command(s) are performed with a "-p" switch, in order
+	to perserve attributes such as permissions and last access time
+	from the original.
+        Note that, multiple upload targets can be specified, but each
+        must be an absolute path to a file on a host. Because of ambiguity
+        with suffixes to be added, directories or constructions containing
+        unexpanded shell wildcard ("glob") characters, cannot be used.
+        Note also that upload targets cannot contain white space.
+	The synctool distribution is denoted by the argument to the
+	"--distrib" switch".  The distribution must be rooted in a
+	directory named $DISTROOT/<dist>. $PROGNAM exits with a
+	diagnostic messages if such a directory is not found for the
+	specified distribution. If no distribution is specified,
+	$DEFAULT_DISTRIB is used as a default.
+	In order to be unabiguously parsable into components, the <host>
+	component must indeed be a hostname, NOT an IP number. The 
+	The colon (:) and slash (/) between the <host> and <file>
+	component is required. The <file> component must not contain
+	any white space (space, tab, newline etc.).  If any of these
+	requirements is not met by a specified upload item,
+	$PROGNAM, will skip the upload item while warning that the
+	particular item cannot be properly parsed.
+	If no "--suffix or "--nosuffix" switch is specified, uploaded
+	files are tagged with a suffix corresponding to the host from
+	which they are uploaded. Thus, by default, a file uploaded
+	from a particular host becomes a "norm" for that host only.
+	Note that only the short hostname is used as tag, even if fully
+	qualified name is used to specify the host.
+	By specifying "--nosuffix", no tag is used at all, so files
+	uploaded from a particular host will become a "norm" all hosts
+	that use the synctool distribution.
+	By specifying "--suffix <tag>" the uploaded file will be tagged
+	with the specified tag. This is a convenient way to make the
+	uploaded file into a norm for a subgroup of hosts - e.g.
+	"batch" or "interactive". Note that the string  "$SUFFIXGLUE"
+        is used to "glue" the suffix to the end of a filename.
+        Suffixes should not themselves contain a "$SUFFIXGLUE" string.
+        To guard against "distribution pollution", by
+	typos and other trivial mistakes, $PROGNAM reads the
+	configuration file of the distribution and accepts only
+	hostnames and suffixes that are defined in the configuration
+	file.
+	The "--dirsuffix" switch enables you to specify a suffix for the
+	receiving parent directory, or to the grandparent directory
+	(and so on) as well if you specify "--dirdepth" greater than the
+	default of 1.
+	Note that a "dry run", in which commands that would be
+	executed are just printed (along with possible comments) is the
+	the default run mode. To actually execute the uploads, the
+	"--apply" switch must be used.
+EOT
+}
+
+
+sub upload {
+
+#
+# Parse and check a single upload item and do - or "dry run" - the
+# actual upload.
+#
+	my ($upload_item, $destroot) = @_;
+	my ($host, $interface, $abspath, $dest, $destdir, $destfile, $i, $cmd);
+
+	if ($upload_item =~ /^([a-z0-9-.]+)[:](\/\S+)$/) {
+		$host = $1;
+		$abspath = $2;
+	}
+	else {
+		die "$PROGNAM: \"$upload_item\" cannot be properly parsed\n";
+	}
+	
+	if ($abspath =~ m/[*?{}[\]]/) {
+		die "$PROGNAM: upload target cannot contain shell wildcards characters\n";
+	}
+	if ($abspath =~ m/(.*)\/$/) {
+		die "$PROGNAM: Trailing slash, upload target must be a file, not a directory\n";
+	}
+	
+	# Checking the configuration, first make sure we have a short hostname.
+	$host =~ s/\..*$//;
+	
+	# Establish the default.
+	$interface = $host;
+
+	if (! exists($INTERFACE{$host})) {
+		warn "$PROGNAM: host \"$host\" is unknown in the distribution configuration\n";
+	}
+	else {
+		$interface = $INTERFACE{$host};
+		if ($host ne $interface) {
+			# Rewrite upload item int terms of the interface to use.
+			$upload_item = "$interface:$abspath";
+			warn "$PROGNAM: Using interface $interface for host $host\n";
+		}
+	}
+	
+	$abspath =~ m/^(.+)\/(.+)$/;
+	$destdir = $1;
+	$destfile = $2;
+
+	if (defined($DIRSUFFIX)) {
+		$destdir = "$destdir$SUFFIXGLUE$DIRSUFFIX";
+		$i = $DIRDEPTH - 1;
+
+
+		#
+		# Only in case not just the parent directory has to have a dirsuffix we enter the loop:
+		# 
+		my $destsub;
+		while ($i > 0) {
+			$i--;
+			if ($destdir =~ m/^(.+)\/(.+)$/ && defined($1) && defined($2)) {
+				$destdir = "$1$SUFFIXGLUE$DIRSUFFIX";
+				if (defined($destsub)) {
+					$destsub = "$2/$destsub";
+				}
+				else {
+					$destsub = $2;
+				}
+			}
+			else { 
+				die "$PROGNAM: Invalid \"dirdepth\" for $upload_item\n";
+			}
+		}
+		
+		#
+		# If we went throught the loop, $destsub has a value, and we must adapt $destdir
+		# accordingly to have the correct destination path again.
+		#
+		if (defined($destsub)) {
+			$destdir = "$destdir/$destsub";
+		}
+	}
+
+	if ($POLICY eq "NOSUFFIX") {
+		$dest = "$destroot$destdir/$destfile";
+	}
+	elsif ($POLICY eq "SUFFIX") {
+		$dest = "$destroot$destdir/$destfile$SUFFIXGLUE$SUFFIX";
+	}
+	else {
+		if (! exists($VALIDTAG{$host})) {
+			warn "$PROGNAM: suffix \"$host\" is unknown in the distribution configuration\n";
+			if ($DRYRUN) {
+				print "# \"$upload_item\" is skipped\n";
+			}
+			else {
+				warn "$PROGNAM: \"$upload_item\" is skipped\n";
+			}
+			return;
+		}
+		$dest = "$destroot$destdir/$destfile$SUFFIXGLUE$host";
+	}
+
+
+	$cmd = "$SCP -p $upload_item $dest";
+
+	if ($DRYRUN) {
+		print "$cmd\n";
+		if (-f $dest) {
+			print "# \"$dest\" exists, will be overwritten\n";
+		}
+		if (! -d "$destroot$destdir") {
+			print "# No directory \"$destroot$destdir\", create first with proper uid, gid and permissions\n";
+		}
+	}
+	else {
+		if (! -d "$destroot$destdir") {
+			die "$PROGNAM: No directory \"$destroot$destdir\", create first with proper uid, gid and permissions\n";
+		}
+		if (system($cmd) != 0) {
+			die "$PROGNAM: \"$cmd\" exited with non-zero status!\n";
+		}
+	}
+}
+
+
+sub readconfig {
+
+#
+# Read the synctool.conf file of the distribution and store the
+# host names and host group tags in the VALIDTAG hash.
+#
+
+	my $configfile = $_[0];
+	
+	local *FH;
+	my ($line, $item, @list, $hostname);
+
+	if (!open(FH, "< $configfile")) {
+		die "$PROGNAM: failed to open $configfile\n";
+	}
+
+	while (defined($line = <FH>)) {
+		chomp($line);
+		if ($line =~ /^host\s+(\w+.*)$/) {
+			@list = split(/\s+/, $1);
+			# The first entry in the list MUST be the hostname, and it
+			# is also the default interface specification. Thus, the
+			# hostname is both the key and the default value for the
+			# interface table.
+			$hostname = $list[0];
+			$INTERFACE{$hostname} = $hostname;
+			foreach $item (@list) {
+				$VALIDTAG{$item} = 1;
+				if ($item =~ /^interface:(\S+)/) {
+					$INTERFACE{$hostname} = $1;
+				}
+			}
+		}
+	}
+	close(FH);
+}
+
+
+sub main {
+
+	my ($distrib, $suffix, $nosuffix, $dirsuffix, $dirdepth, $apply, $help, $configfile, $item);
+
+	if (!GetOptions(
+		"distrib=s"	=> \$distrib,
+		"suffix=s"	=> \$suffix,
+		"nosuffix"	=> \$nosuffix,
+		"dirsuffix=s"	=> \$dirsuffix,
+		"dirdepth=i"	=> \$dirdepth,
+		"apply"		=> \$apply,
+		"help"		=> \$help
+	)) {
+		usage();
+	}
+
+	if (defined($help)) {
+		usage();
+	}
+
+	if (!defined($distrib)) {
+		warn "$PROGNAM: no distribution specified, assuming default ($DEFAULT_DISTRIB)\n";
+		$distrib = $DEFAULT_DISTRIB;	
+	}
+	if (! -d "$DISTROOT/$distrib") {
+		die "$PROGNAM: distribution $DISTROOT/$distrib not found\n";
+	}
+
+	readconfig("$DISTROOT/$distrib/synctool.conf");
+
+	if (defined($nosuffix)) {
+		if (defined($suffix)) {
+			die "$PROGNAM: --suffix / --nosuffix option conflict\n";
+		}
+		$POLICY = "NOSUFFIX";
+	}
+	else {
+		if (defined($suffix)) {
+			if (! exists($VALIDTAG{$suffix})) {
+				die "$PROGNAM: suffix \"$suffix\" is unknown in the distribution configuration\n";
+			}
+			$POLICY = "SUFFIX";
+			$SUFFIX = "$suffix";
+		}
+	}
+
+	if (defined($dirsuffix)) {
+		if (! exists($VALIDTAG{$dirsuffix})) {
+			die "$PROGNAM: directory suffix \"$dirsuffix\" is unknown in the distribution configuration\n";
+		}
+		$DIRSUFFIX = $dirsuffix;
+	}
+
+	if (defined($dirdepth)) {
+		if ($dirdepth < 1) {
+			die "$PROGNAM: invalid \"dirdepth\" value\n";
+		}
+		if (defined($dirsuffix)) {
+			$DIRDEPTH = $dirdepth;
+		}
+		else {
+			warn "$PROGNAM: No dirsuffix specified, dirdepth value is not applicable\n"
+		}
+	}
+
+	if (scalar(@ARGV) == 0) {
+		die "$PROGNAM: no upload items specified\n";
+	} 
+
+	if ($apply) {
+		$DRYRUN = 0;
+	}
+	if ($DRYRUN) {
+		warn "\n\t$PROGNAM DRY RUN, not doing any uploads ...\n\n";
+	}
+	foreach $item (@ARGV) {
+		upload($item, "$DISTROOT/$distrib/overlay");
+	}
+}
+
+
+&main;
+
+# EOT
