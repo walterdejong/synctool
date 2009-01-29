@@ -734,11 +734,6 @@ def strip_group_file(filename, full_path, cfg, all_groups, groups):
 		stderr('warning: no extension on $masterdir%s, skipping' % full_path[master_len:])
 		return None
 
-	if arr[-1] == 'post':
-		master_len = len(cfg['masterdir'])
-#		stderr('warning: skipping post script $masterdir%s' % full_path[master_len:])
-		return None
-
 	if arr[-1][0] != '_':
 		master_len = len(cfg['masterdir'])
 		stderr('warning: no underscored extension on $masterdir%s, skipping' % full_path[master_len:])
@@ -754,6 +749,11 @@ def strip_group_file(filename, full_path, cfg, all_groups, groups):
 	if not group_ext in groups:
 		master_len = len(cfg['masterdir'])
 		verbose('skipping $masterdir%s, it is not one of my groups' % full_path[master_len:])
+		return None
+
+	if len(arr) > 2 and arr[-2] == 'post':
+		master_len = len(cfg['masterdir'])
+		stderr('warning: skipping post script $masterdir%s' % full_path[master_len:])
 		return None
 
 	return string.join(arr[:-1], '.')		# strip the 'group' or 'host' extension
@@ -881,13 +881,13 @@ def on_update(cfg, dest, full_path=None):
 			run_command(cfg, cmd)
 
 #
-#	if a .post script exists, run it
+#	if a .post script exists for this file with this group extension, run it
 #
 	if full_path:
 		arr = string.split(full_path, '.')
 
 		if len(arr) > 1 and arr[-1][0] == '_':
-			script = '%s.post' % string.join(arr[:-1], '.')
+			script = '%s.post.%s' % (string.join(arr[:-1], '.'), arr[-1])
 
 			if path_exists(script):
 				run_command(cfg, script)
