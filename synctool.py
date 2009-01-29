@@ -735,6 +735,10 @@ def strip_group_file(filename, full_path, cfg, all_groups, groups):
 		return None
 
 	if arr[-1][0] != '_':
+		if arr[-1] == 'post':		# it's a .post script
+#			stderr('warning: skipping post script $masterdir%s' % full_path[master_len:])
+			return None
+
 		master_len = len(cfg['masterdir'])
 		stderr('warning: no underscored extension on $masterdir%s, skipping' % full_path[master_len:])
 		return None
