@@ -1,13 +1,19 @@
-#!/bin/ksh
+#!/bin/bash
 
 #
-# Toplevel rsynctool script, aster, suse, version
-# Last modified Tue Jun. 20 2006, HJS:
-#	SUSE Linux version, adapted from "aster" version
-#	The SUSE version has its own distribution, with
-#	its own root and config file. So now we have
-#	"teras", "aster", "suse".
-
+# Toplevel rsynctool script, Altix, SuSE version.
+# Last modified HJS 20081112:
+#	Adapted to handle a new generic feature in the configuration file.
+#	An interface specification can now be appended as a field on the
+#	host defining record in the configuration file. This feature was
+#	added to accomodate complex configurations of multihomed hosts
+#	in which the rsynctool master cannot or should NOT use an interface
+#	that equals the official hostname (i.e. that what the target host
+#	specifies it to be when "hostname" -s is run). The new and optional
+#	"interface:" specification is used to direct the rsyncmatser to the
+#	proper interface that should be used for all synctool management
+#	network traffic.
+# 
 PROGNAM=${0##*/}
 AWK=/bin/awk
 SED=/bin/sed
@@ -67,7 +73,7 @@ LOCALHOST=`$HOSTNAME -s`
 if [ $? -ne 0 ]
 then
 	errmsg "Failed to determine (short) local host name"
-	exit
+	exit 1
 fi
 
 if [ ! -r $CONFIGFILE ]
@@ -97,7 +103,15 @@ then
 	for i in $HOSTLIST
 	do
 		## DEBUG ## echo $i
-		j=`echo $i | $AWK -v chk=$i '$1 == "host" && $2 == chk { print $2; }' $CONFIGFILE`	
+		j=`echo $i | \
+		$AWK -v chk=$i '$1 == "host" && $2 == chk {
+			if ($NF ~ /^interface:/) {
+				print substr($NF, 11);
+			}
+			else {
+				print $2;
+			}
+		}' $CONFIGFILE`	
 		if [ $? -ne 0 ]
 		then
 			errmsg "Error parsing configuration file $CONFIGFILE"
@@ -109,6 +123,16 @@ then
 			errmsg "Host \"$i\" not found in configuration file $CONFIGFILE"
 			exit 1
 		fi	
+		if [ -z "$HOSTINTERFACELIST" ]
+		then
+			HOSTINTERFACELIST=$j
+		else
+			HOSTINTERFACELIST="$HOSTINTERFACELIST $j"
+		fi
+		if [ "$i" != "$j" ]
+		then
+			echo "$PROGNAM: Using interface $j for host $i" >&2
+		fi
 	done 
 	shift 2
 fi
@@ -119,13 +143,22 @@ then
 	# No explicit hosts specified, implies all hosts defined in the config file.
 	# So, extract all.
 	#
-	HOSTLIST=`$AWK '$1 == "host" && NF >= 2 { print $2; }' $CONFIGFILE`
+	HOSTINTERFACELIST=`$AWK -v PROGNAM=$PROGNAM '$1 == "host" && NF >= 2 {
+		if ($NF ~ /^interface/) {
+			interface = substr($NF, 11);
+			print interface;
+			print PROGNAM ": Using interface " interface " for host "$2 | "/bin/cat 1>&2";
+		}
+		else {
+			print $2;
+		}
+	}' $CONFIGFILE`
 	if [ $? -ne 0 ]
 	then
 		errmsg "Error parsing configuration file $CONFIGFILE"
 		exit 1
 	fi
-	if [ -z "$HOSTLIST" ]
+	if [ -z "$HOSTINTERFACELIST" ]
 	then
 		errmsg "No valid hosts after consulting $CONFIGFILE"
 		exit 1
@@ -135,26 +168,19 @@ fi
 # rsynctool-single uses this
 export CONFIGFILE
 
-for host in $HOSTLIST
+for host in $HOSTLIST $HOSTINTERFACELIST
 do
 	if [ "$host" == "$LOCALHOST" ]
 	then
-		echo "Please do not run on the server $host"
+		errmsg "Do not run $RSYNCTOOL on the rsync server itself ($host)"
 		exit 1
-
-		#
-		# At present this cannot happen in the aster version, since in
-		# the above code all hosts are checked against the aster synctool
-		# configuration and  the local server host is not a valid host
-		# since, being an  Irix (teras) system rather than an Altix (aster),
-		# it does not occur in that file.
-		#
-		$SYNCTOOL $* | $SED "s/^/$host: /" &
-	else
-		$RSYNCTOOL $host $* | $SED "s/^/$host: /" &
 	fi
+done
+
+for host in $HOSTINTERFACELIST
+do
+	$RSYNCTOOL $host $* | sed "s/^/${host}: /" &
 done
 wait
 
 # EOB
-
