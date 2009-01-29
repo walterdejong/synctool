@@ -734,6 +734,11 @@ def strip_group_file(filename, full_path, cfg, all_groups, groups):
 		stderr('warning: no extension on $masterdir%s, skipping' % full_path[master_len:])
 		return None
 
+	if arr[-1] == 'post':
+		master_len = len(cfg['masterdir'])
+#		stderr('warning: skipping post script $masterdir%s' % full_path[master_len:])
+		return None
+
 	if arr[-1][0] != '_':
 		master_len = len(cfg['masterdir'])
 		stderr('warning: no underscored extension on $masterdir%s, skipping' % full_path[master_len:])
@@ -853,10 +858,10 @@ def treewalk_overlay(args, dir, files):
 #	if file is updated, run the appropriate on_update command
 #
 		if compare_files(full_path, dest):
-			on_update(cfg, dest)
+			on_update(cfg, dest, full_path)
 
 
-def on_update(cfg, dest):
+def on_update(cfg, dest, full_path=None):
 	'''run on_update command for the dest file'''
 
 	if cfg.has_key('on_update'):
@@ -874,6 +879,18 @@ def on_update(cfg, dest):
 		if update.has_key(dest):
 			cmd = update[dest]
 			run_command(cfg, cmd)
+
+#
+#	if a .post script exists, run it
+#
+	if full_path:
+		arr = string.split(full_path, '.')
+
+		if len(arr) > 1 and arr[-1][0] == '_':
+			script = '%s.post' % string.join(arr[:-1], '.')
+
+			if path_exists(script):
+				run_command(cfg, script)
 
 
 def run_command(cfg, cmd):
@@ -1674,7 +1691,7 @@ def main():
 	elif single_file:
 		(changed, full_path) = single_files(cfg, single_file)
 		if changed:
-			on_update(cfg, full_path)
+			on_update(cfg, single_file, full_path)
 
 	else:
 		overlay_files(cfg)
