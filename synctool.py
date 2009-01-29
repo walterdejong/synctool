@@ -891,6 +891,14 @@ def on_update(cfg, dest, full_path=None):
 
 			if path_exists(script):
 				run_command(cfg, script)
+			else:
+#
+#	.post script with group extension does not exist, maybe try without group extension
+#
+				script = '%s.post' % string.join(arr[:-1], '.')
+
+				if path_exists(script):
+					run_command(cfg, script)
 
 
 def run_command(cfg, cmd):
