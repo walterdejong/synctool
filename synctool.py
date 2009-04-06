@@ -30,6 +30,8 @@ LOGFD=None
 
 UPDATE_CACHE={}
 
+FOUND_SINGLE=None
+
 #
 #	default symlink mode
 #	Linux makes them 0777 no matter what umask you have ...
@@ -1140,55 +1142,96 @@ def always_run(cfg):
 		run_command(cfg, cmd)
 
 
+def treewalk_find(args, dir, files):
+	'''scan the overlay directory to find a single file'''
+
+# it seems rather stupid that this function uses a global variable as a return value,
+# but this is because a callback routine for os.path.walk() can not have a custom return value
+# FOUND_SINGLE must be None before starting the treewalk_find
+	global FOUND_SINGLE
+
+	(cfg, base_path, groups, all_groups, find_file) = args
+	base_len = len(base_path)
+
+	masterdir = cfg['masterdir']
+	master_len = len(masterdir)
+
+	dest_dir = dir[base_len:]
+	if not dest_dir:
+		dest_dir = '/'
+
+	n = 0
+	nr_files = len(files)
+
+	while n < nr_files:
+		file = files[n]
+
+		full_path = os.path.join(dir, file)
+
+		verbose('checking $masterdir%s' % full_path[master_len:])
+
+		dest = os.path.join(dest_dir, file)
+
+		dest = strip_group_file(dest, full_path, cfg, all_groups, groups)
+		if not dest:
+			files.remove(file)			# this is important for directories
+			nr_files = nr_files - 1
+			continue
+
+#
+#	is this file/dir overridden by another group for this host?
+#
+		val = check_overrides(os.path.join(masterdir, 'overlay', dest[1:]), full_path, cfg, groups)
+		if val:
+			if val != 2:				# do not prune directories
+				files.remove(file)
+
+			nr_files = nr_files - 1
+			continue
+
+		n = n + 1
+
+		dest = compose_path(dest)
+
+		if dest == find_file:
+			verbose('found $masterdir%s' % full_path[master_len:])
+			if FOUND_SINGLE:
+				stderr('error: conflict in overlay tree:')
+				stderr('   %s' % FOUND_SINGLE)
+				stderr('   %s' % full_path)
+				stderr('')
+				FOUND_SINGLE = None
+			else:
+				FOUND_SINGLE = full_path
+				return
+
+
 def find_synctree(cfg, filename):
 	'''helper function for single_files() and diff_files()'''
 	'''find the path in the synctree for a given filename'''
 
+	global FOUND_SINGLE
+
 	hostname = cfg['hostname']
 	masterdir = cfg['masterdir']
 	groups = cfg['host'][hostname]
+	all_groups = make_all_groups(cfg)
 
 	base_path = os.path.join(masterdir, 'overlay')
 	if not os.path.isdir(base_path):
-		stderr('error: overlay directory %s does not exist' % base_path)
+		verbose('skipping %s, no such directory' % base_path)
+		base_path = None
+
+	FOUND_SINGLE = None
+
+	if base_path:
+		os.path.walk(base_path, treewalk_find, (cfg, base_path, groups, all_groups, filename))
+
+	if not FOUND_SINGLE:
+		stdout('%s is not in the overlay tree' % filename)
 		return None
 
-#
-#	make an absolute path
-#
-	if filename[0] != '/':
-		filename = os.path.join(os.getcwd(), filename)
-
-	full_path = base_path
-
-	for part in string.split(filename, '/'):
-		if not part:				# it started with a '/'
-			continue
-
-		overridden = 0
-		for group in groups:
-			src = os.path.join(full_path, '%s._%s' % (part, group))
-			if path_exists(src):
-				overridden = 1
-				break
-
-		if overridden:
-			full_path = src
-			continue
-
-#
-#	Mind that files in the synctree must end with a group extension
-#	So it is correct to use path_isdir() here
-#
-		src = os.path.join(full_path, part)
-		if not path_isdir(src):
-			verbose('checking against %s' % src)
-			stderr('%s is not in the synctool tree' % filename)
-			return None
-
-		full_path = src
-
-	return full_path
+	return FOUND_SINGLE
 
 
 def single_files(cfg, filename):
