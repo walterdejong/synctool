@@ -1,0 +1,139 @@
+#! /bin/sh
+#
+#	checkconfig	WJ107
+#
+#	shell scripted version
+#
+
+PROGNAM=${0##*/}
+
+FLAGDIR=/usr/local/etc/checkconfig.d
+
+#
+#	display usage information
+#
+usage() {
+	echo "usage:"
+	echo "        chkconfig [-s]                  # print state of all flags"
+	echo "        chkconfig <flag>                # test flag state"
+	echo "        chkconfig [-f] <flag> <state>   # set flag 'on' or 'off'"
+
+	exit 1
+}
+
+#
+#	show summary of all flags
+#
+checkconfig_show() {
+	for f in "$FLAGDIR"/*
+	do
+		read STATUS < "$f"
+
+		FLAG=${f##*/}
+
+		printf "\t%-30s %s\n" "$FLAG" "$STATUS"
+	done
+
+	exit 0
+}
+
+#
+#	create new flag, $1 is flag name, $2 is on|off
+#
+checkconfig_create() {
+	if [ -z "$1" ]
+	then
+		usage
+	fi
+	if [ -z "$2" ]
+	then
+		usage
+	fi
+
+	if [ "$2" != "on" -a "$2" != "off" ]
+	then
+		echo "${PROGNAM}: invalid state: use 'on' or 'off'"
+		exit 1
+	fi
+
+	echo "$2" >"$FLAGDIR/$1"
+	exit $?
+}
+
+#
+#	set the value of a flag
+#
+checkconfig_set() {
+	if [ ! -f "$FLAGDIR/$1" ]
+	then
+		echo "${PROGNAM}: no such flag '$1'"
+		echo "use '${PROGNAM} -f $1 on' to create and set the flag"
+		exit 1
+	fi
+
+	checkconfig_create "$1" "$2"
+}
+
+
+#
+#	get status of a flag
+#	return 0 : status is "on"
+#	return 1 : status is "off"
+#
+checkconfig_status() {
+	if [ ! -f "$FLAGDIR/$1" ]
+	then
+		exit 1
+	fi
+
+	read STATUS < "$FLAGDIR/$1"
+
+	if [ "$STATUS" = "on" ]
+	then
+		exit 0
+	fi
+	exit 1
+}
+
+
+### main ###
+
+
+if [ -z "$1" -o "$1" = "-s" ]
+then
+	checkconfig_show
+	exit 0
+fi
+
+if [ "$1" = "-h" -o "$1" = "--help" ]
+then
+	usage
+	exit 0
+fi
+
+#
+#	create new flags with option -f
+#
+if [ "$1" = "-f" ]
+then
+	checkconfig_create "$2" "$3"
+	exit $?
+fi
+
+#
+#	set the value of a flag
+#
+if [ ! -z "$2" ]
+then
+	checkconfig_set "$1" "$2"
+	exit $?
+fi
+
+#
+#	give checkconfig status of a particular flag
+#
+checkconfig_status "$1"
+exit $?
+
+# EOB
+
