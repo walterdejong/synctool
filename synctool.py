@@ -3,6 +3,8 @@
 #	synctool	WJ103
 #
 
+import synctool_config
+
 import sys
 import os
 import os.path
@@ -17,9 +19,6 @@ import grp
 import time
 import md5
 
-DEFAULT_CONF='synctool.conf'
-
-CONF_FILE=DEFAULT_CONF
 DRY_RUN=1
 VERBOSE=0
 QUIET=0
@@ -968,27 +967,13 @@ def run_command(cfg, cmd):
 		verbose('  os.system("%s")             # dry run, action not performed' % cmd)
 
 
-def make_all_groups(cfg):
-	'''make a list of all possible groups'''
-
-	all_groups = []
-	host_dict = cfg['host']
-	for host in host_dict.keys():
-		for group in host_dict[host]:
-			if not group in all_groups:
-				all_groups.append(group)
-
-	all_groups.extend(cfg['ignore_groups'])		# although ignored, they are existing groups
-	return all_groups
-
-
 def overlay_files(cfg):
 	'''run the overlay function'''
 
 	hostname = cfg['hostname']
 	masterdir = cfg['masterdir']
 	groups = cfg['host'][hostname]
-	all_groups = make_all_groups(cfg)
+	all_groups = synctool_config.make_all_groups(cfg)
 
 	base_path = os.path.join(masterdir, 'overlay')
 	if not os.path.isdir(base_path):
@@ -1058,7 +1043,7 @@ def delete_files(cfg):
 	hostname = cfg['hostname']
 	masterdir = cfg['masterdir']
 	groups = cfg['host'][hostname]
-	all_groups = make_all_groups(cfg)
+	all_groups = synctool_config.make_all_groups(cfg)
 
 	delete_path = os.path.join(masterdir, 'delete')
 	if not os.path.isdir(delete_path):
@@ -1122,7 +1107,7 @@ def run_tasks(cfg):
 	hostname = cfg['hostname']
 	masterdir = cfg['masterdir']
 	groups = cfg['host'][hostname]
-	all_groups = make_all_groups(cfg)
+	all_groups = synctool_config.make_all_groups(cfg)
 
 	tasks_path = os.path.join(masterdir, 'tasks')
 	if not os.path.isdir(tasks_path):
@@ -1215,7 +1200,7 @@ def find_synctree(cfg, filename):
 	hostname = cfg['hostname']
 	masterdir = cfg['masterdir']
 	groups = cfg['host'][hostname]
-	all_groups = make_all_groups(cfg)
+	all_groups = synctool_config.make_all_groups(cfg)
 
 	base_path = os.path.join(masterdir, 'overlay')
 	if not os.path.isdir(base_path):
@@ -1262,7 +1247,7 @@ def diff_files(cfg, filename):
 	global DRY_RUN
 
 	if not cfg.has_key('diff_cmd'):
-		stderr('error: diff_cmd is undefined in %s' % CONF_FILE)
+		stderr('error: diff_cmd is undefined in %s' % synctool_config.CONF_FILE)
 		return
 
 	DRY_RUN=1							# be sure that it doesn't do any updates
@@ -1278,311 +1263,11 @@ def diff_files(cfg, filename):
 		os.system('%s %s %s' % (cfg['diff_cmd'], filename, sync_path))
 
 
-def read_config(filename):
-	'''read the config file and return cfg structure'''
-
-	if not filename:
-		filename = os.path.join('.', DEFAULT_CONF)
-
-	cfg = {}
-	cfg['ignore_groups'] = []
-
-	if os.path.isdir(filename):
-		filename = os.path.join(filename, DEFAULT_CONF)
-
-# funky ... it is possible to open() directories without problems ...
-	if not os.path.isfile(filename):
-		stderr("no such config file '%s'" % filename)
-		sys.exit(-1)
-
-	try:
-		cwd = os.getcwd()
-	except OSError, reason:
-		cwd = '.'
-
-	filename = os.path.join(cwd, filename)
-	if not QUIET:
-		stdout('using config file: %s' % filename)
-
-	try:
-		f = open(filename, 'r')
-	except IOError, reason:
-		stderr("failed to read config file '%s' : %s" % (filename, reason))
-		sys.exit(-1)
-
-	lineno = 0
-	errors = 0
-
-	while 1:
-		line = f.readline()
-		if not line:
-			break
-
-		lineno = lineno + 1
-
-		line = string.strip(line)
-		if not line:
-			continue
-
-		if line[0] == '#':
-			continue
-
-		arr = string.split(line)
-		if len(arr) <= 1:
-			stderr('%s:%d: syntax error ; expected key/value pair' % (filename, lineno))
-			errors = errors + 1
-			continue
-
-		keyword = string.lower(arr[0])
-
-#
-#	keyword: masterdir
-#
-		if keyword == 'masterdir':
-			if cfg.has_key('masterdir'):
-				stderr("%s:%d: redefinition of masterdir" % (filename, lineno))
-				errors = errors + 1
-				continue
-
-			cfg['masterdir'] = arr[1]
-			continue
-
-#
-#	keyword: symlink_mode
-#
-		if keyword == 'symlink_mode':
-			if cfg.has_key('symlink_mode'):
-				stderr("%s:%d: redefinition of symlink_mode" % (filename, lineno))
-				errors = errors + 1
-				continue
-
-			try:
-				mode = int(arr[1], 8)
-			except ValueError:
-				stderr("%s:%d: invalid argument for symlink_mode" % (filename, lineno))
-				errors = errors + 1
-				continue
-
-			cfg['symlink_mode'] = mode
-			continue
-
-#
-#	keyword: host
-#
-		if keyword == 'host':
-			if len(arr) < 2:
-				stderr("%s:%d: 'host' requires at least 1 argument: the hostname" % (filename, lineno))
-				errors = errors + 1
-				continue
-
-			if not cfg.has_key('host'):
-				cfg['host'] = {}
-
-			host = arr[1]
-			groups = arr[2:]
-
-			if cfg['host'].has_key(host):
-				stderr("%s:%d: redefinition of host %s" % (filename, lineno, host))
-				errors = errors + 1
-				continue
-
-			cfg['host'][host] = groups
-			continue
-
-#
-#	keyword: ignore_host
-#
-		if keyword == 'ignore_host':
-			if len(arr) < 2:
-				stderr("%s:%d: 'ignore_host' requires 1 argument: the hostname to ignore" % (filename, lineno))
-				errors = errors + 1
-				continue
-
-			cfg['ignore_groups'].append(arr[1])
-			continue
-
-#
-#	keyword: ignore_group
-#
-		if keyword == 'ignore_group':
-			if len(arr) < 2:
-				stderr("%s:%d: 'ignore_group' requires at least 1 argument: the group to ignore" % (filename, lineno))
-				errors = errors + 1
-				continue
-
-			cfg['ignore_groups'].extend(arr[1:])
-			continue
-
-#
-#	keyword: on_update
-#
-		if keyword == 'on_update':
-			if len(arr) < 3:
-				stderr("%s:%d: 'on_update' requires at least 2 arguments: filename and shell command to run" % (filename, lineno))
-				errors = errors + 1
-				continue
-
-			if not cfg.has_key('on_update'):
-				cfg['on_update'] = {}
-
-			file = arr[1]
-			cmd = string.join(arr[2:])
-
-			if cfg['on_update'].has_key(file):
-				stderr("%s:%d: redefinition of on_update %s" % (filename, lineno, file))
-				errors = errors + 1
-				continue
-
-#
-#	check if the script exists
-#
-			if arr[2][0] != '/':
-				master = '.'
-				if cfg.has_key('masterdir'):
-					master = cfg['masterdir']
-				else:
-					stderr("%s:%d: note: masterdir not defined, using current working directory" % (filename, lineno))
-
-				scripts = os.path.join(master, 'scripts')
-				full_cmd = os.path.join(scripts, arr[2])
-			else:
-				full_cmd = arr[2]
-
-			if not os.path.isfile(full_cmd):
-				stderr("%s:%d: no such command '%s'" % (filename, lineno, full_cmd))
-				errors = errors + 1
-				continue
-
-			cfg['on_update'][file] = cmd
-			continue
-
-#
-#	keyword: always_run
-#
-		if keyword == 'always_run':
-			if len(arr) < 2:
-				stderr("%s:%d: 'always_run' requires an argument: the shell command to run" % (filename, lineno))
-				errors = errors + 1
-				continue
-
-			if not cfg.has_key('always_run'):
-				cfg['always_run'] = []
-
-			cmd = string.join(arr[1:])
-
-			if cmd in cfg['always_run']:
-				stderr("%s:%d: same command defined again: %s" % (filename, lineno, cmd))
-				errors = errors + 1
-				continue
-
-#
-#	check if the script exists
-#
-			if arr[1][0] != '/':
-				master = '.'
-				if cfg.has_key('masterdir'):
-					master = cfg['masterdir']
-				else:
-					stderr("%s:%d: note: masterdir not defined, using current working directory" % (filename, lineno))
-
-				scripts = os.path.join(master, 'scripts')
-				full_cmd = os.path.join(scripts, arr[1])
-			else:
-				full_cmd = arr[1]
-
-			if not os.path.isfile(full_cmd):
-				stderr("%s:%d: no such command '%s'" % (filename, lineno, full_cmd))
-				errors = errors + 1
-				continue
-
-			cfg['always_run'].append(cmd)
-			continue
-
-#
-#	keyword: diff_cmd
-#
-		if keyword == 'diff_cmd':
-			if len(arr) < 2:
-				stderr("%s:%d: 'diff_cmd' requires an argument: the full path to the 'diff' command" % (filename, lineno))
-				errors = errors + 1
-				continue
-
-			if cfg.has_key('diff_cmd'):
-				stderr("%s:%d: redefinition of diff_cmd" % (filename, lineno))
-				errors = errors + 1
-				continue
-
-			cmd = arr[1]
-			if not os.path.isfile(cmd):
-				stderr("%s:%d: no such command '%s'" % (filename, lineno, cmd))
-				errors = errors + 1
-				continue
-
-			cfg['diff_cmd'] = string.join(arr[1:])
-			continue
-
-		stderr("%s:%d: unknown keyword '%s'" % (filename, lineno, keyword))
-		errors = errors + 1
-
-	f.close()
-
-	if not cfg.has_key('masterdir'):
-		cfg['masterdir'] = '.'
-
-#
-#	get my hostname
-#
-	hostname = socket.gethostname()
-	arr = string.split(hostname, '.')
-
-	if arr[0] in cfg['ignore_groups']:
-		stderr('host %s is disabled in the config file' % arr[0])
-		errors = errors + 1
-	else:
-		if cfg['host'].has_key(hostname):
-			cfg['hostname'] = hostname
-
-			if len(arr) > 0 and arr[0] != hostname and cfg['host'].has_key(arr[0]):
-				stderr("%s: conflict; host %s and %s are both defined" % (filename, hostname, arr[0]))
-				errors = errors + 1
-		else:
-			if len(arr) > 0 and cfg['host'].has_key(arr[0]):
-				cfg['hostname'] = arr[0]
-				hostname = arr[0]
-			else:
-				stderr('%s: no entry for host %s defined' % (filename, hostname))
-				errors = errors + 1
-
-	if errors > 0:
-		sys.exit(-1)
-
-# implicitly add 'hostname' as first group
-	if not hostname in cfg['host'][hostname]:
-		cfg['host'][hostname].insert(0, hostname)
-
-	for host in cfg['host'].keys():
-		if not host in cfg['host'][host]:
-			cfg['host'][host].insert(0, host)
-
-# remove ignored groups from all hosts
-		changed = 0
-		groups = cfg['host'][host]
-		for ignore in cfg['ignore_groups']:
-			if ignore in groups:
-				groups.remove(ignore)
-				changed = 1
-
-		if changed:
-			cfg['host'][host] = groups
-
-	return cfg
-
-
 def usage():
 	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
 	print 'options:'
 	print '  -h, --help            Display this information'
-	print '  -c, --conf=dir/file   Use this config file (default: %s)' % DEFAULT_CONF
+	print '  -c, --conf=dir/file   Use this config file (default: %s)' % synctool_config.DEFAULT_CONF
 #	print '  -n, --dry-run         Show what would have been updated'
 	print '  -d, --diff=file       Show diff for file'
 	print '  -1, --single=file     Update a single file'
@@ -1596,11 +1281,11 @@ def usage():
 	print 'synctool can help you administer your cluster of machines'
 	print 'Note that by default, it does a dry-run, unless you specify --fix'
 	print
-	print 'Written by Walter de Jong <walter@sara.nl> (c) 2003-2006'
+	print 'Written by Walter de Jong <walter@sara.nl> (c) 2003-2009'
 
 
 def main():
-	global CONF_FILE, DRY_RUN, VERBOSE, QUIET, UNIX_CMD, LOGFILE, SYMLINK_MODE, RUN_TASKS
+	global DRY_RUN, VERBOSE, QUIET, UNIX_CMD, LOGFILE, SYMLINK_MODE, RUN_TASKS
 
 	progname = os.path.basename(sys.argv[0])
 
@@ -1632,7 +1317,7 @@ def main():
 				sys.exit(1)
 
 			if opt in ('-c', '--conf'):
-				CONF_FILE=arg
+				synctool_config.CONF_FILE=arg
 				continue
 
 # dry run already is default
@@ -1689,7 +1374,7 @@ def main():
 			stderr("options '--diff' and '--fix' cannot be combined")
 			sys.exit(1)
 
-	cfg = read_config(CONF_FILE)
+	cfg = synctool_config.read_config(synctool_config.CONF_FILE)
 
 	if cfg.has_key('symlink_mode'):
 		SYMLINK_MODE = cfg['symlink_mode']
@@ -1700,7 +1385,7 @@ def main():
 		t = time.localtime(time.time())
 
 		unix_out('#')
-		unix_out('# synctool by Walter de Jong <walter@sara.nl> (c) 2003')
+		unix_out('# synctool by Walter de Jong <walter@sara.nl> (c) 2003-2009')
 		unix_out('#')
 		unix_out('# script generated on %04d/%02d/%02d %02d:%02d:%02d' % (t[0], t[1], t[2], t[3], t[4], t[5]))
 		unix_out('#')
