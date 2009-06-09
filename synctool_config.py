@@ -19,6 +19,7 @@ OPT_NODE = 0
 ARG_NODENAME = None
 OPT_NODEGROUP = 0
 ARG_NODEGROUP = None
+OPT_INTERFACES = 0
 
 
 def stdout(str):
@@ -135,7 +136,23 @@ def read_config(filename):
 				errors = errors + 1
 				continue
 
-			cfg['host'][host] = groups
+			if groups[-1][:10] == 'interface:':
+				interface = groups[-1][10:]
+				groups = groups[:-1]
+
+				if not cfg.has_key('interfaces'):
+					cfg['interfaces'] = {}
+
+				if cfg['interfaces'].has_key(host):
+					stderr("%s:%d: redefinition of interface for host %s" % (filename, lineno, host))
+					errors = errors + 1
+					continue
+
+				cfg['interfaces'][host] = interface
+
+			if len(groups) > 0:
+				cfg['host'][host] = groups
+
 			continue
 
 #
@@ -418,6 +435,28 @@ def list_nodegroup(cfg, nodegroup):
 		print node
 
 
+def get_interfaces(cfg):
+	nodes = cfg['host'].keys()
+
+	arr = []
+
+	for node in nodes:
+		if cfg['interfaces'].has_key(node):
+			arr.append(cfg['interfaces'][node])
+		else:
+			arr.append(node)
+
+	return arr
+
+
+def list_interfaces(cfg):
+	arr = get_interfaces(cfg)
+	arr.sort()
+
+	for interface in arr:
+		print interface
+
+
 def usage():
 	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
 	print 'options:'
@@ -427,16 +466,17 @@ def usage():
 	print '  -g, --groups                    List all known groups'
 	print '  -n, --node <node name>          List all groups this node is in'
 	print '  -N, --node-group <group name>   List all nodes in this group'
+	print '  -i, --interfaces                List all nodes by interface'
 
 
 def get_options():
-	global CONF_FILE, OPT_LIST_NODES, OPT_LIST_GROUPS, ARG_NODENAME, OPT_NODE, ARG_NODEGROUP, OPT_NODEGROUP
+	global CONF_FILE, OPT_LIST_NODES, OPT_LIST_GROUPS, ARG_NODENAME, OPT_NODE, ARG_NODEGROUP, OPT_NODEGROUP, OPT_INTERFACES
 
 	progname = os.path.basename(sys.argv[0])
 
 	if len(sys.argv) > 1:
 		try:
-			opts, args = getopt.getopt(sys.argv[1:], "hc:lgn:N:", ['help', 'conf=', 'list-nodes', 'groups', 'node=', 'node-group='])
+			opts, args = getopt.getopt(sys.argv[1:], "hc:lgn:N:i", ['help', 'conf=', 'list-nodes', 'groups', 'node=', 'node-group=', 'interfaces'])
 		except getopt.error, (reason):
 			print
 			print '%s: %s' % (progname, reason)
@@ -484,6 +524,10 @@ def get_options():
 				OPT_NODEGROUP = 1
 				continue
 
+			if opt in ('-i', '--interfaces'):
+				OPT_INTERFACES = 1
+				continue
+
 			stderr("unknown command line option '%s'" % opt)
 			errors = errors + 1
 
@@ -517,5 +561,9 @@ if __name__ == '__main__':
 			sys.exit(1)
 
 		list_nodegroup(cfg, ARG_NODEGROUP)
+
+	if OPT_INTERFACES:
+		list_interfaces(cfg)
+
 
 # EOB
