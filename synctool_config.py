@@ -20,6 +20,7 @@ ARG_NODENAME = None
 OPT_NODEGROUP = 0
 ARG_NODEGROUP = None
 OPT_INTERFACES = 0
+OPT_GROUP_INTERFACES = 0
 
 
 def stdout(str):
@@ -457,6 +458,34 @@ def list_interfaces(cfg):
 		print interface
 
 
+def get_group_interfaces(cfg, nodegroup):
+	all_groups = make_all_groups(cfg)
+
+	if not nodegroup in all_groups:
+		stderr("no such nodegroup '%s' defined" % nodegroup)
+		sys.exit(1)
+
+	nodes = get_nodegroup(cfg, nodegroup)
+
+	arr = []
+
+	for node in nodes:
+		if cfg['interfaces'].has_key(node):
+			arr.append(cfg['interfaces'][node])
+		else:
+			arr.append(node)
+
+	return arr
+
+
+def list_group_interfaces(cfg, nodegroup):
+	arr = get_group_interfaces(cfg, nodegroup)
+	arr.sort()
+
+	for interface in arr:
+		print interface
+
+
 def usage():
 	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
 	print 'options:'
@@ -467,16 +496,18 @@ def usage():
 	print '  -n, --node <node name>          List all groups this node is in'
 	print '  -N, --node-group <group name>   List all nodes in this group'
 	print '  -i, --interfaces                List all nodes by interface'
+	print '  -I, --group-interfaces <group>  List all nodes from group by interface'
 
 
 def get_options():
-	global CONF_FILE, OPT_LIST_NODES, OPT_LIST_GROUPS, ARG_NODENAME, OPT_NODE, ARG_NODEGROUP, OPT_NODEGROUP, OPT_INTERFACES
+	global CONF_FILE, OPT_LIST_NODES, OPT_LIST_GROUPS, ARG_NODENAME, OPT_NODE
+	global ARG_NODEGROUP, OPT_NODEGROUP, OPT_INTERFACES, OPT_GROUP_INTERFACES
 
 	progname = os.path.basename(sys.argv[0])
 
 	if len(sys.argv) > 1:
 		try:
-			opts, args = getopt.getopt(sys.argv[1:], "hc:lgn:N:i", ['help', 'conf=', 'list-nodes', 'groups', 'node=', 'node-group=', 'interfaces'])
+			opts, args = getopt.getopt(sys.argv[1:], "hc:lgn:N:iI:", ['help', 'conf=', 'list-nodes', 'groups', 'node=', 'node-group=', 'interfaces', 'group-interfaces'])
 		except getopt.error, (reason):
 			print
 			print '%s: %s' % (progname, reason)
@@ -528,6 +559,11 @@ def get_options():
 				OPT_INTERFACES = 1
 				continue
 
+			if opt in ('-I', '--group-interfaces'):
+				OPT_GROUP_INTERFACES = 1
+				ARG_NODEGROUP = arg
+				continue
+
 			stderr("unknown command line option '%s'" % opt)
 			errors = errors + 1
 
@@ -564,6 +600,9 @@ if __name__ == '__main__':
 
 	if OPT_INTERFACES:
 		list_interfaces(cfg)
+
+	if OPT_GROUP_INTERFACES:
+		list_group_interfaces(cfg, ARG_NODEGROUP)
 
 
 # EOB
