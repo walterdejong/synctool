@@ -13,14 +13,19 @@ import getopt
 DEFAULT_CONF='synctool.conf'
 CONF_FILE=DEFAULT_CONF
 
-OPT_LIST_NODES = 0
-OPT_LIST_GROUPS = 0
-OPT_NODE = 0
-ARG_NODENAME = None
-OPT_NODEGROUP = 0
-ARG_NODEGROUP = None
-OPT_INTERFACES = 0
-OPT_GROUP_INTERFACES = 0
+ACTION = 0
+ACTION_OPTION = None
+ARG_NODENAMES = None
+ARG_NODEGROUPS = None
+
+# these are enums for the "list" command-line options
+ACTION_LIST_NODES = 1
+ACTION_LIST_GROUPS = 2
+ACTION_NODES = 3
+ACTION_NODEGROUPS = 4
+ACTION_INTERFACES = 5
+ACTION_GROUP_INTERFACES = 6
+
 
 
 def stdout(str):
@@ -486,6 +491,17 @@ def list_group_interfaces(cfg, nodegroup):
 		print interface
 
 
+def set_action(a, opt):
+	global ACTION, ACTION_OPTION
+
+	if ACTION > 0:
+		stderr('the options %s and %s can not be combined' % (ACTION_OPTION, opt))
+		sys.exit(1)
+
+	ACTION = a
+	ACTION_OPTION = opt
+
+
 def usage():
 	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
 	print 'options:'
@@ -500,8 +516,7 @@ def usage():
 
 
 def get_options():
-	global CONF_FILE, OPT_LIST_NODES, OPT_LIST_GROUPS, ARG_NODENAME, OPT_NODE
-	global ARG_NODEGROUP, OPT_NODEGROUP, OPT_INTERFACES, OPT_GROUP_INTERFACES
+	global CONF_FILE, ARG_NODENAMES, ARG_NODEGROUPS
 
 	progname = os.path.basename(sys.argv[0])
 
@@ -538,30 +553,30 @@ def get_options():
 				continue
 
 			if opt in ('-l', '--list-nodes'):
-				OPT_LIST_NODES = 1
+				set_action(ACTION_LIST_NODES, '--list-nodes')
 				continue
 
 			if opt in ('-g', '--groups'):
-				OPT_LIST_GROUPS = 1
+				set_action(ACTION_LIST_GROUPS, '--groups')
 				continue
 
 			if opt in ('-n', '--node'):
-				ARG_NODENAME = arg
-				OPT_NODE = 1
+				set_action(ACTION_NODES, '--node')
+				ARG_NODENAMES = arg
 				continue
 
 			if opt in ('-N', '--node-group'):
-				ARG_NODEGROUP = arg
-				OPT_NODEGROUP = 1
+				set_action(ACTION_NODEGROUPS, '--node-group')
+				ARG_NODEGROUPS = arg
 				continue
 
 			if opt in ('-i', '--interfaces'):
-				OPT_INTERFACES = 1
+				set_action(ACTION_INTERFACES, '--interfaces')
 				continue
 
 			if opt in ('-I', '--group-interfaces'):
-				OPT_GROUP_INTERFACES = 1
-				ARG_NODEGROUP = arg
+				set_action(ACTION_GROUP_INTERFACES, '--group-interfaces')
+				ARG_NODEGROUPS = arg
 				continue
 
 			stderr("unknown command line option '%s'" % opt)
@@ -578,31 +593,31 @@ if __name__ == '__main__':
 
 	cfg = read_config(CONF_FILE)
 
-	if OPT_LIST_NODES:
+	if ACTION == ACTION_LIST_NODES:
 		list_nodes(cfg)
 
-	if OPT_LIST_GROUPS:
+	elif ACTION == ACTION_LIST_GROUPS:
 		list_groups(cfg)
 
-	if OPT_NODE:
-		if not ARG_NODENAME:
+	elif ACTION == ACTION_NODES:
+		if not ARG_NODENAMES:
 			stderr("option '--node' requires an argument; the node name")
 			sys.exit(1)
 
-		list_node(cfg, ARG_NODENAME)
+		list_node(cfg, ARG_NODENAMES)
 
-	if OPT_NODEGROUP:
-		if not ARG_NODEGROUP:
+	elif ACTION == ACTION_NODEGROUPS:
+		if not ARG_NODEGROUPS:
 			stderr("option '--node-group' requires an argument; the node group name")
 			sys.exit(1)
 
-		list_nodegroup(cfg, ARG_NODEGROUP)
+		list_nodegroup(cfg, ARG_NODEGROUPS)
 
-	if OPT_INTERFACES:
+	elif ACTION == ACTION_INTERFACES:
 		list_interfaces(cfg)
 
-	if OPT_GROUP_INTERFACES:
-		list_group_interfaces(cfg, ARG_NODEGROUP)
+	elif ACTION == ACTION_GROUP_INTERFACES:
+		list_group_interfaces(cfg, ARG_NODEGROUPS)
 
 
 # EOB
