@@ -308,7 +308,7 @@ def read_config(filename):
 	arr = string.split(hostname, '.')
 
 	if arr[0] in cfg['ignore_groups']:
-		stderr('host %s is disabled in the config file' % arr[0])
+		stderr('%s: host %s is disabled in the config file' % (filename, arr[0]))
 		errors = errors + 1
 	else:
 		if cfg['host'].has_key(hostname):
@@ -350,12 +350,12 @@ def read_config(filename):
 	return cfg
 
 
-def get_nodes(cfg):
+def get_all_nodes(cfg):
 	return cfg['host'].keys()
 
 
-def list_nodes(cfg):
-	nodes = get_nodes(cfg)
+def list_all_nodes(cfg):
+	nodes = get_all_nodes(cfg)
 	nodes.sort()
 
 	for host in nodes:
@@ -376,7 +376,7 @@ def make_all_groups(cfg):
 	return all_groups
 
 
-def get_groups(cfg):
+def get_all_groups(cfg):
 	arr = []
 
 	nodes = cfg['host'].keys()
@@ -388,8 +388,8 @@ def get_groups(cfg):
 	return arr
 
 
-def list_groups(cfg):
-	groups = get_groups(cfg)
+def list_all_groups(cfg):
+	groups = get_all_groups(cfg)
 
 	groups.sort()
 
@@ -400,41 +400,51 @@ def list_groups(cfg):
 			print group
 
 
-def get_node(cfg, nodename):
-	return cfg['host'][nodename]
+def get_nodes(cfg, nodenames):
+	arr = []
+
+	for nodename in nodenames:
+		for group in cfg['host'][nodename]:
+			if not group in arr:
+				arr.append(group)
+
+	return arr
 
 
-def list_node(cfg, nodename):
-	if not cfg['host'].has_key(nodename):
-		stderr("no such node '%s' defined" % nodename)
-		sys.exit(1)
+def list_nodes(cfg, nodenames):
+	for nodename in nodenames:
+		if not cfg['host'].has_key(nodename):
+			stderr("no such node '%s' defined" % nodename)
+			sys.exit(1)
 
-	groups = get_node(cfg, nodename)
+	groups = get_nodes(cfg, nodenames)
 
 	for group in groups:
 		print group
 
 
-def get_nodegroup(cfg, nodegroup):
+def get_nodegroups(cfg, nodegroups):
 	arr = []
 
 	nodes = cfg['host'].keys()
 
-	for node in nodes:
-		if nodegroup in cfg['host'][node]:
-			arr.append(node)
+	for nodegroup in nodegroups:
+		for node in nodes:
+			if nodegroup in cfg['host'][node] and not node in arr:
+				arr.append(node)
 
 	return arr
 
 
-def list_nodegroup(cfg, nodegroup):
+def list_nodegroups(cfg, nodegroups):
 	all_groups = make_all_groups(cfg)
 
-	if not nodegroup in all_groups:
-		stderr("no such nodegroup '%s' defined" % nodegroup)
-		sys.exit(1)
+	for nodegroup in nodegroups:
+		if not nodegroup in all_groups:
+			stderr("no such nodegroup '%s' defined" % nodegroup)
+			sys.exit(1)
 
-	arr = get_nodegroup(cfg, nodegroup)
+	arr = get_nodegroups(cfg, nodegroups)
 
 	arr.sort()
 	for node in arr:
@@ -463,22 +473,25 @@ def list_interfaces(cfg):
 		print interface
 
 
-def get_group_interfaces(cfg, nodegroup):
+def get_group_interfaces(cfg, nodegroups):
 	all_groups = make_all_groups(cfg)
 
-	if not nodegroup in all_groups:
-		stderr("no such nodegroup '%s' defined" % nodegroup)
-		sys.exit(1)
+	for nodegroup in nodegroups:
+		if not nodegroup in all_groups:
+			stderr("no such nodegroup '%s' defined" % nodegroup)
+			sys.exit(1)
 
-	nodes = get_nodegroup(cfg, nodegroup)
+	nodes = get_nodegroups(cfg, nodegroups)
 
 	arr = []
 
 	for node in nodes:
 		if cfg.has_key('interfaces') and cfg['interfaces'].has_key(node):
-			arr.append(cfg['interfaces'][node])
+			if not cfg['interfaces'][node] in arr:
+				arr.append(cfg['interfaces'][node])
 		else:
-			arr.append(node)
+			if not node in arr:
+				arr.append(node)
 
 	return arr
 
@@ -503,16 +516,16 @@ def set_action(a, opt):
 
 
 def usage():
-	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
+	print 'usage: %s [options] [<argument> [..]]' % os.path.basename(sys.argv[0])
 	print 'options:'
-	print '  -h, --help                      Display this information'
-	print '  -c, --conf=dir/file             Use this config file (default: %s)' % DEFAULT_CONF
-	print '  -l, --list-nodes                List all configured nodes'
-	print '  -g, --groups                    List all known groups'
-	print '  -n, --node <node name>          List all groups this node is in'
-	print '  -N, --node-group <group name>   List all nodes in this group'
-	print '  -i, --interfaces                List all nodes by interface'
-	print '  -I, --group-interfaces <group>  List all nodes from group by interface'
+	print '  -h, --help                           Display this information'
+	print '  -c, --conf=dir/file                  Use this config file (default: %s)' % DEFAULT_CONF
+	print '  -l, --list-nodes                     List all configured nodes'
+	print '  -g, --groups                         List all known groups'
+	print '  -n, --node <node name> [..]          List all groups this node is in'
+	print '  -N, --node-group <group name> [..]   List all nodes in this group'
+	print '  -i, --interfaces                     List all nodes by interface'
+	print '  -I, --group-interfaces <group> [..]  List all nodes from group by interface'
 
 
 def get_options():
@@ -562,12 +575,12 @@ def get_options():
 
 			if opt in ('-n', '--node'):
 				set_action(ACTION_NODES, '--node')
-				ARG_NODENAMES = arg
+				ARG_NODENAMES = [ arg ]
 				continue
 
 			if opt in ('-N', '--node-group'):
 				set_action(ACTION_NODEGROUPS, '--node-group')
-				ARG_NODEGROUPS = arg
+				ARG_NODEGROUPS = [ arg ]
 				continue
 
 			if opt in ('-i', '--interfaces'):
@@ -576,7 +589,7 @@ def get_options():
 
 			if opt in ('-I', '--group-interfaces'):
 				set_action(ACTION_GROUP_INTERFACES, '--group-interfaces')
-				ARG_NODEGROUPS = arg
+				ARG_NODEGROUPS = [ arg ]
 				continue
 
 			stderr("unknown command line option '%s'" % opt)
@@ -586,6 +599,16 @@ def get_options():
 			usage()
 			sys.exit(1)
 
+	if args != None and len(args) > 0:
+		if ARG_NODENAMES != None:
+			ARG_NODENAMES.extend(args)
+
+		elif ARG_NODEGROUPS != None:
+			ARG_NODEGROUPS.extend(args)
+
+		else:
+			stderr('error: excessive arguments on command-line')
+			sys.exit(1)
 
 
 if __name__ == '__main__':
@@ -594,24 +617,24 @@ if __name__ == '__main__':
 	cfg = read_config(CONF_FILE)
 
 	if ACTION == ACTION_LIST_NODES:
-		list_nodes(cfg)
+		list_all_nodes(cfg)
 
 	elif ACTION == ACTION_LIST_GROUPS:
-		list_groups(cfg)
+		list_all_groups(cfg)
 
 	elif ACTION == ACTION_NODES:
 		if not ARG_NODENAMES:
 			stderr("option '--node' requires an argument; the node name")
 			sys.exit(1)
 
-		list_node(cfg, ARG_NODENAMES)
+		list_nodes(cfg, ARG_NODENAMES)
 
 	elif ACTION == ACTION_NODEGROUPS:
 		if not ARG_NODEGROUPS:
 			stderr("option '--node-group' requires an argument; the node group name")
 			sys.exit(1)
 
-		list_nodegroup(cfg, ARG_NODEGROUPS)
+		list_nodegroups(cfg, ARG_NODEGROUPS)
 
 	elif ACTION == ACTION_INTERFACES:
 		list_interfaces(cfg)
