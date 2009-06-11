@@ -447,7 +447,7 @@ def get_interfaces(cfg):
 	arr = []
 
 	for node in nodes:
-		if cfg['interfaces'].has_key(node):
+		if cfg.has_key('interfaces') and cfg['interfaces'].has_key(node):
 			arr.append(cfg['interfaces'][node])
 		else:
 			arr.append(node)
@@ -475,7 +475,7 @@ def get_group_interfaces(cfg, nodegroup):
 	arr = []
 
 	for node in nodes:
-		if cfg['interfaces'].has_key(node):
+		if cfg.has_key('interfaces') and cfg['interfaces'].has_key(node):
 			arr.append(cfg['interfaces'][node])
 		else:
 			arr.append(node)
