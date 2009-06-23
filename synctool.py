@@ -1376,6 +1376,7 @@ def main():
 
 	cfg = synctool_config.read_config()
 	synctool_config.add_myhostname(cfg)
+	synctool_config.remove_ignored_groups(cfg)
 
 	if cfg.has_key('symlink_mode'):
 		SYMLINK_MODE = cfg['symlink_mode']
