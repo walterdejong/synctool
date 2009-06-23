@@ -529,17 +529,19 @@ def set_action(a, opt):
 
 
 def usage():
-	print 'usage: %s [options] [<argument> [..]]' % os.path.basename(sys.argv[0])
+	print 'usage: %s [options] [<argument>]' % os.path.basename(sys.argv[0])
 	print 'options:'
 	print '  -h, --help                           Display this information'
 	print '  -c, --conf=dir/file                  Use this config file (default: %s)' % DEFAULT_CONF
 	print '  -l, --list-nodes                     List all configured nodes'
 	print '  -g, --groups                         List all known groups'
-	print '  -n, --node <node name> [..]          List all groups this node is in'
-	print '  -N, --node-group <group name> [..]   List all nodes in this group'
+	print '  -n, --node <node list>               List all groups this node is in'
+	print '  -N, --node-group <group list>        List all nodes in this group'
 	print '  -i, --interfaces                     List all nodes by interface'
-	print '  -I, --group-interfaces <group> [..]  List all nodes from group by interface'
+	print '  -I, --group-interfaces <group list>  List all nodes from group by interface'
 	print '  -f, --filter-ignored                 Do not list ignored host and groups'
+	print
+	print 'A node/group list can be a single value, or a comma-separated list'
 
 
 def get_options():
@@ -593,12 +595,12 @@ def get_options():
 
 			if opt in ('-n', '--node'):
 				set_action(ACTION_NODES, '--node')
-				ARG_NODENAMES = [ arg ]
+				ARG_NODENAMES = string.split(arg, ',')
 				continue
 
 			if opt in ('-N', '--node-group'):
 				set_action(ACTION_NODEGROUPS, '--node-group')
-				ARG_NODEGROUPS = [ arg ]
+				ARG_NODEGROUPS = string.split(arg, ',')
 				continue
 
 			if opt in ('-i', '--interfaces'):
@@ -607,7 +609,7 @@ def get_options():
 
 			if opt in ('-I', '--group-interfaces'):
 				set_action(ACTION_GROUP_INTERFACES, '--group-interfaces')
-				ARG_NODEGROUPS = [ arg ]
+				ARG_NODEGROUPS = string.split(arg, ',')
 				continue
 
 			if opt in ('-f', '--filter-ignored'):
@@ -622,15 +624,8 @@ def get_options():
 			sys.exit(1)
 
 	if args != None and len(args) > 0:
-		if ARG_NODENAMES != None:
-			ARG_NODENAMES.extend(args)
-
-		elif ARG_NODEGROUPS != None:
-			ARG_NODEGROUPS.extend(args)
-
-		else:
-			stderr('error: excessive arguments on command-line')
-			sys.exit(1)
+		stderr('error: excessive arguments on command-line')
+		sys.exit(1)
 
 	if not ACTION:
 		usage()
