@@ -10,7 +10,7 @@ import socket
 import getopt
 
 
-DEFAULT_CONF='synctool.conf'
+DEFAULT_CONF='/var/lib/synctool/synctool.conf'
 CONF_FILE=DEFAULT_CONF
 
 ACTION = 0
