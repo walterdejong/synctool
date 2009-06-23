@@ -23,11 +23,11 @@ ACTION_LIST_NODES = 1
 ACTION_LIST_GROUPS = 2
 ACTION_NODES = 3
 ACTION_NODEGROUPS = 4
-ACTION_INTERFACES = 5
-ACTION_GROUP_INTERFACES = 6
 
 # optional: do not list hosts/groups that are ignored
 OPT_FILTER_IGNORED = 0
+# optional: list interface names for the selected nodes
+OPT_INTERFACE = 0
 
 
 def stdout(str):
@@ -365,15 +365,28 @@ def get_all_nodes(cfg):
 	return cfg['host'].keys()
 
 
+def get_node_interface(cfg, node):
+	if cfg.has_key('interfaces') and cfg['interfaces'].has_key(node):
+		return cfg['interfaces'][node]
+
+	return node
+
+
 def list_all_nodes(cfg):
 	nodes = get_all_nodes(cfg)
 	nodes.sort()
 
 	for host in nodes:
 		if host in cfg['ignore_groups']:
+			if OPT_INTERFACE:
+				host = get_node_interface(cfg, host)
+
 			if not OPT_FILTER_IGNORED:
 				print '%s (ignored)' % host
 		else:
+			if OPT_INTERFACE:
+				host = get_node_interface(cfg, host)
+
 			print host
 
 
@@ -397,7 +410,7 @@ def get_all_groups(cfg):
 	nodes = cfg['host'].keys()
 
 	for group in make_all_groups(cfg):
-		if not group in nodes:
+		if not group in arr:
 			arr.append(group)
 
 	return arr
@@ -405,7 +418,6 @@ def get_all_groups(cfg):
 
 def list_all_groups(cfg):
 	groups = get_all_groups(cfg)
-
 	groups.sort()
 
 	for group in groups:
@@ -470,51 +482,16 @@ def list_nodegroups(cfg, nodegroups):
 
 	for node in arr:
 		if node in cfg['ignore_groups']:
+			if OPT_INTERFACE:
+				node = get_node_interface(cfg, node)
+
 			if not OPT_FILTER_IGNORED:
 				print '%s (ignored)' % node
 		else:
+			if OPT_INTERFACE:
+				node = get_node_interface(cfg, node)
+
 			print node
-
-
-def get_node_interface(cfg, node):
-	if cfg.has_key('interfaces') and cfg['interfaces'].has_key(node):
-		return cfg['interfaces'][node]
-
-	return node
-
-
-def list_interfaces(cfg):
-	nodes = get_all_nodes(cfg)
-	nodes.sort()
-
-	for node in nodes:
-		if node in cfg['ignore_groups']:
-			if not OPT_FILTER_IGNORED:
-				print '%s (ignored)' % get_node_interface(cfg, node)
-		else:
-			print get_node_interface(cfg, node)
-
-
-def list_group_interfaces(cfg, nodegroups):
-#
-#	same as list_nodegroups(), but now print get_node_interface() for each node
-#
-	all_groups = make_all_groups(cfg)
-
-	for nodegroup in nodegroups:
-		if not nodegroup in all_groups:
-			stderr("no such nodegroup '%s' defined" % nodegroup)
-			sys.exit(1)
-
-	arr = get_nodegroups(cfg, nodegroups)
-	arr.sort()
-
-	for node in arr:
-		if node in cfg['ignore_groups']:
-			if not OPT_FILTER_IGNORED:
-				print '%s (ignored)' % get_node_interface(cfg, node)
-		else:
-			print get_node_interface(cfg, node)
 
 
 def set_action(a, opt):
@@ -531,21 +508,20 @@ def set_action(a, opt):
 def usage():
 	print 'usage: %s [options] [<argument>]' % os.path.basename(sys.argv[0])
 	print 'options:'
-	print '  -h, --help                           Display this information'
-	print '  -c, --conf=dir/file                  Use this config file (default: %s)' % DEFAULT_CONF
-	print '  -l, --list-nodes                     List all configured nodes'
-	print '  -g, --groups                         List all known groups'
-	print '  -n, --node <node list>               List all groups this node is in'
-	print '  -N, --node-group <group list>        List all nodes in this group'
-	print '  -i, --interfaces                     List all nodes by interface'
-	print '  -I, --group-interfaces <group list>  List all nodes from group by interface'
-	print '  -f, --filter-ignored                 Do not list ignored host and groups'
+	print '  -h, --help                     Display this information'
+	print '  -c, --conf=dir/file            Use this config file (default: %s)' % DEFAULT_CONF
+	print '  -l, --list-nodes               List all configured nodes'
+	print '  -g, --groups                   List all known groups'
+	print '  -n, --node <node list>         List all groups this node is in'
+	print '  -N, --node-group <group list>  List all nodes in this group'
+	print '  -i, --interface                List selected nodes by interface'
+	print '  -f, --filter-ignored           Do not list ignored host and groups'
 	print
 	print 'A node/group list can be a single value, or a comma-separated list'
 
 
 def get_options():
-	global CONF_FILE, ARG_NODENAMES, ARG_NODEGROUPS, OPT_FILTER_IGNORED
+	global CONF_FILE, ARG_NODENAMES, ARG_NODEGROUPS, OPT_FILTER_IGNORED, OPT_INTERFACE
 
 	progname = os.path.basename(sys.argv[0])
 
@@ -555,7 +531,7 @@ def get_options():
 
 	if len(sys.argv) > 1:
 		try:
-			opts, args = getopt.getopt(sys.argv[1:], "hc:lgn:N:iI:f", ['help', 'conf=', 'list-nodes', 'groups', 'node=', 'node-group=', 'interfaces', 'group-interfaces', 'filter-ignored'])
+			opts, args = getopt.getopt(sys.argv[1:], "hc:lgn:N:iI:f", ['help', 'conf=', 'list-nodes', 'groups', 'node=', 'node-group=', 'interface', 'group-interfaces', 'filter-ignored'])
 		except getopt.error, (reason):
 			print
 			print '%s: %s' % (progname, reason)
@@ -603,13 +579,8 @@ def get_options():
 				ARG_NODEGROUPS = string.split(arg, ',')
 				continue
 
-			if opt in ('-i', '--interfaces'):
-				set_action(ACTION_INTERFACES, '--interfaces')
-				continue
-
-			if opt in ('-I', '--group-interfaces'):
-				set_action(ACTION_GROUP_INTERFACES, '--group-interfaces')
-				ARG_NODEGROUPS = string.split(arg, ',')
+			if opt in ('-i', '--interface'):
+				OPT_INTERFACE = 1
 				continue
 
 			if opt in ('-f', '--filter-ignored'):
@@ -657,12 +628,6 @@ if __name__ == '__main__':
 			sys.exit(1)
 
 		list_nodegroups(cfg, ARG_NODEGROUPS)
-
-	elif ACTION == ACTION_INTERFACES:
-		list_interfaces(cfg)
-
-	elif ACTION == ACTION_GROUP_INTERFACES:
-		list_group_interfaces(cfg, ARG_NODEGROUPS)
 
 
 # EOB
