@@ -533,6 +533,10 @@ def get_options():
 
 	progname = os.path.basename(sys.argv[0])
 
+	if len(sys.argv) <= 1:
+		usage()
+		sys.exit(1)
+
 	if len(sys.argv) > 1:
 		try:
 			opts, args = getopt.getopt(sys.argv[1:], "hc:lgn:N:iI:", ['help', 'conf=', 'list-nodes', 'groups', 'node=', 'node-group=', 'interfaces', 'group-interfaces'])
