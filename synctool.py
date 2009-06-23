@@ -1374,7 +1374,8 @@ def main():
 			stderr("options '--diff' and '--fix' cannot be combined")
 			sys.exit(1)
 
-	cfg = synctool_config.read_config(synctool_config.CONF_FILE)
+	cfg = synctool_config.read_config()
+	synctool_config.add_myhostname(cfg)
 
 	if cfg.has_key('symlink_mode'):
 		SYMLINK_MODE = cfg['symlink_mode']

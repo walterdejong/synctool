@@ -36,21 +36,18 @@ def stderr(str):
 	sys.stderr.write(str + '\n')
 
 
-def read_config(filename):
+def read_config():
 	'''read the config file and return cfg structure'''
-
-	if not filename:
-		filename = os.path.join('.', DEFAULT_CONF)
 
 	cfg = {}
 	cfg['ignore_groups'] = []
 
-	if os.path.isdir(filename):
-		filename = os.path.join(filename, DEFAULT_CONF)
+	if os.path.isdir(CONF_FILE):
+		filename = os.path.join(filename, CONF_FILE)
 
 # funky ... it is possible to open() directories without problems ...
-	if not os.path.isfile(filename):
-		stderr("no such config file '%s'" % filename)
+	if not os.path.isfile(CONF_FILE):
+		stderr("no such config file '%s'" % CONF_FILE)
 		sys.exit(-1)
 
 	try:
@@ -58,12 +55,12 @@ def read_config(filename):
 	except OSError, reason:
 		cwd = '.'
 
-	filename = os.path.join(cwd, filename)
+	filename = os.path.join(cwd, CONF_FILE)
 
 	try:
 		f = open(filename, 'r')
 	except IOError, reason:
-		stderr("failed to read config file '%s' : %s" % (filename, reason))
+		stderr("failed to read config file '%s' : %s" % (CONF_FILE, reason))
 		sys.exit(-1)
 
 	lineno = 0
@@ -85,7 +82,7 @@ def read_config(filename):
 
 		arr = string.split(line)
 		if len(arr) <= 1:
-			stderr('%s:%d: syntax error ; expected key/value pair' % (filename, lineno))
+			stderr('%s:%d: syntax error ; expected key/value pair' % (CONF_FILE, lineno))
 			errors = errors + 1
 			continue
 
@@ -96,7 +93,7 @@ def read_config(filename):
 #
 		if keyword == 'masterdir':
 			if cfg.has_key('masterdir'):
-				stderr("%s:%d: redefinition of masterdir" % (filename, lineno))
+				stderr("%s:%d: redefinition of masterdir" % (CONF_FILE, lineno))
 				errors = errors + 1
 				continue
 
@@ -108,14 +105,14 @@ def read_config(filename):
 #
 		if keyword == 'symlink_mode':
 			if cfg.has_key('symlink_mode'):
-				stderr("%s:%d: redefinition of symlink_mode" % (filename, lineno))
+				stderr("%s:%d: redefinition of symlink_mode" % (CONF_FILE, lineno))
 				errors = errors + 1
 				continue
 
 			try:
 				mode = int(arr[1], 8)
 			except ValueError:
-				stderr("%s:%d: invalid argument for symlink_mode" % (filename, lineno))
+				stderr("%s:%d: invalid argument for symlink_mode" % (CONF_FILE, lineno))
 				errors = errors + 1
 				continue
 
@@ -127,7 +124,7 @@ def read_config(filename):
 #
 		if keyword == 'host':
 			if len(arr) < 2:
-				stderr("%s:%d: 'host' requires at least 1 argument: the hostname" % (filename, lineno))
+				stderr("%s:%d: 'host' requires at least 1 argument: the hostname" % (CONF_FILE, lineno))
 				errors = errors + 1
 				continue
 
@@ -138,7 +135,7 @@ def read_config(filename):
 			groups = arr[2:]
 
 			if cfg['host'].has_key(host):
-				stderr("%s:%d: redefinition of host %s" % (filename, lineno, host))
+				stderr("%s:%d: redefinition of host %s" % (CONF_FILE, lineno, host))
 				errors = errors + 1
 				continue
 
@@ -150,7 +147,7 @@ def read_config(filename):
 					cfg['interfaces'] = {}
 
 				if cfg['interfaces'].has_key(host):
-					stderr("%s:%d: redefinition of interface for host %s" % (filename, lineno, host))
+					stderr("%s:%d: redefinition of interface for host %s" % (CONF_FILE, lineno, host))
 					errors = errors + 1
 					continue
 
@@ -166,7 +163,7 @@ def read_config(filename):
 #
 		if keyword == 'ignore_host':
 			if len(arr) < 2:
-				stderr("%s:%d: 'ignore_host' requires 1 argument: the hostname to ignore" % (filename, lineno))
+				stderr("%s:%d: 'ignore_host' requires 1 argument: the hostname to ignore" % (CONF_FILE, lineno))
 				errors = errors + 1
 				continue
 
@@ -178,7 +175,7 @@ def read_config(filename):
 #
 		if keyword == 'ignore_group':
 			if len(arr) < 2:
-				stderr("%s:%d: 'ignore_group' requires at least 1 argument: the group to ignore" % (filename, lineno))
+				stderr("%s:%d: 'ignore_group' requires at least 1 argument: the group to ignore" % (CONF_FILE, lineno))
 				errors = errors + 1
 				continue
 
@@ -190,7 +187,7 @@ def read_config(filename):
 #
 		if keyword == 'on_update':
 			if len(arr) < 3:
-				stderr("%s:%d: 'on_update' requires at least 2 arguments: filename and shell command to run" % (filename, lineno))
+				stderr("%s:%d: 'on_update' requires at least 2 arguments: filename and shell command to run" % (CONF_FILE, lineno))
 				errors = errors + 1
 				continue
 
@@ -201,7 +198,7 @@ def read_config(filename):
 			cmd = string.join(arr[2:])
 
 			if cfg['on_update'].has_key(file):
-				stderr("%s:%d: redefinition of on_update %s" % (filename, lineno, file))
+				stderr("%s:%d: redefinition of on_update %s" % (CONF_FILE, lineno, file))
 				errors = errors + 1
 				continue
 
@@ -213,7 +210,7 @@ def read_config(filename):
 				if cfg.has_key('masterdir'):
 					master = cfg['masterdir']
 				else:
-					stderr("%s:%d: note: masterdir not defined, using current working directory" % (filename, lineno))
+					stderr("%s:%d: note: masterdir not defined, using current working directory" % (CONF_FILE, lineno))
 
 				scripts = os.path.join(master, 'scripts')
 				full_cmd = os.path.join(scripts, arr[2])
@@ -221,7 +218,7 @@ def read_config(filename):
 				full_cmd = arr[2]
 
 			if not os.path.isfile(full_cmd):
-				stderr("%s:%d: no such command '%s'" % (filename, lineno, full_cmd))
+				stderr("%s:%d: no such command '%s'" % (CONF_FILE, lineno, full_cmd))
 				errors = errors + 1
 				continue
 
@@ -233,7 +230,7 @@ def read_config(filename):
 #
 		if keyword == 'always_run':
 			if len(arr) < 2:
-				stderr("%s:%d: 'always_run' requires an argument: the shell command to run" % (filename, lineno))
+				stderr("%s:%d: 'always_run' requires an argument: the shell command to run" % (CONF_FILE, lineno))
 				errors = errors + 1
 				continue
 
@@ -243,7 +240,7 @@ def read_config(filename):
 			cmd = string.join(arr[1:])
 
 			if cmd in cfg['always_run']:
-				stderr("%s:%d: same command defined again: %s" % (filename, lineno, cmd))
+				stderr("%s:%d: same command defined again: %s" % (CONF_FILE, lineno, cmd))
 				errors = errors + 1
 				continue
 
@@ -255,7 +252,7 @@ def read_config(filename):
 				if cfg.has_key('masterdir'):
 					master = cfg['masterdir']
 				else:
-					stderr("%s:%d: note: masterdir not defined, using current working directory" % (filename, lineno))
+					stderr("%s:%d: note: masterdir not defined, using current working directory" % (CONF_FILE, lineno))
 
 				scripts = os.path.join(master, 'scripts')
 				full_cmd = os.path.join(scripts, arr[1])
@@ -263,7 +260,7 @@ def read_config(filename):
 				full_cmd = arr[1]
 
 			if not os.path.isfile(full_cmd):
-				stderr("%s:%d: no such command '%s'" % (filename, lineno, full_cmd))
+				stderr("%s:%d: no such command '%s'" % (CONF_FILE, lineno, full_cmd))
 				errors = errors + 1
 				continue
 
@@ -275,25 +272,25 @@ def read_config(filename):
 #
 		if keyword == 'diff_cmd':
 			if len(arr) < 2:
-				stderr("%s:%d: 'diff_cmd' requires an argument: the full path to the 'diff' command" % (filename, lineno))
+				stderr("%s:%d: 'diff_cmd' requires an argument: the full path to the 'diff' command" % (CONF_FILE, lineno))
 				errors = errors + 1
 				continue
 
 			if cfg.has_key('diff_cmd'):
-				stderr("%s:%d: redefinition of diff_cmd" % (filename, lineno))
+				stderr("%s:%d: redefinition of diff_cmd" % (CONF_FILE, lineno))
 				errors = errors + 1
 				continue
 
 			cmd = arr[1]
 			if not os.path.isfile(cmd):
-				stderr("%s:%d: no such command '%s'" % (filename, lineno, cmd))
+				stderr("%s:%d: no such command '%s'" % (CONF_FILE, lineno, cmd))
 				errors = errors + 1
 				continue
 
 			cfg['diff_cmd'] = string.join(arr[1:])
 			continue
 
-		stderr("%s:%d: unknown keyword '%s'" % (filename, lineno, keyword))
+		stderr("%s:%d: unknown keyword '%s'" % (CONF_FILE, lineno, keyword))
 		errors = errors + 1
 
 	f.close()
@@ -301,37 +298,10 @@ def read_config(filename):
 	if not cfg.has_key('masterdir'):
 		cfg['masterdir'] = '.'
 
-#
-#	get my hostname
-#
-	hostname = socket.gethostname()
-	arr = string.split(hostname, '.')
-
-	if arr[0] in cfg['ignore_groups']:
-		stderr('%s: host %s is disabled in the config file' % (filename, arr[0]))
-		errors = errors + 1
-	else:
-		if cfg['host'].has_key(hostname):
-			cfg['hostname'] = hostname
-
-			if len(arr) > 0 and arr[0] != hostname and cfg['host'].has_key(arr[0]):
-				stderr("%s: conflict; host %s and %s are both defined" % (filename, hostname, arr[0]))
-				errors = errors + 1
-		else:
-			if len(arr) > 0 and cfg['host'].has_key(arr[0]):
-				cfg['hostname'] = arr[0]
-				hostname = arr[0]
-			else:
-				stderr('%s: no entry for host %s defined' % (filename, hostname))
-				errors = errors + 1
-
 	if errors > 0:
 		sys.exit(-1)
 
 # implicitly add 'hostname' as first group
-	if not hostname in cfg['host'][hostname]:
-		cfg['host'][hostname].insert(0, hostname)
-
 	for host in cfg['host'].keys():
 		if not host in cfg['host'][host]:
 			cfg['host'][host].insert(0, host)
@@ -348,6 +318,53 @@ def read_config(filename):
 			cfg['host'][host] = groups
 
 	return cfg
+
+
+def add_myhostname(cfg):
+	'''add the hostname of the current host to the configuration, so that it can be used'''
+
+	errors = 0
+#
+#	get my hostname
+#
+	hostname = socket.gethostname()
+	arr = string.split(hostname, '.')
+
+	if arr[0] in cfg['ignore_groups']:
+		stderr('%s: host %s is disabled in the config file' % (CONF_FILE, arr[0]))
+		errors = errors + 1
+	else:
+		if cfg['host'].has_key(hostname):
+			cfg['hostname'] = hostname
+
+			if len(arr) > 0 and arr[0] != hostname and cfg['host'].has_key(arr[0]):
+				stderr("%s: conflict; host %s and %s are both defined" % (CONF_FILE, hostname, arr[0]))
+				errors = errors + 1
+		else:
+			if len(arr) > 0 and cfg['host'].has_key(arr[0]):
+				cfg['hostname'] = arr[0]
+				hostname = arr[0]
+			else:
+				stderr('%s: no entry for host %s defined' % (CONF_FILE, hostname))
+				errors = errors + 1
+
+	if errors > 0:
+		sys.exit(-1)
+
+# implicitly add 'hostname' as first group
+	if not hostname in cfg['host'][hostname]:
+		cfg['host'][hostname].insert(0, hostname)
+
+# remove ignored groups
+	changed = 0
+	groups = cfg['host'][hostname]
+	for ignore in cfg['ignore_groups']:
+		if ignore in groups:
+			groups.remove(ignore)
+			changed = 1
+
+	if changed:
+		cfg['host'][hostname] = groups
 
 
 def get_all_nodes(cfg):
@@ -618,7 +635,7 @@ def get_options():
 if __name__ == '__main__':
 	get_options()
 
-	cfg = read_config(CONF_FILE)
+	cfg = read_config()
 
 	if ACTION == ACTION_LIST_NODES:
 		list_all_nodes(cfg)
