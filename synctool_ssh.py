@@ -73,9 +73,49 @@ def run_remote_cmd(cfg, nodes, cmd):
 
 	ssh_cmd = cfg['ssh_cmd']
 
+	parallel = 0
+
 	for node in nodes:
 		if OPT_DEBUG:
 			print 'TD %s %s %s' % (ssh_cmd, node, cmd)
+			continue
+
+		if parallel > 3:
+			try:
+				if os.wait() != -1:
+					parallel = parallel - 1
+
+			except OSError:
+				pass
+
+		pid = os.fork()
+
+		if not pid:
+#			argv = string.split(ssh_cmd)
+#			argv.append(node)
+#			argv.append(cmd)
+#
+#			os.execv(argv[0], argv)
+#			print 'error: execv() failed'
+#			sys.exit(-1)
+
+			f = os.popen('%s %s %s 2>&1' % (ssh_cmd, node, cmd), 'r')
+			while 1:
+				line = f.readline()
+				if not line:
+					break
+
+				line = string.strip(line)
+
+				print '%s: %s' % (NAMEMAP[node], line)
+
+			f.close()
+			sys.exit(0)
+
+		if pid == -1:
+			print 'error: failed to fork()'
+		else:
+			parallel = parallel + 1
 
 
 def usage():
