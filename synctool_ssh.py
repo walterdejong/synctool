@@ -17,6 +17,7 @@ OPT_DEBUG = 0
 NODELIST = None
 GROUPLIST = None
 EXCLUDELIST = None
+EXCLUDEGROUPS = None
 
 # map interface names back to node definition names
 NAMEMAP = {}
@@ -40,11 +41,19 @@ def make_nodeset(cfg):
 		nodes_in_groups = synctool_config.get_nodegroups(cfg, groups)
 		nodes.extend(nodes_in_groups)
 
+	excludes = []
+
 	if EXCLUDELIST:
 		excludes = string.split(EXCLUDELIST, ',')
-		for node in excludes:
-			if node in nodes:
-				nodes.remove(node)
+
+	if EXCLUDEGROUPS:
+		groups = string.split(EXCLUDEGROUPS, ',')
+		nodes_in_groups = synctool_config.get_nodegroups(cfg, groups)
+		excludes.extend(nodes_in_groups)
+
+	for node in excludes:
+		if node in nodes and not node in explicit_includes:
+			nodes.remove(node)
 
 	if len(nodes) <= 0:
 		return []
@@ -80,7 +89,10 @@ def run_remote_cmd(cfg, nodes, cmd):
 			print 'TD %s %s %s' % (ssh_cmd, node, cmd)
 			continue
 
-		if parallel > 3:
+#
+#	run commands in parallel, as many as defined
+#
+		if parallel > 16:
 			try:
 				if os.wait() != -1:
 					parallel = parallel - 1
@@ -91,14 +103,9 @@ def run_remote_cmd(cfg, nodes, cmd):
 		pid = os.fork()
 
 		if not pid:
-#			argv = string.split(ssh_cmd)
-#			argv.append(node)
-#			argv.append(cmd)
 #
-#			os.execv(argv[0], argv)
-#			print 'error: execv() failed'
-#			sys.exit(-1)
-
+#	execute remote command and show output with the nodename
+#
 			f = os.popen('%s %s %s 2>&1' % (ssh_cmd, node, cmd), 'r')
 			while 1:
 				line = f.readline()
@@ -117,27 +124,43 @@ def run_remote_cmd(cfg, nodes, cmd):
 		else:
 			parallel = parallel + 1
 
+#
+#	wait for children to terminate
+#
+	while 1:
+		try:
+			if os.wait() == -1:
+				break
+
+		except OSError:
+			break
+
 
 def usage():
 	print 'usage: %s [options] <remote command>' % os.path.basename(sys.argv[0])
 	print 'options:'
-	print '  -h, --help              Display this information'
-	print '  -c, --conf=dir/file     Use this config file (default: %s)' % synctool_config.DEFAULT_CONF
-	print '  -d, --debug             Do not run the remote command'
-	print '  -n, --node=nodelist     Execute only on these nodes'
-	print '  -g, --group=grouplist   Execute only on these groups of nodes'
-	print '  -x, --exclude=nodelist  Exclude these nodes from the selected group'
+	print '  -h, --help                     Display this information'
+	print '  -c, --conf=dir/file            Use this config file (default: %s)' % synctool_config.DEFAULT_CONF
+	print '  -d, --debug                    Do not run the remote command'
+	print '  -n, --node=nodelist            Execute only on these nodes'
+	print '  -g, --group=grouplist          Execute only on these groups of nodes'
+	print '  -x, --exclude=nodelist         Exclude these nodes from the selected group'
+	print '  -X, --exclude-group=grouplist  Exclude these groups from the selection'
+	print
+	print 'A nodelist or grouplist is a comma-separated list'
+	print
+	print 'synctool-ssh by Walter de Jong <walter@sara.nl> (c) 2009'
 
 
 def get_options():
-	global NODELIST, GROUPLIST, EXCLUDELIST, REMOTE_CMD, OPT_DEBUG
+	global NODELIST, GROUPLIST, EXCLUDELIST, EXCLUDEGROUPS, REMOTE_CMD, OPT_DEBUG
 
 	if len(sys.argv) <= 1:
 		usage()
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hc:dn:g:x:", ['help', 'conf=', 'debug', 'node', 'group', 'exclude'])
+		opts, args = getopt.getopt(sys.argv[1:], "hc:dn:g:x:X:", ['help', 'conf=', 'debug', 'node', 'group', 'exclude', 'exclude-group'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 		usage()
@@ -187,6 +210,13 @@ def get_options():
 				EXCLUDELIST = arg
 			else:
 				EXCLUDELIST = EXCLUDELIST + ',' + arg
+			continue
+
+		if opt in ('-X', '--exclude-group'):
+			if not EXCLUDEGROUPS:
+				EXCLUDEGROUPS = arg
+			else:
+				EXCLUDEGROUPS = EXCLUDEGROUPS + ',' + arg
 			continue
 
 	if args == None or len(args) <= 0:
