@@ -169,7 +169,7 @@ def get_options():
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hc:dn:g:x:X:", ['help', 'conf=', 'debug', 'node', 'group', 'exclude', 'exclude-group'])
+		opts, args = getopt.getopt(sys.argv[1:], "hc:dn:g:x:X:", ['help', 'conf=', 'debug', 'node=', 'group=', 'exclude=', 'exclude-group='])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
