@@ -211,7 +211,7 @@ def get_options():
 			if not GROUPLIST:
 				GROUPLIST = arg
 			else:
-				GROUPLIST = NODELIST + ',' + arg
+				GROUPLIST = GROUPLIST + ',' + arg
 			continue
 
 		if opt in ('-x', '--exclude'):
