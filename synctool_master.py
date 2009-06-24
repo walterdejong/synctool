@@ -24,7 +24,7 @@ def rsync_masterdir(cfg, nodes):
 
 	rsync_cmd = cfg['rsync_cmd']
 
-	synctool_ssh.run_parallel(cfg, nodes, '%s %s' % (rsync_cmd, cfg['masterdir']), cfg['masterdir'], ':')
+	synctool_ssh.run_parallel(cfg, nodes, '%s %s/' % (rsync_cmd, cfg['masterdir']), '%s/' % cfg['masterdir'], ':')
 
 
 def run_remote_synctool(cfg, nodes):
@@ -160,8 +160,8 @@ if __name__ == '__main__':
 #	enable debugging
 #
 #############
-	synctool_config.OPT_DEBUG = 1
-	synctool_ssh.OPT_DEBUG = 1
+#	synctool_config.OPT_DEBUG = 1
+#	synctool_ssh.OPT_DEBUG = 1
 
 	if not OPT_SKIP_RSYNC:
 		rsync_masterdir(cfg, nodes)
