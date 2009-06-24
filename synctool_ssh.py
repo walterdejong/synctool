@@ -75,13 +75,17 @@ def make_nodeset(cfg):
 	return nodeset
 
 
-def run_remote_cmd(cfg, nodes, cmd):
+def run_remote_cmd(cfg, nodes, remote_cmd):
 	if not cfg.has_key('ssh_cmd'):
 		print '%s: error: ssh_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE)
 		sys.exit(-1)
 
 	ssh_cmd = cfg['ssh_cmd']
 
+	run_parallel(cfg, nodes, ssh_cmd, remote_cmd)
+
+
+def run_parallel(cfg, nodes, cmd, cmd_args):
 	if not cfg.has_key('num_proc'):
 		num_proc = 16						# use sensible default
 	else:
@@ -91,7 +95,7 @@ def run_remote_cmd(cfg, nodes, cmd):
 
 	for node in nodes:
 		if OPT_DEBUG:
-			print 'debug: %s %s %s' % (ssh_cmd, node, cmd)
+			print 'debug: %s %s %s' % (cmd, node, cmd_args)
 			continue
 
 #
@@ -111,7 +115,7 @@ def run_remote_cmd(cfg, nodes, cmd):
 #
 #	execute remote command and show output with the nodename
 #
-			f = os.popen('%s %s %s 2>&1' % (ssh_cmd, node, cmd), 'r')
+			f = os.popen('%s %s %s 2>&1' % (cmd, node, cmd_args), 'r')
 			while 1:
 				line = f.readline()
 				if not line:
