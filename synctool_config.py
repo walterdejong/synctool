@@ -16,13 +16,13 @@ CONF_FILE=DEFAULT_CONF
 ACTION = 0
 ACTION_OPTION = None
 ARG_NODENAMES = None
-ARG_NODEGROUPS = None
+ARG_GROUPS = None
 
 # these are enums for the "list" command-line options
 ACTION_LIST_NODES = 1
 ACTION_LIST_GROUPS = 2
 ACTION_NODES = 3
-ACTION_NODEGROUPS = 4
+ACTION_GROUPS = 4
 
 # optional: do not list hosts/groups that are ignored
 OPT_FILTER_IGNORED = 0
@@ -555,20 +555,20 @@ def set_action(a, opt):
 def usage():
 	print 'usage: %s [options] [<argument>]' % os.path.basename(sys.argv[0])
 	print 'options:'
-	print '  -h, --help                     Display this information'
-	print '  -c, --conf=dir/file            Use this config file (default: %s)' % DEFAULT_CONF
-	print '  -l, --list-nodes               List all configured nodes'
-	print '  -g, --groups                   List all known groups'
-	print '  -n, --node <node list>         List all groups this node is in'
-	print '  -N, --node-group <group list>  List all nodes in this group'
-	print '  -i, --interface                List selected nodes by interface'
-	print '  -f, --filter-ignored           Do not list ignored host and groups'
+	print '  -h, --help               Display this information'
+	print '  -c, --conf=dir/file      Use this config file (default: %s)' % DEFAULT_CONF
+	print '  -l, --list-nodes         List all configured nodes'
+	print '  -L, --list-groups        List all configured groups'
+	print '  -n, --node=nodelist      List all groups this node is in'
+	print '  -g, --group=grouplist    List all nodes in this group'
+	print '  -i, --interface          List selected nodes by interface'
+	print '  -f, --filter-ignored     Do not list ignored host and groups'
 	print
 	print 'A node/group list can be a single value, or a comma-separated list'
 
 
 def get_options():
-	global CONF_FILE, ARG_NODENAMES, ARG_NODEGROUPS, OPT_FILTER_IGNORED, OPT_INTERFACE
+	global CONF_FILE, ARG_NODENAMES, ARG_GROUPS, OPT_FILTER_IGNORED, OPT_INTERFACE
 
 	progname = os.path.basename(sys.argv[0])
 
@@ -578,7 +578,7 @@ def get_options():
 
 	if len(sys.argv) > 1:
 		try:
-			opts, args = getopt.getopt(sys.argv[1:], "hc:lgn:N:iI:f", ['help', 'conf=', 'list-nodes', 'groups', 'node=', 'node-group=', 'interface', 'group-interfaces', 'filter-ignored'])
+			opts, args = getopt.getopt(sys.argv[1:], "hc:lLn:g:if", ['help', 'conf=', 'list-nodes', 'list-groups', 'node=', 'group=', 'interface', 'filter-ignored'])
 		except getopt.error, (reason):
 			print
 			print '%s: %s' % (progname, reason)
@@ -612,8 +612,8 @@ def get_options():
 				set_action(ACTION_LIST_NODES, '--list-nodes')
 				continue
 
-			if opt in ('-g', '--groups'):
-				set_action(ACTION_LIST_GROUPS, '--groups')
+			if opt in ('-L', '--list-groups'):
+				set_action(ACTION_LIST_GROUPS, '--list-groups')
 				continue
 
 			if opt in ('-n', '--node'):
@@ -621,9 +621,9 @@ def get_options():
 				ARG_NODENAMES = string.split(arg, ',')
 				continue
 
-			if opt in ('-N', '--node-group'):
-				set_action(ACTION_NODEGROUPS, '--node-group')
-				ARG_NODEGROUPS = string.split(arg, ',')
+			if opt in ('-g', '--group'):
+				set_action(ACTION_GROUPS, '--group')
+				ARG_GROUPS = string.split(arg, ',')
 				continue
 
 			if opt in ('-i', '--interface'):
@@ -669,12 +669,12 @@ if __name__ == '__main__':
 
 		list_nodes(cfg, ARG_NODENAMES)
 
-	elif ACTION == ACTION_NODEGROUPS:
-		if not ARG_NODEGROUPS:
+	elif ACTION == ACTION_GROUPS:
+		if not ARG_GROUPS:
 			stderr("option '--node-group' requires an argument; the node group name")
 			sys.exit(1)
 
-		list_nodegroups(cfg, ARG_NODEGROUPS)
+		list_nodegroups(cfg, ARG_GROUPS)
 
 
 # EOB
