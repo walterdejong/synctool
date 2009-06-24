@@ -63,7 +63,7 @@ def make_nodeset(cfg):
 	for node in nodes:
 		if node in cfg['ignore_groups'] and not node in explicit_includes:
 			if OPT_DEBUG:
-				print 'TD %s is ignored' % node
+				print 'debug: %s is ignored' % node
 			continue
 
 		iface = synctool_config.get_node_interface(cfg, node)
@@ -82,17 +82,22 @@ def run_remote_cmd(cfg, nodes, cmd):
 
 	ssh_cmd = cfg['ssh_cmd']
 
+	if not cfg.has_key('num_proc'):
+		num_proc = 16						# use sensible default
+	else:
+		num_proc = int(cfg['num_proc'])
+
 	parallel = 0
 
 	for node in nodes:
 		if OPT_DEBUG:
-			print 'TD %s %s %s' % (ssh_cmd, node, cmd)
+			print 'debug: %s %s %s' % (ssh_cmd, node, cmd)
 			continue
 
 #
 #	run commands in parallel, as many as defined
 #
-		if parallel > 16:
+		if parallel > num_proc:
 			try:
 				if os.wait() != -1:
 					parallel = parallel - 1

@@ -315,6 +315,30 @@ def read_config():
 			cfg['ssh_cmd'] = string.join(arr[1:])
 			continue
 
+#
+#	keyword: num_proc
+#
+		if keyword == 'num_proc':
+			if cfg.has_key('num_proc'):
+				stderr("%s:%d: redefinition of num_proc" % (CONF_FILE, lineno))
+				errors = errors + 1
+				continue
+
+			try:
+				num_proc = int(arr[1])
+			except ValueError:
+				stderr("%s:%d: invalid argument for num_proc" % (CONF_FILE, lineno))
+				errors = errors + 1
+				continue
+
+			if num_proc < 1:
+				stderr("%s:%d: invalid argument for num_proc" % (CONF_FILE, lineno))
+				errors = errors + 1
+				continue
+
+			cfg['num_proc'] = num_proc
+			continue
+
 		stderr("%s:%d: unknown keyword '%s'" % (CONF_FILE, lineno, keyword))
 		errors = errors + 1
 
