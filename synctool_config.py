@@ -316,6 +316,52 @@ def read_config():
 			continue
 
 #
+#	keyword: rsync_cmd
+#
+		if keyword == 'rsync_cmd':
+			if len(arr) < 2:
+				stderr("%s:%d: 'rsync_cmd' requires an argument: the full path to the 'rsync' command" % (CONF_FILE, lineno))
+				errors = errors + 1
+				continue
+
+			if cfg.has_key('rsync_cmd'):
+				stderr("%s:%d: redefinition of rsync_cmd" % (CONF_FILE, lineno))
+				errors = errors + 1
+				continue
+
+			cmd = arr[1]
+			if not os.path.isfile(cmd):
+				stderr("%s:%d: no such command '%s'" % (CONF_FILE, lineno, cmd))
+				errors = errors + 1
+				continue
+
+			cfg['rsync_cmd'] = string.join(arr[1:])
+			continue
+
+#
+#	keyword: synctool_cmd
+#
+		if keyword == 'synctool_cmd':
+			if len(arr) < 2:
+				stderr("%s:%d: 'synctool_cmd' requires an argument: the full path to the remote 'synctool' command" % (CONF_FILE, lineno))
+				errors = errors + 1
+				continue
+
+			if cfg.has_key('synctool_cmd'):
+				stderr("%s:%d: redefinition of synctool_cmd" % (CONF_FILE, lineno))
+				errors = errors + 1
+				continue
+
+			cmd = arr[1]
+			if not os.path.isfile(cmd):
+				stderr("%s:%d: no such command '%s'" % (CONF_FILE, lineno, cmd))
+				errors = errors + 1
+				continue
+
+			cfg['synctool_cmd'] = string.join(arr[1:])
+			continue
+
+#
 #	keyword: num_proc
 #
 		if keyword == 'num_proc':

@@ -85,7 +85,7 @@ def run_remote_cmd(cfg, nodes, remote_cmd):
 	run_parallel(cfg, nodes, ssh_cmd, remote_cmd)
 
 
-def run_parallel(cfg, nodes, cmd, cmd_args):
+def run_parallel(cfg, nodes, cmd, cmd_args, join_char=None):
 	if not cfg.has_key('num_proc'):
 		num_proc = 16						# use sensible default
 	else:
@@ -95,7 +95,10 @@ def run_parallel(cfg, nodes, cmd, cmd_args):
 
 	for node in nodes:
 		if OPT_DEBUG:
-			print 'debug: %s %s %s' % (cmd, node, cmd_args)
+			if join_char != None:
+				print 'debug: %s %s%s%s' % (cmd, node, join_char, cmd_args)
+			else:
+				print 'debug: %s %s %s' % (cmd, node, cmd_args)
 			continue
 
 #
@@ -115,7 +118,11 @@ def run_parallel(cfg, nodes, cmd, cmd_args):
 #
 #	execute remote command and show output with the nodename
 #
-			f = os.popen('%s %s %s 2>&1' % (cmd, node, cmd_args), 'r')
+			if join_char != None:
+				f = os.popen('%s %s%s%s 2>&1' % (cmd, node, join_char, cmd_args), 'r')
+			else:
+				f = os.popen('%s %s %s 2>&1' % (cmd, node, cmd_args), 'r')
+
 			while 1:
 				line = f.readline()
 				if not line:
