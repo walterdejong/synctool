@@ -292,6 +292,29 @@ def read_config():
 			cfg['diff_cmd'] = string.join(arr[1:])
 			continue
 
+#
+#	keyword: ssh_cmd
+#
+		if keyword == 'ssh_cmd':
+			if len(arr) < 2:
+				stderr("%s:%d: 'ssh_cmd' requires an argument: the full path to the 'ssh' command" % (CONF_FILE, lineno))
+				errors = errors + 1
+				continue
+
+			if cfg.has_key('ssh_cmd'):
+				stderr("%s:%d: redefinition of ssh_cmd" % (CONF_FILE, lineno))
+				errors = errors + 1
+				continue
+
+			cmd = arr[1]
+			if not os.path.isfile(cmd):
+				stderr("%s:%d: no such command '%s'" % (CONF_FILE, lineno, cmd))
+				errors = errors + 1
+				continue
+
+			cfg['ssh_cmd'] = string.join(arr[1:])
+			continue
+
 		stderr("%s:%d: unknown keyword '%s'" % (CONF_FILE, lineno, keyword))
 		errors = errors + 1
 
