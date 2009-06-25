@@ -405,25 +405,51 @@ def read_config():
 
 def add_myhostname(cfg):
 	'''add the hostname of the current host to the configuration, so that it can be used'''
+	'''also determine the nodename of the current host'''
 
 #
 #	get my hostname
 #
 	hostname = socket.gethostname()
+	cfg['hostname'] = hostname
+
 	arr = string.split(hostname, '.')
-	cfg['hostname'] = arr[0]
+	short_hostname = arr[0]
 
-	if cfg['host'].has_key(hostname):
-		if arr[0] != hostname and cfg['host'].has_key(arr[0]):
-			stderr("%s: conflict; host %s and %s are both defined" % (CONF_FILE, hostname, arr[0]))
-			sys.exit(-1)
+	all_nodes = get_all_nodes(cfg)
+
+	if hostname != short_hostname and hostname in all_nodes and short_hostname in all_nodes:
+		stderr("%s: conflict; node %s and %s are both defined" % (CONF_FILE, hostname, arr[0]))
+		sys.exit(-1)
+
+	nodename = None
+
+	if short_hostname in all_nodes:
+		nodename = short_hostname
+
+	elif hostname in all_nodes:
+		nodename = hostname
+
 	else:
-		if cfg['host'].has_key(arr[0]):
-			hostname = arr[0]
+# try to find a node that has the (short) hostname listed as interface or as a group
+		for node in all_nodes:
+			iface = get_node_interface(cfg, node)
+			if iface == short_hostname or iface == hostname:
+				nodename = node
+				break
 
+			groups = get_groups(cfg, [node])
+			if short_hostname in groups or hostname in groups:
+				nodename = node
+				break
+
+	cfg['nodename'] = nodename
+
+	if nodename != None:
 # implicitly add hostname as first group
-	if cfg['host'].has_key(hostname):
-		insert_group(cfg, hostname, hostname)
+		insert_group(cfg, nodename, hostname)
+		insert_group(cfg, nodename, short_hostname)
+		insert_group(cfg, nodename, nodename)
 
 
 # remove ignored groups from all hosts
@@ -444,8 +470,10 @@ def insert_group(cfg, node, group):
 	'''add group to node definition'''
 
 	if cfg['host'].has_key(node):
-		if not group in cfg['host'][node]:
-			cfg['host'][node].insert(0, group)
+		if group in cfg['host'][node]:
+			cfg['host'][node].remove(group)		# this is to make sure it comes first
+
+		cfg['host'][node].insert(0, group)
 	else:
 		cfg['host'][node] = [group]
 

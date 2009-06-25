@@ -970,9 +970,9 @@ def run_command(cfg, cmd):
 def overlay_files(cfg):
 	'''run the overlay function'''
 
-	hostname = cfg['hostname']
+	nodename = cfg['nodename']
 	masterdir = cfg['masterdir']
-	groups = cfg['host'][hostname]
+	groups = synctool_config.get_groups(cfg, [nodename])
 	all_groups = synctool_config.make_all_groups(cfg)
 
 	base_path = os.path.join(masterdir, 'overlay')
@@ -1040,9 +1040,9 @@ def treewalk_delete(args, dir, files):
 
 
 def delete_files(cfg):
-	hostname = cfg['hostname']
+	nodename = cfg['nodename']
 	masterdir = cfg['masterdir']
-	groups = cfg['host'][hostname]
+	groups = synctool_config.get_groups(cfg, [nodename])
 	all_groups = synctool_config.make_all_groups(cfg)
 
 	delete_path = os.path.join(masterdir, 'delete')
@@ -1104,9 +1104,9 @@ def treewalk_tasks(args, dir, files):
 
 
 def run_tasks(cfg):
-	hostname = cfg['hostname']
+	nodename = cfg['nodename']
 	masterdir = cfg['masterdir']
-	groups = cfg['host'][hostname]
+	groups = synctool_config.get_groups(cfg, [nodename])
 	all_groups = synctool_config.make_all_groups(cfg)
 
 	tasks_path = os.path.join(masterdir, 'tasks')
@@ -1197,9 +1197,9 @@ def find_synctree(cfg, filename):
 
 	global FOUND_SINGLE
 
-	hostname = cfg['hostname']
+	nodename = cfg['nodename']
 	masterdir = cfg['masterdir']
-	groups = cfg['host'][hostname]
+	groups = synctool_config.get_groups(cfg, [nodename])
 	all_groups = synctool_config.make_all_groups(cfg)
 
 	base_path = os.path.join(masterdir, 'overlay')
@@ -1377,8 +1377,12 @@ def main():
 	cfg = synctool_config.read_config()
 	synctool_config.add_myhostname(cfg)
 
-	if cfg['hostname'] in cfg['ignore_groups']:
-		stderr('%s: node %s is disabled in the config file' % (synctool_config.CONF_FILE, cfg['hostname']))
+	if cfg['nodename'] == None:
+		stderr('unabled to determine my nodename, please check %s' % synctool_config.CONF_FILE)
+		sys.exit(1)
+
+	if cfg['nodename'] in cfg['ignore_groups']:
+		stderr('%s: node %s is disabled in the config file' % (synctool_config.CONF_FILE, cfg['nodename']))
 		sys.exit(1)
 
 	synctool_config.remove_ignored_groups(cfg)
@@ -1396,6 +1400,7 @@ def main():
 		unix_out('#')
 		unix_out('# script generated on %04d/%02d/%02d %02d:%02d:%02d' % (t[0], t[1], t[2], t[3], t[4], t[5]))
 		unix_out('#')
+		unix_out('# NODENAME=%s' % cfg['nodename'])
 		unix_out('# HOSTNAME=%s' % cfg['hostname'])
 		unix_out('# MASTERDIR=%s' % cfg['masterdir'])
 		unix_out('# SYMLINK_MODE=0%o' % SYMLINK_MODE)
@@ -1413,6 +1418,7 @@ def main():
 		unix_out('')
 	else:
 		if not QUIET:
+			verbose('my nodename: %s' % cfg['nodename'])
 			verbose('my hostname: %s' % cfg['hostname'])
 			verbose('masterdir: %s' % cfg['masterdir'])
 			verbose('symlink_mode: 0%o' % SYMLINK_MODE)
@@ -1423,14 +1429,15 @@ def main():
 			verbose('')
 
 			if DRY_RUN:
-				stdout(' DRY RUN, not doing any updates')
+				stdout('DRY RUN, not doing any updates')
 			else:
-				stdout(' --fix specified, applying changes')
+				stdout('--fix specified, applying changes')
 			verbose('')
 
 	openlog(LOGFILE)
 
-	os.putenv('MASTERDIR', cfg['masterdir'])
+	os.putenv('SYNCTOOL_NODENAME', cfg['nodename'])
+	os.putenv('SYNCTOOL_MASTERDIR', cfg['masterdir'])
 
 	if diff_file:
 		diff_files(cfg, diff_file)
