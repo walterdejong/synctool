@@ -61,7 +61,7 @@ def filter_myhostname(hostname, nodes):
 #
 #	there can be another name under which this host is known
 #
-	groups = synctool_config.get_nodes(cfg, [cfg['hostname']])
+	groups = synctool_config.get_groups(cfg, [cfg['hostname']])
 	for group in groups:
 		if group in nodes:
 			print 'TD filtered my hostname (2)'

@@ -507,7 +507,9 @@ def list_all_groups(cfg):
 			print group
 
 
-def get_nodes(cfg, nodenames):
+def get_groups(cfg, nodenames):
+	'''returns the groups for the nodes listed in [nodenames]'''
+
 	arr = []
 
 	for nodename in nodenames:
@@ -525,7 +527,7 @@ def list_nodes(cfg, nodenames):
 			stderr("no such node '%s' defined" % nodename)
 			sys.exit(1)
 
-	groups = get_nodes(cfg, nodenames)
+	groups = get_groups(cfg, nodenames)
 	groups.sort()
 
 	for group in groups:
