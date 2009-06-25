@@ -68,21 +68,36 @@ def read_config():
 	lineno = 0
 	errors = 0
 
+#
+#	read lines from the config file
+#	variable tmp_line is used to be able to do multi-line reads (backslash terminated)
+#
+	line = ''
 	while 1:
-		line = f.readline()
-		if not line:
+		tmp_line = f.readline()
+		if not tmp_line:
 			break
 
 		lineno = lineno + 1
 
-		line = string.strip(line)
-		if not line:
+		tmp_line = string.strip(tmp_line)
+		if not tmp_line:
 			continue
 
-		if line[0] == '#':
+		if tmp_line[0] == '#':
 			continue
+
+		if tmp_line[-1] == '\\':
+			line = line + ' ' + tmp_line[:-1]
+			continue
+
+		line = line + ' ' + tmp_line
+		tmp_line = ''
 
 		arr = string.split(line)
+
+		line = ''					# <-- line is being reset here; use arr[] from here on
+
 		if len(arr) <= 1:
 			stderr('%s:%d: syntax error ; expected key/value pair' % (CONF_FILE, lineno))
 			errors = errors + 1
