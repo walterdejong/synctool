@@ -5,6 +5,7 @@
 
 import synctool_config
 import synctool_ssh
+import synctool
 
 import os
 import sys
@@ -35,6 +36,39 @@ def run_remote_synctool(cfg, nodes):
 	synctool_cmd = cfg['synctool_cmd']
 
 	synctool_ssh.run_remote_cmd(cfg, nodes, '%s %s' % (synctool_cmd, PASS_ARGS))
+
+
+def run_local_synctool(cfg):
+	'''run synctool_cmd locally on this host'''
+
+	print 'TD running synctool locally'
+
+	if not cfg.has_key('synctool_cmd'):
+		print '%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE)
+		sys.exit(-1)
+
+	synctool.run_command(cfg, '%s %s' % (cfg['synctool_cmd'], PASS_ARGS))
+
+
+def filter_myhostname(hostname, nodes):
+	'''filter out this host; no rsync/ssh needs to be run to this host'''
+
+	if cfg['hostname'] in nodes:				# that's clear
+		print 'TD filtered my hostname'
+		nodes.remove(cfg['hostname'])
+		return 1
+
+#
+#	there can be another name under which this host is known
+#
+	groups = synctool_config.get_nodes(cfg, [cfg['hostname']])
+	for group in groups:
+		if group in nodes:
+			print 'TD filtered my hostname (2)'
+			nodes.remove(group)
+			return 1
+
+	return 0
 
 
 def usage():
@@ -153,20 +187,26 @@ if __name__ == '__main__':
 	get_options()
 
 	cfg = synctool_config.read_config()
-	nodes = synctool_ssh.make_nodeset(cfg)
+	synctool_config.add_myhostname(cfg)
 
 #############
 #
 #	enable debugging
 #
 #############
-#	synctool_config.OPT_DEBUG = 1
-#	synctool_ssh.OPT_DEBUG = 1
+	synctool_config.OPT_DEBUG = 1
+	synctool_ssh.OPT_DEBUG = 1
 
-	if not OPT_SKIP_RSYNC:
-		rsync_masterdir(cfg, nodes)
+	nodes = synctool_ssh.make_nodeset(cfg)
 
-	run_remote_synctool(cfg, nodes)
+	if filter_myhostname(cfg['hostname'], nodes):
+		run_local_synctool(cfg)
+
+	if len(nodes) > 0:
+		if not OPT_SKIP_RSYNC:
+			rsync_masterdir(cfg, nodes)
+
+		run_remote_synctool(cfg, nodes)
 
 
 # EOB

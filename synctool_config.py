@@ -407,37 +407,23 @@ def read_config():
 def add_myhostname(cfg):
 	'''add the hostname of the current host to the configuration, so that it can be used'''
 
-	errors = 0
 #
 #	get my hostname
 #
 	hostname = socket.gethostname()
 	arr = string.split(hostname, '.')
+	cfg['hostname'] = arr[0]
 
-	if arr[0] in cfg['ignore_groups']:
-		stderr('%s: host %s is disabled in the config file' % (CONF_FILE, arr[0]))
-		errors = errors + 1
+	if cfg['host'].has_key(hostname):
+		if arr[0] != hostname and cfg['host'].has_key(arr[0]):
+			stderr("%s: conflict; host %s and %s are both defined" % (CONF_FILE, hostname, arr[0]))
+			sys.exit(-1)
 	else:
-		if cfg['host'].has_key(hostname):
-			cfg['hostname'] = hostname
+		if cfg['host'].has_key(arr[0]):
+			hostname = arr[0]
 
-			if len(arr) > 0 and arr[0] != hostname and cfg['host'].has_key(arr[0]):
-				stderr("%s: conflict; host %s and %s are both defined" % (CONF_FILE, hostname, arr[0]))
-				errors = errors + 1
-		else:
-			if len(arr) > 0 and cfg['host'].has_key(arr[0]):
-				cfg['hostname'] = arr[0]
-				hostname = arr[0]
-			else:
-				stderr('%s: no entry for host %s defined' % (CONF_FILE, hostname))
-				errors = errors + 1
-
-	if errors > 0:
-		sys.exit(-1)
-
-# implicitly add 'hostname' as first group
-	if not hostname in cfg['host'][hostname]:
-		cfg['host'][hostname].insert(0, hostname)
+	if cfg['host'].has_key(hostname):
+		cfg['host'][hostname].insert(0, hostname)		# implicitly add 'hostname' as first group
 
 
 # remove ignored groups from all hosts
@@ -525,9 +511,10 @@ def get_nodes(cfg, nodenames):
 	arr = []
 
 	for nodename in nodenames:
-		for group in cfg['host'][nodename]:
-			if not group in arr:
-				arr.append(group)
+		if cfg['host'].has_key(nodename):
+			for group in cfg['host'][nodename]:
+				if not group in arr:
+					arr.append(group)
 
 	return arr
 

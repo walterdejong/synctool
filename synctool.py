@@ -1376,6 +1376,11 @@ def main():
 
 	cfg = synctool_config.read_config()
 	synctool_config.add_myhostname(cfg)
+
+	if cfg['hostname'] in cfg['ignore_groups']:
+		stderr('%s: host %s is disabled in the config file' % (CONF_FILE, cfg['hostname']))
+		sys.exit(1)
+
 	synctool_config.remove_ignored_groups(cfg)
 
 	if cfg.has_key('symlink_mode'):
