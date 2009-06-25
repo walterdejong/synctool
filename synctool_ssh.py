@@ -38,7 +38,7 @@ def make_nodeset(cfg):
 
 	if GROUPLIST:
 		groups = string.split(GROUPLIST, ',')
-		nodes_in_groups = synctool_config.get_nodegroups(cfg, groups)
+		nodes_in_groups = synctool_config.get_nodes_in_groups(cfg, groups)
 		nodes.extend(nodes_in_groups)
 
 	excludes = []
@@ -48,7 +48,7 @@ def make_nodeset(cfg):
 
 	if EXCLUDEGROUPS:
 		groups = string.split(EXCLUDEGROUPS, ',')
-		nodes_in_groups = synctool_config.get_nodegroups(cfg, groups)
+		nodes_in_groups = synctool_config.get_nodes_in_groups(cfg, groups)
 		excludes.extend(nodes_in_groups)
 
 	for node in excludes:
