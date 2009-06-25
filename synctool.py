@@ -1378,7 +1378,7 @@ def main():
 	synctool_config.add_myhostname(cfg)
 
 	if cfg['hostname'] in cfg['ignore_groups']:
-		stderr('%s: host %s is disabled in the config file' % (synctool_config.CONF_FILE, cfg['hostname']))
+		stderr('%s: node %s is disabled in the config file' % (synctool_config.CONF_FILE, cfg['hostname']))
 		sys.exit(1)
 
 	synctool_config.remove_ignored_groups(cfg)
@@ -1413,20 +1413,20 @@ def main():
 		unix_out('')
 	else:
 		if not QUIET:
-			stdout('my hostname: %s' % cfg['hostname'])
-			stdout('masterdir: %s' % cfg['masterdir'])
+			verbose('my hostname: %s' % cfg['hostname'])
+			verbose('masterdir: %s' % cfg['masterdir'])
 			verbose('symlink_mode: 0%o' % SYMLINK_MODE)
 
 			if LOGFILE != None and not DRY_RUN:
-				stdout('logfile: %s' % LOGFILE)
+				verbose('logfile: %s' % LOGFILE)
 
-			stdout('')
+			verbose('')
 
 			if DRY_RUN:
 				stdout(' DRY RUN, not doing any updates')
 			else:
 				stdout(' --fix specified, applying changes')
-			stdout('')
+			verbose('')
 
 	openlog(LOGFILE)
 

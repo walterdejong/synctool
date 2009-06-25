@@ -122,11 +122,11 @@ def read_config():
 			continue
 
 #
-#	keyword: host
+#	keyword: host / node
 #
-		if keyword == 'host':
+		if keyword == 'host' or keyword == 'node':
 			if len(arr) < 2:
-				stderr("%s:%d: 'host' requires at least 1 argument: the hostname" % (CONF_FILE, lineno))
+				stderr("%s:%d: '%s' requires at least 1 argument: the hostname" % (CONF_FILE, lineno, keyword))
 				errors = errors + 1
 				continue
 
@@ -137,7 +137,7 @@ def read_config():
 			groups = arr[2:]
 
 			if cfg['host'].has_key(host):
-				stderr("%s:%d: redefinition of host %s" % (CONF_FILE, lineno, host))
+				stderr("%s:%d: redefinition of node %s" % (CONF_FILE, lineno, host))
 				errors = errors + 1
 				continue
 
@@ -149,7 +149,7 @@ def read_config():
 					cfg['interfaces'] = {}
 
 				if cfg['interfaces'].has_key(host):
-					stderr("%s:%d: redefinition of interface for host %s" % (CONF_FILE, lineno, host))
+					stderr("%s:%d: redefinition of interface for node %s" % (CONF_FILE, lineno, host))
 					errors = errors + 1
 					continue
 
@@ -161,11 +161,11 @@ def read_config():
 			continue
 
 #
-#	keyword: ignore_host
+#	keyword: ignore_host / ignore_node
 #
-		if keyword == 'ignore_host':
+		if keyword == 'ignore_host' or keyword == 'ignore_node':
 			if len(arr) < 2:
-				stderr("%s:%d: 'ignore_host' requires 1 argument: the hostname to ignore" % (CONF_FILE, lineno))
+				stderr("%s:%d: '%s' requires 1 argument: the hostname to ignore" % (CONF_FILE, lineno, keyword))
 				errors = errors + 1
 				continue
 
@@ -595,7 +595,7 @@ def usage():
 	print '  -n, --node=nodelist      List all groups this node is in'
 	print '  -g, --group=grouplist    List all nodes in this group'
 	print '  -i, --interface          List selected nodes by interface'
-	print '  -f, --filter-ignored     Do not list ignored host and groups'
+	print '  -f, --filter-ignored     Do not list ignored nodes and groups'
 	print
 	print 'A node/group list can be a single value, or a comma-separated list'
 
