@@ -1378,7 +1378,7 @@ def main():
 	synctool_config.add_myhostname(cfg)
 
 	if cfg['nodename'] == None:
-		stderr('unabled to determine my nodename, please check %s' % synctool_config.CONF_FILE)
+		stderr('unable to determine my nodename, please check %s' % synctool_config.CONF_FILE)
 		sys.exit(1)
 
 	if cfg['nodename'] in cfg['ignore_groups']:
