@@ -126,7 +126,7 @@ def read_config():
 #
 		if keyword == 'host' or keyword == 'node':
 			if len(arr) < 2:
-				stderr("%s:%d: '%s' requires at least 1 argument: the hostname" % (CONF_FILE, lineno, keyword))
+				stderr("%s:%d: '%s' requires at least 1 argument: the nodename" % (CONF_FILE, lineno, keyword))
 				errors = errors + 1
 				continue
 
@@ -165,7 +165,7 @@ def read_config():
 #
 		if keyword == 'ignore_host' or keyword == 'ignore_node':
 			if len(arr) < 2:
-				stderr("%s:%d: '%s' requires 1 argument: the hostname to ignore" % (CONF_FILE, lineno, keyword))
+				stderr("%s:%d: '%s' requires 1 argument: the nodename to ignore" % (CONF_FILE, lineno, keyword))
 				errors = errors + 1
 				continue
 
@@ -396,10 +396,9 @@ def read_config():
 	if errors > 0:
 		sys.exit(-1)
 
-# implicitly add 'hostname' as first group
-	for host in cfg['host'].keys():
-		if not host in cfg['host'][host]:
-			cfg['host'][host].insert(0, host)
+# implicitly add 'nodename' as first group
+	for node in get_all_nodes(cfg):
+		insert_group(cfg, node, node)
 
 	return cfg
 
@@ -422,8 +421,9 @@ def add_myhostname(cfg):
 		if cfg['host'].has_key(arr[0]):
 			hostname = arr[0]
 
+# implicitly add hostname as first group
 	if cfg['host'].has_key(hostname):
-		cfg['host'][hostname].insert(0, hostname)		# implicitly add 'hostname' as first group
+		insert_group(cfg, hostname, hostname)
 
 
 # remove ignored groups from all hosts
@@ -438,6 +438,16 @@ def remove_ignored_groups(cfg):
 
 		if changed:
 			cfg['host'][host] = groups
+
+
+def insert_group(cfg, node, group):
+	'''add group to node definition'''
+
+	if cfg['host'].has_key(node):
+		if not group in cfg['host'][node]:
+			cfg['host'][node].insert(0, group)
+	else:
+		cfg['host'][node] = [group]
 
 
 def get_all_nodes(cfg):
