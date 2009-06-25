@@ -1378,7 +1378,7 @@ def main():
 	synctool_config.add_myhostname(cfg)
 
 	if cfg['hostname'] in cfg['ignore_groups']:
-		stderr('%s: host %s is disabled in the config file' % (CONF_FILE, cfg['hostname']))
+		stderr('%s: host %s is disabled in the config file' % (synctool_config.CONF_FILE, cfg['hostname']))
 		sys.exit(1)
 
 	synctool_config.remove_ignored_groups(cfg)
