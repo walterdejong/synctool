@@ -3,9 +3,10 @@
 #	synctool_master.py	WJ109
 #
 
-import synctool_config
-import synctool_ssh
 import synctool
+import synctool_ssh
+import synctool_config
+import synctool_aggr
 
 import os
 import sys
@@ -14,6 +15,7 @@ import getopt
 
 
 OPT_SKIP_RSYNC = 0
+OPT_AGGREGATE = 0
 
 PASS_ARGS = None
 
@@ -48,6 +50,22 @@ def run_local_synctool(cfg):
 	synctool.run_command(cfg, '%s %s' % (cfg['synctool_cmd'], PASS_ARGS))
 
 
+def run_with_aggregate():
+	'''pipe the synctool output through the aggregator'''
+
+	argv = sys.argv[:]
+
+	if '-a' in argv:
+		argv.remove('-a')
+
+	if '--aggregate' in argv:
+		argv.remove('--aggregate')
+
+	f = os.popen(string.join(argv), 'r')
+	synctool_aggr.aggregate(f)
+	f.close()
+
+
 def usage():
 	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
 	print 'options:'
@@ -67,6 +85,7 @@ def usage():
 	print '  -f, --fix                      Perform updates (otherwise, do dry-run)'
 	print '      --skip-rsync               Do not sync the repository'
 	print '                                 (eg. when it is on a shared filesystem)'
+	print '  -a, --aggregate                Condense output; list nodes per change'
 	print
 	print 'A nodelist or grouplist is a comma-separated list'
 	print 'Note that by default, it does a dry-run, unless you specify --fix'
@@ -75,15 +94,15 @@ def usage():
 
 
 def get_options():
-	global PASS_ARGS, OPT_SKIP_RSYNC
+	global PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE
 
 #	if len(sys.argv) <= 1:
 #		usage()
 #		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hc:n:g:x:X:d:1:tfvq", ['help', 'conf=', 'debug', 'node=', 'group=',
-			'exclude=', 'exclude-group=', 'diff=', 'single=', 'tasks', 'fix', 'verbose', 'quiet', 'skip-rsync'])
+		opts, args = getopt.getopt(sys.argv[1:], "hc:n:g:x:X:d:1:tfvqa", ['help', 'conf=', 'debug', 'node=', 'group=',
+			'exclude=', 'exclude-group=', 'diff=', 'single=', 'tasks', 'fix', 'verbose', 'quiet', 'aggregate', 'skip-rsync'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -140,6 +159,10 @@ def get_options():
 				synctool_ssh.EXCLUDEGROUPS = synctool_ssh.EXCLUDEGROUPS + ',' + arg
 			continue
 
+		if opt in ('-a', '--aggregate'):
+			OPT_AGGREGATE = 1
+			continue
+
 		if opt == '--skip-rsync':
 			OPT_SKIP_RSYNC = 1
 			continue
@@ -156,8 +179,13 @@ def get_options():
 		PASS_ARGS = PASS_ARGS[1:]
 
 
+
 if __name__ == '__main__':
 	get_options()
+
+	if OPT_AGGREGATE:
+		run_with_aggregate()
+		sys.exit(0)
 
 	cfg = synctool_config.read_config()
 	synctool_config.add_myhostname(cfg)
@@ -167,8 +195,8 @@ if __name__ == '__main__':
 #	enable debugging
 #
 #############
-	synctool_config.OPT_DEBUG = 1
-	synctool_ssh.OPT_DEBUG = 1
+#	synctool_config.OPT_DEBUG = 1
+#	synctool_ssh.OPT_DEBUG = 1
 
 	nodes = synctool_ssh.make_nodeset(cfg)
 
