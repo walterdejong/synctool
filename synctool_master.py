@@ -18,6 +18,7 @@ OPT_SKIP_RSYNC = 0
 OPT_AGGREGATE = 0
 
 PASS_ARGS = None
+MASTER_OPTS = None
 
 
 def rsync_masterdir(cfg, nodes):
@@ -53,15 +54,17 @@ def run_local_synctool(cfg):
 def run_with_aggregate():
 	'''pipe the synctool output through the aggregator'''
 
-	argv = sys.argv[:]
+	global MASTER_OPTS
+#
+#	simply re-run this command, but with a pipe
+#
+	if '-a' in MASTER_OPTS:
+		MASTER_OPTS.remove('-a')
 
-	if '-a' in argv:
-		argv.remove('-a')
+	if '--aggregate' in MASTER_OPTS:
+		MASTER_OPTS.remove('--aggregate')
 
-	if '--aggregate' in argv:
-		argv.remove('--aggregate')
-
-	f = os.popen(string.join(argv), 'r')
+	f = os.popen('%s %s' % (sys.argv[0], string.join(MASTER_OPTS)), 'r')
 	synctool_aggr.aggregate(f)
 	f.close()
 
@@ -94,7 +97,7 @@ def usage():
 
 
 def get_options():
-	global PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE
+	global PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE, MASTER_OPTS
 
 #	if len(sys.argv) <= 1:
 #		usage()
@@ -121,8 +124,12 @@ def get_options():
 	synctool_ssh.GROUPLIST = ''
 
 	PASS_ARGS = ''
+	MASTER_OPTS = []
 
 	for opt, arg in opts:
+		MASTER_OPTS.append(opt)
+		MASTER_OPTS.append(arg)
+
 		if opt in ('-h', '--help', '-?'):
 			usage()
 			sys.exit(1)
@@ -177,7 +184,6 @@ def get_options():
 
 	if len(PASS_ARGS) > 0 and PASS_ARGS[0] == ' ':
 		PASS_ARGS = PASS_ARGS[1:]
-
 
 
 if __name__ == '__main__':
