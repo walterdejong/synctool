@@ -180,6 +180,7 @@ def get_options():
 			PASS_ARGS = PASS_ARGS + ' ' + arg
 
 	if args:
+		MASTER_OPTS.extend(args)
 		PASS_ARGS = PASS_ARGS + ' ' + string.join(args)
 
 	if len(PASS_ARGS) > 0 and PASS_ARGS[0] == ' ':
