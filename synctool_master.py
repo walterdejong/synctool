@@ -7,6 +7,9 @@ import synctool
 import synctool_ssh
 import synctool_config
 import synctool_aggr
+import synctool_lib
+
+from synctool_lib import verbose,stdout,stderr,unix_out
 
 import os
 import sys
@@ -23,7 +26,7 @@ MASTER_OPTS = None
 
 def rsync_masterdir(cfg, nodes):
 	if not cfg.has_key('rsync_cmd'):
-		print '%s: error: rsync_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE)
+		stderr('%s: error: rsync_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
 		sys.exit(-1)
 
 	rsync_cmd = cfg['rsync_cmd']
@@ -33,7 +36,7 @@ def rsync_masterdir(cfg, nodes):
 
 def run_remote_synctool(cfg, nodes):
 	if not cfg.has_key('synctool_cmd'):
-		print '%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE)
+		stderr('%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
 		sys.exit(-1)
 
 	synctool_cmd = cfg['synctool_cmd']
@@ -45,7 +48,7 @@ def run_local_synctool(cfg):
 	'''run synctool_cmd locally on this host'''
 
 	if not cfg.has_key('synctool_cmd'):
-		print '%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE)
+		stderr('%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
 		sys.exit(-1)
 
 	synctool.run_command(cfg, '%s %s' % (cfg['synctool_cmd'], PASS_ARGS))
@@ -88,6 +91,7 @@ def usage():
 	print '  -f, --fix                      Perform updates (otherwise, do dry-run)'
 	print '      --skip-rsync               Do not sync the repository'
 	print '                                 (eg. when it is on a shared filesystem)'
+	print '  -l, --log=logfile              Log taken actions to logfile'
 	print '  -a, --aggregate                Condense output; list nodes per change'
 	print
 	print 'A nodelist or grouplist is a comma-separated list'
@@ -104,8 +108,8 @@ def get_options():
 #		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hc:n:g:x:X:d:1:tfvqa", ['help', 'conf=', 'debug', 'node=', 'group=',
-			'exclude=', 'exclude-group=', 'diff=', 'single=', 'tasks', 'fix', 'verbose', 'quiet', 'aggregate', 'skip-rsync'])
+		opts, args = getopt.getopt(sys.argv[1:], "hc:vn:g:x:X:d:1:tfql:a", ['help', 'conf=', 'verbose', 'node=', 'group=',
+			'exclude=', 'exclude-group=', 'diff=', 'single=', 'tasks', 'fix', 'quiet', 'log=', 'aggregate', 'skip-rsync', 'unix'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -138,6 +142,11 @@ def get_options():
 			synctool_config.CONF_FILE = arg
 			continue
 
+		if opt in ('-v', '--verbose'):
+			synctool_lib.VERBOSE = 1
+			PASS_ARGS = PASS_ARGS + ' --verbose'
+			continue
+
 		if opt in ('-n', '--node'):
 			if not synctool_ssh.NODELIST:
 				synctool_ssh.NODELIST = arg
@@ -166,12 +175,32 @@ def get_options():
 				synctool_ssh.EXCLUDEGROUPS = synctool_ssh.EXCLUDEGROUPS + ',' + arg
 			continue
 
+		if opt in ('-q', '--quiet'):
+			synctool_lib.QUIET = 1
+			PASS_ARGS = PASS_ARGS + ' --quiet'
+			continue
+
+		if opt in ('-f', '--fix'):
+			synctool_lib.DRY_RUN = 0
+			PASS_ARGS = PASS_ARGS + ' --fix'
+			continue
+
 		if opt in ('-a', '--aggregate'):
 			OPT_AGGREGATE = 1
 			continue
 
 		if opt == '--skip-rsync':
 			OPT_SKIP_RSYNC = 1
+			continue
+
+		if opt == '--unix':
+			synctool_lib.UNIX_CMD = 1
+			PASS_ARGS = PASS_ARGS + ' --unix'
+			continue
+
+		if opt in ('-l', '--log'):
+			synctool_lib.LOGFILE = arg
+			PASS_ARGS = PASS_ARGS + ' --log %s' % synctool_lib.LOGFILE
 			continue
 
 		PASS_ARGS = PASS_ARGS + ' ' + opt
@@ -190,8 +219,11 @@ def get_options():
 if __name__ == '__main__':
 	get_options()
 
+	synctool_lib.openlog()
+
 	if OPT_AGGREGATE:
 		run_with_aggregate()
+		synctool_lib.closelog()
 		sys.exit(0)
 
 	cfg = synctool_config.read_config()
@@ -222,6 +254,8 @@ if __name__ == '__main__':
 			rsync_masterdir(cfg, nodes)
 
 		run_remote_synctool(cfg, nodes)
+
+	synctool_lib.closelog()
 
 
 # EOB

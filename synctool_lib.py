@@ -47,7 +47,7 @@ def unix_out(str):
 def openlog():
 	global LOGFD
 
-	if LOGFILE == None or LOGFILE == '':
+	if LOGFILE == None or LOGFILE == '' or DRY_RUN:
 		return
 
 	LOGFD = None

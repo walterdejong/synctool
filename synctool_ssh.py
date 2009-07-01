@@ -14,8 +14,6 @@ import string
 import getopt
 
 
-OPT_DEBUG = 0
-
 # these are set by command-line options
 NODELIST = None
 GROUPLIST = None
@@ -97,14 +95,18 @@ def run_parallel(cfg, nodes, cmd, cmd_args, join_char=None):
 
 	for node in nodes:
 		if node == cfg['nodename']:
-			verbose(cmd_args)
+			verbose('running %s' % cmd_args)
 			unix_out(cmd_args)
 		else:
+			the_command = string.split(cmd)
+			the_command = the_command[0]
+			the_command = os.path.basename(the_command)
+
 			if join_char != None:
-				verbose('%s %s%s%s' % (cmd, node, join_char, cmd_args))
+				verbose('running %s to %s%s%s' % (the_command, node, join_char, cmd_args))
 				unix_out('%s %s%s%s' % (cmd, node, join_char, cmd_args))
 			else:
-				verbose('%s %s %s' % (cmd, node, cmd_args))
+				verbose('running %s to %s %s' % (the_command, node, cmd_args))
 				unix_out('%s %s %s' % (cmd, node, cmd_args))
 
 		if synctool_lib.DRY_RUN:
@@ -145,7 +147,7 @@ def run_parallel(cfg, nodes, cmd, cmd_args, join_char=None):
 
 				line = string.strip(line)
 
-				print '%s: %s' % (NAMEMAP[node], line)
+				stdout('%s: %s' % (NAMEMAP[node], line))
 
 			f.close()
 			sys.exit(0)
@@ -168,7 +170,7 @@ def run_parallel(cfg, nodes, cmd, cmd_args, join_char=None):
 
 
 def run_local_cmd(cfg, cmd):
-	verbose('run locally %s' % cmd)
+	verbose('running command %s' % cmd)
 	unix_out(cmd)
 
 	if synctool_lib.DRY_RUN:
@@ -183,7 +185,7 @@ def run_local_cmd(cfg, cmd):
 
 		line = string.strip(line)
 
-		print '%s: %s' % (NAMEMAP[cfg['nodename']], line)
+		stdout('%s: %s' % (NAMEMAP[cfg['nodename']], line))
 
 	f.close()
 
@@ -209,14 +211,14 @@ def usage():
 
 
 def get_options():
-	global NODELIST, GROUPLIST, EXCLUDELIST, EXCLUDEGROUPS, REMOTE_CMD, OPT_DEBUG
+	global NODELIST, GROUPLIST, EXCLUDELIST, EXCLUDEGROUPS, REMOTE_CMD
 
 	if len(sys.argv) <= 1:
 		usage()
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hc:vdn:g:x:X:", ['help', 'conf=', 'verbose', 'debug',
+		opts, args = getopt.getopt(sys.argv[1:], "hc:vn:g:x:X:", ['help', 'conf=', 'verbose',
 			'node=', 'group=', 'exclude=', 'exclude-group=', 'unix', 'dry-run'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
@@ -246,10 +248,6 @@ def get_options():
 
 		if opt in ('-v', '--verbose'):
 			synctool_lib.VERBOSE = 1
-			continue
-
-		if opt in ('-d', '--debug'):
-			OPT_DEBUG = 1
 			continue
 
 		if opt in ('-n', '--node'):
