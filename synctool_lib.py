@@ -57,14 +57,15 @@ def openlog():
 		print 'error: failed to open logfile %s : %s' % (filename, reason)
 		sys.exit(-1)
 
-	log('start run')
+#	log('start run')
 
 
 def closelog():
 	global LOGFD
 
 	if LOGFD != None:
-		log('end run\n')
+#		log('end run')
+		log('--')
 
 		LOGFD.close()
 		LOGFD = None
