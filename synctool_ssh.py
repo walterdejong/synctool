@@ -4,6 +4,9 @@
 #
 
 import synctool_config
+import synctool_lib
+
+from synctool_lib import verbose,stdout,stderr,unix_out
 
 import os
 import sys
@@ -62,8 +65,7 @@ def make_nodeset(cfg):
 
 	for node in nodes:
 		if node in cfg['ignore_groups'] and not node in explicit_includes:
-			if OPT_DEBUG:
-				print 'debug: %s is ignored' % node
+			verbose('node %s is ignored' % node)
 			continue
 
 		iface = synctool_config.get_node_interface(cfg, node)
@@ -77,7 +79,7 @@ def make_nodeset(cfg):
 
 def run_remote_cmd(cfg, nodes, remote_cmd):
 	if not cfg.has_key('ssh_cmd'):
-		print '%s: error: ssh_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE)
+		stderr('%s: error: ssh_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
 		sys.exit(-1)
 
 	ssh_cmd = cfg['ssh_cmd']
@@ -94,13 +96,19 @@ def run_parallel(cfg, nodes, cmd, cmd_args, join_char=None):
 	parallel = 0
 
 	for node in nodes:
-		if OPT_DEBUG:
+		if node == cfg['nodename']:
+			verbose(cmd_args)
+			unix_out(cmd_args)
+		else:
 			if join_char != None:
-				print 'debug: %s %s%s%s' % (cmd, node, join_char, cmd_args)
+				verbose('%s %s%s%s' % (cmd, node, join_char, cmd_args))
+				unix_out('%s %s%s%s' % (cmd, node, join_char, cmd_args))
 			else:
-				print 'debug: %s %s %s' % (cmd, node, cmd_args)
-			continue
+				verbose('%s %s %s' % (cmd, node, cmd_args))
+				unix_out('%s %s %s' % (cmd, node, cmd_args))
 
+		if synctool_lib.DRY_RUN:
+			continue
 #
 #	run commands in parallel, as many as defined
 #
@@ -115,6 +123,13 @@ def run_parallel(cfg, nodes, cmd, cmd_args, join_char=None):
 		pid = os.fork()
 
 		if not pid:
+#
+#	is this node the localhost? then run locally
+#
+			if node == cfg['nodename']:
+				run_local_cmd(cfg, cmd_args)
+				sys.exit(0)
+
 #
 #	execute remote command and show output with the nodename
 #
@@ -136,7 +151,7 @@ def run_parallel(cfg, nodes, cmd, cmd_args, join_char=None):
 			sys.exit(0)
 
 		if pid == -1:
-			print 'error: failed to fork()'
+			stderr('error: failed to fork()')
 		else:
 			parallel = parallel + 1
 
@@ -152,16 +167,41 @@ def run_parallel(cfg, nodes, cmd, cmd_args, join_char=None):
 			break
 
 
+def run_local_cmd(cfg, cmd):
+	verbose('run locally %s' % cmd)
+	unix_out(cmd)
+
+	if synctool_lib.DRY_RUN:
+		return
+
+	f = os.popen('%s 2>&1' % cmd, 'r')
+
+	while 1:
+		line = f.readline()
+		if not line:
+			break
+
+		line = string.strip(line)
+
+		print '%s: %s' % (NAMEMAP[cfg['nodename']], line)
+
+	f.close()
+
+
 def usage():
 	print 'usage: %s [options] <remote command>' % os.path.basename(sys.argv[0])
 	print 'options:'
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=dir/file            Use this config file (default: %s)' % synctool_config.DEFAULT_CONF
-	print '  -d, --debug                    Do not run the remote command'
+	print '  -v, --verbose                  Be verbose'
+	print
 	print '  -n, --node=nodelist            Execute only on these nodes'
 	print '  -g, --group=grouplist          Execute only on these groups of nodes'
 	print '  -x, --exclude=nodelist         Exclude these nodes from the selected group'
 	print '  -X, --exclude-group=grouplist  Exclude these groups from the selection'
+	print
+	print '      --unix                     Output actions as unix shell commands'
+	print '      --dry-run                  Do not run the remote command'
 	print
 	print 'A nodelist or grouplist is a comma-separated list'
 	print
@@ -176,7 +216,8 @@ def get_options():
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hc:dn:g:x:X:", ['help', 'conf=', 'debug', 'node=', 'group=', 'exclude=', 'exclude-group='])
+		opts, args = getopt.getopt(sys.argv[1:], "hc:vdn:g:x:X:", ['help', 'conf=', 'verbose', 'debug',
+			'node=', 'group=', 'exclude=', 'exclude-group=', 'unix', 'dry-run'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -201,6 +242,10 @@ def get_options():
 
 		if opt in ('-c', '--conf'):
 			synctool_config.CONF_FILE = arg
+			continue
+
+		if opt in ('-v', '--verbose'):
+			synctool_lib.VERBOSE = 1
 			continue
 
 		if opt in ('-d', '--debug'):
@@ -235,6 +280,14 @@ def get_options():
 				EXCLUDEGROUPS = EXCLUDEGROUPS + ',' + arg
 			continue
 
+		if opt == '--unix':
+			synctool_lib.UNIX_CMD = 1
+			continue
+
+		if opt == '--dry-run':
+			synctool_lib.DRY_RUN = 1
+			continue
+
 	if args == None or len(args) <= 0:
 		print '%s: missing remote command' % os.path.basename(sys.argv[0])
 		sys.exit(1)
@@ -245,8 +298,10 @@ def get_options():
 if __name__ == '__main__':
 	cmd = get_options()
 	cfg = synctool_config.read_config()
+	synctool_config.add_myhostname(cfg)
 
 	nodes = make_nodeset(cfg)
+
 	run_remote_cmd(cfg, nodes, cmd)
 
 

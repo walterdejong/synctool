@@ -8,7 +8,7 @@
 import time
 
 
-DRY_RUN = 1
+DRY_RUN = 0
 VERBOSE = 0
 QUIET = 0
 UNIX_CMD = 0

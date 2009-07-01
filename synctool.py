@@ -1220,6 +1220,8 @@ def usage():
 if __name__ == '__main__':
 	progname = os.path.basename(sys.argv[0])
 
+	synctool_lib.DRY_RUN = 1		# set default dry-run
+
 	diff_file = None
 	single_file = None
 
