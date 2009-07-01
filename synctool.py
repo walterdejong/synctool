@@ -4,6 +4,9 @@
 #
 
 import synctool_config
+import synctool_lib
+
+from synctool_lib import verbose,stdout,stderr,unix_out
 
 import sys
 import os
@@ -19,17 +22,12 @@ import grp
 import time
 import md5
 
-DRY_RUN=1
-VERBOSE=0
-QUIET=0
-UNIX_CMD=0
-RUN_TASKS=0
-LOGFILE=None
-LOGFD=None
 
-UPDATE_CACHE={}
+RUN_TASKS = 0
 
-FOUND_SINGLE=None
+UPDATE_CACHE = {}
+
+FOUND_SINGLE = None
 
 #
 #	default symlink mode
@@ -38,65 +36,8 @@ FOUND_SINGLE=None
 #
 #	The symlink mode can be set in the config file with keyword symlink_mode
 #
-SYMLINK_MODE=0755
+SYMLINK_MODE = 0755
 
-MONTHS = ( 'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec' )
-
-
-def verbose(str):
-	'''do conditional output based on the verbose command line parameter'''
-
-	if VERBOSE:
-		print str
-
-
-def unix_out(str):
-	'''output as unix shell command'''
-
-	if UNIX_CMD:
-		print str
-
-
-def stdout(str):
-	if not UNIX_CMD:
-		print str
-
-	log(str)
-
-
-def stderr(str):
-	print str
-	log(str)
-
-
-def openlog(filename):
-	global LOGFD
-
-	LOGFD = None
-	if filename != None and filename != '':
-		try:
-			LOGFD = open(filename, 'a')
-		except IOError, (err, reason):
-			print 'error: failed to open logfile %s : %s' % (filename, reason)
-			sys.exit(-1)
-
-		log('start run')
-
-
-def closelog():
-	global LOGFD
-
-	if LOGFD != None:
-		log('end run\n')
-
-		LOGFD.close()
-		LOGFD = None
-
-
-def log(str):
-	if not DRY_RUN and LOGFD != None:
-		t = time.localtime(time.time())
-		LOGFD.write('%s %02d %02d:%02d:%02d %s\n' % (MONTHS[t[1]-1], t[2], t[3], t[4], t[5], str))
 
 
 def ascii_uid(uid):
@@ -435,7 +376,7 @@ def compare_files(src_path, dest_path):
 		if stat_isfile(dest_stat):
 			if src_stat[stat.ST_SIZE] != dest_stat[stat.ST_SIZE]:
 				done = 1
-				if DRY_RUN:
+				if synctool_lib.DRY_RUN:
 					stdout('%s mismatch (file size)' % dest_path)
 				else:
 					stdout('%s updated (file size mismatch)' % dest_path)
@@ -453,7 +394,7 @@ def compare_files(src_path, dest_path):
 
 				if src_sum != dest_sum:
 					done = 1
-					if DRY_RUN:
+					if synctool_lib.DRY_RUN:
 #						stdout('%s mismatch (SHA1 checksum)' % dest_path)
 						stdout('%s mismatch (MD5 checksum)' % dest_path)
 					else:
@@ -542,7 +483,7 @@ def copy_file(src, dest):
 	unix_out('umask 077')
 	unix_out('cp %s %s' % (src, dest))
 
-	if not DRY_RUN:
+	if not synctool_lib.DRY_RUN:
 		if path_isfile(dest):
 			verbose('  saving %s as %s.saved' % (dest, dest))
 			try:
@@ -578,7 +519,7 @@ def symlink_file(oldpath, newpath):
 	unix_out('umask 022')
 	unix_out('ln -s %s %s' % (oldpath, newpath))
 
-	if not DRY_RUN:
+	if not synctool_lib.DRY_RUN:
 		if path_exists(newpath):
 			verbose('saving %s as %s.saved' % (newpath, newpath))
 			try:
@@ -603,7 +544,7 @@ def symlink_file(oldpath, newpath):
 def set_permissions(file, mode):
 	unix_out('chmod 0%o %s' % (mode & 07777, file))
 
-	if not DRY_RUN:
+	if not synctool_lib.DRY_RUN:
 		verbose('  os.chmod(%s, %04o)' % (file, mode & 07777))
 		try:
 			os.chmod(file, mode & 07777)
@@ -616,7 +557,7 @@ def set_permissions(file, mode):
 def set_owner(file, uid, gid):
 	unix_out('chown %s.%s %s' % (ascii_uid(uid), ascii_gid(gid), file))
 
-	if not DRY_RUN:
+	if not synctool_lib.DRY_RUN:
 		verbose('  os.chown(%s, %d, %d)' % (file, uid, gid))
 		try:
 			os.chown(file, uid, gid)
@@ -629,7 +570,7 @@ def set_owner(file, uid, gid):
 def delete_file(file):
 	unix_out('mv %s %s.saved' % (file, file))
 
-	if not DRY_RUN:
+	if not synctool_lib.DRY_RUN:
 		verbose('moving %s to %s.saved' % (file, file))
 		try:
 			os.rename(file, '%s.saved' % file)
@@ -648,7 +589,7 @@ def delete_file(file):
 def hard_delete_file(file):
 	unix_out('rm -f %s' % file)
 
-	if not DRY_RUN:
+	if not synctool_lib.DRY_RUN:
 		verbose('  os.unlink(%s)' % file)
 		try:
 			os.unlink(file)
@@ -662,7 +603,7 @@ def make_dir(path):
 	unix_out('umask 077')
 	unix_out('mkdir %s' % path)
 
-	if not DRY_RUN:
+	if not synctool_lib.DRY_RUN:
 		old_umask = os.umask(077)
 
 		verbose('  os.mkdir(%s)' % path)
@@ -679,7 +620,7 @@ def make_dir(path):
 def move_dir(dir):
 	unix_out('mv %s %s.saved' % (dir, dir))
 
-	if not DRY_RUN:
+	if not synctool_lib.DRY_RUN:
 		verbose('moving %s to %s.saved' % (dir, dir))
 		try:
 			os.rename(dir, '%s.saved' % dir)
@@ -912,7 +853,7 @@ def run_command(cfg, cmd):
 	masterdir = cfg['masterdir']
 	master_len = len(masterdir)
 
-	if DRY_RUN:
+	if synctool_lib.DRY_RUN:
 		not_str = 'not '
 	else:
 		not_str = ''
@@ -950,14 +891,14 @@ def run_command(cfg, cmd):
 
 	arr[0] = cmd1
 	cmd1 = string.join(arr)
-	if not QUIET:
+	if not synctool_lib.QUIET:
 		stdout('%srunning command %s' % (not_str, cmd1))
 
 	unix_out('# run command %s' % cmd1)
 	unix_out(cmd)
 	unix_out('')
 
-	if not DRY_RUN:
+	if not synctool_lib.DRY_RUN:
 		verbose('  os.system("%s")' % cmd1)
 		try:
 			os.system(cmd)
@@ -1030,7 +971,7 @@ def treewalk_delete(args, dir, files):
 			continue
 
 		if path_exists(dest):
-			if DRY_RUN:
+			if synctool_lib.DRY_RUN:
 				not_str = 'not '
 			else:
 				not_str = ''
@@ -1244,19 +1185,17 @@ def single_files(cfg, filename):
 def diff_files(cfg, filename):
 	'''display a diff of the file'''
 
-	global DRY_RUN
-
 	if not cfg.has_key('diff_cmd'):
 		stderr('error: diff_cmd is undefined in %s' % synctool_config.CONF_FILE)
 		return
 
-	DRY_RUN=1							# be sure that it doesn't do any updates
+	synctool_lib.DRY_RUN = 1						# be sure that it doesn't do any updates
 
 	sync_path = find_synctree(cfg, filename)
 	if not sync_path:
 		return
 
-	if UNIX_CMD:
+	if synctool_lib.UNIX_CMD:
 		unix_out('%s %s %s' % (cfg['diff_cmd'], filename, sync_path))
 	else:
 		verbose('%s %s %s' % (cfg['diff_cmd'], filename, sync_path))
@@ -1284,9 +1223,7 @@ def usage():
 	print 'Written by Walter de Jong <walter@sara.nl> (c) 2003-2009'
 
 
-def main():
-	global DRY_RUN, VERBOSE, QUIET, UNIX_CMD, LOGFILE, SYMLINK_MODE, RUN_TASKS
-
+if __name__ == '__main__':
 	progname = os.path.basename(sys.argv[0])
 
 	diff_file = None
@@ -1323,27 +1260,27 @@ def main():
 # dry run already is default
 #
 #			if opt in ('-n', '--dry-run'):
-#				DRY_RUN=1
+#				synctool_lib.DRY_RUN=1
 #				continue
 
 			if opt in ('-f', '--fix'):
-				DRY_RUN=0
+				synctool_lib.DRY_RUN=0
 				continue
 
 			if opt in ('-v', '--verbose'):
-				VERBOSE=1
+				syntool_lib.VERBOSE=1
 				continue
 
 			if opt in ('-q', '--quiet'):
-				QUIET=1
+				synctool_lib.QUIET=1
 				continue
 
 			if opt in ('-x', '--unix'):
-				UNIX_CMD=1
+				synctool_lib.UNIX_CMD=1
 				continue
 
 			if opt in ('-l', '--log'):
-				LOGFILE=arg
+				synctool_lib.LOGFILE=arg
 				continue
 
 			if opt in ('-d', '--diff'):
@@ -1370,7 +1307,7 @@ def main():
 				stderr("options '--diff' and '--single' cannot be combined")
 				sys.exit(1)
 
-		if diff_file and not DRY_RUN:
+		if diff_file and not synctool_lib.DRY_RUN:
 			stderr("options '--diff' and '--fix' cannot be combined")
 			sys.exit(1)
 
@@ -1390,9 +1327,7 @@ def main():
 	if cfg.has_key('symlink_mode'):
 		SYMLINK_MODE = cfg['symlink_mode']
 
-	if UNIX_CMD:
-		import time
-
+	if synctool_lib.UNIX_CMD:
 		t = time.localtime(time.time())
 
 		unix_out('#')
@@ -1406,35 +1341,35 @@ def main():
 		unix_out('# SYMLINK_MODE=0%o' % SYMLINK_MODE)
 		unix_out('#')
 
-		if DRY_RUN:
+		if synctool_lib.DRY_RUN:
 			unix_out('# NOTE: dry run, not doing any updates')
 		else:
 			unix_out('# NOTE: --fix specified, applying updates')
-			if LOGFILE != None:
+			if synctool_lib.LOGFILE != None:
 				unix_out('#')
-				unix_out('# logging to: %s' % LOGFILE)
+				unix_out('# logging to: %s' % syntool_lib.LOGFILE)
 
 		unix_out('#')
 		unix_out('')
 	else:
-		if not QUIET:
+		if not synctool_lib.QUIET:
 			verbose('my nodename: %s' % cfg['nodename'])
 			verbose('my hostname: %s' % cfg['hostname'])
 			verbose('masterdir: %s' % cfg['masterdir'])
 			verbose('symlink_mode: 0%o' % SYMLINK_MODE)
 
-			if LOGFILE != None and not DRY_RUN:
-				verbose('logfile: %s' % LOGFILE)
+			if synctool_lib.LOGFILE != None and not synctool_lib.DRY_RUN:
+				verbose('logfile: %s' % synctool_lib.LOGFILE)
 
 			verbose('')
 
-			if DRY_RUN:
+			if synctool_lib.DRY_RUN:
 				stdout('DRY RUN, not doing any updates')
 			else:
 				stdout('--fix specified, applying changes')
 			verbose('')
 
-	openlog(LOGFILE)
+	synctool_lib.openlog()
 
 	os.putenv('SYNCTOOL_NODENAME', cfg['nodename'])
 	os.putenv('SYNCTOOL_MASTERDIR', cfg['masterdir'])
@@ -1457,10 +1392,7 @@ def main():
 
 	unix_out('# EOB')
 
-	closelog()
+	synctool_lib.closelog()
 
-
-if __name__ == '__main__':
-	main()
 
 # EOB
