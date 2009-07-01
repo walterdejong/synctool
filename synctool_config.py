@@ -30,6 +30,16 @@ OPT_FILTER_IGNORED = 0
 OPT_INTERFACE = 0
 
 
+#
+#	default symlink mode
+#	Linux makes them 0777 no matter what umask you have ...
+#	but how do you like them on a different platform?
+#
+#	The symlink mode can be set in the config file with keyword symlink_mode
+#
+SYMLINK_MODE = 0755
+
+
 def stdout(str):
 	print str
 
@@ -134,6 +144,7 @@ def read_config():
 				continue
 
 			cfg['symlink_mode'] = mode
+			SYMLINK_MODE = mode
 			continue
 
 #

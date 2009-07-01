@@ -23,21 +23,15 @@ import time
 import md5
 
 
+# extra command-line option --tasks
 RUN_TASKS = 0
 
+# UPDATE_CACHE is a name cache of files that have been updated
+# it helps avoiding duplicate checks for files that have multiple classes
 UPDATE_CACHE = {}
 
+# ugly global var for use with callback function
 FOUND_SINGLE = None
-
-#
-#	default symlink mode
-#	Linux makes them 0777 no matter what umask you have ...
-#	but how do you like them on a different platform?
-#
-#	The symlink mode can be set in the config file with keyword symlink_mode
-#
-SYMLINK_MODE = 0755
-
 
 
 def ascii_uid(uid):
@@ -274,8 +268,8 @@ def compare_files(src_path, dest_path):
 				delete_file(dest_path)
 				need_update = 1
 
-			if (dest_stat[stat.ST_MODE] & 07777) != SYMLINK_MODE:
-				stdout('%s should have mode %04o (symlink), but has %04o' % (dest_path, SYMLINK_MODE, dest_stat[stat.ST_MODE] & 07777))
+			if (dest_stat[stat.ST_MODE] & 07777) != synctool_config.SYMLINK_MODE:
+				stdout('%s should have mode %04o (symlink), but has %04o' % (dest_path, synctool_config.SYMLINK_MODE, dest_stat[stat.ST_MODE] & 07777))
 				unix_out('# fix permissions of symbolic link %s' % dest_path)
 				need_update = 1
 
@@ -1324,9 +1318,6 @@ if __name__ == '__main__':
 
 	synctool_config.remove_ignored_groups(cfg)
 
-	if cfg.has_key('symlink_mode'):
-		SYMLINK_MODE = cfg['symlink_mode']
-
 	if synctool_lib.UNIX_CMD:
 		t = time.localtime(time.time())
 
@@ -1338,7 +1329,7 @@ if __name__ == '__main__':
 		unix_out('# NODENAME=%s' % cfg['nodename'])
 		unix_out('# HOSTNAME=%s' % cfg['hostname'])
 		unix_out('# MASTERDIR=%s' % cfg['masterdir'])
-		unix_out('# SYMLINK_MODE=0%o' % SYMLINK_MODE)
+		unix_out('# SYMLINK_MODE=0%o' % synctool_config.SYMLINK_MODE)
 		unix_out('#')
 
 		if synctool_lib.DRY_RUN:
@@ -1356,7 +1347,7 @@ if __name__ == '__main__':
 			verbose('my nodename: %s' % cfg['nodename'])
 			verbose('my hostname: %s' % cfg['hostname'])
 			verbose('masterdir: %s' % cfg['masterdir'])
-			verbose('symlink_mode: 0%o' % SYMLINK_MODE)
+			verbose('symlink_mode: 0%o' % synctool_config.SYMLINK_MODE)
 
 			if synctool_lib.LOGFILE != None and not synctool_lib.DRY_RUN:
 				verbose('logfile: %s' % synctool_lib.LOGFILE)
