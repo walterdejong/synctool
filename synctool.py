@@ -997,10 +997,6 @@ def treewalk_tasks(args, dir, files):
 	masterdir = cfg['masterdir']
 	master_len = len(masterdir)
 
-	dest_dir = dir[base_len:]
-	if not dest_dir:
-		dest_dir = '/'
-
 	n = 0
 	nr_files = len(files)
 
@@ -1011,31 +1007,26 @@ def treewalk_tasks(args, dir, files):
 
 		verbose('checking $masterdir%s' % full_path[master_len:])
 
-		dest = os.path.join(dest_dir, file)
-
-		dest = strip_group_file(dest, full_path, cfg, all_groups, groups)
-		if not dest:
+		stripped = strip_group_file(full_path, full_path, cfg, all_groups, groups)
+		if not stripped:
 			files.remove(file)
 			nr_files = nr_files - 1
 			continue
-
 #
 #	is this file overridden by another group for this host?
 #
-		if check_overrides(os.path.join(masterdir, 'tasks', dest[1:]), full_path, cfg, groups):
+		if check_overrides(os.path.join(masterdir, 'tasks', stripped), full_path, cfg, groups):
 			files.remove(file)
 			nr_files = nr_files - 1
 			continue
 
 		n = n + 1
 
-		dest = compose_path(dest)
-
-		if path_isdir(dest):
+		if path_isdir(full_path):
 			continue
 
 # run the task
-		run_command(cfg, dest)
+		run_command(cfg, full_path)
 
 
 def run_tasks(cfg):
