@@ -66,6 +66,17 @@ def make_nodeset(cfg):
 			verbose('node %s is ignored' % node)
 			continue
 
+		groups = synctool_config.get_groups(cfg, [node])
+		do_continue = 0
+		for group in groups:
+			if group in cfg['ignore_groups']:
+				verbose('group %s is ignored' % group)
+				do_continue = 1
+				break
+
+		if do_continue:
+			continue
+
 		iface = synctool_config.get_node_interface(cfg, node)
 		NAMEMAP[iface] = node
 
