@@ -1264,7 +1264,7 @@ if __name__ == '__main__':
 				continue
 
 			if opt in ('-v', '--verbose'):
-				syntool_lib.VERBOSE=1
+				synctool_lib.VERBOSE=1
 				continue
 
 			if opt in ('-q', '--quiet'):
@@ -1340,7 +1340,7 @@ if __name__ == '__main__':
 			unix_out('# NOTE: --fix specified, applying updates')
 			if synctool_lib.LOGFILE != None:
 				unix_out('#')
-				unix_out('# logging to: %s' % syntool_lib.LOGFILE)
+				unix_out('# logging to: %s' % synctool_lib.LOGFILE)
 
 		unix_out('#')
 		unix_out('')
