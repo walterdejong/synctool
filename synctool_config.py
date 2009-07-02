@@ -51,6 +51,8 @@ def stderr(str):
 def read_config():
 	'''read the config file and return cfg structure'''
 
+	global SYMLINK_MODE
+
 	cfg = {}
 	cfg['ignore_groups'] = []
 
