@@ -5,20 +5,16 @@
 #	Sets up a client for synctooling
 #
 
-SRCDIR=/var/lib/synctool/suse10/overlay/usr/sara/bin
-DESTDIR=/usr/sara/bin
-
-EXT=_sara
-
-TMPDIR=/tmp/bootstrap-synctool.$$
-
+VERSION=4.0
 
 if [ $# -le 0 ]
 then
-	echo "usage: $PROG <host> [..]"
+	echo "usage: ${0##*/} <host> [..]"
 	echo "This initializes synctool on the host"
 	exit 1
 fi
+
+UID=`id -u`
 
 if [ $UID -ne 0 ]
 then
@@ -26,28 +22,19 @@ then
 	exit 1
 fi
 
-mkdir $TMPDIR
+if [ ! -f synctool-${VERSION}.tar.gz ]
+then
+	echo "can't find synctool-${VERSION}.tar.gz"
+	echo "it should be present in the current working directory"
+	exit 1
+fi
 
-cp $SRCDIR/synctool.sh.$EXT $TMPDIR/synctool.sh
-cp $SRCDIR/synctool.py.$EXT $TMPDIR/synctool.py
-cp $SRCDIR/md5sum.py.$EXT $TMPDIR/md5sum.py
-
-for HOST in $*
+for host in $*
 do
-# set root authorized_keys file
-##	ssh -q $HOST /bin/mkdir -m 0700 /root/.ssh
-##	scp -q /root/.ssh/id_rsa.pub $HOST:/root/.ssh/authorized_keys
-
-# copy synctool executables
-	ssh -q $HOST /bin/mkdir -m 0755 -p $DESTDIR
-	scp -q $TMPDIR/* $HOST:$DESTDIR
-
-# make dist tree dir
-	ssh -q $HOST /bin/mkdir -m 0755 -p $SRCDIR
+	echo "copying tarball to ${host}:/tmp/"
+	scp synctool-${VERSION}.tar.gz ${host}:/tmp/
+	echo "running make client_install on $host"
+	ssh -q ${host} "( cd /tmp && tar xf /tmp/synctool-${VERSION}.tar.gz && cd /tmp/synctool-${VERSION} && make client_install )"
 done
 
-rm $TMPDIR/synctool.sh $TMPDIR/synctool.py $TMPDIR/md5sum.py
-rmdir $TMPDIR
-
 # EOB
-
