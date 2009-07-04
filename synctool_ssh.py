@@ -180,6 +180,99 @@ def run_parallel(cfg, nodes, cmd, cmd_args, join_char=None):
 			break
 
 
+def run_parallel_cmds(cfg, nodes, cmds):
+	'''fork and run multiple commands in sequence'''
+	'''cmds[] is an array of tuples (cmd, cmd_args, join_char)'''
+
+	if not cfg.has_key('num_proc'):
+		num_proc = 16						# use sensible default
+	else:
+		num_proc = int(cfg['num_proc'])
+
+	parallel = 0
+
+	for node in nodes:
+#
+#	run commands in parallel, as many as defined
+#
+		if parallel > num_proc:
+			try:
+				if os.wait() != -1:
+					parallel = parallel - 1
+
+			except OSError:
+				pass
+
+		pid = os.fork()
+
+		if not pid:
+#
+#	run the commands one after another
+#
+			for (cmd, cmd_args, join_char) in cmds:
+# show what we're going to do
+				if node == cfg['nodename']:
+					verbose('running %s' % cmd_args)
+					unix_out(cmd_args)
+				else:
+					the_command = string.split(cmd)
+					the_command = the_command[0]
+					the_command = os.path.basename(the_command)
+
+				if join_char != None:
+					verbose('running %s to %s%s%s' % (the_command, node, join_char, cmd_args))
+					unix_out('%s %s%s%s' % (cmd, node, join_char, cmd_args))
+				else:
+					verbose('running %s to %s %s' % (the_command, node, cmd_args))
+					unix_out('%s %s %s' % (cmd, node, cmd_args))
+
+# the rysnc must run, even for dry runs
+#				if synctool_lib.DRY_RUN:
+#					continue
+
+#
+#	is this node the localhost? then run locally
+#
+				if node == cfg['nodename']:
+					run_local_cmd(cfg, cmd_args)
+					continue
+
+#
+#	execute remote command and show output with the nodename
+#
+				if join_char != None:
+					f = os.popen('%s %s%s%s 2>&1' % (cmd, node, join_char, cmd_args), 'r')
+				else:
+					f = os.popen('%s %s %s 2>&1' % (cmd, node, cmd_args), 'r')
+
+				lines = f.readlines()		# collect output
+				f.close()
+
+				lines = map(string.strip, lines)
+
+				for line in lines:
+					stdout('%s: %s' % (NAMEMAP[node], line))
+
+# all done, child exits
+			sys.exit(0)
+
+		if pid == -1:
+			stderr('error: failed to fork()')
+		else:
+			parallel = parallel + 1
+
+#
+#	wait for children to terminate
+#
+	while 1:
+		try:
+			if os.wait() == -1:
+				break
+
+		except OSError:
+			break
+
+
 def run_local_cmd(cfg, cmd):
 	verbose('running command %s' % cmd)
 	unix_out(cmd)
@@ -188,17 +281,18 @@ def run_local_cmd(cfg, cmd):
 		return
 
 	f = os.popen('%s 2>&1' % cmd, 'r')
+	lines = f.readlines()
+	f.close()
 
-	while 1:
-		line = f.readline()
-		if not line:
-			break
+	lines = map(string.strip, lines);
 
-		line = string.strip(line)
-
+	for line in lines:
 		stdout('%s: %s' % (NAMEMAP[cfg['nodename']], line))
 
-	f.close()
+
+def run_local_cmds(cfg, cmds):
+	for cmd in cmds:
+		run_local_cmd(cfg, cmd)
 
 
 def usage():

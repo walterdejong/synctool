@@ -24,24 +24,35 @@ PASS_ARGS = None
 MASTER_OPTS = None
 
 
-def rsync_masterdir(cfg, nodes):
+def run_remote_synctool(cfg, nodes):
 	if not cfg.has_key('rsync_cmd'):
 		stderr('%s: error: rsync_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
 		sys.exit(-1)
 
 	rsync_cmd = cfg['rsync_cmd']
 
-	synctool_ssh.run_parallel(cfg, nodes, '%s %s/' % (rsync_cmd, cfg['masterdir']), '%s/' % cfg['masterdir'], ':')
+	if not cfg.has_key('ssh_cmd'):
+		stderr('%s: error: ssh_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
+		sys.exit(-1)
 
+	ssh_cmd = cfg['ssh_cmd']
 
-def run_remote_synctool(cfg, nodes):
 	if not cfg.has_key('synctool_cmd'):
 		stderr('%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
 		sys.exit(-1)
 
 	synctool_cmd = cfg['synctool_cmd']
 
-	synctool_ssh.run_remote_cmd(cfg, nodes, '%s %s' % (synctool_cmd, PASS_ARGS))
+	cmds = []
+
+	if not OPT_SKIP_RSYNC:
+		run_rsync = ('%s %s/' % (rsync_cmd, cfg['masterdir']), '%s/' % cfg['masterdir'], ':')
+		cmds.append(run_rsync)
+
+	run_synctool = (ssh_cmd, '%s %s' % (synctool_cmd, PASS_ARGS), None)
+	cmds.append(run_synctool)
+
+	synctool_ssh.run_parallel_cmds(cfg, nodes, cmds)
 
 
 def run_local_synctool(cfg):
@@ -250,9 +261,6 @@ if __name__ == '__main__':
 			run_local_synctool(cfg)
 
 	if len(nodes) > 0:
-		if not OPT_SKIP_RSYNC:
-			rsync_masterdir(cfg, nodes)
-
 		run_remote_synctool(cfg, nodes)
 
 	synctool_lib.closelog()
