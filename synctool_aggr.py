@@ -18,7 +18,7 @@ def list_to_string(list):
 
 	str = list[0]
 	for elem in list[1:]:
-		str = str + ' ' + elem
+		str = str + ',' + elem
 
 	return str
 
