@@ -68,7 +68,6 @@ def aggregate(f):
 				condensed_per_hostlist[hostlist] = []
 
 			condensed_per_hostlist[hostlist].append(comment)
-
 #
 #	print condensed output
 #
@@ -78,7 +77,7 @@ def aggregate(f):
 		print '%s:' % hostlist,
 
 		if len(condensed_per_hostlist[hostlist]) <= 1:
-			print comment
+			print condensed_per_hostlist[hostlist][0]
 		else:
 			print
 			for comment in condensed_per_hostlist[hostlist]:
