@@ -74,14 +74,10 @@ def aggregate(f):
 	keys = condensed_per_hostlist.keys()
 	keys.sort(sort_by_len)
 	for hostlist in keys:
-		print '%s:' % hostlist,
+		print '%s:' % hostlist
 
-		if len(condensed_per_hostlist[hostlist]) <= 1:
-			print condensed_per_hostlist[hostlist][0]
-		else:
-			print
-			for comment in condensed_per_hostlist[hostlist]:
-				print ' ', comment
+		for comment in condensed_per_hostlist[hostlist]:
+			print ' ', comment
 
 
 if __name__ == '__main__':
