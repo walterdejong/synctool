@@ -10,6 +10,29 @@ import sys
 import string
 
 
+def list_to_string(list):
+	if not list:
+		return ''
+
+	list.sort()
+
+	str = list[0]
+	for elem in list[1:]:
+		str = str + ' ' + elem
+
+	return str
+
+
+def sort_by_len(a, b):
+	if len(a) < len(b):
+		return -1
+
+	if len(a) > len(b):
+		return 1
+
+	return 0
+
+
 def aggregate(f):
 	lines = f.readlines()
 	if not lines:
@@ -18,6 +41,7 @@ def aggregate(f):
 	lines = map(string.strip, lines)
 
 	condensed = {}
+	condensed_per_hostlist = {}
 
 	for line in lines:
 		arr = string.split(line, ':')
@@ -27,20 +51,38 @@ def aggregate(f):
 
 		host = arr[0]
 		comment = string.join(arr[1:], ':')
+		comment = string.strip(comment)
 
 		if not condensed.has_key(comment):
 			condensed[comment] = []
 
 		if not host in condensed[comment]:
+			hostlist = list_to_string(condensed[comment])
+			if condensed_per_hostlist.has_key(hostlist):
+				del condensed_per_hostlist[hostlist]
+
 			condensed[comment].append(host)
+
+			hostlist = list_to_string(condensed[comment])
+			if not condensed_per_hostlist.has_key(hostlist):
+				condensed_per_hostlist[hostlist] = []
+
+			condensed_per_hostlist[hostlist].append(comment)
+
 #
 #	print condensed output
 #
-	for comment in condensed.keys():
-		for host in condensed[comment]:
-			print host,
+	keys = condensed_per_hostlist.keys()
+	keys.sort(sort_by_len)
+	for hostlist in keys:
+		print '%s:' % hostlist,
 
-		print ':', string.strip(comment)
+		if len(condensed_per_hostlist[hostlist]) <= 1:
+			print comment
+		else:
+			print
+			for comment in condensed_per_hostlist[hostlist]:
+				print ' ', comment
 
 
 if __name__ == '__main__':
