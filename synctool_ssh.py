@@ -37,8 +37,23 @@ def make_nodeset(cfg):
 		nodes = string.split(NODELIST, ',')
 		explicit_includes = nodes[:]
 
+# check if the nodes exist at all
+	all_nodes = synctool_config.get_all_nodes(cfg)
+	for node in nodes:
+		if not node in all_nodes:
+			stderr("no such node '%s'" % node)
+			return None
+
 	if GROUPLIST:
 		groups = string.split(GROUPLIST, ',')
+
+# check if the groups exist at all
+		all_groups = synctool_config.get_all_groups(cfg)
+		for group in groups:
+			if not group in all_groups:
+				stderr("no such group '%s'" % group)
+				return None
+
 		nodes_in_groups = synctool_config.get_nodes_in_groups(cfg, groups)
 		nodes.extend(nodes_in_groups)
 
@@ -404,6 +419,8 @@ if __name__ == '__main__':
 	synctool_config.add_myhostname(cfg)
 
 	nodes = make_nodeset(cfg)
+	if nodes == None:
+		sys.exit(1)
 
 	run_remote_cmd(cfg, nodes, cmd)
 

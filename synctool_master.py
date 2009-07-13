@@ -249,6 +249,8 @@ if __name__ == '__main__':
 #	synctool_ssh.OPT_DEBUG = 1
 
 	nodes = synctool_ssh.make_nodeset(cfg)
+	if nodes == None:
+		sys.exit(1)
 
 #
 #	see if we need to run synctool locally, on the current host
