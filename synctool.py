@@ -827,18 +827,33 @@ def on_update(cfg, dest, full_path=None):
 		arr = string.split(full_path, '.')
 
 		if len(arr) > 1 and arr[-1][0] == '_':
-			script = '%s.post.%s' % (string.join(arr[:-1], '.'), arr[-1])
+			script_base = '%s.post' % string.join(arr[:-1], '.')
+		else:
+			script_base = '%s.post' % full_path
+
+		nodename = cfg['nodename']
+		groups = synctool_config.get_groups(cfg, [nodename])
+
+		found = 0
+		for group in groups:
+			script = '%s._%s' % (script_base, group)
+
+#			verbose('checking for post script %s' % script)
 
 			if path_exists(script):
+				found = 1
 				run_command(cfg, script)
-			else:
+				break
+
+		if not found:
 #
 #	.post script with group extension does not exist, maybe try without group extension
 #
-				script = '%s.post' % string.join(arr[:-1], '.')
+			script = script_base
+#			verbose('checking for post script %s' % script)
 
-				if path_exists(script):
-					run_command(cfg, script)
+			if path_exists(script):
+				run_command(cfg, script)
 
 
 def run_command(cfg, cmd):
