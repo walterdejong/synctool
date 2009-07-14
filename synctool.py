@@ -699,14 +699,17 @@ def strip_group_file(filename, full_path, cfg, all_groups, groups):
 	return string.join(arr[:-1], '.')		# strip the 'group' or 'host' extension
 
 
-def check_overrides(path, full_path, cfg, groups):
+def check_overrides(path, full_path, files, cfg, groups):
 	override = None
 
-	for group in groups:
-		possible_override = '%s._%s' % (path, group)
+	dirname = os.path.dirname(path)
+	filename = os.path.basename(path)
 
-		if path_exists(possible_override):
-			override = possible_override
+	for group in groups:
+		possible_override = '%s._%s' % (filename, group)
+
+		if possible_override in files:
+			override = os.path.join(dirname, possible_override)
 			break
 
 	if override and full_path != override:
@@ -782,7 +785,7 @@ def treewalk_overlay(args, dir, files):
 #
 #	is this file/dir overridden by another group for this host?
 #
-		val = check_overrides(os.path.join(masterdir, 'overlay', dest[1:]), full_path, cfg, groups)
+		val = check_overrides(os.path.join(masterdir, 'overlay', dest[1:]), full_path, files, cfg, groups)
 		if val:
 			if val != 2:				# do not prune directories
 				files.remove(file)
@@ -974,7 +977,7 @@ def treewalk_delete(args, dir, files):
 #
 #	is this file/dir overridden by another group for this host?
 #
-		if check_overrides(os.path.join(delete_path, dest[1:]), full_path, cfg, groups):
+		if check_overrides(os.path.join(delete_path, dest[1:]), full_path, files, cfg, groups):
 			files.remove(file)			# this is important for directories
 			nr_files = nr_files - 1
 			continue
@@ -1037,7 +1040,7 @@ def treewalk_tasks(args, dir, files):
 #
 #	is this file overridden by another group for this host?
 #
-		if check_overrides(os.path.join(masterdir, 'tasks', stripped), full_path, cfg, groups):
+		if check_overrides(os.path.join(masterdir, 'tasks', stripped), full_path, files, cfg, groups):
 			files.remove(file)
 			nr_files = nr_files - 1
 			continue
@@ -1115,7 +1118,7 @@ def treewalk_find(args, dir, files):
 #
 #	is this file/dir overridden by another group for this host?
 #
-		val = check_overrides(os.path.join(masterdir, 'overlay', dest[1:]), full_path, cfg, groups)
+		val = check_overrides(os.path.join(masterdir, 'overlay', dest[1:]), full_path, files, cfg, groups)
 		if val:
 			if val != 2:				# do not prune directories
 				files.remove(file)
