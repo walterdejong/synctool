@@ -1061,6 +1061,9 @@ def treewalk_find(args, dir, files):
 # FOUND_SINGLE must be None before starting the treewalk_find
 	global FOUND_SINGLE
 
+	was_verbose = synctool_lib.VERBOSE
+	synctool_lib.VERBOSE = 0
+
 	(cfg, base_path, groups, all_groups, find_file) = args
 	base_len = len(base_path)
 
@@ -1078,8 +1081,6 @@ def treewalk_find(args, dir, files):
 		file = files[n]
 
 		full_path = os.path.join(dir, file)
-
-		verbose('checking $masterdir%s' % full_path[master_len:])
 
 		dest = os.path.join(dest_dir, file)
 
@@ -1105,6 +1106,8 @@ def treewalk_find(args, dir, files):
 		dest = compose_path(dest)
 
 		if dest == find_file:
+			synctool_lib.VERBOSE = was_verbose
+
 			verbose('found $masterdir%s' % full_path[master_len:])
 			if FOUND_SINGLE:
 				stderr('error: conflict in overlay tree:')
@@ -1115,6 +1118,8 @@ def treewalk_find(args, dir, files):
 			else:
 				FOUND_SINGLE = full_path
 				return
+
+	synctool_lib.VERBOSE = was_verbose
 
 
 def find_synctree(cfg, filename):
