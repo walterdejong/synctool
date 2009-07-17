@@ -24,7 +24,7 @@ PASS_ARGS = None
 MASTER_OPTS = None
 
 
-def run_remote_synctool(cfg, nodes):
+def run_remote_synctool(nodes):
 	if not synctool_config.RSYNC_CMD:
 		stderr('%s: error: rsync_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
 		sys.exit(-1)
@@ -46,17 +46,17 @@ def run_remote_synctool(cfg, nodes):
 	run_synctool = (synctool_config.SSH_CMD, '%s %s' % (synctool_config.SYNCTOOL_CMD, PASS_ARGS), None)
 	cmds.append(run_synctool)
 
-	synctool_ssh.run_parallel_cmds(cfg, nodes, cmds)
+	synctool_ssh.run_parallel_cmds(nodes, cmds)
 
 
-def run_local_synctool(cfg):
+def run_local_synctool():
 	'''run synctool_cmd locally on this host'''
 
 	if not synctool_config.SYNCTOOL_CMD:
 		stderr('%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
 		sys.exit(-1)
 
-	synctool.run_command(cfg, '%s %s' % (synctool_config.SYNCTOOL_CMD, PASS_ARGS))
+	synctool.run_command('%s %s' % (synctool_config.SYNCTOOL_CMD, PASS_ARGS))
 
 
 def run_with_aggregate():
@@ -231,8 +231,8 @@ if __name__ == '__main__':
 		synctool_lib.closelog()
 		sys.exit(0)
 
-	cfg = synctool_config.read_config()
-	synctool_config.add_myhostname(cfg)
+	synctool_config.read_config()
+	synctool_config.add_myhostname()
 
 #############
 #
@@ -242,7 +242,7 @@ if __name__ == '__main__':
 #	synctool_config.OPT_DEBUG = 1
 #	synctool_ssh.OPT_DEBUG = 1
 
-	nodes = synctool_ssh.make_nodeset(cfg)
+	nodes = synctool_ssh.make_nodeset()
 	if nodes == None:
 		sys.exit(1)
 
@@ -250,13 +250,13 @@ if __name__ == '__main__':
 #	see if we need to run synctool locally, on the current host
 #
 	if synctool_config.NODENAME != None:
-		iface = synctool_config.get_node_interface(cfg, synctool_config.NODENAME)
+		iface = synctool_config.get_node_interface(synctool_config.NODENAME)
 		if iface in nodes:
 			nodes.remove(iface)
-			run_local_synctool(cfg)
+			run_local_synctool()
 
 	if len(nodes) > 0:
-		run_remote_synctool(cfg, nodes)
+		run_remote_synctool(nodes)
 
 	synctool_lib.closelog()
 

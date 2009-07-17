@@ -24,21 +24,21 @@ EXCLUDEGROUPS = None
 NAMEMAP = {}
 
 
-def make_nodeset(cfg):
+def make_nodeset():
 	global NAMEMAP
 
 	nodes = []
 	explicit_includes = []
 
 	if not NODELIST and not GROUPLIST:
-		nodes = synctool_config.get_all_nodes(cfg)
+		nodes = synctool_config.get_all_nodes()
 
 	if NODELIST:
 		nodes = string.split(NODELIST, ',')
 		explicit_includes = nodes[:]
 
 # check if the nodes exist at all
-	all_nodes = synctool_config.get_all_nodes(cfg)
+	all_nodes = synctool_config.get_all_nodes()
 	for node in nodes:
 		if not node in all_nodes:
 			stderr("no such node '%s'" % node)
@@ -48,13 +48,13 @@ def make_nodeset(cfg):
 		groups = string.split(GROUPLIST, ',')
 
 # check if the groups exist at all
-		all_groups = synctool_config.get_all_groups(cfg)
+		all_groups = synctool_config.get_all_groups()
 		for group in groups:
 			if not group in all_groups:
 				stderr("no such group '%s'" % group)
 				return None
 
-		nodes_in_groups = synctool_config.get_nodes_in_groups(cfg, groups)
+		nodes_in_groups = synctool_config.get_nodes_in_groups(groups)
 		nodes.extend(nodes_in_groups)
 
 	excludes = []
@@ -64,7 +64,7 @@ def make_nodeset(cfg):
 
 	if EXCLUDEGROUPS:
 		groups = string.split(EXCLUDEGROUPS, ',')
-		nodes_in_groups = synctool_config.get_nodes_in_groups(cfg, groups)
+		nodes_in_groups = synctool_config.get_nodes_in_groups(groups)
 		excludes.extend(nodes_in_groups)
 
 	for node in excludes:
@@ -81,7 +81,7 @@ def make_nodeset(cfg):
 			verbose('node %s is ignored' % node)
 			continue
 
-		groups = synctool_config.get_groups(cfg, [node])
+		groups = synctool_config.get_groups([node])
 		do_continue = 0
 		for group in groups:
 			if group in synctool_config.IGNORE_GROUPS:
@@ -92,7 +92,7 @@ def make_nodeset(cfg):
 		if do_continue:
 			continue
 
-		iface = synctool_config.get_node_interface(cfg, node)
+		iface = synctool_config.get_node_interface(node)
 		NAMEMAP[iface] = node
 
 		if not iface in nodeset:			# make sure we do not have duplicates
@@ -101,15 +101,15 @@ def make_nodeset(cfg):
 	return nodeset
 
 
-def run_remote_cmd(cfg, nodes, remote_cmd):
+def run_remote_cmd(nodes, remote_cmd):
 	if not synctool_config.SSH_CMD:
 		stderr('%s: error: ssh_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
 		sys.exit(-1)
 
-	run_parallel(cfg, nodes, synctool_config.SSH_CMD, remote_cmd)
+	run_parallel(nodes, synctool_config.SSH_CMD, remote_cmd)
 
 
-def run_parallel(cfg, nodes, cmd, cmd_args, join_char=None):
+def run_parallel(nodes, cmd, cmd_args, join_char=None):
 	parallel = 0
 
 	for node in nodes:
@@ -148,7 +148,7 @@ def run_parallel(cfg, nodes, cmd, cmd_args, join_char=None):
 #	is this node the localhost? then run locally
 #
 			if node == synctool_config.NODENAME:
-				run_local_cmd(cfg, cmd_args)
+				run_local_cmd(cmd_args)
 				sys.exit(0)
 
 #
@@ -188,7 +188,7 @@ def run_parallel(cfg, nodes, cmd, cmd_args, join_char=None):
 			break
 
 
-def run_parallel_cmds(cfg, nodes, cmds):
+def run_parallel_cmds(nodes, cmds):
 	'''fork and run multiple commands in sequence'''
 	'''cmds[] is an array of tuples (cmd, cmd_args, join_char)'''
 
@@ -237,7 +237,7 @@ def run_parallel_cmds(cfg, nodes, cmds):
 #	is this node the localhost? then run locally
 #
 				if node == synctool_config.NODENAME:
-					run_local_cmd(cfg, cmd_args)
+					run_local_cmd(cmd_args)
 					continue
 
 #
@@ -276,7 +276,7 @@ def run_parallel_cmds(cfg, nodes, cmds):
 			break
 
 
-def run_local_cmd(cfg, cmd):
+def run_local_cmd(cmd):
 	verbose('running command %s' % cmd)
 	unix_out(cmd)
 
@@ -293,9 +293,9 @@ def run_local_cmd(cfg, cmd):
 		stdout('%s: %s' % (NAMEMAP[synctool_config.NODENAME], line))
 
 
-def run_local_cmds(cfg, cmds):
+def run_local_cmds(cmds):
 	for cmd in cmds:
-		run_local_cmd(cfg, cmd)
+		run_local_cmd(cmd)
 
 
 def usage():
@@ -403,14 +403,14 @@ def get_options():
 
 if __name__ == '__main__':
 	cmd = get_options()
-	cfg = synctool_config.read_config()
-	synctool_config.add_myhostname(cfg)
+	synctool_config.read_config()
+	synctool_config.add_myhostname()
 
-	nodes = make_nodeset(cfg)
+	nodes = make_nodeset()
 	if nodes == None:
 		sys.exit(1)
 
-	run_remote_cmd(cfg, nodes, cmd)
+	run_remote_cmd(nodes, cmd)
 
 
 # EOB

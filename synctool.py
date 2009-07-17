@@ -657,7 +657,7 @@ def move_dir(dir):
 		verbose('moving %s to %s.saved             # dry run, update not performed' % (dir, dir))
 
 
-def strip_group_dir(dir, full_path, cfg, all_groups, groups):
+def strip_group_dir(dir, full_path, all_groups, groups):
 	'''strip the group extension and return the basename, None on error'''
 
 	parts = string.split(dir, '/')
@@ -689,11 +689,11 @@ def strip_group_dir(dir, full_path, cfg, all_groups, groups):
 	return dir
 
 
-def strip_group_file(filename, full_path, cfg, all_groups, groups):
+def strip_group_file(filename, full_path, all_groups, groups):
 	'''strip group extension and return basename, None on error'''
 
 	if path_isdir(full_path):
-		return strip_group_dir(filename, full_path, cfg, all_groups, groups)
+		return strip_group_dir(filename, full_path, all_groups, groups)
 
 	arr = string.split(filename, '.')
 
@@ -731,7 +731,7 @@ def strip_group_file(filename, full_path, cfg, all_groups, groups):
 	return string.join(arr[:-1], '.')		# strip the 'group' or 'host' extension
 
 
-def check_overrides(path, full_path, files, cfg, groups):
+def check_overrides(path, full_path, files, groups):
 	override = None
 
 	dirname = os.path.dirname(path)
@@ -784,7 +784,7 @@ def compose_path(path):
 def treewalk_overlay(args, dir, files):
 	'''scan the overlay directory and check against the live system'''
 
-	(cfg, base_path, groups, all_groups) = args
+	(base_path, groups, all_groups) = args
 	base_len = len(base_path)
 
 	master_len = len(synctool_config.MASTERDIR)
@@ -812,7 +812,7 @@ def treewalk_overlay(args, dir, files):
 #
 #	check for valid group
 #
-		dest = strip_group_file(dest, full_path, cfg, all_groups, groups)
+		dest = strip_group_file(dest, full_path, all_groups, groups)
 		if not dest:
 			files.remove(file)			# this is important for directories
 			nr_files = nr_files - 1
@@ -821,7 +821,7 @@ def treewalk_overlay(args, dir, files):
 #
 #	is this file/dir overridden by another group for this host?
 #
-		val = check_overrides(os.path.join(synctool_config.MASTERDIR, 'overlay', dest[1:]), full_path, files, cfg, groups)
+		val = check_overrides(os.path.join(synctool_config.MASTERDIR, 'overlay', dest[1:]), full_path, files, groups)
 		if val:
 			if val != 2:				# do not prune directories
 				files.remove(file)
@@ -837,10 +837,10 @@ def treewalk_overlay(args, dir, files):
 #	if file is updated, run the appropriate on_update command
 #
 		if compare_files(full_path, dest):
-			on_update(cfg, dest, full_path)
+			on_update(dest, full_path)
 
 
-def on_update(cfg, dest, full_path=None):
+def on_update(dest, full_path=None):
 	'''run on_update command for the dest file'''
 
 # if the dest file is not in the on_update map, maybe it's directory is ...
@@ -855,7 +855,7 @@ def on_update(cfg, dest, full_path=None):
 
 	if update.has_key(dest):
 		cmd = update[dest]
-		run_command(cfg, cmd)
+		run_command(cmd)
 
 #
 #	if a .post script exists for this file with relevant group extension, run it
@@ -873,7 +873,7 @@ def on_update(cfg, dest, full_path=None):
 
 		dir_listing = os.listdir(dirname)
 
-		groups = synctool_config.get_groups(cfg, [synctool_config.NODENAME])
+		groups = synctool_config.get_groups([synctool_config.NODENAME])
 
 		found = 0
 		for group in groups:
@@ -884,7 +884,7 @@ def on_update(cfg, dest, full_path=None):
 			if script in dir_listing:
 				found = 1
 				full_script = os.path.join(dirname, script)
-				run_command(cfg, full_script)
+				run_command(full_script)
 				break
 
 		if not found:
@@ -896,10 +896,10 @@ def on_update(cfg, dest, full_path=None):
 
 			if script in dir_listing:
 				full_script = os.path.join(dirname, script)
-				run_command(cfg, full_script)
+				run_command(full_script)
 
 
-def run_command(cfg, cmd):
+def run_command(cmd):
 	'''run a shell command'''
 
 	master_len = len(synctool_config.MASTERDIR)
@@ -959,11 +959,11 @@ def run_command(cfg, cmd):
 		verbose('  os.system("%s")             # dry run, action not performed' % cmd)
 
 
-def overlay_files(cfg):
+def overlay_files():
 	'''run the overlay function'''
 
-	groups = synctool_config.get_groups(cfg, [synctool_config.NODENAME])
-	all_groups = synctool_config.make_all_groups(cfg)
+	groups = synctool_config.get_groups([synctool_config.NODENAME])
+	all_groups = synctool_config.make_all_groups()
 
 	base_path = os.path.join(synctool_config.MASTERDIR, 'overlay')
 	if not os.path.isdir(base_path):
@@ -971,11 +971,11 @@ def overlay_files(cfg):
 		base_path = None
 
 	if base_path:
-		os.path.walk(base_path, treewalk_overlay, (cfg, base_path, groups, all_groups))
+		os.path.walk(base_path, treewalk_overlay, (base_path, groups, all_groups))
 
 
 def treewalk_delete(args, dir, files):
-	(cfg, delete_path, groups, all_groups) = args
+	(delete_path, groups, all_groups) = args
 
 	delete_len = len(delete_path)
 	master_len = len(synctool_config.MASTERDIR)
@@ -1003,7 +1003,7 @@ def treewalk_delete(args, dir, files):
 #
 #	check for valid group
 #
-		dest = strip_group_file(dest, full_path, cfg, all_groups, groups)
+		dest = strip_group_file(dest, full_path, all_groups, groups)
 		if not dest:
 			files.remove(file)			# this is important for directories
 			nr_files = nr_files - 1
@@ -1012,7 +1012,7 @@ def treewalk_delete(args, dir, files):
 #
 #	is this file/dir overridden by another group for this host?
 #
-		if check_overrides(os.path.join(delete_path, dest[1:]), full_path, files, cfg, groups):
+		if check_overrides(os.path.join(delete_path, dest[1:]), full_path, files, groups):
 			files.remove(file)			# this is important for directories
 			nr_files = nr_files - 1
 			continue
@@ -1034,22 +1034,22 @@ def treewalk_delete(args, dir, files):
 			hard_delete_file(dest)
 
 
-def delete_files(cfg):
-	groups = synctool_config.get_groups(cfg, [synctool_config.NODENAME])
-	all_groups = synctool_config.make_all_groups(cfg)
+def delete_files():
+	groups = synctool_config.get_groups([synctool_config.NODENAME])
+	all_groups = synctool_config.make_all_groups()
 
 	delete_path = os.path.join(synctool_config.MASTERDIR, 'delete')
 	if not os.path.isdir(delete_path):
 		verbose('skipping $masterdir/delete, no such directory')
 		return
 
-	os.path.walk(delete_path, treewalk_delete, (cfg, delete_path, groups, all_groups))
+	os.path.walk(delete_path, treewalk_delete, (delete_path, groups, all_groups))
 
 
 def treewalk_tasks(args, dir, files):
 	'''scan the tasks directory and run the necessary tasks'''
 
-	(cfg, base_path, groups, all_groups) = args
+	(base_path, groups, all_groups) = args
 	base_len = len(base_path)
 
 	master_len = len(synctool_config.MASTERDIR)
@@ -1069,7 +1069,7 @@ def treewalk_tasks(args, dir, files):
 
 		verbose('checking $masterdir%s' % full_path[master_len:])
 
-		stripped = strip_group_file(full_path, full_path, cfg, all_groups, groups)
+		stripped = strip_group_file(full_path, full_path, all_groups, groups)
 		if not stripped:
 			files.remove(file)
 			nr_files = nr_files - 1
@@ -1077,7 +1077,7 @@ def treewalk_tasks(args, dir, files):
 #
 #	is this file overridden by another group for this host?
 #
-		if check_overrides(os.path.join(synctool_config.MASTERDIR, 'tasks', stripped), full_path, files, cfg, groups):
+		if check_overrides(os.path.join(synctool_config.MASTERDIR, 'tasks', stripped), full_path, files, groups):
 			files.remove(file)
 			nr_files = nr_files - 1
 			continue
@@ -1088,26 +1088,26 @@ def treewalk_tasks(args, dir, files):
 			continue
 
 # run the task
-		run_command(cfg, full_path)
+		run_command(full_path)
 
 
-def run_tasks(cfg):
-	groups = synctool_config.get_groups(cfg, [synctool_config.NODENAME])
-	all_groups = synctool_config.make_all_groups(cfg)
+def run_tasks():
+	groups = synctool_config.get_groups([synctool_config.NODENAME])
+	all_groups = synctool_config.make_all_groups()
 
 	tasks_path = os.path.join(synctool_config.MASTERDIR, 'tasks')
 	if not os.path.isdir(tasks_path):
 		stderr('no such directory $masterdir/tasks')
 		return
 
-	os.path.walk(tasks_path, treewalk_tasks, (cfg, tasks_path, groups, all_groups))
+	os.path.walk(tasks_path, treewalk_tasks, (tasks_path, groups, all_groups))
 
 
-def always_run(cfg):
+def always_run():
 	'''always run these commands'''
 
 	for cmd in synctool_config.ALWAYS_RUN:
-		run_command(cfg, cmd)
+		run_command(cmd)
 
 
 def treewalk_find(args, dir, files):
@@ -1121,7 +1121,7 @@ def treewalk_find(args, dir, files):
 	was_verbose = synctool_lib.VERBOSE
 	synctool_lib.VERBOSE = 0
 
-	(cfg, base_path, subdir, groups, all_groups, find_file) = args
+	(base_path, subdir, groups, all_groups, find_file) = args
 	base_len = len(base_path)
 
 	master_len = len(synctool_config.MASTERDIR)
@@ -1145,7 +1145,7 @@ def treewalk_find(args, dir, files):
 
 		dest = os.path.join(dest_dir, file)
 
-		dest = strip_group_file(dest, full_path, cfg, all_groups, groups)
+		dest = strip_group_file(dest, full_path, all_groups, groups)
 		if not dest:
 			files.remove(file)			# this is important for directories
 			nr_files = nr_files - 1
@@ -1154,7 +1154,7 @@ def treewalk_find(args, dir, files):
 #
 #	is this file/dir overridden by another group for this host?
 #
-		val = check_overrides(os.path.join(synctool_config.MASTERDIR, subdir, dest[1:]), full_path, files, cfg, groups)
+		val = check_overrides(os.path.join(synctool_config.MASTERDIR, subdir, dest[1:]), full_path, files, groups)
 		if val:
 			if val != 2:				# do not prune directories
 				files.remove(file)
@@ -1183,14 +1183,14 @@ def treewalk_find(args, dir, files):
 	synctool_lib.VERBOSE = was_verbose
 
 
-def find_synctree(cfg, subdir, filename):
+def find_synctree(subdir, filename):
 	'''helper function for single_files() and diff_files()'''
 	'''find the path in the synctree for a given filename'''
 
 	global FOUND_SINGLE
 
-	groups = synctool_config.get_groups(cfg, [synctool_config.NODENAME])
-	all_groups = synctool_config.make_all_groups(cfg)
+	groups = synctool_config.get_groups([synctool_config.NODENAME])
+	all_groups = synctool_config.make_all_groups()
 
 	base_path = os.path.join(synctool_config.MASTERDIR, subdir)
 	if not os.path.isdir(base_path):
@@ -1200,7 +1200,7 @@ def find_synctree(cfg, subdir, filename):
 	FOUND_SINGLE = None
 
 	if base_path:
-		os.path.walk(base_path, treewalk_find, (cfg, base_path, subdir, groups, all_groups, filename))
+		os.path.walk(base_path, treewalk_find, (base_path, subdir, groups, all_groups, filename))
 
 	if not FOUND_SINGLE:
 		return None
@@ -1208,7 +1208,7 @@ def find_synctree(cfg, subdir, filename):
 	return FOUND_SINGLE
 
 
-def single_files(cfg, filename):
+def single_files(filename):
 	'''check/update a single file'''
 	'''returns (1, path_in_synctree) if file is different'''
 
@@ -1216,7 +1216,7 @@ def single_files(cfg, filename):
 		stderr('missing filename')
 		return (0, None)
 
-	full_path = find_synctree(cfg, 'overlay', filename)
+	full_path = find_synctree('overlay', filename)
 	if not full_path:
 		stdout('%s is not in the overlay tree' % filename)
 		return (0, None)
@@ -1231,7 +1231,7 @@ def single_files(cfg, filename):
 	return (changed, full_path)
 
 
-def single_task(cfg, filename):
+def single_task(filename):
 	'''run a single task'''
 
 	if not filename:
@@ -1242,15 +1242,15 @@ def single_task(cfg, filename):
 	if task_script[0] != '/':				# trick to make find_synctree() work for tasks, too
 		task_script = '/' + task_script
 
-	full_path = find_synctree(cfg, 'tasks', task_script)
+	full_path = find_synctree('tasks', task_script)
 	if not full_path:
 		stderr("no such task '%s'" % filename)
 		return
 
-	run_command(cfg, full_path)
+	run_command(full_path)
 
 
-def diff_files(cfg, filename):
+def diff_files(filename):
 	'''display a diff of the file'''
 
 	if not synctool_config.DIFF_CMD:
@@ -1259,7 +1259,7 @@ def diff_files(cfg, filename):
 
 	synctool_lib.DRY_RUN = 1						# be sure that it doesn't do any updates
 
-	sync_path = find_synctree(cfg, filename)
+	sync_path = find_synctree(filename)
 	if not sync_path:
 		return
 
@@ -1385,8 +1385,8 @@ if __name__ == '__main__':
 			stderr("options '--diff' and '--fix' cannot be combined")
 			sys.exit(1)
 
-	cfg = synctool_config.read_config()
-	synctool_config.add_myhostname(cfg)
+	synctool_config.read_config()
+	synctool_config.add_myhostname()
 
 	if synctool_config.NODENAME == None:
 		stderr('unable to determine my nodename, please check %s' % synctool_config.CONF_FILE)
@@ -1396,7 +1396,7 @@ if __name__ == '__main__':
 		stderr('%s: node %s is disabled in the config file' % (synctool_config.CONF_FILE, synctool_config.NODENAME))
 		sys.exit(1)
 
-	synctool_config.remove_ignored_groups(cfg)
+	synctool_config.remove_ignored_groups()
 
 	if synctool_lib.UNIX_CMD:
 		t = time.localtime(time.time())
@@ -1446,25 +1446,25 @@ if __name__ == '__main__':
 	os.putenv('SYNCTOOL_MASTERDIR', synctool_config.MASTERDIR)
 
 	if diff_file:
-		diff_files(cfg, diff_file)
+		diff_files(diff_file)
 
 	elif single_file:
 		if RUN_TASKS:
-			cmd = single_task(cfg, single_file)
+			cmd = single_task(single_file)
 			if cmd:
-				run_command(cfg, cmd)
+				run_command(cmd)
 		else:
-			(changed, full_path) = single_files(cfg, single_file)
+			(changed, full_path) = single_files(single_file)
 			if changed:
-				on_update(cfg, single_file, full_path)
+				on_update(single_file, full_path)
 
 	elif RUN_TASKS:
-		run_tasks(cfg)
+		run_tasks()
 
 	else:
-		overlay_files(cfg)
-		delete_files(cfg)
-		always_run(cfg)
+		overlay_files()
+		delete_files()
+		always_run()
 
 	unix_out('# EOB')
 

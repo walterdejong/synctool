@@ -465,16 +465,14 @@ def read_config():
 	if errors > 0:
 		sys.exit(-1)
 
-	cfg = {}
-
 # implicitly add 'nodename' as first group
-	for node in get_all_nodes(cfg):
-		insert_group(cfg, node, node)
+	for node in get_all_nodes():
+		insert_group(node, node)
 
 	return {}
 
 
-def add_myhostname(cfg):
+def add_myhostname():
 	'''add the hostname of the current host to the configuration, so that it can be used'''
 	'''also determine the nodename of the current host'''
 
@@ -488,7 +486,7 @@ def add_myhostname(cfg):
 	arr = string.split(hostname, '.')
 	short_hostname = arr[0]
 
-	all_nodes = get_all_nodes(cfg)
+	all_nodes = get_all_nodes()
 
 	if hostname != short_hostname and hostname in all_nodes and short_hostname in all_nodes:
 		stderr("%s: conflict; node %s and %s are both defined" % (CONF_FILE, hostname, arr[0]))
@@ -505,12 +503,12 @@ def add_myhostname(cfg):
 	else:
 # try to find a node that has the (short) hostname listed as interface or as a group
 		for node in all_nodes:
-			iface = get_node_interface(cfg, node)
+			iface = get_node_interface(node)
 			if iface == short_hostname or iface == hostname:
 				nodename = node
 				break
 
-			groups = get_groups(cfg, [node])
+			groups = get_groups([node])
 			if short_hostname in groups or hostname in groups:
 				nodename = node
 				break
@@ -519,13 +517,13 @@ def add_myhostname(cfg):
 
 	if nodename != None:
 # implicitly add hostname as first group
-		insert_group(cfg, nodename, hostname)
-		insert_group(cfg, nodename, short_hostname)
-		insert_group(cfg, nodename, nodename)
+		insert_group(nodename, hostname)
+		insert_group(nodename, short_hostname)
+		insert_group(nodename, nodename)
 
 
 # remove ignored groups from all hosts
-def remove_ignored_groups(cfg):
+def remove_ignored_groups():
 	for host in NODES.keys():
 		changed = 0
 		groups = NODES[host]
@@ -538,7 +536,7 @@ def remove_ignored_groups(cfg):
 			NODES[host] = groups
 
 
-def insert_group(cfg, node, group):
+def insert_group(node, group):
 	'''add group to node definition'''
 
 	if NODES.has_key(node):
@@ -550,36 +548,36 @@ def insert_group(cfg, node, group):
 		NODES[node] = [group]
 
 
-def get_all_nodes(cfg):
+def get_all_nodes():
 	return NODES.keys()
 
 
-def get_node_interface(cfg, node):
+def get_node_interface(node):
 	if INTERFACES.has_key(node):
 		return INTERFACES[node]
 
 	return node
 
 
-def list_all_nodes(cfg):
-	nodes = get_all_nodes(cfg)
+def list_all_nodes():
+	nodes = get_all_nodes()
 	nodes.sort()
 
 	for host in nodes:
 		if host in IGNORE_GROUPS:
 			if OPT_INTERFACE:
-				host = get_node_interface(cfg, host)
+				host = get_node_interface(host)
 
 			if not OPT_FILTER_IGNORED:
 				print '%s (ignored)' % host
 		else:
 			if OPT_INTERFACE:
-				host = get_node_interface(cfg, host)
+				host = get_node_interface(host)
 
 			print host
 
 
-def make_all_groups(cfg):
+def make_all_groups():
 	'''make a list of all possible groups'''
 
 	all_groups = []
@@ -593,20 +591,20 @@ def make_all_groups(cfg):
 	return all_groups
 
 
-def get_all_groups(cfg):
+def get_all_groups():
 	arr = []
 
 	nodes = NODES.keys()
 
-	for group in make_all_groups(cfg):
+	for group in make_all_groups():
 		if not group in arr:
 			arr.append(group)
 
 	return arr
 
 
-def list_all_groups(cfg):
-	groups = get_all_groups(cfg)
+def list_all_groups():
+	groups = get_all_groups()
 	groups.sort()
 
 	for group in groups:
@@ -617,7 +615,7 @@ def list_all_groups(cfg):
 			print group
 
 
-def get_groups(cfg, nodenames):
+def get_groups(nodenames):
 	'''returns the groups for the nodes listed in [nodenames]'''
 
 	arr = []
@@ -631,14 +629,14 @@ def get_groups(cfg, nodenames):
 	return arr
 
 
-def list_nodes(cfg, nodenames):
+def list_nodes(nodenames):
 	for nodename in nodenames:
 		if not NODES.has_key(nodename):
 			stderr("no such node '%s' defined" % nodename)
 			sys.exit(1)
 
-	groups = get_groups(cfg, nodenames)
-	groups.sort()
+	groups = get_groups(nodenames)
+#	groups.sort()							# group order is important
 
 	for group in groups:
 		if group in IGNORE_GROUPS:
@@ -648,7 +646,7 @@ def list_nodes(cfg, nodenames):
 			print group
 
 
-def get_nodes_in_groups(cfg, nodegroups):
+def get_nodes_in_groups(nodegroups):
 	'''returns the nodes that are in [groups]'''
 
 	arr = []
@@ -663,27 +661,27 @@ def get_nodes_in_groups(cfg, nodegroups):
 	return arr
 
 
-def list_nodegroups(cfg, nodegroups):
-	all_groups = make_all_groups(cfg)
+def list_nodegroups(nodegroups):
+	all_groups = make_all_groups()
 
 	for nodegroup in nodegroups:
 		if not nodegroup in all_groups:
 			stderr("no such nodegroup '%s' defined" % nodegroup)
 			sys.exit(1)
 
-	arr = get_nodes_in_groups(cfg, nodegroups)
+	arr = get_nodes_in_groups(nodegroups)
 	arr.sort()
 
 	for node in arr:
 		if node in IGNORE_GROUPS:
 			if OPT_INTERFACE:
-				node = get_node_interface(cfg, node)
+				node = get_node_interface(node)
 
 			if not OPT_FILTER_IGNORED:
 				print '%s (ignored)' % node
 		else:
 			if OPT_INTERFACE:
-				node = get_node_interface(cfg, node)
+				node = get_node_interface(node)
 
 			print node
 
@@ -801,27 +799,27 @@ def get_options():
 if __name__ == '__main__':
 	get_options()
 
-	cfg = read_config()
+	read_config()
 
 	if ACTION == ACTION_LIST_NODES:
-		list_all_nodes(cfg)
+		list_all_nodes()
 
 	elif ACTION == ACTION_LIST_GROUPS:
-		list_all_groups(cfg)
+		list_all_groups()
 
 	elif ACTION == ACTION_NODES:
 		if not ARG_NODENAMES:
 			stderr("option '--node' requires an argument; the node name")
 			sys.exit(1)
 
-		list_nodes(cfg, ARG_NODENAMES)
+		list_nodes(ARG_NODENAMES)
 
 	elif ACTION == ACTION_GROUPS:
 		if not ARG_GROUPS:
 			stderr("option '--node-group' requires an argument; the node group name")
 			sys.exit(1)
 
-		list_nodegroups(cfg, ARG_GROUPS)
+		list_nodegroups(ARG_GROUPS)
 
 
 # EOB
