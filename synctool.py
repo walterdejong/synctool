@@ -1412,7 +1412,7 @@ if __name__ == '__main__':
 		unix_out('# script generated on %04d/%02d/%02d %02d:%02d:%02d' % (t[0], t[1], t[2], t[3], t[4], t[5]))
 		unix_out('#')
 		unix_out('# NODENAME=%s' % synctool_config.NODENAME)
-		unix_out('# HOSTNAME=%s' % cfg['hostname'])
+		unix_out('# HOSTNAME=%s' % synctool_config.HOSTNAME)
 		unix_out('# MASTERDIR=%s' % synctool_config.MASTERDIR)
 		unix_out('# SYMLINK_MODE=0%o' % synctool_config.SYMLINK_MODE)
 		unix_out('#')
@@ -1430,7 +1430,7 @@ if __name__ == '__main__':
 	else:
 		if not synctool_lib.QUIET:
 			verbose('my nodename: %s' % synctool_config.NODENAME)
-			verbose('my hostname: %s' % cfg['hostname'])
+			verbose('my hostname: %s' % synctool_config.HOSTNAME)
 			verbose('masterdir: %s' % synctool_config.MASTERDIR)
 			verbose('symlink_mode: 0%o' % synctool_config.SYMLINK_MODE)
 
