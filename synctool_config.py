@@ -37,6 +37,9 @@ HOSTNAME = None
 NODENAME = None
 
 DIFF_CMD = None
+SSH_CMD = None
+RSYNC_CMD = None
+SYNCTOOL_CMD = None
 
 #
 #	default symlink mode
@@ -66,19 +69,11 @@ def stderr(str):
 def read_config():
 	'''read the config file and return cfg structure'''
 
-	global MASTERDIR, DIFF_CMD, SYMLINK_MODE
+	global MASTERDIR, DIFF_CMD, SSH_CMD, RSYNC_CMD, SYNCTOOL_CMD, SYMLINK_MODE
 	global IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
 	global ON_UPDATE, ALWAYS_RUN
 
 	cfg = {}
-	cfg['symlink_mode'] = SYMLINK_MODE
-	cfg['ignore_dotfiles'] = IGNORE_DOTFILES
-	cfg['ignore_dotdirs'] = IGNORE_DOTDIRS
-	cfg['ignore_files'] = IGNORE_FILES = []
-	cfg['ignore_groups'] = IGNORE_GROUPS = []
-	cfg['on_update'] = ON_UPDATE = {}
-	cfg['always_run'] = ALWAYS_RUN = []
-	DIFF_CMD = None
 
 	if os.path.isdir(CONF_FILE):
 		filename = os.path.join(filename, CONF_FILE)
@@ -391,7 +386,7 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			if cfg.has_key('ssh_cmd'):
+			if SSH_CMD != None:
 				stderr("%s:%d: redefinition of ssh_cmd" % (CONF_FILE, lineno))
 				errors = errors + 1
 				continue
@@ -402,7 +397,7 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			cfg['ssh_cmd'] = string.join(arr[1:])
+			SSH_CMD = string.join(arr[1:])
 			continue
 
 #
@@ -414,7 +409,7 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			if cfg.has_key('rsync_cmd'):
+			if RSYNC_CMD != None:
 				stderr("%s:%d: redefinition of rsync_cmd" % (CONF_FILE, lineno))
 				errors = errors + 1
 				continue
@@ -425,7 +420,7 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			cfg['rsync_cmd'] = string.join(arr[1:])
+			RSYNC_CMD = string.join(arr[1:])
 			continue
 
 #
@@ -437,7 +432,7 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			if cfg.has_key('synctool_cmd'):
+			if SYNCTOOL_CMD:
 				stderr("%s:%d: redefinition of synctool_cmd" % (CONF_FILE, lineno))
 				errors = errors + 1
 				continue
@@ -448,7 +443,7 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			cfg['synctool_cmd'] = string.join(arr[1:])
+			SYNCTOOL_CMD = string.join(arr[1:])
 			continue
 
 #

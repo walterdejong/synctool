@@ -102,13 +102,11 @@ def make_nodeset(cfg):
 
 
 def run_remote_cmd(cfg, nodes, remote_cmd):
-	if not cfg.has_key('ssh_cmd'):
+	if not synctool_config.SSH_CMD:
 		stderr('%s: error: ssh_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
 		sys.exit(-1)
 
-	ssh_cmd = cfg['ssh_cmd']
-
-	run_parallel(cfg, nodes, ssh_cmd, remote_cmd)
+	run_parallel(cfg, nodes, synctool_config.SSH_CMD, remote_cmd)
 
 
 def run_parallel(cfg, nodes, cmd, cmd_args, join_char=None):
