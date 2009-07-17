@@ -29,6 +29,7 @@ OPT_FILTER_IGNORED = 0
 # optional: list interface names for the selected nodes
 OPT_INTERFACE = 0
 
+MASTERDIR = None
 
 #
 #	default symlink mode
@@ -54,7 +55,7 @@ def stderr(str):
 def read_config():
 	'''read the config file and return cfg structure'''
 
-	global SYMLINK_MODE, IGNORE_DOTFILES, IGNORE_DOTDIRS
+	global MASTERDIR, SYMLINK_MODE, IGNORE_DOTFILES, IGNORE_DOTDIRS
 
 	cfg = {}
 	cfg['ignore_groups'] = []
@@ -133,7 +134,7 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			cfg['masterdir'] = arr[1]
+			cfg['masterdir'] = MASTERDIR = arr[1]
 			continue
 
 #
