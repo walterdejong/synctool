@@ -40,6 +40,7 @@ DIFF_CMD = None
 SSH_CMD = None
 RSYNC_CMD = None
 SYNCTOOL_CMD = None
+NUM_PROC = 16				# use sensible default
 
 #
 #	default symlink mode
@@ -69,7 +70,7 @@ def stderr(str):
 def read_config():
 	'''read the config file and return cfg structure'''
 
-	global MASTERDIR, DIFF_CMD, SSH_CMD, RSYNC_CMD, SYNCTOOL_CMD, SYMLINK_MODE
+	global MASTERDIR, DIFF_CMD, SSH_CMD, RSYNC_CMD, SYNCTOOL_CMD, NUM_PROC, SYMLINK_MODE
 	global IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
 	global ON_UPDATE, ALWAYS_RUN
 
@@ -450,11 +451,6 @@ def read_config():
 #	keyword: num_proc
 #
 		if keyword == 'num_proc':
-			if cfg.has_key('num_proc'):
-				stderr("%s:%d: redefinition of num_proc" % (CONF_FILE, lineno))
-				errors = errors + 1
-				continue
-
 			try:
 				num_proc = int(arr[1])
 			except ValueError:
@@ -467,7 +463,7 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			cfg['num_proc'] = num_proc
+			NUM_PROC = num_proc
 			continue
 
 		stderr("%s:%d: unknown keyword '%s'" % (CONF_FILE, lineno, keyword))

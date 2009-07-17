@@ -110,11 +110,6 @@ def run_remote_cmd(cfg, nodes, remote_cmd):
 
 
 def run_parallel(cfg, nodes, cmd, cmd_args, join_char=None):
-	if not cfg.has_key('num_proc'):
-		num_proc = 16						# use sensible default
-	else:
-		num_proc = int(cfg['num_proc'])
-
 	parallel = 0
 
 	for node in nodes:
@@ -138,7 +133,7 @@ def run_parallel(cfg, nodes, cmd, cmd_args, join_char=None):
 #
 #	run commands in parallel, as many as defined
 #
-		if parallel > num_proc:
+		if parallel > synctool_config.NUM_PROC:
 			try:
 				if os.wait() != -1:
 					parallel = parallel - 1
@@ -197,18 +192,13 @@ def run_parallel_cmds(cfg, nodes, cmds):
 	'''fork and run multiple commands in sequence'''
 	'''cmds[] is an array of tuples (cmd, cmd_args, join_char)'''
 
-	if not cfg.has_key('num_proc'):
-		num_proc = 16						# use sensible default
-	else:
-		num_proc = int(cfg['num_proc'])
-
 	parallel = 0
 
 	for node in nodes:
 #
 #	run commands in parallel, as many as defined
 #
-		if parallel > num_proc:
+		if parallel > synctool_config.NUM_PROC:
 			try:
 				if os.wait() != -1:
 					parallel = parallel - 1
