@@ -179,6 +179,21 @@ def path_exists(path):
 	return stat_exists(stat_path(path))
 
 
+def path_isignored(cfg, full_path, filename):
+	if path_isdir(full_path):
+		if synctool_config.IGNORE_DOTDIRS and filename[0] == '.':
+			master_len = len(cfg['masterdir'])
+			verbose('ignoring hidden directory $masterdir%s/' % full_path[master_len:])
+			return 1
+	else:
+		if synctool_config.IGNORE_DOTFILES and filename[0] == '.':
+			master_len = len(cfg['masterdir'])
+			verbose('ignoring hidden file $masterdir%s' % full_path[master_len:])
+			return 1
+
+	return 0
+
+
 def compare_files(src_path, dest_path):
 	'''see what the differences are between src and dest, and fix it if not a dry run
 
@@ -779,6 +794,11 @@ def treewalk_overlay(args, dir, files):
 
 		full_path = os.path.join(dir, file)
 
+		if path_isignored(cfg, full_path, file):
+			files.remove(file)
+			nr_files = nr_files - 1
+			continue
+
 		verbose('checking $masterdir%s' % full_path[master_len:])
 
 		dest = os.path.join(dest_dir, file)
@@ -971,6 +991,11 @@ def treewalk_delete(args, dir, files):
 
 		full_path = os.path.join(dir, file)
 
+		if path_isignored(cfg, full_path, file):
+			files.remove(file)
+			nr_files = nr_files - 1
+			continue
+
 		verbose('checking $masterdir%s' % full_path[master_len:])
 
 		dest = os.path.join(dest_dir, file)
@@ -1037,12 +1062,12 @@ def treewalk_tasks(args, dir, files):
 	while n < nr_files:
 		file = files[n]
 
-		if file[0] == '.':			# skip hidden entries
+		full_path = os.path.join(dir, file)
+
+		if path_isignored(cfg, full_path, file):
 			files.remove(file)
 			nr_files = nr_files - 1
 			continue
-
-		full_path = os.path.join(dir, file)
 
 		verbose('checking $masterdir%s' % full_path[master_len:])
 
@@ -1120,6 +1145,11 @@ def treewalk_find(args, dir, files):
 		file = files[n]
 
 		full_path = os.path.join(dir, file)
+
+		if path_isignored(cfg, full_path, file):
+			files.remove(file)
+			nr_files = nr_files - 1
+			continue
 
 		dest = os.path.join(dest_dir, file)
 

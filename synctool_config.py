@@ -39,6 +39,9 @@ OPT_INTERFACE = 0
 #
 SYMLINK_MODE = 0755
 
+IGNORE_DOTFILES = 0
+IGNORE_DOTDIRS = 0
+
 
 def stdout(str):
 	print str
@@ -51,10 +54,13 @@ def stderr(str):
 def read_config():
 	'''read the config file and return cfg structure'''
 
-	global SYMLINK_MODE
+	global SYMLINK_MODE, IGNORE_DOTFILES, IGNORE_DOTDIRS
 
 	cfg = {}
 	cfg['ignore_groups'] = []
+	cfg['symlink_mode'] = SYMLINK_MODE
+	cfg['ignore_dotfiles'] = IGNORE_DOTFILES
+	cfg['ignore_dotdirs'] = IGNORE_DOTDIRS
 
 	if os.path.isdir(CONF_FILE):
 		filename = os.path.join(filename, CONF_FILE)
@@ -133,11 +139,6 @@ def read_config():
 #	keyword: symlink_mode
 #
 		if keyword == 'symlink_mode':
-			if cfg.has_key('symlink_mode'):
-				stderr("%s:%d: redefinition of symlink_mode" % (CONF_FILE, lineno))
-				errors = errors + 1
-				continue
-
 			try:
 				mode = int(arr[1], 8)
 			except ValueError:
@@ -147,6 +148,40 @@ def read_config():
 
 			cfg['symlink_mode'] = mode
 			SYMLINK_MODE = mode
+			continue
+
+#
+#	keyword: ignore_dotfiles
+#
+		if keyword == 'ignore_dotfiles':
+			if arr[1] in ('1', 'on', 'yes'):
+				IGNORE_DOTFILES = 1
+				cfg['ignore_dotfiles'] = 1
+
+			elif arr[1] in ('0', 'off', 'no'):
+				IGNORE_DOTFILES = 0
+				cfg['ignore_dotfiles'] = 0
+
+			else:
+				stderr("%s:%d: invalid argument for ignore_dotfiles" % (CONF_FILE, lineno))
+				errors = errors + 1
+			continue
+
+#
+#	keyword: ignore_dotdirs
+#
+		if keyword == 'ignore_dotdirs':
+			if arr[1] in ('1', 'on', 'yes'):
+				IGNORE_DOTDIRS = 1
+				cfg['ignore_dotdirs'] = 1
+
+			elif arr[1] in ('0', 'off', 'no'):
+				IGNORE_DOTDIRS = 0
+				cfg['ignore_dotdirs'] = 0
+
+			else:
+				stderr("%s:%d: invalid argument for ignore_dotdirs" % (CONF_FILE, lineno))
+				errors = errors + 1
 			continue
 
 #
