@@ -20,8 +20,13 @@ import shutil
 import pwd
 import grp
 import time
-import md5
 
+try:
+	import hashlib
+	use_hashlib = 1
+except ImportError:
+	import md5
+	use_hashlib = 0
 
 # extra command-line option --tasks
 RUN_TASKS = 0
@@ -75,8 +80,12 @@ def checksum_files(file1, file2):
 	except IOError(err, reason):
 		raise IOError(err, 'failed to open %s : %s' % (file2, reason))
 
-	sum1 = md5.new()
-	sum2 = md5.new()
+	if use_hashlib:
+		sum1 = hashlib.md5()
+		sum2 = hashlib.md5()
+	else:
+		sum1 = md5.new()
+		sum2 = md5.new()
 
 	len1 = len2 = 0
 	ended = 0

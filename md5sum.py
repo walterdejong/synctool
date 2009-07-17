@@ -3,8 +3,12 @@
 #	md5sum.py
 #
 
-import md5
-
+try:
+	import hashlib
+	use_hashlib = 1
+except ImportError:
+	import md5
+	use_hashlib = 0
 
 #
 #	note: in Python version 1, the md5.hexdigest() method did not yet exist
@@ -25,7 +29,11 @@ def md5sum(filename):
 	if not f:
 		return ''
 
-	digest = md5.new()
+	if use_hashlib:
+		digest = hashlib.md5()
+	else:
+		digest = md5.new()
+
 	while 1:
 		buf = f.read(16384)
 		if not buf:

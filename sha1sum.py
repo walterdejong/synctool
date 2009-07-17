@@ -3,7 +3,12 @@
 #	sha1sum.py
 #
 
-import sha
+try:
+	import hashlib
+	use_hashlib = 1
+except:
+	import sha
+	use_hashlib = 0
 
 
 def hexdigest(digest):
@@ -22,7 +27,11 @@ def sha1sum(filename):
 	if not f:
 		return ''
 
-	digest = sha.new()
+	if use_hashlib:
+		digest = hashlib.sha1()
+	else:
+		digest = sha.new()
+
 	while 1:
 		buf = f.read(16384)
 		if not buf:
