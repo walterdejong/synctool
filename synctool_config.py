@@ -42,6 +42,7 @@ SYMLINK_MODE = 0755
 
 IGNORE_DOTFILES = 0
 IGNORE_DOTDIRS = 0
+IGNORE_FILES = []
 
 
 def stdout(str):
@@ -55,14 +56,14 @@ def stderr(str):
 def read_config():
 	'''read the config file and return cfg structure'''
 
-	global MASTERDIR, SYMLINK_MODE, IGNORE_DOTFILES, IGNORE_DOTDIRS
+	global MASTERDIR, SYMLINK_MODE, IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES
 
 	cfg = {}
 	cfg['ignore_groups'] = []
 	cfg['symlink_mode'] = SYMLINK_MODE
 	cfg['ignore_dotfiles'] = IGNORE_DOTFILES
 	cfg['ignore_dotdirs'] = IGNORE_DOTDIRS
-	cfg['ignore_files'] = []
+	cfg['ignore_files'] = IGNORE_FILES = []
 
 	if os.path.isdir(CONF_FILE):
 		filename = os.path.join(filename, CONF_FILE)
@@ -195,7 +196,8 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			cfg['ignore_files'].extend(arr[1:])
+			IGNORE_FILES.extend(arr[1:])
+			cfg['ignore_files'] = IGNORE_FILES
 			continue
 
 #
