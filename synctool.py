@@ -843,21 +843,19 @@ def treewalk_overlay(args, dir, files):
 def on_update(cfg, dest, full_path=None):
 	'''run on_update command for the dest file'''
 
-	if cfg.has_key('on_update'):
-
 # if the dest file is not in the on_update map, maybe it's directory is ...
 # note that if there are multiple files in the directory that are updated,
 # the action may is triggered multiple times as well
 
-		update = synctool_config.ON_UPDATE
+	update = synctool_config.ON_UPDATE
+	if not update.has_key(dest):
+		dest = os.path.dirname(dest)
 		if not update.has_key(dest):
-			dest = os.path.dirname(dest)
-			if not update.has_key(dest):
-				dest = dest + '/'
+			dest = dest + '/'
 
-		if update.has_key(dest):
-			cmd = update[dest]
-			run_command(cfg, cmd)
+	if update.has_key(dest):
+		cmd = update[dest]
+		run_command(cfg, cmd)
 
 #
 #	if a .post script exists for this file with relevant group extension, run it

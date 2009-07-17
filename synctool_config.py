@@ -58,6 +58,9 @@ IGNORE_GROUPS = []
 ON_UPDATE = {}
 ALWAYS_RUN = []
 
+NODES = {}
+INTERFACES = {}
+
 
 def stdout(str):
 	print str
@@ -68,13 +71,12 @@ def stderr(str):
 
 
 def read_config():
-	'''read the config file and return cfg structure'''
+	'''read the config file and set a bunch of globals'''
 
 	global MASTERDIR, DIFF_CMD, SSH_CMD, RSYNC_CMD, SYNCTOOL_CMD, NUM_PROC, SYMLINK_MODE
 	global IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
 	global ON_UPDATE, ALWAYS_RUN
-
-	cfg = {}
+	global NODES, INTERFACES
 
 	if os.path.isdir(CONF_FILE):
 		filename = os.path.join(filename, CONF_FILE)
@@ -146,7 +148,7 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			cfg['masterdir'] = MASTERDIR = arr[1]
+			MASTERDIR = arr[1]
 			continue
 
 #
@@ -160,7 +162,6 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			cfg['symlink_mode'] = mode
 			SYMLINK_MODE = mode
 			continue
 
@@ -170,11 +171,9 @@ def read_config():
 		if keyword == 'ignore_dotfiles':
 			if arr[1] in ('1', 'on', 'yes'):
 				IGNORE_DOTFILES = 1
-				cfg['ignore_dotfiles'] = 1
 
 			elif arr[1] in ('0', 'off', 'no'):
 				IGNORE_DOTFILES = 0
-				cfg['ignore_dotfiles'] = 0
 
 			else:
 				stderr("%s:%d: invalid argument for ignore_dotfiles" % (CONF_FILE, lineno))
@@ -187,11 +186,9 @@ def read_config():
 		if keyword == 'ignore_dotdirs':
 			if arr[1] in ('1', 'on', 'yes'):
 				IGNORE_DOTDIRS = 1
-				cfg['ignore_dotdirs'] = 1
 
 			elif arr[1] in ('0', 'off', 'no'):
 				IGNORE_DOTDIRS = 0
-				cfg['ignore_dotdirs'] = 0
 
 			else:
 				stderr("%s:%d: invalid argument for ignore_dotdirs" % (CONF_FILE, lineno))
@@ -208,7 +205,6 @@ def read_config():
 				continue
 
 			IGNORE_FILES.extend(arr[1:])
-			cfg['ignore_files'] = IGNORE_FILES
 			continue
 
 #
@@ -220,14 +216,11 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			if not cfg.has_key('host'):
-				cfg['host'] = {}
-
-			host = arr[1]
+			node = arr[1]
 			groups = arr[2:]
 
-			if cfg['host'].has_key(host):
-				stderr("%s:%d: redefinition of node %s" % (CONF_FILE, lineno, host))
+			if NODES.has_key(node):
+				stderr("%s:%d: redefinition of node %s" % (CONF_FILE, lineno, node))
 				errors = errors + 1
 				continue
 
@@ -235,18 +228,15 @@ def read_config():
 				interface = groups[-1][10:]
 				groups = groups[:-1]
 
-				if not cfg.has_key('interfaces'):
-					cfg['interfaces'] = {}
-
-				if cfg['interfaces'].has_key(host):
-					stderr("%s:%d: redefinition of interface for node %s" % (CONF_FILE, lineno, host))
+				if INTERFACES.has_key(node):
+					stderr("%s:%d: redefinition of interface for node %s" % (CONF_FILE, lineno, node))
 					errors = errors + 1
 					continue
 
-				cfg['interfaces'][host] = interface
+				INTERFACES[node] = interface
 
 			if len(groups) > 0:
-				cfg['host'][host] = groups
+				NODES[node] = groups
 
 			continue
 
@@ -260,7 +250,6 @@ def read_config():
 				continue
 
 			IGNORE_GROUPS.append(arr[1])
-			cfg['ignore_groups'] = IGNORE_GROUPS
 			continue
 
 #
@@ -273,7 +262,6 @@ def read_config():
 				continue
 
 			IGNORE_GROUPS.extend(arr[1:])
-			cfg['ignore_groups'] = IGNORE_GROUPS
 			continue
 
 #
@@ -472,16 +460,18 @@ def read_config():
 	f.close()
 
 	if MASTERDIR == None:
-		cfg['masterdir'] = MASTERDIR = '.'
+		MASTERDIR = '.'
 
 	if errors > 0:
 		sys.exit(-1)
+
+	cfg = {}
 
 # implicitly add 'nodename' as first group
 	for node in get_all_nodes(cfg):
 		insert_group(cfg, node, node)
 
-	return cfg
+	return {}
 
 
 def add_myhostname(cfg):
@@ -493,8 +483,7 @@ def add_myhostname(cfg):
 #
 #	get my hostname
 #
-	hostname = socket.gethostname()
-	cfg['hostname'] = HOSTNAME = hostname
+	HOSTNAME = hostname = socket.gethostname()
 
 	arr = string.split(hostname, '.')
 	short_hostname = arr[0]
@@ -526,7 +515,7 @@ def add_myhostname(cfg):
 				nodename = node
 				break
 
-	cfg['nodename'] = NODENAME = nodename
+	NODENAME = nodename
 
 	if nodename != None:
 # implicitly add hostname as first group
@@ -537,37 +526,37 @@ def add_myhostname(cfg):
 
 # remove ignored groups from all hosts
 def remove_ignored_groups(cfg):
-	for host in cfg['host'].keys():
+	for host in NODES.keys():
 		changed = 0
-		groups = cfg['host'][host]
+		groups = NODES[host]
 		for ignore in IGNORE_GROUPS:
 			if ignore in groups:
 				groups.remove(ignore)
 				changed = 1
 
 		if changed:
-			cfg['host'][host] = groups
+			NODES[host] = groups
 
 
 def insert_group(cfg, node, group):
 	'''add group to node definition'''
 
-	if cfg['host'].has_key(node):
-		if group in cfg['host'][node]:
-			cfg['host'][node].remove(group)		# this is to make sure it comes first
+	if NODES.has_key(node):
+		if group in NODES[node]:
+			NODES[node].remove(group)		# this is to make sure it comes first
 
-		cfg['host'][node].insert(0, group)
+		NODES[node].insert(0, group)
 	else:
-		cfg['host'][node] = [group]
+		NODES[node] = [group]
 
 
 def get_all_nodes(cfg):
-	return cfg['host'].keys()
+	return NODES.keys()
 
 
 def get_node_interface(cfg, node):
-	if cfg.has_key('interfaces') and cfg['interfaces'].has_key(node):
-		return cfg['interfaces'][node]
+	if INTERFACES.has_key(node):
+		return INTERFACES[node]
 
 	return node
 
@@ -594,7 +583,7 @@ def make_all_groups(cfg):
 	'''make a list of all possible groups'''
 
 	all_groups = []
-	host_dict = cfg['host']
+	host_dict = NODES
 	for host in host_dict.keys():
 		for group in host_dict[host]:
 			if not group in all_groups:
@@ -607,7 +596,7 @@ def make_all_groups(cfg):
 def get_all_groups(cfg):
 	arr = []
 
-	nodes = cfg['host'].keys()
+	nodes = NODES.keys()
 
 	for group in make_all_groups(cfg):
 		if not group in arr:
@@ -634,8 +623,8 @@ def get_groups(cfg, nodenames):
 	arr = []
 
 	for nodename in nodenames:
-		if cfg['host'].has_key(nodename):
-			for group in cfg['host'][nodename]:
+		if NODES.has_key(nodename):
+			for group in NODES[nodename]:
 				if not group in arr:
 					arr.append(group)
 
@@ -644,7 +633,7 @@ def get_groups(cfg, nodenames):
 
 def list_nodes(cfg, nodenames):
 	for nodename in nodenames:
-		if not cfg['host'].has_key(nodename):
+		if not NODES.has_key(nodename):
 			stderr("no such node '%s' defined" % nodename)
 			sys.exit(1)
 
@@ -664,11 +653,11 @@ def get_nodes_in_groups(cfg, nodegroups):
 
 	arr = []
 
-	nodes = cfg['host'].keys()
+	nodes = NODES.keys()
 
 	for nodegroup in nodegroups:
 		for node in nodes:
-			if nodegroup in cfg['host'][node] and not node in arr:
+			if nodegroup in NODES[node] and not node in arr:
 				arr.append(node)
 
 	return arr
