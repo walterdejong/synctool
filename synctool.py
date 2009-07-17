@@ -1108,10 +1108,7 @@ def run_tasks(cfg):
 def always_run(cfg):
 	'''always run these commands'''
 
-	if not cfg.has_key('always_run'):
-		return
-
-	for cmd in cfg['always_run']:
+	for cmd in synctool_config.ALWAYS_RUN:
 		run_command(cfg, cmd)
 
 

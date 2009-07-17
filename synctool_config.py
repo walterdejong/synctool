@@ -50,6 +50,7 @@ IGNORE_DOTDIRS = 0
 IGNORE_FILES = []
 IGNORE_GROUPS = []
 ON_UPDATE = {}
+ALWAYS_RUN = []
 
 
 def stdout(str):
@@ -64,7 +65,7 @@ def read_config():
 	'''read the config file and return cfg structure'''
 
 	global MASTERDIR, SYMLINK_MODE, IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
-	global ON_UPDATE
+	global ON_UPDATE, ALWAYS_RUN
 
 	cfg = {}
 	cfg['symlink_mode'] = SYMLINK_MODE
@@ -73,6 +74,7 @@ def read_config():
 	cfg['ignore_files'] = IGNORE_FILES = []
 	cfg['ignore_groups'] = IGNORE_GROUPS = []
 	cfg['on_update'] = ON_UPDATE = {}
+	cfg['always_run'] = ALWAYS_RUN = []
 
 	if os.path.isdir(CONF_FILE):
 		filename = os.path.join(filename, CONF_FILE)
@@ -323,12 +325,9 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			if not cfg.has_key('always_run'):
-				cfg['always_run'] = []
-
 			cmd = string.join(arr[1:])
 
-			if cmd in cfg['always_run']:
+			if cmd in ALWAYS_RUN:
 				stderr("%s:%d: same command defined again: %s" % (CONF_FILE, lineno, cmd))
 				errors = errors + 1
 				continue
@@ -353,7 +352,7 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			cfg['always_run'].append(cmd)
+			ALWAYS_RUN.append(cmd)
 			continue
 
 #
