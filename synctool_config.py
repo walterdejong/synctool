@@ -49,6 +49,7 @@ IGNORE_DOTFILES = 0
 IGNORE_DOTDIRS = 0
 IGNORE_FILES = []
 IGNORE_GROUPS = []
+ON_UPDATE = {}
 
 
 def stdout(str):
@@ -63,6 +64,7 @@ def read_config():
 	'''read the config file and return cfg structure'''
 
 	global MASTERDIR, SYMLINK_MODE, IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
+	global ON_UPDATE
 
 	cfg = {}
 	cfg['symlink_mode'] = SYMLINK_MODE
@@ -70,6 +72,7 @@ def read_config():
 	cfg['ignore_dotdirs'] = IGNORE_DOTDIRS
 	cfg['ignore_files'] = IGNORE_FILES = []
 	cfg['ignore_groups'] = IGNORE_GROUPS = []
+	cfg['on_update'] = ON_UPDATE = {}
 
 	if os.path.isdir(CONF_FILE):
 		filename = os.path.join(filename, CONF_FILE)
@@ -280,13 +283,10 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			if not cfg.has_key('on_update'):
-				cfg['on_update'] = {}
-
 			file = arr[1]
 			cmd = string.join(arr[2:])
 
-			if cfg['on_update'].has_key(file):
+			if ON_UPDATE.has_key(file):
 				stderr("%s:%d: redefinition of on_update %s" % (CONF_FILE, lineno, file))
 				errors = errors + 1
 				continue
@@ -311,7 +311,7 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			cfg['on_update'][file] = cmd
+			ON_UPDATE[file] = cmd
 			continue
 
 #

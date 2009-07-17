@@ -849,7 +849,7 @@ def on_update(cfg, dest, full_path=None):
 # note that if there are multiple files in the directory that are updated,
 # the action may is triggered multiple times as well
 
-		update = cfg['on_update']
+		update = synctool_config.ON_UPDATE
 		if not update.has_key(dest):
 			dest = os.path.dirname(dest)
 			if not update.has_key(dest):
