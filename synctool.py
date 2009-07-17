@@ -179,7 +179,7 @@ def path_exists(path):
 	return stat_exists(stat_path(path))
 
 
-def path_isignored(cfg, full_path, filename):
+def path_isignored(full_path, filename):
 	if len(synctool_config.IGNORE_FILES) > 0:
 		if filename in synctool_config.IGNORE_FILES:
 			return 1
@@ -801,7 +801,7 @@ def treewalk_overlay(args, dir, files):
 
 		full_path = os.path.join(dir, file)
 
-		if path_isignored(cfg, full_path, file):
+		if path_isignored(full_path, file):
 			files.remove(file)
 			nr_files = nr_files - 1
 			continue
@@ -996,7 +996,7 @@ def treewalk_delete(args, dir, files):
 
 		full_path = os.path.join(dir, file)
 
-		if path_isignored(cfg, full_path, file):
+		if path_isignored(full_path, file):
 			files.remove(file)
 			nr_files = nr_files - 1
 			continue
@@ -1067,7 +1067,7 @@ def treewalk_tasks(args, dir, files):
 
 		full_path = os.path.join(dir, file)
 
-		if path_isignored(cfg, full_path, file):
+		if path_isignored(full_path, file):
 			files.remove(file)
 			nr_files = nr_files - 1
 			continue
@@ -1147,7 +1147,7 @@ def treewalk_find(args, dir, files):
 
 		full_path = os.path.join(dir, file)
 
-		if path_isignored(cfg, full_path, file):
+		if path_isignored(full_path, file):
 			files.remove(file)
 			nr_files = nr_files - 1
 			continue
