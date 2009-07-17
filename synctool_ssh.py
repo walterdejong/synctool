@@ -77,14 +77,14 @@ def make_nodeset(cfg):
 	nodeset = []
 
 	for node in nodes:
-		if node in cfg['ignore_groups'] and not node in explicit_includes:
+		if node in synctool_config.IGNORE_GROUPS and not node in explicit_includes:
 			verbose('node %s is ignored' % node)
 			continue
 
 		groups = synctool_config.get_groups(cfg, [node])
 		do_continue = 0
 		for group in groups:
-			if group in cfg['ignore_groups']:
+			if group in synctool_config.IGNORE_GROUPS:
 				verbose('group %s is ignored' % group)
 				do_continue = 1
 				break

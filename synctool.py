@@ -1397,7 +1397,7 @@ if __name__ == '__main__':
 		stderr('unable to determine my nodename, please check %s' % synctool_config.CONF_FILE)
 		sys.exit(1)
 
-	if synctool_config.NODENAME in cfg['ignore_groups']:
+	if synctool_config.NODENAME in synctool_config.IGNORE_GROUPS:
 		stderr('%s: node %s is disabled in the config file' % (synctool_config.CONF_FILE, synctool_config.NODENAME))
 		sys.exit(1)
 

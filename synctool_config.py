@@ -48,6 +48,7 @@ SYMLINK_MODE = 0755
 IGNORE_DOTFILES = 0
 IGNORE_DOTDIRS = 0
 IGNORE_FILES = []
+IGNORE_GROUPS = []
 
 
 def stdout(str):
@@ -61,14 +62,14 @@ def stderr(str):
 def read_config():
 	'''read the config file and return cfg structure'''
 
-	global MASTERDIR, SYMLINK_MODE, IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES
+	global MASTERDIR, SYMLINK_MODE, IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
 
 	cfg = {}
-	cfg['ignore_groups'] = []
 	cfg['symlink_mode'] = SYMLINK_MODE
 	cfg['ignore_dotfiles'] = IGNORE_DOTFILES
 	cfg['ignore_dotdirs'] = IGNORE_DOTDIRS
 	cfg['ignore_files'] = IGNORE_FILES = []
+	cfg['ignore_groups'] = IGNORE_GROUPS = []
 
 	if os.path.isdir(CONF_FILE):
 		filename = os.path.join(filename, CONF_FILE)
@@ -253,7 +254,8 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			cfg['ignore_groups'].append(arr[1])
+			IGNORE_GROUPS.append(arr[1])
+			cfg['ignore_groups'] = IGNORE_GROUPS
 			continue
 
 #
@@ -265,7 +267,8 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			cfg['ignore_groups'].extend(arr[1:])
+			IGNORE_GROUPS.extend(arr[1:])
+			cfg['ignore_groups'] = IGNORE_GROUPS
 			continue
 
 #
@@ -543,7 +546,7 @@ def remove_ignored_groups(cfg):
 	for host in cfg['host'].keys():
 		changed = 0
 		groups = cfg['host'][host]
-		for ignore in cfg['ignore_groups']:
+		for ignore in IGNORE_GROUPS:
 			if ignore in groups:
 				groups.remove(ignore)
 				changed = 1
@@ -580,7 +583,7 @@ def list_all_nodes(cfg):
 	nodes.sort()
 
 	for host in nodes:
-		if host in cfg['ignore_groups']:
+		if host in IGNORE_GROUPS:
 			if OPT_INTERFACE:
 				host = get_node_interface(cfg, host)
 
@@ -603,7 +606,7 @@ def make_all_groups(cfg):
 			if not group in all_groups:
 				all_groups.append(group)
 
-	all_groups.extend(cfg['ignore_groups'])		# although ignored, they are existing groups
+	all_groups.extend(IGNORE_GROUPS)		# although ignored, they are existing groups
 	return all_groups
 
 
@@ -624,7 +627,7 @@ def list_all_groups(cfg):
 	groups.sort()
 
 	for group in groups:
-		if group in cfg['ignore_groups']:
+		if group in IGNORE_GROUPS:
 			if not OPT_FILTER_IGNORED:
 				print '%s (ignored)' % group
 		else:
@@ -655,7 +658,7 @@ def list_nodes(cfg, nodenames):
 	groups.sort()
 
 	for group in groups:
-		if group in cfg['ignore_groups']:
+		if group in IGNORE_GROUPS:
 			if not OPT_FILTER_IGNORED:
 				print '%s (ignored)' % group
 		else:
@@ -689,7 +692,7 @@ def list_nodegroups(cfg, nodegroups):
 	arr.sort()
 
 	for node in arr:
-		if node in cfg['ignore_groups']:
+		if node in IGNORE_GROUPS:
 			if OPT_INTERFACE:
 				node = get_node_interface(cfg, node)
 
