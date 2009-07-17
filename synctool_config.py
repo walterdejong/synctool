@@ -61,6 +61,7 @@ def read_config():
 	cfg['symlink_mode'] = SYMLINK_MODE
 	cfg['ignore_dotfiles'] = IGNORE_DOTFILES
 	cfg['ignore_dotdirs'] = IGNORE_DOTDIRS
+	cfg['ignore_files'] = []
 
 	if os.path.isdir(CONF_FILE):
 		filename = os.path.join(filename, CONF_FILE)
@@ -182,6 +183,18 @@ def read_config():
 			else:
 				stderr("%s:%d: invalid argument for ignore_dotdirs" % (CONF_FILE, lineno))
 				errors = errors + 1
+			continue
+
+#
+#	keyword: ignore
+#
+		if keyword in ('ignore', 'ignore_file', 'ignore_files', 'ignore_dir', 'ignore_dirs'):
+			if len(arr) < 2:
+				stderr("%s:%d: 'ignore' requires at least 1 argument: the file or directory to ignore" % (CONF_FILE, lineno))
+				errors = errors + 1
+				continue
+
+			cfg['ignore_files'].extend(arr[1:])
 			continue
 
 #

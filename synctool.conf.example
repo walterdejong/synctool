@@ -6,6 +6,7 @@ masterdir /usr/local/sara/dist/synctool
 symlink_mode 0755
 ignore_dotfiles no
 ignore_dotdirs yes
+ignore .svn
 
 diff_cmd /usr/bin/diff -u
 ssh_cmd /usr/bin/ssh -o ConnectTimeout=10 -q

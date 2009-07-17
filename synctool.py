@@ -180,6 +180,16 @@ def path_exists(path):
 
 
 def path_isignored(cfg, full_path, filename):
+	ignore_files = cfg['ignore_files']
+
+	if len(ignore_files) > 0:
+		if filename in ignore_files:
+			return 1
+
+		arr = string.split(filename, '.')
+		if len(arr) > 1 and arr[-1][0] == '_' and string.join(arr[:-1], '.') in ignore_files:
+			return 1
+
 	if path_isdir(full_path):
 		if synctool_config.IGNORE_DOTDIRS and filename[0] == '.':
 			master_len = len(cfg['masterdir'])
