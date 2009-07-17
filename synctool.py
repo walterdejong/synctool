@@ -873,7 +873,7 @@ def on_update(dest, full_path=None):
 
 		dir_listing = os.listdir(dirname)
 
-		groups = synctool_config.get_groups([synctool_config.NODENAME])
+		groups = synctool_config.get_my_groups()
 
 		found = 0
 		for group in groups:
@@ -962,7 +962,7 @@ def run_command(cmd):
 def overlay_files():
 	'''run the overlay function'''
 
-	groups = synctool_config.get_groups([synctool_config.NODENAME])
+	groups = synctool_config.get_my_groups()
 	all_groups = synctool_config.make_all_groups()
 
 	base_path = os.path.join(synctool_config.MASTERDIR, 'overlay')
@@ -1035,7 +1035,7 @@ def treewalk_delete(args, dir, files):
 
 
 def delete_files():
-	groups = synctool_config.get_groups([synctool_config.NODENAME])
+	groups = synctool_config.get_my_groups()
 	all_groups = synctool_config.make_all_groups()
 
 	delete_path = os.path.join(synctool_config.MASTERDIR, 'delete')
@@ -1092,7 +1092,7 @@ def treewalk_tasks(args, dir, files):
 
 
 def run_tasks():
-	groups = synctool_config.get_groups([synctool_config.NODENAME])
+	groups = synctool_config.get_my_groups()
 	all_groups = synctool_config.make_all_groups()
 
 	tasks_path = os.path.join(synctool_config.MASTERDIR, 'tasks')
@@ -1189,7 +1189,7 @@ def find_synctree(subdir, filename):
 
 	global FOUND_SINGLE
 
-	groups = synctool_config.get_groups([synctool_config.NODENAME])
+	groups = synctool_config.get_my_groups()
 	all_groups = synctool_config.make_all_groups()
 
 	base_path = os.path.join(synctool_config.MASTERDIR, subdir)

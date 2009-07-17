@@ -508,7 +508,7 @@ def add_myhostname():
 				nodename = node
 				break
 
-			groups = get_groups([node])
+			groups = get_groups(node)
 			if short_hostname in groups or hostname in groups:
 				nodename = node
 				break
@@ -615,27 +615,36 @@ def list_all_groups():
 			print group
 
 
-def get_groups(nodenames):
-	'''returns the groups for the nodes listed in [nodenames]'''
+def get_groups(nodename):
+	'''returns the groups for the node'''
 
-	arr = []
+	if NODES.has_key(nodename):
+		return NODES[nodename]
 
-	for nodename in nodenames:
-		if NODES.has_key(nodename):
-			for group in NODES[nodename]:
-				if not group in arr:
-					arr.append(group)
+	return []
 
-	return arr
+
+def get_my_groups():
+	'''returns the groups for this node'''
+
+	if NODES.has_key(NODENAME):
+		return NODES[NODENAME]
+
+	return []
 
 
 def list_nodes(nodenames):
+	groups = []
+
 	for nodename in nodenames:
 		if not NODES.has_key(nodename):
 			stderr("no such node '%s' defined" % nodename)
 			sys.exit(1)
 
-	groups = get_groups(nodenames)
+		for group in get_groups(nodename):
+			if not group in groups:
+				groups.append(group)
+
 #	groups.sort()							# group order is important
 
 	for group in groups:

@@ -81,7 +81,7 @@ def make_nodeset():
 			verbose('node %s is ignored' % node)
 			continue
 
-		groups = synctool_config.get_groups([node])
+		groups = synctool_config.get_groups(node)
 		do_continue = 0
 		for group in groups:
 			if group in synctool_config.IGNORE_GROUPS:

@@ -14,11 +14,11 @@ rsync_cmd /usr/bin/rsync -ar --delete -e 'ssh -o ConnectTimeout=10 -q'
 synctool_cmd /usr/sara/bin/synctool.py -c /var/lib/synctool/suse10/synctool.conf
 num_proc 64
 
-host p1 teras 
-host p4 teras batch
-host p5 teras batch
-host p6 teras batch
-host p7 teras batch
+host p1 teras       interface:p1-mgt
+host p4 teras batch interface:p4-mgt
+host p5 teras batch interface:p5-mgt
+host p6 teras batch interface:p6-mgt
+host p7 teras batch interface:p7-mgt
 
 ignore_host p9 any_arguments_here_are_ignored teras batch
 ignore_group test test2
