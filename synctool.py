@@ -1319,6 +1319,10 @@ if __name__ == '__main__':
 			usage()
 			sys.exit(1)
 
+		if diff_file and RUN_TASKS:
+			stderr("options '--diff' and '--tasks' cannot be combined")
+			sys.exit(1)
+
 		if diff_file and single_file:
 			if diff_file != single_file:
 				stderr("options '--diff' and '--single' cannot be combined")
@@ -1396,13 +1400,13 @@ if __name__ == '__main__':
 		if changed:
 			on_update(cfg, single_file, full_path)
 
+	elif RUN_TASKS:
+		run_tasks(cfg)
+
 	else:
 		overlay_files(cfg)
 		delete_files(cfg)
 		always_run(cfg)
-
-	if RUN_TASKS:
-		run_tasks(cfg)
 
 	unix_out('# EOB')
 
