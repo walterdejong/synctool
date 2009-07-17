@@ -97,7 +97,7 @@ def usage():
 	print '  -X, --exclude-group=grouplist  Exclude these groups from the selection'
 	print
 	print '  -d, --diff=file                Show diff for file'
-	print '  -1, --single=file              Update a single file'
+	print '  -1, --single=file              Update a single file/run single task'
 	print '  -t, --tasks                    Run the scripts in the tasks/ directory'
 	print '  -f, --fix                      Perform updates (otherwise, do dry-run)'
 	print '      --skip-rsync               Do not sync the repository'

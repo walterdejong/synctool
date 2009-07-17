@@ -1028,6 +1028,11 @@ def treewalk_tasks(args, dir, files):
 	while n < nr_files:
 		file = files[n]
 
+		if file[0] == '.':			# skip hidden entries
+			files.remove(file)
+			nr_files = nr_files - 1
+			continue
+
 		full_path = os.path.join(dir, file)
 
 		verbose('checking $masterdir%s' % full_path[master_len:])
@@ -1062,7 +1067,7 @@ def run_tasks(cfg):
 
 	tasks_path = os.path.join(masterdir, 'tasks')
 	if not os.path.isdir(tasks_path):
-		verbose('skipping $masterdir/tasks, no such directory')
+		stderr('no such directory $masterdir/tasks')
 		return
 
 	os.path.walk(tasks_path, treewalk_tasks, (cfg, tasks_path, groups, all_groups))
@@ -1089,7 +1094,7 @@ def treewalk_find(args, dir, files):
 	was_verbose = synctool_lib.VERBOSE
 	synctool_lib.VERBOSE = 0
 
-	(cfg, base_path, groups, all_groups, find_file) = args
+	(cfg, base_path, subdir, groups, all_groups, find_file) = args
 	base_len = len(base_path)
 
 	masterdir = cfg['masterdir']
@@ -1118,7 +1123,7 @@ def treewalk_find(args, dir, files):
 #
 #	is this file/dir overridden by another group for this host?
 #
-		val = check_overrides(os.path.join(masterdir, 'overlay', dest[1:]), full_path, files, cfg, groups)
+		val = check_overrides(os.path.join(masterdir, subdir, dest[1:]), full_path, files, cfg, groups)
 		if val:
 			if val != 2:				# do not prune directories
 				files.remove(file)
@@ -1147,7 +1152,7 @@ def treewalk_find(args, dir, files):
 	synctool_lib.VERBOSE = was_verbose
 
 
-def find_synctree(cfg, filename):
+def find_synctree(cfg, subdir, filename):
 	'''helper function for single_files() and diff_files()'''
 	'''find the path in the synctree for a given filename'''
 
@@ -1158,7 +1163,7 @@ def find_synctree(cfg, filename):
 	groups = synctool_config.get_groups(cfg, [nodename])
 	all_groups = synctool_config.make_all_groups(cfg)
 
-	base_path = os.path.join(masterdir, 'overlay')
+	base_path = os.path.join(masterdir, subdir)
 	if not os.path.isdir(base_path):
 		verbose('skipping %s, no such directory' % base_path)
 		base_path = None
@@ -1166,10 +1171,9 @@ def find_synctree(cfg, filename):
 	FOUND_SINGLE = None
 
 	if base_path:
-		os.path.walk(base_path, treewalk_find, (cfg, base_path, groups, all_groups, filename))
+		os.path.walk(base_path, treewalk_find, (cfg, base_path, subdir, groups, all_groups, filename))
 
 	if not FOUND_SINGLE:
-		stdout('%s is not in the overlay tree' % filename)
 		return None
 
 	return FOUND_SINGLE
@@ -1183,8 +1187,9 @@ def single_files(cfg, filename):
 		stderr('missing filename')
 		return (0, None)
 
-	full_path = find_synctree(cfg, filename)
+	full_path = find_synctree(cfg, 'overlay', filename)
 	if not full_path:
+		stdout('%s is not in the overlay tree' % filename)
 		return (0, None)
 
 	verbose('checking against %s' % full_path)
@@ -1195,6 +1200,25 @@ def single_files(cfg, filename):
 		unix_out('# %s is up to date\n' % filename)
 
 	return (changed, full_path)
+
+
+def single_task(cfg, filename):
+	'''run a single task'''
+
+	if not filename:
+		stderr('missing task filename')
+		return
+
+	task_script = filename
+	if task_script[0] != '/':				# trick to make find_synctree() work for tasks, too
+		task_script = '/' + task_script
+
+	full_path = find_synctree(cfg, 'tasks', task_script)
+	if not full_path:
+		stderr("no such task '%s'" % filename)
+		return
+
+	run_command(cfg, full_path)
 
 
 def diff_files(cfg, filename):
@@ -1224,7 +1248,7 @@ def usage():
 	print '  -c, --conf=dir/file   Use this config file (default: %s)' % synctool_config.DEFAULT_CONF
 #	print '  -n, --dry-run         Show what would have been updated'
 	print '  -d, --diff=file       Show diff for file'
-	print '  -1, --single=file     Update a single file'
+	print '  -1, --single=file     Update a single file/run single task'
 	print '  -t, --tasks           Run the scripts in the tasks/ directory'
 	print '  -f, --fix             Perform updates (otherwise, do dry-run)'
 	print '  -v, --verbose         Be verbose'
@@ -1396,9 +1420,14 @@ if __name__ == '__main__':
 		diff_files(cfg, diff_file)
 
 	elif single_file:
-		(changed, full_path) = single_files(cfg, single_file)
-		if changed:
-			on_update(cfg, single_file, full_path)
+		if RUN_TASKS:
+			cmd = single_task(cfg, single_file)
+			if cmd:
+				run_command(cfg, cmd)
+		else:
+			(changed, full_path) = single_files(cfg, single_file)
+			if changed:
+				on_update(cfg, single_file, full_path)
 
 	elif RUN_TASKS:
 		run_tasks(cfg)
