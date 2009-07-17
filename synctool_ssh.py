@@ -120,7 +120,7 @@ def run_parallel(cfg, nodes, cmd, cmd_args, join_char=None):
 	parallel = 0
 
 	for node in nodes:
-		if node == cfg['nodename']:
+		if node == synctool_config.NODENAME:
 			verbose('running %s' % cmd_args)
 			unix_out(cmd_args)
 		else:
@@ -154,7 +154,7 @@ def run_parallel(cfg, nodes, cmd, cmd_args, join_char=None):
 #
 #	is this node the localhost? then run locally
 #
-			if node == cfg['nodename']:
+			if node == synctool_config.NODENAME:
 				run_local_cmd(cfg, cmd_args)
 				sys.exit(0)
 
@@ -226,7 +226,7 @@ def run_parallel_cmds(cfg, nodes, cmds):
 #
 			for (cmd, cmd_args, join_char) in cmds:
 # show what we're going to do
-				if node == cfg['nodename']:
+				if node == synctool_config.NODENAME:
 					verbose('running %s' % cmd_args)
 					unix_out(cmd_args)
 				else:
@@ -248,7 +248,7 @@ def run_parallel_cmds(cfg, nodes, cmds):
 #
 #	is this node the localhost? then run locally
 #
-				if node == cfg['nodename']:
+				if node == synctool_config.NODENAME:
 					run_local_cmd(cfg, cmd_args)
 					continue
 
@@ -302,7 +302,7 @@ def run_local_cmd(cfg, cmd):
 	lines = map(string.strip, lines);
 
 	for line in lines:
-		stdout('%s: %s' % (NAMEMAP[cfg['nodename']], line))
+		stdout('%s: %s' % (NAMEMAP[synctool_config.NODENAME], line))
 
 
 def run_local_cmds(cfg, cmds):

@@ -255,9 +255,8 @@ if __name__ == '__main__':
 #
 #	see if we need to run synctool locally, on the current host
 #
-	nodename = cfg['nodename']
-	if nodename != None:
-		iface = synctool_config.get_node_interface(cfg, nodename)
+	if synctool_config.NODENAME != None:
+		iface = synctool_config.get_node_interface(cfg, synctool_config.NODENAME)
 		if iface in nodes:
 			nodes.remove(iface)
 			run_local_synctool(cfg)

@@ -29,7 +29,12 @@ OPT_FILTER_IGNORED = 0
 # optional: list interface names for the selected nodes
 OPT_INTERFACE = 0
 
+#
+#	config variables
+#
 MASTERDIR = None
+HOSTNAME = None
+NODENAME = None
 
 #
 #	default symlink mode
@@ -486,11 +491,13 @@ def add_myhostname(cfg):
 	'''add the hostname of the current host to the configuration, so that it can be used'''
 	'''also determine the nodename of the current host'''
 
+	global NODENAME, HOSTNAME
+
 #
 #	get my hostname
 #
 	hostname = socket.gethostname()
-	cfg['hostname'] = hostname
+	cfg['hostname'] = HOSTNAME = hostname
 
 	arr = string.split(hostname, '.')
 	short_hostname = arr[0]
@@ -522,7 +529,7 @@ def add_myhostname(cfg):
 				nodename = node
 				break
 
-	cfg['nodename'] = nodename
+	cfg['nodename'] = NODENAME = nodename
 
 	if nodename != None:
 # implicitly add hostname as first group
