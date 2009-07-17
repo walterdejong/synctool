@@ -46,7 +46,7 @@ def run_remote_synctool(cfg, nodes):
 	cmds = []
 
 	if not OPT_SKIP_RSYNC:
-		run_rsync = ('%s %s/' % (rsync_cmd, cfg['masterdir']), '%s/' % cfg['masterdir'], ':')
+		run_rsync = ('%s %s/' % (rsync_cmd, synctool_config.MASTERDIR), '%s/' % synctool_config.MASTERDIR, ':')
 		cmds.append(run_rsync)
 
 	run_synctool = (ssh_cmd, '%s %s' % (synctool_cmd, PASS_ARGS), None)

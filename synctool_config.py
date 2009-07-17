@@ -129,7 +129,7 @@ def read_config():
 #	keyword: masterdir
 #
 		if keyword == 'masterdir':
-			if cfg.has_key('masterdir'):
+			if MASTERDIR != None:
 				stderr("%s:%d: redefinition of masterdir" % (CONF_FILE, lineno))
 				errors = errors + 1
 				continue
@@ -286,8 +286,8 @@ def read_config():
 #
 			if arr[2][0] != '/':
 				master = '.'
-				if cfg.has_key('masterdir'):
-					master = cfg['masterdir']
+				if MASTERDIR != None:
+					master = MASTERDIR
 				else:
 					stderr("%s:%d: note: masterdir not defined, using current working directory" % (CONF_FILE, lineno))
 
@@ -328,8 +328,8 @@ def read_config():
 #
 			if arr[1][0] != '/':
 				master = '.'
-				if cfg.has_key('masterdir'):
-					master = cfg['masterdir']
+				if MASTERDIR != None:
+					master = MASTERDIR
 				else:
 					stderr("%s:%d: note: masterdir not defined, using current working directory" % (CONF_FILE, lineno))
 
@@ -467,8 +467,8 @@ def read_config():
 
 	f.close()
 
-	if not cfg.has_key('masterdir'):
-		cfg['masterdir'] = '.'
+	if MASTERDIR == None:
+		cfg['masterdir'] = MASTERDIR = '.'
 
 	if errors > 0:
 		sys.exit(-1)
