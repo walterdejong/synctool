@@ -36,6 +36,8 @@ MASTERDIR = None
 HOSTNAME = None
 NODENAME = None
 
+DIFF_CMD = None
+
 #
 #	default symlink mode
 #	Linux makes them 0777 no matter what umask you have ...
@@ -64,7 +66,8 @@ def stderr(str):
 def read_config():
 	'''read the config file and return cfg structure'''
 
-	global MASTERDIR, SYMLINK_MODE, IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
+	global MASTERDIR, DIFF_CMD, SYMLINK_MODE
+	global IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
 	global ON_UPDATE, ALWAYS_RUN
 
 	cfg = {}
@@ -75,6 +78,7 @@ def read_config():
 	cfg['ignore_groups'] = IGNORE_GROUPS = []
 	cfg['on_update'] = ON_UPDATE = {}
 	cfg['always_run'] = ALWAYS_RUN = []
+	DIFF_CMD = None
 
 	if os.path.isdir(CONF_FILE):
 		filename = os.path.join(filename, CONF_FILE)
@@ -364,7 +368,7 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			if cfg.has_key('diff_cmd'):
+			if DIFF_CMD != None:
 				stderr("%s:%d: redefinition of diff_cmd" % (CONF_FILE, lineno))
 				errors = errors + 1
 				continue
@@ -375,7 +379,7 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			cfg['diff_cmd'] = string.join(arr[1:])
+			DIFF_CMD = string.join(arr[1:])
 			continue
 
 #

@@ -1255,7 +1255,7 @@ def single_task(cfg, filename):
 def diff_files(cfg, filename):
 	'''display a diff of the file'''
 
-	if not cfg.has_key('diff_cmd'):
+	if not synctool_config.DIFF_CMD:
 		stderr('error: diff_cmd is undefined in %s' % synctool_config.CONF_FILE)
 		return
 
@@ -1266,10 +1266,10 @@ def diff_files(cfg, filename):
 		return
 
 	if synctool_lib.UNIX_CMD:
-		unix_out('%s %s %s' % (cfg['diff_cmd'], filename, sync_path))
+		unix_out('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
 	else:
-		verbose('%s %s %s' % (cfg['diff_cmd'], filename, sync_path))
-		os.system('%s %s %s' % (cfg['diff_cmd'], filename, sync_path))
+		verbose('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
+		os.system('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
 
 
 def usage():
