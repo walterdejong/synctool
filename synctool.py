@@ -1249,7 +1249,7 @@ def diff_files(filename):
 
 	synctool_lib.DRY_RUN = 1						# be sure that it doesn't do any updates
 
-	sync_path = find_synctree(filename)
+	sync_path = find_synctree('overlay', filename)
 	if not sync_path:
 		return
 
