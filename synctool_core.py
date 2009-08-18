@@ -90,6 +90,19 @@ def overlay_callback(dir, filename, ext):
 	'''compare files and run post-script if needed'''
 
 	src = os.path.join(dir, '%s._%s' % (filename, ext))
+
+# TODO dest = compose_path(src[MASTER_LEN:])
+#
+#	NB. een higher-performing oplossing kan zijn:
+#
+#	if string.find(dir, '_') >= 0:
+#		dest = compose_path(src[MASTER_LEN:])
+#	else:
+#		dest = src[MASTER_LEN:]
+#
+#	een andere oplossing kan zijn om het dest full_path ten alle tijde al bij te houden
+#
+
 	dest = src[MASTER_LEN:]
 
 	print 'TD cmp %s <-> %s' % (src, dest)
@@ -108,9 +121,14 @@ def treewalk(callback, dir, files):
 	for file in files:
 		full_path = os.path.join(dir, file)
 		if os.path.isdir(full_path):
+# TODO filter dirs that are not my group
+# first, remove all underscored dirs from files[] and put them in kept_dirs[]
 			continue
 
 		all_files.append(file)
+
+# TODO stripped_dirs[] = filter_dir_overrides(kept_dirs)
+# extend stripped_dirs[] to files[], as os.path.treewalk() uses this
 
 	my_files = filter(file_has_group_ext, all_files)
 
