@@ -18,9 +18,13 @@ ALL_GROUPS = None
 
 
 # this is an enum; return values for dir_has_group_ext()
-DIR_EXT_NO_GROUP=1
-DIR_EXT_IS_GROUP=2
-DIR_EXT_INVALID_GROUP=3
+DIR_EXT_NO_GROUP = 1
+DIR_EXT_IS_GROUP = 2
+DIR_EXT_INVALID_GROUP = 3
+
+# used for find_synctree()
+FIND_SYNCTREE = None
+FOUND_SYNCTREE = None
 
 
 def file_has_group_ext(filename):
@@ -130,6 +134,8 @@ def overlay_callback(src_dir, dest_dir, filename, ext):
 	if os.path.exists(post_script):
 		print 'TD on_update', post_script
 
+	return True
+
 
 def treewalk(src_dir, dest_dir, callback):
 	'''walk the repository tree, either under overlay/, delete/, or tasks/'''
@@ -203,7 +209,8 @@ def treewalk(src_dir, dest_dir, callback):
 			if filename in synctool_config.IGNORE_FILES:
 				continue
 
-			callback(src_dir, dest_dir, filename, stripped[filename])
+			if not callback(src_dir, dest_dir, filename, stripped[filename]):
+				return
 
 # now handle directories
 
@@ -234,10 +241,45 @@ def overlay():
 
 	base_path = os.path.join(synctool_config.MASTERDIR, 'overlay')
 	if not os.path.isdir(base_path):
-		verbose('skipping %s/, no such directory' % base_path)
-		base_path = None
+		stderr('error: $masterdir/overlay/ not found')
+		return
 
 	treewalk(base_path, '/', overlay_callback)
+
+
+def find_callback(src_dir, dest_dir, filename, ext):
+	'''callback function for find_synctree()'''
+
+	global FOUND_SYNCTREE
+
+	dest = os.path.join(dest_dir, filename)
+
+	if dest == FIND_SYNCTREE:
+		FOUND_SYNCTREE = os.path.join(src_dir, '%s._%s' % (filename, ext))
+		return False			# terminate the treewalk()
+
+	return True
+
+
+def find_synctree(pathname):
+	'''find the overlay source of a full destination path'''
+
+	global FIND_SYNCTREE, FOUND_SYNCTREE
+
+	base_path = os.path.join(synctool_config.MASTERDIR, 'overlay')
+	if not os.path.isdir(base_path):
+		stderr('error: $masterdir/overlay/ not found')
+		return
+
+	FIND_SYNCTREE = pathname
+	FOUND_SYNCTREE = None
+
+	treewalk(base_path, '/', find_callback)
+
+	if not FOUND_SYNCTREE:
+		print 'find_synctree(): %s not found' % pathname
+	else:
+		print '%s <-> %s' % (FOUND_SYNCTREE, pathname)
 
 
 def read_config():
@@ -263,6 +305,9 @@ def read_config():
 if __name__ == '__main__':
 	read_config()
 	overlay()
+
+	print
+	find_synctree('/usr/sara/acct/sbin/accup')
 
 
 # EOB
