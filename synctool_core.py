@@ -16,8 +16,11 @@ import string
 GROUPS = None
 ALL_GROUPS = None
 
-# ugly global, but it is much faster than passing it around as an argument
-MASTER_LEN = 0
+
+# this is an enum; return values for dir_has_group_ext()
+DIR_EXT_NO_GROUP=1
+DIR_EXT_IS_GROUP=2
+DIR_EXT_INVALID_GROUP=3
 
 
 def file_has_group_ext(filename):
@@ -53,6 +56,35 @@ def file_has_group_ext(filename):
 	return 0
 
 
+def dir_has_group_ext(dirname):
+	'''see if the group extension on a directory applies'''
+	'''NB. this is not a filter() function'''
+
+	arr = string.split(dirname, '.')
+
+	if len(arr) < 2:
+		return DIR_EXT_NO_GROUP
+
+	group = arr[-1]
+
+	if group[0] != '_':
+		return DIR_EXT_NO_GROUP
+
+	group = group[1:]
+	if not group:
+		return DIR_EXT_NO_GROUP
+
+	if group in GROUPS:				# got a directory for one of our groups
+		return DIR_EXT_IS_GROUP
+
+	if not group in ALL_GROUPS:
+		stderr('unknown group on directory %s/, skipped' % dirname)
+		return DIR_EXT_INVALID_GROUP
+
+	verbose('%s/ is not one of my groups, skipped' % dirname)
+	return DIR_EXT_INVALID_GROUP
+
+
 def filter_overrides(files):
 	'''return a dict with {base filename:extension}'''
 
@@ -86,75 +118,112 @@ def filter_overrides(files):
 	return stripped
 
 
-def overlay_callback(dir, filename, ext):
+def overlay_callback(src_dir, dest_dir, filename, ext):
 	'''compare files and run post-script if needed'''
 
-	src = os.path.join(dir, '%s._%s' % (filename, ext))
-
-# TODO dest = compose_path(src[MASTER_LEN:])
-#
-#	NB. een higher-performing oplossing kan zijn:
-#
-#	if string.find(dir, '_') >= 0:
-#		dest = compose_path(src[MASTER_LEN:])
-#	else:
-#		dest = src[MASTER_LEN:]
-#
-#	een andere oplossing kan zijn om het dest full_path ten alle tijde al bij te houden
-#
-
-	dest = os.path.join(dir, filename)[MASTER_LEN:]
+	src = os.path.join(src_dir, '%s._%s' % (filename, ext))
+	dest = os.path.join(dest_dir, filename)
 
 	print 'TD cmp %s <-> %s' % (src, dest)
 
-	post_script = os.path.join(dir, '%s.post' % filename)
+	post_script = os.path.join(src_dir, '%s.post' % filename)
 	if os.path.exists(post_script):
 		print 'TD on_update', post_script
 
 
-def treewalk(callback, dir, files):
+def treewalk(src_dir, dest_dir, callback):
 	'''walk the repository tree, either under overlay/, delete/, or tasks/'''
 	'''and call the callback function for relevant files'''
 
-	all_files = []
-
-	for file in files:
-		full_path = os.path.join(dir, file)
-		if os.path.isdir(full_path):
-# TODO filter dirs that are not my group
-# first, remove all underscored dirs from files[] and put them in kept_dirs[]
-			continue
-
-		all_files.append(file)
-
-# TODO stripped_dirs[] = filter_dir_overrides(kept_dirs)
-# extend stripped_dirs[] to files[], as os.path.treewalk() uses this
-
-	my_files = filter(file_has_group_ext, all_files)
-
-	if not my_files:
+	try:
+		files = os.listdir(src_dir)
+	except OSError, err:
+		stderr('error: %s' % err)
 		return
 
-	stripped = filter_overrides(my_files)
+	all_dirs = []
+	group_ext_dirs = []
 
-	for filename in stripped.keys():
-		callback(dir, filename, stripped[filename])
+	n = 0
+	while n < len(files):
+		filename = files[n]
+		full_path = os.path.join(src_dir, filename)
+
+# do not follow symlinked directories
+		if os.path.islink(full_path):
+			n = n + 1
+			continue
+
+		if os.path.isdir(full_path):
+
+# it's a directory
+
+# TODO check ignore_dotdirs
+
+# first, remove all dirs from files[] and put them in all_dirs[] or group_ext_dirs[]
+
+			files.remove(filename)
+
+			if string.find(filename, '_') >= 0:
+				ret = dir_has_group_ext(filename)
+
+				if ret == DIR_EXT_NO_GROUP:
+					all_dirs.append(filename)
+
+				elif ret == DIR_EXT_IS_GROUP:
+					group_ext_dirs.append(filename)
+
+				elif ret == DIR_EXT_INVALID_GROUP:
+					pass
+
+				else:
+					raise RuntimeError, 'bug: unknown return value %d from dir_has_group_ext()' % ret
+			else:
+				all_dirs.append(filename)
+
+			continue
+
+# TODO else check ignore_dotfiles
+
+		n = n + 1
+
+# TODO check ignored files & dirs
+
+	files = filter(file_has_group_ext, files)
+
+	if len(files) > 0:
+		stripped = filter_overrides(files)
+
+		for filename in stripped.keys():
+			callback(src_dir, dest_dir, filename, stripped[filename])
+
+# now handle directories
+
+# recursively visit all directories
+	for dirname in all_dirs:
+		new_src_dir = os.path.join(src_dir, dirname)
+		new_dest_dir = os.path.join(dest_dir, dirname)
+		treewalk(new_src_dir,  new_dest_dir, callback)
+
+# visit all directories with group extensions that apply
+	if len(group_ext_dirs) > 0:
+		stripped = filter_overrides(group_ext_dirs)
+
+		for dirname in stripped.keys():
+			new_src_dir = os.path.join(src_dir, '%s._%s' % (dirname, stripped[dirname]))
+			new_dest_dir = os.path.join(dest_dir, dirname)
+			treewalk(new_src_dir,  new_dest_dir, callback)
 
 
 def overlay():
 	'''run the overlay function'''
 
-	global MASTER_LEN
-
 	base_path = os.path.join(synctool_config.MASTERDIR, 'overlay')
 	if not os.path.isdir(base_path):
-		verbose('skipping %s, no such directory' % base_path)
+		verbose('skipping %s/, no such directory' % base_path)
 		base_path = None
 
-	MASTER_LEN = len(base_path)
-
-	if base_path:
-		os.path.walk(base_path, treewalk, overlay_callback)
+	treewalk(base_path, '/', overlay_callback)
 
 
 def read_config():
