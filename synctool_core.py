@@ -158,13 +158,15 @@ def treewalk(src_dir, dest_dir, callback):
 
 # it's a directory
 
-# TODO check ignore_dotdirs
-
-# first, remove all dirs from files[] and put them in all_dirs[] or group_ext_dirs[]
+# remove all dirs from files[] and put them in all_dirs[] or group_ext_dirs[]
 
 			files.remove(filename)
 
-			if string.find(filename, '_') >= 0:
+# check ignore_dotdirs
+			if filename[0] == '.' and synctool_config.IGNORE_DOTDIRS:
+				continue
+
+			if string.find(filename, '_') >= 0:				# first a quick check for group extension
 				ret = dir_has_group_ext(filename)
 
 				if ret == DIR_EXT_NO_GROUP:
@@ -183,24 +185,33 @@ def treewalk(src_dir, dest_dir, callback):
 
 			continue
 
-# TODO else check ignore_dotfiles
+# check ignore_dotfiles
+		else:
+			if filename[0] == '.' and synctool_config.IGNORE_DOTFILES:
+				files.remove(filename)
+				continue
 
 		n = n + 1
 
-# TODO check ignored files & dirs
-
+# handle all files with group extensions that apply
 	files = filter(file_has_group_ext, files)
 
 	if len(files) > 0:
 		stripped = filter_overrides(files)
 
 		for filename in stripped.keys():
+			if filename in synctool_config.IGNORE_FILES:
+				continue
+
 			callback(src_dir, dest_dir, filename, stripped[filename])
 
 # now handle directories
 
 # recursively visit all directories
 	for dirname in all_dirs:
+		if dirname in synctool_config.IGNORE_FILES:
+			continue
+
 		new_src_dir = os.path.join(src_dir, dirname)
 		new_dest_dir = os.path.join(dest_dir, dirname)
 		treewalk(new_src_dir,  new_dest_dir, callback)
@@ -210,9 +221,12 @@ def treewalk(src_dir, dest_dir, callback):
 		stripped = filter_overrides(group_ext_dirs)
 
 		for dirname in stripped.keys():
+			if dirname in synctool_config.IGNORE_FILES:
+				continue
+
 			new_src_dir = os.path.join(src_dir, '%s._%s' % (dirname, stripped[dirname]))
 			new_dest_dir = os.path.join(dest_dir, dirname)
-			treewalk(new_src_dir,  new_dest_dir, callback)
+			treewalk(new_src_dir, new_dest_dir, callback)
 
 
 def overlay():
