@@ -16,6 +16,8 @@ import string
 GROUPS = None
 ALL_GROUPS = None
 
+# treewalk() sets the current source dir (used for error reporting from filter() functions)
+CURR_DIR = None
 
 # this is an enum; return values for dir_has_group_ext()
 DIR_EXT_NO_GROUP = 1
@@ -33,7 +35,7 @@ def file_has_group_ext(filename):
 	arr = string.split(filename, '.')
 
 	if len(arr) < 2:
-		stderr('no group extension on %s, skipped' % filename)
+		stderr('no group extension on %s/%s, skipped' % (CURR_DIR, filename))
 		return 0
 
 	group = arr[-1]
@@ -41,22 +43,22 @@ def file_has_group_ext(filename):
 		return 0
 
 	if group[0] != '_':
-		stderr('no underscored group extension on %s, skipped' % filename)
+		stderr('no underscored group extension on %s/%s, skipped' % (CURR_DIR, filename))
 		return 0
 
 	group = group[1:]
 	if not group:
-		stderr('no group extension on %s, skipped' % filename)
+		stderr('no group extension on %s/%s, skipped' % (CURR_DIR, filename))
 		return 0
 
 	if group in GROUPS:				# got a file for one of our groups
 		return 1
 
 	if not group in ALL_GROUPS:
-		stderr('unknown group on file %s, skipped' % filename)
+		stderr('unknown group on file %s/%s, skipped' % (CURR_DIR, filename))
 		return 0
 
-	verbose('%s is not one of my groups, skipped' % filename)
+	verbose('%s/%s is not one of my groups, skipped' % (CURR_DIR, filename))
 	return 0
 
 
@@ -82,10 +84,10 @@ def dir_has_group_ext(dirname):
 		return DIR_EXT_IS_GROUP
 
 	if not group in ALL_GROUPS:
-		stderr('unknown group on directory %s/, skipped' % dirname)
+		stderr('unknown group on directory %s/%s/, skipped' % (CURR_DIR, dirname))
 		return DIR_EXT_INVALID_GROUP
 
-	verbose('%s/ is not one of my groups, skipped' % dirname)
+	verbose('%s/%s/ is not one of my groups, skipped' % (CURR_DIR, dirname))
 	return DIR_EXT_INVALID_GROUP
 
 
@@ -116,7 +118,7 @@ def filter_overrides(files):
 			a = GROUPS.index(ext)
 			b = GROUPS.index(stripped[stripped_name])
 			if a < b:
-				verbose('%s._%s overrides %s._%s' % (stripped_name, ext, stripped_name, stripped[stripped_name]))
+				verbose('%s/%s._%s overrides %s._%s' % (CURR_DIR, stripped_name, ext, stripped_name, stripped[stripped_name]))
 				stripped[stripped_name] = ext
 
 	return stripped
@@ -140,6 +142,10 @@ def overlay_callback(src_dir, dest_dir, filename, ext):
 def treewalk(src_dir, dest_dir, callback):
 	'''walk the repository tree, either under overlay/, delete/, or tasks/'''
 	'''and call the callback function for relevant files'''
+
+	global CURR_DIR
+
+	CURR_DIR = src_dir				# stupid global for filter() functions
 
 	try:
 		files = os.listdir(src_dir)
@@ -261,14 +267,14 @@ def find_callback(src_dir, dest_dir, filename, ext):
 	return True
 
 
-def find_synctree(pathname):
-	'''find the overlay source of a full destination path'''
+def find_synctree(subdir, pathname):
+	'''find the source of a full destination path'''
 
 	global FIND_SYNCTREE, FOUND_SYNCTREE
 
-	base_path = os.path.join(synctool_config.MASTERDIR, 'overlay')
+	base_path = os.path.join(synctool_config.MASTERDIR, subdir)
 	if not os.path.isdir(base_path):
-		stderr('error: $masterdir/overlay/ not found')
+		stderr('error: $masterdir/%s/ not found' % subdir)
 		return
 
 	FIND_SYNCTREE = pathname
@@ -277,9 +283,11 @@ def find_synctree(pathname):
 	treewalk(base_path, '/', find_callback)
 
 	if not FOUND_SYNCTREE:
-		print 'find_synctree(): %s not found' % pathname
+		print 'TD find_synctree(): %s not found' % pathname
 	else:
-		print '%s <-> %s' % (FOUND_SYNCTREE, pathname)
+		print 'TD %s <-> %s' % (FOUND_SYNCTREE, pathname)
+
+	return FOUND_SYNCTREE
 
 
 def read_config():
@@ -307,7 +315,8 @@ if __name__ == '__main__':
 	overlay()
 
 	print
-	find_synctree('/usr/sara/acct/sbin/accup')
+	find_synctree('overlay', '/usr/sara/acct/sbin/accup')
+	find_synctree('tasks', '/scr1')
 
 
 # EOB
