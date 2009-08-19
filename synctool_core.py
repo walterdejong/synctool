@@ -103,7 +103,7 @@ def overlay_callback(dir, filename, ext):
 #	een andere oplossing kan zijn om het dest full_path ten alle tijde al bij te houden
 #
 
-	dest = src[MASTER_LEN:]
+	dest = os.path.join(dir, filename)[MASTER_LEN:]
 
 	print 'TD cmp %s <-> %s' % (src, dest)
 
