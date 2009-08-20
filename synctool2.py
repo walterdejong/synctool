@@ -707,6 +707,9 @@ def overlay_callback(src_dir, dest_dir, filename, ext):
 	verbose('checking $masterdir/%s' % src[synctool_config.MASTER_LEN:])
 
 	if compare_files(src, dest):
+#
+#	TODO: post script is being run, but wtah about on_update commands?
+#
 		if synctool_core.POST_SCRIPTS.has_key(filename):
 			run_command(synctool_core.POST_SCRIPTS[filename][0])
 
