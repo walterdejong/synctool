@@ -193,7 +193,7 @@ def path_isignored(full_path, filename):
 			return 1
 	else:
 		if synctool_config.IGNORE_DOTFILES and filename[0] == '.':
-			verbose('ignoring hidden file $masterdir/%s' % full_path[MASTER_LEN:])
+			verbose('ignoring hidden file $masterdir/%s' % full_path[synctool_config.MASTER_LEN:])
 			return 1
 
 	return 0
@@ -673,7 +673,7 @@ def run_command(cmd):
 		cmd = string.join(arr)
 
 	elif len(cmd1) > synctool_config.MASTER_LEN and cmd1[:synctool_config.MASTER_LEN] == synctool_config.MASTERDIR + '/':
-		cmd1 = '$masterdir/%s' % cmd1[MASTER_LEN:]
+		cmd1 = '$masterdir/%s' % cmd1[synctool_config.MASTER_LEN:]
 
 	if not os.path.isfile(cmdfile):
 		stderr('error: command %s not found' % cmd1)
