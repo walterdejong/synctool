@@ -744,7 +744,7 @@ def delete_callback(src_dir, dest_dir, filename, ext):
 		else:
 			not_str = ''
 
-		stdout('%sdeleting $masterdir%s : %s' % (not_str, full_path[master_len:], dest))
+		stdout('%sdeleting $masterdir/%s : %s' % (not_str, src[synctool_config.MASTER_LEN:], dest))
 		hard_delete_file(dest)
 
 	return True
