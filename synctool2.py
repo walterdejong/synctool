@@ -751,9 +751,9 @@ def delete_callback(src_dir, dest_dir, filename, ext):
 
 
 def delete_files():
-	base_path = os.path.join(synctool_config.MASTERDIR, 'overlay')
+	base_path = os.path.join(synctool_config.MASTERDIR, 'delete')
 	if not os.path.isdir(base_path):
-		stderr('error: $masterdir/overlay/ not found')
+		stderr('error: $masterdir/delete/ not found')
 		return
 
 	synctool_core.treewalk(base_path, '/', delete_callback)
