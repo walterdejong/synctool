@@ -736,7 +736,7 @@ def delete_callback(src_dir, dest_dir, filename, ext):
 	dest = os.path.join(dest_dir, filename)
 
 	if path_isdir(dest):			# do not delete directories
-		continue
+		return True
 
 	if path_exists(dest):
 		if synctool_lib.DRY_RUN:
@@ -746,6 +746,8 @@ def delete_callback(src_dir, dest_dir, filename, ext):
 
 		stdout('%sdeleting $masterdir%s : %s' % (not_str, full_path[master_len:], dest))
 		hard_delete_file(dest)
+
+	return True
 
 
 def delete_files():
