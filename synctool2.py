@@ -721,10 +721,6 @@ def overlay_callback(src_dir, dest_dir, filename, ext):
 def overlay_files():
 	'''run the overlay function'''
 
-	global MASTER_LEN
-
-	MASTER_LEN = len(synctool_config.MASTERDIR) + 1
-
 	base_path = os.path.join(synctool_config.MASTERDIR, 'overlay')
 	if not os.path.isdir(base_path):
 		stderr('error: $masterdir/overlay/ not found')
@@ -733,8 +729,32 @@ def overlay_files():
 	synctool_core.treewalk(base_path, '/', overlay_callback)
 
 
+def delete_callback(src_dir, dest_dir, filename, ext):
+	'''delete files'''
+
+	src = os.path.join(src_dir, '%s._%s' % (filename, ext))
+	dest = os.path.join(dest_dir, filename)
+
+	if path_isdir(dest):			# do not delete directories
+		continue
+
+	if path_exists(dest):
+		if synctool_lib.DRY_RUN:
+			not_str = 'not '
+		else:
+			not_str = ''
+
+		stdout('%sdeleting $masterdir%s : %s' % (not_str, full_path[master_len:], dest))
+		hard_delete_file(dest)
+
+
 def delete_files():
-	print 'TODO implement delete_files()'
+	base_path = os.path.join(synctool_config.MASTERDIR, 'overlay')
+	if not os.path.isdir(base_path):
+		stderr('error: $masterdir/overlay/ not found')
+		return
+
+	synctool_core.treewalk(base_path, '/', delete_callback)
 
 
 def run_tasks():
