@@ -711,7 +711,7 @@ def overlay_callback(src_dir, dest_dir, filename, ext):
 #	TODO: post script is being run, but wtah about on_update commands?
 #
 		if synctool_core.POST_SCRIPTS.has_key(filename):
-			run_command(synctool_core.POST_SCRIPTS[filename][0])
+			run_command(os.path.join(src_dir, synctool_core.POST_SCRIPTS[filename][0]))
 
 	return True
 
