@@ -19,6 +19,9 @@ ALL_GROUPS = None
 # treewalk() sets the current source dir (used for error reporting from filter() functions)
 CURR_DIR = None
 
+# array of .post scripts in current dir
+POST_SCRIPTS = []
+
 # this is an enum; return values for dir_has_group_ext()
 DIR_EXT_NO_GROUP = 1
 DIR_EXT_IS_GROUP = 2
@@ -29,37 +32,44 @@ FIND_SYNCTREE = None
 FOUND_SYNCTREE = None
 
 
+
 def file_has_group_ext(filename):
 	'''filter function; see if the group extension applies'''
+
+	global POST_SCRIPTS
 
 	arr = string.split(filename, '.')
 
 	if len(arr) < 2:
 		stderr('no group extension on %s/%s, skipped' % (CURR_DIR, filename))
-		return 0
+		return False
 
 	group = arr[-1]
+
+# check for .post script; keep it for now
+# .post scripts are processed in overlay_callback()
 	if group == 'post':
-		return 0
+		POST_SCRIPTS.append(filename)
+		return False
 
 	if group[0] != '_':
 		stderr('no underscored group extension on %s/%s, skipped' % (CURR_DIR, filename))
-		return 0
+		return False
 
 	group = group[1:]
 	if not group:
 		stderr('no group extension on %s/%s, skipped' % (CURR_DIR, filename))
-		return 0
+		return False
 
 	if group in GROUPS:				# got a file for one of our groups
-		return 1
+		return True
 
 	if not group in ALL_GROUPS:
 		stderr('unknown group on file %s/%s, skipped' % (CURR_DIR, filename))
-		return 0
+		return False
 
 	verbose('%s/%s is not one of my groups, skipped' % (CURR_DIR, filename))
-	return 0
+	return False
 
 
 def dir_has_group_ext(dirname):
@@ -127,10 +137,23 @@ def filter_overrides(files):
 def overlay_callback(src_dir, dest_dir, filename, ext):
 	'''compare files and run post-script if needed'''
 
+# TODO efficiently handle .post scripts
+#	if filename[-5:] == 'post': return True
+
 	src = os.path.join(src_dir, '%s._%s' % (filename, ext))
 	dest = os.path.join(dest_dir, filename)
 
 	print 'TD cmp %s <-> %s' % (src, dest)
+
+#
+#	TODO .post scripts worden op Huygens op een andere manier gebruikt;
+#
+#	bijv. scr1.post._computenodes
+#
+#	if filename in POST_SCRIPTS:
+#		...
+#
+#
 
 	post_script = os.path.join(src_dir, '%s.post' % filename)
 	if os.path.exists(post_script):
