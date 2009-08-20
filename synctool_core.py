@@ -19,8 +19,9 @@ ALL_GROUPS = None
 # treewalk() sets the current source dir (used for error reporting from filter() functions)
 CURR_DIR = None
 
-# array of .post scripts in current dir
-POST_SCRIPTS = []
+# dict of .post scripts in current dir
+# the format is {dest filename: (.post script filename, .post script group extension)}
+POST_SCRIPTS = {}
 
 # this is an enum; return values for dir_has_group_ext()
 DIR_EXT_NO_GROUP = 1
@@ -32,11 +33,39 @@ FIND_SYNCTREE = None
 FOUND_SYNCTREE = None
 
 
+def add_post_script(base_filename, scriptname, group=None):
+	'''set the .post script to execute for the dest filename with name 'base_filename'
+
+	the global var POST_SCRIPTS is a dict that holds (fullpath script, group ext) indexed by base filename
+	so you can do script_to_execute = POST_SCRIPTS[base_filename][0]
+	The group is stored so that add_post_script() can determine which script is more important, when
+	multiple .post scripts are possible
+	'''
+
+	global POST_SCRIPTS
+
+	if not POST_SCRIPTS.has_key(base_filename):
+		POST_SCRIPTS[base_filename] = (scriptname, group)
+		return
+
+	if not group:
+# apparently, group-specific .post script is already set, so just return here
+		return
+
+	(script_b, group_b) = POST_SCRIPTS[base_filename]
+	if not group_b:
+		POST_SCRIPTS[base_filename] = (scriptname, group)
+		return
+
+# determine which group is more important
+	a = GROUPS.index(group)
+	b = GROUPS.index(group_b)
+	if a < b:
+		POST_SCRIPTS[base_filename] = (scriptname, group)
+
 
 def file_has_group_ext(filename):
 	'''filter function; see if the group extension applies'''
-
-	global POST_SCRIPTS
 
 	arr = string.split(filename, '.')
 
@@ -49,7 +78,7 @@ def file_has_group_ext(filename):
 # check for .post script; keep it for now
 # .post scripts are processed in overlay_callback()
 	if group == 'post':
-		POST_SCRIPTS.append(filename)
+		add_post_script(string.join(arr[:-1], '.'), filename, None)
 		return False
 
 	if group[0] != '_':
@@ -61,7 +90,11 @@ def file_has_group_ext(filename):
 		stderr('no group extension on %s/%s, skipped' % (CURR_DIR, filename))
 		return False
 
-	if group in GROUPS:				# got a file for one of our groups
+	if group in GROUPS:								# got a file for one of our groups
+		if len(arr) > 2 and arr[-2] == 'post':		# it's a group-specific .post script
+			add_post_script(string.join(arr[:-2], '.'), filename, group)
+			return False
+
 		return True
 
 	if not group in ALL_GROUPS:
@@ -145,19 +178,8 @@ def overlay_callback(src_dir, dest_dir, filename, ext):
 
 	print 'TD cmp %s <-> %s' % (src, dest)
 
-#
-#	TODO .post scripts worden op Huygens op een andere manier gebruikt;
-#
-#	bijv. scr1.post._computenodes
-#
-#	if filename in POST_SCRIPTS:
-#		...
-#
-#
-
-	post_script = os.path.join(src_dir, '%s.post' % filename)
-	if os.path.exists(post_script):
-		print 'TD on_update', post_script
+	if POST_SCRIPTS.has_key(filename):
+		print 'TD on_update', POST_SCRIPTS[filename][0]
 
 	return True
 
@@ -166,9 +188,10 @@ def treewalk(src_dir, dest_dir, callback):
 	'''walk the repository tree, either under overlay/, delete/, or tasks/'''
 	'''and call the callback function for relevant files'''
 
-	global CURR_DIR
+	global CURR_DIR, POST_SCRIPTS
 
 	CURR_DIR = src_dir				# stupid global for filter() functions
+	POST_SCRIPTS = {}
 
 	try:
 		files = os.listdir(src_dir)
