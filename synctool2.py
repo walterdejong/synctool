@@ -32,13 +32,6 @@ except ImportError:
 # extra command-line option --tasks
 RUN_TASKS = 0
 
-# UPDATE_CACHE is a name cache of files that have been updated
-# it helps avoiding duplicate checks for files that have multiple classes
-UPDATE_CACHE = {}
-
-# ugly global var for use with callback function
-FOUND_SINGLE = None
-
 
 def ascii_uid(uid):
 	'''get the name for this uid'''
@@ -207,9 +200,6 @@ def compare_files(src_path, dest_path):
 	src_path is the file in the synctool/overlay tree
 	dest_path is the file in the system
 
-	UPDATE_CACHE is a name cache of files that have been updated
-	it helps avoiding duplicate checks for files that have multiple classes
-
 	done is a local boolean saying if a path has been checked
 	need_update is a local boolean saying if a path needs to be updated
 
@@ -250,12 +240,6 @@ def compare_files(src_path, dest_path):
 		check permissions
 		return 0
 '''
-
-	global UPDATE_CACHE
-
-	if UPDATE_CACHE.has_key(dest_path):
-		verbose('%s was already updated' % dest_path)
-		return 1
 
 	src_stat = stat_path(src_path)
 	if not src_stat:
@@ -326,7 +310,6 @@ def compare_files(src_path, dest_path):
 		if need_update:
 			symlink_file(src_link, dest_path)
 			unix_out('')
-			UPDATE_CACHE[dest_path] = 1
 			return 1
 
 		done = 1
@@ -366,7 +349,6 @@ def compare_files(src_path, dest_path):
 			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
 			set_permissions(dest_path, src_stat[stat.ST_MODE])
 			unix_out('')
-			UPDATE_CACHE[dest_path] = 1
 			return 1
 
 		done = 1
@@ -440,7 +422,6 @@ def compare_files(src_path, dest_path):
 			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
 			set_permissions(dest_path, src_stat[stat.ST_MODE])
 			unix_out('')
-			UPDATE_CACHE[dest_path] = 1
 			return 1
 
 		done = 1
@@ -480,7 +461,6 @@ def compare_files(src_path, dest_path):
 			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
 
 			unix_out('')
-			UPDATE_CACHE[dest_path] = 1
 			return 1
 
 		if (src_stat[stat.ST_MODE] & 07777) != (dest_stat[stat.ST_MODE] & 07777):
@@ -490,7 +470,6 @@ def compare_files(src_path, dest_path):
 			set_permissions(dest_path, src_stat[stat.ST_MODE])
 
 			unix_out('')
-			UPDATE_CACHE[dest_path] = 1
 			return 1
 
 #		if src_stat[stat.ST_MTIME] != dest_stat[stat.ST_MTIME]:
