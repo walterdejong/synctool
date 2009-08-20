@@ -15,9 +15,6 @@ import sys
 import string
 
 
-GROUPS = None
-ALL_GROUPS = None
-
 # treewalk() sets the current source dir (used for error reporting from filter() functions)
 CURR_DIR = None
 
@@ -60,8 +57,8 @@ def add_post_script(base_filename, scriptname, group=None):
 		return
 
 # determine which group is more important
-	a = GROUPS.index(group)
-	b = GROUPS.index(group_b)
+	a = synctool_config.GROUPS.index(group)
+	b = synctool_config.GROUPS.index(group_b)
 	if a < b:
 		POST_SCRIPTS[base_filename] = (scriptname, group)
 
@@ -92,14 +89,14 @@ def file_has_group_ext(filename):
 		stderr('no group extension on $masterdir/%s/%s, skipped' % (CURR_DIR[synctool_config.MASTER_LEN:], filename))
 		return False
 
-	if group in GROUPS:								# got a file for one of our groups
+	if group in synctool_config.GROUPS:				# got a file for one of our groups
 		if len(arr) > 2 and arr[-2] == 'post':		# it's a group-specific .post script
 			add_post_script(string.join(arr[:-2], '.'), filename, group)
 			return False
 
 		return True
 
-	if not group in ALL_GROUPS:
+	if not group in synctool_config.ALL_GROUPS:
 		stderr('unknown group on file $masterdir/%s/%s, skipped' % (CURR_DIR[synctool_config.MASTER_LEN:], filename))
 		return False
 
@@ -125,10 +122,10 @@ def dir_has_group_ext(dirname):
 	if not group:
 		return DIR_EXT_NO_GROUP
 
-	if group in GROUPS:				# got a directory for one of our groups
+	if group in synctool_config.GROUPS:				# got a directory for one of our groups
 		return DIR_EXT_IS_GROUP
 
-	if not group in ALL_GROUPS:
+	if not group in synctool_config.ALL_GROUPS:
 		stderr('unknown group on directory $masterdir/%s/%s/, skipped' % (CURR_DIR[synctool_config.MASTER_LEN:], dirname))
 		return DIR_EXT_INVALID_GROUP
 
@@ -160,8 +157,8 @@ def filter_overrides(files):
 		else:
 # choose most important group
 # the most important group is the one that is listed earlier in the GROUPS array, so it has a smaller index
-			a = GROUPS.index(ext)
-			b = GROUPS.index(stripped[stripped_name])
+			a = synctool_config.GROUPS.index(ext)
+			b = synctool_config.GROUPS.index(stripped[stripped_name])
 			if a < b:
 				verbose('$masterdir/%s/%s._%s overrides %s._%s' % (CURR_DIR[synctool_config.MASTER_LEN:], stripped_name, ext, stripped_name, stripped[stripped_name]))
 				stripped[stripped_name] = ext
@@ -310,28 +307,8 @@ def find_synctree(subdir, pathname):
 	return FOUND_SYNCTREE
 
 
-def read_config():
-	global GROUPS, ALL_GROUPS
-
-	synctool_config.read_config()
-	synctool_config.add_myhostname()
-
-	if synctool_config.NODENAME == None:
-		stderr('unable to determine my nodename, please check %s' % synctool_config.CONF_FILE)
-		sys.exit(1)
-
-#	if synctool_config.NODENAME in synctool_config.IGNORE_GROUPS:
-#		stderr('%s: node %s is disabled in the config file' % (synctool_config.CONF_FILE, synctool_config.NODENAME))
-#		sys.exit(1)
-
-	synctool_config.remove_ignored_groups()
-	GROUPS = synctool_config.get_my_groups()
-	print 'TD GROUPS ==', GROUPS
-	ALL_GROUPS = synctool_config.make_all_groups()
-
-
 if __name__ == '__main__':
-	read_config()
+	synctool_config.read_config()
 
 	synctool_lib.VERBOSE = True
 
