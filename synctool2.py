@@ -708,7 +708,7 @@ def overlay_callback(src_dir, dest_dir, filename, ext):
 
 	if compare_files(src, dest):
 		if synctool_core.POST_SCRIPTS.has_key(filename):
-			print 'TD on_update', synctool_core.POST_SCRIPTS[filename][0]
+			run_command(synctool_core.POST_SCRIPTS[filename][0])
 
 	return True
 
