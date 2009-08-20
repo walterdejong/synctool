@@ -39,10 +39,6 @@ UPDATE_CACHE = {}
 # ugly global var for use with callback function
 FOUND_SINGLE = None
 
-# list of my groups, and all groups; initialized after read_config()
-GROUPS = None
-ALL_GROUPS = None
-
 
 def ascii_uid(uid):
 	'''get the name for this uid'''
@@ -952,8 +948,8 @@ if __name__ == '__main__':
 
 	synctool_config.remove_ignored_groups()
 
-	GROUPS = synctool_config.get_my_groups()
-	ALL_GROUPS = synctool_config.make_all_groups()
+	synctool_config.GROUPS = synctool_config.get_my_groups()
+	synctool_config.ALL_GROUPS = synctool_config.make_all_groups()
 
 	if synctool_lib.UNIX_CMD:
 		t = time.localtime(time.time())

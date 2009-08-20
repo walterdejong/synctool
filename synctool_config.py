@@ -61,6 +61,9 @@ ALWAYS_RUN = []
 NODES = {}
 INTERFACES = {}
 
+# to be initialized externally ... (see synctool.py)
+GROUPS = None
+ALL_GROUPS = None
 
 # string length of the 'MASTERDIR' variable
 # although silly to keep this in a var, it makes it easier to print messages
