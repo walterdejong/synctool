@@ -672,7 +672,7 @@ def run_command(cmd):
 		arr[0] = cmdfile
 		cmd = string.join(arr)
 
-	elif len(cmd1) > synctool_config.MASTER_LEN and cmd1[:synctool_config.MASTER_LEN] == synctool_config.MASTERDIR:
+	elif len(cmd1) > synctool_config.MASTER_LEN and cmd1[:synctool_config.MASTER_LEN] == synctool_config.MASTERDIR + '/':
 		cmd1 = '$masterdir/%s' % cmd1[MASTER_LEN:]
 
 	if not os.path.isfile(cmdfile):
