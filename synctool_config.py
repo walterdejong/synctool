@@ -62,6 +62,11 @@ NODES = {}
 INTERFACES = {}
 
 
+# string length of the 'MASTERDIR' variable
+# although silly to keep this in a var, it makes it easier to print messages
+MASTER_LEN = 0
+
+
 def stdout(str):
 	print str
 
@@ -149,6 +154,7 @@ def read_config():
 				continue
 
 			MASTERDIR = arr[1]
+			MASTER_LEN = len(MASTERDIR) + 1
 			continue
 
 #

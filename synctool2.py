@@ -195,13 +195,11 @@ def path_isignored(full_path, filename):
 
 	if path_isdir(full_path):
 		if synctool_config.IGNORE_DOTDIRS and filename[0] == '.':
-			master_len = len(synctool_config.MASTERDIR)
-			verbose('ignoring hidden directory $masterdir%s/' % full_path[master_len:])
+			verbose('ignoring hidden directory $masterdir/%s/' % full_path[synctool_config.MASTER_LEN:])
 			return 1
 	else:
 		if synctool_config.IGNORE_DOTFILES and filename[0] == '.':
-			master_len = len(synctool_config.MASTERDIR)
-			verbose('ignoring hidden file $masterdir%s' % full_path[master_len:])
+			verbose('ignoring hidden file $masterdir/%s' % full_path[MASTER_LEN:])
 			return 1
 
 	return 0
@@ -662,250 +660,8 @@ def move_dir(dir):
 		verbose('moving %s to %s.saved             # dry run, update not performed' % (dir, dir))
 
 
-def strip_group_dir(dir, full_path):
-	'''strip the group extension and return the basename, None on error'''
-
-	parts = string.split(dir, '/')
-	if not parts:
-		arr = string.split(dir, '.')
-	else:
-		arr = string.split(parts[-1], '.')
-
-	if len(arr) > 1 and arr[-1][0] == '_':
-		group_ext = arr[-1][1:]
-
-		if not group_ext in ALL_GROUPS:
-			master_len = len(synctool_config.MASTERDIR)
-			stderr('warning: unknown group %s on directory $masterdir%s/, skipping' % (group_ext, full_path[master_len:]))
-			return None
-
-		if not group_ext in GROUPS:
-			master_len = len(synctool_config.MASTERDIR)
-			verbose('skipping directory $masterdir%s/, it is not one of my groups' % full_path[master_len:])
-			return None
-
-		if not parts:
-			dir = string.join(arr[:-1], '.')
-		else:
-			dir = string.join(arr[:-1], '.')
-			dir = string.join(parts[:-1], '/') + '/' + dir
-
-#	stderr('TD returning dir == %s' % dir)
-	return dir
-
-
-def strip_group_file(filename, full_path):
-	'''strip group extension and return basename, None on error'''
-
-	if path_isdir(full_path):
-		return strip_group_dir(filename, full_path)
-
-	arr = string.split(filename, '.')
-
-	if len(arr) <= 1:
-		master_len = len(synctool_config.MASTERDIR)
-		stderr('warning: no extension on $masterdir%s, skipping' % full_path[master_len:])
-		return None
-
-	if arr[-1][0] != '_':
-		if arr[-1] == 'post':		# it's a .post script
-#			stderr('warning: skipping post script $masterdir%s' % full_path[master_len:])
-			return None
-
-		master_len = len(synctool_config.MASTERDIR)
-		stderr('warning: no underscored extension on $masterdir%s, skipping' % full_path[master_len:])
-		return None
-
-	group_ext = arr[-1][1:]
-
-	if not group_ext in ALL_GROUPS:
-		master_len = len(synctool_config.MASTERDIR)
-		stderr('warning: unknown group on $masterdir%s, skipping' % full_path[master_len:])
-		return None
-
-	if not group_ext in GROUPS:
-		master_len = len(synctool_config.MASTERDIR)
-		verbose('skipping $masterdir%s, it is not one of my groups' % full_path[master_len:])
-		return None
-
-	if len(arr) > 2 and arr[-2] == 'post':
-		master_len = len(synctool_config.MASTERDIR)
-#		stderr('warning: skipping post script $masterdir%s' % full_path[master_len:])
-		return None
-
-	return string.join(arr[:-1], '.')		# strip the 'group' or 'host' extension
-
-
-def check_overrides(path, full_path, files):
-	override = None
-
-	dirname = os.path.dirname(path)
-	filename = os.path.basename(path)
-
-	for group in GROUPS:
-		possible_override = '%s._%s' % (filename, group)
-
-		if possible_override in files:
-			override = os.path.join(dirname, possible_override)
-			break
-
-	if override and full_path != override:
-		master_len = len(synctool_config.MASTERDIR)
-		verbose('overridden by $masterdir%s' % override[master_len:])
-
-		if path_isdir(override):
-			return 2
-
-		return 1
-
-	return 0
-
-
-def compose_path(path):
-	'''return a full destination path without any group extensions in subdirectory names'''
-	'''e.g. /etc/sysconfig._group1/ifcfg-eth0._host1 => /etc/sysconfig/ifcfg-eth0'''
-
-	arr = string.split(path, '/')
-
-	newarr = []
-
-#
-#	we already know that this path is not going to be overridden any more, so
-#	we can do this a bit hackish and simply strip all/any group extensions
-#
-	for part in arr:
-		arr2 = string.split(part, '.')
-		if len(arr2) > 1 and arr2[-1][0] == '_':
-			newpart = string.join(arr2[:-1], '.')
-			newarr.append(newpart)
-		else:
-			newarr.append(part)
-
-	newpath = string.join(newarr, '/')
-#	verbose('compose_path(%s) => %s' % (path, newpath))
-	return newpath
-
-
-def treewalk_overlay(args, dir, files):
-	'''scan the overlay directory and check against the live system'''
-
-	(base_path) = args
-	base_len = len(base_path)
-
-	master_len = len(synctool_config.MASTERDIR)
-
-	dest_dir = dir[base_len:]
-	if not dest_dir:
-		dest_dir = '/'
-
-	n = 0
-	nr_files = len(files)
-
-	while n < nr_files:
-		file = files[n]
-
-		full_path = os.path.join(dir, file)
-
-		if path_isignored(full_path, file):
-			files.remove(file)
-			nr_files = nr_files - 1
-			continue
-
-		verbose('checking $masterdir%s' % full_path[master_len:])
-
-		dest = os.path.join(dest_dir, file)
-#
-#	check for valid group
-#
-		dest = strip_group_file(dest, full_path)
-		if not dest:
-			files.remove(file)			# this is important for directories
-			nr_files = nr_files - 1
-			continue
-
-#
-#	is this file/dir overridden by another group for this host?
-#
-		val = check_overrides(os.path.join(synctool_config.MASTERDIR, 'overlay', dest[1:]), full_path, files)
-		if val:
-			if val != 2:				# do not prune directories
-				files.remove(file)
-
-			nr_files = nr_files - 1
-			continue
-
-		n = n + 1
-
-		dest = compose_path(dest)
-
-#
-#	if file is updated, run the appropriate on_update command
-#
-		if compare_files(full_path, dest):
-			on_update(dest, full_path)
-
-
-def on_update(dest, full_path=None):
-	'''run on_update command for the dest file'''
-
-# if the dest file is not in the on_update map, maybe it's directory is ...
-# note that if there are multiple files in the directory that are updated,
-# the action may is triggered multiple times as well
-
-	update = synctool_config.ON_UPDATE
-	if not update.has_key(dest):
-		dest = os.path.dirname(dest)
-		if not update.has_key(dest):
-			dest = dest + '/'
-
-	if update.has_key(dest):
-		cmd = update[dest]
-		run_command(cmd)
-
-#
-#	if a .post script exists for this file with relevant group extension, run it
-#
-	if full_path:
-		dirname = os.path.dirname(full_path)
-		filename = os.path.basename(full_path)
-
-		arr = string.split(filename, '.')
-
-		if len(arr) > 1 and arr[-1][0] == '_':
-			script_base = '%s.post' % string.join(arr[:-1], '.')
-		else:
-			script_base = '%s.post' % filename
-
-		dir_listing = os.listdir(dirname)
-
-		found = 0
-		for group in GROUPS:
-			script = '%s._%s' % (script_base, group)
-
-#			verbose('checking for post script %s' % script)
-
-			if script in dir_listing:
-				found = 1
-				full_script = os.path.join(dirname, script)
-				run_command(full_script)
-				break
-
-		if not found:
-#
-#	.post script with group extension does not exist, maybe try without group extension
-#
-			script = script_base
-#			verbose('checking for post script %s' % script)
-
-			if script in dir_listing:
-				full_script = os.path.join(dirname, script)
-				run_command(full_script)
-
-
 def run_command(cmd):
 	'''run a shell command'''
-
-	master_len = len(synctool_config.MASTERDIR)
 
 	if synctool_lib.DRY_RUN:
 		not_str = 'not '
@@ -936,8 +692,8 @@ def run_command(cmd):
 		arr[0] = cmdfile
 		cmd = string.join(arr)
 
-	elif len(cmd1) > master_len and cmd1[:master_len] == synctool_config.MASTERDIR:
-		cmd1 = '$masterdir%s' % cmd1[master_len:]
+	elif len(cmd1) > synctool_config.MASTER_LEN and cmd1[:synctool_config.MASTER_LEN] == synctool_config.MASTERDIR:
+		cmd1 = '$masterdir/%s' % cmd1[MASTER_LEN:]
 
 	if not os.path.isfile(cmdfile):
 		stderr('error: command %s not found' % cmd1)
@@ -962,139 +718,41 @@ def run_command(cmd):
 		verbose('  os.system("%s")             # dry run, action not performed' % cmd)
 
 
+def overlay_callback(src_dir, dest_dir, filename, ext):
+	'''compare files and run post-script if needed'''
+
+	src = os.path.join(src_dir, '%s._%s' % (filename, ext))
+	dest = os.path.join(dest_dir, filename)
+
+	verbose('checking $masterdir/%s' % src[synctool_config.MASTER_LEN:])
+
+	if synctool_core.POST_SCRIPTS.has_key(filename):
+		print 'TD on_update', synctool_core.POST_SCRIPTS[filename][0]
+
+	return True
+
+
 def overlay_files():
 	'''run the overlay function'''
 
+	global MASTER_LEN
+
+	MASTER_LEN = len(synctool_config.MASTERDIR) + 1
+
 	base_path = os.path.join(synctool_config.MASTERDIR, 'overlay')
 	if not os.path.isdir(base_path):
-		verbose('skipping %s, no such directory' % base_path)
-		base_path = None
+		stderr('error: $masterdir/overlay/ not found')
+		return
 
-	if base_path:
-		os.path.walk(base_path, treewalk_overlay, (base_path))
-
-
-def treewalk_delete(args, dir, files):
-	(delete_path) = args
-
-	delete_len = len(delete_path)
-	master_len = len(synctool_config.MASTERDIR)
-
-	dest_dir = dir[delete_len:]
-	if not dest_dir:
-		dest_dir = '/'
-
-	n = 0
-	nr_files = len(files)
-
-	while n < nr_files:
-		file = files[n]
-
-		full_path = os.path.join(dir, file)
-
-		if path_isignored(full_path, file):
-			files.remove(file)
-			nr_files = nr_files - 1
-			continue
-
-		verbose('checking $masterdir%s' % full_path[master_len:])
-
-		dest = os.path.join(dest_dir, file)
-#
-#	check for valid group
-#
-		dest = strip_group_file(dest, full_path)
-		if not dest:
-			files.remove(file)			# this is important for directories
-			nr_files = nr_files - 1
-			continue
-
-#
-#	is this file/dir overridden by another group for this host?
-#
-		if check_overrides(os.path.join(delete_path, dest[1:]), full_path, files):
-			files.remove(file)			# this is important for directories
-			nr_files = nr_files - 1
-			continue
-
-		n = n + 1
-
-		dest = compose_path(dest)
-
-		if os.path.isdir(dest):			# do not delete directories
-			continue
-
-		if path_exists(dest):
-			if synctool_lib.DRY_RUN:
-				not_str = 'not '
-			else:
-				not_str = ''
-
-			stdout('%sdeleting $masterdir%s : %s' % (not_str, full_path[master_len:], dest))
-			hard_delete_file(dest)
+	synctool_core.treewalk(base_path, '/', overlay_callback)
 
 
 def delete_files():
-	delete_path = os.path.join(synctool_config.MASTERDIR, 'delete')
-	if not os.path.isdir(delete_path):
-		verbose('skipping $masterdir/delete, no such directory')
-		return
-
-	os.path.walk(delete_path, treewalk_delete, (delete_path))
-
-
-def treewalk_tasks(args, dir, files):
-	'''scan the tasks directory and run the necessary tasks'''
-
-	(base_path) = args
-	base_len = len(base_path)
-
-	master_len = len(synctool_config.MASTERDIR)
-
-	n = 0
-	nr_files = len(files)
-
-	while n < nr_files:
-		file = files[n]
-
-		full_path = os.path.join(dir, file)
-
-		if path_isignored(full_path, file):
-			files.remove(file)
-			nr_files = nr_files - 1
-			continue
-
-		verbose('checking $masterdir%s' % full_path[master_len:])
-
-		stripped = strip_group_file(full_path, full_path)
-		if not stripped:
-			files.remove(file)
-			nr_files = nr_files - 1
-			continue
-#
-#	is this file overridden by another group for this host?
-#
-		if check_overrides(os.path.join(synctool_config.MASTERDIR, 'tasks', stripped), full_path, files):
-			files.remove(file)
-			nr_files = nr_files - 1
-			continue
-
-		n = n + 1
-
-		if path_isdir(full_path):
-			continue
-
-# run the task
-		run_command(full_path)
+	print 'TODO implement delete_files()'
 
 
 def run_tasks():
-	tasks_path = os.path.join(synctool_config.MASTERDIR, 'tasks')
-	if not os.path.isdir(tasks_path):
-		stderr('no such directory $masterdir/tasks')
-		return
-
-	os.path.walk(tasks_path, treewalk_tasks, (tasks_path))
+	print 'TODO implement run_tasks()'
 
 
 def always_run():
@@ -1102,101 +760,6 @@ def always_run():
 
 	for cmd in synctool_config.ALWAYS_RUN:
 		run_command(cmd)
-
-
-def treewalk_find(args, dir, files):
-	'''scan the overlay directory to find a single file'''
-
-# it seems rather stupid that this function uses a global variable as a return value,
-# but this is because a callback routine for os.path.walk() can not have a custom return value
-# FOUND_SINGLE must be None before starting the treewalk_find
-	global FOUND_SINGLE
-
-	was_verbose = synctool_lib.VERBOSE
-	synctool_lib.VERBOSE = 0
-
-	(base_path, subdir, find_file) = args
-	base_len = len(base_path)
-
-	master_len = len(synctool_config.MASTERDIR)
-
-	dest_dir = dir[base_len:]
-	if not dest_dir:
-		dest_dir = '/'
-
-	n = 0
-	nr_files = len(files)
-
-	while n < nr_files:
-		file = files[n]
-
-		full_path = os.path.join(dir, file)
-
-		if path_isignored(full_path, file):
-			files.remove(file)
-			nr_files = nr_files - 1
-			continue
-
-		dest = os.path.join(dest_dir, file)
-
-		dest = strip_group_file(dest, full_path)
-		if not dest:
-			files.remove(file)			# this is important for directories
-			nr_files = nr_files - 1
-			continue
-
-#
-#	is this file/dir overridden by another group for this host?
-#
-		val = check_overrides(os.path.join(synctool_config.MASTERDIR, subdir, dest[1:]), full_path, files)
-		if val:
-			if val != 2:				# do not prune directories
-				files.remove(file)
-
-			nr_files = nr_files - 1
-			continue
-
-		n = n + 1
-
-		dest = compose_path(dest)
-
-		if dest == find_file:
-			synctool_lib.VERBOSE = was_verbose
-
-			verbose('found $masterdir%s' % full_path[master_len:])
-			if FOUND_SINGLE:
-				stderr('error: conflict in overlay tree:')
-				stderr('   %s' % FOUND_SINGLE)
-				stderr('   %s' % full_path)
-				stderr('')
-				FOUND_SINGLE = None
-			else:
-				FOUND_SINGLE = full_path
-				return
-
-	synctool_lib.VERBOSE = was_verbose
-
-
-def find_synctree(subdir, filename):
-	'''helper function for single_files() and diff_files()'''
-	'''find the path in the synctree for a given filename'''
-
-	global FOUND_SINGLE
-
-	base_path = os.path.join(synctool_config.MASTERDIR, subdir)
-	if not os.path.isdir(base_path):
-		verbose('skipping %s, no such directory' % base_path)
-		base_path = None
-
-	FOUND_SINGLE = None
-
-	if base_path:
-		os.path.walk(base_path, treewalk_find, (base_path, subdir, filename))
-
-	if not FOUND_SINGLE:
-		return None
-
-	return FOUND_SINGLE
 
 
 def single_files(filename):
@@ -1207,7 +770,7 @@ def single_files(filename):
 		stderr('missing filename')
 		return (0, None)
 
-	full_path = find_synctree('overlay', filename)
+	full_path = synctool_core.find_synctree('overlay', filename)
 	if not full_path:
 		stdout('%s is not in the overlay tree' % filename)
 		return (0, None)
@@ -1233,7 +796,7 @@ def single_task(filename):
 	if task_script[0] != '/':				# trick to make find_synctree() work for tasks, too
 		task_script = '/' + task_script
 
-	full_path = find_synctree('tasks', task_script)
+	full_path = synctool_core.find_synctree('tasks', task_script)
 	if not full_path:
 		stderr("no such task '%s'" % filename)
 		return
@@ -1250,7 +813,7 @@ def diff_files(filename):
 
 	synctool_lib.DRY_RUN = 1						# be sure that it doesn't do any updates
 
-	sync_path = find_synctree('overlay', filename)
+	sync_path = synctool_core.find_synctree('overlay', filename)
 	if not sync_path:
 		return
 

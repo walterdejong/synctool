@@ -34,10 +34,6 @@ DIR_EXT_INVALID_GROUP = 3
 FIND_SYNCTREE = None
 FOUND_SYNCTREE = None
 
-# string length of the 'MASTERDIR' variable
-# although silly to keep this in a var, it makes it easier to print messages
-MASTER_LEN = 0
-
 
 def add_post_script(base_filename, scriptname, group=None):
 	'''set the .post script to execute for the dest filename with name 'base_filename'
@@ -76,7 +72,7 @@ def file_has_group_ext(filename):
 	arr = string.split(filename, '.')
 
 	if len(arr) < 2:
-		stderr('no group extension on $masterdir/%s/%s, skipped' % (CURR_DIR[MASTER_LEN:], filename))
+		stderr('no group extension on $masterdir/%s/%s, skipped' % (CURR_DIR[synctool_config.MASTER_LEN:], filename))
 		return False
 
 	group = arr[-1]
@@ -88,12 +84,12 @@ def file_has_group_ext(filename):
 		return False
 
 	if group[0] != '_':
-		stderr('no underscored group extension on $masterdir/%s/%s, skipped' % (CURR_DIR[MASTER_LEN:], filename))
+		stderr('no underscored group extension on $masterdir/%s/%s, skipped' % (CURR_DIR[synctool_config.MASTER_LEN:], filename))
 		return False
 
 	group = group[1:]
 	if not group:
-		stderr('no group extension on $masterdir/%s/%s, skipped' % (CURR_DIR[MASTER_LEN:], filename))
+		stderr('no group extension on $masterdir/%s/%s, skipped' % (CURR_DIR[synctool_config.MASTER_LEN:], filename))
 		return False
 
 	if group in GROUPS:								# got a file for one of our groups
@@ -104,10 +100,10 @@ def file_has_group_ext(filename):
 		return True
 
 	if not group in ALL_GROUPS:
-		stderr('unknown group on file $masterdir/%s/%s, skipped' % (CURR_DIR[MASTER_LEN:], filename))
+		stderr('unknown group on file $masterdir/%s/%s, skipped' % (CURR_DIR[synctool_config.MASTER_LEN:], filename))
 		return False
 
-	verbose('$masterdir/%s/%s is not one of my groups, skipped' % (CURR_DIR[MASTER_LEN:], filename))
+	verbose('$masterdir/%s/%s is not one of my groups, skipped' % (CURR_DIR[synctool_config.MASTER_LEN:], filename))
 	return False
 
 
@@ -133,10 +129,10 @@ def dir_has_group_ext(dirname):
 		return DIR_EXT_IS_GROUP
 
 	if not group in ALL_GROUPS:
-		stderr('unknown group on directory $masterdir/%s/%s/, skipped' % (CURR_DIR[MASTER_LEN:], dirname))
+		stderr('unknown group on directory $masterdir/%s/%s/, skipped' % (CURR_DIR[synctool_config.MASTER_LEN:], dirname))
 		return DIR_EXT_INVALID_GROUP
 
-	verbose('$masterdir/%s/%s/ is not one of my groups, skipped' % (CURR_DIR[MASTER_LEN:], dirname))
+	verbose('$masterdir/%s/%s/ is not one of my groups, skipped' % (CURR_DIR[synctool_config.MASTER_LEN:], dirname))
 	return DIR_EXT_INVALID_GROUP
 
 
@@ -167,24 +163,10 @@ def filter_overrides(files):
 			a = GROUPS.index(ext)
 			b = GROUPS.index(stripped[stripped_name])
 			if a < b:
-				verbose('$masterdir/%s/%s._%s overrides %s._%s' % (CURR_DIR[MASTER_LEN:], stripped_name, ext, stripped_name, stripped[stripped_name]))
+				verbose('$masterdir/%s/%s._%s overrides %s._%s' % (CURR_DIR[synctool_config.MASTER_LEN:], stripped_name, ext, stripped_name, stripped[stripped_name]))
 				stripped[stripped_name] = ext
 
 	return stripped
-
-
-def overlay_callback(src_dir, dest_dir, filename, ext):
-	'''compare files and run post-script if needed'''
-
-	src = os.path.join(src_dir, '%s._%s' % (filename, ext))
-	dest = os.path.join(dest_dir, filename)
-
-	verbose('checking $masterdir/%s' % src[MASTER_LEN:])
-
-	if POST_SCRIPTS.has_key(filename):
-		print 'TD on_update', POST_SCRIPTS[filename][0]
-
-	return True
 
 
 def treewalk(src_dir, dest_dir, callback):
@@ -289,21 +271,6 @@ def treewalk(src_dir, dest_dir, callback):
 			new_src_dir = os.path.join(src_dir, '%s._%s' % (dirname, stripped[dirname]))
 			new_dest_dir = os.path.join(dest_dir, dirname)
 			treewalk(new_src_dir, new_dest_dir, callback)
-
-
-def overlay_files():
-	'''run the overlay function'''
-
-	global MASTER_LEN
-
-	MASTER_LEN = len(synctool_config.MASTERDIR) + 1
-
-	base_path = os.path.join(synctool_config.MASTERDIR, 'overlay')
-	if not os.path.isdir(base_path):
-		stderr('error: $masterdir/overlay/ not found')
-		return
-
-	treewalk(base_path, '/', overlay_callback)
 
 
 def find_callback(src_dir, dest_dir, filename, ext):
