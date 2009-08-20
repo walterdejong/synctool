@@ -722,8 +722,9 @@ def overlay_callback(src_dir, dest_dir, filename, ext):
 
 	verbose('checking $masterdir/%s' % src[synctool_config.MASTER_LEN:])
 
-	if synctool_core.POST_SCRIPTS.has_key(filename):
-		print 'TD on_update', synctool_core.POST_SCRIPTS[filename][0]
+	if compare_files(src, dest):
+		if synctool_core.POST_SCRIPTS.has_key(filename):
+			print 'TD on_update', synctool_core.POST_SCRIPTS[filename][0]
 
 	return True
 
