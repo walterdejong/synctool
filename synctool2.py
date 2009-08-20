@@ -32,6 +32,9 @@ except ImportError:
 # extra command-line option --tasks
 RUN_TASKS = 0
 
+# blocksize for doing I/O while checksumming files
+BLOCKSIZE = 16 * 1024
+
 
 def ascii_uid(uid):
 	'''get the name for this uid'''
@@ -67,12 +70,14 @@ def checksum_files(file1, file2):
 	try:
 		f1 = open(file1, 'r')
 	except IOError(err, reason):
-		raise IOError(err, 'failed to open %s : %s' % (file1, reason))
+		stderr('error: failed to open %s : %s' % (file1, reason))
+		raise
 
 	try:
 		f2 = open(file2, 'r')
 	except IOError(err, reason):
-		raise IOError(err, 'failed to open %s : %s' % (file2, reason))
+		stderr('error: failed to open %s : %s' % (file2, reason))
+		raise
 
 	if use_hashlib:
 		sum1 = hashlib.md5()
@@ -84,14 +89,14 @@ def checksum_files(file1, file2):
 	len1 = len2 = 0
 	ended = 0
 	while len1 == len2 and sum1.digest() == sum2.digest() and not ended:
-		data1 = f1.read(4096)
+		data1 = f1.read(BLOCKSIZE)
 		if not data1:
 			ended = 1
 		else:
 			len1 = len1 + len(data1)
 			sum1.update(data1)
 
-		data2 = f2.read(4096)
+		data2 = f2.read(BLOCKSIZE)
 		if not data2:
 			ended = 1
 		else:
@@ -396,7 +401,7 @@ def compare_files(src_path, dest_path):
 				try:
 					src_sum, dest_sum = checksum_files(src_path, dest_path)
 				except IOError, (err, reason):
-					stderr('error: %s' % reason)
+#	error was already printed				stderr('error: %s' % reason)
 					return 0
 
 				if src_sum != dest_sum:
