@@ -147,6 +147,13 @@ def stat_exists(stat_struct):
 	return 1
 
 
+def stat_isexec(stat_struct):
+	if not stat_struct:
+		return 0
+
+	return stat.S_IEXEC(stat_struct[stat.ST_MODE])
+
+
 def stat_path(path):
 	'''lstat() a path'''
 
@@ -172,6 +179,10 @@ def path_isdir(path):
 
 def path_isfile(path):
 	return stat_isfile(stat_path(path))
+
+
+def path_isexec(path):
+	return stat_isexec(stat_path(path))
 
 
 def path_exists(path):
@@ -675,8 +686,12 @@ def run_command(cmd):
 	elif len(cmd1) > synctool_config.MASTER_LEN and cmd1[:synctool_config.MASTER_LEN] == synctool_config.MASTERDIR + '/':
 		cmd1 = '$masterdir/%s' % cmd1[synctool_config.MASTER_LEN:]
 
-	if not os.path.isfile(cmdfile):
+	if not path_exists(cmdfile):
 		stderr('error: command %s not found' % cmd1)
+		return
+
+	if not path_isexec(cmdfile):
+		stderr("error: file '%s' is not executable" % cmdfile)
 		return
 
 	arr[0] = cmd1
@@ -735,8 +750,9 @@ def delete_callback(src_dir, dest_dir, filename, ext):
 	src = os.path.join(src_dir, '%s._%s' % (filename, ext))
 	dest = os.path.join(dest_dir, filename)
 
-	if path_isdir(dest):			# do not delete directories
-		return True
+# the callback is only executed for files, never for directories; so this is commented out
+#	if path_isdir(dest):			# do not delete directories
+#		return True
 
 	if path_exists(dest):
 		if synctool_lib.DRY_RUN:
@@ -759,8 +775,21 @@ def delete_files():
 	synctool_core.treewalk(base_path, '/', delete_callback)
 
 
+def tasks_callback(src_dir, dest_dir, filename, ext):
+	'''run tasks'''
+
+	src = os.path.join(src_dir, '%s._%s' % (filename, ext))
+	run_command(src)
+	return True
+
+
 def run_tasks():
-	print 'TODO implement run_tasks()'
+	base_path = os.path.join(synctool_config.MASTERDIR, 'tasks')
+	if not os.path.isdir(base_path):
+		stderr('error: $masterdir/tasks/ not found')
+		return
+
+	synctool_core.treewalk(base_path, '/', tasks_callback)
 
 
 def always_run():
