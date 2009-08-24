@@ -23,6 +23,7 @@ ACTION_LIST_NODES = 1
 ACTION_LIST_GROUPS = 2
 ACTION_NODES = 3
 ACTION_GROUPS = 4
+ACTION_MASTERDIR = 5
 
 # optional: do not list hosts/groups that are ignored
 OPT_FILTER_IGNORED = 0
@@ -720,6 +721,7 @@ def usage():
 	print 'options:'
 	print '  -h, --help               Display this information'
 	print '  -c, --conf=dir/file      Use this config file (default: %s)' % DEFAULT_CONF
+	print '  -m, --masterdir          Display the masterdir setting'
 	print '  -l, --list-nodes         List all configured nodes'
 	print '  -L, --list-groups        List all configured groups'
 	print '  -n, --node=nodelist      List all groups this node is in'
@@ -741,7 +743,7 @@ def get_options():
 
 	if len(sys.argv) > 1:
 		try:
-			opts, args = getopt.getopt(sys.argv[1:], "hc:lLn:g:if", ['help', 'conf=', 'list-nodes', 'list-groups', 'node=', 'group=', 'interface', 'filter-ignored'])
+			opts, args = getopt.getopt(sys.argv[1:], "hc:mlLn:g:if", ['help', 'conf=', 'masterdir', 'list-nodes', 'list-groups', 'node=', 'group=', 'interface', 'filter-ignored'])
 		except getopt.error, (reason):
 			print
 			print '%s: %s' % (progname, reason)
@@ -769,6 +771,10 @@ def get_options():
 
 			if opt in ('-c', '--conf'):
 				CONF_FILE=arg
+				continue
+
+			if opt in ('-m', '--masterdir'):
+				set_action(ACTION_MASTERDIR, '--masterdir')
 				continue
 
 			if opt in ('-l', '--list-nodes'):
@@ -838,6 +844,9 @@ if __name__ == '__main__':
 			sys.exit(1)
 
 		list_nodegroups(ARG_GROUPS)
+
+	elif ACTION == ACTION_MASTERDIR:
+		print MASTERDIR
 
 
 # EOB
