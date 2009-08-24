@@ -812,19 +812,37 @@ def single_files(filename):
 		stderr('missing filename')
 		return (0, None)
 
-	full_path = synctool_core.find_synctree('overlay', filename)
-	if not full_path:
+	src = synctool_core.find_synctree('overlay', filename)
+	if not src:
 		stdout('%s is not in the overlay tree' % filename)
 		return (0, None)
 
-	verbose('checking against %s' % full_path)
+	verbose('checking against %s' % src)
 
-	changed = compare_files(full_path, filename)
+	changed = compare_files(src, filename)
 	if not changed:
 		stdout('%s is up to date' % filename)
 		unix_out('# %s is up to date\n' % filename)
 
-	return (changed, full_path)
+	return (changed, src)
+
+
+def on_update_single(src, dest):
+	'''a single file has been updated. Run on_update command or appropriate .post script'''
+
+# file has changed, run on_update command
+	if synctool_config.ON_UPDATE.has_key(dest):
+		run_command(synctool_config.ON_UPDATE[dest])
+
+# file has changed, run appropriate .post script
+
+	src_dir = os.path.dirname(src)
+	dest_dir = os.path.dirname(dest)
+
+	treewalk(src_dir, dest_dir, None, False)		# this constructs new synctool_core.POST_SCRIPTS dictionary
+
+	if synctool_core.POST_SCRIPTS.has_key(filename):
+		run_command(os.path.join(src_dir, synctool_core.POST_SCRIPTS[filename][0]))
 
 
 def single_task(filename):
@@ -838,12 +856,12 @@ def single_task(filename):
 	if task_script[0] != '/':				# trick to make find_synctree() work for tasks, too
 		task_script = '/' + task_script
 
-	full_path = synctool_core.find_synctree('tasks', task_script)
-	if not full_path:
+	src = synctool_core.find_synctree('tasks', task_script)
+	if not src:
 		stderr("no such task '%s'" % filename)
 		return
 
-	run_command(full_path)
+	run_command(src)
 
 
 def diff_files(filename):
@@ -1053,9 +1071,9 @@ if __name__ == '__main__':
 			if cmd:
 				run_command(cmd)
 		else:
-			(changed, full_path) = single_files(single_file)
+			(changed, src) = single_files(single_file)
 			if changed:
-				on_update(single_file, full_path)
+				on_update_single(src, single_file)
 
 	elif RUN_TASKS:
 		run_tasks()

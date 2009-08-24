@@ -166,9 +166,11 @@ def filter_overrides(files):
 	return stripped
 
 
-def treewalk(src_dir, dest_dir, callback):
+def treewalk(src_dir, dest_dir, callback, visit_subdirs=True):
 	'''walk the repository tree, either under overlay/, delete/, or tasks/'''
 	'''and call the callback function for relevant files'''
+	'''* if callback is None, no callback function is called'''
+	'''* if visit_subdirs is False, no treewalk is performed; only the src_dir is scanned'''
 
 	global CURR_DIR, POST_SCRIPTS
 
@@ -236,7 +238,7 @@ def treewalk(src_dir, dest_dir, callback):
 # handle all files with group extensions that apply
 	files = filter(file_has_group_ext, files)
 
-	if len(files) > 0:
+	if len(files) > 0 and callback != None:
 		stripped = filter_overrides(files)
 
 		for filename in stripped.keys():
@@ -247,6 +249,9 @@ def treewalk(src_dir, dest_dir, callback):
 				return
 
 # now handle directories
+
+	if not visit_subdirs:
+		return
 
 # recursively visit all directories
 	for dirname in all_dirs:
