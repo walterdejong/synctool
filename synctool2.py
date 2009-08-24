@@ -838,6 +838,7 @@ def on_update_single(src, dest):
 
 	src_dir = os.path.dirname(src)
 	dest_dir = os.path.dirname(dest)
+	filename = os.path.basename(dest)
 
 	synctool_core.treewalk(src_dir, dest_dir, None, False)		# this constructs new synctool_core.POST_SCRIPTS dictionary
 
