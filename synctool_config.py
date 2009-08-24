@@ -17,6 +17,7 @@ ACTION = 0
 ACTION_OPTION = None
 ARG_NODENAMES = None
 ARG_GROUPS = None
+ARG_CMDS = None
 
 # these are enums for the "list" command-line options
 ACTION_LIST_NODES = 1
@@ -24,6 +25,8 @@ ACTION_LIST_GROUPS = 2
 ACTION_NODES = 3
 ACTION_GROUPS = 4
 ACTION_MASTERDIR = 5
+ACTION_CMDS = 6
+ACTION_NUMPROC = 7
 
 # optional: do not list hosts/groups that are ignored
 OPT_FILTER_IGNORED = 0
@@ -705,6 +708,26 @@ def list_nodegroups(nodegroups):
 			print node
 
 
+def list_commands(cmds):
+	'''display command setting'''
+
+	for cmd in cmds:
+		if cmd == 'diff':
+			print DIFF_CMD
+
+		elif cmd == 'ssh':
+			print SSH_CMD
+
+		elif cmd == 'rsync':
+			print RSYNC_CMD
+
+		elif cmd == 'synctool':
+			print SYNCTOOL_CMD
+
+		else:
+			stderr("no such command '%s' available in synctool" % cmd)
+
+
 def set_action(a, opt):
 	global ACTION, ACTION_OPTION
 
@@ -728,12 +751,15 @@ def usage():
 	print '  -g, --group=grouplist    List all nodes in this group'
 	print '  -i, --interface          List selected nodes by interface'
 	print '  -f, --filter-ignored     Do not list ignored nodes and groups'
+	print '  -C, --command=command    Display setting for command'
+	print '  -p, --numproc            Display numproc setting'
 	print
 	print 'A node/group list can be a single value, or a comma-separated list'
+	print 'A command is a list of these: diff, ssh, rsync, synctool'
 
 
 def get_options():
-	global CONF_FILE, ARG_NODENAMES, ARG_GROUPS, OPT_FILTER_IGNORED, OPT_INTERFACE
+	global CONF_FILE, ARG_NODENAMES, ARG_GROUPS, ARG_CMDS, OPT_FILTER_IGNORED, OPT_INTERFACE
 
 	progname = os.path.basename(sys.argv[0])
 
@@ -743,7 +769,9 @@ def get_options():
 
 	if len(sys.argv) > 1:
 		try:
-			opts, args = getopt.getopt(sys.argv[1:], "hc:mlLn:g:if", ['help', 'conf=', 'masterdir', 'list-nodes', 'list-groups', 'node=', 'group=', 'interface', 'filter-ignored'])
+			opts, args = getopt.getopt(sys.argv[1:], "hc:mlLn:g:ifC:p", ['help', 'conf=', 'masterdir', 'list-nodes', 'list-groups',
+				'node=', 'group=', 'interface', 'filter-ignored', 'command', 'numproc'])
+
 		except getopt.error, (reason):
 			print
 			print '%s: %s' % (progname, reason)
@@ -803,6 +831,15 @@ def get_options():
 				OPT_FILTER_IGNORED = 1
 				continue
 
+			if opt in ('-C', '--command'):
+				set_action(ACTION_CMDS, '--command')
+				ARG_CMDS = string.split(arg, ',')
+				continue
+
+			if opt in ('-p', '--numproc'):
+				set_action(ACTION_NUMPROC, '--numproc')
+				continue
+
 			stderr("unknown command line option '%s'" % opt)
 			errors = errors + 1
 
@@ -848,5 +885,10 @@ if __name__ == '__main__':
 	elif ACTION == ACTION_MASTERDIR:
 		print MASTERDIR
 
+	elif ACTION == ACTION_CMDS:
+		list_commands(ARG_CMDS)
+
+	elif ACTION == ACTION_NUMPROC:
+		print NUM_PROC
 
 # EOB
