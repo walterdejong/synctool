@@ -299,15 +299,11 @@ def find_synctree(subdir, pathname):
 
 	treewalk(base_path, '/', find_callback)
 
-	if not FOUND_SYNCTREE:
-		print 'TD find_synctree(): %s not found' % pathname
-	else:
-		print 'TD %s <-> %s' % (FOUND_SYNCTREE, pathname)
-
 	return FOUND_SYNCTREE
 
 
 if __name__ == '__main__':
+# for testing purposes only!
 	synctool_config.read_config()
 
 	synctool_lib.VERBOSE = True
