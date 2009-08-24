@@ -178,6 +178,22 @@ def path_exists(path):
 	return stat_exists(stat_path(path))
 
 
+def path_isexec(path):
+	'''returns whether a file is executable or not'''
+	'''Mind that this function follows symlinks'''
+
+	try:
+		stat_struct = os.stat(path)
+	except OSError, (err, reason):
+		stderr("stat('%s') failed: %s" % (path, reason))
+		return 0
+
+	if stat_struct[stat.ST_MODE] & 0111:
+		return 1
+
+	return 0
+
+
 def path_isignored(full_path, filename):
 	if len(synctool_config.IGNORE_FILES) > 0:
 		if filename in synctool_config.IGNORE_FILES:
@@ -679,9 +695,9 @@ def run_command(cmd):
 		stderr('error: command %s not found' % cmd1)
 		return
 
-#	if not path_isexec(cmdfile):
-#		stderr("error: file '%s' is not executable" % cmdfile)
-#		return
+	if not path_isexec(cmdfile):
+		stderr("warning: file '%s' is not executable" % cmdfile)
+		return
 
 	arr[0] = cmd1
 	cmd1 = string.join(arr)
