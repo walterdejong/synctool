@@ -147,13 +147,6 @@ def stat_exists(stat_struct):
 	return 1
 
 
-def stat_isexec(stat_struct):
-	if not stat_struct:
-		return 0
-
-	return stat.S_IEXEC(stat_struct[stat.ST_MODE])
-
-
 def stat_path(path):
 	'''lstat() a path'''
 
@@ -179,10 +172,6 @@ def path_isdir(path):
 
 def path_isfile(path):
 	return stat_isfile(stat_path(path))
-
-
-def path_isexec(path):
-	return stat_isexec(stat_path(path))
 
 
 def path_exists(path):
@@ -690,9 +679,9 @@ def run_command(cmd):
 		stderr('error: command %s not found' % cmd1)
 		return
 
-	if not path_isexec(cmdfile):
-		stderr("error: file '%s' is not executable" % cmdfile)
-		return
+#	if not path_isexec(cmdfile):
+#		stderr("error: file '%s' is not executable" % cmdfile)
+#		return
 
 	arr[0] = cmd1
 	cmd1 = string.join(arr)
