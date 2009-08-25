@@ -84,18 +84,18 @@ def filter_validated(line):
 	return 0
 
 
-def check_csmcompat(cfg, csm):
+def check_csmcompat(csm):
 	warn = 0
 
 # first check nodes
-	nodes = synctool_config.get_all_nodes(cfg)
+	nodes = synctool_config.get_all_nodes()
 	ifaces = {}
 
 	for node in nodes:
-		host = synctool_config.get_node_interface(cfg, node)
+		host = synctool_config.get_node_interface(node)
 		ifaces[host] = node
 
-		if not csm['host'].has_key(host) and not node in cfg['ignore_groups']:
+		if not csm['host'].has_key(host) and not node in synctool_config.IGNORE_GROUPS:
 			print 'synctool node %s is not defined in CSM' % host
 			warn = warn + 1
 
@@ -105,12 +105,12 @@ def check_csmcompat(cfg, csm):
 			warn = warn + 1
 
 # check groups
-	nodes = synctool_config.get_all_nodes(cfg)
+	nodes = synctool_config.get_all_nodes()
 
 	for node in nodes:
-		host = synctool_config.get_node_interface(cfg, node)
+		host = synctool_config.get_node_interface(node)
 
-		synctool_groups = synctool_config.get_groups(cfg, [node])
+		synctool_groups = synctool_config.get_groups(node)
 		synctool_groups.sort()
 
 		try:
@@ -137,7 +137,7 @@ def check_csmcompat(cfg, csm):
 				warn = warn + 1
 
 	for group in csm['emptygroups']:
-		if not group in cfg['ignore_groups']:
+		if not group in synctool_config.IGNORE_GROUPS:
 			print 'CSM defines empty group %s' % group
 			warn = warn + 1
 
@@ -189,10 +189,10 @@ def get_options():
 if __name__ == '__main__':
 	get_options()
 
-	cfg = synctool_config.read_config()
+	synctool_config.read_config()
 	csm = read_csm_config()
 
-	check_csmcompat(cfg, csm)
+	check_csmcompat(csm)
 
 
 # EOB
