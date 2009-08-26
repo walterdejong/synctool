@@ -1,6 +1,58 @@
 Here are some helper scripts that are handy when using synctool.
 
-Mind that they require a tool known as 'checkconfig' -- checkconfig
-behaves like IRIX chkconfig. If you don't have it, simply comment-out
-the lines since it is only used as an added safety.
+It's a bit of hodge-podge collection of related scripts that have
+been in use over the years. You don't necessarily need these scripts,
+but might come in handy.
 
+
+Files in this directory:
+
+bootstrap-synctool-client.sh
+  used for installing clients
+
+nmap_config.sh
+  nmaps your management LAN to create a synctool.conf file
+
+synctool_csmcompat.py
+  checks for differences in node configuration between synctool-config
+  and IBM's CSM nodes
+
+checkconfig
+  IRIX-like chkconfig command
+  (and note how its functionality is really entirely different from
+   RedHat/SuSE's chkconfig command)
+
+
+crc32.py
+  checksum replacement for synctool.py.
+  CRC-32 is fast, but regularly gives false positives
+
+md5sum.py
+  checksum replacement for synctool.py (MD5 already is default)
+
+sha1sum.py
+  checksum replacement for synctool.py
+  SHA-1 is slow ... but highly reliable when it comes to collisions
+
+overlay.py
+  proof-of-concept code for a tool that uses hardlinks
+  to construct a tree that is directly synced using rsync
+  This is an experimental code and not used in synctool
+  Mind that this code stems for the day when synctool was still
+  version 2, so there may be incompatibility issues with today's
+  synctool
+
+overlay.conf.example
+  Example config file for overlay.py
+
+rsynctool-single-suse.sh
+rsynctool-suse.sh
+synctool.sh
+  Wrapper scripts that work nicely with synctool 3.
+  They have been obsoleted by synctool 4 -- this functionality is
+  now included in synctool_master.py
+
+rsynctool-upload
+  copies files from nodes into the repository
+  This script was in use with synctool version 3, an updated
+  version may be included later ...
