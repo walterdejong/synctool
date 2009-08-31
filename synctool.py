@@ -656,6 +656,21 @@ def move_dir(dir):
 		verbose('moving %s to %s.saved             # dry run, update not performed' % (dir, dir))
 
 
+def exec_command(cmd):
+	'''this exec() type of function uses popen(), so that the output appears in-order
+	rather than out-of-order, as is the case when using either exec() or system()
+	Also, this may log the output to  logfile'''
+
+	f = os.popen('%s 2>&1' % cmd, 'r')
+	lines = f.readlines()
+	f.close()
+
+	lines = map(string.strip, lines)
+
+	for line in lines:
+		stdout(line)
+
+
 def run_command(cmd):
 	'''run a shell command'''
 
@@ -709,13 +724,10 @@ def run_command(cmd):
 	unix_out('')
 
 	if not synctool_lib.DRY_RUN:
-		verbose('  os.system("%s")' % cmd1)
-		try:
-			os.system(cmd)
-		except OSError, reason:
-			stderr("failed to run shell command '%s' : %s" % (cmd1, reason))
+		verbose('  exec("%s")' % cmd1)
+		exec_command(cmd)
 	else:
-		verbose('  os.system("%s")             # dry run, action not performed' % cmd)
+		verbose('  exec("%s")             # dry run, action not performed' % cmd)
 
 
 def overlay_callback(src_dir, dest_dir, filename, ext):
@@ -882,7 +894,7 @@ def diff_files(filename):
 		unix_out('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
 	else:
 		verbose('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
-		os.system('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
+		exec_command('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
 
 
 def usage():
