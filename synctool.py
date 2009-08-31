@@ -482,7 +482,7 @@ def compare_files(src_path, dest_path):
 			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
 
 			unix_out('')
-			return 1
+			need_update = 1
 
 		if (src_stat[stat.ST_MODE] & 07777) != (dest_stat[stat.ST_MODE] & 07777):
 			stdout('%s should have mode %04o, but has %04o' % (dest_path, src_stat[stat.ST_MODE] & 07777, dest_stat[stat.ST_MODE] & 07777))
@@ -491,14 +491,14 @@ def compare_files(src_path, dest_path):
 			set_permissions(dest_path, src_stat[stat.ST_MODE])
 
 			unix_out('')
-			return 1
+			need_update = 1
 
 #		if src_stat[stat.ST_MTIME] != dest_stat[stat.ST_MTIME]:
 #			stdout('%s should have mtime %d, but has %d' % (dest_path, src_stat[stat.ST_MTIME], dest_stat[stat.ST_MTIME]))
 #		if src_stat[stat.ST_CTIME] != dest_stat[stat.ST_CTIME]:
 #			stdout('%s should have ctime %d, but has %d' % (dest_path, src_stat[stat.ST_CTIME], dest_stat[stat.ST_CTIME]))
 
-	return 0
+	return need_update
 
 
 def copy_file(src, dest):
