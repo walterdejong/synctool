@@ -42,6 +42,7 @@ NODENAME = None
 
 DIFF_CMD = None
 SSH_CMD = None
+SCP_CMD = None
 RSYNC_CMD = None
 SYNCTOOL_CMD = None
 NUM_PROC = 16				# use sensible default
@@ -85,7 +86,7 @@ def stderr(str):
 def read_config():
 	'''read the config file and set a bunch of globals'''
 
-	global MASTERDIR, MASTER_LEN, DIFF_CMD, SSH_CMD, RSYNC_CMD, SYNCTOOL_CMD, NUM_PROC, SYMLINK_MODE
+	global MASTERDIR, MASTER_LEN, DIFF_CMD, SSH_CMD, SCP_CMD, RSYNC_CMD, SYNCTOOL_CMD, NUM_PROC, SYMLINK_MODE
 	global IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
 	global ON_UPDATE, ALWAYS_RUN
 	global NODES, INTERFACES
@@ -400,6 +401,29 @@ def read_config():
 				continue
 
 			SSH_CMD = string.join(arr[1:])
+			continue
+
+#
+#	keyword: scp_cmd
+#
+		if keyword == 'scp_cmd':
+			if len(arr) < 2:
+				stderr("%s:%d: 'scp_cmd' requires an argument: the full path to the 'scp' command" % (CONF_FILE, lineno))
+				errors = errors + 1
+				continue
+
+			if SCP_CMD != None:
+				stderr("%s:%d: redefinition of scp_cmd" % (CONF_FILE, lineno))
+				errors = errors + 1
+				continue
+
+			cmd = arr[1]
+			if not os.path.isfile(cmd):
+				stderr("%s:%d: no such command '%s'" % (CONF_FILE, lineno, cmd))
+				errors = errors + 1
+				continue
+
+			SCP_CMD = string.join(arr[1:])
 			continue
 
 #

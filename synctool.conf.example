@@ -10,6 +10,7 @@ ignore .svn
 
 diff_cmd /usr/bin/diff -u
 ssh_cmd /usr/bin/ssh -o ConnectTimeout=10 -q
+scp_cmd /usr/bin/scp -o ConnectTimeout=10 -q
 rsync_cmd /usr/bin/rsync -ar --delete -e 'ssh -o ConnectTimeout=10 -q'
 synctool_cmd /opt/synctool-4.0/sbin/synctool.py -c /var/lib/synctool/synctool.conf
 num_proc 64
