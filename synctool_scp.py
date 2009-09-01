@@ -38,7 +38,7 @@ def run_parallel(nodes, cmd, cmd_args, join_char=None):
 			the_command = os.path.basename(the_command)
 
 			verbose('copying %s' % cmd_args)
-			unix_out('%s %s %s:' % (cmd, cmd_args, node)
+			unix_out('%s %s %s:' % (cmd, cmd_args, node))
 
 		if synctool_lib.DRY_RUN:
 			continue
