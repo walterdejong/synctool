@@ -22,83 +22,23 @@ def run_remote_copy(nodes, args):
 		stderr('%s: error: scp_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
 		sys.exit(-1)
 
-	run_parallel(nodes, synctool_config.SCP_CMD, args)
-
-
-def run_parallel(nodes, cmd, cmd_args, join_char=None):
-	parallel = 0
-
+# run scp in serial, not parallel
 	for node in nodes:
 		if node == synctool_config.NODENAME:
-			verbose('running %s' % cmd_args)
-			unix_out(cmd_args)
-		else:
-			the_command = string.split(cmd)
-			the_command = the_command[0]
-			the_command = os.path.basename(the_command)
+			verbose('skipping node %s' % node)
+			continue
 
-			verbose('copying %s' % cmd_args)
-			unix_out('%s %s %s:' % (cmd, cmd_args, node))
+		verbose('copying %s' % args)
+		unix_out('%s %s %s:' % (synctool_config.SCP_CMD, args, node))
 
 		if synctool_lib.DRY_RUN:
 			continue
-#
-#	run commands in parallel, as many as defined
-#
-		if parallel > synctool_config.NUM_PROC:
-			try:
-				if os.wait() != -1:
-					parallel = parallel - 1
 
-			except OSError:
-				pass
-
-		pid = os.fork()
-
-		if not pid:
-#
-#	is this node the localhost? then run locally
-#
-			if node == synctool_config.NODENAME:
-###				run_local_cmd(cmd_args)
-				sys.exit(0)
-
-#
-#	execute remote command and show output with the nodename
-#
-			f = os.popen('%s %s %s: 2>&1' % (cmd, cmd_args, node), 'r')
-
-			while 1:
-				line = f.readline()
-				if not line:
-					break
-
-				line = string.strip(line)
-
-				stdout('%s: %s' % (NAMEMAP[node], line))
-
-			f.close()
-			sys.exit(0)
-
-		if pid == -1:
-			stderr('error: failed to fork()')
-		else:
-			parallel = parallel + 1
-
-#
-#	wait for children to terminate
-#
-	while 1:
-		try:
-			if os.wait() == -1:
-				break
-
-		except OSError:
-			break
+		os.system('%s %s %s' % (synctool_config.SCP_CMD, args, node))
 
 
 def usage():
-	print 'usage: %s [options] <filename> [..] [<destination directory>]' % os.path.basename(sys.argv[0])
+	print 'usage: %s [options] <filename> [..]' % os.path.basename(sys.argv[0])
 	print 'options:'
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=dir/file            Use this config file (default: %s)' % synctool_config.DEFAULT_CONF
