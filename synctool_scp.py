@@ -34,6 +34,8 @@ def run_remote_copy(nodes, args):
 		if synctool_lib.DRY_RUN:
 			continue
 
+		sys.stdout.flush()
+
 		try:
 			if not os.fork():
 				cmd_args = string.split(synctool_config.SCP_CMD)[:]
@@ -49,6 +51,22 @@ def run_remote_copy(nodes, args):
 					stderr('failed to execute %s' % cmd_args[0])
 
 				sys.exit(1)
+
+			else:
+				user_interrupt = False
+				while True:
+					try:
+						os.wait()
+					except OSError:
+						break
+
+					except KeyboardInterrupt:
+						user_interrupt = True
+						break
+
+				if user_interrupt:
+					print
+					break
 
 		except KeyboardInterrupt:
 			print
