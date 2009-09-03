@@ -40,9 +40,14 @@ def run_remote_copy(nodes, args):
 				cmd_args.append('%s:' % node)
 				cmd_args.insert(0, synctool_config.SCP_CMD)
 
-				os.execv(synctool_config.SCP_CMD, cmd_args)
+				try:
+					os.execv(synctool_config.SCP_CMD, cmd_args)
+				except OSError, reason:
+					stderr('failed to execute %s: %s' % (synctool_config.SCP_CMD, reason))
 
-				stderr('failed to execute %s' % synctool_config.SCP_CMD)
+				except:
+					stderr('failed to execute %s' % synctool_config.SCP_CMD)
+
 				sys.exit(1)
 
 		except KeyboardInterrupt:
