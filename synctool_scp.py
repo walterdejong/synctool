@@ -28,13 +28,26 @@ def run_remote_copy(nodes, args):
 			verbose('skipping node %s' % node)
 			continue
 
-		verbose('copying %s' % args)
+		verbose('copying %s to %s' % (args, node))
 		unix_out('%s %s %s:' % (synctool_config.SCP_CMD, args, node))
 
 		if synctool_lib.DRY_RUN:
 			continue
 
-		os.system('%s %s %s' % (synctool_config.SCP_CMD, args, node))
+		try:
+			if not os.fork():
+				cmd_args = string.split(args)[:]
+				cmd_args.append('%s:' % node)
+				cmd_args.insert(0, synctool_config.SCP_CMD)
+
+				os.execv(synctool_config.SCP_CMD, cmd_args)
+
+				stderr('failed to execute %s' % synctool_config.SCP_CMD)
+				sys.exit(1)
+
+		except KeyboardInterrupt:
+			print
+			break
 
 
 def usage():
