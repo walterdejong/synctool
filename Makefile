@@ -11,7 +11,7 @@ MKDIR=/bin/mkdir
 
 MASTERDIR=/var/lib/synctool
 
-SCRIPTS=synctool.py synctool_config.py synctool_ssh.py synctool_master.py synctool_aggr.py
+SCRIPTS=synctool.py synctool_config.py synctool_ssh.py synctool_scp.py synctool_master.py synctool_aggr.py
 LIBS=synctool_lib.py synctool_core.py
 
 CLIENT_SCRIPTS=synctool.py synctool_config.py
@@ -37,6 +37,8 @@ install:
 	@( cd $(SBINDIR) && ln -sf synctool_config.py synctool-config )
 	@( cd $(SBINDIR) && ln -sf synctool_ssh.py synctool-ssh )
 	@( cd $(SBINDIR) && ln -sf synctool_ssh.py dsh )
+	@( cd $(SBINDIR) && ln -sf synctool_scp.py synctool-scp )
+	@( cd $(SBINDIR) && ln -sf synctool_scp.py dcp )
 	@( cd $(SBINDIR) && ln -sf synctool_aggr.py synctool-aggr )
 	@( cd $(SBINDIR) && ln -sf synctool_aggr.py aggr )
 	@echo masterdir is $(MASTERDIR)
