@@ -36,17 +36,17 @@ def run_remote_copy(nodes, args):
 
 		try:
 			if not os.fork():
-				cmd_args = string.split(args)[:]
+				cmd_args = string.split(synctool_config.SCP_CMD)[:]
+				cmd_args.extend(string.split(args))
 				cmd_args.append('%s:' % node)
-				cmd_args.insert(0, synctool_config.SCP_CMD)
 
 				try:
-					os.execv(synctool_config.SCP_CMD, cmd_args)
+					os.execv(cmd_args[0], cmd_args)
 				except OSError, reason:
-					stderr('failed to execute %s: %s' % (synctool_config.SCP_CMD, reason))
+					stderr('failed to execute %s: %s' % (cmd_args[0], reason))
 
 				except:
-					stderr('failed to execute %s' % synctool_config.SCP_CMD)
+					stderr('failed to execute %s' % cmd_args[0])
 
 				sys.exit(1)
 
