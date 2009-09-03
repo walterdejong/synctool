@@ -17,6 +17,10 @@ import string
 import getopt
 
 
+DESTDIR = None
+SCP_OPTIONS = None
+
+
 def run_remote_copy(nodes, args):
 	if not synctool_config.SCP_CMD:
 		stderr('%s: error: scp_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
@@ -28,8 +32,21 @@ def run_remote_copy(nodes, args):
 			verbose('skipping node %s' % node)
 			continue
 
-		verbose('copying %s to %s' % (args, node))
-		unix_out('%s %s %s:' % (synctool_config.SCP_CMD, args, node))
+		if DESTDIR:
+			verbose('copying %s to %s:%s' % (args, node, DESTDIR))
+
+			if SCP_OPTIONS:
+				unix_out('%s %s %s %s:%s' % (synctool_config.SCP_CMD, SCP_OPTIONS, args, node, DESTDIR))
+			else:
+				unix_out('%s %s %s:%s' % (synctool_config.SCP_CMD, args, node, DESTDIR))
+
+		else:
+			verbose('copying %s to %s' % (args, node))
+
+			if SCP_OPTIONS:
+				unix_out('%s %s %s %s:' % (synctool_config.SCP_CMD, SCP_OPTIONS, args, node))
+			else:
+				unix_out('%s %s %s:' % (synctool_config.SCP_CMD, args, node))
 
 		if synctool_lib.DRY_RUN:
 			continue
@@ -38,9 +55,17 @@ def run_remote_copy(nodes, args):
 
 		try:
 			if not os.fork():
-				cmd_args = string.split(synctool_config.SCP_CMD)[:]
+				cmd_args = string.split(synctool_config.SCP_CMD)
+
+				if SCP_OPTIONS:
+					cmd_args.extend(string.split(SCP_OPTIONS))
+
 				cmd_args.extend(string.split(args))
-				cmd_args.append('%s:' % node)
+
+				if DESTDIR:
+					cmd_args.append('%s:%s' % (node, DESTDIR))
+				else:
+					cmd_args.append('%s:' % node)
 
 				try:
 					os.execv(cmd_args[0], cmd_args)
@@ -80,6 +105,9 @@ def usage():
 	print '  -c, --conf=dir/file            Use this config file (default: %s)' % synctool_config.DEFAULT_CONF
 	print '  -v, --verbose                  Be verbose'
 	print
+	print '  -d, --dest=dir/file            Set destination name to copy to'
+	print '  -o, --options=options          Set additional scp options'
+	print
 	print '  -n, --node=nodelist            Execute only on these nodes'
 	print '  -g, --group=grouplist          Execute only on these groups of nodes'
 	print '  -x, --exclude=nodelist         Exclude these nodes from the selected group'
@@ -94,12 +122,18 @@ def usage():
 
 
 def get_options():
+	global DESTDIR, SCP_OPTIONS
+
 	if len(sys.argv) <= 1:
 		usage()
 		sys.exit(1)
 
+	DESTDIR = None
+	SCP_OPTIONS = None
+
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hc:vn:g:x:X:", ['help', 'conf=', 'verbose',
+		opts, args = getopt.getopt(sys.argv[1:], "hc:vd:o:n:g:x:X:", ['help', 'conf=', 'verbose',
+			'dest=', 'options=',
 			'node=', 'group=', 'exclude=', 'exclude-group=', 'unix', 'dry-run'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
@@ -129,6 +163,14 @@ def get_options():
 
 		if opt in ('-v', '--verbose'):
 			synctool_lib.VERBOSE = 1
+			continue
+
+		if opt in ('-d', '--dest'):
+			DESTDIR = arg
+			continue
+
+		if opt in ('-o', '--options'):
+			SCP_OPTIONS = arg
 			continue
 
 		if opt in ('-n', '--node'):
