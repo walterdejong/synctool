@@ -5,6 +5,7 @@
 #	group together output that is the same
 #
 
+import os
 import sys
 import string
 
