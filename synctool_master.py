@@ -59,24 +59,6 @@ def run_local_synctool():
 	synctool.run_command('%s %s' % (synctool_config.SYNCTOOL_CMD, PASS_ARGS))
 
 
-def run_with_aggregate():
-	'''pipe the synctool output through the aggregator'''
-
-	global MASTER_OPTS
-#
-#	simply re-run this command, but with a pipe
-#
-	if '-a' in MASTER_OPTS:
-		MASTER_OPTS.remove('-a')
-
-	if '--aggregate' in MASTER_OPTS:
-		MASTER_OPTS.remove('--aggregate')
-
-	f = os.popen('%s %s' % (sys.argv[0], string.join(MASTER_OPTS)), 'r')
-	synctool_aggr.aggregate(f)
-	f.close()
-
-
 def usage():
 	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
 	print 'options:'
@@ -133,7 +115,7 @@ def get_options():
 	synctool_ssh.GROUPLIST = ''
 
 	PASS_ARGS = ''
-	MASTER_OPTS = []
+	MASTER_OPTS = [ sys.argv[0] ]
 
 	for opt, arg in opts:
 		MASTER_OPTS.append(opt)
@@ -227,7 +209,7 @@ if __name__ == '__main__':
 	synctool_lib.openlog()
 
 	if OPT_AGGREGATE:
-		run_with_aggregate()
+		synctool_aggr.run(MASTER_OPTS)
 		synctool_lib.closelog()
 		sys.exit(0)
 

@@ -2,8 +2,6 @@
 #
 #	synctool-ssh	WJ109
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
-#
 
 import synctool_config
 import synctool_aggr
@@ -304,24 +302,6 @@ def run_local_cmds(cmds):
 		run_local_cmd(cmd)
 
 
-def run_with_aggregate():
-	'''pipe the output through the aggregator'''
-
-	global MASTER_OPTS
-#
-#	simply re-run this command, but with a pipe
-#
-	if '-a' in MASTER_OPTS:
-		MASTER_OPTS.remove('-a')
-
-	if '--aggregate' in MASTER_OPTS:
-		MASTER_OPTS.remove('--aggregate')
-
-	f = os.popen('%s %s' % (sys.argv[0], string.join(MASTER_OPTS)), 'r')
-	synctool_aggr.aggregate(f)
-	f.close()
-
-
 def usage():
 	print 'usage: %s [options] <remote command>' % os.path.basename(sys.argv[0])
 	print 'options:'
@@ -370,7 +350,7 @@ def get_options():
 	NODELIST = ''
 	GROUPLIST = ''
 
-	MASTER_OPTS = []
+	MASTER_OPTS = [ sys.argv[0] ]
 
 	for opt, arg in opts:
 		MASTER_OPTS.append(opt)
@@ -442,7 +422,7 @@ if __name__ == '__main__':
 	cmd = get_options()
 
 	if OPT_AGGREGATE:
-		run_with_aggregate()
+		synctool_aggr.run(MASTER_OPTS)
 		sys.exit(0)
 
 	synctool_config.read_config()

@@ -57,6 +57,23 @@ def aggregate(f):
 			print line
 
 
+def run(cmd_args):
+	'''pipe the output through the aggregator'''
+
+#
+#	simply re-run this command, but with a pipe
+#
+	if '-a' in cmd_args:
+		cmd_args.remove('-a')
+
+	if '--aggregate' in cmd_args:
+		cmd_args.remove('--aggregate')
+
+	f = os.popen(string.join(cmd_args), 'r')
+	aggregate(f)
+	f.close()
+
+
 if __name__ == '__main__':
 	aggregate(sys.stdin)
 
