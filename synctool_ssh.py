@@ -2,6 +2,12 @@
 #
 #	synctool-ssh	WJ109
 #
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
+#
+#   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
+#   synctool is distributed under terms described in the GNU General Public
+#   License.
+#
 
 import synctool_config
 import synctool_lib
@@ -22,6 +28,9 @@ EXCLUDEGROUPS = None
 
 # map interface names back to node definition names
 NAMEMAP = {}
+
+OPT_AGGREGATE = 0
+MASTER_OPTS = None
 
 
 def make_nodeset():
@@ -298,6 +307,24 @@ def run_local_cmds(cmds):
 		run_local_cmd(cmd)
 
 
+def run_with_aggregate():
+	'''pipe the output through the aggregator'''
+
+	global MASTER_OPTS
+#
+#	simply re-run this command, but with a pipe
+#
+	if '-a' in MASTER_OPTS:
+		MASTER_OPTS.remove('-a')
+
+	if '--aggregate' in MASTER_OPTS:
+		MASTER_OPTS.remove('--aggregate')
+
+	f = os.popen('%s %s' % (sys.argv[0], string.join(MASTER_OPTS)), 'r')
+	synctool_aggr.aggregate(f)
+	f.close()
+
+
 def usage():
 	print 'usage: %s [options] <remote command>' % os.path.basename(sys.argv[0])
 	print 'options:'
@@ -309,17 +336,18 @@ def usage():
 	print '  -g, --group=grouplist          Execute only on these groups of nodes'
 	print '  -x, --exclude=nodelist         Exclude these nodes from the selected group'
 	print '  -X, --exclude-group=grouplist  Exclude these groups from the selection'
+	print '  -a, --aggregate                Condense output'
 	print
 	print '      --unix                     Output actions as unix shell commands'
 	print '      --dry-run                  Do not run the remote command'
 	print
 	print 'A nodelist or grouplist is a comma-separated list'
 	print
-	print 'synctool-ssh by Walter de Jong <walter@sara.nl> (c) 2009'
+	print 'synctool-ssh by Walter de Jong <walter@heiho.net> (c) 2009'
 
 
 def get_options():
-	global NODELIST, GROUPLIST, EXCLUDELIST, EXCLUDEGROUPS, REMOTE_CMD
+	global NODELIST, GROUPLIST, EXCLUDELIST, EXCLUDEGROUPS, REMOTE_CMD, MASTER_OPTS, OPT_AGGREGATE
 
 	if len(sys.argv) <= 1:
 		usage()
@@ -345,7 +373,12 @@ def get_options():
 	NODELIST = ''
 	GROUPLIST = ''
 
+	MASTER_OPTS = []
+
 	for opt, arg in opts:
+		MASTER_OPTS.append(opt)
+		MASTER_OPTS.append(arg)
+
 		if opt in ('-h', '--help', '-?'):
 			usage()
 			sys.exit(1)
@@ -386,6 +419,10 @@ def get_options():
 				EXCLUDEGROUPS = EXCLUDEGROUPS + ',' + arg
 			continue
 
+		if opt in ('-a', '--aggregate'):
+			OPT_AGGREGATE = 1
+			continue
+
 		if opt == '--unix':
 			synctool_lib.UNIX_CMD = 1
 			continue
@@ -403,6 +440,11 @@ def get_options():
 
 if __name__ == '__main__':
 	cmd = get_options()
+
+	if OPT_AGGREGATE:
+		run_with_aggregate()
+		sys.exit(0)
+
 	synctool_config.read_config()
 	synctool_config.add_myhostname()
 
