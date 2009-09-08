@@ -106,6 +106,10 @@ def make_nodeset():
 
 
 def run_remote_cmd(nodes, remote_cmd_args):
+	'''nodes[] is nodeset to run on'''
+	'''remote_cmd_args[] is array of command + arguments'''
+	'''join_char is ':' or None'''
+
 	if not synctool_config.SSH_CMD:
 		stderr('%s: error: ssh_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
 		sys.exit(-1)
@@ -124,7 +128,6 @@ def run_remote_cmd(nodes, remote_cmd_args):
 			unix_out(cmd_str)
 		else:
 			the_command = os.path.basename(cmd_args[0])
-
 			verbose('running %s to %s %s' % (the_command, node, cmd_str))
 			unix_out('%s %s %s' % (cmd, node, cmd_str))
 
@@ -144,31 +147,7 @@ def run_remote_cmd(nodes, remote_cmd_args):
 		pid = os.fork()
 
 		if not pid:
-#
-#	is this node the localhost? then run locally
-#
-			if node == synctool_config.NODENAME:
-				run_local_cmd(remote_cmd_args)
-				sys.exit(0)
-
-#
-#	execute remote command and show output with the nodename
-#
-			cmd_args.append(node)
-			cmd_args.extend(remote_cmd_args)
-
-			f = synctool_lib.popen(cmd_args)
-
-			while 1:
-				line = f.readline()
-				if not line:
-					break
-
-				line = string.strip(line)
-
-				stdout('%s: %s' % (NAMEMAP[node], line))
-
-			f.close()
+			_run_command(cmd_args, node, None, remote_cmd_args)
 			sys.exit(0)
 
 		if pid == -1:
@@ -179,7 +158,7 @@ def run_remote_cmd(nodes, remote_cmd_args):
 #
 #	wait for children to terminate
 #
-	while 1:
+	while True:
 		try:
 			if os.wait() == -1:
 				break
@@ -188,9 +167,49 @@ def run_remote_cmd(nodes, remote_cmd_args):
 			break
 
 
+def _run_command(cmd_arr, node, join_char, cmd_args):
+	'''cmd_arr[] is an array that can be passed to e.g. os.execv(), or synctool_lib.popen()
+	cmd_args[] contains the additional arguments to the command
+	The resulting command will be: cmd_arr + node + join_char + cmd_args'''
+
+#
+#	is this node the localhost? then run locally
+#
+	if node == synctool_config.NODENAME:
+		run_local_cmd(cmd_args)
+		return
+
+	nodename = NAMEMAP[node]
+
+# make the command arguments ready for synctool_lib.popen()
+	if join_char:
+		cmd_args[0] = '%s%s%s' % (node, join_char, cmd_args)
+	else:
+		cmd_arr.append(node)
+	cmd_arr.extend(remote_cmd_args)
+
+# execute remote command and show output with the nodename
+	f = synctool_lib.popen(cmd_arr)
+
+	while True:
+		line = f.readline()
+		if not line:
+			break
+
+		line = string.strip(line)
+
+		stdout('%s: %s' % (nodename, line))
+
+	f.close()
+
+
 def run_parallel_cmds(nodes, cmds):
-	'''fork and run multiple commands in sequence'''
-	'''cmds[] is an array of tuples (cmd, cmd_args, join_char)'''
+	'''fork and run multiple commands in sequence
+	cmds[] is an array of tuples (cmd_arr[], cmd_args[], join_char)
+	cmd_arr[] is an array that can be passed to e.g. os.execv(), or synctool_lib.popen()
+	cmd_args[] contains the additional arguments to the command
+
+	The resulting command will be: cmd_arr + node + join_char + cmd_args'''
 
 	parallel = 0
 
@@ -212,49 +231,27 @@ def run_parallel_cmds(nodes, cmds):
 #
 #	run the commands one after another
 #
-			for (cmd, cmd_args, join_char) in cmds:
+			for (cmd_arr, cmd_args, join_char) in cmds:
 # show what we're going to do
+				the_command = os.path.basename(cmd_arr[0])
 				if node == synctool_config.NODENAME:
-					verbose('running %s' % cmd_args)
-					unix_out(cmd_args)
+					cmd_str = string.join(cmd_args)
+					verbose('running %s %s' % (the_command, cmd_str))
+					unix_out('%s %s' % (string.join(cmd_arr), cmd_str))
 				else:
-					the_command = string.split(cmd)
-					the_command = the_command[0]
-					the_command = os.path.basename(the_command)
+					if join_char:
+						cmd_str = '%s%s%s' % (node, join_char, string.join(cmd_args))
+					else:
+						cmd_str = '%s %s' % (node, string.join(cmd_args))
 
-				if join_char != None:
-					verbose('running %s to %s%s%s' % (the_command, node, join_char, cmd_args))
-					unix_out('%s %s%s%s' % (cmd, node, join_char, cmd_args))
-				else:
-					verbose('running %s to %s %s' % (the_command, node, cmd_args))
-					unix_out('%s %s %s' % (cmd, node, cmd_args))
+					verbose('running %s %s' % (the_command, cmd_str))
+					unix_out('%s %s' % (string.join(cmd_arr), cmd_str))
 
-# the rysnc must run, even for dry runs
+# the rsync must run, even for dry runs
 #				if synctool_lib.DRY_RUN:
 #					continue
 
-#
-#	is this node the localhost? then run locally
-#
-				if node == synctool_config.NODENAME:
-					run_local_cmd(cmd_args)
-					continue
-
-#
-#	execute remote command and show output with the nodename
-#
-				if join_char != None:
-					f = os.popen('%s %s%s%s 2>&1' % (cmd, node, join_char, cmd_args), 'r')
-				else:
-					f = os.popen('%s %s %s 2>&1' % (cmd, node, cmd_args), 'r')
-
-				lines = f.readlines()		# collect output
-				f.close()
-
-				lines = map(string.strip, lines)
-
-				for line in lines:
-					stdout('%s: %s' % (NAMEMAP[node], line))
+				_run_command(cmd_arr, node, join_char, cmd_args)
 
 # all done, child exits
 			sys.exit(0)
@@ -276,26 +273,29 @@ def run_parallel_cmds(nodes, cmds):
 			break
 
 
-def run_local_cmd(cmd):
-	verbose('running command %s' % cmd)
-	unix_out(cmd)
+def run_local_cmd(cmd_args):
+	cmd_str = string.join(cmd_args)
+
+	verbose('running command %s' % cmd_str)
+	unix_out(cmd_str)
 
 	if synctool_lib.DRY_RUN:
 		return
 
-	f = os.popen('%s 2>&1' % cmd, 'r')
-	lines = f.readlines()
+	nodename = NAMEMAP[synctool_config.NODENAME]
+
+	f = synctool_lib.popen(cmd_args)
+
+	while True:
+		line = f.readline()
+		if not line:
+			break
+
+		line = string.strip(line)
+
+		stdout('%s: %s' % (nodename, line))
+
 	f.close()
-
-	lines = map(string.strip, lines);
-
-	for line in lines:
-		stdout('%s: %s' % (NAMEMAP[synctool_config.NODENAME], line))
-
-
-def run_local_cmds(cmds):
-	for cmd in cmds:
-		run_local_cmd(cmd)
 
 
 def usage():

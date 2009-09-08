@@ -39,12 +39,12 @@ def run_remote_synctool(nodes):
 
 	cmds = []
 
+# append rsync command
 	if not OPT_SKIP_RSYNC:
-		run_rsync = ('%s %s/' % (synctool_config.RSYNC_CMD, synctool_config.MASTERDIR), '%s/' % synctool_config.MASTERDIR, ':')
-		cmds.append(run_rsync)
+		cmds.append([ string.split(synctool_config.RSYNC_CMD), [ '%s/' % synctool_config.MASTERDIR ], ':' ])
 
-	run_synctool = (synctool_config.SSH_CMD, '%s %s' % (synctool_config.SYNCTOOL_CMD, PASS_ARGS), None)
-	cmds.append(run_synctool)
+# append synctool command
+	cmds.append([ string.split(synctool_config.SSH_CMD), string.split(synctool_config.SYNCTOOL_CMD) + PASS_ARGS, None ])
 
 	synctool_ssh.run_parallel_cmds(nodes, cmds)
 
@@ -56,7 +56,7 @@ def run_local_synctool():
 		stderr('%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
 		sys.exit(-1)
 
-	synctool.run_command('%s %s' % (synctool_config.SYNCTOOL_CMD, PASS_ARGS))
+	synctool.run_command('%s %s' % (synctool_config.SYNCTOOL_CMD, string.join(PASS_ARGS)))
 
 
 def usage():
@@ -114,7 +114,7 @@ def get_options():
 	synctool_ssh.NODELIST = ''
 	synctool_ssh.GROUPLIST = ''
 
-	PASS_ARGS = ''
+	PASS_ARGS = []
 	MASTER_OPTS = [ sys.argv[0] ]
 
 	for opt, arg in opts:
@@ -131,7 +131,7 @@ def get_options():
 
 		if opt in ('-v', '--verbose'):
 			synctool_lib.VERBOSE = 1
-			PASS_ARGS = PASS_ARGS + ' --verbose'
+			PASS_ARGS.append(opt)
 			continue
 
 		if opt in ('-n', '--node'):
@@ -164,12 +164,12 @@ def get_options():
 
 		if opt in ('-q', '--quiet'):
 			synctool_lib.QUIET = 1
-			PASS_ARGS = PASS_ARGS + ' --quiet'
+			PASS_ARGS.append(opt)
 			continue
 
 		if opt in ('-f', '--fix'):
 			synctool_lib.DRY_RUN = 0
-			PASS_ARGS = PASS_ARGS + ' --fix'
+			PASS_ARGS.append(opt)
 			continue
 
 		if opt in ('-a', '--aggregate'):
@@ -182,25 +182,23 @@ def get_options():
 
 		if opt == '--unix':
 			synctool_lib.UNIX_CMD = 1
-			PASS_ARGS = PASS_ARGS + ' --unix'
+			PASS_ARGS.append(opt)
 			continue
 
 		if opt in ('-l', '--log'):
 			synctool_lib.LOGFILE = arg
-			PASS_ARGS = PASS_ARGS + ' --log %s' % synctool_lib.LOGFILE
+			PASS_ARGS.append(opt)
+			PASS_ARGS.append(arg)
 			continue
 
-		PASS_ARGS = PASS_ARGS + ' ' + opt
+		PASS_ARGS.append(opt)
 
 		if arg:
-			PASS_ARGS = PASS_ARGS + ' ' + arg
+			PASS_ARGS.append(arg)
 
 	if args:
 		MASTER_OPTS.extend(args)
-		PASS_ARGS = PASS_ARGS + ' ' + string.join(args)
-
-	if len(PASS_ARGS) > 0 and PASS_ARGS[0] == ' ':
-		PASS_ARGS = PASS_ARGS[1:]
+		PASS_ARGS.extend(args)
 
 
 if __name__ == '__main__':
