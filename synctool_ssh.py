@@ -6,6 +6,7 @@
 #
 
 import synctool_config
+import synctool_aggr
 import synctool_lib
 
 from synctool_lib import verbose,stdout,stderr,unix_out
@@ -350,8 +351,8 @@ def get_options():
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hc:vn:g:x:X:", ['help', 'conf=', 'verbose',
-			'node=', 'group=', 'exclude=', 'exclude-group=', 'unix', 'dry-run'])
+		opts, args = getopt.getopt(sys.argv[1:], "hc:vn:g:x:X:a", ['help', 'conf=', 'verbose',
+			'node=', 'group=', 'exclude=', 'exclude-group=', 'aggregate', 'unix', 'dry-run'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -430,6 +431,9 @@ def get_options():
 	if args == None or len(args) <= 0:
 		print '%s: missing remote command' % os.path.basename(sys.argv[0])
 		sys.exit(1)
+
+	if args != None:
+		MASTER_OPTS.extend(args)
 
 	return string.join(args)
 
