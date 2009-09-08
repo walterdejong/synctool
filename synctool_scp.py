@@ -207,11 +207,11 @@ def get_options():
 			continue
 
 		if opt == '--unix':
-			synctool_lib.UNIX_CMD = 1
+			synctool_lib.UNIX_CMD = True
 			continue
 
 		if opt == '--dry-run':
-			synctool_lib.DRY_RUN = 1
+			synctool_lib.DRY_RUN = True
 			continue
 
 	if args == None or len(args) <= 0:

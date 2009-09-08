@@ -24,7 +24,7 @@ EXCLUDEGROUPS = None
 # map interface names back to node definition names
 NAMEMAP = {}
 
-OPT_AGGREGATE = 0
+OPT_AGGREGATE = False
 MASTER_OPTS = None
 
 
@@ -399,15 +399,15 @@ def get_options():
 			continue
 
 		if opt in ('-a', '--aggregate'):
-			OPT_AGGREGATE = 1
+			OPT_AGGREGATE = True
 			continue
 
 		if opt == '--unix':
-			synctool_lib.UNIX_CMD = 1
+			synctool_lib.UNIX_CMD = True
 			continue
 
 		if opt == '--dry-run':
-			synctool_lib.DRY_RUN = 1
+			synctool_lib.DRY_RUN = True
 			continue
 
 	if args == None or len(args) <= 0:

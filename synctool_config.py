@@ -29,9 +29,9 @@ ACTION_CMDS = 6
 ACTION_NUMPROC = 7
 
 # optional: do not list hosts/groups that are ignored
-OPT_FILTER_IGNORED = 0
+OPT_FILTER_IGNORED = False
 # optional: list interface names for the selected nodes
-OPT_INTERFACE = 0
+OPT_INTERFACE = False
 
 #
 #	config variables
@@ -848,11 +848,11 @@ def get_options():
 				continue
 
 			if opt in ('-i', '--interface'):
-				OPT_INTERFACE = 1
+				OPT_INTERFACE = True
 				continue
 
 			if opt in ('-f', '--filter-ignored'):
-				OPT_FILTER_IGNORED = 1
+				OPT_FILTER_IGNORED = True
 				continue
 
 			if opt in ('-C', '--command'):
@@ -878,7 +878,6 @@ def get_options():
 	if not ACTION:
 		usage()
 		sys.exit(1)
-
 
 
 if __name__ == '__main__':
@@ -914,5 +913,6 @@ if __name__ == '__main__':
 
 	elif ACTION == ACTION_NUMPROC:
 		print NUM_PROC
+
 
 # EOB

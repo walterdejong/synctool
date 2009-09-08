@@ -11,10 +11,10 @@ import string
 import time
 
 
-DRY_RUN = 0
-VERBOSE = 0
-QUIET = 0
-UNIX_CMD = 0
+DRY_RUN = False
+VERBOSE = False
+QUIET = False
+UNIX_CMD = False
 LOGFILE = None
 LOGFD = None
 

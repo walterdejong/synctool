@@ -17,8 +17,8 @@ import string
 import getopt
 import shlex
 
-OPT_SKIP_RSYNC = 0
-OPT_AGGREGATE = 0
+OPT_SKIP_RSYNC = False
+OPT_AGGREGATE = False
 
 PASS_ARGS = None
 MASTER_OPTS = None
@@ -173,11 +173,11 @@ def get_options():
 			continue
 
 		if opt in ('-a', '--aggregate'):
-			OPT_AGGREGATE = 1
+			OPT_AGGREGATE = True
 			continue
 
 		if opt == '--skip-rsync':
-			OPT_SKIP_RSYNC = 1
+			OPT_SKIP_RSYNC = True
 			continue
 
 		if opt == '--unix':
@@ -219,8 +219,8 @@ if __name__ == '__main__':
 #	enable debugging
 #
 #############
-#	synctool_config.OPT_DEBUG = 1
-#	synctool_ssh.OPT_DEBUG = 1
+#	synctool_config.OPT_DEBUG = True
+#	synctool_ssh.OPT_DEBUG = True
 
 	nodes = synctool_ssh.make_nodeset()
 	if nodes == None:

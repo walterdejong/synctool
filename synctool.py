@@ -30,7 +30,7 @@ except ImportError:
 	use_hashlib = 0
 
 # extra command-line option --tasks
-RUN_TASKS = 0
+RUN_TASKS = False
 
 # blocksize for doing I/O while checksumming files
 BLOCKSIZE = 16 * 1024
@@ -946,45 +946,45 @@ if __name__ == '__main__':
 				sys.exit(1)
 
 			if opt in ('-c', '--conf'):
-				synctool_config.CONF_FILE=arg
+				synctool_config.CONF_FILE = arg
 				continue
 
 # dry run already is default
 #
 #			if opt in ('-n', '--dry-run'):
-#				synctool_lib.DRY_RUN=1
+#				synctool_lib.DRY_RUN = True
 #				continue
 
 			if opt in ('-f', '--fix'):
-				synctool_lib.DRY_RUN=0
+				synctool_lib.DRY_RUN = False
 				continue
 
 			if opt in ('-v', '--verbose'):
-				synctool_lib.VERBOSE=1
+				synctool_lib.VERBOSE = True
 				continue
 
 			if opt in ('-q', '--quiet'):
-				synctool_lib.QUIET=1
+				synctool_lib.QUIET = True
 				continue
 
 			if opt in ('-x', '--unix'):
-				synctool_lib.UNIX_CMD=1
+				synctool_lib.UNIX_CMD = True
 				continue
 
 			if opt in ('-l', '--log'):
-				synctool_lib.LOGFILE=arg
+				synctool_lib.LOGFILE = arg
 				continue
 
 			if opt in ('-d', '--diff'):
-				diff_file=arg
+				diff_file = arg
 				continue
 
 			if opt in ('-1', '--single'):
-				single_file=arg
+				single_file = arg
 				continue
 
 			if opt in ('-t', '--task', '--tasks'):
-				RUN_TASKS=1
+				RUN_TASKS = True
 				continue
 
 			stderr("unknown command line option '%s'" % opt)
