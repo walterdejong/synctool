@@ -41,7 +41,7 @@ def run_remote_synctool(nodes):
 
 # append rsync command
 	if not OPT_SKIP_RSYNC:
-		cmds.append([ shlex.split(synctool_config.RSYNC_CMD), [ '%s/' % synctool_config.MASTERDIR ], ':' ])
+		cmds.append([ shlex.split(synctool_config.RSYNC_CMD) + [ '%s/' % synctool_config.MASTERDIR ], [ '%s/' % synctool_config.MASTERDIR ], ':' ])
 
 # append synctool command
 	cmds.append([ shlex.split(synctool_config.SSH_CMD), shlex.split(synctool_config.SYNCTOOL_CMD) + PASS_ARGS, None ])

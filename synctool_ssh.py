@@ -183,7 +183,7 @@ def _run_command(cmd_arr, node, join_char, cmd_args):
 
 # make the command arguments ready for synctool_lib.popen()
 	if join_char:
-		cmd_args[0] = '%s%s%s' % (node, join_char, cmd_args)
+		cmd_args[0] = '%s%s%s' % (node, join_char, cmd_args[0])
 	else:
 		cmd_arr.append(node)
 	cmd_arr.extend(cmd_args)
