@@ -111,7 +111,7 @@ def run_remote_cmd(nodes, remote_cmd_args):
 		sys.exit(-1)
 
 	cmd = synctool_config.SSH_CMD
-	cmd_args = string.split(cmd) + remote_cmd_args
+	cmd_args = string.split(cmd)
 
 # cmd_str is used for printing info only
 	cmd_str = string.join(remote_cmd_args)
@@ -125,12 +125,8 @@ def run_remote_cmd(nodes, remote_cmd_args):
 		else:
 			the_command = os.path.basename(cmd_args[0])
 
-			if join_char != None:
-				verbose('running %s to %s%s%s' % (the_command, node, join_char, cmd_str))
-				unix_out('%s %s%s%s' % (cmd, node, join_char, cmd_str))
-			else:
-				verbose('running %s to %s %s' % (the_command, node, cmd_str))
-				unix_out('%s %s %s' % (cmd, node, cmd_str))
+			verbose('running %s to %s %s' % (the_command, node, cmd_str))
+			unix_out('%s %s %s' % (cmd, node, cmd_str))
 
 		if synctool_lib.DRY_RUN:
 			continue
@@ -158,6 +154,9 @@ def run_remote_cmd(nodes, remote_cmd_args):
 #
 #	execute remote command and show output with the nodename
 #
+			cmd_args.append(node)
+			cmd_args.extend(remote_cmd_args)
+
 			f = synctool_lib.popen(cmd_args)
 
 			while 1:
