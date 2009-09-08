@@ -4,10 +4,6 @@
 #
 #   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
 #
-#   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
-#   synctool is distributed under terms described in the GNU General Public
-#   License.
-#
 
 import synctool_config
 import synctool_lib
@@ -343,7 +339,7 @@ def usage():
 	print
 	print 'A nodelist or grouplist is a comma-separated list'
 	print
-	print 'synctool-ssh by Walter de Jong <walter@heiho.net> (c) 2009'
+	print 'synctool-ssh by Walter de Jong <walter@sara.nl> (c) 2009'
 
 
 def get_options():
