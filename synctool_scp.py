@@ -21,10 +21,22 @@ DESTDIR = None
 SCP_OPTIONS = None
 
 
-def run_remote_copy(nodes, args):
+def run_remote_copy(nodes, files):
+	'''copy files[] to nodes[]'''
+
 	if not synctool_config.SCP_CMD:
 		stderr('%s: error: scp_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
 		sys.exit(-1)
+
+	files_str = string.join(files)
+
+# prepare cmd_args[] for exec() outside the loop
+	cmd_args = string.split(synctool_config.SCP_CMD)
+
+	if SCP_OPTIONS:
+		cmd_args.extend(string.split(SCP_OPTIONS))
+
+	cmd_args.extend(files)
 
 # run scp in serial, not parallel
 	for node in nodes:
@@ -33,20 +45,20 @@ def run_remote_copy(nodes, args):
 			continue
 
 		if DESTDIR:
-			verbose('copying %s to %s:%s' % (args, node, DESTDIR))
+			verbose('copying %s to %s:%s' % (files_str, node, DESTDIR))
 
 			if SCP_OPTIONS:
-				unix_out('%s %s %s %s:%s' % (synctool_config.SCP_CMD, SCP_OPTIONS, args, node, DESTDIR))
+				unix_out('%s %s %s %s:%s' % (synctool_config.SCP_CMD, SCP_OPTIONS, files_str, node, DESTDIR))
 			else:
-				unix_out('%s %s %s:%s' % (synctool_config.SCP_CMD, args, node, DESTDIR))
+				unix_out('%s %s %s:%s' % (synctool_config.SCP_CMD, files_str, node, DESTDIR))
 
 		else:
-			verbose('copying %s to %s' % (args, node))
+			verbose('copying %s to %s' % (files_str, node))
 
 			if SCP_OPTIONS:
-				unix_out('%s %s %s %s:' % (synctool_config.SCP_CMD, SCP_OPTIONS, args, node))
+				unix_out('%s %s %s %s:' % (synctool_config.SCP_CMD, SCP_OPTIONS, files_str, node))
 			else:
-				unix_out('%s %s %s:' % (synctool_config.SCP_CMD, args, node))
+				unix_out('%s %s %s:' % (synctool_config.SCP_CMD, files_str, node))
 
 		if synctool_lib.DRY_RUN:
 			continue
@@ -55,13 +67,6 @@ def run_remote_copy(nodes, args):
 
 		try:
 			if not os.fork():
-				cmd_args = string.split(synctool_config.SCP_CMD)
-
-				if SCP_OPTIONS:
-					cmd_args.extend(string.split(SCP_OPTIONS))
-
-				cmd_args.extend(string.split(args))
-
 				if DESTDIR:
 					cmd_args.append('%s:%s' % (node, DESTDIR))
 				else:
@@ -213,11 +218,11 @@ def get_options():
 		print '%s: missing file to copy' % os.path.basename(sys.argv[0])
 		sys.exit(1)
 
-	return string.join(args)
+	return args
 
 
 if __name__ == '__main__':
-	cmd = get_options()
+	files = get_options()
 	synctool_config.read_config()
 	synctool_config.add_myhostname()
 
@@ -225,7 +230,7 @@ if __name__ == '__main__':
 	if nodes == None:
 		sys.exit(1)
 
-	run_remote_copy(nodes, cmd)
+	run_remote_copy(nodes, files)
 
 
 # EOB
