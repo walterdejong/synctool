@@ -13,7 +13,7 @@ import os
 import sys
 import string
 import getopt
-
+import shlex
 
 # these are set by command-line options
 NODELIST = None
@@ -115,7 +115,7 @@ def run_remote_cmd(nodes, remote_cmd_args):
 		sys.exit(-1)
 
 	cmd = synctool_config.SSH_CMD
-	cmd_args = string.split(cmd)
+	cmd_args = shlex.split(cmd)
 
 # cmd_str is used for printing info only
 	cmd_str = string.join(remote_cmd_args)
@@ -128,7 +128,7 @@ def run_remote_cmd(nodes, remote_cmd_args):
 			unix_out(cmd_str)
 		else:
 			the_command = os.path.basename(cmd_args[0])
-			verbose('running %s to %s %s' % (the_command, node, cmd_str))
+			verbose('running %s to %s %s' % (the_command, NAMEMAP[node], cmd_str))
 			unix_out('%s %s %s' % (cmd, node, cmd_str))
 
 		if synctool_lib.DRY_RUN:
@@ -186,7 +186,7 @@ def _run_command(cmd_arr, node, join_char, cmd_args):
 		cmd_args[0] = '%s%s%s' % (node, join_char, cmd_args)
 	else:
 		cmd_arr.append(node)
-	cmd_arr.extend(remote_cmd_args)
+	cmd_arr.extend(cmd_args)
 
 # execute remote command and show output with the nodename
 	f = synctool_lib.popen(cmd_arr)
@@ -240,11 +240,17 @@ def run_parallel_cmds(nodes, cmds):
 					unix_out('%s %s' % (string.join(cmd_arr), cmd_str))
 				else:
 					if join_char:
+						cmd_str = '%s%s%s' % (NAMEMAP[node], join_char, string.join(cmd_args))
+					else:
+						cmd_str = '%s %s' % (NAMEMAP[node], string.join(cmd_args))
+
+					verbose('running %s %s' % (the_command, cmd_str))
+
+					if join_char:
 						cmd_str = '%s%s%s' % (node, join_char, string.join(cmd_args))
 					else:
 						cmd_str = '%s %s' % (node, string.join(cmd_args))
 
-					verbose('running %s %s' % (the_command, cmd_str))
 					unix_out('%s %s' % (string.join(cmd_arr), cmd_str))
 
 # the rsync must run, even for dry runs

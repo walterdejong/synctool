@@ -15,7 +15,7 @@ import os
 import sys
 import string
 import getopt
-
+import shlex
 
 DESTDIR = None
 SCP_OPTIONS = None
@@ -31,10 +31,10 @@ def run_remote_copy(nodes, files):
 	files_str = string.join(files)
 
 # prepare cmd_args[] for exec() outside the loop
-	cmd_args = string.split(synctool_config.SCP_CMD)
+	cmd_args = shlex.split(synctool_config.SCP_CMD)
 
 	if SCP_OPTIONS:
-		cmd_args.extend(string.split(SCP_OPTIONS))
+		cmd_args.extend(shlex.split(SCP_OPTIONS))
 
 	cmd_args.extend(files)
 

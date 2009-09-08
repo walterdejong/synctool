@@ -15,7 +15,7 @@ import os
 import sys
 import string
 import getopt
-
+import shlex
 
 OPT_SKIP_RSYNC = 0
 OPT_AGGREGATE = 0
@@ -41,10 +41,10 @@ def run_remote_synctool(nodes):
 
 # append rsync command
 	if not OPT_SKIP_RSYNC:
-		cmds.append([ string.split(synctool_config.RSYNC_CMD), [ '%s/' % synctool_config.MASTERDIR ], ':' ])
+		cmds.append([ shlex.split(synctool_config.RSYNC_CMD), [ '%s/' % synctool_config.MASTERDIR ], ':' ])
 
 # append synctool command
-	cmds.append([ string.split(synctool_config.SSH_CMD), string.split(synctool_config.SYNCTOOL_CMD) + PASS_ARGS, None ])
+	cmds.append([ shlex.split(synctool_config.SSH_CMD), shlex.split(synctool_config.SYNCTOOL_CMD) + PASS_ARGS, None ])
 
 	synctool_ssh.run_parallel_cmds(nodes, cmds)
 
