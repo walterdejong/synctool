@@ -105,32 +105,32 @@ def make_nodeset():
 	return nodeset
 
 
-def run_remote_cmd(nodes, remote_cmd):
+def run_remote_cmd(nodes, remote_cmd_args):
 	if not synctool_config.SSH_CMD:
 		stderr('%s: error: ssh_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
 		sys.exit(-1)
 
-	run_parallel(nodes, synctool_config.SSH_CMD, remote_cmd)
+	cmd = synctool_config.SSH_CMD
+	cmd_args = string.split(cmd) + remote_cmd_args
 
+# cmd_str is used for printing info only
+	cmd_str = string.join(remote_cmd_args)
 
-def run_parallel(nodes, cmd, cmd_args, join_char=None):
 	parallel = 0
 
 	for node in nodes:
 		if node == synctool_config.NODENAME:
-			verbose('running %s' % cmd_args)
-			unix_out(cmd_args)
+			verbose('running %s' % cmd_str)
+			unix_out(cmd_str)
 		else:
-			the_command = string.split(cmd)
-			the_command = the_command[0]
-			the_command = os.path.basename(the_command)
+			the_command = os.path.basename(cmd_args[0])
 
 			if join_char != None:
-				verbose('running %s to %s%s%s' % (the_command, node, join_char, cmd_args))
-				unix_out('%s %s%s%s' % (cmd, node, join_char, cmd_args))
+				verbose('running %s to %s%s%s' % (the_command, node, join_char, cmd_str))
+				unix_out('%s %s%s%s' % (cmd, node, join_char, cmd_str))
 			else:
-				verbose('running %s to %s %s' % (the_command, node, cmd_args))
-				unix_out('%s %s %s' % (cmd, node, cmd_args))
+				verbose('running %s to %s %s' % (the_command, node, cmd_str))
+				unix_out('%s %s %s' % (cmd, node, cmd_str))
 
 		if synctool_lib.DRY_RUN:
 			continue
@@ -152,16 +152,13 @@ def run_parallel(nodes, cmd, cmd_args, join_char=None):
 #	is this node the localhost? then run locally
 #
 			if node == synctool_config.NODENAME:
-				run_local_cmd(cmd_args)
+				run_local_cmd(remote_cmd_args)
 				sys.exit(0)
 
 #
 #	execute remote command and show output with the nodename
 #
-			if join_char != None:
-				f = os.popen('%s %s%s%s 2>&1' % (cmd, node, join_char, cmd_args), 'r')
-			else:
-				f = os.popen('%s %s %s 2>&1' % (cmd, node, cmd_args), 'r')
+			f = synctool_lib.popen(cmd_args)
 
 			while 1:
 				line = f.readline()
@@ -415,11 +412,11 @@ def get_options():
 	if args != None:
 		MASTER_OPTS.extend(args)
 
-	return string.join(args)
+	return args
 
 
 if __name__ == '__main__':
-	cmd = get_options()
+	cmd_args = get_options()
 
 	if OPT_AGGREGATE:
 		synctool_aggr.run(MASTER_OPTS)
@@ -432,7 +429,7 @@ if __name__ == '__main__':
 	if nodes == None:
 		sys.exit(1)
 
-	run_remote_cmd(nodes, cmd)
+	run_remote_cmd(nodes, cmd_args)
 
 
 # EOB
