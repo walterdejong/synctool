@@ -751,17 +751,9 @@ def overlay_callback(src_dir, dest_dir, filename, ext):
 def overlay_dir_callback(src_dir, dest_dir):
 	'''this def gets called if there were any updates in this dir'''
 
-	print 'TD overlay_dir_callback(): change detected in %s / %s' % (src_dir, dest_dir)
-
 # dir has changed, run on_update command
 	if synctool_config.ON_UPDATE.has_key(dest_dir):
 		run_command(synctool_config.ON_UPDATE[dest_dir])
-
-# dir has changed, run appropriate .post script
-	print 'TD current POST_SCRIPTS ==', synctool_core.POST_SCRIPTS
-	filename = os.path.basename(dest_dir)
-	if synctool_core.POST_SCRIPTS.has_key(filename):
-		run_command(os.path.join(src_dir, synctool_core.POST_SCRIPTS[filename][0]))
 
 
 def overlay_files():
@@ -803,7 +795,9 @@ def delete_callback(src_dir, dest_dir, filename, ext):
 def delete_dir_callback(src_dir, dest_dir):
 	'''this def gets called when a file in the dir was deleted'''
 
-	print 'TD delete_dir_callback(): change detected in %s / %s' % (src_dir, dest_dir)
+# dir has changed, run on_update command
+	if synctool_config.ON_UPDATE.has_key(dest_dir):
+		run_command(synctool_config.ON_UPDATE[dest_dir])
 
 
 def delete_files():
