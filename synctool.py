@@ -753,6 +753,16 @@ def overlay_dir_callback(src_dir, dest_dir):
 
 	print 'TD overlay_dir_callback(): change detected in %s / %s' % (src_dir, dest_dir)
 
+# dir has changed, run on_update command
+	if synctool_config.ON_UPDATE.has_key(dest_dir):
+		run_command(synctool_config.ON_UPDATE[dest_dir])
+
+# dir has changed, run appropriate .post script
+	print 'TD current POST_SCRIPTS ==', synctool_core.POST_SCRIPTS
+	filename = os.path.basename(dest_dir)
+	if synctool_core.POST_SCRIPTS.has_key(filename):
+		run_command(os.path.join(src_dir, synctool_core.POST_SCRIPTS[filename][0]))
+
 
 def overlay_files():
 	'''run the overlay function'''
