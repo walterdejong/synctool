@@ -725,6 +725,23 @@ def run_command(cmd):
 		verbose('  os.system("%s")             # dry run, action not performed' % cmd)
 
 
+def run_command_in_dir(dest_dir, cmd):
+	'''change directory to dest_dir, and run the shell command'''
+
+	cwd = os.getcwd()
+	try:
+		os.chdir(dest_dir)
+	except OSError, reason:
+		stderr('error changing directory to %s: %s' % (dest_dir, reason))
+	else:
+		run_command(cmd)
+
+		try:
+			os.chdir(cwd)
+		except OSError, reason:
+			stderr('error changing directory to %s: %s' % (cwd, reason))
+
+
 def overlay_callback(src_dir, dest_dir, filename, ext):
 	'''compare files and run post-script if needed'''
 
@@ -736,11 +753,11 @@ def overlay_callback(src_dir, dest_dir, filename, ext):
 	if compare_files(src, dest):
 # file has changed, run on_update command
 		if synctool_config.ON_UPDATE.has_key(dest):
-			run_command(synctool_config.ON_UPDATE[dest])
+			run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest])
 
 # file has changed, run appropriate .post script
 		if synctool_core.POST_SCRIPTS.has_key(filename):
-			run_command(os.path.join(src_dir, synctool_core.POST_SCRIPTS[filename][0]))
+			run_command_in_dir(dest_dir, os.path.join(src_dir, synctool_core.POST_SCRIPTS[filename][0]))
 
 # file in dir has changed, flag it
 		synctool_core.DIR_CHANGED = True
@@ -753,7 +770,7 @@ def overlay_dir_callback(src_dir, dest_dir):
 
 # dir has changed, run on_update command
 	if synctool_config.ON_UPDATE.has_key(dest_dir):
-		run_command(synctool_config.ON_UPDATE[dest_dir])
+		run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest_dir])
 
 
 def overlay_files():
@@ -797,7 +814,7 @@ def delete_dir_callback(src_dir, dest_dir):
 
 # dir has changed, run on_update command
 	if synctool_config.ON_UPDATE.has_key(dest_dir):
-		run_command(synctool_config.ON_UPDATE[dest_dir])
+		run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest_dir])
 
 
 def delete_files():
@@ -859,20 +876,21 @@ def single_files(filename):
 def on_update_single(src, dest):
 	'''a single file has been updated. Run on_update command or appropriate .post script'''
 
+	dest_dir = os.path.dirname(dest)
+
 # file has changed, run on_update command
 	if synctool_config.ON_UPDATE.has_key(dest):
-		run_command(synctool_config.ON_UPDATE[dest])
+		run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest])
 
 # file has changed, run appropriate .post script
 
 	src_dir = os.path.dirname(src)
-	dest_dir = os.path.dirname(dest)
 	filename = os.path.basename(dest)
 
 	synctool_core.treewalk(src_dir, dest_dir, None, None, False)		# this constructs new synctool_core.POST_SCRIPTS dictionary
 
 	if synctool_core.POST_SCRIPTS.has_key(filename):
-		run_command(os.path.join(src_dir, synctool_core.POST_SCRIPTS[filename][0]))
+		run_command_in_dir(dest_dir, os.path.join(src_dir, synctool_core.POST_SCRIPTS[filename][0]))
 
 
 def single_task(filename):
