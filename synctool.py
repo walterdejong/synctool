@@ -742,7 +742,16 @@ def overlay_callback(src_dir, dest_dir, filename, ext):
 		if synctool_core.POST_SCRIPTS.has_key(filename):
 			run_command(os.path.join(src_dir, synctool_core.POST_SCRIPTS[filename][0]))
 
+# file in dir has changed, flag it
+		synctool_core.DIR_CHANGED = True
+
 	return True
+
+
+def overlay_dir_callback(src_dir, dest_dir):
+	'''this def gets called if there were any updates in this dir'''
+
+	print 'TD overlay_dir_callback(): change detected in %s / %s' % (src_dir, dest_dir)
 
 
 def overlay_files():
@@ -753,7 +762,7 @@ def overlay_files():
 		stderr('error: $masterdir/overlay/ not found')
 		return
 
-	synctool_core.treewalk(base_path, '/', overlay_callback)
+	synctool_core.treewalk(base_path, '/', overlay_callback, overlay_dir_callback)
 
 
 def delete_callback(src_dir, dest_dir, filename, ext):
@@ -775,7 +784,16 @@ def delete_callback(src_dir, dest_dir, filename, ext):
 		stdout('%sdeleting $masterdir/%s : %s' % (not_str, src[synctool_config.MASTER_LEN:], dest))
 		hard_delete_file(dest)
 
+# file in dir has changed, flag it
+		synctool_core.DIR_CHANGED = True
+
 	return True
+
+
+def delete_dir_callback(src_dir, dest_dir):
+	'''this def gets called when a file in the dir was deleted'''
+
+	print 'TD delete_dir_callback(): change detected in %s / %s' % (src_dir, dest_dir)
 
 
 def delete_files():
@@ -784,7 +802,7 @@ def delete_files():
 		stderr('error: $masterdir/delete/ not found')
 		return
 
-	synctool_core.treewalk(base_path, '/', delete_callback)
+	synctool_core.treewalk(base_path, '/', delete_callback, delete_dir_callback)
 
 
 def tasks_callback(src_dir, dest_dir, filename, ext):
@@ -847,7 +865,7 @@ def on_update_single(src, dest):
 	dest_dir = os.path.dirname(dest)
 	filename = os.path.basename(dest)
 
-	synctool_core.treewalk(src_dir, dest_dir, None, False)		# this constructs new synctool_core.POST_SCRIPTS dictionary
+	synctool_core.treewalk(src_dir, dest_dir, None, None, False)		# this constructs new synctool_core.POST_SCRIPTS dictionary
 
 	if synctool_core.POST_SCRIPTS.has_key(filename):
 		run_command(os.path.join(src_dir, synctool_core.POST_SCRIPTS[filename][0]))
