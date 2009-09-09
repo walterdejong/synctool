@@ -706,7 +706,6 @@ def run_command(cmd):
 
 	unix_out('# run command %s' % cmd1)
 	unix_out(cmd)
-	unix_out('')
 
 	if not synctool_lib.DRY_RUN:
 		verbose('  os.system("%s")' % cmd1)
@@ -728,6 +727,9 @@ def run_command(cmd):
 def run_command_in_dir(dest_dir, cmd):
 	'''change directory to dest_dir, and run the shell command'''
 
+	verbose('  os.chdir(%s)' % dest_dir)
+	unix_out('cd %s' % dest_dir)
+
 	cwd = os.getcwd()
 	try:
 		os.chdir(dest_dir)
@@ -735,6 +737,10 @@ def run_command_in_dir(dest_dir, cmd):
 		stderr('error changing directory to %s: %s' % (dest_dir, reason))
 	else:
 		run_command(cmd)
+
+		verbose('  os.chdir(%s)' % cwd)
+		unix_out('cd %s' % cwd)
+		unix_out('')
 
 		try:
 			os.chdir(cwd)
@@ -831,6 +837,7 @@ def tasks_callback(src_dir, dest_dir, filename, ext):
 
 	src = os.path.join(src_dir, '%s._%s' % (filename, ext))
 	run_command(src)
+	unix_out('')
 	return True
 
 
@@ -848,6 +855,7 @@ def always_run():
 
 	for cmd in synctool_config.ALWAYS_RUN:
 		run_command(cmd)
+		unix_out('')
 
 
 def single_files(filename):
@@ -910,6 +918,7 @@ def single_task(filename):
 		return
 
 	run_command(src)
+	unix_out('')
 
 
 def diff_files(filename):
@@ -1118,6 +1127,7 @@ if __name__ == '__main__':
 			cmd = single_task(single_file)
 			if cmd:
 				run_command(cmd)
+				unix_out('')
 		else:
 			(changed, src) = single_files(single_file)
 			if changed:
