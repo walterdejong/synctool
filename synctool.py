@@ -778,6 +778,9 @@ def overlay_dir_callback(src_dir, dest_dir):
 	if synctool_config.ON_UPDATE.has_key(dest_dir):
 		run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest_dir])
 
+	if synctool_core.POST_SCRIPTS.has_key(dest_dir):
+		run_command_in_dir(dest_dir, synctool_core.POST_SCRIPTS[dest_dir][0])
+
 
 def overlay_files():
 	'''run the overlay function'''

@@ -171,13 +171,17 @@ def treewalk(src_dir, dest_dir, callback, dir_callback=None, visit_subdirs=True)
 	and call the callback function for relevant files
 	* if callback is None, no callback function is called
 	* dir_callback is a callback function for directories that have updates in them
-	* if visit_subdirs is False, no treewalk is performed; only the src_dir is scanned'''
+	* if visit_subdirs is False, no treewalk is performed; only the src_dir is scanned
+	'''
 
 	global CURR_DIR, POST_SCRIPTS, DIR_CHANGED
 
 	CURR_DIR = src_dir				# stupid global for filter() functions
 	POST_SCRIPTS = {}
 	DIR_CHANGED = False
+
+	if os.path.isfile('%s.post' % src_dir):			# .post script for a directory
+		add_post_script(dest_dir, src_dir)
 
 	try:
 		files = os.listdir(src_dir)
