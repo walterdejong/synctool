@@ -3,7 +3,7 @@
 #	synctool Makefile	WJ109
 #
 
-PREFIX=/opt/synctool-4.0
+PREFIX=/opt/synctool
 SBINDIR=$(PREFIX)/sbin
 
 INSTALL=/usr/bin/install
