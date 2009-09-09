@@ -180,9 +180,6 @@ def treewalk(src_dir, dest_dir, callback, dir_callback=None, visit_subdirs=True)
 	POST_SCRIPTS = {}
 	DIR_CHANGED = False
 
-	if os.path.isfile('%s.post' % src_dir):			# .post script for a directory
-		add_post_script(dest_dir, src_dir)
-
 	try:
 		files = os.listdir(src_dir)
 	except OSError, err:
