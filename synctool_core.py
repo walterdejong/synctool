@@ -162,6 +162,8 @@ def filter_overrides(files):
 			if a < b:
 				verbose('$masterdir/%s/%s._%s overrides %s._%s' % (CURR_DIR[synctool_config.MASTER_LEN:], stripped_name, ext, stripped_name, stripped[stripped_name]))
 				stripped[stripped_name] = ext
+			else:
+				verbose('$masterdir/%s/%s._%s overrides %s._%s' % (CURR_DIR[synctool_config.MASTER_LEN:], stripped_name, stripped[stripped_name], stripped_name, ext))
 
 	return stripped
 
