@@ -240,28 +240,33 @@ def treewalk(src_dir, dest_dir, callback, dir_callback=None, visit_subdirs=True)
 
 		n = n + 1
 
+	if callback != None:
 # handle all files with group extensions that apply
-	files = filter(file_has_group_ext, files)
+		files = filter(file_has_group_ext, files)
 
-	if len(files) > 0 and callback != None:
-		stripped = filter_overrides(files)
+# add directories back in; callback must be called on them, too
+		files.extend(all_dirs)
+		files.extend(group_ext_dirs)
 
-		for filename in stripped.keys():
-			if filename in synctool_config.IGNORE_FILES:
-				continue
+		if len(files) > 0:
+			stripped = filter_overrides(files)
 
-			if not callback(src_dir, dest_dir, filename, stripped[filename]):
+			for filename in stripped.keys():
+				if filename in synctool_config.IGNORE_FILES:
+					continue
+
+				if not callback(src_dir, dest_dir, filename, stripped[filename]):
 # the callback has signalled that we should leave now, but we should also run the dir_callback if needed
-				if DIR_CHANGED and dir_callback != None:
-					dir_callback(src_dir, dest_dir)
-					DIR_CHANGED = False
+					if DIR_CHANGED and dir_callback != None:
+						dir_callback(src_dir, dest_dir)
+						DIR_CHANGED = False
 
-				return
+					return
 
 # the callback may set a flag that this directory triggered an update
-	if DIR_CHANGED and dir_callback != None:
-		dir_callback(src_dir, dest_dir)
-		DIR_CHANGED = False
+		if DIR_CHANGED and dir_callback != None:
+			dir_callback(src_dir, dest_dir)
+			DIR_CHANGED = False
 
 # now handle directories
 
