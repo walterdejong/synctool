@@ -182,7 +182,7 @@ def get_options():
 			continue
 
 		if opt == '--unix':
-#			synctool_lib.UNIX_CMD = True
+			synctool_lib.UNIX_CMD = True
 			PASS_ARGS.append(opt)
 			continue
 

@@ -198,7 +198,8 @@ def _run_command(cmd_arr, node, join_char, cmd_args):
 
 		line = string.strip(line)
 
-		stdout('%s: %s' % (nodename, line))
+# pass output on; simply use 'print' rather than 'stdout()'
+		print '%s: %s' % (nodename, line)
 
 	f.close()
 
@@ -299,7 +300,8 @@ def run_local_cmd(cmd_args):
 
 		line = string.strip(line)
 
-		stdout('%s: %s' % (nodename, line))
+# pass output on; simply use 'print' rather than 'stdout()'
+		print '%s: %s' % (nodename, line)
 
 	f.close()
 
