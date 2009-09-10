@@ -166,7 +166,13 @@ def filter_overrides(files):
 # choose most important group
 # the most important group is the one that is listed earlier in the GROUPS array, so it has a smaller index
 			a = synctool_config.GROUPS.index(ext)
-			b = synctool_config.GROUPS.index(stripped[stripped_name])
+
+			ext2 = stripped[stripped_name]
+			if not ext2:
+				b = a + 1
+			else:
+				b = synctool_config.GROUPS.index(ext2)
+
 			if a < b:
 				verbose('$masterdir/%s/%s._%s overrides %s._%s' % (CURR_DIR[synctool_config.MASTER_LEN:], stripped_name, ext, stripped_name, stripped[stripped_name]))
 				stripped[stripped_name] = ext
