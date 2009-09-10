@@ -809,9 +809,8 @@ def delete_callback(src_dir, dest_dir, filename, ext):
 
 	dest = os.path.join(dest_dir, filename)
 
-# the callback is only executed for files, never for directories; so this is commented out
-#	if path_isdir(dest):			# do not delete directories
-#		return True
+	if path_isdir(dest):			# do not delete directories
+		return True
 
 	if path_exists(dest):
 		if synctool_lib.DRY_RUN:
