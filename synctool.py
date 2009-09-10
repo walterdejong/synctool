@@ -794,8 +794,9 @@ def overlay_dir_updated(src_dir, dest_dir):
 
 # dir has changed, run appropriate .post script
 	basename = os.path.basename(dest_dir)
+	dirname = os.path.dirname(src_dir)
 	if synctool_core.POST_SCRIPTS.has_key(basename):
-		run_command_in_dir(dest_dir, os.path.join(src_dir, synctool_core.POST_SCRIPTS[basename][0]))
+		run_command_in_dir(os.path.dirname(dest_dir), os.path.join(dirname, synctool_core.POST_SCRIPTS[basename][0]))
 
 
 def overlay_files():
@@ -840,18 +841,8 @@ def delete_callback(src_dir, dest_dir, filename, ext):
 def delete_dir_updated(src_dir, dest_dir):
 	'''this def gets called when a file in the dir was deleted'''
 
-# dir has changed, run on_update command
-	if synctool_config.ON_UPDATE.has_key(dest_dir):
-		run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest_dir])
-
-# dir has changed, run .post script if it exists
-#
-# NB. this test is too simple; it does not work well for "overrides"
-#     synctool_core.POST_SCRIPTS has no notion of this .post script because it resides in a higher directory, so we can't use that here
-#
-	dir_post_script = '%s.post' % src_dir
-	if os.path.isfile(dir_post_script):
-		run_command_in_dir(dest_dir, dir_post_script)
+# do the same as for overlay; run .post scripts
+	overlay_dir_updated(src_dir, dest_dir)
 
 
 def delete_files():

@@ -280,9 +280,11 @@ def treewalk(src_dir, dest_dir, callback, dir_updated=None, visit_subdirs=True):
 	if not visit_subdirs:
 		return
 
-# recursively visit all directories
+# make a local copy of the POST_SCRIPTS dict
+# it's quite messy to use a global var in a recursive function, but it's also being used by a filter() function, so hey ...
 	copy_post_scripts = POST_SCRIPTS.copy()
 
+# recursively visit all directories
 	for dirname in all_dirs:
 		if dirname in synctool_config.IGNORE_FILES:
 			continue
@@ -294,8 +296,10 @@ def treewalk(src_dir, dest_dir, callback, dir_updated=None, visit_subdirs=True):
 		new_dest_dir = os.path.join(dest_dir, dirname)
 		treewalk(new_src_dir,  new_dest_dir, callback, dir_updated)
 
+# after recursing the treewalk, reset pointer POST_SCRIPTS to the current level
+		POST_SCRIPTS = copy_post_scripts
+
 # the callback may set a flag that this directory triggered an update
-		POST_SCRIPTS = copy_post_scripts.copy()
 		if DIR_CHANGED and dir_updated != None:
 			dir_updated(new_src_dir, new_dest_dir)
 			DIR_CHANGED = False
@@ -315,8 +319,10 @@ def treewalk(src_dir, dest_dir, callback, dir_updated=None, visit_subdirs=True):
 			new_dest_dir = os.path.join(dest_dir, dirname)
 			treewalk(new_src_dir, new_dest_dir, callback, dir_updated)
 
+# after recursing the treewalk, reset pointer POST_SCRIPTS to the current level
+			POST_SCRIPTS = copy_post_scripts
+
 # the callback may set a flag that this directory triggered an update
-			POST_SCRIPTS = copy_post_scripts.copy()
 			if DIR_CHANGED and dir_updated != None:
 				dir_updated(new_src_dir, new_dest_dir)
 				DIR_CHANGED = False
