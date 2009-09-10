@@ -731,6 +731,16 @@ def run_command_in_dir(dest_dir, cmd):
 	unix_out('cd %s' % dest_dir)
 
 	cwd = os.getcwd()
+
+# if dry run, the target directory may not exist yet (mkdir has not been called for real, for a dry run)
+	if synctool_lib.DRY_RUN:
+		run_command(cmd)
+
+		verbose('  os.chdir(%s)' % cwd)
+		unix_out('cd %s' % cwd)
+		unix_out('')
+		return
+
 	try:
 		os.chdir(dest_dir)
 	except OSError, reason:
