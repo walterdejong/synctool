@@ -146,7 +146,7 @@ def filter_overrides(files):
 			if not stripped.has_key(filename):
 				stripped[filename] = None
 
-			return
+			continue
 
 		stripped_name = string.join(arr[:-1], '.')
 		ext = arr[-1]
