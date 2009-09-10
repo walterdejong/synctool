@@ -170,14 +170,16 @@ def filter_overrides(files):
 			ext2 = stripped[stripped_name]
 			if not ext2:
 				b = a + 1
+				dest = stripped_name
 			else:
 				b = synctool_config.GROUPS.index(ext2)
+				dest = '%s._%s' % (stripped_name, ext2)
 
 			if a < b:
-				verbose('$masterdir/%s/%s._%s overrides %s._%s' % (CURR_DIR[synctool_config.MASTER_LEN:], stripped_name, ext, stripped_name, stripped[stripped_name]))
+				verbose('$masterdir/%s/%s._%s overrides %s' % (CURR_DIR[synctool_config.MASTER_LEN:], stripped_name, ext, dest))
 				stripped[stripped_name] = ext
 			else:
-				verbose('$masterdir/%s/%s._%s overrides %s._%s' % (CURR_DIR[synctool_config.MASTER_LEN:], stripped_name, stripped[stripped_name], stripped_name, ext))
+				verbose('$masterdir/%s/%s overrides %s._%s' % (CURR_DIR[synctool_config.MASTER_LEN:], dest, stripped_name, ext))
 
 	return stripped
 
