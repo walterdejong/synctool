@@ -276,17 +276,7 @@ def treewalk(src_dir, dest_dir, callback, dir_updated=None, visit_subdirs=True):
 					continue
 
 				if not callback(src_dir, dest_dir, filename, stripped[filename]):
-# the callback has signalled that we should leave now, but we should also run the dir_updated callback func if needed
-					if DIR_CHANGED and dir_updated != None:
-						dir_updated(src_dir, dest_dir)
-						DIR_CHANGED = False
-
 					return
-
-# the callback may set a flag that this directory triggered an update
-		if DIR_CHANGED and dir_updated != None:
-			dir_updated(src_dir, dest_dir)
-			DIR_CHANGED = False
 
 # now handle directories
 
@@ -310,9 +300,17 @@ def treewalk(src_dir, dest_dir, callback, dir_updated=None, visit_subdirs=True):
 			if dirname in synctool_config.IGNORE_FILES:
 				continue
 
+			copy_post_scripts = POST_SCRIPTS.copy()
+
 			new_src_dir = os.path.join(src_dir, '%s._%s' % (dirname, stripped[dirname]))
 			new_dest_dir = os.path.join(dest_dir, dirname)
 			treewalk(new_src_dir, new_dest_dir, callback, dir_updated)
+
+# the callback may set a flag that this directory triggered an update
+			print 'TD copy_post_scripts ==', copy_post_scripts
+			if DIR_CHANGED and dir_updated != None:
+				dir_updated(new_src_dir, new_dest_dir)
+				DIR_CHANGED = False
 
 
 def find_callback(src_dir, dest_dir, filename, ext):
