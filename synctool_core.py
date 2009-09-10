@@ -152,7 +152,11 @@ def filter_overrides(files):
 		ext = arr[-1]
 
 		if ext[0] != '_':
-			raise RuntimeError, 'bug! The extension should have started with an underscore: %s' % filename
+# no group extension on this filename; this is accepted for directories
+			if not stripped.has_key(filename):
+				stripped[filename] = None
+
+			continue
 
 		ext = ext[1:]
 
