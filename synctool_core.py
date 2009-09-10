@@ -295,12 +295,10 @@ def treewalk(src_dir, dest_dir, callback, dir_updated=None, visit_subdirs=True):
 		treewalk(new_src_dir,  new_dest_dir, callback, dir_updated)
 
 # the callback may set a flag that this directory triggered an update
-		print 'TD copy_post_scripts ==', copy_post_scripts
+		POST_SCRIPTS = copy_post_scripts.copy()
 		if DIR_CHANGED and dir_updated != None:
 			dir_updated(new_src_dir, new_dest_dir)
 			DIR_CHANGED = False
-
-	POST_SCRIPTS = copy_post_scripts.copy()
 
 # visit all directories with group extensions that apply
 	if len(group_ext_dirs) > 0:
@@ -313,14 +311,12 @@ def treewalk(src_dir, dest_dir, callback, dir_updated=None, visit_subdirs=True):
 			if not callback(src_dir, dest_dir, dirname, stripped[dirname]):
 				return
 
-			copy_post_scripts = POST_SCRIPTS.copy()
-
 			new_src_dir = os.path.join(src_dir, '%s._%s' % (dirname, stripped[dirname]))
 			new_dest_dir = os.path.join(dest_dir, dirname)
 			treewalk(new_src_dir, new_dest_dir, callback, dir_updated)
 
 # the callback may set a flag that this directory triggered an update
-			print 'TD copy_post_scripts ==', copy_post_scripts
+			POST_SCRIPTS = copy_post_scripts.copy()
 			if DIR_CHANGED and dir_updated != None:
 				dir_updated(new_src_dir, new_dest_dir)
 				DIR_CHANGED = False
