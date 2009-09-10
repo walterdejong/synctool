@@ -753,7 +753,7 @@ def overlay_callback(src_dir, dest_dir, filename, ext):
 
 	if ext:
 		src = os.path.join(src_dir, '%s._%s' % (filename, ext))
-	else
+	else:
 		src = os.path.join(src_dir, filename)
 
 	dest = os.path.join(dest_dir, filename)
@@ -804,7 +804,7 @@ def delete_callback(src_dir, dest_dir, filename, ext):
 
 	if ext:
 		src = os.path.join(src_dir, '%s._%s' % (filename, ext))
-	else
+	else:
 		src = os.path.join(src_dir, filename)
 
 	dest = os.path.join(dest_dir, filename)
@@ -855,7 +855,7 @@ def tasks_callback(src_dir, dest_dir, filename, ext):
 
 	if ext:
 		src = os.path.join(src_dir, '%s._%s' % (filename, ext))
-	else
+	else:
 		src = os.path.join(src_dir, filename)
 
 	run_command(src)
