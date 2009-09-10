@@ -926,6 +926,20 @@ def on_update_single(src, dest):
 	if synctool_core.POST_SCRIPTS.has_key(filename):
 		run_command_in_dir(dest_dir, os.path.join(src_dir, synctool_core.POST_SCRIPTS[filename][0]))
 
+# if it was a indeed a file and not a directory, check if the directory has a .post script, too
+	if os.path.isfile(src):
+		src_dir = os.path.dirname(src_dir)
+		basename = os.path.basename(dest_dir)
+		dest_dir = os.path.dirname(dest_dir)
+
+		if synctool_config.ON_UPDATE.has_key(dest_dir):
+			run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest_dir])
+
+		synctool_core.treewalk(src_dir, dest_dir, None, None, False)		# this constructs new synctool_core.POST_SCRIPTS dictionary
+
+		if synctool_core.POST_SCRIPTS.has_key(basename):
+			run_command_in_dir(dest_dir, os.path.join(src_dir, synctool_core.POST_SCRIPTS[basename][0]))
+
 
 def single_task(filename):
 	'''run a single task'''
