@@ -793,6 +793,10 @@ def overlay_dir_updated(src_dir, dest_dir):
 		run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest_dir])
 
 # dir has changed, run .post script if it exists
+#
+# NB. this test is too simple; it does not work well for "overrides"
+#     synctool_core.POST_SCRIPTS has no notion of this .post script because it resides in a higher directory, so we can't use that here
+#
 	dir_post_script = '%s.post' % src_dir
 	if os.path.isfile(dir_post_script):
 		run_command_in_dir(dest_dir, dir_post_script)
@@ -845,6 +849,10 @@ def delete_dir_updated(src_dir, dest_dir):
 		run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest_dir])
 
 # dir has changed, run .post script if it exists
+#
+# NB. this test is too simple; it does not work well for "overrides"
+#     synctool_core.POST_SCRIPTS has no notion of this .post script because it resides in a higher directory, so we can't use that here
+#
 	dir_post_script = '%s.post' % src_dir
 	if os.path.isfile(dir_post_script):
 		run_command_in_dir(dest_dir, dir_post_script)
