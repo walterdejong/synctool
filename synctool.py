@@ -963,7 +963,7 @@ def usage():
 	print '  -f, --fix             Perform updates (otherwise, do dry-run)'
 	print '  -v, --verbose         Be verbose'
 	print '  -q, --quiet           Suppress informational startup messages'
-	print '  -x, --unix            Output actions as unix shell commands'
+	print '      --unix            Output actions as unix shell commands'
 	print '  -l, --log=logfile     Log taken actions to logfile'
 	print
 	print 'synctool can help you administer your cluster of machines'
@@ -982,7 +982,7 @@ if __name__ == '__main__':
 
 	if len(sys.argv) > 1:
 		try:
-			opts, args = getopt.getopt(sys.argv[1:], "hc:l:d:1:tfvqx", ['help', 'conf=', 'log=', 'diff=', 'single=', 'tasks', 'fix', 'verbose', 'quiet', 'unix'])
+			opts, args = getopt.getopt(sys.argv[1:], "hc:l:d:1:tfvq", ['help', 'conf=', 'log=', 'diff=', 'single=', 'tasks', 'fix', 'verbose', 'quiet', 'unix'])
 		except getopt.error, (reason):
 			print '%s: %s' % (progname, reason)
 			usage()
@@ -1026,7 +1026,7 @@ if __name__ == '__main__':
 				synctool_lib.QUIET = True
 				continue
 
-			if opt in ('-x', '--unix'):
+			if opt == '--unix':
 				synctool_lib.UNIX_CMD = True
 				continue
 

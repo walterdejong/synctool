@@ -76,6 +76,7 @@ def usage():
 	print '  -1, --single=file              Update a single file/run single task'
 	print '  -t, --tasks                    Run the scripts in the tasks/ directory'
 	print '  -f, --fix                      Perform updates (otherwise, do dry-run)'
+	print '      --unix                     Output actions as unix shell commands'
 	print '      --skip-rsync               Do not sync the repository'
 	print '                                 (eg. when it is on a shared filesystem)'
 	print '  -l, --log=logfile              Log taken actions to logfile'
@@ -181,7 +182,7 @@ def get_options():
 			continue
 
 		if opt == '--unix':
-			synctool_lib.UNIX_CMD = 1
+			synctool_lib.UNIX_CMD = True
 			PASS_ARGS.append(opt)
 			continue
 
