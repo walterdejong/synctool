@@ -751,7 +751,11 @@ def run_command_in_dir(dest_dir, cmd):
 def overlay_callback(src_dir, dest_dir, filename, ext):
 	'''compare files and run post-script if needed'''
 
-	src = os.path.join(src_dir, '%s._%s' % (filename, ext))
+	if ext:
+		src = os.path.join(src_dir, '%s._%s' % (filename, ext))
+	else
+		src = os.path.join(src_dir, filename)
+
 	dest = os.path.join(dest_dir, filename)
 
 	verbose('checking $masterdir/%s' % src[synctool_config.MASTER_LEN:])
@@ -798,7 +802,11 @@ def overlay_files():
 def delete_callback(src_dir, dest_dir, filename, ext):
 	'''delete files'''
 
-	src = os.path.join(src_dir, '%s._%s' % (filename, ext))
+	if ext:
+		src = os.path.join(src_dir, '%s._%s' % (filename, ext))
+	else
+		src = os.path.join(src_dir, filename)
+
 	dest = os.path.join(dest_dir, filename)
 
 # the callback is only executed for files, never for directories; so this is commented out
@@ -845,7 +853,11 @@ def delete_files():
 def tasks_callback(src_dir, dest_dir, filename, ext):
 	'''run tasks'''
 
-	src = os.path.join(src_dir, '%s._%s' % (filename, ext))
+	if ext:
+		src = os.path.join(src_dir, '%s._%s' % (filename, ext))
+	else
+		src = os.path.join(src_dir, filename)
+
 	run_command(src)
 	unix_out('')
 	return True

@@ -142,7 +142,11 @@ def filter_overrides(files):
 		arr = string.split(filename, '.')
 
 		if len(arr) < 2:
-			raise RuntimeError, 'bug! There should have been a good valid extension on this filename: %s' % filename
+# no extension on this filename; this is accepted for directories
+			if not stripped.has_key(filename):
+				stripped[filename] = None
+
+			return
 
 		stripped_name = string.join(arr[:-1], '.')
 		ext = arr[-1]
