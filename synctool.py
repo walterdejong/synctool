@@ -1096,15 +1096,10 @@ if __name__ == '__main__':
 		unix_out('# SYMLINK_MODE=0%o' % synctool_config.SYMLINK_MODE)
 		unix_out('#')
 
-		if synctool_lib.DRY_RUN:
-			unix_out('# NOTE: dry run, not doing any updates')
-		else:
+		if not synctool_lib.DRY_RUN:
 			unix_out('# NOTE: --fix specified, applying updates')
-			if synctool_lib.LOGFILE != None:
-				unix_out('#')
-				unix_out('# logging to: %s' % synctool_lib.LOGFILE)
+			unix_out('#')
 
-		unix_out('#')
 		unix_out('')
 	else:
 		if not synctool_lib.QUIET:
