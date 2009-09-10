@@ -261,19 +261,19 @@ def treewalk(src_dir, dest_dir, callback, dir_updated=None, visit_subdirs=True):
 
 		n = n + 1
 
-	if callback != None:
 # handle all files with group extensions that apply
-		files = filter(file_has_group_ext, files)
+# this also adds .post scripts to the dict POST_SCRIPTS
+	files = filter(file_has_group_ext, files)
 
-		if len(files) > 0:
-			stripped = filter_overrides(files)
+	if len(files) > 0 and callback != None:
+		stripped = filter_overrides(files)
 
-			for filename in stripped.keys():
-				if filename in synctool_config.IGNORE_FILES:
-					continue
+		for filename in stripped.keys():
+			if filename in synctool_config.IGNORE_FILES:
+				continue
 
-				if not callback(src_dir, dest_dir, filename, stripped[filename]):
-					return
+			if not callback(src_dir, dest_dir, filename, stripped[filename]):
+				return
 
 # now handle directories
 
