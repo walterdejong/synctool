@@ -273,6 +273,11 @@ def treewalk(src_dir, dest_dir, callback, dir_updated=None, visit_subdirs=True):
 					continue
 
 				if not callback(src_dir, dest_dir, filename, stripped[filename]):
+# the callback may set a flag that this directory triggered an update
+					if DIR_CHANGED and dir_updated != None:
+						dir_updated(src_dir, dest_dir)
+						DIR_CHANGED = False
+
 					return
 
 # now handle directories
