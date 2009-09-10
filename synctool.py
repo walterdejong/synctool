@@ -978,7 +978,14 @@ def diff_files(filename):
 		unix_out('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
 	else:
 		verbose('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
+
+		sys.stdout.flush()
+		sys.stderr.flush()
+
 		os.system('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
+
+		sys.stdout.flush()
+		sys.stderr.flush()
 
 
 def usage():
