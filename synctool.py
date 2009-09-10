@@ -775,7 +775,7 @@ def overlay_callback(src_dir, dest_dir, filename, ext):
 	return True
 
 
-def overlay_dir_callback(src_dir, dest_dir):
+def overlay_dir_updated(src_dir, dest_dir):
 	'''this def gets called if there were any updates in this dir'''
 
 # dir has changed, run on_update command
@@ -796,7 +796,7 @@ def overlay_files():
 		stderr('error: $masterdir/overlay/ not found')
 		return
 
-	synctool_core.treewalk(base_path, '/', overlay_callback, overlay_dir_callback)
+	synctool_core.treewalk(base_path, '/', overlay_callback, overlay_dir_updated)
 
 
 def delete_callback(src_dir, dest_dir, filename, ext):
@@ -828,7 +828,7 @@ def delete_callback(src_dir, dest_dir, filename, ext):
 	return True
 
 
-def delete_dir_callback(src_dir, dest_dir):
+def delete_dir_updated(src_dir, dest_dir):
 	'''this def gets called when a file in the dir was deleted'''
 
 # dir has changed, run on_update command
@@ -847,7 +847,7 @@ def delete_files():
 		stderr('error: $masterdir/delete/ not found')
 		return
 
-	synctool_core.treewalk(base_path, '/', delete_callback, delete_dir_callback)
+	synctool_core.treewalk(base_path, '/', delete_callback, delete_dir_updated)
 
 
 def tasks_callback(src_dir, dest_dir, filename, ext):

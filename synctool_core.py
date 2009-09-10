@@ -184,11 +184,11 @@ def filter_overrides(files):
 	return stripped
 
 
-def treewalk(src_dir, dest_dir, callback, dir_callback=None, visit_subdirs=True):
+def treewalk(src_dir, dest_dir, callback, dir_updated=None, visit_subdirs=True):
 	'''walk the repository tree, either under overlay/, delete/, or tasks/
 	and call the callback function for relevant files
 	* if callback is None, no callback function is called
-	* dir_callback is a callback function for directories that have updates in them
+	* dir_updated is a callback function for directories that have updates in them
 	* if visit_subdirs is False, no treewalk is performed; only the src_dir is scanned
 	'''
 
@@ -272,16 +272,16 @@ def treewalk(src_dir, dest_dir, callback, dir_callback=None, visit_subdirs=True)
 					continue
 
 				if not callback(src_dir, dest_dir, filename, stripped[filename]):
-# the callback has signalled that we should leave now, but we should also run the dir_callback if needed
-					if DIR_CHANGED and dir_callback != None:
-						dir_callback(src_dir, dest_dir)
+# the callback has signalled that we should leave now, but we should also run the dir_updated callback func if needed
+					if DIR_CHANGED and dir_updated != None:
+						dir_updated(src_dir, dest_dir)
 						DIR_CHANGED = False
 
 					return
 
 # the callback may set a flag that this directory triggered an update
-		if DIR_CHANGED and dir_callback != None:
-			dir_callback(src_dir, dest_dir)
+		if DIR_CHANGED and dir_updated != None:
+			dir_updated(src_dir, dest_dir)
 			DIR_CHANGED = False
 
 # now handle directories
@@ -296,7 +296,7 @@ def treewalk(src_dir, dest_dir, callback, dir_callback=None, visit_subdirs=True)
 
 		new_src_dir = os.path.join(src_dir, dirname)
 		new_dest_dir = os.path.join(dest_dir, dirname)
-		treewalk(new_src_dir,  new_dest_dir, callback, dir_callback)
+		treewalk(new_src_dir,  new_dest_dir, callback, dir_updated)
 
 # visit all directories with group extensions that apply
 	if len(group_ext_dirs) > 0:
@@ -308,7 +308,7 @@ def treewalk(src_dir, dest_dir, callback, dir_callback=None, visit_subdirs=True)
 
 			new_src_dir = os.path.join(src_dir, '%s._%s' % (dirname, stripped[dirname]))
 			new_dest_dir = os.path.join(dest_dir, dirname)
-			treewalk(new_src_dir, new_dest_dir, callback, dir_callback)
+			treewalk(new_src_dir, new_dest_dir, callback, dir_updated)
 
 
 def find_callback(src_dir, dest_dir, filename, ext):
