@@ -2,7 +2,8 @@
 #
 #	synctool_core.py	WJ109
 #
-#	The core holds the 'overlay' function
+#	The core holds the 'treewalk' function and determines what file is for what group of a node
+#	It also determines what .post script is available to run for the file
 #
 
 import synctool_config
@@ -264,10 +265,6 @@ def treewalk(src_dir, dest_dir, callback, dir_updated=None, visit_subdirs=True):
 # handle all files with group extensions that apply
 		files = filter(file_has_group_ext, files)
 
-# add directories back in; callback must be called on them, too
-		files.extend(all_dirs)
-		files.extend(group_ext_dirs)
-
 		if len(files) > 0:
 			stripped = filter_overrides(files)
 
@@ -284,13 +281,26 @@ def treewalk(src_dir, dest_dir, callback, dir_updated=None, visit_subdirs=True):
 		return
 
 # recursively visit all directories
+	copy_post_scripts = POST_SCRIPTS.copy()
+
 	for dirname in all_dirs:
 		if dirname in synctool_config.IGNORE_FILES:
 			continue
 
+		if not callback(src_dir, dest_dir, dirname, None):
+			return
+
 		new_src_dir = os.path.join(src_dir, dirname)
 		new_dest_dir = os.path.join(dest_dir, dirname)
 		treewalk(new_src_dir,  new_dest_dir, callback, dir_updated)
+
+# the callback may set a flag that this directory triggered an update
+		print 'TD copy_post_scripts ==', copy_post_scripts
+		if DIR_CHANGED and dir_updated != None:
+			dir_updated(new_src_dir, new_dest_dir)
+			DIR_CHANGED = False
+
+	POST_SCRIPTS = copy_post_scripts.copy()
 
 # visit all directories with group extensions that apply
 	if len(group_ext_dirs) > 0:
@@ -299,6 +309,9 @@ def treewalk(src_dir, dest_dir, callback, dir_updated=None, visit_subdirs=True):
 		for dirname in stripped.keys():
 			if dirname in synctool_config.IGNORE_FILES:
 				continue
+
+			if not callback(src_dir, dest_dir, dirname, stripped[dirname]):
+				return
 
 			copy_post_scripts = POST_SCRIPTS.copy()
 
