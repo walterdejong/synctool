@@ -770,16 +770,18 @@ def usage():
 	print 'usage: %s [options] [<argument>]' % os.path.basename(sys.argv[0])
 	print 'options:'
 	print '  -h, --help               Display this information'
-	print '  -c, --conf=dir/file      Use this config file (default: %s)' % DEFAULT_CONF
-	print '  -m, --masterdir          Display the masterdir setting'
+	print '  -c, --conf=dir/file      Use this config file'
+	print '                           (default: %s)' % DEFAULT_CONF
 	print '  -l, --list-nodes         List all configured nodes'
 	print '  -L, --list-groups        List all configured groups'
 	print '  -n, --node=nodelist      List all groups this node is in'
 	print '  -g, --group=grouplist    List all nodes in this group'
 	print '  -i, --interface          List selected nodes by interface'
 	print '  -f, --filter-ignored     Do not list ignored nodes and groups'
+	print
 	print '  -C, --command=command    Display setting for command'
 	print '  -p, --numproc            Display numproc setting'
+	print '  -m, --masterdir          Display the masterdir setting'
 	print '      --prefix             Display installation prefix'
 	print '  -v, --version            Display synctool version'
 	print
