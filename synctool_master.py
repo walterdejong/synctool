@@ -2,6 +2,8 @@
 #
 #	synctool_master.py	WJ109
 #
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
+#
 
 import synctool
 import synctool_ssh
@@ -56,7 +58,7 @@ def run_local_synctool():
 		stderr('%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
 		sys.exit(-1)
 
-	synctool.run_command('%s %s' % (synctool_config.SYNCTOOL_CMD, string.join(PASS_ARGS)))
+	synctool_ssh.run_local_cmd(shlex.split(synctool_config.SYNCTOOL_CMD) + PASS_ARGS)
 
 
 def usage():
@@ -79,6 +81,7 @@ def usage():
 	print '      --unix                     Output actions as unix shell commands'
 	print '      --skip-rsync               Do not sync the repository'
 	print '                                 (eg. when it is on a shared filesystem)'
+	print '  -T, --tier                     Sync with other synctool-masters'
 	print '  -l, --log=logfile              Log taken actions to logfile'
 	print '  -a, --aggregate                Condense output; list nodes per change'
 	print
@@ -96,8 +99,8 @@ def get_options():
 #		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hc:vn:g:x:X:d:1:tfql:a", ['help', 'conf=', 'verbose', 'node=', 'group=',
-			'exclude=', 'exclude-group=', 'diff=', 'single=', 'tasks', 'fix', 'quiet', 'log=', 'aggregate', 'skip-rsync', 'unix'])
+		opts, args = getopt.getopt(sys.argv[1:], "hc:vn:g:x:X:d:1:tfql:aT", ['help', 'conf=', 'verbose', 'node=', 'group=',
+			'exclude=', 'exclude-group=', 'diff=', 'single=', 'tasks', 'fix', 'quiet', 'log=', 'aggregate', 'tier', 'skip-rsync', 'unix'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -190,6 +193,12 @@ def get_options():
 			synctool_lib.LOGFILE = arg
 			PASS_ARGS.append(opt)
 			PASS_ARGS.append(arg)
+			continue
+
+		if opt in ('-T', '--tier'):
+			synctool_ssh.MULTI_TIER = synctool_ssh.MULTI_TIER + 1
+			if synctool_ssh.MULTI_TIER > 1:
+				PASS_ARGS.append(opt)
 			continue
 
 		PASS_ARGS.append(opt)

@@ -2,6 +2,8 @@
 #
 #	synctool-ssh	WJ109
 #
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
+#
 
 import synctool_config
 import synctool_aggr
@@ -26,6 +28,8 @@ NAMEMAP = {}
 
 OPT_AGGREGATE = False
 MASTER_OPTS = None
+
+MULTI_TIER = 0
 
 
 def make_nodeset():
@@ -199,7 +203,11 @@ def _run_command(cmd_arr, node, join_char, cmd_args):
 		line = string.strip(line)
 
 # pass output on; simply use 'print' rather than 'stdout()'
-		print '%s: %s' % (nodename, line)
+# in a multi-tiered setup, do not prepend the nodename of this node to the output
+		if MULTI_TIER:
+			print line
+		else:
+			print '%s: %s' % (nodename, line)
 
 	f.close()
 
