@@ -9,6 +9,7 @@ import string
 import socket
 import getopt
 
+VERSION = '4.3'
 
 DEFAULT_CONF='/var/lib/synctool/synctool.conf'
 CONF_FILE=DEFAULT_CONF
@@ -27,6 +28,7 @@ ACTION_GROUPS = 4
 ACTION_MASTERDIR = 5
 ACTION_CMDS = 6
 ACTION_NUMPROC = 7
+ACTION_VERSION = 8
 
 # optional: do not list hosts/groups that are ignored
 OPT_FILTER_IGNORED = False
@@ -777,6 +779,7 @@ def usage():
 	print '  -f, --filter-ignored     Do not list ignored nodes and groups'
 	print '  -C, --command=command    Display setting for command'
 	print '  -p, --numproc            Display numproc setting'
+	print '  -v, --version            Display synctool version'
 	print
 	print 'A node/group list can be a single value, or a comma-separated list'
 	print 'A command is a list of these: diff, ssh, rsync, synctool'
@@ -795,8 +798,8 @@ def get_options():
 
 	if len(sys.argv) > 1:
 		try:
-			opts, args = getopt.getopt(sys.argv[1:], "hc:mlLn:g:ifC:p", ['help', 'conf=', 'masterdir', 'list-nodes', 'list-groups',
-				'node=', 'group=', 'interface', 'filter-ignored', 'command', 'numproc'])
+			opts, args = getopt.getopt(sys.argv[1:], "hc:mlLn:g:ifC:pv", ['help', 'conf=', 'masterdir', 'list-nodes', 'list-groups',
+				'node=', 'group=', 'interface', 'filter-ignored', 'command', 'numproc', 'version'])
 
 		except getopt.error, (reason):
 			print
@@ -866,6 +869,10 @@ def get_options():
 				set_action(ACTION_NUMPROC, '--numproc')
 				continue
 
+			if opt in ('-v', '--version'):
+				set_action(ACTION_VERSION, '--version')
+				continue
+
 			stderr("unknown command line option '%s'" % opt)
 			errors = errors + 1
 
@@ -915,6 +922,9 @@ if __name__ == '__main__':
 
 	elif ACTION == ACTION_NUMPROC:
 		print NUM_PROC
+
+	elif ACTION == ACTION_VERSION:
+		print VERSION
 
 
 # EOB
