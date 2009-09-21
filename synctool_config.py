@@ -29,6 +29,7 @@ ACTION_MASTERDIR = 5
 ACTION_CMDS = 6
 ACTION_NUMPROC = 7
 ACTION_VERSION = 8
+ACTION_PREFIX = 9
 
 # optional: do not list hosts/groups that are ignored
 OPT_FILTER_IGNORED = False
@@ -779,6 +780,7 @@ def usage():
 	print '  -f, --filter-ignored     Do not list ignored nodes and groups'
 	print '  -C, --command=command    Display setting for command'
 	print '  -p, --numproc            Display numproc setting'
+	print '      --prefix             Display installation prefix'
 	print '  -v, --version            Display synctool version'
 	print
 	print 'A node/group list can be a single value, or a comma-separated list'
@@ -799,7 +801,7 @@ def get_options():
 	if len(sys.argv) > 1:
 		try:
 			opts, args = getopt.getopt(sys.argv[1:], "hc:mlLn:g:ifC:pv", ['help', 'conf=', 'masterdir', 'list-nodes', 'list-groups',
-				'node=', 'group=', 'interface', 'filter-ignored', 'command', 'numproc', 'version'])
+				'node=', 'group=', 'interface', 'filter-ignored', 'command', 'numproc', 'version', 'prefix'])
 
 		except getopt.error, (reason):
 			print
@@ -873,6 +875,10 @@ def get_options():
 				set_action(ACTION_VERSION, '--version')
 				continue
 
+			if opt == '--prefix':
+				set_action(ACTION_PREFIX, '--prefix')
+				continue
+
 			stderr("unknown command line option '%s'" % opt)
 			errors = errors + 1
 
@@ -925,6 +931,9 @@ if __name__ == '__main__':
 
 	elif ACTION == ACTION_VERSION:
 		print VERSION
+
+	elif ACTION == ACTION_PREFIX:
+		print os.path.abspath(os.path.dirname(sys.argv[0]))
 
 
 # EOB
