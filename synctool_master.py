@@ -131,6 +131,8 @@ def get_options():
 
 		if opt in ('-c', '--conf'):
 			synctool_config.CONF_FILE = arg
+			PASS_ARGS.append(opt)
+			PASS_ARGS.append(arg)
 			continue
 
 		if opt in ('-v', '--verbose'):
@@ -203,10 +205,10 @@ def get_options():
 
 		PASS_ARGS.append(opt)
 
-		if arg:
+		if arg != None:
 			PASS_ARGS.append(arg)
 
-	if args:
+	if args != None:
 		MASTER_OPTS.extend(args)
 		PASS_ARGS.extend(args)
 
