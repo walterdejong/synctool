@@ -180,7 +180,7 @@ def _run_command(cmd_arr, node, join_char, cmd_args):
 #	is this node the localhost? then run locally
 #
 	if node == synctool_config.NODENAME:
-		run_local_cmd(cmd_args)
+		_run_local_cmd(cmd_args)
 		return
 
 	nodename = NAMEMAP[node]
@@ -288,7 +288,9 @@ def run_parallel_cmds(nodes, cmds):
 			break
 
 
-def run_local_cmd(cmd_args):
+def _run_local_cmd(cmd_args):
+	'''run command on the local host'''
+
 	cmd_str = string.join(cmd_args)
 
 	verbose('running command %s' % cmd_str)

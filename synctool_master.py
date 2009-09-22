@@ -51,16 +51,6 @@ def run_remote_synctool(nodes):
 	synctool_ssh.run_parallel_cmds(nodes, cmds)
 
 
-def run_local_synctool():
-	'''run synctool_cmd locally on this host'''
-
-	if not synctool_config.SYNCTOOL_CMD:
-		stderr('%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
-		sys.exit(-1)
-
-	synctool_ssh.run_local_cmd(shlex.split(synctool_config.SYNCTOOL_CMD) + PASS_ARGS)
-
-
 def usage():
 	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
 	print 'options:'
@@ -238,17 +228,7 @@ if __name__ == '__main__':
 	if nodes == None:
 		sys.exit(1)
 
-#
-#	see if we need to run synctool locally, on the current host
-#
-	if synctool_config.NODENAME != None:
-		iface = synctool_config.get_node_interface(synctool_config.NODENAME)
-		if iface in nodes:
-			nodes.remove(iface)
-			run_local_synctool()
-
-	if len(nodes) > 0:
-		run_remote_synctool(nodes)
+	run_remote_synctool(nodes)
 
 	synctool_lib.closelog()
 
