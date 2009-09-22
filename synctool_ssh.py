@@ -297,8 +297,6 @@ def run_local_cmd(cmd_args):
 	if synctool_lib.DRY_RUN:
 		return
 
-	nodename = NAMEMAP[synctool_config.NODENAME]
-
 	f = synctool_lib.popen(cmd_args)
 
 	while True:
@@ -309,7 +307,7 @@ def run_local_cmd(cmd_args):
 		line = string.strip(line)
 
 # pass output on; simply use 'print' rather than 'stdout()'
-		print '%s: %s' % (nodename, line)
+		print '%s: %s' % (synctool_config.NODENAME, line)
 
 	f.close()
 
