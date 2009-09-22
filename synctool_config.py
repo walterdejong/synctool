@@ -103,7 +103,7 @@ def read_config():
 		sys.exit(-1)
 
 	try:
-		f = open(filename, 'r')
+		f = open(CONF_FILE, 'r')
 	except IOError, reason:
 		stderr("failed to read config file '%s' : %s" % (CONF_FILE, reason))
 		sys.exit(-1)
