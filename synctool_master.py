@@ -65,10 +65,8 @@ def usage():
 	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
 	print 'options:'
 	print '  -h, --help                     Display this information'
-	print '  -c, --conf=dir/file            Use this config file (default: %s)' % synctool_config.DEFAULT_CONF
-	print '  -v, --verbose                  Be verbose'
-	print '  -q, --quiet                    Suppress informational startup messages'
-	print
+	print '  -c, --conf=dir/file            Use this config file'
+	print '                                 (default: %s)' % synctool_config.DEFAULT_CONF
 	print '  -n, --node=nodelist            Execute only on these nodes'
 	print '  -g, --group=grouplist          Execute only on these groups of nodes'
 	print '  -x, --exclude=nodelist         Exclude these nodes from the selected group'
@@ -83,6 +81,8 @@ def usage():
 	print '                                 (eg. when it is on a shared filesystem)'
 	print '  -T, --tier                     Sync with other synctool-masters'
 	print '  -l, --log=logfile              Log taken actions to logfile'
+	print '  -v, --verbose                  Be verbose'
+	print '  -q, --quiet                    Suppress informational startup messages'
 	print '  -a, --aggregate                Condense output; list nodes per change'
 	print
 	print 'A nodelist or grouplist is a comma-separated list'

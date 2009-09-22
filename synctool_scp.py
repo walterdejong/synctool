@@ -107,17 +107,17 @@ def usage():
 	print 'usage: %s [options] <filename> [..]' % os.path.basename(sys.argv[0])
 	print 'options:'
 	print '  -h, --help                     Display this information'
-	print '  -c, --conf=dir/file            Use this config file (default: %s)' % synctool_config.DEFAULT_CONF
-	print '  -v, --verbose                  Be verbose'
-	print
-	print '  -d, --dest=dir/file            Set destination name to copy to'
-	print '  -o, --options=options          Set additional scp options'
-	print
+	print '  -c, --conf=dir/file            Use this config file'
+	print '                                 (default: %s)' % synctool_config.DEFAULT_CONF
 	print '  -n, --node=nodelist            Execute only on these nodes'
 	print '  -g, --group=grouplist          Execute only on these groups of nodes'
 	print '  -x, --exclude=nodelist         Exclude these nodes from the selected group'
 	print '  -X, --exclude-group=grouplist  Exclude these groups from the selection'
 	print
+	print '  -d, --dest=dir/file            Set destination name to copy to'
+	print '  -o, --options=options          Set additional scp options'
+	print
+	print '  -v, --verbose                  Be verbose'
 	print '      --unix                     Output actions as unix shell commands'
 	print '      --dry-run                  Do not run the remote copy command'
 	print

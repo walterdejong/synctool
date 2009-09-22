@@ -992,7 +992,8 @@ def usage():
 	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
 	print 'options:'
 	print '  -h, --help            Display this information'
-	print '  -c, --conf=dir/file   Use this config file (default: %s)' % synctool_config.DEFAULT_CONF
+	print '  -c, --conf=dir/file   Use this config file'
+	print '                        (default: %s)' % synctool_config.DEFAULT_CONF
 #	print '  -n, --dry-run         Show what would have been updated'
 	print '  -d, --diff=file       Show diff for file'
 	print '  -1, --single=file     Update a single file/run single task'

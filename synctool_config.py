@@ -103,13 +103,6 @@ def read_config():
 		sys.exit(-1)
 
 	try:
-		cwd = os.getcwd()
-	except OSError, reason:
-		cwd = '.'
-
-	filename = os.path.join(cwd, CONF_FILE)
-
-	try:
 		f = open(filename, 'r')
 	except IOError, reason:
 		stderr("failed to read config file '%s' : %s" % (CONF_FILE, reason))
