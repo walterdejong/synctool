@@ -69,7 +69,6 @@ def usage():
 	print '      --unix                     Output actions as unix shell commands'
 	print '      --skip-rsync               Do not sync the repository'
 	print '                                 (eg. when it is on a shared filesystem)'
-	print '  -T, --tier                     Sync with other synctool-masters'
 	print '  -l, --log=logfile              Log taken actions to logfile'
 	print '  -v, --verbose                  Be verbose'
 	print '  -q, --quiet                    Suppress informational startup messages'
@@ -89,8 +88,8 @@ def get_options():
 #		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hc:vn:g:x:X:d:1:tfql:aT", ['help', 'conf=', 'verbose', 'node=', 'group=',
-			'exclude=', 'exclude-group=', 'diff=', 'single=', 'tasks', 'fix', 'quiet', 'log=', 'aggregate', 'tier', 'skip-rsync', 'unix'])
+		opts, args = getopt.getopt(sys.argv[1:], "hc:vn:g:x:X:d:1:tfql:a", ['help', 'conf=', 'verbose', 'node=', 'group=',
+			'exclude=', 'exclude-group=', 'diff=', 'single=', 'tasks', 'fix', 'quiet', 'log=', 'aggregate', 'skip-rsync', 'unix'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -185,12 +184,6 @@ def get_options():
 			synctool_lib.LOGFILE = arg
 			PASS_ARGS.append(opt)
 			PASS_ARGS.append(arg)
-			continue
-
-		if opt in ('-T', '--tier'):
-			synctool_ssh.MULTI_TIER = synctool_ssh.MULTI_TIER + 1
-			if synctool_ssh.MULTI_TIER > 1:
-				PASS_ARGS.append(opt)
 			continue
 
 		PASS_ARGS.append(opt)

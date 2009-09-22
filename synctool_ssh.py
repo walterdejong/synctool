@@ -27,9 +27,8 @@ EXCLUDEGROUPS = None
 NAMEMAP = {}
 
 OPT_AGGREGATE = False
+OPT_NODENAME = True
 MASTER_OPTS = None
-
-MULTI_TIER = 0
 
 
 def make_nodeset():
@@ -203,11 +202,11 @@ def _run_command(cmd_arr, node, join_char, cmd_args):
 		line = string.strip(line)
 
 # pass output on; simply use 'print' rather than 'stdout()'
-# in a multi-tiered setup, do not prepend the nodename of this node to the output
-		if MULTI_TIER:
-			print line
-		else:
+# do not prepend the nodename of this node to the output if option --no-nodename was given
+		if OPT_NODENAME:
 			print '%s: %s' % (nodename, line)
+		else:
+			print line
 
 	f.close()
 
@@ -327,6 +326,7 @@ def usage():
 	print '  -a, --aggregate                Condense output'
 	print
 	print '  -v, --verbose                  Be verbose'
+	print '  -N, --no-nodename              Do not prepend nodename to output'
 	print '      --unix                     Output actions as unix shell commands'
 	print '      --dry-run                  Do not run the remote command'
 	print
@@ -336,15 +336,15 @@ def usage():
 
 
 def get_options():
-	global NODELIST, GROUPLIST, EXCLUDELIST, EXCLUDEGROUPS, REMOTE_CMD, MASTER_OPTS, OPT_AGGREGATE
+	global NODELIST, GROUPLIST, EXCLUDELIST, EXCLUDEGROUPS, REMOTE_CMD, MASTER_OPTS, OPT_AGGREGATE, OPT_NODENAME
 
 	if len(sys.argv) <= 1:
 		usage()
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hc:vn:g:x:X:a", ['help', 'conf=', 'verbose',
-			'node=', 'group=', 'exclude=', 'exclude-group=', 'aggregate', 'unix', 'dry-run'])
+		opts, args = getopt.getopt(sys.argv[1:], "hc:vn:g:x:X:aN", ['help', 'conf=', 'verbose',
+			'node=', 'group=', 'exclude=', 'exclude-group=', 'aggregate', 'no-nodename', 'unix', 'dry-run'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -410,6 +410,10 @@ def get_options():
 
 		if opt in ('-a', '--aggregate'):
 			OPT_AGGREGATE = True
+			continue
+
+		if opt in ('-N', '--no-nodename'):
+			OPT_NODENAME = False
 			continue
 
 		if opt == '--unix':
