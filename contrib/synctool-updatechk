@@ -1,0 +1,25 @@
+#! /bin/sh
+#
+#	check for difference between current and online version
+#
+#
+#	- This is meant to be a cron.weekly/ script (or so)
+#
+
+URL=http://www.heiho.net/synctool/index.html
+
+VERSION=`synctool-config --version`
+
+ONLINE_VERSION=`curl -L $URL 2>/dev/null | sed 's/<[^>]*>//g' | awk '/The latest version is / { print $5 }'`
+#               ^get webpage               ^strip html tags     ^get version number
+
+
+if [ "$ONLINE_VERSION" != "$VERSION" ]
+then
+	echo "There is a different synctool version available from $URL"
+	echo
+	echo "This message was sent by `hostname -s`:$0"
+fi
+
+# EOB
+
