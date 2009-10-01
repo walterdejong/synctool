@@ -167,7 +167,7 @@ def get_options():
 			continue
 
 		if opt in ('-v', '--verbose'):
-			synctool_lib.VERBOSE = 1
+			synctool_lib.VERBOSE = True
 			continue
 
 		if opt in ('-d', '--dest'):

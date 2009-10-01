@@ -2,8 +2,6 @@
 #
 #	synctool-ssh	WJ109
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
-#
 
 import synctool_config
 import synctool_aggr
@@ -203,10 +201,16 @@ def _run_command(cmd_arr, node, join_char, cmd_args):
 
 # pass output on; simply use 'print' rather than 'stdout()'
 # do not prepend the nodename of this node to the output if option --no-nodename was given
-		if OPT_NODENAME:
-			print '%s: %s' % (nodename, line)
+		if line[:15] == '%synctool-log% ':
+			if line[15:] == '--':
+				pass
+			else:
+				synctool_lib.masterlog('%s: %s' % (nodename, line[15:]))
 		else:
-			print line
+			if OPT_NODENAME:
+				print '%s: %s' % (nodename, line)
+			else:
+				print line
 
 	f.close()
 
@@ -308,7 +312,13 @@ def _run_local_cmd(cmd_args):
 		line = string.strip(line)
 
 # pass output on; simply use 'print' rather than 'stdout()'
-		print '%s: %s' % (synctool_config.NODENAME, line)
+		if line[:15] == '%synctool-log% ':
+			if line[15:] == '--':
+				pass
+			else:
+				synctool_lib.masterlog('%s: %s' % (synctool_config.NODENAME, line[15:]))
+		else:
+			print '%s: %s' % (synctool_config.NODENAME, line)
 
 	f.close()
 
@@ -377,7 +387,7 @@ def get_options():
 			continue
 
 		if opt in ('-v', '--verbose'):
-			synctool_lib.VERBOSE = 1
+			synctool_lib.VERBOSE = True
 			continue
 
 		if opt in ('-n', '--node'):

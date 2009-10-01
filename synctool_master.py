@@ -2,12 +2,6 @@
 #
 #	synctool_master.py	WJ109
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
-#
-#   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
-#   synctool is distributed under terms described in the GNU General Public
-#   License.
-#
 
 import synctool
 import synctool_ssh
@@ -80,7 +74,7 @@ def usage():
 	print 'A nodelist or grouplist is a comma-separated list'
 	print 'Note that by default, it does a dry-run, unless you specify --fix'
 	print
-	print 'Written by Walter de Jong <walter@heiho.net> (c) 2003-2009'
+	print 'Written by Walter de Jong <walter@sara.nl> (c) 2003-2009'
 
 
 def get_options():
@@ -128,7 +122,7 @@ def get_options():
 			continue
 
 		if opt in ('-v', '--verbose'):
-			synctool_lib.VERBOSE = 1
+			synctool_lib.VERBOSE = True
 			PASS_ARGS.append(opt)
 			continue
 
@@ -161,12 +155,12 @@ def get_options():
 			continue
 
 		if opt in ('-q', '--quiet'):
-			synctool_lib.QUIET = 1
+			synctool_lib.QUIET = True
 			PASS_ARGS.append(opt)
 			continue
 
 		if opt in ('-f', '--fix'):
-			synctool_lib.DRY_RUN = 0
+			synctool_lib.DRY_RUN = False
 			PASS_ARGS.append(opt)
 			continue
 
@@ -196,7 +190,6 @@ def get_options():
 		PASS_ARGS.extend(args)
 
 
-
 if __name__ == '__main__':
 	get_options()
 
@@ -207,15 +200,9 @@ if __name__ == '__main__':
 	synctool_config.read_config()
 	synctool_config.add_myhostname()
 
-	synctool_lib.openlog()
-
-#############
-#
-#	enable debugging
-#
-#############
-#	synctool_config.OPT_DEBUG = True
-#	synctool_ssh.OPT_DEBUG = True
+# ooh ... testing for DRY_RUN doesn't work here
+	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
+		synctool_lib.openlog()
 
 	nodes = synctool_ssh.make_nodeset()
 	if nodes == None:

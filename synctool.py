@@ -2,10 +2,6 @@
 #
 #	synctool	WJ103
 #
-#   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
-#   synctool is distributed under terms described in the GNU General Public
-#   License.
-#
 
 import synctool_config
 import synctool_lib
@@ -28,10 +24,10 @@ import time
 
 try:
 	import hashlib
-	use_hashlib = 1
+	use_hashlib = True
 except ImportError:
 	import md5
-	use_hashlib = 0
+	use_hashlib = False
 
 # extra command-line option --tasks
 RUN_TASKS = False
@@ -972,7 +968,7 @@ def diff_files(filename):
 		stderr('error: diff_cmd is undefined in %s' % synctool_config.CONF_FILE)
 		return
 
-	synctool_lib.DRY_RUN = 1						# be sure that it doesn't do any updates
+	synctool_lib.DRY_RUN = True						# be sure that it doesn't do any updates
 
 	sync_path = synctool_core.find_synctree('overlay', filename)
 	if not sync_path:
@@ -1010,13 +1006,13 @@ def usage():
 	print 'synctool can help you administer your cluster of machines'
 	print 'Note that by default, it does a dry-run, unless you specify --fix'
 	print
-	print 'Written by Walter de Jong <walter@heiho.net> (c) 2003-2009'
+	print 'Written by Walter de Jong <walter@sara.nl> (c) 2003-2009'
 
 
 if __name__ == '__main__':
 	progname = os.path.basename(sys.argv[0])
 
-	synctool_lib.DRY_RUN = 1		# set default dry-run
+	synctool_lib.DRY_RUN = True			# set default dry-run
 
 	diff_file = None
 	single_file = None
@@ -1127,7 +1123,7 @@ if __name__ == '__main__':
 		t = time.localtime(time.time())
 
 		unix_out('#')
-		unix_out('# synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009')
+		unix_out('# synctool by Walter de Jong <walter@sara.nl> (c) 2003-2009')
 		unix_out('#')
 		unix_out('# script generated on %04d/%02d/%02d %02d:%02d:%02d' % (t[0], t[1], t[2], t[3], t[4], t[5]))
 		unix_out('#')

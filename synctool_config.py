@@ -2,10 +2,6 @@
 #
 #	synctool-config	WJ109
 #
-#   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
-#   synctool is distributed under terms described in the GNU General Public
-#   License.
-#
 
 import os
 import sys
@@ -803,7 +799,7 @@ def usage():
 	print 'A node/group list can be a single value, or a comma-separated list'
 	print 'A command is a list of these: diff, ssh, rsync, synctool'
 	print
-	print 'synctool-config by Walter de Jong <walter@heiho.net> (c) 2009'
+	print 'synctool-config by Walter de Jong <walter@sara.nl> (c) 2009'
 
 
 def get_options():

@@ -4,12 +4,6 @@
 #
 #	- common functions/variables for synctool suite programs
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
-#
-#   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
-#   synctool is distributed under terms described in the GNU General Public
-#   License.
-#
 
 import synctool_config
 
@@ -82,7 +76,17 @@ def closelog():
 		LOGFD = None
 
 
+def masterlog(str):
+	'''log only locally (on the masternode)'''
+
+	if not DRY_RUN and LOGFD != None:
+		t = time.localtime(time.time())
+		LOGFD.write('%s %02d %02d:%02d:%02d %s\n' % (MONTHS[t[1]-1], t[2], t[3], t[4], t[5], str))
+
+
 def log(str):
+	'''log message locally, and print it so that synctool-master will pick it up'''
+
 	if not DRY_RUN and LOGFD != None:
 		t = time.localtime(time.time())
 		LOGFD.write('%s %02d %02d:%02d:%02d %s\n' % (MONTHS[t[1]-1], t[2], t[3], t[4], t[5], str))
