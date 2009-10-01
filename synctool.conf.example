@@ -12,25 +12,33 @@ diff_cmd /usr/bin/diff -u
 ssh_cmd /usr/bin/ssh -o ConnectTimeout=10 -q
 scp_cmd /usr/bin/scp -o ConnectTimeout=10 -p
 rsync_cmd /usr/bin/rsync -ar --delete -e 'ssh -o ConnectTimeout=10 -q'
-synctool_cmd /opt/synctool-4.0/sbin/synctool.py -c /var/lib/synctool/synctool.conf
+synctool_cmd /opt/synctool/sbin/synctool.py -c /var/lib/synctool/synctool.conf
+logfile /var/log/synctool.log
 num_proc 64
 
-host p1 teras       interface:p1-mgt
-host p4 teras batch interface:p4-mgt
-host p5 teras batch interface:p5-mgt
-host p6 teras batch interface:p6-mgt
-host p7 teras batch interface:p7-mgt
+node node0 master all
 
-ignore_host p9 any_arguments_here_are_ignored teras batch
+node node1 fs sched all interface:node1-mgmt
+node node2 login all interface:node2-mgmt
+node node3 batch all interface:node3-mgmt
+node node4 batch all interface:node4-mgmt
+node node5 batch all interface:node5-mgmt
+node node6 batch all interface:node6-mgmt
+node node7 batch all interface:node7-mgmt
+node node8 batch test all interface:node8-mgmt
+node node9 batch all interface:node9-mgmt
+
+ignore_node node0
+
+ignore_node node9 any_arguments_here_are_ignored batch test
 ignore_group test test2
 
-on_update	/etc/jlimits.in					/usr/etc/genlimits -i /etc/jlimits.in -l
-on_update	/etc/inetd.conf					hup_daemon.sh /usr/etc/inetd
-on_update	/etc/syslog.conf				hup_daemon.sh /usr/etc/syslogd
-on_update	/var/spool/cron/crontabs/root	hup_daemon.sh /sbin/cron
-on_update	/etc/ntpd.conf					/etc/init.d/ntpd stop ; /etc/init.d/ntpd start
+on_update	/etc/aliases					/usr/bin/newaliases
+on_update	/etc/ssh/sshd_config			/etc/init.d/ssh reload
+on_update	/etc/syslog-ng/syslog-ng.conf	/etc/init.d/syslog-ng reload
+on_update	/etc/crontab					/etc/init.d/cron reload
+on_update	/etc/ntp.conf					/etc/init.d/ntpd reload
 
 # always_run /bin/date
 
 # EOB
-

@@ -2,6 +2,10 @@
 #
 #	synctool-config	WJ109
 #
+#   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
+#   synctool is distributed under terms described in the GNU General Public
+#   License.
+#
 
 import os
 import sys
@@ -11,8 +15,8 @@ import getopt
 
 VERSION = '4.3rc'
 
-DEFAULT_CONF='/var/lib/synctool/synctool.conf'
-CONF_FILE=DEFAULT_CONF
+DEFAULT_CONF = '/var/lib/synctool/synctool.conf'
+CONF_FILE = DEFAULT_CONF
 
 ACTION = 0
 ACTION_OPTION = None
@@ -48,6 +52,7 @@ SSH_CMD = None
 SCP_CMD = None
 RSYNC_CMD = None
 SYNCTOOL_CMD = None
+LOGFILE = None
 NUM_PROC = 16				# use sensible default
 
 #
@@ -89,7 +94,7 @@ def stderr(str):
 def read_config():
 	'''read the config file and set a bunch of globals'''
 
-	global MASTERDIR, MASTER_LEN, DIFF_CMD, SSH_CMD, SCP_CMD, RSYNC_CMD, SYNCTOOL_CMD, NUM_PROC, SYMLINK_MODE
+	global MASTERDIR, MASTER_LEN, DIFF_CMD, SSH_CMD, SCP_CMD, RSYNC_CMD, SYNCTOOL_CMD, LOGFILE, NUM_PROC, SYMLINK_MODE
 	global IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
 	global ON_UPDATE, ALWAYS_RUN
 	global NODES, INTERFACES
@@ -469,6 +474,23 @@ def read_config():
 			continue
 
 #
+#	keyword: logfile
+#
+		if keyword == 'logfile':
+			if len(arr) < 2:
+				stderr("%s:%d: 'logfile' requires an argument: the full path to the file to write log messages to" % (CONF_FILE, lineno))
+				errors = errors + 1
+				continue
+
+			if LOGFILE:
+				stderr("%s:%d: redefinition of logfile" % (CONF_FILE, lineno))
+				errors = errors + 1
+				continue
+
+			LOGFILE = string.join(arr[1:])
+			continue
+
+#
 #	keyword: num_proc
 #
 		if keyword == 'num_proc':
@@ -781,7 +803,7 @@ def usage():
 	print 'A node/group list can be a single value, or a comma-separated list'
 	print 'A command is a list of these: diff, ssh, rsync, synctool'
 	print
-	print 'synctool-config by Walter de Jong <walter@sara.nl> (c) 2009'
+	print 'synctool-config by Walter de Jong <walter@heiho.net> (c) 2009'
 
 
 def get_options():

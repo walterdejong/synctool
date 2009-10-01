@@ -2,6 +2,10 @@
 #
 #	synctool	WJ103
 #
+#   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
+#   synctool is distributed under terms described in the GNU General Public
+#   License.
+#
 
 import synctool_config
 import synctool_lib
@@ -1002,12 +1006,11 @@ def usage():
 	print '  -v, --verbose         Be verbose'
 	print '  -q, --quiet           Suppress informational startup messages'
 	print '      --unix            Output actions as unix shell commands'
-	print '  -l, --log=logfile     Log taken actions to logfile'
 	print
 	print 'synctool can help you administer your cluster of machines'
 	print 'Note that by default, it does a dry-run, unless you specify --fix'
 	print
-	print 'Written by Walter de Jong <walter@sara.nl> (c) 2003-2009'
+	print 'Written by Walter de Jong <walter@heiho.net> (c) 2003-2009'
 
 
 if __name__ == '__main__':
@@ -1020,7 +1023,7 @@ if __name__ == '__main__':
 
 	if len(sys.argv) > 1:
 		try:
-			opts, args = getopt.getopt(sys.argv[1:], "hc:l:d:1:tfvq", ['help', 'conf=', 'log=', 'diff=', 'single=', 'tasks', 'fix', 'verbose', 'quiet', 'unix'])
+			opts, args = getopt.getopt(sys.argv[1:], "hc:d:1:tfvq", ['help', 'conf=', 'diff=', 'single=', 'tasks', 'fix', 'verbose', 'quiet', 'unix', 'masterlog'])
 		except getopt.error, (reason):
 			print '%s: %s' % (progname, reason)
 			usage()
@@ -1068,8 +1071,8 @@ if __name__ == '__main__':
 				synctool_lib.UNIX_CMD = True
 				continue
 
-			if opt in ('-l', '--log'):
-				synctool_lib.LOGFILE = arg
+			if opt == '--masterlog':
+				synctool_lib.MASTERLOG = True
 				continue
 
 			if opt in ('-d', '--diff'):
@@ -1124,7 +1127,7 @@ if __name__ == '__main__':
 		t = time.localtime(time.time())
 
 		unix_out('#')
-		unix_out('# synctool by Walter de Jong <walter@sara.nl> (c) 2003-2009')
+		unix_out('# synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009')
 		unix_out('#')
 		unix_out('# script generated on %04d/%02d/%02d %02d:%02d:%02d' % (t[0], t[1], t[2], t[3], t[4], t[5]))
 		unix_out('#')
@@ -1146,7 +1149,7 @@ if __name__ == '__main__':
 			verbose('masterdir: %s' % synctool_config.MASTERDIR)
 			verbose('symlink_mode: 0%o' % synctool_config.SYMLINK_MODE)
 
-			if synctool_lib.LOGFILE != None and not synctool_lib.DRY_RUN:
+			if synctool_config.LOGFILE != None and not synctool_lib.DRY_RUN:
 				verbose('logfile: %s' % synctool_lib.LOGFILE)
 
 			verbose('')

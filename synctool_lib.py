@@ -4,6 +4,14 @@
 #
 #	- common functions/variables for synctool suite programs
 #
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
+#
+#   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
+#   synctool is distributed under terms described in the GNU General Public
+#   License.
+#
+
+import synctool_config
 
 import os
 import sys
@@ -15,7 +23,7 @@ DRY_RUN = False
 VERBOSE = False
 QUIET = False
 UNIX_CMD = False
-LOGFILE = None
+MASTERLOG = False
 LOGFD = None
 
 MONTHS = ( 'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec' )
@@ -50,12 +58,12 @@ def unix_out(str):
 def openlog():
 	global LOGFD
 
-	if LOGFILE == None or LOGFILE == '' or DRY_RUN:
+	if synctool_config.LOGFILE == None or synctool_config.LOGFILE == '' or DRY_RUN:
 		return
 
 	LOGFD = None
 	try:
-		LOGFD = open(LOGFILE, 'a')
+		LOGFD = open(synctool_config.LOGFILE, 'a')
 	except IOError, (err, reason):
 		print 'error: failed to open logfile %s : %s' % (filename, reason)
 		sys.exit(-1)
@@ -78,6 +86,9 @@ def log(str):
 	if not DRY_RUN and LOGFD != None:
 		t = time.localtime(time.time())
 		LOGFD.write('%s %02d %02d:%02d:%02d %s\n' % (MONTHS[t[1]-1], t[2], t[3], t[4], t[5], str))
+
+		if MASTERLOG:
+			print '%synctool-log%', str
 
 
 def popen(cmd_args):

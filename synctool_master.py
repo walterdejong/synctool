@@ -4,6 +4,10 @@
 #
 #   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
 #
+#   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
+#   synctool is distributed under terms described in the GNU General Public
+#   License.
+#
 
 import synctool
 import synctool_ssh
@@ -69,7 +73,6 @@ def usage():
 	print '      --unix                     Output actions as unix shell commands'
 	print '      --skip-rsync               Do not sync the repository'
 	print '                                 (eg. when it is on a shared filesystem)'
-	print '  -l, --log=logfile              Log taken actions to logfile'
 	print '  -v, --verbose                  Be verbose'
 	print '  -q, --quiet                    Suppress informational startup messages'
 	print '  -a, --aggregate                Condense output; list nodes per change'
@@ -77,7 +80,7 @@ def usage():
 	print 'A nodelist or grouplist is a comma-separated list'
 	print 'Note that by default, it does a dry-run, unless you specify --fix'
 	print
-	print 'Written by Walter de Jong <walter@sara.nl> (c) 2003-2009'
+	print 'Written by Walter de Jong <walter@heiho.net> (c) 2003-2009'
 
 
 def get_options():
@@ -88,8 +91,8 @@ def get_options():
 #		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hc:vn:g:x:X:d:1:tfql:a", ['help', 'conf=', 'verbose', 'node=', 'group=',
-			'exclude=', 'exclude-group=', 'diff=', 'single=', 'tasks', 'fix', 'quiet', 'log=', 'aggregate', 'skip-rsync', 'unix'])
+		opts, args = getopt.getopt(sys.argv[1:], "hc:vn:g:x:X:d:1:tfqa", ['help', 'conf=', 'verbose', 'node=', 'group=',
+			'exclude=', 'exclude-group=', 'diff=', 'single=', 'tasks', 'fix', 'quiet', 'aggregate', 'skip-rsync', 'unix'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -180,34 +183,31 @@ def get_options():
 			PASS_ARGS.append(opt)
 			continue
 
-		if opt in ('-l', '--log'):
-			synctool_lib.LOGFILE = arg
-			PASS_ARGS.append(opt)
-			PASS_ARGS.append(arg)
-			continue
-
 		PASS_ARGS.append(opt)
 
 		if arg != None:
 			PASS_ARGS.append(arg)
+
+# enable logging at the master node
+	PASS_ARGS.append('--masterlog')
 
 	if args != None:
 		MASTER_OPTS.extend(args)
 		PASS_ARGS.extend(args)
 
 
+
 if __name__ == '__main__':
 	get_options()
 
-	synctool_lib.openlog()
-
 	if OPT_AGGREGATE:
 		synctool_aggr.run(MASTER_OPTS)
-		synctool_lib.closelog()
 		sys.exit(0)
 
 	synctool_config.read_config()
 	synctool_config.add_myhostname()
+
+	synctool_lib.openlog()
 
 #############
 #
