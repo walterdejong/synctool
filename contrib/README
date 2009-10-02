@@ -2,13 +2,18 @@ Here are some helper scripts that are handy when using synctool.
 
 It's a bit of hodge-podge collection of related scripts that have
 been in use over the years. You don't necessarily need these scripts,
-but might come in handy.
+but might come in handy. They are provided AS IS and WITHOUT
+WARRANTY OF ANY KIND. The respective authors can not be held responsible
+for any damage done by these scripts.
 
 
 Files in this directory:
 
+synctool-updatechk
+  cron.weekly/monthly script that checks for availability of newer version
+
 bootstrap-synctool-client.sh
-  used for installing clients
+  may be used for installing clients
 
 nmap_config.sh
   nmaps your management LAN to create a synctool.conf file

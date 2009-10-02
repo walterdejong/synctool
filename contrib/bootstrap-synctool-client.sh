@@ -5,7 +5,7 @@
 #	Sets up a client for synctooling
 #
 
-VERSION=4.0
+VERSION=4.3
 
 if [ $# -le 0 ]
 then
@@ -29,12 +29,12 @@ then
 	exit 1
 fi
 
-for host in $*
+for host in `synctool-config -lf`
 do
 	echo "copying tarball to ${host}:/tmp/"
 	scp synctool-${VERSION}.tar.gz ${host}:/tmp/
 	echo "running make client_install on $host"
-	ssh -q ${host} "( cd /tmp && tar xf /tmp/synctool-${VERSION}.tar.gz && cd /tmp/synctool-${VERSION} && make client_install )"
+	ssh -q ${host} "( cd /tmp && tar xf /tmp/synctool-${VERSION}.tar.gz && cd /tmp/synctool-${VERSION}/src && make client_install )"
 done
 
 # EOB
