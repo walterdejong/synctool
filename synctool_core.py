@@ -369,7 +369,7 @@ if __name__ == '__main__':
 	overlay_files()
 
 	print
-	find_synctree('overlay', '/usr/sara/acct/sbin/accup')
+	find_synctree('overlay', '/etc/ntp.conf')
 	find_synctree('tasks', '/scr1')
 
 
