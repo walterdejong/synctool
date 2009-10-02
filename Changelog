@@ -1,0 +1,55 @@
+- enhancement: better handling of filenames containing spaces for dsh and dcp
+- enhancement: added -a option to dsh
+- enhancement: added -v option to synctool-config
+- enhancement: added --prefix to synctool-config
+- bugfix: since version 4 it would not detect changes on directory entries
+- bugfix: since version 4 it would not run on_update / .post scripts
+  for updated directories
+- bugfix: --single did not trigger an update in the directory
+- enhancement: when running .post scripts or on_update commands,
+  change the working directory to the relevant directory
+- bugfix: diff flushes the output buffer so that the lines do not get mixed up
+  when using synctool_master
+- bugfix: option --unix did not behave well in all cases
+- bugfix: locally run commands also produce output with nodename in front
+- enhancement: better support for tiered setups via option --no-nodename
+- code cleanup: use True/False
+- contrib: synctool-upgradechk script checks for availability of new release
+- enhancement: central logging at master node
+- enhancement: specify logfile in synctool.conf, "--log" is deprecated
+
+5 Sep 2009:
+- added synctool-scp or dcp command to easily copy files to all nodes
+  using scp
+- released as 4.2
+
+31 Aug 2009:
+- small bugfix: chown+chmod required two update runs, now done in the same
+  run
+- small bugfix: the order of the output messages would be incorrect when
+  running an external command. The fix is to flush output before running
+  an external command
+- released as 4.1
+
+26 Aug 2009:
+- synctool_master.py replaces wrapper scripts
+- synctool-config helps creation of handy scripts
+- level of parallelism is configurable through 'numproc' setting
+- included synctool-ssh or 'dsh' command
+- synctool and dsh can be run on a subset of groups or even on
+  individual nodes
+- output can be condensed by using synctool-aggr or '-a' option
+- on_update actions can also be put into '.post' scripts
+- fully rewritten internals of treewalk and file selection mechanism
+- released as 4.0
+
+12 Sep 2008:
+- files must have underscored group extension
+  (NB. This breaks backwards compatibility!)
+- directories can have group extensions, too
+- release as 3.0
+
+06 Feb 2007:
+- fixed bug in path_isfile() ; it checked for a directory (!) rather than a file
+- released as 2.3.0
+

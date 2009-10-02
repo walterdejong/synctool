@@ -1,0 +1,219 @@
+synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
+
+synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
+synctool is distributed under terms described in the GNU General Public
+License.
+
+See the README for general information.
+See the INSTALL file for information on how to deploy synctool.
+See the DOCUMENTATION file for information on how to use synctool.
+
+
+(NOT SO) FREQUENTLY ASKED QUESTIONS
+
+1. I don't understand this tool.
+2. Why not use cfengine?
+3. Why do you say there is no communication between master and client?
+4. I get the error: "rsync: command not found"
+5. I get a weird error from rsync
+6. I get "command not found" errors
+7. I will not allow ssh traffic on my network (for some reason)
+8. You can go faster than this: use an MD5 checkum cache for each file,
+   computed only once on the master node
+9. You can go faster than this: do block updates when copying files, like
+   rsync does
+10. Has this tool been tested properly?
+11. What about scalability?
+12. Have you tried deploying synctool with rsync with multicast?
+13. Does synctool not do any versioning or revision control?
+14. When was the first release?
+15. Does synctool have a logo?
+16. Googling for 'synctool' turns up a lot of Microsoft stuff??
+
+
+1. I don't understand this tool.
+
+Are you a system administrator, administrating a cluster of computers?
+Read the README file. Then read the INSTALL file. Try following the steps
+described in the INSTALL file. Read the DOCUMENTATION file. Try using it
+as described in the examples in the DOCUMENTATION file.
+If all else fails, just give up.
+
+
+2. Why not use cfengine?
+
+cfengine is the main reason why I developed synctool. Need I say more?
+It's a great tool, but its learning curve is so steep that many sysadmins
+(even capable people) stay away from it.
+Personally, I have setup and actively maintained complex cfengine setups.
+Still, I like the simplicity of synctool. Making changes in cfengine always
+takes more time than doing them in synctool.
+A sysadmin tool is supposed to make system adminstration easier, not harder.
+There are things that cfengine can do out of the box that synctool can not,
+and therefore some argue that it is more powerful. There are pros and cons
+to both. Use whichever you prefer, I know which I like best.
+
+
+3. Why do you say there is no communication between master and client?
+
+synctool is a python script that reads from the local repository (typically
+/var/lib/synctool). Therefore, there is no communication between master
+and client, and there is also no complicated protocol or authentication
+mechanism for synctool. synctool employs rsync with ssh to copy the masterdir
+from the master node to the clients. synctool leaves the tasks of
+authenticating and efficiently copying files over the network to the tools
+that are fit for this job.
+So yes, there is communication, but that part is done by rsync and ssh
+and really does not have much to do with the synctool Python program.
+The synctool Python program only matches files with certain extensions and
+puts them in the right place on the system.
+
+Also note how this setup is safe; it is a server-push setup and never
+a client-pull. You can harden your master server with a firewall that
+blocks new incoming connections, and still be able to operate synctool
+normally, because everything is controlled from the master side.
+
+
+4. I get the error: "rsync: command not found"
+
+Install rsync from http://samba.anu.edu.au/rsync/
+If you already have rsync, edit synctool.conf to make sure the rsync_cmd
+setting is correct.
+
+
+5. I get a weird error from rsync
+
+On some systems, the /usr/bin/rsync executable is an rdist program
+rather than the rsync program from http://samba.anu.edu.au/rsync/
+Make sure the rsync_cmd setting in synctool.conf is correct.
+
+
+6. I get "command not found" errors
+
+Make sure the program in the error message is installed.
+Check the settings for diff_cmd, ssh_cmd, rsync_cmd, and synctool_cmd
+in synctool.conf
+
+
+7. I will not allow ssh traffic on my network (for some reason)
+
+You will have some means to copy files from one system to another.
+The SSH and rsync commands are configurable in synctool.conf, so
+change them accordingly.
+
+
+8. You can go faster than this: use an MD5 checkum cache for each file,
+   computed only once on the master node
+
+True. But then you no longer can easily fiddle around with the local
+repository on a node for testing purposes. Surely there's a way around this,
+but at this moment, I think synctool is fast enough and I really like
+keeping things simple.
+
+
+9. You can go faster than this: do block updates when copying files, like
+   rsync does
+
+True, originally I was even thinking about patching rsync to accept classes
+the way that synctool does. This turned out to be harder than it sounds ...
+Since synctool is meant to copy small configuration files, there is little
+to gain here by doing block updates.
+
+
+10. Has this tool been tested properly?
+
+synctool has been in use for four years before it went out in the public,
+helping the system adminstrators of two Dutch national supercomputer
+clusters. During this time, synctool proved to be a very stable and useful
+tool.
+In the meantime, we migrated to a new system. Again, synctool proved to
+be easier, faster and even more reliable than the supplied vendor solution.
+On another system with a different architecture, and in a multi-platform
+environment, synctool gets the job done.
+At the time of the version 4.0 release (August 2009), we are managing
+6 clusters of varying sizes and platforms, with synctool.
+
+
+11. What about scalability?
+
+synctool was developed to help system administration on a small cluster of
+big machines. Mind however, that the scalability of synctool lies mostly in
+the tool that you use to distribute repositories, for example rsync.
+rsync is a great aid to synctool, making it possible to deploy synctool even
+on large clusters. I have seen it in action on a 100 node cluster and it had
+no problems whatsoever.
+Mind the definition of "node" -- the 100 node cluster I'm talking about had
+64 processor cores in every node, essentially making it a 6400 node cluster.
+A node in synctool terminology is a host running a single system image.
+
+At this moment, the config file is rather clumsy for handling large clusters,
+since you have to list each and every node. It is not possible to specify a
+range of nodes in a single statement. With some clever scripting around an
+'nmap -sP' you can easily map a whole cluster into a synctool.conf file.
+There is a script in the contrib/ directory that does exactly this.
+
+On large clusters, it is likely that there will be a lot of output to the
+screen. Use -q or --quiet and -a or --aggregate to clean it up.
+
+If you have thousands of hosts, you may want to make a multi-tiered setup
+in which you sync to nodes that sync other sets of nodes. It sounds
+complicated, but it's quite simple to script when you use synctool groups
+in a clever way. For example, make a group of 'syncnodes' that are
+synced by the master server. Every syncnode runs synctool-master to their
+own subcluster or their own racks. synctool-ssh has an option --no-nodename
+to make sure the output comes out right in such a multi-tiered setup.
+See the contrib directory for an example script that runs a multi-tiered
+synctool.
+
+One other thing, synctool was meant to manage configuration files and not
+large databases (for example). If you put a great number (thousands,
+millions?) or very large files in the synctool repository, synctool runs
+may get slow. For normal use, it should be perfectly OK.
+
+
+12. Have you tried deploying synctool with rsync with multicast?
+
+No, but I have seen multicast system installations in use with rsync,
+and I believe it should be possible to build this around synctool too.
+I've also seen problems with rsync in conjuction with multicast, and maybe
+you're better off with the smarter bittorrent way of distributing the
+repository. I have not experimented with this, but I'm sure it is possible.
+
+
+13. Does synctool not do any versioning or revision control?
+
+No, but it is possible to deploy it under RCS, CVS, svn, git, or your version
+control system of choice. synctool is a simple tool by itself, and happily
+delegates the task to a tool that is meant to do version control.
+
+When you do deploy it under a version control system, be sure to ignore any
+housekeeping directories in the repository by stating in synctool.conf:
+
+# one of these
+ignore RCS
+ignore CVS
+ignore .svn
+
+By the way, synctool was developed using subversion.
+
+
+14. When was the first release?
+
+The first release to the public under GPL was synctool 2.2.0 in January 2007.
+synctool had already been in use for four years before releasing it to the
+public.
+
+
+15. Does synctool have a logo?
+Yes, it's called 'the synctool wrench'. See images/synctool_logo.jpg or
+go to the website at http://www.heiho.net/synctool/
+
+
+16. Googling for 'synctool' turns up a lot of Microsoft stuff??
+Sadly, Microsoft named one of their little tools 'synctool', too. I don't
+know which one was first, and I don't really mind. I'm confident that
+UNIX sysadmins will recognize my synctool when they see it.
+I guess you could also google for "cluster synctool".
+
+
+EOB

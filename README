@@ -1,0 +1,47 @@
+synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
+
+synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
+synctool is distributed under terms described in the GNU General Public
+License.
+
+See the INSTALL file for information on how to deploy synctool.
+See the DOCUMENTATION file for information on how to use synctool.
+
+
+synctool is a tool that can help you administer your cluster of computers.
+It is meant for copying configuration files to groups (or classes) of
+computers within a cluster.
+There are other tools in existence that do the same thing, and ironically,
+none of them are as easy to understand and use as synctool.
+
+synctool simplyfies things by working with the following concepts:
+
+ * a host can be part of a class
+ * files are designated a class by means of filename extension
+ * the 'overlay' directory tree contains the files and directories that should
+   be copied (or 'synced') to the target host
+ * when certain files are updated, you will want to execute a script
+   (eg, /etc/init.d/daemon restart)
+ * synctool is a simple tool. By itself, it does not even communicate over the
+   network. It uses rsync to distribute repositories over an SSH channel.
+   Not only does this make synctool fast, it also makes it easy to understand
+   and use.
+
+However, synctool does more than just this. Note how synctool manages
+files, not processes, and not full system installations. However, synctool
+is extensible in the sense that it can run scripts on hosts (via the
+'tasks' mechanism). This is primarily meant to do synchronized updates of
+software packages on all systems in the cluster, but can also be used
+to check daemons, or perform other system administration tasks.
+Making clever use of synctool makes it a very powerful tool.
+
+synctool is successfully being used to administrate several clusters at the
+Dutch national supercomputer facility for as long as 6 years now. Hopefully,
+it will be of some value to you as well.
+
+
+Greets,
+
+     --Walter
+
+EOB

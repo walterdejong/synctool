@@ -1,0 +1,124 @@
+synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
+
+synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
+synctool is distributed under terms described in the GNU General Public
+License.
+
+See the README for general information.
+See the DOCUMENTATION file for information on how to use synctool.
+
+
+In 'synctool terminology', a "node" is a host, a computer in a group of
+computers. A group of computers is called a cluster.
+
+
+First of all, synctool requires passwordless SSH from the master node to
+each cluster node as root. Exactly how to do this is beyond the scope
+of this document (see the SSH documentation or just google around), but
+I'd like to say this about it:
+ * use SSH keypairs
+ * or use hostbased authentication, also for root
+ * set sshd_config PermitRootLogin without-password
+ * run sshd only the internal network interface to secure your system
+ * in general, passwordless SSH from any cluster node to your master node
+   should _not_ work; at least, synctool does not need this
+
+For sites with extra tight security, it is possible to configure ssh to run
+only specific (synctool) commands, or maybe you want to change the
+ssh_cmd in the configuration so that it runs a different command, that
+suits your security needs.
+
+When passwordless SSH as root works, proceed to installing the software.
+
+
+Edit the provided Makefile and adjust PREFIX to point to your
+desired location where the software should reside. Some prefer
+/usr/local, others prefer /usr/local/synctool, while others
+prefer /opt. Pick whatever you think is best.
+
+On your master node, run 'make install'. This copies the commands
+to the selected location and sets up symlinks for:
+
+  synctool -> synctool_master.py
+  synctool-config -> synctool_config.py
+  synctool-ssh -> synctool_ssh.py
+  dsh -> synctool_ssh.py
+  synctool-scp -> synctool_scp.py
+  dcp -> synctool_scp.py
+  synctool-aggr -> synctool_aggr.py
+
+It also creates the master repository under /var/lib/synctool/
+Copy the synctool.conf.example to /var/lib/synctool/synctool.conf
+and edit it, adjusting it as needed.
+
+synctool.conf describes what your cluster looks like; what nodes
+have what roles, and how can synctool contact them?
+Think a bit about what role each machine has. There is no need to
+go into great depth right now; you can always adjust the configuration
+later.
+In general, it is good practice to always put a node into group 'all':
+
+  node n1 all interface:machine-n01
+
+The nodename is the 'synctool name that the node has'. It is in general the
+short hostname of the host, but in fact it can be anything you like. The
+nodename has nothing to do with hostnames or DNS entries.
+The interface specifies how synctool can contact the node; this can be an
+IP address or a DNS name of the host you wish to contact. In clusters, there
+is often a management network interface -- configure that interface name
+here.
+
+It is also good practice to label your master node as 'master' or 'install'.
+
+  node n1 master all interface:machine-n01
+
+Now n1 responds to the groups 'n1', 'master', and 'all'.
+
+Some people don't like managing the master node itself with synctool.
+While it _is_ possible and perfectly alright to do this, some like to
+exclude the master node by default:
+
+  ignore_node n1
+
+
+You have to list each and every host.
+In the contrib/ directory, there is a script that uses nmap ping with
+which you can scan your management network and quickly turn it into
+a synctool configuration. This makes life a bit easier.
+
+
+Try the command 'dsh hostname', 'dsh uptime', or 'dsh date'.
+If you correctly set up passwordless SSH, dsh should run the commands
+on every node without problems or needed manual intervention.
+It is important that this works, before proceeding.
+
+NB. Some (mostly IBM) systems already have a 'dsh' command. In synctool,
+    'dsh' is a symbolic link to synctool-ssh
+    The same goes for 'dcp', which is a symlink to synctool-scp
+
+
+Now that you have a rough setup on the master node, you also need to
+install client side software on every cluster node. As synctool is
+not fully functional yet, you can't use synctool to do this.
+
+SSH to a node and unpack the tarball. Edit the Makefile as before.
+Run 'make client_install'.
+
+An easy way to copy the package to all nodes, is by using the synctool-scp
+or 'dcp' command. An easy way to deploy it is by using dsh.
+You may also use contrib/bootstrap-synctool-client.sh to install clients.
+
+Note that by default, synctool will install to /opt/synctool
+so if you don't like this, you have to change it.
+
+
+After installing all client software, give the command 'synctool' on
+the master node a go.
+There should be some output about 'DRY RUN'. This means that synctool
+is now working and you can start filling your repository with useful files.
+
+
+See the DOCUMENTATION file for information on how to use synctool.
+
+
+EOB
