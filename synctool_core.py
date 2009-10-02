@@ -5,6 +5,12 @@
 #	The core holds the 'treewalk' function and determines what file is for what group of a node
 #	It also determines what .post script is available to run for the file
 #
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
+#
+#   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
+#   synctool is distributed under terms described in the GNU General Public
+#   License.
+#
 
 import synctool_config
 import synctool_lib

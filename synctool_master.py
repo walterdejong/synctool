@@ -2,6 +2,12 @@
 #
 #	synctool_master.py	WJ109
 #
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
+#
+#   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
+#   synctool is distributed under terms described in the GNU General Public
+#   License.
+#
 
 import synctool
 import synctool_ssh
@@ -74,7 +80,7 @@ def usage():
 	print 'A nodelist or grouplist is a comma-separated list'
 	print 'Note that by default, it does a dry-run, unless you specify --fix'
 	print
-	print 'Written by Walter de Jong <walter@sara.nl> (c) 2003-2009'
+	print 'Written by Walter de Jong <walter@heiho.net> (c) 2003-2009'
 
 
 def get_options():
@@ -85,7 +91,7 @@ def get_options():
 #		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hc:vn:g:x:X:d:1:tfqa", ['help', 'conf=', 'verbose', 'node=', 'group=',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:tfqa', ['help', 'conf=', 'verbose', 'node=', 'group=',
 			'exclude=', 'exclude-group=', 'diff=', 'single=', 'tasks', 'fix', 'quiet', 'aggregate', 'skip-rsync', 'unix'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)

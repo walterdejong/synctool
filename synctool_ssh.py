@@ -2,6 +2,12 @@
 #
 #	synctool-ssh	WJ109
 #
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
+#
+#   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
+#   synctool is distributed under terms described in the GNU General Public
+#   License.
+#
 
 import synctool_config
 import synctool_aggr
@@ -342,7 +348,7 @@ def usage():
 	print
 	print 'A nodelist or grouplist is a comma-separated list'
 	print
-	print 'synctool-ssh by Walter de Jong <walter@sara.nl> (c) 2009'
+	print 'synctool-ssh by Walter de Jong <walter@heiho.net> (c) 2009'
 
 
 def get_options():
@@ -353,7 +359,7 @@ def get_options():
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hc:vn:g:x:X:aN", ['help', 'conf=', 'verbose',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:aN', ['help', 'conf=', 'verbose',
 			'node=', 'group=', 'exclude=', 'exclude-group=', 'aggregate', 'no-nodename', 'unix', 'dry-run'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)

@@ -2,6 +2,12 @@
 #
 #	synctool-config	WJ109
 #
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
+#
+#   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
+#   synctool is distributed under terms described in the GNU General Public
+#   License.
+#
 
 import os
 import sys
@@ -9,7 +15,7 @@ import string
 import socket
 import getopt
 
-VERSION = '4.3rc2'
+VERSION = '4.3rc3'
 
 DEFAULT_CONF = '/var/lib/synctool/synctool.conf'
 CONF_FILE = DEFAULT_CONF
@@ -799,7 +805,7 @@ def usage():
 	print 'A node/group list can be a single value, or a comma-separated list'
 	print 'A command is a list of these: diff, ssh, rsync, synctool'
 	print
-	print 'synctool-config by Walter de Jong <walter@sara.nl> (c) 2009'
+	print 'synctool-config by Walter de Jong <walter@heiho.net> (c) 2009'
 
 
 def get_options():
@@ -813,7 +819,7 @@ def get_options():
 
 	if len(sys.argv) > 1:
 		try:
-			opts, args = getopt.getopt(sys.argv[1:], "hc:mlLn:g:ifC:pv", ['help', 'conf=', 'masterdir', 'list-nodes', 'list-groups',
+			opts, args = getopt.getopt(sys.argv[1:], 'hc:mlLn:g:ifC:pv', ['help', 'conf=', 'masterdir', 'list-nodes', 'list-groups',
 				'node=', 'group=', 'interface', 'filter-ignored', 'command', 'numproc', 'version', 'prefix'])
 
 		except getopt.error, (reason):

@@ -2,6 +2,12 @@
 #
 #	synctool_lib.py		WJ109
 #
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
+#
+#   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
+#   synctool is distributed under terms described in the GNU General Public
+#   License.
+#
 #	- common functions/variables for synctool suite programs
 #
 

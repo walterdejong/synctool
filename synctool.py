@@ -2,6 +2,12 @@
 #
 #	synctool	WJ103
 #
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
+#
+#   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
+#   synctool is distributed under terms described in the GNU General Public
+#   License.
+#
 
 import synctool_config
 import synctool_lib
@@ -1006,44 +1012,48 @@ def usage():
 	print 'synctool can help you administer your cluster of machines'
 	print 'Note that by default, it does a dry-run, unless you specify --fix'
 	print
-	print 'Written by Walter de Jong <walter@sara.nl> (c) 2003-2009'
+	print 'Written by Walter de Jong <walter@heiho.net> (c) 2003-2009'
 
 
-if __name__ == '__main__':
+def get_options():
+	global RUN_TASKS
+
 	progname = os.path.basename(sys.argv[0])
 
-	synctool_lib.DRY_RUN = True			# set default dry-run
+	synctool_lib.DRY_RUN = True				# set default dry-run
 
 	diff_file = None
 	single_file = None
 
-	if len(sys.argv) > 1:
-		try:
-			opts, args = getopt.getopt(sys.argv[1:], "hc:d:1:tfvq", ['help', 'conf=', 'diff=', 'single=', 'tasks', 'fix', 'verbose', 'quiet', 'unix', 'masterlog'])
-		except getopt.error, (reason):
-			print '%s: %s' % (progname, reason)
+	if len(sys.argv) <= 1:
+		return (diff_file, single_file)
+
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:tfvq', ['help', 'conf=', 'diff=', 'single=', 'tasks', 'fix', 'verbose', 'quiet', 'unix', 'masterlog'])
+	except getopt.error, (reason):
+		print '%s: %s' % (progname, reason)
+		usage()
+		sys.exit(1)
+
+	except getopt.GetoptError, (reason):
+		print '%s: %s' % (progname, reason)
+		usage()
+		sys.exit(1)
+
+	except:
+		usage()
+		sys.exit(1)
+
+	errors = 0
+
+	for opt, arg in opts:
+		if opt in ('-h', '--help', '-?'):
 			usage()
 			sys.exit(1)
 
-		except getopt.GetoptError, (reason):
-			print '%s: %s' % (progname, reason)
-			usage()
-			sys.exit(1)
-
-		except:
-			usage()
-			sys.exit(1)
-
-		errors = 0
-
-		for opt, arg in opts:
-			if opt in ('-h', '--help', '-?'):
-				usage()
-				sys.exit(1)
-
-			if opt in ('-c', '--conf'):
-				synctool_config.CONF_FILE = arg
-				continue
+		if opt in ('-c', '--conf'):
+			synctool_config.CONF_FILE = arg
+			continue
 
 # dry run already is default
 #
@@ -1051,57 +1061,63 @@ if __name__ == '__main__':
 #				synctool_lib.DRY_RUN = True
 #				continue
 
-			if opt in ('-f', '--fix'):
-				synctool_lib.DRY_RUN = False
-				continue
+		if opt in ('-f', '--fix'):
+			synctool_lib.DRY_RUN = False
+			continue
 
-			if opt in ('-v', '--verbose'):
-				synctool_lib.VERBOSE = True
-				continue
+		if opt in ('-v', '--verbose'):
+			synctool_lib.VERBOSE = True
+			continue
 
-			if opt in ('-q', '--quiet'):
-				synctool_lib.QUIET = True
-				continue
+		if opt in ('-q', '--quiet'):
+			synctool_lib.QUIET = True
+			continue
 
-			if opt == '--unix':
-				synctool_lib.UNIX_CMD = True
-				continue
+		if opt == '--unix':
+			synctool_lib.UNIX_CMD = True
+			continue
 
-			if opt == '--masterlog':
-				synctool_lib.MASTERLOG = True
-				continue
+		if opt == '--masterlog':
+			synctool_lib.MASTERLOG = True
+			continue
 
-			if opt in ('-d', '--diff'):
-				diff_file = arg
-				continue
+		if opt in ('-d', '--diff'):
+			diff_file = arg
+			continue
 
-			if opt in ('-1', '--single'):
-				single_file = arg
-				continue
+		if opt in ('-1', '--single'):
+			single_file = arg
+			continue
 
-			if opt in ('-t', '--task', '--tasks'):
-				RUN_TASKS = True
-				continue
+		if opt in ('-t', '--task', '--tasks'):
+			RUN_TASKS = True
+			continue
 
-			stderr("unknown command line option '%s'" % opt)
-			errors = errors + 1
+		stderr("unknown command line option '%s'" % opt)
+		errors = errors + 1
 
-		if errors:
-			usage()
+	if errors:
+		usage()
+		sys.exit(1)
+
+	if diff_file and RUN_TASKS:
+		stderr("options '--diff' and '--tasks' cannot be combined")
+		sys.exit(1)
+
+	if diff_file and single_file:
+		if diff_file != single_file:
+			stderr("options '--diff' and '--single' cannot be combined")
 			sys.exit(1)
 
-		if diff_file and RUN_TASKS:
-			stderr("options '--diff' and '--tasks' cannot be combined")
-			sys.exit(1)
+	if diff_file and not synctool_lib.DRY_RUN:
+		stderr("options '--diff' and '--fix' cannot be combined")
+		sys.exit(1)
 
-		if diff_file and single_file:
-			if diff_file != single_file:
-				stderr("options '--diff' and '--single' cannot be combined")
-				sys.exit(1)
+	return (diff_file, single_file)
 
-		if diff_file and not synctool_lib.DRY_RUN:
-			stderr("options '--diff' and '--fix' cannot be combined")
-			sys.exit(1)
+
+if __name__ == '__main__':
+	(diff_file, single_file) = get_options()
 
 	synctool_config.read_config()
 	synctool_config.add_myhostname()
@@ -1123,9 +1139,7 @@ if __name__ == '__main__':
 		t = time.localtime(time.time())
 
 		unix_out('#')
-		unix_out('# synctool by Walter de Jong <walter@sara.nl> (c) 2003-2009')
-		unix_out('#')
-		unix_out('# script generated on %04d/%02d/%02d %02d:%02d:%02d' % (t[0], t[1], t[2], t[3], t[4], t[5]))
+		unix_out('# script generated by synctool on %04d/%02d/%02d %02d:%02d:%02d' % (t[0], t[1], t[2], t[3], t[4], t[5]))
 		unix_out('#')
 		unix_out('# NODENAME=%s' % synctool_config.NODENAME)
 		unix_out('# HOSTNAME=%s' % synctool_config.HOSTNAME)

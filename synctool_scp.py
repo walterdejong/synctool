@@ -2,6 +2,12 @@
 #
 #	synctool-scp	WJ109
 #
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
+#
+#   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
+#   synctool is distributed under terms described in the GNU General Public
+#   License.
+#
 #	- simply use synctool-ssh because lots of code would be the same
 #
 
@@ -123,7 +129,7 @@ def usage():
 	print
 	print 'A nodelist or grouplist is a comma-separated list'
 	print
-	print 'synctool-scp by Walter de Jong <walter@sara.nl> (c) 2009'
+	print 'synctool-scp by Walter de Jong <walter@heiho.net> (c) 2009'
 
 
 def get_options():
@@ -137,7 +143,7 @@ def get_options():
 	SCP_OPTIONS = None
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hc:vd:o:n:g:x:X:", ['help', 'conf=', 'verbose',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vd:o:n:g:x:X:', ['help', 'conf=', 'verbose',
 			'dest=', 'options=',
 			'node=', 'group=', 'exclude=', 'exclude-group=', 'unix', 'dry-run'])
 	except getopt.error, (reason):
