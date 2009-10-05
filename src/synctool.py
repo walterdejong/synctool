@@ -1160,7 +1160,7 @@ if __name__ == '__main__':
 			verbose('symlink_mode: 0%o' % synctool_config.SYMLINK_MODE)
 
 			if synctool_config.LOGFILE != None and not synctool_lib.DRY_RUN:
-				verbose('logfile: %s' % synctool_lib.LOGFILE)
+				verbose('logfile: %s' % synctool_config.LOGFILE)
 
 			verbose('')
 
