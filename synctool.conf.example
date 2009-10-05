@@ -39,6 +39,10 @@ on_update	/etc/syslog-ng/syslog-ng.conf	/etc/init.d/syslog-ng reload
 on_update	/etc/crontab					/etc/init.d/cron reload
 on_update	/etc/ntp.conf					/etc/init.d/ntpd reload
 
+on_update	/etc/logrotate.d				/bin/rm -f /etc/logrotate.d/*.saved
+on_update	/etc/cron.d						/bin/rm -f /etc/cron.d/*.saved
+on_update	/etc/cron.daily					/bin/rm -f /etc/cron.daily/*.saved
+
 # always_run /bin/date
 
 # EOB
