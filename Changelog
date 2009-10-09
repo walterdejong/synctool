@@ -1,3 +1,4 @@
+9 Oct 2009:
 - enhancement: better handling of filenames containing spaces for dsh and dcp
 - enhancement: added -a option to dsh
 - enhancement: added -v option to synctool-config
@@ -17,6 +18,7 @@
 - contrib: synctool-upgradechk script checks for availability of new release
 - enhancement: central logging at master node
 - enhancement: specify logfile in synctool.conf, "--log" is deprecated
+- released as 4.3
 
 5 Sep 2009:
 - added synctool-scp or dcp command to easily copy files to all nodes
