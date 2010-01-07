@@ -101,10 +101,6 @@ def read_config():
 	global ON_UPDATE, ALWAYS_RUN
 	global NODES, INTERFACES
 
-	if os.path.isdir(CONF_FILE):
-		filename = os.path.join(filename, CONF_FILE)
-
-# funky ... it is possible to open() directories without problems ...
 	if not os.path.isfile(CONF_FILE):
 		stderr("no such config file '%s'" % CONF_FILE)
 		sys.exit(-1)
