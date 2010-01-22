@@ -1,3 +1,8 @@
+22 Jan 2010:
+- bugfix for configurations where the master node is being managed with
+  synctool as well
+- released as 4.4
+
 9 Oct 2009:
 - enhancement: better handling of filenames containing spaces for dsh and dcp
 - enhancement: added -a option to dsh

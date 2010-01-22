@@ -55,6 +55,11 @@ def run_remote_synctool(nodes):
 	synctool_ssh.run_parallel_cmds(nodes, cmds)
 
 
+def run_local_synctool():
+	cmd_arr = shlex.split(synctool_config.SYNCTOOL_CMD) + PASS_ARGS
+	synctool_ssh.run_local_cmd(cmd_arr)
+
+
 def usage():
 	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
 	print 'options:'
@@ -213,6 +218,15 @@ if __name__ == '__main__':
 	nodes = synctool_ssh.make_nodeset()
 	if nodes == None:
 		sys.exit(1)
+
+	for node in nodes:
+#
+#	is this node the localhost? then run locally
+#
+		if node == synctool_config.NODENAME:
+			run_local_synctool()
+			nodes.remove(node)
+			break
 
 	run_remote_synctool(nodes)
 
