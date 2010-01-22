@@ -183,7 +183,8 @@ def _run_command(cmd_arr, node, join_char, cmd_args):
 #	is this node the local node?
 #
 	if node == synctool_config.NODENAME:
-		raise RuntimeError, "node %s is the local node, this is not going to work" % node
+		run_local_cmd(cmd_args)
+		return
 
 	nodename = NAMEMAP[node]
 
