@@ -342,7 +342,10 @@ def find_callback(src_dir, dest_dir, filename, ext):
 	dest = os.path.join(dest_dir, filename)
 
 	if dest == FIND_SYNCTREE:
-		FOUND_SYNCTREE = os.path.join(src_dir, '%s._%s' % (filename, ext))
+		if not ext:				# directories have no extension
+			FOUND_SYNCTREE = os.path.join(src_dir, filename)
+		else:
+			FOUND_SYNCTREE = os.path.join(src_dir, '%s._%s' % (filename, ext))
 		return False			# terminate the treewalk()
 
 	return True

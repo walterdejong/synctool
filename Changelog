@@ -1,3 +1,6 @@
+26 Jan 2010:
+- bugfix: '--single' did not work for directories
+
 22 Jan 2010:
 - bugfix for configurations where the master node is being managed with
   synctool as well
