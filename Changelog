@@ -1,5 +1,6 @@
 26 Jan 2010:
 - bugfix: '--single' did not work for directories
+- add new option '--ref' to show what file synctool uses from the repository
 
 22 Jan 2010:
 - bugfix for configurations where the master node is being managed with

@@ -172,6 +172,13 @@ led to any problems.
 To update only a single file rather than all files, use the option
 '--single' or '-1'.
 
+If you want to check what file synctool is using for a given destination
+file, use the '-r' or '--ref' option:
+
+  root@masternode:/# synctool -q -n node1 -r /etc/resolv.conf
+  node1: /etc/resolv.conf._somegroup
+
+
 To inspect differences between the master copy and the client copy of a file,
 use '--diff' or '-d'.
 
