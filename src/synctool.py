@@ -967,6 +967,21 @@ def single_task(filename):
 	unix_out('')
 
 
+def reference(filename):
+	'''show which source file in the repository synctool chooses to use'''
+
+	if not filename:
+		stderr('missing filename')
+		return
+
+	src = synctool_core.find_synctree('overlay', filename)
+	if not src:
+		stdout('%s is not in the overlay tree' % filename)
+		return
+
+	stdout(src)
+
+
 def diff_files(filename):
 	'''display a diff of the file'''
 
@@ -1003,6 +1018,7 @@ def usage():
 #	print '  -n, --dry-run         Show what would have been updated'
 	print '  -d, --diff=file       Show diff for file'
 	print '  -1, --single=file     Update a single file/run single task'
+	print '  -r, --ref=file        Show which source file synctool chooses'
 	print '  -t, --tasks           Run the scripts in the tasks/ directory'
 	print '  -f, --fix             Perform updates (otherwise, do dry-run)'
 	print '  -v, --verbose         Be verbose'
@@ -1016,7 +1032,7 @@ def usage():
 
 
 def get_options():
-	global RUN_TASKS
+	global RUN_TASKS, REFERENCE
 
 	progname = os.path.basename(sys.argv[0])
 
@@ -1024,12 +1040,13 @@ def get_options():
 
 	diff_file = None
 	single_file = None
+	reference_file = None
 
 	if len(sys.argv) <= 1:
-		return (diff_file, single_file)
+		return (None, None, None)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:tfvq', ['help', 'conf=', 'diff=', 'single=', 'tasks', 'fix', 'verbose', 'quiet', 'unix', 'masterlog'])
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:tfvq', ['help', 'conf=', 'diff=', 'single=', 'reference=', 'tasks', 'fix', 'verbose', 'quiet', 'unix', 'masterlog'])
 	except getopt.error, (reason):
 		print '%s: %s' % (progname, reason)
 		usage()
@@ -1093,6 +1110,11 @@ def get_options():
 			RUN_TASKS = True
 			continue
 
+		if opt in ('-r', '--ref', '--reference'):
+			REFERENCE = True
+			reference_file = arg
+			continue
+
 		stderr("unknown command line option '%s'" % opt)
 		errors = errors + 1
 
@@ -1113,11 +1135,11 @@ def get_options():
 		stderr("options '--diff' and '--fix' cannot be combined")
 		sys.exit(1)
 
-	return (diff_file, single_file)
+	return (diff_file, single_file, reference_file)
 
 
 if __name__ == '__main__':
-	(diff_file, single_file) = get_options()
+	(diff_file, single_file, reference_file) = get_options()
 
 	synctool_config.read_config()
 	synctool_config.add_myhostname()
@@ -1188,6 +1210,9 @@ if __name__ == '__main__':
 			(changed, src) = single_files(single_file)
 			if changed:
 				on_update_single(src, single_file)
+
+	elif reference_file:
+		reference(reference_file)
 
 	elif RUN_TASKS:
 		run_tasks()

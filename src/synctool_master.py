@@ -73,6 +73,7 @@ def usage():
 	print
 	print '  -d, --diff=file                Show diff for file'
 	print '  -1, --single=file              Update a single file/run single task'
+	print '  -r, --ref=file                 Show which source file synctool chooses'
 	print '  -t, --tasks                    Run the scripts in the tasks/ directory'
 	print '  -f, --fix                      Perform updates (otherwise, do dry-run)'
 	print '      --unix                     Output actions as unix shell commands'
@@ -96,8 +97,8 @@ def get_options():
 #		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:tfqa', ['help', 'conf=', 'verbose', 'node=', 'group=',
-			'exclude=', 'exclude-group=', 'diff=', 'single=', 'tasks', 'fix', 'quiet', 'aggregate', 'skip-rsync', 'unix'])
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:r:tfqa', ['help', 'conf=', 'verbose', 'node=', 'group=',
+			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=', 'tasks', 'fix', 'quiet', 'aggregate', 'skip-rsync', 'unix'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
