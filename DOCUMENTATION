@@ -198,6 +198,17 @@ or copy a file to these three nodes:
 	# dcp -n node1,node2,node3 -d /tmp patchfile-1.0.tar.gz
 
 
+You may also wish to pull a file from a node into the repository. You can do
+this from the masternode like this:
+
+    # synctool -n node1 --upload /path/to/file
+
+It may be desirable to give the file a different group extension than the
+default proposed by synctool:
+
+    # synctool -n node1 --upload /path/to/file --suffix=somegroup
+
+
 The '-t' or '--tasks' option runs the de executables that are in tasks/
 (if you also supply '-f'..!) These executables can also have classnames as
 filename extension. They can be shell scripts or any other kind of
