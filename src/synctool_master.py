@@ -70,6 +70,12 @@ def upload(interface, upload_filename, upload_suffix=None):
 		stderr('%s: error: scp_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
 		sys.exit(-1)
 
+	if upload_filename[0] != '/':
+		stderr('error: the filename to upload must be an absolute path')
+		sys.exit(-1)
+
+	trimmed_upload_fn = upload_filename[1:]			# remove leading slash
+
 	import synctool_core
 
 # make the known groups lists
@@ -94,7 +100,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 # see if file is already in the repository
 	repos_filename = synctool_core.find_synctree('overlay', upload_filename)
 	if not repos_filename:
-		repos_filename = os.path.join(synctool_config.MASTERDIR, upload_filename)
+		repos_filename = os.path.join(synctool_config.MASTERDIR, 'overlay', trimmed_upload_fn)
 		if upload_suffix:
 			repos_filename = repos_filename + '._' + upload_suffix
 		else:
@@ -107,10 +113,15 @@ def upload(interface, upload_filename, upload_suffix=None):
 
 			repos_filename = repos_filename + '._' + upload_suffix
 
+	verbose('%s:%s => %s' % (node, upload_filename, repos_filename))
 	unix_out('%s %s:%s %s' % (synctool_config.SCP_CMD, interface, upload_filename, repos_filename))
 
+# display short path name
+	masterlen = len(synctool_config.MASTERDIR) + 1
+	short_repos_filename = '$%s' % repos_filename[masterlen:]
+
 	if dry_run:
-		stdout('would be uploaded as %s' % repos_filename)
+		stdout('would be uploaded as %s' % short_repos_filename)
 	else:
 		# make scp command array
 		cmd_arr = shlex.split(synctool_config.SCP_CMD)
@@ -120,7 +131,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 		synctool_ssh.run_local_cmd(cmd_arr)
 
 		if os.path.isfile(repos_filename):
-			stdout('uploaded %s' % repos_filename)
+			stdout('uploaded %s' % short_repos_filename)
 
 
 def usage():
