@@ -63,6 +63,34 @@ def run_local_synctool():
 	synctool_ssh.run_local_cmd(cmd_arr)
 
 
+def upload(node, upload_filename, upload_suffix=None):
+	'''copy a file from a node into the overlay/ tree'''
+
+	import synctool_core
+
+# shadow DRY_RUN because that var can not be used correctly here
+	dry_run = True
+	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
+		dry_run = False
+
+	interface = synctool_config.get_node_interface(node)
+
+	repos_filename = synctool_core.find_synctree('overlay', upload_filename)
+	if not src:
+		repos_filename = os.path.join(synctool_config.MASTERDIR, upload_filename)
+		if upload_suffix:
+			repos_filename = repos_filename + '._' + upload_suffix
+		else:
+			repos_filename = repos_filename + '._' + node		# use _nodename as default suffix
+
+# make scp command array
+	cmd_arr = shlex.split(synctool_config.SCP_CMD)
+	cmd_arr.append('%s:%s' % (interface, upload_filename))
+	cmd_arr.append(repos_filename)
+
+	print 'TD upload', cmd_arr
+
+
 def usage():
 	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
 	print 'options:'
@@ -77,6 +105,8 @@ def usage():
 	print '  -d, --diff=file                Show diff for file'
 	print '  -1, --single=file              Update a single file/run single task'
 	print '  -r, --ref=file                 Show which source file synctool chooses'
+	print '  -u, --upload=file              Pull a remote file into the overlay tree'
+	print '  -s, --suffix=group             Give group suffix for the uploaded file'
 	print '  -t, --tasks                    Run the scripts in the tasks/ directory'
 	print '  -f, --fix                      Perform updates (otherwise, do dry-run)'
 	print '      --unix                     Output actions as unix shell commands'
@@ -103,8 +133,8 @@ def get_options():
 #		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:r:tfqa', ['help', 'conf=', 'verbose', 'node=', 'group=',
-			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=', 'tasks', 'fix', 'quiet', 'aggregate',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:r:u:s:tfqa', ['help', 'conf=', 'verbose', 'node=', 'group=',
+			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=', 'upload=', 'suffix=', 'tasks', 'fix', 'quiet', 'aggregate',
 			'skip-rsync', 'unix', 'version', 'check-update', 'download'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
@@ -122,6 +152,9 @@ def get_options():
 
 	synctool_ssh.NODELIST = ''
 	synctool_ssh.GROUPLIST = ''
+
+	upload_filename = None
+	upload_suffix = None
 
 	PASS_ARGS = []
 	MASTER_OPTS = [ sys.argv[0] ]
@@ -173,6 +206,14 @@ def get_options():
 				synctool_ssh.EXCLUDEGROUPS = synctool_ssh.EXCLUDEGROUPS + ',' + arg
 			continue
 
+		if opt in ('-u', '--upload'):
+			upload_filename = arg
+			continue
+
+		if opt in ('-s', '--suffix'):
+			upload_suffix = arg
+			continue
+
 		if opt in ('-q', '--quiet'):
 			synctool_lib.QUIET = True
 			PASS_ARGS.append(opt)
@@ -220,9 +261,11 @@ def get_options():
 		MASTER_OPTS.extend(args)
 		PASS_ARGS.extend(args)
 
+	return (upload_filename, upload_suffix)
+
 
 if __name__ == '__main__':
-	get_options()
+	(upload_filename, upload_suffix) = get_options()
 
 	if OPT_VERSION:
 		print synctool_config.VERSION
@@ -251,16 +294,25 @@ if __name__ == '__main__':
 	if nodes == None:
 		sys.exit(1)
 
-	for node in nodes:
-#
-#	is this node the localhost? then run locally
-#
-		if node == synctool_config.NODENAME:
-			run_local_synctool()
-			nodes.remove(node)
-			break
+	if upload_filename:			# upload a file
+		if len(nodes) > 1:
+			print "The option --upload can only be run on just one node"
+			print "Please use --node=nodename to specify the node to upload from"
+			sys.exit(1)
+	
+		upload(nodes[0], upload_filename, suffix)
 
-	run_remote_synctool(nodes)
+	else:						# do regular synctool run
+		for node in nodes:
+		#
+		#	is this node the localhost? then run locally
+		#
+			if node == synctool_config.NODENAME:
+				run_local_synctool()
+				nodes.remove(node)
+				break
+
+		run_remote_synctool(nodes)
 
 	synctool_lib.closelog()
 
