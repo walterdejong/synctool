@@ -260,15 +260,12 @@ def get_options():
 
 		if opt in ('-d', '--diff'):
 			opt_diff = True
-			continue
 
 		if opt in ('-1', '--single'):
 			opt_single = True
-			continue
 
 		if opt in ('-r', '--ref'):
 			opt_reference = True
-			continue
 
 		if opt in ('-u', '--upload'):
 			opt_upload = True
@@ -282,18 +279,13 @@ def get_options():
 
 		if opt in ('-t', '--tasks'):
 			opt_tasks = True
-			continue
 
 		if opt in ('-q', '--quiet'):
 			synctool_lib.QUIET = True
-			PASS_ARGS.append(opt)
-			continue
 
 		if opt in ('-f', '--fix'):
 			opt_fix = True
 			synctool_lib.DRY_RUN = False
-			PASS_ARGS.append(opt)
-			continue
 
 		if opt in ('-a', '--aggregate'):
 			OPT_AGGREGATE = True
@@ -305,8 +297,6 @@ def get_options():
 
 		if opt == '--unix':
 			synctool_lib.UNIX_CMD = True
-			PASS_ARGS.append(opt)
-			continue
 
 		if opt == '--version':
 			OPT_VERSION = True
