@@ -976,14 +976,9 @@ def reference(filename):
 		stderr('missing filename')
 		return
 
-	if RUN_TASKS:
-		subdir = 'tasks'
-	else:
-		subdir = 'overlay'
-
-	src = synctool_core.find_synctree(subdir, filename)
+	src = synctool_core.find_synctree('overlay', filename)
 	if not src:
-		stdout('%s is not in the %s tree' % (filename, subdir))
+		stdout('%s is not in the overlay tree' % filename)
 		return
 
 	stdout(src)
@@ -1154,6 +1149,10 @@ def get_options():
 			sys.exit(1)
 
 	if reference_file:
+		if RUN_TASKS:
+			stderr("options '--ref' and '--tasks' cannot be combined")		# maybe this is a missing feature(?)
+			sys.exit(1)
+
 		if diff_file:
 			stderr("options '--ref' and '--diff' cannot be combined")
 			sys.exit(1)
