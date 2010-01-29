@@ -2,7 +2,7 @@
 #
 #	synctool-config	WJ109
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2010
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -801,7 +801,7 @@ def usage():
 	print 'A node/group list can be a single value, or a comma-separated list'
 	print 'A command is a list of these: diff, ssh, rsync, synctool'
 	print
-	print 'synctool-config by Walter de Jong <walter@heiho.net> (c) 2009'
+	print 'synctool-config by Walter de Jong <walter@heiho.net> (c) 2009-2010'
 
 
 def get_options():
@@ -913,6 +913,10 @@ def get_options():
 if __name__ == '__main__':
 	get_options()
 
+	if ACTION == ACTION_VERSION:
+		print VERSION
+		sys.exit(0)
+
 	read_config()
 
 	if ACTION == ACTION_LIST_NODES:
@@ -943,9 +947,6 @@ if __name__ == '__main__':
 
 	elif ACTION == ACTION_NUMPROC:
 		print NUM_PROC
-
-	elif ACTION == ACTION_VERSION:
-		print VERSION
 
 	elif ACTION == ACTION_PREFIX:
 		print os.path.abspath(os.path.dirname(sys.argv[0]))

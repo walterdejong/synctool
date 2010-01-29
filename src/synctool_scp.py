@@ -2,7 +2,7 @@
 #
 #	synctool-scp	WJ109
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2010
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -129,7 +129,7 @@ def usage():
 	print
 	print 'A nodelist or grouplist is a comma-separated list'
 	print
-	print 'synctool-scp by Walter de Jong <walter@heiho.net> (c) 2009'
+	print 'synctool-scp by Walter de Jong <walter@heiho.net> (c) 2009-2010'
 
 
 def get_options():

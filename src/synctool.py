@@ -2,7 +2,7 @@
 #
 #	synctool	WJ103
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2010
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -40,6 +40,9 @@ RUN_TASKS = False
 
 # blocksize for doing I/O while checksumming files
 BLOCKSIZE = 16 * 1024
+
+OPT_VERSION = False
+OPT_CHECK_VERSION = False
 
 
 def ascii_uid(uid):
@@ -1024,15 +1027,17 @@ def usage():
 	print '  -v, --verbose         Be verbose'
 	print '  -q, --quiet           Suppress informational startup messages'
 	print '      --unix            Output actions as unix shell commands'
+	print '      --version         Print current version number'
+	print '      --check-update    Check for availibility of newer version'
 	print
 	print 'synctool can help you administer your cluster of machines'
 	print 'Note that by default, it does a dry-run, unless you specify --fix'
 	print
-	print 'Written by Walter de Jong <walter@heiho.net> (c) 2003-2009'
+	print 'Written by Walter de Jong <walter@heiho.net> (c) 2003-2010'
 
 
 def get_options():
-	global RUN_TASKS, REFERENCE
+	global RUN_TASKS, REFERENCE, OPT_VERSION, OPT_CHECK_UPDATE
 
 	progname = os.path.basename(sys.argv[0])
 
@@ -1046,7 +1051,8 @@ def get_options():
 		return (None, None, None)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:tfvq', ['help', 'conf=', 'diff=', 'single=', 'reference=', 'tasks', 'fix', 'verbose', 'quiet', 'unix', 'masterlog'])
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:tfvq', ['help', 'conf=', 'diff=', 'single=', 'reference=', 'tasks', 'fix', 'verbose', 'quiet',
+			'unix', 'masterlog', 'version', 'check-update'])
 	except getopt.error, (reason):
 		print '%s: %s' % (progname, reason)
 		usage()
@@ -1115,6 +1121,14 @@ def get_options():
 			reference_file = arg
 			continue
 
+		if opt == '--version':
+			OPT_VERSION = True
+			continue
+
+		if opt == '--check-update':
+			OPT_CHECK_UPDATE = True
+			continue
+
 		stderr("unknown command line option '%s'" % opt)
 		errors = errors + 1
 
@@ -1140,6 +1154,14 @@ def get_options():
 
 if __name__ == '__main__':
 	(diff_file, single_file, reference_file) = get_options()
+
+	if OPT_VERSION:
+		print synctool_config.VERSION
+		sys.exit(0)
+
+	if OPT_CHECK_UPDATE:
+		import synctool_update
+		sys.exit(synctool_update.check())
 
 	synctool_config.read_config()
 	synctool_config.add_myhostname()

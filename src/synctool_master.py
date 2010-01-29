@@ -2,7 +2,7 @@
 #
 #	synctool_master.py	WJ109
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2010
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -25,6 +25,8 @@ import shlex
 
 OPT_SKIP_RSYNC = False
 OPT_AGGREGATE = False
+OPT_VERSION = False
+OPT_CHECK_UPDATE = False
 
 PASS_ARGS = None
 MASTER_OPTS = None
@@ -79,6 +81,8 @@ def usage():
 	print '      --unix                     Output actions as unix shell commands'
 	print '      --skip-rsync               Do not sync the repository'
 	print '                                 (eg. when it is on a shared filesystem)'
+	print '      --version                  Show current version number'
+	print '      --check-update             Check for availibility of newer version'
 	print '  -v, --verbose                  Be verbose'
 	print '  -q, --quiet                    Suppress informational startup messages'
 	print '  -a, --aggregate                Condense output; list nodes per change'
@@ -86,11 +90,11 @@ def usage():
 	print 'A nodelist or grouplist is a comma-separated list'
 	print 'Note that by default, it does a dry-run, unless you specify --fix'
 	print
-	print 'Written by Walter de Jong <walter@heiho.net> (c) 2003-2009'
+	print 'Written by Walter de Jong <walter@heiho.net> (c) 2003-2010'
 
 
 def get_options():
-	global PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE, MASTER_OPTS
+	global PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE, OPT_CHECK_UPDATE, OPT_VERSION, MASTER_OPTS
 
 #	if len(sys.argv) <= 1:
 #		usage()
@@ -98,7 +102,7 @@ def get_options():
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:r:tfqa', ['help', 'conf=', 'verbose', 'node=', 'group=',
-			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=', 'tasks', 'fix', 'quiet', 'aggregate', 'skip-rsync', 'unix'])
+			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=', 'tasks', 'fix', 'quiet', 'aggregate', 'skip-rsync', 'unix', 'version', 'check-update'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -189,6 +193,14 @@ def get_options():
 			PASS_ARGS.append(opt)
 			continue
 
+		if opt == '--version':
+			OPT_VERSION = True
+			continue
+
+		if opt == '--check-update':
+			OPT_CHECK_UPDATE = True
+			continue
+
 		PASS_ARGS.append(opt)
 
 		if arg != None:
@@ -204,6 +216,14 @@ def get_options():
 
 if __name__ == '__main__':
 	get_options()
+
+	if OPT_VERSION:
+		print synctool_config.VERSION
+		sys.exit(0)
+
+	if OPT_CHECK_UPDATE:
+		import synctool_update
+		sys.exit(synctool_update.check())
 
 	if OPT_AGGREGATE:
 		synctool_aggr.run(MASTER_OPTS)

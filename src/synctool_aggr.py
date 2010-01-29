@@ -4,7 +4,7 @@
 #
 #	group together output that is the same
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2009
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2010
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -90,7 +90,7 @@ def usage():
 	print 'synctool-aggr is built in to synctool-master and synctool-ssh'
 	print "and activated by the '-a' option"
 	print
-	print 'Written by Walter de Jong <walter@heiho.net> (c) 2009'
+	print 'Written by Walter de Jong <walter@heiho.net> (c) 2009-2010'
 
 
 def get_options():
