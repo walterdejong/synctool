@@ -66,6 +66,10 @@ def run_local_synctool():
 def upload(node, upload_filename, upload_suffix=None):
 	'''copy a file from a node into the overlay/ tree'''
 
+	if not synctool_config.SCP_CMD:
+		stderr('%s: error: scp_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
+		sys.exit(-1)
+
 	import synctool_core
 
 # make the known groups lists
@@ -87,13 +91,26 @@ def upload(node, upload_filename, upload_suffix=None):
 			repos_filename = repos_filename + '._' + upload_suffix
 		else:
 			repos_filename = repos_filename + '._' + node		# use _nodename as default suffix
+	else:
+		if upload_suffix:
+			arr = string.split(repos_filename, '.')
+			if len(arr) > 1 and arr[-1][0] == '_':
+				repos_filename = string.join(arr[:-1], '.')
+
+			repos_filename = repos_filename + '._' + upload_suffix
 
 # make scp command array
 	cmd_arr = shlex.split(synctool_config.SCP_CMD)
 	cmd_arr.append('%s:%s' % (interface, upload_filename))
 	cmd_arr.append(repos_filename)
 
-	print 'TD upload', cmd_arr
+	if synctool_lib.UNIX_CMD:
+		stdout('%s %s:%s %s' % (synctool_config.SCP_CMD, interface, upload_filename, repos_filename))
+
+	if dry_run:
+		stdout('would be uploaded as %s' % repos_filename)
+	else:
+		stdout('uploaded %s' % repos_filename)
 
 
 def usage():
