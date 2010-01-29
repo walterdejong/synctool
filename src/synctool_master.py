@@ -199,6 +199,15 @@ def get_options():
 	upload_filename = None
 	upload_suffix = None
 
+# these are only used for checking the validity of command-line option combinations
+	opt_diff = False
+	opt_single = False
+	opt_reference = False
+	opt_tasks = False
+	opt_upload = False
+	opt_suffix = False
+	opt_fix = False
+
 	PASS_ARGS = []
 	MASTER_OPTS = [ sys.argv[0] ]
 
@@ -249,12 +258,30 @@ def get_options():
 				synctool_ssh.EXCLUDEGROUPS = synctool_ssh.EXCLUDEGROUPS + ',' + arg
 			continue
 
+		if opt in ('-d', '--diff'):
+			opt_diff = True
+			continue
+
+		if opt in ('-1', '--single'):
+			opt_single = True
+			continue
+
+		if opt in ('-r', '--ref'):
+			opt_reference = True
+			continue
+
 		if opt in ('-u', '--upload'):
+			opt_upload = True
 			upload_filename = arg
 			continue
 
 		if opt in ('-s', '--suffix'):
+			opt_suffix = True
 			upload_suffix = arg
+			continue
+
+		if opt in ('-t', '--tasks'):
+			opt_tasks = True
 			continue
 
 		if opt in ('-q', '--quiet'):
@@ -263,6 +290,7 @@ def get_options():
 			continue
 
 		if opt in ('-f', '--fix'):
+			opt_fix = True
 			synctool_lib.DRY_RUN = False
 			PASS_ARGS.append(opt)
 			continue
@@ -303,6 +331,8 @@ def get_options():
 	if args != None:
 		MASTER_OPTS.extend(args)
 		PASS_ARGS.extend(args)
+
+	synctool.option_combinations(opt_diff, opt_single, opt_reference, opt_tasks, opt_upload, opt_suffix, opt_fix)
 
 	return (upload_filename, upload_suffix)
 

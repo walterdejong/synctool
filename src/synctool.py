@@ -1011,6 +1011,28 @@ def diff_files(filename):
 		sys.stderr.flush()
 
 
+def	option_combinations(opt_diff, opt_single, opt_reference, opt_tasks, opt_upload, opt_suffix, opt_fix):
+	'''some combinations of command-line options don't make sense; alert the user and abort'''
+	
+	if opt_upload and (opt_diff or opt_single or opt_reference or opt_tasks):
+		stderr("the '--upload' option can not be combined with '--diff', '--single', '--ref',")
+		stderr("or '--tasks'")
+		sys.exit(1)
+
+	if opt_suffix and not opt_upload:
+		stderr("option '--suffix' can only be used together with '--upload'")
+		sys.exit(1)
+
+	if opt_diff and (opt_single or opt_reference or opt_tasks or opt_fix):
+		stderr("option '--diff' can not be combined with '--single', '--ref', '--tasks',")
+		stderr("or '--fix'")
+		sys.exit(1)
+		
+	if opt_reference and (opt_single or opt_tasks or opt_fix):
+		stderr("option '--reference' can not be combined with '--single', '--tasks', or '--fix'")
+		sys.exit(1)
+
+
 def usage():
 	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
 	print 'options:'
@@ -1041,10 +1063,6 @@ def get_options():
 
 	synctool_lib.DRY_RUN = True				# set default dry-run
 
-	diff_file = None
-	single_file = None
-	reference_file = None
-
 	if len(sys.argv) <= 1:
 		return (None, None, None)
 
@@ -1066,6 +1084,19 @@ def get_options():
 		sys.exit(1)
 
 	errors = 0
+
+	diff_file = None
+	single_file = None
+	reference_file = None
+
+# these are only used for checking the validity of command-line option combinations
+	opt_diff = False
+	opt_single = False
+	opt_reference = False
+	opt_tasks = False
+	opt_upload = False
+	opt_suffix = False
+	opt_fix = False
 
 	for opt, arg in opts:
 		if opt in ('-h', '--help', '-?'):
@@ -1103,18 +1134,22 @@ def get_options():
 			continue
 
 		if opt in ('-d', '--diff'):
+			opt_diff = True
 			diff_file = arg
 			continue
 
 		if opt in ('-1', '--single'):
+			opt_single = True
 			single_file = arg
 			continue
 
 		if opt in ('-t', '--task', '--tasks'):
+			opt_tasks = True
 			RUN_TASKS = True
 			continue
 
 		if opt in ('-r', '--ref', '--reference'):
+			opt_reference = True
 			reference_file = arg
 			continue
 
@@ -1129,40 +1164,7 @@ def get_options():
 		usage()
 		sys.exit(1)
 
-	if diff_file:
-		if RUN_TASKS:
-			stderr("options '--diff' and '--tasks' cannot be combined")
-			sys.exit(1)
-
-		if reference_file:
-			stderr("options '--diff' and '--ref' cannot be combined")
-			sys.exit(1)
-
-		if single_file:
-			if diff_file != single_file:
-				stderr("options '--diff' and '--single' cannot be combined")
-				sys.exit(1)
-
-		if not synctool_lib.DRY_RUN:
-			stderr("options '--diff' and '--fix' cannot be combined")
-			sys.exit(1)
-
-	if reference_file:
-		if RUN_TASKS:
-			stderr("options '--ref' and '--tasks' cannot be combined")		# maybe this is a missing feature(?)
-			sys.exit(1)
-
-		if diff_file:
-			stderr("options '--ref' and '--diff' cannot be combined")
-			sys.exit(1)
-
-		if single_file:
-			stderr("options '--ref' and '--single' cannot be combined")
-			sys.exit(1)
-
-		if not synctool_lib.DRY_RUN:
-			stderr("options '--ref' and '--fix' cannot be combined")
-			sys.exit(1)
+	option_combinations(opt_diff, opt_single, opt_reference, opt_tasks, opt_upload, opt_suffix, opt_fix)
 
 	return (diff_file, single_file, reference_file)
 
