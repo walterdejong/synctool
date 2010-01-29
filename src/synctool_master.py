@@ -63,7 +63,7 @@ def run_local_synctool():
 	synctool_ssh.run_local_cmd(cmd_arr)
 
 
-def upload(node, upload_filename, upload_suffix=None):
+def upload(interface, upload_filename, upload_suffix=None):
 	'''copy a file from a node into the overlay/ tree'''
 
 	if not synctool_config.SCP_CMD:
@@ -77,13 +77,21 @@ def upload(node, upload_filename, upload_suffix=None):
 	synctool_config.GROUPS = synctool_config.get_my_groups()
 	synctool_config.ALL_GROUPS = synctool_config.make_all_groups()
 
+	if upload_suffix and not upload_suffix in synctool_config.ALL_GROUPS:
+		stderr("no such group '%s'" % upload_suffix)
+		sys.exit(-1)
+		
 # shadow DRY_RUN because that var can not be used correctly here
-	dry_run = True
 	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
 		dry_run = False
+	else:
+		dry_run = True
+		if not synctool_lib.QUIET:
+			stdout('DRY RUN, not uploading any files')
 
-	interface = synctool_config.get_node_interface(node)
+	node = synctool_ssh.get_nodename_from_interface(interface)
 
+# see if file is already in the repository
 	repos_filename = synctool_core.find_synctree('overlay', upload_filename)
 	if not repos_filename:
 		repos_filename = os.path.join(synctool_config.MASTERDIR, upload_filename)
@@ -93,18 +101,13 @@ def upload(node, upload_filename, upload_suffix=None):
 			repos_filename = repos_filename + '._' + node		# use _nodename as default suffix
 	else:
 		if upload_suffix:
-			if not upload_suffix in synctool_config.ALL_GROUPS:
-				stderr("no such group '%s'" % upload_suffix)
-				sys.exit(-1)
-		
 			arr = string.split(repos_filename, '.')
 			if len(arr) > 1 and arr[-1][0] == '_':
 				repos_filename = string.join(arr[:-1], '.')
 
 			repos_filename = repos_filename + '._' + upload_suffix
 
-	if synctool_lib.UNIX_CMD:
-		stdout('%s %s:%s %s' % (synctool_config.SCP_CMD, interface, upload_filename, repos_filename))
+	unix_out('%s %s:%s %s' % (synctool_config.SCP_CMD, interface, upload_filename, repos_filename))
 
 	if dry_run:
 		stdout('would be uploaded as %s' % repos_filename)
@@ -324,7 +327,7 @@ if __name__ == '__main__':
 		sys.exit(1)
 
 	if upload_filename:			# upload a file
-		if len(nodes) > 1:
+		if len(nodes) != 1:
 			print "The option --upload can only be run on just one node"
 			print "Please use --node=nodename to specify the node to upload from"
 			sys.exit(1)

@@ -112,6 +112,13 @@ def make_nodeset():
 	return nodeset
 
 
+def get_nodename_from_interface(iface):
+	if NAMEMAP.has_key(iface):
+		return NAMEMAP[iface]
+
+	return iface
+
+
 def run_remote_cmd(nodes, remote_cmd_args):
 	'''nodes[] is nodeset to run on'''
 	'''remote_cmd_args[] is array of command + arguments'''
