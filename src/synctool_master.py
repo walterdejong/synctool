@@ -93,16 +93,15 @@ def upload(node, upload_filename, upload_suffix=None):
 			repos_filename = repos_filename + '._' + node		# use _nodename as default suffix
 	else:
 		if upload_suffix:
+			if not upload_suffix in synctool_config.ALL_GROUPS:
+				stderr("no such group '%s'" % upload_suffix)
+				sys.exit(-1)
+		
 			arr = string.split(repos_filename, '.')
 			if len(arr) > 1 and arr[-1][0] == '_':
 				repos_filename = string.join(arr[:-1], '.')
 
 			repos_filename = repos_filename + '._' + upload_suffix
-
-# make scp command array
-	cmd_arr = shlex.split(synctool_config.SCP_CMD)
-	cmd_arr.append('%s:%s' % (interface, upload_filename))
-	cmd_arr.append(repos_filename)
 
 	if synctool_lib.UNIX_CMD:
 		stdout('%s %s:%s %s' % (synctool_config.SCP_CMD, interface, upload_filename, repos_filename))
@@ -110,7 +109,15 @@ def upload(node, upload_filename, upload_suffix=None):
 	if dry_run:
 		stdout('would be uploaded as %s' % repos_filename)
 	else:
-		stdout('uploaded %s' % repos_filename)
+		# make scp command array
+		cmd_arr = shlex.split(synctool_config.SCP_CMD)
+		cmd_arr.append('%s:%s' % (interface, upload_filename))
+		cmd_arr.append(repos_filename)
+
+		synctool_ssh.run_local_cmd(cmd_arr)
+
+		if os.path.isfile(repos_filename):
+			stdout('uploaded %s' % repos_filename)
 
 
 def usage():
