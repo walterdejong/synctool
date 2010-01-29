@@ -113,12 +113,12 @@ def upload(interface, upload_filename, upload_suffix=None):
 
 			repos_filename = repos_filename + '._' + upload_suffix
 
-	verbose('%s:%s => %s' % (node, upload_filename, repos_filename))
+	verbose('%s:%s uploaded as %s' % (node, upload_filename, repos_filename))
 	unix_out('%s %s:%s %s' % (synctool_config.SCP_CMD, interface, upload_filename, repos_filename))
 
 # display short path name
 	masterlen = len(synctool_config.MASTERDIR) + 1
-	short_repos_filename = '$%s' % repos_filename[masterlen:]
+	short_repos_filename = '$masterdir/%s' % repos_filename[masterlen:]
 
 	if dry_run:
 		stdout('would be uploaded as %s' % short_repos_filename)
