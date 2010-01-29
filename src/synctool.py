@@ -977,13 +977,13 @@ def reference(filename):
 		return
 
 	if RUN_TASKS:
-		subdir = 'overlay'
-	else:
 		subdir = 'tasks'
+	else:
+		subdir = 'overlay'
 
 	src = synctool_core.find_synctree(subdir, filename)
 	if not src:
-		stdout('%s is not in the %s tree' % (subdir, filename))
+		stdout('%s is not in the %s tree' % (filename, subdir))
 		return
 
 	stdout(src)
