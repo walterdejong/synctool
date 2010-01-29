@@ -54,7 +54,7 @@ def check():
 
 	latest_version = get_latest_version()
 
-	if lastest_version == synctool_config.VERSION:
+	if latest_version == synctool_config.VERSION:
 		stdout('You are running the latest version of synctool')
 		return 0
 	else:
