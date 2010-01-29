@@ -68,6 +68,11 @@ def upload(node, upload_filename, upload_suffix=None):
 
 	import synctool_core
 
+# make the known groups lists
+	synctool_config.remove_ignored_groups()
+	synctool_config.GROUPS = synctool_config.get_my_groups()
+	synctool_config.ALL_GROUPS = synctool_config.make_all_groups()
+
 # shadow DRY_RUN because that var can not be used correctly here
 	dry_run = True
 	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
@@ -76,7 +81,7 @@ def upload(node, upload_filename, upload_suffix=None):
 	interface = synctool_config.get_node_interface(node)
 
 	repos_filename = synctool_core.find_synctree('overlay', upload_filename)
-	if not src:
+	if not repos_filename:
 		repos_filename = os.path.join(synctool_config.MASTERDIR, upload_filename)
 		if upload_suffix:
 			repos_filename = repos_filename + '._' + upload_suffix
@@ -300,7 +305,7 @@ if __name__ == '__main__':
 			print "Please use --node=nodename to specify the node to upload from"
 			sys.exit(1)
 	
-		upload(nodes[0], upload_filename, suffix)
+		upload(nodes[0], upload_filename, upload_suffix)
 
 	else:						# do regular synctool run
 		for node in nodes:
