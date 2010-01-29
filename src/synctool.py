@@ -976,9 +976,14 @@ def reference(filename):
 		stderr('missing filename')
 		return
 
-	src = synctool_core.find_synctree('overlay', filename)
+	if RUN_TASKS:
+		subdir = 'overlay'
+	else:
+		subdir = 'tasks'
+
+	src = synctool_core.find_synctree(subdir, filename)
 	if not src:
-		stdout('%s is not in the overlay tree' % filename)
+		stdout('%s is not in the %s tree' % (subdir, filename))
 		return
 
 	stdout(src)
@@ -1130,18 +1135,36 @@ def get_options():
 		usage()
 		sys.exit(1)
 
-	if diff_file and RUN_TASKS:
-		stderr("options '--diff' and '--tasks' cannot be combined")
-		sys.exit(1)
-
-	if diff_file and single_file:
-		if diff_file != single_file:
-			stderr("options '--diff' and '--single' cannot be combined")
+	if diff_file:
+		if RUN_TASKS:
+			stderr("options '--diff' and '--tasks' cannot be combined")
 			sys.exit(1)
 
-	if diff_file and not synctool_lib.DRY_RUN:
-		stderr("options '--diff' and '--fix' cannot be combined")
-		sys.exit(1)
+		if reference_file:
+			stderr("options '--diff' and '--ref' cannot be combined")
+			sys.exit(1)
+
+		if single_file:
+			if diff_file != single_file:
+				stderr("options '--diff' and '--single' cannot be combined")
+				sys.exit(1)
+
+		if not synctool_lib.DRY_RUN:
+			stderr("options '--diff' and '--fix' cannot be combined")
+			sys.exit(1)
+
+	if reference_file:
+		if diff_file:
+			stderr("options '--ref' and '--diff' cannot be combined")
+			sys.exit(1)
+
+		if single_file:
+			stderr("options '--ref' and '--single' cannot be combined")
+			sys.exit(1)
+
+		if not synctool_lib.DRY_RUN:
+			stderr("options '--ref' and '--fix' cannot be combined")
+			sys.exit(1)
 
 	return (diff_file, single_file, reference_file)
 
