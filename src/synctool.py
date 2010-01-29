@@ -1035,7 +1035,7 @@ def usage():
 
 
 def get_options():
-	global RUN_TASKS, REFERENCE, OPT_VERSION
+	global RUN_TASKS, OPT_VERSION
 
 	progname = os.path.basename(sys.argv[0])
 
@@ -1049,7 +1049,7 @@ def get_options():
 		return (None, None, None)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:tfvq', ['help', 'conf=', 'diff=', 'single=', 'reference=', 'tasks', 'fix', 'verbose', 'quiet',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:tfvq', ['help', 'conf=', 'diff=', 'single=', 'ref=', 'tasks', 'fix', 'verbose', 'quiet',
 			'unix', 'masterlog', 'version'])
 	except getopt.error, (reason):
 		print '%s: %s' % (progname, reason)
@@ -1115,7 +1115,6 @@ def get_options():
 			continue
 
 		if opt in ('-r', '--ref', '--reference'):
-			REFERENCE = True
 			reference_file = arg
 			continue
 
