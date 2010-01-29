@@ -42,7 +42,6 @@ RUN_TASKS = False
 BLOCKSIZE = 16 * 1024
 
 OPT_VERSION = False
-OPT_CHECK_VERSION = False
 
 
 def ascii_uid(uid):
@@ -1028,7 +1027,6 @@ def usage():
 	print '  -q, --quiet           Suppress informational startup messages'
 	print '      --unix            Output actions as unix shell commands'
 	print '      --version         Print current version number'
-	print '      --check-update    Check for availibility of newer version'
 	print
 	print 'synctool can help you administer your cluster of machines'
 	print 'Note that by default, it does a dry-run, unless you specify --fix'
@@ -1037,7 +1035,7 @@ def usage():
 
 
 def get_options():
-	global RUN_TASKS, REFERENCE, OPT_VERSION, OPT_CHECK_UPDATE
+	global RUN_TASKS, REFERENCE, OPT_VERSION
 
 	progname = os.path.basename(sys.argv[0])
 
@@ -1052,7 +1050,7 @@ def get_options():
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:tfvq', ['help', 'conf=', 'diff=', 'single=', 'reference=', 'tasks', 'fix', 'verbose', 'quiet',
-			'unix', 'masterlog', 'version', 'check-update'])
+			'unix', 'masterlog', 'version'])
 	except getopt.error, (reason):
 		print '%s: %s' % (progname, reason)
 		usage()
@@ -1125,10 +1123,6 @@ def get_options():
 			OPT_VERSION = True
 			continue
 
-		if opt == '--check-update':
-			OPT_CHECK_UPDATE = True
-			continue
-
 		stderr("unknown command line option '%s'" % opt)
 		errors = errors + 1
 
@@ -1158,10 +1152,6 @@ if __name__ == '__main__':
 	if OPT_VERSION:
 		print synctool_config.VERSION
 		sys.exit(0)
-
-	if OPT_CHECK_UPDATE:
-		import synctool_update
-		sys.exit(synctool_update.check())
 
 	synctool_config.read_config()
 	synctool_config.add_myhostname()

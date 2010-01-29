@@ -27,6 +27,7 @@ OPT_SKIP_RSYNC = False
 OPT_AGGREGATE = False
 OPT_VERSION = False
 OPT_CHECK_UPDATE = False
+OPT_DOWNLOAD = False
 
 PASS_ARGS = None
 MASTER_OPTS = None
@@ -83,6 +84,7 @@ def usage():
 	print '                                 (eg. when it is on a shared filesystem)'
 	print '      --version                  Show current version number'
 	print '      --check-update             Check for availibility of newer version'
+	print '      --download                 Download latest version'
 	print '  -v, --verbose                  Be verbose'
 	print '  -q, --quiet                    Suppress informational startup messages'
 	print '  -a, --aggregate                Condense output; list nodes per change'
@@ -94,7 +96,7 @@ def usage():
 
 
 def get_options():
-	global PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE, OPT_CHECK_UPDATE, OPT_VERSION, MASTER_OPTS
+	global PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE, OPT_VERSION, OPT_CHECK_UPDATE, OPT_DOWNLOAD, MASTER_OPTS
 
 #	if len(sys.argv) <= 1:
 #		usage()
@@ -102,7 +104,8 @@ def get_options():
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:r:tfqa', ['help', 'conf=', 'verbose', 'node=', 'group=',
-			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=', 'tasks', 'fix', 'quiet', 'aggregate', 'skip-rsync', 'unix', 'version', 'check-update'])
+			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=', 'tasks', 'fix', 'quiet', 'aggregate',
+			'skip-rsync', 'unix', 'version', 'check-update', 'download'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -201,6 +204,10 @@ def get_options():
 			OPT_CHECK_UPDATE = True
 			continue
 
+		if opt == '--download':
+			OPT_DOWNLOAD = True
+			continue
+
 		PASS_ARGS.append(opt)
 
 		if arg != None:
@@ -224,6 +231,10 @@ if __name__ == '__main__':
 	if OPT_CHECK_UPDATE:
 		import synctool_update
 		sys.exit(synctool_update.check())
+
+	if OPT_DOWNLOAD:
+		import synctool_update
+		sys.exit(synctool_update.download())
 
 	if OPT_AGGREGATE:
 		synctool_aggr.run(MASTER_OPTS)

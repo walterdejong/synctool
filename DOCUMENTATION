@@ -254,7 +254,8 @@ log on the master node.
 
 
 synctool can check whether a new version of synctool itself is available by
-using the '--check-update' option.
+using the '--check-update' option on the master node.
+To download the latest version, run synctool '--download' on the master node.
 
 
 EOB
