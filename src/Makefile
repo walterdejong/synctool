@@ -12,7 +12,7 @@ MKDIR=/bin/mkdir
 MASTERDIR=/var/lib/synctool
 
 SCRIPTS=synctool.py synctool_config.py synctool_ssh.py synctool_scp.py synctool_master.py synctool_aggr.py
-LIBS=synctool_lib.py synctool_core.py synctool_update.py
+LIBS=synctool_lib.py synctool_core.py synctool_update.py synctool_unbuffered.py
 
 CLIENT_SCRIPTS=synctool.py synctool_config.py
 
