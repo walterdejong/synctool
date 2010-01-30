@@ -9,6 +9,7 @@
 #   License.
 #
 
+import synctool_unbuffered
 import synctool_config
 import synctool_aggr
 import synctool_lib
@@ -458,6 +459,9 @@ def get_options():
 
 
 if __name__ == '__main__':
+	sys.stdout = synctool_unbuffered.Unbuffered(sys.stdout)
+	sys.stderr = synctool_unbuffered.Unbuffered(sys.stderr)
+
 	cmd_args = get_options()
 
 	if OPT_AGGREGATE:
