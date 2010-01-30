@@ -11,6 +11,7 @@
 #	- simply use synctool-ssh because lots of code would be the same
 #
 
+import synctool_unbuffered
 import synctool_config
 import synctool_lib
 import synctool_ssh
@@ -228,6 +229,9 @@ def get_options():
 
 
 if __name__ == '__main__':
+	sys.stdout = synctool_unbuffered.Unbuffered(sys.stdout)
+	sys.stderr = synctool_unbuffered.Unbuffered(sys.stderr)
+
 	files = get_options()
 	synctool_config.read_config()
 	synctool_config.add_myhostname()
