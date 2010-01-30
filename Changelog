@@ -4,6 +4,7 @@
 - added new option '--download' to download the latest version
 - added new options '--upload' and '--suffix' for pulling files into the
   repository
+- bugfix for issues with buffered I/O in synctool_master/aggr
 
 26 Jan 2010:
 - bugfix: '--single' did not work for directories

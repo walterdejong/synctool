@@ -14,6 +14,7 @@ import synctool_ssh
 import synctool_config
 import synctool_aggr
 import synctool_lib
+import synctool_unbuffered
 
 from synctool_lib import verbose,stdout,stderr,unix_out
 
@@ -212,7 +213,8 @@ def get_options():
 	MASTER_OPTS = [ sys.argv[0] ]
 
 	for opt, arg in opts:
-		MASTER_OPTS.append(opt)
+		if opt:
+			MASTER_OPTS.append(opt)
 
 		if arg:
 			MASTER_OPTS.append(arg)
@@ -312,9 +314,10 @@ def get_options():
 			OPT_DOWNLOAD = True
 			continue
 
-		PASS_ARGS.append(opt)
+		if opt:
+			PASS_ARGS.append(opt)
 
-		if arg != None:
+		if arg:
 			PASS_ARGS.append(arg)
 
 # enable logging at the master node
@@ -330,6 +333,9 @@ def get_options():
 
 
 if __name__ == '__main__':
+	sys.stdout = synctool_unbuffered.Unbuffered(sys.stdout)
+	sys.stderr = synctool_unbuffered.Unbuffered(sys.stderr)
+
 	(upload_filename, upload_suffix) = get_options()
 
 	if OPT_VERSION:
@@ -368,11 +374,13 @@ if __name__ == '__main__':
 		upload(nodes[0], upload_filename, upload_suffix)
 
 	else:						# do regular synctool run
+		local_interface = synctool_config.get_node_interface(synctool_config.NODENAME)
+
 		for node in nodes:
 		#
 		#	is this node the localhost? then run locally
 		#
-			if node == synctool_config.NODENAME:
+			if node == local_interface:
 				run_local_synctool()
 				nodes.remove(node)
 				break
