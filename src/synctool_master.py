@@ -213,7 +213,9 @@ def get_options():
 
 	for opt, arg in opts:
 		MASTER_OPTS.append(opt)
-		MASTER_OPTS.append(arg)
+
+		if arg:
+			MASTER_OPTS.append(arg)
 
 		if opt in ('-h', '--help', '-?'):
 			usage()
