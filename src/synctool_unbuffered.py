@@ -1,15 +1,5 @@
 #
-#   synctool_unbuffered.py     WJ110
-#
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2010
-#
-#   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
-#   synctool is distributed under terms described in the GNU General Public
-#   License.
-#
-#   - wrapper class for making stdout/stderr unbuffered
-#	* the reason why: synctool-aggregate was suffering from duplicate output issues
-#	  due to stdio buffering problems
+#	unbuffered output
 #
 
 class Unbuffered:
@@ -18,7 +8,9 @@ class Unbuffered:
 
 	def write(self, data):
 		self.stream.write(data)
-		self.stream.flush()
+
+		if len(data) >= 1 and (data[-1] == '\n' or data[-1] == '\r'):
+			self.stream.flush()
 
 	def flush(self):
 		self.stream.flush()
