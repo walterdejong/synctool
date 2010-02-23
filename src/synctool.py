@@ -95,18 +95,18 @@ def checksum_files(file1, file2):
 		sum2 = md5.new()
 
 	len1 = len2 = 0
-	ended = 0
+	ended = False
 	while len1 == len2 and sum1.digest() == sum2.digest() and not ended:
 		data1 = f1.read(BLOCKSIZE)
 		if not data1:
-			ended = 1
+			ended = True
 		else:
 			len1 = len1 + len(data1)
 			sum1.update(data1)
 
 		data2 = f2.read(BLOCKSIZE)
 		if not data2:
-			ended = 1
+			ended = True
 		else:
 			len2 = len2 + len(data2)
 			sum2.update(data2)

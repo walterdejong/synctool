@@ -18,6 +18,14 @@ import sys
 import string
 import urllib
 
+try:
+	import hashlib
+	use_hashlib = True
+except ImportError:
+	import md5
+	use_hashlib = False
+
+
 VERSION_CHECKING_URL = 'http://www.heiho.net/synctool/LATEST.txt'
 DOWNLOAD_URL = 'http://www.heiho.net/synctool/'
 
@@ -28,6 +36,16 @@ DOWNLOAD_BYTES = 0
 
 def get_latest_version():
 	'''get latest version by downloading the LATEST.txt versioning file'''
+
+	tup = get_latest_version_and_checksum()
+	if not tup:
+		return None
+
+	return tup[0]
+
+
+def get_latest_version_and_checksum():
+	'''get latest version and checksum by downloading the LATEST.txt versioning file'''
 
 	verbose('accessing URL %s' % VERSION_CHECKING_URL)
 
@@ -45,7 +63,14 @@ def get_latest_version():
 		return None
 
 	data = string.strip(data)
-	return data
+
+# format of the data in LATEST.txt is:
+# <version> <MD5 checksum>
+	arr = string.split(data)
+	if len(arr) != 2:
+		return None
+	
+	return (arr[0], arr[1])
 
 
 def check():
@@ -102,9 +127,11 @@ def download():
 
 	global DOWNLOAD_FILENAME, DOWNLOAD_BYTES			# ugly globals because of callback function
 
-	version = get_latest_version()
-	if not version:
-		return
+	tup = get_latest_version_and_checksum()
+	if not tup:
+		return 1
+
+	(version, checksum) = tup
 
 	filename = 'synctool-%s.tar.gz' % version
 	download_url = DOWNLOAD_URL + filename
@@ -123,7 +150,44 @@ def download():
 		return 1
 	else:
 		print
-		return 0
+#
+#	compute and compare MD5 checksums
+#	sadly, there is no easy way to do this 'live' while downloading,
+#	because the download callback does not see the downloaded data blocks
+#
+	downloaded_sum = checksum_file(DOWNLOAD_FILENAME)
+	if downloaded_sum != checksum:
+		stderr('ERROR: checksum failed for %s' % DOWNLOAD_FILENAME)
+		return 1
+
+	return 0
+
+
+def checksum_file(filename):
+	'''compute MD5 checksum of a file'''
+
+	try:
+		f = open(filename, 'r')
+	except IOError(err, reason):
+		stderr('error: failed to open %s : %s' % (filename, reason))
+		raise
+
+	if use_hashlib:
+		sum1 = hashlib.md5()
+	else:
+		sum1 = md5.new()
+
+	BLOCKSIZE = 16 * 1024
+
+	while True:
+		data = f.read(BLOCKSIZE)
+		if not data:
+			break
+
+		sum1.update(data)
+
+	f.close()
+	return sum1.hexdigest()
 
 
 if __name__ == '__main__':
