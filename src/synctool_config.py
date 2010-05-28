@@ -616,8 +616,13 @@ def list_all_nodes():
 	nodes = get_all_nodes()
 	nodes.sort()
 
+	if IGNORE_GROUPS != None:
+		ignore_nodes = get_nodes_in_groups(IGNORE_GROUPS)
+	else:
+		ignore_nodes = []
+
 	for host in nodes:
-		if host in IGNORE_GROUPS:
+		if host in ignore_nodes:
 			if OPT_INTERFACE:
 				host = get_node_interface(host)
 
