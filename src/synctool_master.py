@@ -362,7 +362,8 @@ if __name__ == '__main__':
 		synctool_lib.openlog()
 
 	nodes = synctool_ssh.make_nodeset()
-	if nodes == None:
+	if nodes == None or len(nodes) <= 0:
+		print 'no valid nodes specified'
 		sys.exit(1)
 
 	if upload_filename:			# upload a file

@@ -472,7 +472,8 @@ if __name__ == '__main__':
 	synctool_config.add_myhostname()
 
 	nodes = make_nodeset()
-	if nodes == None:
+	if nodes == None or len(nodes) <= 0:
+		print 'no valid nodes specified'
 		sys.exit(1)
 
 	run_remote_cmd(nodes, cmd_args)
