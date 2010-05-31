@@ -98,6 +98,15 @@ def upload(interface, upload_filename, upload_suffix=None):
 
 	node = synctool_ssh.get_nodename_from_interface(interface)
 
+# pretend that the current node is now the given node;
+# this is needed for find_synctree() to find the most optimal reference for the file
+	orig_NODENAME = synctool_config.NODENAME
+	synctool_config.NODENAME = node
+	synctool_config.insert_group(node, node)
+
+	orig_GROUPS = synctool_config.GROUPS[:]
+	synctool_config.GROUPS = synctool_config.get_my_groups()
+
 # see if file is already in the repository
 	repos_filename = synctool_core.find_synctree('overlay', upload_filename)
 	if not repos_filename:
@@ -113,6 +122,9 @@ def upload(interface, upload_filename, upload_suffix=None):
 				repos_filename = string.join(arr[:-1], '.')
 
 			repos_filename = repos_filename + '._' + upload_suffix
+
+	synctool_config.NODENAME = orig_NODENAME
+	synctool_config.GROUPS = orig_GROUPS
 
 	verbose('%s:%s uploaded as %s' % (node, upload_filename, repos_filename))
 	unix_out('%s %s:%s %s' % (synctool_config.SCP_CMD, interface, upload_filename, repos_filename))
@@ -371,7 +383,7 @@ if __name__ == '__main__':
 			print "The option --upload can only be run on just one node"
 			print "Please use --node=nodename to specify the node to upload from"
 			sys.exit(1)
-	
+		
 		upload(nodes[0], upload_filename, upload_suffix)
 
 	else:						# do regular synctool run
