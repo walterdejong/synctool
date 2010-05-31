@@ -1,5 +1,6 @@
 28 May 2010:
 - print message when no valid nodes are given in nodeset
+- synctool-config -l[f] was broken, now fixed
 
 23 Feb 2010:
 - option '--download' does an md5 checksum of the downloaded file
