@@ -76,7 +76,7 @@ ALWAYS_RUN = []
 NODES = {}
 INTERFACES = {}
 
-COMPOUND_GROUPS = {}
+GROUP_DEFS = {}
 
 # to be initialized externally ... (see synctool.py)
 # these are lists of group names
@@ -102,7 +102,7 @@ def read_config():
 	global MASTERDIR, MASTER_LEN, DIFF_CMD, SSH_CMD, SCP_CMD, RSYNC_CMD, SYNCTOOL_CMD, LOGFILE, NUM_PROC, SYMLINK_MODE
 	global IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
 	global ON_UPDATE, ALWAYS_RUN
-	global NODES, INTERFACES, COMPOUND_GROUPS
+	global NODES, INTERFACES, GROUP_DEFS
 
 	if not os.path.isfile(CONF_FILE):
 		stderr("no such config file '%s'" % CONF_FILE)
@@ -234,7 +234,7 @@ def read_config():
 			
 			group = arr[1]
 			
-			if COMPOUND_GROUPS.has_key(group):
+			if GROUP_DEFS.has_key(group):
 				stderr("%s:%d: redefiniton of group %s" % (CONF_FILE, lineno, group))
 				errors = errors + 1
 				continue
@@ -245,7 +245,7 @@ def read_config():
 				continue
 			
 			try:
-				COMPOUND_GROUPS[group] = expand_grouplist(arr[2:])
+				GROUP_DEFS[group] = expand_grouplist(arr[2:])
 			except RuntimeError, e:
 				stderr("%s:%d: compound groups can not contain node names" % (CONF_FILE, lineno))
 				errors = errors + 1
@@ -270,7 +270,7 @@ def read_config():
 				errors = errors + 1
 				continue
 
-			if COMPOUND_GROUPS.has_key(node):
+			if GROUP_DEFS.has_key(node):
 				stderr("%s:%d: %s was previously defined as a group" % (CONF_FILE, lineno, node))
 				errors = errors + 1
 				continue
@@ -318,10 +318,10 @@ def read_config():
 
 			IGNORE_GROUPS.extend(arr[1:])
 			
-			# add any (yet) unknown group names to the compound groups dict
+			# add any (yet) unknown group names to the group_defs dict
 			for elem in arr[1:]:
-				if not COMPOUND_GROUPS.has_key(elem):
-					COMPOUND_GROUPS[elem] = None
+				if not GROUP_DEFS.has_key(elem):
+					GROUP_DEFS[elem] = None
 			
 			continue
 
@@ -575,18 +575,18 @@ def expand_grouplist(grouplist):
 	'''expand a list of (compound) groups recursively
 	Returns the expanded group list
 '''
-	global COMPOUND_GROUPS
+	global GROUP_DEFS
 	
 	groups = []
 	
 	for elem in grouplist:
 		groups.append(elem)
 		
-		if COMPOUND_GROUPS.has_key(elem):
-			compound_groups = COMPOUND_GROUPS[elem]
+		if GROUP_DEFS.has_key(elem):
+			compound_groups = GROUP_DEFS[elem]
 			
-			# mind that COMPOUND_GROUPS[group] can be None
-			# for any 'new' leaf groups that have no subgroups
+			# mind that GROUP_DEFS[group] can be None
+			# for any groups that have no subgroups
 			if compound_groups != None:
 				groups.extend(compound_groups)
 		else:
@@ -596,7 +596,7 @@ def expand_grouplist(grouplist):
 			if NODES.has_key(elem):
 				raise RuntimeError, 'node %s can not be part of compound group list' % elem
 			
-			COMPOUND_GROUPS[elem] = None
+			GROUP_DEFS[elem] = None
 	
 	# remove duplicates
 	# this looks pretty lame ... but Python sets are not usable here;
@@ -725,14 +725,14 @@ def make_all_groups():
 	This is a set of all group names plus all node names
 '''
 
-	arr = COMPOUND_GROUPS.keys()
+	arr = GROUP_DEFS.keys()
 	arr.extend(NODES.keys())
 	
 	return list(set(arr))
-	
+
 
 def list_all_groups():
-	groups = COMPOUND_GROUPS.keys()
+	groups = GROUP_DEFS.keys()
 	groups.sort()
 
 	for group in groups:
