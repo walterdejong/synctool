@@ -818,96 +818,95 @@ def get_options():
 		usage()
 		sys.exit(1)
 
-	if len(sys.argv) > 1:
-		try:
-			opts, args = getopt.getopt(sys.argv[1:], 'hc:mlLn:g:ifC:pv', ['help', 'conf=', 'masterdir', 'list-nodes', 'list-groups',
-				'node=', 'group=', 'interface', 'filter-ignored', 'command', 'numproc', 'version', 'prefix'])
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:mlLn:g:ifC:pv', ['help', 'conf=', 'masterdir', 'list-nodes', 'list-groups',
+			'node=', 'group=', 'interface', 'filter-ignored', 'command', 'numproc', 'version', 'prefix'])
 
-		except getopt.error, (reason):
-			print
-			print '%s: %s' % (progname, reason)
-			print
-			usage()
-			sys.exit(1)
+	except getopt.error, (reason):
+		print
+		print '%s: %s' % (progname, reason)
+		print
+		usage()
+		sys.exit(1)
 
-		except getopt.GetoptError, (reason):
-			print
-			print '%s: %s' % (progname, reason)
-			print
-			usage()
-			sys.exit(1)
+	except getopt.GetoptError, (reason):
+		print
+		print '%s: %s' % (progname, reason)
+		print
+		usage()
+		sys.exit(1)
 
-		except:
-			usage()
-			sys.exit(1)
-
-		errors = 0
-
-		for opt, arg in opts:
-			if opt in ('-h', '--help', '-?'):
-				usage()
-				sys.exit(1)
-
-			if opt in ('-c', '--conf'):
-				CONF_FILE=arg
-				continue
-
-			if opt in ('-m', '--masterdir'):
-				set_action(ACTION_MASTERDIR, '--masterdir')
-				continue
-
-			if opt in ('-l', '--list-nodes'):
-				set_action(ACTION_LIST_NODES, '--list-nodes')
-				continue
-
-			if opt in ('-L', '--list-groups'):
-				set_action(ACTION_LIST_GROUPS, '--list-groups')
-				continue
-
-			if opt in ('-n', '--node'):
-				set_action(ACTION_NODES, '--node')
-				ARG_NODENAMES = string.split(arg, ',')
-				continue
-
-			if opt in ('-g', '--group'):
-				set_action(ACTION_GROUPS, '--group')
-				ARG_GROUPS = string.split(arg, ',')
-				continue
-
-			if opt in ('-i', '--interface'):
-				OPT_INTERFACE = True
-				continue
-
-			if opt in ('-f', '--filter-ignored'):
-				OPT_FILTER_IGNORED = True
-				continue
-
-			if opt in ('-C', '--command'):
-				set_action(ACTION_CMDS, '--command')
-				ARG_CMDS = string.split(arg, ',')
-				continue
-
-			if opt in ('-p', '--numproc'):
-				set_action(ACTION_NUMPROC, '--numproc')
-				continue
-
-			if opt in ('-v', '--version'):
-				set_action(ACTION_VERSION, '--version')
-				continue
-
-			if opt == '--prefix':
-				set_action(ACTION_PREFIX, '--prefix')
-				continue
-
-			stderr("unknown command line option '%s'" % opt)
-			errors = errors + 1
-
-		if errors:
-			usage()
-			sys.exit(1)
+	except:
+		usage()
+		sys.exit(1)
 
 	if args != None and len(args) > 0:
 		stderr('error: excessive arguments on command-line')
+		sys.exit(1)
+
+	errors = 0
+
+	for opt, arg in opts:
+		if opt in ('-h', '--help', '-?'):
+			usage()
+			sys.exit(1)
+
+		if opt in ('-c', '--conf'):
+			CONF_FILE=arg
+			continue
+
+		if opt in ('-m', '--masterdir'):
+			set_action(ACTION_MASTERDIR, '--masterdir')
+			continue
+
+		if opt in ('-l', '--list-nodes'):
+			set_action(ACTION_LIST_NODES, '--list-nodes')
+			continue
+
+		if opt in ('-L', '--list-groups'):
+			set_action(ACTION_LIST_GROUPS, '--list-groups')
+			continue
+
+		if opt in ('-n', '--node'):
+			set_action(ACTION_NODES, '--node')
+			ARG_NODENAMES = string.split(arg, ',')
+			continue
+
+		if opt in ('-g', '--group'):
+			set_action(ACTION_GROUPS, '--group')
+			ARG_GROUPS = string.split(arg, ',')
+			continue
+
+		if opt in ('-i', '--interface'):
+			OPT_INTERFACE = True
+			continue
+
+		if opt in ('-f', '--filter-ignored'):
+			OPT_FILTER_IGNORED = True
+			continue
+
+		if opt in ('-C', '--command'):
+			set_action(ACTION_CMDS, '--command')
+			ARG_CMDS = string.split(arg, ',')
+			continue
+
+		if opt in ('-p', '--numproc'):
+			set_action(ACTION_NUMPROC, '--numproc')
+			continue
+
+		if opt in ('-v', '--version'):
+			set_action(ACTION_VERSION, '--version')
+			continue
+
+		if opt == '--prefix':
+			set_action(ACTION_PREFIX, '--prefix')
+			continue
+
+		stderr("unknown command line option '%s'" % opt)
+		errors = errors + 1
+
+	if errors:
+		usage()
 		sys.exit(1)
 
 	if not ACTION:

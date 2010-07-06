@@ -1083,6 +1083,10 @@ def get_options():
 		usage()
 		sys.exit(1)
 
+	if args != None and len(args) > 0:
+		stderr('error: excessive arguments on command line')
+		sys.exit(1)
+
 	errors = 0
 
 	diff_file = None

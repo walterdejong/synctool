@@ -206,6 +206,10 @@ def get_options():
 		usage()
 		sys.exit(1)
 
+	if args != None and len(args) > 0:
+		stderr('error: excessive arguments on command line')
+		sys.exit(1)
+
 	synctool_ssh.NODELIST = ''
 	synctool_ssh.GROUPLIST = ''
 
