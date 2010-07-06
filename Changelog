@@ -1,5 +1,6 @@
 31 May 2010:
-- improved upload: it finds the most optimal reference file
+- improved upload: it finds the most optimal reference file if it exists
+  (still minor issue with typed subdirs and non-existent target file)
 
 28 May 2010:
 - print message when no valid nodes are given in nodeset
