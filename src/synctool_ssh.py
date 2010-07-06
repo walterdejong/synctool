@@ -60,7 +60,7 @@ def make_nodeset():
 		groups = string.split(GROUPLIST, ',')
 
 # check if the groups exist at all
-		all_groups = synctool_config.get_all_groups()
+		all_groups = synctool_config.make_all_groups()
 		for group in groups:
 			if not group in all_groups:
 				stderr("no such group '%s'" % group)

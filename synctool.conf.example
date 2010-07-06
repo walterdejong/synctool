@@ -16,17 +16,20 @@ synctool_cmd /opt/synctool/sbin/synctool.py -c /var/lib/synctool/synctool.conf
 logfile /var/log/synctool.log
 num_proc 64
 
+group wn workernode batch all
+group test wn
+
 node node0 master all
 
 node node1 fs sched all interface:node1-mgmt
 node node2 login all interface:node2-mgmt
-node node3 batch all interface:node3-mgmt
-node node4 batch all interface:node4-mgmt
-node node5 batch all interface:node5-mgmt
-node node6 batch all interface:node6-mgmt
-node node7 batch all interface:node7-mgmt
-node node8 batch test all interface:node8-mgmt
-node node9 batch all interface:node9-mgmt
+node node3 wn interface:node3-mgmt
+node node4 wn interface:node4-mgmt
+node node5 wn interface:node5-mgmt
+node node6 wn interface:node6-mgmt
+node node7 wn interface:node7-mgmt
+node node8 test interface:node8-mgmt
+node node9 wn interface:node9-mgmt
 
 ignore_node node0
 

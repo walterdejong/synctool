@@ -232,40 +232,25 @@ def read_config():
 				continue
 			
 			group = arr[1]
-			groups = arr[2:]
 			
 			if COMPOUND_GROUPS.has_key(group):
 				stderr("%s:%d: redefiniton of group %s" % (CONF_FILE, lineno, group))
 				errors = errors + 1
 				continue
 			
-			# expand groups recursively
-			# COMPOUND_GROUPS[group] is set to None for any 'new' leaf groups that have no subgroups
+			if NODES.has_key(group):
+				stderr("%s:%d: %s was previously defined as a node" % (CONF_FILE, lineno, group))
+				errors = errors + 1
+				continue
 			
-			groups = []
+			try:
+				COMPOUND_GROUPS[group] = expand_grouplist(arr[2:])
+			except RuntimeError, e:
+				stderr("%s:%d: compound groups can not contain node names" % (CONF_FILE, lineno))
+				errors = errors + 1
+				continue
 			
-			for elem in arr[2:]:
-				groups.append(elem)
-				
-				compound_group_exists = COMPOUND_GROUPS.has_key(elem)
-				if compound_group_exists:
-					compound_group = COMPOUND_GROUPS[elem]
-					
-					if compound_group != None:
-						groups.extend(compound_group)
-				else:
-					COMPOUND_GROUPS[elem] = None
-			
-			# remove duplicates
-			# this looks pretty lame ... but Python sets are not usable here;
-			# sets mess around with the order (probably because the elements are string values)
-			
-			extended_group = []
-			for elem in groups:
-				if not elem in extended_group:
-					extended_group.append(elem)
-			
-			COMPOUND_GROUPS[group] = extended_group
+			continue
 
 #
 #	keyword: host / node
@@ -284,6 +269,11 @@ def read_config():
 				errors = errors + 1
 				continue
 
+			if COMPOUND_GROUPS.has_key(node):
+				stderr("%s:%d: %s was previously defined as a group" % (CONF_FILE, lineno, node))
+				errors = errors + 1
+				continue
+			
 			if groups[-1][:10] == 'interface:':
 				interface = groups[-1][10:]
 				groups = groups[:-1]
@@ -295,9 +285,13 @@ def read_config():
 
 				INTERFACES[node] = interface
 
-			if len(groups) > 0:
-				NODES[node] = groups
-
+			try:
+				NODES[node] = expand_grouplist(groups)
+			except RuntimeError, e:
+				stderr("%s:%d: a group list can not contain node names" % (CONF_FILE, lineno))
+				errors = errors + 1
+				continue
+			
 			continue
 
 #
@@ -322,6 +316,12 @@ def read_config():
 				continue
 
 			IGNORE_GROUPS.extend(arr[1:])
+			
+			# add any (yet) unknown group names to the compound groups dict
+			for elem in arr[1:]:
+				if not COMPOUND_GROUPS.has_key(elem):
+					COMPOUND_GROUPS[elem] = None
+			
 			continue
 
 #
@@ -562,15 +562,51 @@ def read_config():
 	if MASTERDIR == None:
 		MASTERDIR = '.'
 
-# TD debug
-	print COMPOUND_GROUPS
-
 	if errors > 0:
 		sys.exit(-1)
 
 # implicitly add 'nodename' as first group
 	for node in get_all_nodes():
 		insert_group(node, node)
+
+
+def expand_grouplist(grouplist):
+	'''expand a list of (compound) groups recursively
+	Returns the expanded group list
+'''
+	global COMPOUND_GROUPS
+	
+	groups = []
+	
+	for elem in grouplist:
+		groups.append(elem)
+		
+		if COMPOUND_GROUPS.has_key(elem):
+			compound_groups = COMPOUND_GROUPS[elem]
+			
+			# mind that COMPOUND_GROUPS[group] can be None
+			# for any 'new' leaf groups that have no subgroups
+			if compound_groups != None:
+				groups.extend(compound_groups)
+		else:
+			# node names are often treated in the code as groups too ...
+			# but they are special groups, and can not be in a compound group just
+			# to prevent odd things from happening
+			if NODES.has_key(elem):
+				raise RuntimeError, 'node %s can not be part of compound group list' % elem
+			
+			COMPOUND_GROUPS[elem] = None
+	
+	# remove duplicates
+	# this looks pretty lame ... but Python sets are not usable here;
+	# sets mess around with the order (probably because the elements are string values)
+	
+	expanded_grouplist = []
+	for elem in groups:
+		if not elem in expanded_grouplist:
+			expanded_grouplist.append(elem)
+	
+	return expanded_grouplist
 
 
 def add_myhostname():
@@ -684,33 +720,18 @@ def list_all_nodes():
 
 
 def make_all_groups():
-	'''make a list of all possible groups'''
+	'''make a list of all possible groups
+	This is a set of all group names plus all node names
+'''
 
-	all_groups = []
-	host_dict = NODES
-	for host in host_dict.keys():
-		for group in host_dict[host]:
-			if not group in all_groups:
-				all_groups.append(group)
-
-	all_groups.extend(IGNORE_GROUPS)		# although ignored, they are existing groups
-	return all_groups
-
-
-def get_all_groups():
-	arr = []
-
-	nodes = NODES.keys()
-
-	for group in make_all_groups():
-		if not group in arr:
-			arr.append(group)
-
-	return arr
-
+	arr = COMPOUND_GROUPS.keys()
+	arr.extend(NODES.keys())
+	
+	return list(set(arr))
+	
 
 def list_all_groups():
-	groups = get_all_groups()
+	groups = COMPOUND_GROUPS.keys()
 	groups.sort()
 
 	for group in groups:

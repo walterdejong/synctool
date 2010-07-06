@@ -1,5 +1,6 @@
-6 Jul 2010:
+7 Jul 2010:
 - check getopt extra arguments: Python getopt is not the GNU getopt
+- added new config keyword 'group' for defining compound groups
 
 31 May 2010:
 - improved upload: it finds the most optimal reference file if it exists
