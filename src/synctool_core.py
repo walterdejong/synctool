@@ -64,8 +64,8 @@ def add_post_script(base_filename, scriptname, group=None):
 		return
 
 # determine which group is more important
-	a = synctool_config.GROUPS.index(group)
-	b = synctool_config.GROUPS.index(group_b)
+	a = synctool_config.MY_GROUPS.index(group)
+	b = synctool_config.MY_GROUPS.index(group_b)
 	if a < b:
 		POST_SCRIPTS[base_filename] = (scriptname, group)
 
@@ -96,7 +96,7 @@ def file_has_group_ext(filename):
 		stderr('no group extension on $masterdir/%s/%s, skipped' % (CURR_DIR[synctool_config.MASTER_LEN:], filename))
 		return False
 
-	if group in synctool_config.GROUPS:				# got a file for one of our groups
+	if group in synctool_config.MY_GROUPS:			# got a file for one of our groups
 		if len(arr) > 2 and arr[-2] == 'post':		# it's a group-specific .post script
 			add_post_script(string.join(arr[:-2], '.'), filename, group)
 			return False
@@ -129,7 +129,7 @@ def dir_has_group_ext(dirname):
 	if not group:
 		return DIR_EXT_NO_GROUP
 
-	if group in synctool_config.GROUPS:				# got a directory for one of our groups
+	if group in synctool_config.MY_GROUPS:				# got a directory for one of our groups
 		return DIR_EXT_IS_GROUP
 
 	if not group in synctool_config.ALL_GROUPS:
@@ -171,15 +171,15 @@ def filter_overrides(files):
 			stripped[stripped_name] = ext
 		else:
 # choose most important group
-# the most important group is the one that is listed earlier in the GROUPS array, so it has a smaller index
-			a = synctool_config.GROUPS.index(ext)
+# the most important group is the one that is listed earlier in the MY_GROUPS array, so it has a smaller index
+			a = synctool_config.MY_GROUPS.index(ext)
 
 			ext2 = stripped[stripped_name]
 			if not ext2:
 				b = a + 1
 				dest = stripped_name
 			else:
-				b = synctool_config.GROUPS.index(ext2)
+				b = synctool_config.MY_GROUPS.index(ext2)
 				dest = '%s._%s' % (stripped_name, ext2)
 
 			if a < b:

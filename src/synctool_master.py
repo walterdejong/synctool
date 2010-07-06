@@ -81,7 +81,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 
 # make the known groups lists
 	synctool_config.remove_ignored_groups()
-	synctool_config.GROUPS = synctool_config.get_my_groups()
+	synctool_config.MY_GROUPS = synctool_config.get_my_groups()
 	synctool_config.ALL_GROUPS = synctool_config.make_all_groups()
 
 	if upload_suffix and not upload_suffix in synctool_config.ALL_GROUPS:
@@ -104,8 +104,8 @@ def upload(interface, upload_filename, upload_suffix=None):
 	synctool_config.NODENAME = node
 	synctool_config.insert_group(node, node)
 
-	orig_GROUPS = synctool_config.GROUPS[:]
-	synctool_config.GROUPS = synctool_config.get_my_groups()
+	orig_MY_GROUPS = synctool_config.MY_GROUPS[:]
+	synctool_config.MY_GROUPS = synctool_config.get_my_groups()
 
 # see if file is already in the repository
 	repos_filename = synctool_core.find_synctree('overlay', upload_filename)
@@ -124,7 +124,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 			repos_filename = repos_filename + '._' + upload_suffix
 
 	synctool_config.NODENAME = orig_NODENAME
-	synctool_config.GROUPS = orig_GROUPS
+	synctool_config.MY_GROUPS = orig_MY_GROUPS
 
 	verbose('%s:%s uploaded as %s' % (node, upload_filename, repos_filename))
 	unix_out('%s %s:%s %s' % (synctool_config.SCP_CMD, interface, upload_filename, repos_filename))

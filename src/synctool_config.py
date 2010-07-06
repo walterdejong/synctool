@@ -79,7 +79,8 @@ INTERFACES = {}
 COMPOUND_GROUPS = {}
 
 # to be initialized externally ... (see synctool.py)
-GROUPS = None
+# these are lists of group names
+MY_GROUPS = None
 ALL_GROUPS = None
 
 # string length of the 'MASTERDIR' variable

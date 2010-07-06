@@ -1193,7 +1193,7 @@ if __name__ == '__main__':
 
 	synctool_config.remove_ignored_groups()
 
-	synctool_config.GROUPS = synctool_config.get_my_groups()
+	synctool_config.MY_GROUPS = synctool_config.get_my_groups()
 	synctool_config.ALL_GROUPS = synctool_config.make_all_groups()
 
 	if synctool_lib.UNIX_CMD:
