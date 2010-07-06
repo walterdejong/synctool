@@ -76,6 +76,8 @@ ALWAYS_RUN = []
 NODES = {}
 INTERFACES = {}
 
+COMPOUND_GROUPS = {}
+
 # to be initialized externally ... (see synctool.py)
 GROUPS = None
 ALL_GROUPS = None
@@ -99,7 +101,7 @@ def read_config():
 	global MASTERDIR, MASTER_LEN, DIFF_CMD, SSH_CMD, SCP_CMD, RSYNC_CMD, SYNCTOOL_CMD, LOGFILE, NUM_PROC, SYMLINK_MODE
 	global IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
 	global ON_UPDATE, ALWAYS_RUN
-	global NODES, INTERFACES
+	global NODES, INTERFACES, COMPOUND_GROUPS
 
 	if not os.path.isfile(CONF_FILE):
 		stderr("no such config file '%s'" % CONF_FILE)
@@ -219,6 +221,51 @@ def read_config():
 
 			IGNORE_FILES.extend(arr[1:])
 			continue
+
+#
+#	keyword: group
+#
+		if keyword == 'group':
+			if len(arr) < 3:
+				stderr("%s:%d: 'group' requires at least 2 arguments: the compound group name and at least 1 member group" % (CONF_FILE, lineno))
+				errors = errors + 1
+				continue
+			
+			group = arr[1]
+			groups = arr[2:]
+			
+			if COMPOUND_GROUPS.has_key(group):
+				stderr("%s:%d: redefiniton of group %s" % (CONF_FILE, lineno, group))
+				errors = errors + 1
+				continue
+			
+			# expand groups recursively
+			# COMPOUND_GROUPS[group] is set to None for any 'new' leaf groups that have no subgroups
+			
+			groups = []
+			
+			for elem in arr[2:]:
+				groups.append(elem)
+				
+				compound_group_exists = COMPOUND_GROUPS.has_key(elem)
+				if compound_group_exists:
+					compound_group = COMPOUND_GROUPS[elem]
+					
+					if compound_group != None:
+						groups.extend(compound_group)
+				else:
+					COMPOUND_GROUPS[elem] = None
+			
+			# remove duplicates
+			# this looks pretty lame ... but Python sets are not usable here;
+			# sets mess around with the order (probably because the elements are string values)
+			
+			extended_group = []
+			for elem in groups:
+				if not elem in extended_group:
+					extended_group.append(elem)
+			
+			COMPOUND_GROUPS[group] = extended_group
 
 #
 #	keyword: host / node
@@ -515,14 +562,15 @@ def read_config():
 	if MASTERDIR == None:
 		MASTERDIR = '.'
 
+# TD debug
+	print COMPOUND_GROUPS
+
 	if errors > 0:
 		sys.exit(-1)
 
 # implicitly add 'nodename' as first group
 	for node in get_all_nodes():
 		insert_group(node, node)
-
-	return {}
 
 
 def add_myhostname():
