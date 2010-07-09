@@ -98,7 +98,7 @@ file. There are two ways to do this in synctool.
 
    root@masternode:/# synctool -qf
    node3: /etc/xinetd.d/identd updated (file size mismatch)
-   node3: running command /bin/rm /etc/xinetd.d/*.saved ; /etc/init.d/xinetd reload
+   node3: running command $masterdir/overlay/etc/xinetd.d/identd.post
 
 It is possible to put a group extension on the .post script, so that you
 can have one group of nodes perform different actions than others.
