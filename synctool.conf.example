@@ -25,12 +25,10 @@ group test wn
 group g1 batch test wn
 
 #
-#	node definitions
+# list all nodes and their groups
+# the nodename is a logical name known only to synctool
+# "interface:" specifies the (short) address where synctool connects to
 #
-=======
-group wn workernode batch all
-group test wn
-
 node node0 master all
 
 node node1 fs sched all interface:node1-mgmt

@@ -1,3 +1,6 @@
+9 Jul 2010:
+- bugfix: it's OK when a node is no group at all
+
 7 Jul 2010:
 - check getopt extra arguments: Python getopt is not the GNU getopt
 - added new config keyword 'group' for defining compound groups

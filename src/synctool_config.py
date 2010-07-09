@@ -275,7 +275,7 @@ def read_config():
 				errors = errors + 1
 				continue
 			
-			if groups[-1][:10] == 'interface:':
+			if len(groups) >= 1 and groups[-1][:10] == 'interface:':
 				interface = groups[-1][10:]
 				groups = groups[:-1]
 
