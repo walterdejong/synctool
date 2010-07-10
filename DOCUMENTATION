@@ -127,6 +127,10 @@ the exception of node5 and node7.
   fstab._node7        nsswitch.conf.old._all  sysctl.conf._all
   ...
 
+The group 'all' implictly applies to all nodes. Likewise, there is an
+implicit group 'none' that applies to no nodes. Group 'none' can be
+convenient when you to have a copy of a file around, but do not wish to push
+it to any nodes (yet).
 
 The '-v' option gives verbose output. This is another way of displaying the
 logic that synctool performs:

@@ -56,9 +56,8 @@ have what roles, and how synctool can contact them.
 Think a bit about what role each machine has. There is no need to
 go into great depth right now; you can always adjust the configuration
 later.
-In general, it is good practice to always put a node into group 'all':
 
-  node n1 all interface:machine-n01
+  node n1 interface:machine-n01
 
 The nodename is the 'synctool name that the node has'. It is in general the
 short hostname of the host, but in fact it can be anything you like. The
@@ -68,11 +67,11 @@ IP address or a DNS name of the host you wish to contact. In clusters, there
 is often a management network interface -- configure that interface name
 here.
 
-It is also good practice to label your master node as 'master' or 'install'.
+It is good practice to label your master node as 'master' or 'install'.
 
-  node n1 master all interface:machine-n01
+  node n1 master interface:machine-n01
 
-Now n1 responds to the groups 'n1', 'master', and 'all'.
+Now n1 responds to the groups 'n1' and 'master'.
 
 Some people don't like managing the master node itself with synctool.
 While it _is_ possible and perfectly alright to do this, some like to
@@ -91,7 +90,7 @@ Nodes can be in as many different groups as you like. You can split
 long lines of node definitions by ending them with a backslash:
 
   node n101 workernode debian plasma mathworks solar \
-            fsmounted backup all interface:if0-n101
+            fsmounted backup interface:if0-n101
 
 Mind however, that in practice, synctool repositories are generally
 easiest maintained with as few groups as possible.
@@ -103,8 +102,7 @@ compound group must be defined before defining the nodes:
     group wn workernode debian plasma mathworks solar \
              fsmounted backup
 
-    node 101 wn all interface:if0-n101
-
+    node 101 wn interface:if0-n101
 
 
 After filling a couple of nodes in synctool.conf, try the command

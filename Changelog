@@ -1,3 +1,6 @@
+10 Jul 2010:
+- groups 'all' and 'none' are now built-in
+
 9 Jul 2010:
 - bugfix: it's OK when a node is no group at all
 

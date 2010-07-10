@@ -20,7 +20,7 @@ synctool_cmd /opt/synctool/sbin/synctool.py -c /var/lib/synctool/synctool.conf
 num_proc 64
 
 # compound groups may be specified like this
-group wn workernode batch all
+group wn workernode batch
 group test wn
 group g1 batch test wn
 
@@ -31,8 +31,8 @@ group g1 batch test wn
 #
 node node0 master all
 
-node node1 fs sched all interface:node1-mgmt
-node node2 login all interface:node2-mgmt
+node node1 fs sched interface:node1-mgmt
+node node2 login interface:node2-mgmt
 node node3 wn interface:node3-mgmt
 node node4 wn interface:node4-mgmt
 node node5 wn interface:node5-mgmt

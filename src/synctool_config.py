@@ -566,9 +566,24 @@ def read_config():
 	if errors > 0:
 		sys.exit(-1)
 
-# implicitly add 'nodename' as first group
+	# implicitly add 'nodename' as first group
 	for node in get_all_nodes():
 		insert_group(node, node)
+
+	# implicitly add group 'all'
+	if not GROUP_DEFS.has_key('all'):
+		GROUP_DEFS['all'] = None
+
+	for node in get_all_nodes():
+		if not 'all' in NODES[node]:
+			NODES[node].append('all')
+
+	# implicitly add group 'none'
+	if not GROUP_DEFS.has_key('none'):
+		GROUP_DEFS['none'] = None
+
+	if not 'none' in IGNORE_GROUPS:
+		IGNORE_GROUPS.append('none')
 
 
 def expand_grouplist(grouplist):
