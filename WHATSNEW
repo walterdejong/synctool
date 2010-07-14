@@ -1,0 +1,68 @@
+synctool by Walter de Jong <walter@heiho.net> (c) 2003-2010
+
+synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
+synctool is distributed under terms described in the GNU General Public
+License.
+
+See the README file for generic information on synctool.
+See the INSTALL file for information on how to deploy synctool.
+See the DOCUMENTATION file for information on how to use synctool.
+
+
+What's new in synctool version 4.6 ?
+====================================
+
+Aside from a few minor bug fixes, version 4.6 includes two new features
+that both have to do with group definitions in synctool's config file:
+
+ 1, groups 'all' and 'none' are now built-in groups.
+    group 'all' applies to all nodes. Group 'none' is ignored by default.
+    It can be used on files in the synctool repository that must not be
+    synced right now, but maybe later.
+
+    The fact that 'all' and 'none' are built-in now means that you can
+    remove them from synctool's config file -- but read below.
+
+    The built-in groups 'all' and 'none' may be overridden if you define
+    them yourself, but really, you shouldn't.
+
+ 2. 'compound groups' may be defined. This is convenient if you have many
+    nodes that are in the same set of groups. Example:
+ 
+     group wn workernode batch mounthome plasma solar ldapclient
+
+     node n1 master
+     node n2 login mounthome
+     node n3 wn
+     node n4 wn
+     node n5 wn
+     node n6 wn othergroup
+     node n7 moreimportantgroupfirst wn
+
+    Compound groups may be combined, too:
+
+     group bigwn somegroup othergroup wn
+
+
+    Original idea of compound groups was by Tim Dittler.
+
+
+
+Upgrading info
+==============
+
+Upgrade synctool as usual. I always upgrade the server first, and then the
+clients. After upgrading, you may delete the groups 'all' and 'none' from
+the synctool.conf file.   The synctool.conf file is located under
+/var/lib/synctool (by default).
+
+NB. If you remove the groups 'all' and 'none' from the config file before
+upgrading and then run synctool, you may end up with nodes being unable to
+parse the config file. If you get stuck like this, change the config file
+back and use 'dcp /var/lib/synctool/synctool.conf' to restore the working
+config file on the nodes.
+After that, upgrade in the proper way.
+
+
+
+EOB
