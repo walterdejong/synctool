@@ -15,7 +15,7 @@ import string
 import socket
 import getopt
 
-VERSION = '4.6-beta'
+VERSION = '4.6'
 
 DEFAULT_CONF = '/var/lib/synctool/synctool.conf'
 CONF_FILE = DEFAULT_CONF
