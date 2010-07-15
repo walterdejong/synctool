@@ -1,0 +1,22 @@
+Source: synctool
+Section: admin
+Priority: optional
+Maintainer: Dennis Stam <dennis.stam@sara.nl>
+Build-Depends: debhelper (>= 7.0.15), cdbs (>= 0.4.52), python, python-support (>= 0.8.4)
+Build-Depends-Indep: python (>= 2.5)
+Standards-Version: 3.8.0
+
+Package: python-synctool
+Architecture: all
+Depends: ${python:Depends}
+Description: Contains the python modules for synctool
+
+Package: synctool-master
+Architecture: all
+Depends: ${python:Depends}, python-synctool
+Description: Synctool is a tool that can help you administer your cluster of computers
+
+Package: synctool-client
+Architecture: all
+Depends: ${python:Depends}, python-synctool
+Description: Synctool is a tool that can help you administer your cluster of computers

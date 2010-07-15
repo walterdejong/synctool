@@ -9,6 +9,9 @@ for any damage done by these scripts.
 
 Files in this directory:
 
+debian/
+  contains files needed to make .deb packages from the synctool sources
+
 synctool-updatechk
   cron.weekly/monthly script that checks for availability of newer version
 

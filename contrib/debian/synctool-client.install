@@ -1,0 +1,2 @@
+debian/tmp/usr/bin/synctool.py usr/bin
+debian/tmp/usr/bin/synctool_config.py usr/bin

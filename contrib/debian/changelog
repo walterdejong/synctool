@@ -1,0 +1,5 @@
+synctool (4.6-1) UNRELEASED; urgency=low
+
+  * Initial debian release
+
+ -- Dennis Stam <dennis.stam@sara.nl>  Wed, 14 Jul 2010 09:59:39 +0200

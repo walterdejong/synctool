@@ -1,0 +1,41 @@
+#!/usr/bin/make -f
+
+DEB_PYTHON_SYSTEM := pysupport
+
+include /usr/share/cdbs/1/rules/debhelper.mk
+include /usr/share/cdbs/1/class/python-distutils.mk
+
+DEB_PYTHON_SETUP_CMD := setup.py
+DEB_PYTHON_COMPRESS_EXCLUDE := .pyc
+DEB_STRIP_EXCLUDE := .pyc
+
+DEB_PYTHON_MODULE_PACKAGE = synctool-master
+
+binary-post-install/synctool-master::
+	cd debian/synctool-master/usr/bin && \
+	ln -sf synctool_master.py synctool && \
+	ln -sf synctool_master.py synctool-master && \
+	ln -sf synctool_config.py synctool-config && \
+	ln -sf synctool_ssh.py synctool-ssh && \
+	ln -sf synctool_ssh.py dsh && \
+	ln -sf synctool_scp.py synctool-scp && \
+	ln -sf synctool_scp.py dcp && \
+	ln -sf synctool_aggr.py synctool-aggr && \
+	ln -sf synctool_aggr.py aggr
+
+	mkdir -m 700 -p debian/synctool-master/var/lib/synctool
+	mkdir -m 755 -p debian/synctool-master/var/lib/synctool/overlay
+	mkdir -m 755 -p debian/synctool-master/var/lib/synctool/delete
+	mkdir -m 755 -p debian/synctool-master/var/lib/synctool/scripts
+	mkdir -m 755 -p debian/synctool-master/var/lib/synctool/tasks
+
+binary-post-install/synctool-client::
+	cd debian/synctool-client/usr/bin && \
+	ln -sf synctool.py synctool && \
+	ln -sf synctool_config.py synctool-config
+
+	mkdir -m 700 -p debian/synctool-client/var/lib/synctool
+	mkdir -m 755 -p debian/synctool-client/var/lib/synctool/overlay
+	mkdir -m 755 -p debian/synctool-client/var/lib/synctool/delete
+	mkdir -m 755 -p debian/synctool-client/var/lib/synctool/scripts
+	mkdir -m 755 -p debian/synctool-client/var/lib/synctool/tasks

@@ -1,0 +1,6 @@
+debian/tmp/usr/bin/synctool_master.py usr/bin
+debian/tmp/usr/bin/synctool_config.py usr/bin
+debian/tmp/usr/bin/synctool_ssh.py usr/bin
+debian/tmp/usr/bin/synctool_scp.py usr/bin
+debian/tmp/usr/bin/synctool_aggr.py usr/bin
+
