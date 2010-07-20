@@ -38,6 +38,9 @@ DIR_EXT_INVALID_GROUP = 3
 FIND_SYNCTREE = None
 FOUND_SYNCTREE = None
 
+# treewalk() may flag this when a file in the dir is updated
+DIR_CHANGED = False
+
 
 def add_post_script(base_filename, scriptname, group=None):
 	'''set the .post script to execute for the dest filename with name 'base_filename'
