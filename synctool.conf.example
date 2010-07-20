@@ -29,7 +29,7 @@ group g1 batch test wn
 # the nodename is a logical name known only to synctool
 # "interface:" specifies the (short) address where synctool connects to
 #
-node node0 master all
+node node0 master
 
 node node1 fs sched interface:node1-mgmt
 node node2 login interface:node2-mgmt
