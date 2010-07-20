@@ -39,7 +39,7 @@ node node5 wn interface:node5-mgmt
 node node6 wn interface:node6-mgmt
 node node7 wn interface:node7-mgmt
 node node8 test interface:node8-mgmt
-node node9 batch all interface:node9-mgmt
+node node9 batch interface:node9-mgmt
 
 ignore_node node0
 
