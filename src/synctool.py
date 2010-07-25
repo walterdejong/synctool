@@ -1145,6 +1145,8 @@ def get_options():
 		if opt in ('-1', '--single'):
 			opt_single = True
 			single_file = arg
+			while len(single_file) > 1 and single_file[-1] == '/':		# strip trailing slashes (single directories)
+				single_file = single_file[:-1]
 			continue
 
 		if opt in ('-t', '--task', '--tasks'):
