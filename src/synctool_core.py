@@ -292,6 +292,7 @@ def treewalk(src_dir, dest_dir, callback, dir_updated=None, visit_subdirs=True):
 # make a local copy of the POST_SCRIPTS dict
 # it's quite messy to use a global var in a recursive function, but it's also being used by a filter() function, so hey ...
 	copy_post_scripts = POST_SCRIPTS.copy()
+	copy_dir_changed = DIR_CHANGED
 
 # recursively visit all directories
 	for dirname in all_dirs:
@@ -311,7 +312,7 @@ def treewalk(src_dir, dest_dir, callback, dir_updated=None, visit_subdirs=True):
 # the callback may set a flag that this directory triggered an update
 		if DIR_CHANGED and dir_updated != None:
 			dir_updated(new_src_dir, new_dest_dir)
-			DIR_CHANGED = False
+			DIR_CHANGED = copy_dir_changed
 
 # visit all directories with group extensions that apply
 	if len(group_ext_dirs) > 0:
@@ -334,7 +335,7 @@ def treewalk(src_dir, dest_dir, callback, dir_updated=None, visit_subdirs=True):
 # the callback may set a flag that this directory triggered an update
 			if DIR_CHANGED and dir_updated != None:
 				dir_updated(new_src_dir, new_dest_dir)
-				DIR_CHANGED = False
+				DIR_CHANGED = copy_dir_changed
 
 
 def find_callback(src_dir, dest_dir, filename, ext):

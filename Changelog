@@ -1,3 +1,8 @@
+25 Jul 2010:
+- bugfix for not running .post scripts on directories when a subdirectory
+  also had a .post script ready to run. Fix contributed by Charles Lane
+- option --single allows trailing slash on argument for directories
+
 15 Jul 2010:
 - added contributed debian control files needed for making .deb packages
 
