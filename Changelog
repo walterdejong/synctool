@@ -1,3 +1,6 @@
+28 Jul 2010:
+- released version 4.6.1 (bugfixes)
+
 25 Jul 2010:
 - bugfix for not running .post scripts on directories when a subdirectory
   also had a .post script ready to run. Fix contributed by Charles Lane

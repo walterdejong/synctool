@@ -9,6 +9,12 @@ See the INSTALL file for information on how to deploy synctool.
 See the DOCUMENTATION file for information on how to use synctool.
 
 
+- Version 4.6.1 is a bugfix release to 4.6
+  It also contains contributed control files needed for making .deb packages
+  for the Debian GNU/Linux OS, which can be found under contrib/debian/
+
+
+
 What's new in synctool version 4.6 ?
 ====================================
 
