@@ -1,3 +1,6 @@
+9 Aug 2010:
+- removed usage of Python class "set" since older Pythons do not have it
+
 6 Aug 2010:
 - put 'binaries' under $masterdir/bin/ so that clients automatically
   receive up to date synctool with every run (!)

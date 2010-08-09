@@ -742,8 +742,11 @@ def make_all_groups():
 
 	arr = GROUP_DEFS.keys()
 	arr.extend(NODES.keys())
-	
-	return list(set(arr))
+
+#	older versions of python do not support sets BUT that doesn't matter ...
+#	all groups + nodes should have no duplicates anyway
+#	return list(set(arr))
+	return arr
 
 
 def list_all_groups():
