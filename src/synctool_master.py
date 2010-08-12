@@ -411,9 +411,12 @@ if __name__ == '__main__':
 	try:
 		main()
 	except IOError, ioerr:
-		if iorerr.errno == 32:			# Broken pipe
+		if iorerr.errno == 32:		# Broken pipe
 			pass
 		else:
 			print ioerr
+
+	except KeyboardInterrupt:		# user pressed Ctrl-C
+		pass
 
 # EOB
