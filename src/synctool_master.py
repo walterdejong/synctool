@@ -348,7 +348,7 @@ def get_options():
 	return (upload_filename, upload_suffix)
 
 
-if __name__ == '__main__':
+def main():
 	sys.stdout = synctool_unbuffered.Unbuffered(sys.stdout)
 	sys.stderr = synctool_unbuffered.Unbuffered(sys.stderr)
 
@@ -406,5 +406,14 @@ if __name__ == '__main__':
 
 	synctool_lib.closelog()
 
+
+if __name__ == '__main__':
+	try:
+		main()
+	except IOError, ioerr:
+		if iorerr.errno == 32:			# Broken pipe
+			pass
+		else:
+			print ioerr
 
 # EOB

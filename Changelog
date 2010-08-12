@@ -1,3 +1,7 @@
+12 Aug 2010:
+- synctool_master do not print python stack trace for perfectly normal
+  condition 'Broken pipe'
+
 9 Aug 2010:
 - removed usage of Python class "set" since older Pythons do not have it
 
