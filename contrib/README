@@ -11,36 +11,49 @@ Files in this directory:
 
 debian/
   contains files needed to make .deb packages from the synctool sources
+  Contributed by Dennis Stam
+
+synctool.bash_completion
+  Copy this to /etc/bash_completion.d/synctool
+  to enable bash completion
+  Contributed by Tim Dittler
 
 synctool-updatechk
   cron.weekly/monthly script that checks for availability of newer version
-
-bootstrap-synctool-client.sh
-  may be used for installing clients
+  Contributed by Walter
 
 nmap_config.sh
   nmaps your management LAN to create a synctool.conf file
+  Contributed by Walter
 
 synctool_csmcompat.py
   checks for differences in node configuration between synctool-config
   and IBM's CSM nodes
+  Contributed by Huub Stoffers
 
 checkconfig
   IRIX-like chkconfig command
   (and note how its functionality is really entirely different from
    RedHat/SuSE's chkconfig command)
-
+  Contributed by Walter
 
 crc32.py
   checksum replacement for synctool.py.
   CRC-32 is fast, but regularly gives false positives
+  Contributed by Walter
 
 md5sum.py
   checksum replacement for synctool.py (MD5 already is default)
+  Contributed by Walter
 
 sha1sum.py
   checksum replacement for synctool.py
   SHA-1 is slow ... but highly reliable when it comes to collisions
+  Contributed by Walter
+
+bootstrap-synctool-client.sh
+  may be used for installing clients (obsoleted)
+  Contributed by Walter
 
 overlay.py
   proof-of-concept code for a tool that uses hardlinks
@@ -49,18 +62,20 @@ overlay.py
   Mind that this code stems for the day when synctool was still
   version 2, so there may be incompatibility issues with today's
   synctool
+  Contributed by Walter
 
 overlay.conf.example
   Example config file for overlay.py
+  Contributed by Walter
 
 rsynctool-single-suse.sh
 rsynctool-suse.sh
 synctool.sh
   Wrapper scripts that work nicely with synctool 3.
-  They have been obsoleted by synctool 4 -- this functionality is
-  now included in synctool_master.py
+  (obsoleted by synctool 4)
+  Contributed by Huub Stoffers
 
 rsynctool-upload
   copies files from nodes into the repository
-  This script was in use with synctool version 3, an updated
-  version may be included later ...
+  (obsoleted by synctool -u)
+  Contributed by Huub Stoffers

@@ -1,0 +1,58 @@
+have synctool &&
+_synctool() {
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[$COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts="-h -c -n -g -x- X -d -v \
+          --help --conf= --node= --group= --exclude= --exclude-group= \
+          --unix --verbose" 
+    sync_opts="$opts -1 -r -u -s -t -f -q -a \
+          --diff= --single= --ref= --upload= --suffix= --tasks \
+          --fix --skip-rsync --version --check-update \
+           --download --quiet --aggregate"
+    dcp_opts="$opts -d -o --dest= --options= --dry-run"
+    dsh_opts="$opts -a -N --aggregate --no-nodename --dry-run"
+
+    if [[ ${cur} == -* ]] ; then
+      case "${COMP_WORDS[0]}" in
+        synctool)
+            COMPREPLY=( $(compgen -W "${sync_opts}" -- ${cur}) )
+            return 0
+            ;;
+        dsh)
+            COMPREPLY=( $(compgen -W "${dsh_opts}" -- ${cur}) )
+            return 0
+            ;;
+        dcp)
+            COMPREPLY=( $(compgen -W "${dcp_opts}" -- ${cur}) )
+            return 0
+            ;;
+        *)
+          ;;
+      esac
+    fi
+    
+    case "${prev}" in
+      -n)
+         COMPREPLY=( $(compgen -W "$(synctool-config -lf)" -- ${cur}) )
+         return 0
+         ;;
+      -g)
+         COMPREPLY=( $(compgen -W "$(synctool-config -Lf)" -- ${cur}) )
+         return 0
+         ;;
+      "-1")
+         if [[ $COMP_CWORD > 2 ]] ; then
+           if [[ ${COMP_WORDS[COMP_CWORD-2]} == "-t" ]] ; then
+             COMPREPLY=( $(compgen -W "$(ls /var/lib/synctool/tasks/ | sed -e 's/._.*$//g')" -- ${cur}) )
+           fi
+         else COMPREPLY=( $( compgen -d -- $cur ) )
+         fi
+         return 0
+         ;;
+      *)
+        ;;
+    esac
+}
+complete -F _synctool synctool dsh dcp
