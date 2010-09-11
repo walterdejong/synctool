@@ -85,8 +85,7 @@ def run(cmd_args):
 		cmd_args.remove('--aggregate')
 
 	if use_subprocess:
-		f = subprocess.Popen(cmd_args, shell=False, env={'PATH' : os.getenv('PATH')},
-			bufsize=4096, stdout=subprocess.PIPE).stdout
+		f = subprocess.Popen(cmd_args, shell=False, bufsize=4096, stdout=subprocess.PIPE).stdout
 	else:
 		f = os.popen(string.join(cmd_args), 'r')
 
