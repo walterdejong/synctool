@@ -27,6 +27,7 @@ import shutil
 import pwd
 import grp
 import time
+import shlex
 
 try:
 	import hashlib
@@ -34,6 +35,12 @@ try:
 except ImportError:
 	import md5
 	use_hashlib = False
+
+try:
+	import subprocess
+	use_subprocess = True
+except ImportError:
+	use_subprocess = False
 
 # extra command-line option --tasks
 RUN_TASKS = False
@@ -721,10 +728,16 @@ def run_command(cmd):
 		sys.stdout.flush()
 		sys.stderr.flush()
 
-		try:
-			os.system(cmd)
-		except OSError, reason:
-			stderr("failed to run shell command '%s' : %s" % (cmd1, reason))
+		if use_subprocess:
+			try:
+				subprocess.Popen(cmd, shell=True)
+			except:
+				stderr("failed to run shell command '%s' : %s" % (cmd1, reason))
+		else:
+			try:
+				os.system(cmd)
+			except OSError, reason:
+				stderr("failed to run shell command '%s' : %s" % (cmd1, reason))
 
 		sys.stdout.flush()
 		sys.stderr.flush()
@@ -1005,7 +1018,13 @@ def diff_files(filename):
 		sys.stdout.flush()
 		sys.stderr.flush()
 
-		os.system('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
+		if use_subprocess:
+			cmd_arr = shlex.split(synctool_config.DIFF_CMD)
+			cmd_arr.append(filename)
+			cmd_arr.append(sync_path)
+			subprocess.Popen(cmd_arr, shell=False)
+		else:
+			os.system('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
 
 		sys.stdout.flush()
 		sys.stderr.flush()
