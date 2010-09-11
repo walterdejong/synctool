@@ -16,6 +16,13 @@ import sys
 import string
 import getopt
 
+try:
+	import subprocess
+	use_subprocess = True
+except ImportError:
+	# well, your Python version is ancient
+	use_subprocess = False
+
 
 def aggregate(f):
 	lines = f.readlines()
@@ -77,7 +84,12 @@ def run(cmd_args):
 	if '--aggregate' in cmd_args:
 		cmd_args.remove('--aggregate')
 
-	f = os.popen(string.join(cmd_args), 'r')
+	if use_subprocess:
+		f = subprocess.Popen(cmd_args, shell=False, env={'PATH' : os.getenv('PATH')},
+			bufsize=4096, stdout=subprocess.PIPE).stdout
+	else:
+		f = os.popen(string.join(cmd_args), 'r')
+
 	aggregate(f)
 	f.close()
 
