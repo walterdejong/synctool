@@ -1,3 +1,7 @@
+11 Sep 2010:
+- use subprocess.Popen() rather than os.popen()
+  if the subprocess module is available
+
 6 Sep 2010:
 - Tim Dittler contributed a bash_completion file
 
