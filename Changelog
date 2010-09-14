@@ -1,3 +1,6 @@
+14 Sep 2010:
+- strip multiple slashes of filenames given on the command-line
+
 11 Sep 2010:
 - use subprocess.Popen() rather than os.popen() / os.system()
   if the subprocess module is available

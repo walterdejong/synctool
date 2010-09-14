@@ -1158,12 +1158,12 @@ def get_options():
 
 		if opt in ('-d', '--diff'):
 			opt_diff = True
-			diff_file = arg
+			diff_file = synctool_lib.strip_multiple_slashes(arg)
 			continue
 
 		if opt in ('-1', '--single'):
 			opt_single = True
-			single_file = arg
+			single_file = synctool_lib.strip_multiple_slashes(arg)
 			while len(single_file) > 1 and single_file[-1] == '/':		# strip trailing slashes (single directories)
 				single_file = single_file[:-1]
 			continue
@@ -1175,7 +1175,7 @@ def get_options():
 
 		if opt in ('-r', '--ref', '--reference'):
 			opt_reference = True
-			reference_file = arg
+			reference_file = synctool_lib.strip_multiple_slashes(arg)
 			continue
 
 		if opt == '--version':

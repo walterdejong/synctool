@@ -289,7 +289,7 @@ def get_options():
 
 		if opt in ('-u', '--upload'):
 			opt_upload = True
-			upload_filename = arg
+			upload_filename = synctool_lib.strip_multiple_slashes(arg)
 			continue
 
 		if opt in ('-s', '--suffix'):
