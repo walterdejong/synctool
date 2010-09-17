@@ -1,3 +1,6 @@
+17 Sep 2010:
+- fixed typo in variable name for catching a Broken Pipe exception
+
 14 Sep 2010:
 - strip multiple slashes of filenames given on the command-line
 
