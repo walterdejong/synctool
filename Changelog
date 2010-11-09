@@ -1,3 +1,7 @@
+9 November 2010:
+- guard against common but dangerous typo's on command-line
+  like "-diff" instead of "--diff"
+
 23 Sep 2010:
 - bugfix: issue with dsh and --aggregate
 

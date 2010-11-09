@@ -1030,6 +1030,29 @@ def diff_files(filename):
 		sys.stderr.flush()
 
 
+def be_careful_with_getopt():
+	'''check sys.argv for dangerous common typo's on the command-line'''
+	
+	# be extra careful with possible typo's on the command-line
+	# because '-f' might run --fix because of the way that getopt() works
+	
+	for arg in sys.argv:
+
+		# This is probably going to give stupid-looking output in some cases,
+		# but it's better to be safe than sorry
+
+		if arg[:2] == '-d' and string.find(arg, 'f') > -1:
+			print "Did you mean '--diff'?"
+			sys.exit(1)
+
+		if arg[:2] == '-r' and string.find(arg, 'f') > -1:
+			if string.count(arg, 'e') >= 2:
+				print "Did you mean '--reference'?"
+			else:
+				print "Did you mean '--ref'?"
+			sys.exit(1)
+
+
 def	option_combinations(opt_diff, opt_single, opt_reference, opt_tasks, opt_upload, opt_suffix, opt_fix):
 	'''some combinations of command-line options don't make sense; alert the user and abort'''
 	
@@ -1085,6 +1108,8 @@ def get_options():
 	if len(sys.argv) <= 1:
 		return (None, None, None)
 
+	be_careful_with_getopt()	# check for dangerous common typo's on the command-line
+	
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:tfvq', ['help', 'conf=', 'diff=', 'single=', 'ref=', 'tasks', 'fix', 'verbose', 'quiet',
 			'unix', 'masterlog', 'version'])

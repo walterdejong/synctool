@@ -188,6 +188,9 @@ def get_options():
 #		usage()
 #		sys.exit(1)
 
+	# check for typo's on the command-line; things like "-diff" will trigger "-f" => "--fix"
+	synctool.be_careful_with_getopt()
+
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:r:u:s:tfqa', ['help', 'conf=', 'verbose', 'node=', 'group=',
 			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=', 'upload=', 'suffix=', 'tasks', 'fix', 'quiet', 'aggregate',
