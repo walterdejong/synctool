@@ -4,6 +4,8 @@
 # Synctool can do that too, but only with a text diff, not with a nice GUI like meld.
 # 2010-09-28 - Created by Onno with tips from Walter dJ
 # 2010-10-05 - Made more generic - Onno
+# 2010-11-13 - changed decision of interface/hostname - WdJ
+# 2010-11-13 - safer + BSD compatible mktemp - WdJ
 
 SYNCTOOL_CONF=/data/synctool/synctool.conf
 
@@ -32,28 +34,21 @@ fi
 function process_parm() {
   # See if the file is local or on a node, which node, etcetera.
   # This function works with bash arrays. I is the index.
-  PARM=$1
+  PARM="$1"
   I=$2
   if echo "$PARM" | grep --silent ':' ; then
     # File is on a node.
-    NODE[I]=${PARM%:*}
-    FILE[I]=${PARM#*:}
-    # Node starts with 'm-'?
-    if echo ${NODE[I]} | grep --silent '^m-' ; then
+    NODE[I]="${PARM%:*}"
+    FILE[I]="${PARM#*:}"
+
+    INTERFACE[I]=`grep -e "^node\s*${NODE[I]}\W" $SYNCTOOL_CONF \
+                | grep -o 'interface:.*' \
+                | sed 's/interface://'`
+    if [ -z "${INTERFACE[I]}" ] ; then
+	  # interface not found, assume hostname is the same as nodename
       INTERFACE[I]=${NODE[I]}
-      NODE[I]=`echo ${INTERFACE[I]} | sed 's/m-//'`
-    else
-      # Node does not start with 'm-', look up interface.
-      INTERFACE[I]=`grep -e "^node\s*${NODE[I]}\W" $SYNCTOOL_CONF \
-                  | grep -o 'interface:.*' \
-                  | sed 's/interface://'`
-      if [ -z "${INTERFACE[I]}" ] ; then
-        echo "No interface found for node ${NODE[I]} in $SYNCTOOL_CONF."
-        echo "Guessing that the interface will be m-${NODE[I]}."
-        INTERFACE[I]=m-${NODE[I]}
-      fi
     fi
-    DIFF_FILE[I]=$PREFIX-${NODE[I]}-`basename ${FILE[I]}`
+    DIFF_FILE[I]=$PREFIX-${NODE[I]}-`basename "${FILE[I]}"`
     scp -pq ${INTERFACE[I]}:"${FILE[I]}" "${DIFF_FILE[I]}" \
       && cp -a "${DIFF_FILE[I]}" "${DIFF_FILE[I]}.copy-to-check-changes"
   else
@@ -84,7 +79,9 @@ function check_file() {
   if [ ! -f "$FILE" ] ; then
     echo "ERROR: $EXPLANATION"
     # Cleaning up
-    rm -f "$PREFIX"*
+	if [ ! -z "$PREFIX" ]; then
+      rm -f "$PREFIX"*
+	fi
     exit 3
   fi
 }
@@ -96,7 +93,7 @@ NODE=( )
 INTERFACE=( )
 
 # Initialize other var(s)
-PREFIX=`mktemp`
+PREFIX=`mktemp /tmp/tmp.XXXXXXXXXX`
 
 
 # Only one file specified? Compare with synctool overlay version!
