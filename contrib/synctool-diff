@@ -1,0 +1,140 @@
+#!/bin/bash
+
+# Compares a file on a node with the synctool version.
+# Synctool can do that too, but only with a text diff, not with a nice GUI like meld.
+# 2010-09-28 - Created by Onno with tips from Walter dJ
+# 2010-10-05 - Made more generic - Onno
+
+SYNCTOOL_CONF=/data/synctool/synctool.conf
+
+function usage() {
+echo "Compares files across a cluster, managed by synctool or not.
+
+Syntax:
+
+  Compare file in synctool overlay tree with file on node:
+    `basename $0` node:/path/file
+
+  Compare files on nodes or local:
+    `basename $0` [node1:]/path1/file1 [node2:]/path2/file2
+
+'node' can be short hostname (if declared in synctool.conf) or short interface name.
+"
+exit 1
+}
+
+
+if [ -z "$1" ] ; then
+  usage
+fi
+
+
+function process_parm() {
+  # See if the file is local or on a node, which node, etcetera.
+  # This function works with bash arrays. I is the index.
+  PARM=$1
+  I=$2
+  if echo "$PARM" | grep --silent ':' ; then
+    # File is on a node.
+    NODE[I]=${PARM%:*}
+    FILE[I]=${PARM#*:}
+    # Node starts with 'm-'?
+    if echo ${NODE[I]} | grep --silent '^m-' ; then
+      INTERFACE[I]=${NODE[I]}
+      NODE[I]=`echo ${INTERFACE[I]} | sed 's/m-//'`
+    else
+      # Node does not start with 'm-', look up interface.
+      INTERFACE[I]=`grep -e "^node\s*${NODE[I]}\W" $SYNCTOOL_CONF \
+                  | grep -o 'interface:.*' \
+                  | sed 's/interface://'`
+      if [ -z "${INTERFACE[I]}" ] ; then
+        echo "No interface found for node ${NODE[I]} in $SYNCTOOL_CONF."
+        echo "Guessing that the interface will be m-${NODE[I]}."
+        INTERFACE[I]=m-${NODE[I]}
+      fi
+    fi
+    DIFF_FILE[I]=$PREFIX-${NODE[I]}-`basename ${FILE[I]}`
+    scp -pq ${INTERFACE[I]}:"${FILE[I]}" "${DIFF_FILE[I]}" \
+      && cp -a "${DIFF_FILE[I]}" "${DIFF_FILE[I]}.copy-to-check-changes"
+  else
+    # File is local.
+    FILE[I]=$PARM
+    DIFF_FILE[I]=$PARM
+    if [ ! -f "${FILE[I]}" ] ; then
+      echo "File ${FILE[I]} does not exist."
+      exit 2
+    fi
+  fi
+}
+
+function return_changed_file_to_node() {
+  I=$1
+  # Copy any changes back to the node
+  if diff -q ${DIFF_FILE[I]} ${DIFF_FILE[I]}.copy-to-check-changes > /dev/null ; then
+    echo "File ${NODE[I]}:${FILE[I]} has not changed. Not uploading to ${NODE[I]}."
+  else
+    echo "File ${NODE[I]}:${FILE[I]} has changed. Uploading changes."
+    scp -p "${DIFF_FILE[I]}" ${INTERFACE[I]}:"${FILE[I]}"
+  fi
+}
+
+function check_file() {
+  FILE=$1 ; shift
+  EXPLANATION="$@"
+  if [ ! -f "$FILE" ] ; then
+    echo "ERROR: $EXPLANATION"
+    # Cleaning up
+    rm -f "$PREFIX"*
+    exit 3
+  fi
+}
+
+# Initialize arrays
+FILE=( )
+DIFF_FILE=( )
+NODE=( )
+INTERFACE=( )
+
+# Initialize other var(s)
+PREFIX=`mktemp`
+
+
+# Only one file specified? Compare with synctool overlay version!
+if [ -z "$2" ] ; then
+  # Process the only parm and use it as the SECOND file
+  process_parm "$1" "2"
+  check_file "${DIFF_FILE[2]}" "File '${FILE[2]}' not found on node ${NODE[2]}."
+  # The first file is the synctool overlay version
+  DIFF_FILE[1]=`synctool -q -n ${NODE[2]} --ref ${FILE[2]} | grep -o '/data/synctool/.*'`
+  check_file "${DIFF_FILE[1]}" "File '$1' not found in the synctool overlay tree."
+  if diff -q "${DIFF_FILE[1]}" "${DIFF_FILE[2]}" ; then
+    echo "Files '${DIFF_FILE[1]}' and '$1' are the same."
+    exit 0
+  fi
+else
+  # Two parameters specified. Copy them from node if needed.
+  process_parm "$1" 1
+  check_file "${DIFF_FILE[1]}" "File '$1' not found."
+  process_parm "$2" 2
+  check_file "${DIFF_FILE[2]}" "File '$2' not found."
+  if diff -q "${DIFF_FILE[1]}" "${DIFF_FILE[2]}" ; then
+    echo "Files '$1' and '$2' are the same."
+    exit 0
+  fi
+fi
+
+
+# Do the great magic diff & merge & edit stuff
+echo "Comparing: '${DIFF_FILE[1]}' '${DIFF_FILE[2]}'"
+meld "${DIFF_FILE[1]}" "${DIFF_FILE[2]}"
+
+
+if [ -n "${NODE[1]}" ] ; then
+  return_changed_file_to_node 1
+fi
+if [ -n "${NODE[2]}" ] ; then
+  return_changed_file_to_node 2
+fi
+
+# Cleaning up
+rm -f "$PREFIX"*

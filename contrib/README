@@ -9,6 +9,17 @@ for any damage done by these scripts.
 
 Files in this directory:
 
+synctool-diff
+  Compares files across a cluster, managed by synctool or not.
+
+  Compare file in synctool overlay tree with file on node:
+    synctool-diff node:/path/file
+
+  Compare files on nodes or local:
+     synctool-diff [node1:]/path1/file1 [node2:]/path2/file2
+
+  Contributed by Onno Zweers
+
 debian/
   contains files needed to make .deb packages from the synctool sources
   Contributed by Dennis Stam
