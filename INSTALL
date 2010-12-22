@@ -116,25 +116,39 @@ NB. Some (mostly IBM) systems already have a 'dsh' command. In synctool,
     The same goes for 'dcp', which is a symlink to synctool-scp
 
 
-Now that you have a rough setup on the master node, you also need to
-install client side software on every cluster node. As synctool is
-not fully functional yet, you can't use synctool to do this.
+Now that you have a rough setup on the master node, try running
+synctool to a single node:
 
-SSH to a node and unpack the tarball. Edit the Makefile as before.
-Run 'make client_install'.
+    synctool -n anodename
 
-An easy way to copy the package to all nodes, is by using the synctool-scp
-or 'dcp' command. An easy way to deploy it is by using dsh.
-You may also use contrib/bootstrap-synctool-client.sh to install clients.
+If you get 'command not found', add /opt/synctool/sbin to your PATH.
+By default, the full path to the command is:
 
-Note that by default, synctool will install to /opt/synctool
-so if you don't like this, you have to change it.
+    /opt/synctool/sbin/synctool -n anodename
 
-
-After installing all client software, give the command 'synctool' on
-the master node a go.
 There should be some output about 'DRY RUN'. This means that synctool
-is now working and you can start filling your repository with useful files.
+is now working. You can try running synctool across all nodes:
+
+    synctool
+
+Check that every node responds. You can also use 'dsh' to check that
+passwordless SSH to every node is setup correctly:
+
+    dsh uptime
+
+or
+
+	dsh hostname
+
+When synctool to every node works, the basic setup is done and
+you can start filling your repository with useful files.
+
+
+What happened to 'make client_install'?
+It is no longer needed. The master node now automatically updates
+synctool on the client nodes. The binaries needed for this are
+located under /var/lib/synctool/sbin/, and this directory gets
+synced to the nodes.
 
 
 See the DOCUMENTATION file for information on how to use synctool.

@@ -38,13 +38,14 @@ configuration file, the nodename is associated with one or more groups.
 The nodename itself can also be used as a group to indicate that a file
 belongs to that node.
 
-In the synctool masterdir there are 4 subdirectories, each having its own
+In the synctool masterdir there are 5 subdirectories, each having its own
 function:
 
     * overlay/
     * delete/
     * scripts/
     * tasks/
+	* sbin/
 
 The overlay/ tree contains files that have to be copied. When synctool
 detects a difference between a file on the system and a file in the overlay
@@ -63,6 +64,11 @@ must be run.
 The executables in de tasks/ directory are run when synctool is invoked with
 the '-t' or '--tasks' argument. This makes it possible to run scripts on
 hosts, which is very convenient for doing change management.
+
+The sbin/ directory contains the synctool programs. Isn't this an odd place
+to put 'binaries'? Yes, but these are the 'master copies' of the synctool
+software. These are also synced to every node so that synctool can run
+there.
 
 Example run:
 

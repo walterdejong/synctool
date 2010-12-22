@@ -14,7 +14,7 @@ diff_cmd /usr/bin/diff -u
 ssh_cmd /usr/bin/ssh -o ConnectTimeout=10 -q
 scp_cmd /usr/bin/scp -o ConnectTimeout=10 -p
 rsync_cmd /usr/bin/rsync -ar --delete -e 'ssh -o ConnectTimeout=10 -q'
-synctool_cmd /opt/synctool/sbin/synctool.py -c /var/lib/synctool/synctool.conf
+synctool_cmd /var/lib/synctool/sbin/synctool.py -c /var/lib/synctool/synctool.conf
 
 # max amount of parallel processes that synctool_master and synctool-ssh use
 num_proc 64

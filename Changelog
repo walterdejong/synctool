@@ -1,3 +1,6 @@
+22 December 2010:
+- release as version 4.7
+
 13 November 2010:
 - added contributed synctool-diff script by Onno Zweers
 
@@ -29,7 +32,7 @@
 - removed usage of Python class "set" since older Pythons do not have it
 
 6 Aug 2010:
-- put 'binaries' under $masterdir/bin/ so that clients automatically
+- put 'binaries' under $masterdir/sbin/ so that clients automatically
   receive up to date synctool with every run (!)
 
 28 Jul 2010:

@@ -193,6 +193,7 @@ housekeeping directories in the repository by stating in synctool.conf:
 ignore RCS
 ignore CVS
 ignore .svn
+ignore .git
 
 By the way, synctool was developed using subversion.
 
