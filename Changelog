@@ -3,6 +3,7 @@
   reported by Werner Maier
 - dsh and dcp now accept option -q, --quiet, but these are
   ignored and do not really trim down the output
+- released as version 4.7.1
 
 22 December 2010:
 - release as version 4.7

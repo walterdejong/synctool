@@ -12,6 +12,14 @@ See the DOCUMENTATION file for information on how to use synctool.
 What's new in synctool version 4.7 ? 
 ====================================
 
+Only two tiny things:
+ - bugfix for the "ignore" keyword that ignores files or directories
+ - dsh and dcp now quietly accept the command-line option -q
+
+
+What's new in synctool version 4.7 ? 
+====================================
+
 IMPORTANT UPGRADING INFO
 
 This version includes a subtle yet major installation change that makes
