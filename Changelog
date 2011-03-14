@@ -1,6 +1,8 @@
 14 March 2011:
 - fixed bug when ignoring files by name were not being ignored
   reported by Werner Maier
+- dsh and dcp now accept option -q, --quiet, but these are
+  ignored and do not really trim down the output
 
 22 December 2010:
 - release as version 4.7

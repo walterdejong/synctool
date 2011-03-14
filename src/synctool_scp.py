@@ -144,9 +144,9 @@ def get_options():
 	SCP_OPTIONS = None
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vd:o:n:g:x:X:', ['help', 'conf=', 'verbose',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vd:o:n:g:x:X:q', ['help', 'conf=', 'verbose',
 			'dest=', 'options=',
-			'node=', 'group=', 'exclude=', 'exclude-group=', 'unix', 'dry-run'])
+			'node=', 'group=', 'exclude=', 'exclude-group=', 'unix', 'dry-run', 'quiet'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -219,6 +219,10 @@ def get_options():
 
 		if opt == '--dry-run':
 			synctool_lib.DRY_RUN = True
+			continue
+
+		if opt in ('-q', '--quiet'):
+			# silently ignore this option
 			continue
 
 	if args == None or len(args) <= 0:

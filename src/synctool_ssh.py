@@ -367,8 +367,8 @@ def get_options():
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:aN', ['help', 'conf=', 'verbose',
-			'node=', 'group=', 'exclude=', 'exclude-group=', 'aggregate', 'no-nodename', 'unix', 'dry-run'])
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:aNq', ['help', 'conf=', 'verbose',
+			'node=', 'group=', 'exclude=', 'exclude-group=', 'aggregate', 'no-nodename', 'unix', 'dry-run', 'quiet'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -448,6 +448,10 @@ def get_options():
 
 		if opt == '--dry-run':
 			synctool_lib.DRY_RUN = True
+			continue
+
+		if opt in ('-q', '--quiet'):
+			# silently ignore this option
 			continue
 
 	if args == None or len(args) <= 0:
