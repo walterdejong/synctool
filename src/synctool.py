@@ -209,27 +209,6 @@ def path_isexec(path):
 	return False
 
 
-def path_isignored(full_path, filename):
-	if len(synctool_config.IGNORE_FILES) > 0:
-		if filename in synctool_config.IGNORE_FILES:
-			return 1
-
-		arr = string.split(filename, '.')
-		if len(arr) > 1 and arr[-1][0] == '_' and string.join(arr[:-1], '.') in synctool_config.IGNORE_FILES:
-			return 1
-
-	if path_isdir(full_path):
-		if synctool_config.IGNORE_DOTDIRS and filename[0] == '.':
-			verbose('ignoring hidden directory $masterdir/%s/' % full_path[synctool_config.MASTER_LEN:])
-			return 1
-	else:
-		if synctool_config.IGNORE_DOTFILES and filename[0] == '.':
-			verbose('ignoring hidden file $masterdir/%s' % full_path[synctool_config.MASTER_LEN:])
-			return 1
-
-	return 0
-
-
 def compare_files(src_path, dest_path):
 	'''see what the differences are between src and dest, and fix it if not a dry run
 

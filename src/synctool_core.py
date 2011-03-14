@@ -76,6 +76,9 @@ def add_post_script(base_filename, scriptname, group=None):
 def file_has_group_ext(filename):
 	'''filter function; see if the group extension applies'''
 
+	if filename in synctool_config.IGNORE_FILES:
+		return False
+
 	arr = string.split(filename, '.')
 
 	if len(arr) < 2:
@@ -272,6 +275,7 @@ def treewalk(src_dir, dest_dir, callback, dir_updated=None, visit_subdirs=True):
 
 # handle all files with group extensions that apply
 # this also adds .post scripts to the dict POST_SCRIPTS
+# and it filters any files/dirs that are ignored by name
 	files = filter(file_has_group_ext, files)
 
 	if len(files) > 0 and callback != None:

@@ -1,3 +1,7 @@
+14 March 2011:
+- fixed bug when ignoring files by name were not being ignored
+  reported by Werner Maier
+
 22 December 2010:
 - release as version 4.7
 
