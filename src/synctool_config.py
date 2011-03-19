@@ -117,10 +117,10 @@ def read_config():
 	lineno = 0
 	errors = 0
 
-#
-#	read lines from the config file
-#	variable tmp_line is used to be able to do multi-line reads (backslash terminated)
-#
+	#
+	#	read lines from the config file
+	#	variable tmp_line is used to be able to do multi-line reads (backslash terminated)
+	#
 	line = ''
 	while 1:
 		tmp_line = f.readline()
@@ -154,9 +154,9 @@ def read_config():
 
 		keyword = string.lower(arr[0])
 
-#
-#	keyword: masterdir
-#
+		#
+		#	keyword: masterdir
+		#
 		if keyword == 'masterdir':
 			if MASTERDIR != None:
 				stderr("%s:%d: redefinition of masterdir" % (CONF_FILE, lineno))
@@ -167,9 +167,9 @@ def read_config():
 			MASTER_LEN = len(MASTERDIR) + 1
 			continue
 
-#
-#	keyword: symlink_mode
-#
+		#
+		#	keyword: symlink_mode
+		#
 		if keyword == 'symlink_mode':
 			try:
 				mode = int(arr[1], 8)
@@ -181,9 +181,9 @@ def read_config():
 			SYMLINK_MODE = mode
 			continue
 
-#
-#	keyword: ignore_dotfiles
-#
+		#
+		#	keyword: ignore_dotfiles
+		#
 		if keyword == 'ignore_dotfiles':
 			if arr[1] in ('1', 'on', 'yes'):
 				IGNORE_DOTFILES = 1
@@ -196,9 +196,9 @@ def read_config():
 				errors = errors + 1
 			continue
 
-#
-#	keyword: ignore_dotdirs
-#
+		#
+		#	keyword: ignore_dotdirs
+		#
 		if keyword == 'ignore_dotdirs':
 			if arr[1] in ('1', 'on', 'yes'):
 				IGNORE_DOTDIRS = 1
@@ -211,9 +211,9 @@ def read_config():
 				errors = errors + 1
 			continue
 
-#
-#	keyword: ignore
-#
+		#
+		#	keyword: ignore
+		#
 		if keyword in ('ignore', 'ignore_file', 'ignore_files', 'ignore_dir', 'ignore_dirs'):
 			if len(arr) < 2:
 				stderr("%s:%d: 'ignore' requires at least 1 argument: the file or directory to ignore" % (CONF_FILE, lineno))
@@ -223,9 +223,9 @@ def read_config():
 			IGNORE_FILES.extend(arr[1:])
 			continue
 
-#
-#	keyword: group
-#
+		#
+		#	keyword: group
+		#
 		if keyword == 'group':
 			if len(arr) < 3:
 				stderr("%s:%d: 'group' requires at least 2 arguments: the compound group name and at least 1 member group" % (CONF_FILE, lineno))
@@ -253,9 +253,9 @@ def read_config():
 			
 			continue
 
-#
-#	keyword: host / node
-#
+		#
+		#	keyword: host / node
+		#
 		if keyword == 'host' or keyword == 'node':
 			if len(arr) < 2:
 				stderr("%s:%d: '%s' requires at least 1 argument: the nodename" % (CONF_FILE, lineno, keyword))
@@ -295,9 +295,9 @@ def read_config():
 			
 			continue
 
-#
-#	keyword: ignore_host / ignore_node
-#
+		#
+		#	keyword: ignore_host / ignore_node
+		#
 		if keyword == 'ignore_host' or keyword == 'ignore_node':
 			if len(arr) < 2:
 				stderr("%s:%d: '%s' requires 1 argument: the nodename to ignore" % (CONF_FILE, lineno, keyword))
@@ -307,9 +307,9 @@ def read_config():
 			IGNORE_GROUPS.append(arr[1])
 			continue
 
-#
-#	keyword: ignore_group
-#
+		#
+		#	keyword: ignore_group
+		#
 		if keyword == 'ignore_group':
 			if len(arr) < 2:
 				stderr("%s:%d: 'ignore_group' requires at least 1 argument: the group to ignore" % (CONF_FILE, lineno))
@@ -325,9 +325,9 @@ def read_config():
 			
 			continue
 
-#
-#	keyword: on_update
-#
+		#
+		#	keyword: on_update
+		#
 		if keyword == 'on_update':
 			if len(arr) < 3:
 				stderr("%s:%d: 'on_update' requires at least 2 arguments: filename and shell command to run" % (CONF_FILE, lineno))
@@ -342,9 +342,9 @@ def read_config():
 				errors = errors + 1
 				continue
 
-#
-#	check if the script exists
-#
+			#
+			#	check if the script exists
+			#
 			if arr[2][0] != '/':
 				master = '.'
 				if MASTERDIR != None:
@@ -365,9 +365,9 @@ def read_config():
 			ON_UPDATE[file] = cmd
 			continue
 
-#
-#	keyword: always_run
-#
+		#
+		#	keyword: always_run
+		#
 		if keyword == 'always_run':
 			if len(arr) < 2:
 				stderr("%s:%d: 'always_run' requires an argument: the shell command to run" % (CONF_FILE, lineno))
@@ -381,9 +381,9 @@ def read_config():
 				errors = errors + 1
 				continue
 
-#
-#	check if the script exists
-#
+			#
+			#	check if the script exists
+			#
 			if arr[1][0] != '/':
 				master = '.'
 				if MASTERDIR != None:
@@ -404,9 +404,9 @@ def read_config():
 			ALWAYS_RUN.append(cmd)
 			continue
 
-#
-#	keyword: diff_cmd
-#
+		#
+		#	keyword: diff_cmd
+		#
 		if keyword == 'diff_cmd':
 			if len(arr) < 2:
 				stderr("%s:%d: 'diff_cmd' requires an argument: the full path to the 'diff' command" % (CONF_FILE, lineno))
@@ -427,9 +427,9 @@ def read_config():
 			DIFF_CMD = string.join(arr[1:])
 			continue
 
-#
-#	keyword: ssh_cmd
-#
+		#
+		#	keyword: ssh_cmd
+		#
 		if keyword == 'ssh_cmd':
 			if len(arr) < 2:
 				stderr("%s:%d: 'ssh_cmd' requires an argument: the full path to the 'ssh' command" % (CONF_FILE, lineno))
@@ -450,9 +450,9 @@ def read_config():
 			SSH_CMD = string.join(arr[1:])
 			continue
 
-#
-#	keyword: scp_cmd
-#
+		#
+		#	keyword: scp_cmd
+		#
 		if keyword == 'scp_cmd':
 			if len(arr) < 2:
 				stderr("%s:%d: 'scp_cmd' requires an argument: the full path to the 'scp' command" % (CONF_FILE, lineno))
@@ -473,9 +473,9 @@ def read_config():
 			SCP_CMD = string.join(arr[1:])
 			continue
 
-#
-#	keyword: rsync_cmd
-#
+		#
+		#	keyword: rsync_cmd
+		#
 		if keyword == 'rsync_cmd':
 			if len(arr) < 2:
 				stderr("%s:%d: 'rsync_cmd' requires an argument: the full path to the 'rsync' command" % (CONF_FILE, lineno))
@@ -496,9 +496,9 @@ def read_config():
 			RSYNC_CMD = string.join(arr[1:])
 			continue
 
-#
-#	keyword: synctool_cmd
-#
+		#
+		#	keyword: synctool_cmd
+		#
 		if keyword == 'synctool_cmd':
 			if len(arr) < 2:
 				stderr("%s:%d: 'synctool_cmd' requires an argument: the full path to the remote 'synctool' command" % (CONF_FILE, lineno))
@@ -519,9 +519,9 @@ def read_config():
 			SYNCTOOL_CMD = string.join(arr[1:])
 			continue
 
-#
-#	keyword: logfile
-#
+		#
+		#	keyword: logfile
+		#
 		if keyword == 'logfile':
 			if len(arr) < 2:
 				stderr("%s:%d: 'logfile' requires an argument: the full path to the file to write log messages to" % (CONF_FILE, lineno))
@@ -536,9 +536,9 @@ def read_config():
 			LOGFILE = string.join(arr[1:])
 			continue
 
-#
-#	keyword: num_proc
-#
+		#
+		#	keyword: num_proc
+		#
 		if keyword == 'num_proc':
 			try:
 				num_proc = int(arr[1])
@@ -631,9 +631,9 @@ def add_myhostname():
 
 	global NODENAME, HOSTNAME
 
-#
-#	get my hostname
-#
+	#
+	#	get my hostname
+	#
 	HOSTNAME = hostname = socket.gethostname()
 
 	arr = string.split(hostname, '.')
@@ -654,7 +654,8 @@ def add_myhostname():
 		nodename = hostname
 
 	else:
-# try to find a node that has the (short) hostname listed as interface or as a group
+		# try to find a node that has the (short) hostname listed as interface
+		# or as a group
 		for node in all_nodes:
 			iface = get_node_interface(node)
 			if iface == short_hostname or iface == hostname:
@@ -669,7 +670,7 @@ def add_myhostname():
 	NODENAME = nodename
 
 	if nodename != None:
-# implicitly add hostname as first group
+		# implicitly add hostname as first group
 		insert_group(nodename, hostname)
 		insert_group(nodename, short_hostname)
 		insert_group(nodename, nodename)
