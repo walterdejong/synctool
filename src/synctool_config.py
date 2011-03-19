@@ -129,15 +129,17 @@ def read_config():
 
 		lineno = lineno + 1
 
+		n = string.find(tmp_line, '#')
+		if n >= 0:
+			tmp_line = tmp_line[:n]		# strip comment
+
 		tmp_line = string.strip(tmp_line)
 		if not tmp_line:
 			continue
 
-		if tmp_line[0] == '#':
-			continue
-
 		if tmp_line[-1] == '\\':
-			line = line + ' ' + tmp_line[:-1]
+			tmp_line = string.strip(tmp_line[:-1])
+			line = line + ' ' + tmp_line
 			continue
 
 		line = line + ' ' + tmp_line
@@ -145,7 +147,7 @@ def read_config():
 
 		arr = string.split(line)
 
-		line = ''					# <-- line is being reset here; use arr[] from here on
+		line = ''	# <-- line is being reset here; use arr[] from here on
 
 		if len(arr) <= 1:
 			stderr('%s:%d: syntax error ; expected key/value pair' % (CONF_FILE, lineno))
