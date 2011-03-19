@@ -4,7 +4,7 @@
 #
 #	group together output that is the same
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2010
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2011
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
