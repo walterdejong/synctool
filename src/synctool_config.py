@@ -894,7 +894,7 @@ def usage():
 	print 'A node/group list can be a single value, or a comma-separated list'
 	print 'A command is a list of these: diff, ssh, rsync, synctool'
 	print
-	print 'synctool-config by Walter de Jong <walter@heiho.net> (c) 2009-2010'
+	print 'synctool-config by Walter de Jong <walter@heiho.net> (c) 2009-2011'
 
 
 def get_options():

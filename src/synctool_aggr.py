@@ -101,7 +101,7 @@ def usage():
 	print 'synctool-aggr is built in to synctool-master and synctool-ssh'
 	print "and activated by the '-a' option"
 	print
-	print 'Written by Walter de Jong <walter@heiho.net> (c) 2009-2010'
+	print 'Written by Walter de Jong <walter@heiho.net> (c) 2009-2011'
 
 
 def get_options():

@@ -130,7 +130,7 @@ def usage():
 	print
 	print 'A nodelist or grouplist is a comma-separated list'
 	print
-	print 'synctool-scp by Walter de Jong <walter@heiho.net> (c) 2009-2010'
+	print 'synctool-scp by Walter de Jong <walter@heiho.net> (c) 2009-2011'
 
 
 def get_options():
