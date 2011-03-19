@@ -68,4 +68,6 @@ on_update	/etc/cron.daily					/bin/rm -f /etc/cron.daily/*.saved
 
 # always_run /bin/date
 
+# include /etc/synctool_local.conf
+
 # EOB

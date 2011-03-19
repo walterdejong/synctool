@@ -99,20 +99,54 @@ def stderr(str):
 def read_config():
 	'''read the config file and set a bunch of globals'''
 
-	global MASTERDIR, MASTER_LEN, DIFF_CMD, SSH_CMD, SCP_CMD, RSYNC_CMD, SYNCTOOL_CMD, LOGFILE, NUM_PROC, SYMLINK_MODE
-	global IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
-	global ON_UPDATE, ALWAYS_RUN
-	global NODES, INTERFACES, GROUP_DEFS
+	global MASTERDIR, GROUP_DEFS, NODES, IGNORE_GROUPS
 
 	if not os.path.isfile(CONF_FILE):
 		stderr("no such config file '%s'" % CONF_FILE)
 		sys.exit(-1)
 
-	try:
-		f = open(CONF_FILE, 'r')
-	except IOError, reason:
-		stderr("failed to read config file '%s' : %s" % (CONF_FILE, reason))
+	errors = read_config_file(CONF_FILE)
+
+	if errors > 0:
 		sys.exit(-1)
+
+	if MASTERDIR == None:
+		MASTERDIR = '.'
+
+	# implicitly add 'nodename' as first group
+	for node in get_all_nodes():
+		insert_group(node, node)
+
+	# implicitly add group 'all'
+	if not GROUP_DEFS.has_key('all'):
+		GROUP_DEFS['all'] = None
+
+	for node in get_all_nodes():
+		if not 'all' in NODES[node]:
+			NODES[node].append('all')
+
+	# implicitly add group 'none'
+	if not GROUP_DEFS.has_key('none'):
+		GROUP_DEFS['none'] = None
+
+	if not 'none' in IGNORE_GROUPS:
+		IGNORE_GROUPS.append('none')
+
+
+def read_config_file(configfile):
+	'''read a (included) config file'''
+	'''returns 0 on success, or error count on errors'''
+	
+	global MASTERDIR, MASTER_LEN, DIFF_CMD, SSH_CMD, SCP_CMD, RSYNC_CMD, SYNCTOOL_CMD, LOGFILE, NUM_PROC, SYMLINK_MODE
+	global IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
+	global ON_UPDATE, ALWAYS_RUN
+	global NODES, INTERFACES, GROUP_DEFS
+	
+	try:
+		f = open(configfile, 'r')
+	except IOError, reason:
+		stderr("failed to read config file '%s' : %s" % (configfile, reason))
+		return 1
 
 	lineno = 0
 	errors = 0
@@ -150,18 +184,26 @@ def read_config():
 		line = ''	# <-- line is being reset here; use arr[] from here on
 
 		if len(arr) <= 1:
-			stderr('%s:%d: syntax error ; expected key/value pair' % (CONF_FILE, lineno))
+			stderr('%s:%d: syntax error ; expected key/value pair' % (configfile, lineno))
 			errors = errors + 1
 			continue
 
 		keyword = string.lower(arr[0])
 
 		#
+		#	keyword: include
+		#
+		if keyword == 'include':
+			# recursively read the given config file
+			errors = errors + read_config_file(arr[1])
+			continue
+
+		#
 		#	keyword: masterdir
 		#
 		if keyword == 'masterdir':
 			if MASTERDIR != None:
-				stderr("%s:%d: redefinition of masterdir" % (CONF_FILE, lineno))
+				stderr("%s:%d: redefinition of masterdir" % (configfile, lineno))
 				errors = errors + 1
 				continue
 
@@ -176,7 +218,7 @@ def read_config():
 			try:
 				mode = int(arr[1], 8)
 			except ValueError:
-				stderr("%s:%d: invalid argument for symlink_mode" % (CONF_FILE, lineno))
+				stderr("%s:%d: invalid argument for symlink_mode" % (configfile, lineno))
 				errors = errors + 1
 				continue
 
@@ -194,7 +236,7 @@ def read_config():
 				IGNORE_DOTFILES = 0
 
 			else:
-				stderr("%s:%d: invalid argument for ignore_dotfiles" % (CONF_FILE, lineno))
+				stderr("%s:%d: invalid argument for ignore_dotfiles" % (configfile, lineno))
 				errors = errors + 1
 			continue
 
@@ -209,7 +251,7 @@ def read_config():
 				IGNORE_DOTDIRS = 0
 
 			else:
-				stderr("%s:%d: invalid argument for ignore_dotdirs" % (CONF_FILE, lineno))
+				stderr("%s:%d: invalid argument for ignore_dotdirs" % (configfile, lineno))
 				errors = errors + 1
 			continue
 
@@ -218,7 +260,7 @@ def read_config():
 		#
 		if keyword in ('ignore', 'ignore_file', 'ignore_files', 'ignore_dir', 'ignore_dirs'):
 			if len(arr) < 2:
-				stderr("%s:%d: 'ignore' requires at least 1 argument: the file or directory to ignore" % (CONF_FILE, lineno))
+				stderr("%s:%d: 'ignore' requires at least 1 argument: the file or directory to ignore" % (configfile, lineno))
 				errors = errors + 1
 				continue
 
@@ -230,26 +272,26 @@ def read_config():
 		#
 		if keyword == 'group':
 			if len(arr) < 3:
-				stderr("%s:%d: 'group' requires at least 2 arguments: the compound group name and at least 1 member group" % (CONF_FILE, lineno))
+				stderr("%s:%d: 'group' requires at least 2 arguments: the compound group name and at least 1 member group" % (configfile, lineno))
 				errors = errors + 1
 				continue
 			
 			group = arr[1]
 			
 			if GROUP_DEFS.has_key(group):
-				stderr("%s:%d: redefiniton of group %s" % (CONF_FILE, lineno, group))
+				stderr("%s:%d: redefiniton of group %s" % (configfile, lineno, group))
 				errors = errors + 1
 				continue
 			
 			if NODES.has_key(group):
-				stderr("%s:%d: %s was previously defined as a node" % (CONF_FILE, lineno, group))
+				stderr("%s:%d: %s was previously defined as a node" % (configfile, lineno, group))
 				errors = errors + 1
 				continue
 			
 			try:
 				GROUP_DEFS[group] = expand_grouplist(arr[2:])
 			except RuntimeError, e:
-				stderr("%s:%d: compound groups can not contain node names" % (CONF_FILE, lineno))
+				stderr("%s:%d: compound groups can not contain node names" % (configfile, lineno))
 				errors = errors + 1
 				continue
 			
@@ -260,7 +302,7 @@ def read_config():
 		#
 		if keyword == 'host' or keyword == 'node':
 			if len(arr) < 2:
-				stderr("%s:%d: '%s' requires at least 1 argument: the nodename" % (CONF_FILE, lineno, keyword))
+				stderr("%s:%d: '%s' requires at least 1 argument: the nodename" % (configfile, lineno, keyword))
 				errors = errors + 1
 				continue
 
@@ -268,12 +310,12 @@ def read_config():
 			groups = arr[2:]
 
 			if NODES.has_key(node):
-				stderr("%s:%d: redefinition of node %s" % (CONF_FILE, lineno, node))
+				stderr("%s:%d: redefinition of node %s" % (configfile, lineno, node))
 				errors = errors + 1
 				continue
 
 			if GROUP_DEFS.has_key(node):
-				stderr("%s:%d: %s was previously defined as a group" % (CONF_FILE, lineno, node))
+				stderr("%s:%d: %s was previously defined as a group" % (configfile, lineno, node))
 				errors = errors + 1
 				continue
 			
@@ -282,7 +324,7 @@ def read_config():
 				groups = groups[:-1]
 
 				if INTERFACES.has_key(node):
-					stderr("%s:%d: redefinition of interface for node %s" % (CONF_FILE, lineno, node))
+					stderr("%s:%d: redefinition of interface for node %s" % (configfile, lineno, node))
 					errors = errors + 1
 					continue
 
@@ -291,7 +333,7 @@ def read_config():
 			try:
 				NODES[node] = expand_grouplist(groups)
 			except RuntimeError, e:
-				stderr("%s:%d: a group list can not contain node names" % (CONF_FILE, lineno))
+				stderr("%s:%d: a group list can not contain node names" % (configfile, lineno))
 				errors = errors + 1
 				continue
 			
@@ -302,7 +344,7 @@ def read_config():
 		#
 		if keyword == 'ignore_host' or keyword == 'ignore_node':
 			if len(arr) < 2:
-				stderr("%s:%d: '%s' requires 1 argument: the nodename to ignore" % (CONF_FILE, lineno, keyword))
+				stderr("%s:%d: '%s' requires 1 argument: the nodename to ignore" % (configfile, lineno, keyword))
 				errors = errors + 1
 				continue
 
@@ -314,7 +356,7 @@ def read_config():
 		#
 		if keyword == 'ignore_group':
 			if len(arr) < 2:
-				stderr("%s:%d: 'ignore_group' requires at least 1 argument: the group to ignore" % (CONF_FILE, lineno))
+				stderr("%s:%d: 'ignore_group' requires at least 1 argument: the group to ignore" % (configfile, lineno))
 				errors = errors + 1
 				continue
 
@@ -332,17 +374,12 @@ def read_config():
 		#
 		if keyword == 'on_update':
 			if len(arr) < 3:
-				stderr("%s:%d: 'on_update' requires at least 2 arguments: filename and shell command to run" % (CONF_FILE, lineno))
+				stderr("%s:%d: 'on_update' requires at least 2 arguments: filename and shell command to run" % (configfile, lineno))
 				errors = errors + 1
 				continue
 
 			file = arr[1]
 			cmd = string.join(arr[2:])
-
-			if ON_UPDATE.has_key(file):
-				stderr("%s:%d: redefinition of on_update %s" % (CONF_FILE, lineno, file))
-				errors = errors + 1
-				continue
 
 			#
 			#	check if the script exists
@@ -352,7 +389,7 @@ def read_config():
 				if MASTERDIR != None:
 					master = MASTERDIR
 				else:
-					stderr("%s:%d: note: masterdir not defined, using current working directory" % (CONF_FILE, lineno))
+					stderr("%s:%d: note: masterdir not defined, using current working directory" % (configfile, lineno))
 
 				scripts = os.path.join(master, 'scripts')
 				full_cmd = os.path.join(scripts, arr[2])
@@ -360,7 +397,7 @@ def read_config():
 				full_cmd = arr[2]
 
 			if not os.path.isfile(full_cmd):
-				stderr("%s:%d: no such command '%s'" % (CONF_FILE, lineno, full_cmd))
+				stderr("%s:%d: no such command '%s'" % (configfile, lineno, full_cmd))
 				errors = errors + 1
 				continue
 
@@ -372,14 +409,14 @@ def read_config():
 		#
 		if keyword == 'always_run':
 			if len(arr) < 2:
-				stderr("%s:%d: 'always_run' requires an argument: the shell command to run" % (CONF_FILE, lineno))
+				stderr("%s:%d: 'always_run' requires an argument: the shell command to run" % (configfile, lineno))
 				errors = errors + 1
 				continue
 
 			cmd = string.join(arr[1:])
 
 			if cmd in ALWAYS_RUN:
-				stderr("%s:%d: same command defined again: %s" % (CONF_FILE, lineno, cmd))
+				stderr("%s:%d: same command defined again: %s" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
 
@@ -391,7 +428,7 @@ def read_config():
 				if MASTERDIR != None:
 					master = MASTERDIR
 				else:
-					stderr("%s:%d: note: masterdir not defined, using current working directory" % (CONF_FILE, lineno))
+					stderr("%s:%d: note: masterdir not defined, using current working directory" % (configfile, lineno))
 
 				scripts = os.path.join(master, 'scripts')
 				full_cmd = os.path.join(scripts, arr[1])
@@ -399,7 +436,7 @@ def read_config():
 				full_cmd = arr[1]
 
 			if not os.path.isfile(full_cmd):
-				stderr("%s:%d: no such command '%s'" % (CONF_FILE, lineno, full_cmd))
+				stderr("%s:%d: no such command '%s'" % (configfile, lineno, full_cmd))
 				errors = errors + 1
 				continue
 
@@ -411,18 +448,13 @@ def read_config():
 		#
 		if keyword == 'diff_cmd':
 			if len(arr) < 2:
-				stderr("%s:%d: 'diff_cmd' requires an argument: the full path to the 'diff' command" % (CONF_FILE, lineno))
-				errors = errors + 1
-				continue
-
-			if DIFF_CMD != None:
-				stderr("%s:%d: redefinition of diff_cmd" % (CONF_FILE, lineno))
+				stderr("%s:%d: 'diff_cmd' requires an argument: the full path to the 'diff' command" % (configfile, lineno))
 				errors = errors + 1
 				continue
 
 			cmd = arr[1]
 			if not os.path.isfile(cmd):
-				stderr("%s:%d: no such command '%s'" % (CONF_FILE, lineno, cmd))
+				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
 
@@ -434,18 +466,13 @@ def read_config():
 		#
 		if keyword == 'ssh_cmd':
 			if len(arr) < 2:
-				stderr("%s:%d: 'ssh_cmd' requires an argument: the full path to the 'ssh' command" % (CONF_FILE, lineno))
-				errors = errors + 1
-				continue
-
-			if SSH_CMD != None:
-				stderr("%s:%d: redefinition of ssh_cmd" % (CONF_FILE, lineno))
+				stderr("%s:%d: 'ssh_cmd' requires an argument: the full path to the 'ssh' command" % (configfile, lineno))
 				errors = errors + 1
 				continue
 
 			cmd = arr[1]
 			if not os.path.isfile(cmd):
-				stderr("%s:%d: no such command '%s'" % (CONF_FILE, lineno, cmd))
+				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
 
@@ -457,18 +484,13 @@ def read_config():
 		#
 		if keyword == 'scp_cmd':
 			if len(arr) < 2:
-				stderr("%s:%d: 'scp_cmd' requires an argument: the full path to the 'scp' command" % (CONF_FILE, lineno))
-				errors = errors + 1
-				continue
-
-			if SCP_CMD != None:
-				stderr("%s:%d: redefinition of scp_cmd" % (CONF_FILE, lineno))
+				stderr("%s:%d: 'scp_cmd' requires an argument: the full path to the 'scp' command" % (configfile, lineno))
 				errors = errors + 1
 				continue
 
 			cmd = arr[1]
 			if not os.path.isfile(cmd):
-				stderr("%s:%d: no such command '%s'" % (CONF_FILE, lineno, cmd))
+				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
 
@@ -480,18 +502,13 @@ def read_config():
 		#
 		if keyword == 'rsync_cmd':
 			if len(arr) < 2:
-				stderr("%s:%d: 'rsync_cmd' requires an argument: the full path to the 'rsync' command" % (CONF_FILE, lineno))
-				errors = errors + 1
-				continue
-
-			if RSYNC_CMD != None:
-				stderr("%s:%d: redefinition of rsync_cmd" % (CONF_FILE, lineno))
+				stderr("%s:%d: 'rsync_cmd' requires an argument: the full path to the 'rsync' command" % (configfile, lineno))
 				errors = errors + 1
 				continue
 
 			cmd = arr[1]
 			if not os.path.isfile(cmd):
-				stderr("%s:%d: no such command '%s'" % (CONF_FILE, lineno, cmd))
+				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
 
@@ -503,18 +520,13 @@ def read_config():
 		#
 		if keyword == 'synctool_cmd':
 			if len(arr) < 2:
-				stderr("%s:%d: 'synctool_cmd' requires an argument: the full path to the remote 'synctool' command" % (CONF_FILE, lineno))
-				errors = errors + 1
-				continue
-
-			if SYNCTOOL_CMD:
-				stderr("%s:%d: redefinition of synctool_cmd" % (CONF_FILE, lineno))
+				stderr("%s:%d: 'synctool_cmd' requires an argument: the full path to the remote 'synctool' command" % (configfile, lineno))
 				errors = errors + 1
 				continue
 
 			cmd = arr[1]
 			if not os.path.isfile(cmd):
-				stderr("%s:%d: no such command '%s'" % (CONF_FILE, lineno, cmd))
+				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
 
@@ -526,12 +538,7 @@ def read_config():
 		#
 		if keyword == 'logfile':
 			if len(arr) < 2:
-				stderr("%s:%d: 'logfile' requires an argument: the full path to the file to write log messages to" % (CONF_FILE, lineno))
-				errors = errors + 1
-				continue
-
-			if LOGFILE:
-				stderr("%s:%d: redefinition of logfile" % (CONF_FILE, lineno))
+				stderr("%s:%d: 'logfile' requires an argument: the full path to the file to write log messages to" % (configfile, lineno))
 				errors = errors + 1
 				continue
 
@@ -545,47 +552,23 @@ def read_config():
 			try:
 				num_proc = int(arr[1])
 			except ValueError:
-				stderr("%s:%d: invalid argument for num_proc" % (CONF_FILE, lineno))
+				stderr("%s:%d: invalid argument for num_proc" % (configfile, lineno))
 				errors = errors + 1
 				continue
 
 			if num_proc < 1:
-				stderr("%s:%d: invalid argument for num_proc" % (CONF_FILE, lineno))
+				stderr("%s:%d: invalid argument for num_proc" % (configfile, lineno))
 				errors = errors + 1
 				continue
 
 			NUM_PROC = num_proc
 			continue
 
-		stderr("%s:%d: unknown keyword '%s'" % (CONF_FILE, lineno, keyword))
+		stderr("%s:%d: unknown keyword '%s'" % (configfile, lineno, keyword))
 		errors = errors + 1
 
 	f.close()
-
-	if MASTERDIR == None:
-		MASTERDIR = '.'
-
-	if errors > 0:
-		sys.exit(-1)
-
-	# implicitly add 'nodename' as first group
-	for node in get_all_nodes():
-		insert_group(node, node)
-
-	# implicitly add group 'all'
-	if not GROUP_DEFS.has_key('all'):
-		GROUP_DEFS['all'] = None
-
-	for node in get_all_nodes():
-		if not 'all' in NODES[node]:
-			NODES[node].append('all')
-
-	# implicitly add group 'none'
-	if not GROUP_DEFS.has_key('none'):
-		GROUP_DEFS['none'] = None
-
-	if not 'none' in IGNORE_GROUPS:
-		IGNORE_GROUPS.append('none')
+	return errors
 
 
 def expand_grouplist(grouplist):

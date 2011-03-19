@@ -317,6 +317,34 @@ repository:
     $masterdir/overlay/etc/file._red
 
 
+The settings in synctool.conf can be overridden locally by including a
+second config file that is present on the node:
+
+synctool.conf:
+  include /etc/synctool_local.conf
+
+The local config file may contain the same directives as the master config
+file, but apply only to the node on which the file resides. The local config
+file may be managed from the master repository, enabling you to have subtle
+differences in the synctool configuration for certain nodes. For example,
+this can be used to change the symlink_mode in heterogeneous clusters.
+Beware that the local config file is read upon startup and may be synced
+afterwards, if the file was changed.
+Mind that including node specific configs increases the complexity of your
+overall synctool configuration, so in general it is recommended that you
+stick to using the master synctool.conf only, and not including any local
+configs at all.
+The 'include' keyword can also be used to clean up your config a little,
+for example:
+
+  include /var/lib/synctool/nodes.conf
+  include /var/lib/synctool/on_update.conf
+
+In this example all nodes will have the same config, because the masterdir
+/var/lib/synctool/ is synced to all nodes.
+
+
+
 synctool can check whether a new version of synctool itself is available by
 using the '--check-update' option on the master node. You can check
 periodically for updates by using --check-update in a crontab entry.
