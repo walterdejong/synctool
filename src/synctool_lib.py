@@ -65,7 +65,7 @@ def openlog():
 	try:
 		LOGFD = open(synctool_config.LOGFILE, 'a')
 	except IOError, (err, reason):
-		print 'error: failed to open logfile %s : %s' % (filename, reason)
+		print 'error: failed to open logfile %s : %s' % (synctool_config.LOGFILE, reason)
 		sys.exit(-1)
 
 #	log('start run')
