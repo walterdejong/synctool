@@ -13,6 +13,7 @@ ignore_dotfiles no
 ignore_dotdirs yes
 ignore .svn
 ignore .gitignore
+
 logfile /var/log/synctool.log
 
 # configure external commands that synctool uses
