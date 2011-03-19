@@ -122,7 +122,7 @@ def read_config():
 	#	variable tmp_line is used to be able to do multi-line reads (backslash terminated)
 	#
 	line = ''
-	while 1:
+	while True:
 		tmp_line = f.readline()
 		if not tmp_line:
 			break

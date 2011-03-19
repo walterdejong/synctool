@@ -296,7 +296,7 @@ def run_parallel_cmds(nodes, cmds):
 #
 #	wait for children to terminate
 #
-	while 1:
+	while True:
 		try:
 			if os.wait() == -1:
 				break
