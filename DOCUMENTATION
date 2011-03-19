@@ -273,9 +273,53 @@ you want logging:
 synctool will write this logfile on each node seperately, and a concatenated
 log on the master node.
 
+By using directives in the synctool.conf file, synctool can be told to ignore
+certain files, nodes, or groups. These will be excluded, skipped. For example:
+
+  ignore_dotfiles no
+  ignore_dotdirs yes
+  ignore .svn
+  ignore .gitignore
+  ignore_node node1 node2
+  ignore_group oldgroup
+  ignore_group test
+
+
+About symbolic links ...
+On the Linux operating system, symbolic links always have mode 0777 (also
+shown as lrwxrwxrwx). This is awkward, because this mode seems to imply that
+owners, group members, and others have write access to the symbolic link --
+which is not the case. This results in synctool complaining about the mode
+of the symbolic link:
+
+  /path/subdir/symlink should have mode 0755 (symlink), but has 0777
+
+As a workaround, synctool forces the mode of the symbolic link to what
+you set it to in synctool.conf. The hardcoded default value is 0755.
+
+synctool.conf:
+  # Linux
+  symlink_mode 0777
+
+or
+
+  # sensible mode for most other Unix systems
+  symlink_mode 0755
+
+
+As synctool requires files in the repository to require an extension, so
+do symbolic links. Symbolic links in the repository will be 'dead' symlinks
+but they will point to the correct destination on the target node.
+Consider the following example, where "file" does not exist as is in the
+repository:
+
+    $masterdir/overlay/etc/motd._red -> file
+    $masterdir/overlay/etc/file._red
+
 
 synctool can check whether a new version of synctool itself is available by
-using the '--check-update' option on the master node.
+using the '--check-update' option on the master node. You can check
+periodically for updates by using --check-update in a crontab entry.
 To download the latest version, run synctool '--download' on the master node.
 
 

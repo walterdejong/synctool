@@ -3,7 +3,12 @@
 #
 
 masterdir /var/lib/synctool
-symlink_mode 0777
+
+# use mode 0777 on Linux
+#symlink_mode 0777
+# use mode 0755 on most other Unix platforms
+symlink_mode 0755
+
 ignore_dotfiles no
 ignore_dotdirs yes
 ignore .svn
