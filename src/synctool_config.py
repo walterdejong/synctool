@@ -66,9 +66,9 @@ NUM_PROC = 16				# use sensible default
 #
 SYMLINK_MODE = 0755
 
-IGNORE_DOTFILES = 0
-IGNORE_DOTDIRS = 0
-ERASE_SAVED = 0
+ERASE_SAVED = False
+IGNORE_DOTFILES = False
+IGNORE_DOTDIRS = False
 IGNORE_FILES = []
 IGNORE_GROUPS = []
 ON_UPDATE = {}
@@ -139,7 +139,7 @@ def read_config_file(configfile):
 	'''returns 0 on success, or error count on errors'''
 	
 	global MASTERDIR, MASTER_LEN, DIFF_CMD, SSH_CMD, SCP_CMD, RSYNC_CMD, SYNCTOOL_CMD, LOGFILE, NUM_PROC, SYMLINK_MODE
-	global IGNORE_DOTFILES, IGNORE_DOTDIRS, ERASE_SAVED, IGNORE_FILES, IGNORE_GROUPS
+	global ERASE_SAVED, IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
 	global ON_UPDATE, ALWAYS_RUN
 	global NODES, INTERFACES, GROUP_DEFS
 	
@@ -231,10 +231,10 @@ def read_config_file(configfile):
 		#
 		if keyword == 'erase_saved':
 			if arr[1] in ('1', 'on', 'yes'):
-				ERASE_SAVED = 1
+				ERASE_SAVED = True
 			
 			elif arr[1] in ('0', 'off', 'no'):
-				ERASE_SAVED = 0
+				ERASE_SAVED = False
 			
 			else:
 				stderr("%s:%d: invalid argument for erase_saved" % (CONF_FILE, lineno))
@@ -246,10 +246,10 @@ def read_config_file(configfile):
 		#
 		if keyword == 'ignore_dotfiles':
 			if arr[1] in ('1', 'on', 'yes'):
-				IGNORE_DOTFILES = 1
+				IGNORE_DOTFILES = True
 
 			elif arr[1] in ('0', 'off', 'no'):
-				IGNORE_DOTFILES = 0
+				IGNORE_DOTFILES = False
 
 			else:
 				stderr("%s:%d: invalid argument for ignore_dotfiles" % (configfile, lineno))
@@ -261,10 +261,10 @@ def read_config_file(configfile):
 		#
 		if keyword == 'ignore_dotdirs':
 			if arr[1] in ('1', 'on', 'yes'):
-				IGNORE_DOTDIRS = 1
+				IGNORE_DOTDIRS = True
 
 			elif arr[1] in ('0', 'off', 'no'):
-				IGNORE_DOTDIRS = 0
+				IGNORE_DOTDIRS = False
 
 			else:
 				stderr("%s:%d: invalid argument for ignore_dotdirs" % (configfile, lineno))
@@ -680,12 +680,12 @@ def add_myhostname():
 # remove ignored groups from all hosts
 def remove_ignored_groups():
 	for host in NODES.keys():
-		changed = 0
+		changed = False
 		groups = NODES[host]
 		for ignore in IGNORE_GROUPS:
 			if ignore in groups:
 				groups.remove(ignore)
-				changed = 1
+				changed = True
 
 		if changed:
 			NODES[host] = groups
