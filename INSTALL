@@ -41,6 +41,8 @@ to the selected location and sets up symlinks for:
 
   synctool -> synctool_master.py
   synctool-config -> synctool_config.py
+  synctool-ping -> synctool_ping.py
+  dsh-ping -> synctool_ping.py
   synctool-ssh -> synctool_ssh.py
   dsh -> synctool_ssh.py
   synctool-scp -> synctool_scp.py
@@ -106,7 +108,8 @@ compound group must be defined before defining the nodes:
 
 
 After filling a couple of nodes in synctool.conf, try the command
-'dsh hostname', 'dsh uptime', or 'dsh date'.
+'dsh-ping' to see if can see that the nodes are 'up'. If they are,
+try 'dsh hostname', 'dsh uptime', or 'dsh date'.
 If you correctly set up passwordless SSH, dsh should run the commands
 on every node without problems or needed manual intervention.
 It is important that this works, before proceeding.

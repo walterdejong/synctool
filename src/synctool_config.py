@@ -50,6 +50,7 @@ HOSTNAME = None
 NODENAME = None
 
 DIFF_CMD = None
+PING_CMD = None
 SSH_CMD = None
 SCP_CMD = None
 RSYNC_CMD = None
@@ -138,8 +139,9 @@ def read_config_file(configfile):
 	'''read a (included) config file'''
 	'''returns 0 on success, or error count on errors'''
 	
-	global MASTERDIR, MASTER_LEN, DIFF_CMD, SSH_CMD, SCP_CMD, RSYNC_CMD, SYNCTOOL_CMD, LOGFILE, NUM_PROC, SYMLINK_MODE
-	global ERASE_SAVED, IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
+	global MASTERDIR, MASTER_LEN, DIFF_CMD, PING_CMD, SSH_CMD, SCP_CMD, RSYNC_CMD, SYNCTOOL_CMD
+	global LOGFILE, NUM_PROC, SYMLINK_MODE, ERASE_SAVED
+	global IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
 	global ON_UPDATE, ALWAYS_RUN
 	global NODES, INTERFACES, GROUP_DEFS
 	
@@ -475,6 +477,24 @@ def read_config_file(configfile):
 				continue
 
 			DIFF_CMD = string.join(arr[1:])
+			continue
+
+		#
+		#	keyword: ping_cmd
+		#
+		if keyword == 'ping_cmd':
+			if len(arr) < 2:
+				stderr("%s:%d: 'ping_cmd' requires an argument: the full path to the 'ping' command" % (configfile, lineno))
+				errors = errors + 1
+				continue
+
+			cmd = arr[1]
+			if not os.path.isfile(cmd):
+				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
+				errors = errors + 1
+				continue
+
+			PING_CMD = string.join(arr[1:])
 			continue
 
 		#

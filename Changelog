@@ -1,5 +1,6 @@
 17 April 2011:
 - use '-e' to erase .saved files: patch by Werner Maier
+- added the synctool-ping / dsh-ping command
 
 14 March 2011:
 - fixed bug when ignoring files by name were not being ignored
