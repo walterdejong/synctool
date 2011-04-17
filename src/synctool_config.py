@@ -68,6 +68,7 @@ SYMLINK_MODE = 0755
 
 IGNORE_DOTFILES = 0
 IGNORE_DOTDIRS = 0
+ERASE_SAVED = 0
 IGNORE_FILES = []
 IGNORE_GROUPS = []
 ON_UPDATE = {}
@@ -138,7 +139,7 @@ def read_config_file(configfile):
 	'''returns 0 on success, or error count on errors'''
 	
 	global MASTERDIR, MASTER_LEN, DIFF_CMD, SSH_CMD, SCP_CMD, RSYNC_CMD, SYNCTOOL_CMD, LOGFILE, NUM_PROC, SYMLINK_MODE
-	global IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
+	global IGNORE_DOTFILES, IGNORE_DOTDIRS, ERASE_SAVED, IGNORE_FILES, IGNORE_GROUPS
 	global ON_UPDATE, ALWAYS_RUN
 	global NODES, INTERFACES, GROUP_DEFS
 	
@@ -223,6 +224,21 @@ def read_config_file(configfile):
 				continue
 
 			SYMLINK_MODE = mode
+			continue
+
+		#
+		#	keyword: erase_saved
+		#
+		if keyword == 'erase_saved':
+			if arr[1] in ('1', 'on', 'yes'):
+				ERASE_SAVED = 1
+			
+			elif arr[1] in ('0', 'off', 'no'):
+				ERASE_SAVED = 0
+			
+			else:
+				stderr("%s:%d: invalid argument for erase_saved" % (CONF_FILE, lineno))
+				errors = errors + 1
 			continue
 
 		#

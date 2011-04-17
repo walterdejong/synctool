@@ -159,6 +159,7 @@ def usage():
 	print '  -X, --exclude-group=grouplist  Exclude these groups from the selection'
 	print
 	print '  -d, --diff=file                Show diff for file'
+	print '  -e, --erase-saved              Erase .saved files'
 	print '  -1, --single=file              Update a single file/run single task'
 	print '  -r, --ref=file                 Show which source file synctool chooses'
 	print '  -u, --upload=file              Pull a remote file into the overlay tree'
@@ -192,8 +193,8 @@ def get_options():
 	synctool.be_careful_with_getopt()
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:r:u:s:tfqa', ['help', 'conf=', 'verbose', 'node=', 'group=',
-			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=', 'upload=', 'suffix=', 'tasks', 'fix', 'quiet', 'aggregate',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:r:u:s:etfqa', ['help', 'conf=', 'verbose', 'node=', 'group=',
+			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=', 'upload=', 'suffix=', 'erase-saved', 'tasks', 'fix', 'quiet', 'aggregate',
 			'skip-rsync', 'unix', 'version', 'check-update', 'download'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
@@ -258,6 +259,11 @@ def get_options():
 				synctool_ssh.NODELIST = arg
 			else:
 				synctool_ssh.NODELIST = synctool_ssh.NODELIST + ',' + arg
+			continue
+
+		if opt in ('-e', '--erase-saved'):
+			synctool_config.ERASE_SAVED = True
+			PASS_ARGS.append(opt)
 			continue
 
 		if opt in ('-g', '--group'):

@@ -317,6 +317,17 @@ repository:
     $masterdir/overlay/etc/file._red
 
 
+For any file synctool updates, it keeps a backup copy around on the target
+node with the extension '.saved'. If you don't like this, you can tell
+synctool to erase all backup copies using
+
+  erase_saved yes
+
+It is however highly recommended that you run with 'erase_saved no'.
+You can manually specify that you want to remove backup copies using
+synctool -e or synctool --erase-saved.
+
+
 The settings in synctool.conf can be overridden locally by including a
 second config file that is present on the node:
 

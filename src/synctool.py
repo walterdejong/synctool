@@ -492,25 +492,42 @@ def compare_files(src_path, dest_path):
 #		if src_stat[stat.ST_CTIME] != dest_stat[stat.ST_CTIME]:
 #			stdout('%s should have ctime %d, but has %d' % (dest_path, src_stat[stat.ST_CTIME], dest_stat[stat.ST_CTIME]))
 
+	erase_saved(dest_path)
 	return need_update
+
+
+def erase_saved(dst):
+	if synctool_config.ERASE_SAVED:
+		if path_isfile('%s.saved' % dst):
+			unix_out('rm %s.saved' % dst)
+			
+			if synctool_lib.DRY_RUN:
+				verbose('backup copy %s.saved not erased    # dry run, update not performed' % dst)
+			else:
+				verbose('erasing backup copy %s.saved' % dst)
+				try:
+					os.unlink('%s.saved' % dst)
+				except OSError, reason:
+					stderr('failed to delete %s : %s' % (file, reason))
 
 
 def copy_file(src, dest):
 	if path_isfile(dest):
-		unix_out('mv %s %s.saved' % (dest, dest))
+		unix_out('cp %s %s.saved' % (dest, dest))
 
 	unix_out('umask 077')
 	unix_out('cp %s %s' % (src, dest))
 
 	if not synctool_lib.DRY_RUN:
-		if path_isfile(dest):
-			verbose('  saving %s as %s.saved' % (dest, dest))
-			try:
-				os.rename(dest, '%s.saved' % dest)
-			except OSError, reason:
-				stderr('failed to save %s as %s.saved : %s' % (dest, dest, reason))
-
 		old_umask = os.umask(077)
+
+		if not synctool_config.ERASE_SAVED:
+			if path_isfile(dest):
+				verbose('  saving %s as %s.saved' % (dest, dest))
+				try:
+					shutil.copy2(dest, '%s.saved' % dest)
+				except:
+					stderr('failed to save %s as %s.saved' % (dest, dest))
 
 		verbose('  cp %s %s' % (src, dest))
 		try:
@@ -520,7 +537,7 @@ def copy_file(src, dest):
 
 		os.umask(old_umask)
 	else:
-		if path_isfile(dest):
+		if path_isfile(dest) and not synctool_config.ERASE_SAVED:
 			verbose('  saving %s as %s.saved' % (dest, dest))
 
 		verbose('  cp %s %s             # dry run, update not performed' % (src, dest))
@@ -587,22 +604,27 @@ def set_owner(file, uid, gid):
 
 
 def delete_file(file):
-	unix_out('mv %s %s.saved' % (file, file))
-
 	if not synctool_lib.DRY_RUN:
-		verbose('moving %s to %s.saved' % (file, file))
-		try:
-			os.rename(file, '%s.saved' % file)
-		except OSError, reason:
-			stderr('failed to move file to %s.saved : %s' % (file, reason))
+		if not synctool_config.ERASE_SAVED:
+			unix_out('mv %s %s.saved' % (file, file))
 
-#		verbose('  os.unlink(%s)' % file)
-#		try:
-#			os.unlink(file)
-#		except OSError, reason:
-#			stderr('failed to delete %s : %s' % (file, reason))
+			verbose('moving %s to %s.saved' % (file, file))
+			try:
+				os.rename(file, '%s.saved' % file)
+			except OSError, reason:
+				stderr('failed to move file to %s.saved : %s' % (file, reason))
+		else:
+			unix_out('rm %s' % file)
+			verbose('  os.unlink(%s)' % file)
+			try:
+				os.unlink(file)
+			except OSError, reason:
+				stderr('failed to delete %s : %s' % (file, reason))
 	else:
-		verbose('moving %s to %s.saved             # dry run, update not performed' % (file, file))
+		if not synctool_config.ERASE_SAVED:
+			verbose('moving %s to %s.saved             # dry run, update not performed' % (file, file))
+		else:
+			verbose('deleting %s    # dry run, delete not performed' % file)
 
 
 def hard_delete_file(file):
@@ -641,6 +663,9 @@ def move_dir(dir):
 
 	if not synctool_lib.DRY_RUN:
 		verbose('moving %s to %s.saved' % (dir, dir))
+		#
+		#	directories are kept no matter what config.ERASE_SAVED says
+		#
 		try:
 			os.rename(dir, '%s.saved' % dir)
 		except OSError, reason:
@@ -1062,6 +1087,7 @@ def usage():
 	print '                        (default: %s)' % synctool_config.DEFAULT_CONF
 #	print '  -n, --dry-run         Show what would have been updated'
 	print '  -d, --diff=file       Show diff for file'
+	print '  -e, --erase-saved     Erase *.saved backup files'
 	print '  -1, --single=file     Update a single file/run single task'
 	print '  -r, --ref=file        Show which source file synctool chooses'
 	print '  -t, --tasks           Run the scripts in the tasks/ directory'
@@ -1090,7 +1116,7 @@ def get_options():
 	be_careful_with_getopt()	# check for dangerous common typo's on the command-line
 	
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:tfvq', ['help', 'conf=', 'diff=', 'single=', 'ref=', 'tasks', 'fix', 'verbose', 'quiet',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:etfvq', ['help', 'conf=', 'diff=', 'single=', 'ref=', 'erase-saved', 'tasks', 'fix', 'verbose', 'quiet',
 			'unix', 'masterlog', 'version'])
 	except getopt.error, (reason):
 		print '%s: %s' % (progname, reason)
@@ -1142,6 +1168,10 @@ def get_options():
 
 		if opt in ('-f', '--fix'):
 			synctool_lib.DRY_RUN = False
+			continue
+
+		if opt in ('-e', '--erase-saved'):
+			synctool_config.ERASE_SAVED = True
 			continue
 
 		if opt in ('-v', '--verbose'):
