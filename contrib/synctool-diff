@@ -49,7 +49,7 @@ function process_parm() {
                 | grep -o 'interface:.*' \
                 | sed 's/interface://'`
     if [ -z "${INTERFACE[I]}" ] ; then
-	  # interface not found, assume hostname is the same as nodename
+      # interface not found, assume interface is the same as node name
       INTERFACE[I]=${NODE[I]}
     fi
     DIFF_FILE[I]=$PREFIX-${NODE[I]}-`basename "${FILE[I]}"`
@@ -75,7 +75,6 @@ function return_changed_file_to_node() {
   else
     echo "File ${NODE[I]}:${FILE[I]} has changed. Uploading changes."
     rsync -a "${DIFF_FILE[I]}" ${INTERFACE[I]}:"${FILE[I]}"
-    # scp -p "${DIFF_FILE[I]}" ${INTERFACE[I]}:"${FILE[I]}"
   fi
 }
 
@@ -85,9 +84,9 @@ function check_file() {
   if [ ! -f "$FILE" ] ; then
     echo "ERROR: $EXPLANATION"
     # Cleaning up
-	if [ ! -z "$PREFIX" ]; then
+    if [ ! -z "$PREFIX" ]; then
       rm -f "$PREFIX"*
-	fi
+    fi
     exit 3
   fi
 }
