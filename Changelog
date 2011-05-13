@@ -3,6 +3,7 @@
   - synctool-diff patches
   - tasks/functions shell scripting library
   - a script that cleans dirs but also has whitelisting capability
+- checksum performance gain when there is no match
 
 17 April 2011:
 - use '-e' to erase .saved files: patch by Werner Maier

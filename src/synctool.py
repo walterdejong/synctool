@@ -118,6 +118,10 @@ def checksum_files(file1, file2):
 			len2 = len2 + len(data2)
 			sum2.update(data2)
 
+		if sum1.digest() != sum2.digest():
+			# checksum mismatch; early exit
+			break
+
 	f1.close()
 	f2.close()
 	return sum1.digest(), sum2.digest()
