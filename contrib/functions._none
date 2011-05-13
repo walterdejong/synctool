@@ -1,0 +1,191 @@
+#!/bin/bash
+
+# These functions are meant to be called from synctool tasks.
+# WARNING: tested only on Redhat compatible systems.
+
+# Put this file in your synctool/tasks directory, and create
+# tasks in the same directory that source this file.
+#
+# Examples of usage:
+# 	. `dirname $0`/functions._none
+# 	install_packages yum-versionlock
+# 	install_packages ntp traceroute tcptraceroute
+# 	remove_packages cfengine
+# 	setconfig sshd on
+
+
+# Created by Onno Zweers.
+
+
+echo "Sourcing functions._none"
+
+# export DRY_RUN=yes
+
+if [ "$DRY_RUN" = "yes" ] ; then
+  echo "Var DRY_RUN is set in functions._none. Doing a dry-run."
+fi
+
+
+redhat_based_os() {
+  test -f /etc/redhat-release
+  return $?
+}
+
+package_installed() {
+  if redhat_based_os ; then
+    # Redhat-based OS
+    rpm -qa | grep --silent "$PACKAGE"
+  else
+    # DEBIAN/UBUNTU
+    # Notice the space before " installed"; the opposite is "non-installed"!
+    dpkg-query --status $PACKAGE | grep --silent "Status:.* installed"
+  fi
+  return $?
+}
+
+# Checks if packages are installed before trying to install them.
+install_packages() {
+  PACKAGES="$@"
+  if [ -z "$PACKAGES" ]; then
+    echo "ERROR in install_packages: please provide one or more package names."
+    exit 1
+  fi
+  LIST=""
+  for PACKAGE in $PACKAGES ; do
+    if package_installed $PACKAGE ; then
+      echo -e "= package $PACKAGE is already installed."
+    else
+      LIST="$LIST $PACKAGE"
+    fi
+  done
+  if [ -n "$LIST" ] ; then
+    if [ "$DRY_RUN" = "yes" ] ; then
+      echo -e "+ WOULD INSTALL: $LIST."
+    else
+      echo -e "+ INSTALLING: $LIST."
+      if redhat_based_os ; then
+        yum -y install $LIST
+      else
+        apt-get install -y $LIST
+      fi
+    fi
+  fi
+}
+
+remove_packages() {
+  PACKAGES="$@"
+  if [ -z "$PACKAGES" ]; then
+    echo "ERROR in remove_packages: please provide one or more package names."
+    exit 1
+  fi
+  LIST=""
+  for PACKAGE in $PACKAGES ; do
+    if package_installed $PACKAGE ; then
+      LIST="$LIST $PACKAGE"
+    else
+      echo -e "= Package $PACKAGE is not present - not removing."
+    fi
+    wait
+  done
+  if [ -n "$LIST" ] ; then
+    if [ "$DRY_RUN" = "yes" ] ; then
+      echo -e "+ WOULD REMOVE: $LIST."
+    else
+      echo -e "- REMOVING: $LIST."
+      if redhat_based_os ; then
+        yum -y remove $LIST
+      else
+        apt-get remove $LIST
+      fi
+    fi
+  fi
+}
+
+
+setconfig() {
+  # setconfig:
+  #  - dry-run aware
+  #  - chkconfig
+  #  - starts or stops service if needed
+
+  USAGE="Usage: $0 <service> on"
+  if [ "$#" == "0" ]; then
+    echo "$USAGE"
+    exit 1
+  fi
+
+  while (( "$#" )); do
+    case "$1" in
+      on | off )
+        ACTION=$1
+        shift
+        ;;
+      * )
+        SERVICE=$1
+        shift
+        ;;
+    esac
+  done
+
+  # Is the service currently running?
+  service $SERVICE status | grep --silent running && STATUS=on || STATUS=off
+
+  # What is the current runlevel?
+  RUNLEVEL=`runlevel | cut -d ' ' -f 2`
+
+  # Is this service set to start in this runlevel?
+  if chkconfig $SERVICE --list | grep --silent "$RUNLEVEL:on" ; then
+    SETTING=on
+  else
+    SETTING=off
+  fi
+
+  if [ "$SETTING" == "$ACTION" ] ; then
+    if [ "$SETTING" == "on" ] ; then
+      echo "= service $SERVICE is set to start at boot: No chkconfig needed."
+    else
+      echo "= service $SERVICE is not set to start: No chkconfig needed."
+    fi
+  else
+    if [ "$DRY_RUN" == "yes" ] ; then
+      if [ "$SETTING" == "off" ] ; then
+        echo "+ service $SERVICE should be chkconfig'ed $ACTION!"
+      else
+        echo "- service $SERVICE should be chkconfig'ed $ACTION!"
+      fi
+    else
+      if [ "$SETTING" == "off" ] ; then
+        echo "+ service $SERVICE chkconfig $ACTION:"
+        chkconfig $SERVICE $ACTION
+      else
+        echo "- service $SERVICE chkconfig $ACTION:"
+        chkconfig $SERVICE $ACTION
+      fi
+    fi
+  fi
+
+  if [ "$STATUS" == "$ACTION" ] ; then
+    if [ "$STATUS" == "on" ] ; then
+      echo "= service $SERVICE is running: No start needed."
+    else
+      echo "= service $SERVICE is not running: No stop needed."
+    fi
+  else
+    if [ "$DRY_RUN" == "yes" ] ; then
+      if [ "$STATUS" == "off" ] ; then
+        echo "+ service $SERVICE should be started!"
+      else
+        echo "- service $SERVICE should be stopped!"
+      fi
+    else
+      if [ "$STATUS" == "off" ] ; then
+        echo "+ service $SERVICE starting:"
+        service $SERVICE start
+      else
+        echo "- service $SERVICE stopping:"
+        service $SERVICE stop
+      fi
+    fi
+  fi
+}
+
