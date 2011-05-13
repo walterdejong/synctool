@@ -9,6 +9,13 @@ for any damage done by these scripts.
 
 Files in this directory:
 
+whitelist.post
+  Script that does two things:
+  - on a management node, creates a whitelist of files not to be cleaned up
+  - on a cluster node, cleanes up the directory.
+  It's far from perfect but perhaps a good starting point.
+  Contributed by Onno Zweers
+
 synctool-diff
   Compares files across a cluster, managed by synctool or not.
 

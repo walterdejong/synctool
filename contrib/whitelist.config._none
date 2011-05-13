@@ -1,0 +1,34 @@
+#
+# 2010-08 - Created by Onno Zweers.
+#
+# Config file for whitelist.post.
+
+
+# What extention to give to a file to disable it?
+DISABLE_EXTENTION=".disabled"
+
+# To which directory should disabled files be moved?
+# End with a slash. Empty for same directory.
+DISABLE_DIR="/tmp/cron.d/"
+
+# If several files, separate them with \n.
+NEVER_DELETE_THESE_FILES="whitelist"
+
+# Don't move old configuration files.
+IGNORE_FILES_WITH_EXTENSION=".saved"
+
+# Cron and Apache get confused when the whitelist does not have # prefixes.
+WHITELIST_PREFIX='# whitelistfile='
+
+# Whitelists to generate.
+# Format:
+# Whitelist		file masks to generate whitelist (should reflect synctool.conf)
+WHITELISTS="
+mon		*._all	*._mon
+srm		*._all	*._crl	*._postgres	*._srm
+namespace	*._all	*._crl	*._postgres	*._namespace
+dcmain		*._all	*._crl	*._dcmain
+dcache-pool	*._all	*._crl	*._dcache-door	*._dcache-pool	*._infiniband
+console		*._all
+"
+
