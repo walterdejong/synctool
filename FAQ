@@ -45,10 +45,10 @@ If all else fails, just give up.
 cfengine is the main reason why I developed synctool. Need I say more?
 It's a great tool, but its learning curve is so steep that many sysadmins
 (even capable people) stay away from it.
-Personally, I have setup and actively maintained complex cfengine setups.
+Personally, I have set up and actively maintained complex cfengine setups.
 Still, I like the simplicity of synctool. Making changes in cfengine always
 takes more time than doing them in synctool.
-A sysadmin tool is supposed to make system adminstration easier, not harder.
+A sysadmin tool is supposed to make system administration easier, not harder.
 There are things that cfengine can do out of the box that synctool can not,
 and therefore some argue that it is more powerful. There are pros and cons
 to both. Use whichever you prefer, I know which I like best.
