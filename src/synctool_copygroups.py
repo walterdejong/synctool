@@ -20,119 +20,166 @@ import sys
 import string
 
 
+class MemDirEntry:
+	'''in-memory direntry, which can be a file or directory, and have a group
+	extension. The group is denoted by a number rather than groupname.
+	The group number is the index to MY_GROUPS[]'''
+	# so, if the group number is smaller, than the group is more important
+	# group number < 0 denotes irrelevant/invalid group
+	
+	def __init__(self, name, num, memdir = None):
+		self.dname = name
+		self.groupnum = num
+		self.subdir = memdir		# pointer to MemDir if it is a directory
+
+	def __repr__(self):
+		return '<MemDirEntry>: [%s, %d]' % (self.dname, self.groupnum)
+
+
 class MemDir:
 	'''class for having an in-memory representation of a collapsed view
 	of multiple copygroups/ filesystem trees'''
 
-	def __init__(self, dirname = '', parentnode = None, group = 'all'):
-		self.name = dirname
+	def __init__(self, parentnode = None):
 		self.parent = parentnode
-		self.files = {}
-		self.subdirs = []
-		self.copygroup = group
+		self.entries = []			# array of MemDirEntrys
 	
 	def __repr__(self):
 		return '<MemDir>: ' + self.name
 	
-	def listdir(self, pathname, copygroup):
-		'''list contents of on-disk pathname, loading it into MemDir structure'''
-		
-		for entry in os.listdir(pathname):
-			if entry in synctool_config.IGNORE_FILES:
-				continue
-			
-			fullpath = os.path.join(pathname, entry)
-			
-			if synctool.path_isdir(fullpath):
-				if entry[0] == '.' and synctool_config.IGNORE_DOTDIRS:
-					continue
-				
-#				# check for type change
-#				if entry in self.files:
-#					stderr('warning: %s is a file in copygroup/%s and a directory in copygroup/%s' % (fullpath, self.files[entry], copygroup))
-#					del self.files[entry]
-				
-				found = False
-				for d in self.subdirs:
-					if d.name == entry:
-						print 'TD dir %s exists, setting group %s' % (entry, copygroup)
-						d.copygroup = copygroup
-						found = True
-						break
-				
-				if not found:
-					self.subdirs.append(MemDir(entry, self, copygroup))
-				
-			else:
-				# it is a file
-				if entry[0] == '.' and synctool_config.IGNORE_DOTFILES:
-					continue
-				
-				if self.files.has_key(entry):
-					print 'TD file %s exists, setting group %s' % (entry, copygroup)
-				
-#				# check for type change
-#				for d in self.subdirs:
-#					if d.name == entry:
-#						stderr('warning: %s is a directory in copygroup/%s and a file in copygroup/%s' % (fullpath, d.copygroup, copygroup))
-#						self.subdirs.remove(d)
-#						break
-				
-				self.files[entry] = copygroup
-	
-	def loaddir(self, pathname, copygroup):
-		'''recursively load disk tree into MemDir structure'''
-		
-		self.listdir(pathname, copygroup)
-		
-		for d in self.subdirs:
-			if d.copygroup == copygroup:		# otherwise, dir does not exist for this group
-				d.loaddir(pathname + '/' + d.name, copygroup)
-	
-	def load_copygroups(self, group):
-		'''load all copygroups and merge them together in this MemDir tree'''
-		
-		copygroups_dir = os.path.join(synctool_config.MASTERDIR, 'copygroups')
-		if os.path.isdir(copygroups_dir):
-			existing_copygroups = os.listdir(copygroups_dir)
-			
-			# TODO change this; for copygroup in reversed MY_GROUPS[]
-			for copygroup in existing_copygroups:
-				self.loaddir(os.path.join(copygroups_dir, copygroup), copygroup)
-			
-	
-	def walk(self, pathname, callback):
+	def walk(self, path, callback):
 		'''walk the tree, calling the callback function on each entry'''
 		'''The callback takes two arguments: the pathname, the copygroup'''
 		
-		path = pathname + '/' + self.name
-		callback(path, self.copygroup)
-		
-		if path == '/':
-			path = ''
-		
-		for f in self.files:
-			filename = path + '/' + f
-			callback(filename, self.files[f])
-		
-		for d in self.subdirs:
-			d.walk(path, callback)
-
-
-def memdir_walk_callback(path, copygroup):
-	print 'TD: walking group %s: %s' % (copygroup, path)
-
-
-def test_copygroups():
-	root = MemDir()
-	root.loaddir('/Users/walter/src', 'src')
-	root.loaddir('/Users/walter/src/python', 'python')
+		for entry in self.entries:
+			pathname = path + '/' + entry.dname
+			callback(pathname, entry)
+			
+			if entry.subdir != None:
+				entry.subdir.walk(pathname, callback)
 	
-	root.walk('', memdir_walk_callback)
+	def entryindex(self, name):
+		'''see if name is present in this directory
+		If so, return the index'''
+		
+		n = 0
+		for direntry in self.entries:
+			if direntry.dname == name:
+				return n
+			
+			n = n + 1
+		
+		return -1
+	
+	def overlay(self, overlay_dir):
+		'''lay contents of on-disk overlay_dir over the MemDir'''
+		
+		for entry in os.listdir(overlay_dir):
+			(name, groupnum) = split_extension(entry)
+			if groupnum < 0:				# not a relevant group
+				continue
+			
+			# see if we already had this name in the tree
+			n = self.entryindex(name)
+			if n >= 0:
+				direntry = self.entries[n]
+				# yes, see if this group is more important
+				if groupnum < direntry.groupnum:
+					direntry.groupnum = groupnum
+				
+				if direntry.subdir != None:
+					# recurse into subdir
+					direntry.subdir.overlay(os.path.join(overlay_dir, entry))
+				#endif
+			else:
+				# it's a new entry in the MemDir tree
+				# see if it's a directory or a file entry
+				pathname = os.path.join(overlay_dir, entry)
+				if synctool.path_isdir(pathname):
+					memdir = MemDir(self)
+					self.entries.append(MemDirEntry(name, groupnum, memdir))
+					memdir.overlay(pathname)	# recurse into directory
+				else:
+					self.entries.append(MemDirEntry(name, groupnum))
+	
+	def getnode(self, path):
+		'''return the MemDir node pointed to by path
+		raises RuntimeError if path is not a dir under this MemDir node'''
+		
+		node = self
+		for elem in string.split(path, '/'):
+			found = False
+			for direntry in node.entries:
+				if elem == direntry.dname:
+					node = direntry.subdir
+					if node == None:
+						raise RuntimeError, 'MemDir::getnode(%s): element %s is not a directory' % (path, elem)
+					
+					found = True
+					break
+			
+			if not found:
+				raise RuntimeError, 'MemDir::getnode(%s): path %s not found' % (path, elem)
+		
+		return node
+
+
+def split_extension(entryname):
+	'''split a simple filename (without leading path) in a tuple: (name, group number)
+	The group number is the index to MY_GROUPS[] or negative
+	if it is not a relevant group'''
+	
+	group_all = synctool_config.MY_GROUPS.index('all')
+	
+	arr = string.split(entryname, '.')
+	if len(arr) <= 1:
+		return (entryname, group_all)
+	
+	ext = arr.pop()
+	if ext == 'post':
+		# TODO register .post script
+		return (None, -1)
+	
+	if ext[0] != '_':
+		return (entryname, group_all)
+	
+	ext = ext[1:]
+	if not ext:
+		return (entryname, group_all)
+	
+	try:
+		groupnum = synctool_config.MY_GROUPS.index(ext)
+	except ValueError:
+		return (None, -1)
+	
+	if len(arr) > 1 and arr[-1] == 'post':
+		# TODO register group-specific .post script
+		return (None, -1)
+	
+	return (string.join(arr, '.'), groupnum)
+
+
+def memdir_walk_callback(path, direntry):
+	if direntry.subdir != None:
+		print 'D', direntry.groupnum, path
+	else:
+		print ' ', direntry.groupnum, path
+
 
 
 if __name__ == '__main__':
-	test_copygroups()
+	## test program ##
+	
+	synctool_config.MY_GROUPS = ['node1', 'group1', 'group2', 'all']
+	
+	root = MemDir()
+#	root.overlay('/Users/walter/src')
+#	pythondir = root.getnode('python')
+#	pythondir.overlay('/Users/walter/src/python')
+
+	root.overlay('/Users/walter/src/python/synctool-test/overlay')
+	
+	root.walk('', memdir_walk_callback)
 
 
 # EOB
