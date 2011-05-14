@@ -19,6 +19,8 @@ import os
 import sys
 import string
 
+GROUP_ALL = 0
+POST_SCRIPTS = {}
 
 class OverlayEntry:
 	def __init__(self, src, dest, groupnum):
@@ -31,53 +33,65 @@ class OverlayEntry:
 
 
 def split_extension(entryname):
-	'''split a simple filename (without leading path) in a tuple: (name, group number)
-	The group number is the index to MY_GROUPS[] or negative
-	if it is not a relevant group'''
+	'''split a simple filename (without leading path) in a tuple: (name, group number, isPost)
+	The group number is the index to MY_GROUPS[] or negative if it is not a relevant group
+	The return parameter isPost is a boolean showing whether it is a .post script'''
 	
 	arr = string.split(entryname, '.')
 	if len(arr) <= 1:
-		return (entryname, GROUP_ALL+1)
+		return (entryname, GROUP_ALL+1, False)
 	
 	ext = arr.pop()
 	if ext == 'post':
-		# TODO register .post script
-		return (None, -1)
+		# register generic .post script
+		return (string.join(arr, '.'), GROUP_ALL+1, True)
 	
 	if ext[0] != '_':
-		return (entryname, GROUP_ALL+1)
+		return (entryname, GROUP_ALL+1, False)
 	
 	ext = ext[1:]
 	if not ext:
-		return (entryname, GROUP_ALL+1)
+		return (entryname, GROUP_ALL+1, False)
 	
 	try:
 		groupnum = synctool_config.MY_GROUPS.index(ext)
 	except ValueError:
-		return (None, -1)
+		return (None, -1, False)
 	
 	if len(arr) > 1 and arr[-1] == 'post':
-		# TODO register group-specific .post script
-		return (None, -1)
+		# register group-specific .post script
+		arr.pop()
+		return (string.join(arr, '.'), groupnum, True)
 	
-	return (string.join(arr, '.'), groupnum)
+	return (string.join(arr, '.'), groupnum, False)
 
 
 def overlay_pass1(overlay_dir, filelist, dest_dir = '/', highest_groupnum = sys.maxint):
 	'''do pass #1 of 2; create list of source and dest files
 	Each element in the list in a tuple: (src, dest, groupnum)'''
 	
+	global POST_SCRIPTS
+	
 	for entry in os.listdir(overlay_dir):
-		(name, groupnum) = split_extension(entry)
+		(name, groupnum, isPost) = split_extension(entry)
 		if groupnum < 0:				# not a relevant group
+			continue
+		
+		src_path = os.path.join(overlay_dir, entry)
+		dest_path = os.path.join(dest_dir, name)
+		
+		if isPost:
+			# register .post script
+			if POST_SCRIPTS.has_key(dest_path):
+				if groupnum >= POST_SCRIPTS[dest_path].groupnum:
+					continue
+			
+			POST_SCRIPTS[dest_path] = OverlayEntry(src_path, dest_path, groupnum)
 			continue
 		
 		# inherit lower group level from parent directory
 		if groupnum > highest_groupnum:
 			groupnum = highest_groupnum
-		
-		src_path = os.path.join(overlay_dir, entry)
-		dest_path = os.path.join(dest_dir, name)
 		
 		filelist.append(OverlayEntry(src_path, dest_path, groupnum))
 		
@@ -107,6 +121,7 @@ if __name__ == '__main__':
 	
 	synctool_config.MY_GROUPS = ['node1', 'group1', 'group2', 'all']
 	GROUP_ALL = synctool_config.MY_GROUPS.index('all')
+	POST_SCRIPTS = {}
 	
 	filelist = []
 	overlay_pass1('/Users/walter/src/python/synctool-test/overlay', filelist)
@@ -125,5 +140,10 @@ if __name__ == '__main__':
 		print 'dest', dest_path
 		entry = filedict[dest_path]
 		print 'src %d %s' % (entry.groupnum, entry.src_path)
+		
+		# check for .post script
+		if POST_SCRIPTS.has_key(dest_path):
+			post_script = POST_SCRIPTS[dest_path]
+			print 'post %d %s' % (post_script.groupnum, post_script.src_path)
 
 # EOB
