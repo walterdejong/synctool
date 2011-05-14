@@ -30,11 +30,16 @@ class MemDirEntry:
 	# so, if the group number is smaller, than the group is more important
 	# group number < 0 denotes irrelevant/invalid group
 	
-	def __init__(self, name, num, memdir = None):
-		self.dname = name
+	def __init__(self, src_name, dest_name, num, memdir = None):
+		self.src_name = src_name
+		self.dest_name = dest_name
 		self.groupnum = num
 		self.subdir = memdir		# pointer to MemDir if it is a directory
-
+		
+		# when a file MemDirEntry gets overridden, it is removed, BUT
+		# it is not OK to remove subdir entries ... so flag those
+		self.overridden = False
+	
 	def __repr__(self):
 		return '<MemDirEntry>: [%s, %d]' % (self.dname, self.groupnum)
 
@@ -51,24 +56,37 @@ class MemDir:
 	def __repr__(self):
 		return '<MemDir>: ' + self.name
 	
-	def walk(self, path, callback):
+	def walk(self, callback, arg = None):
 		'''walk the tree, calling the callback function on each entry'''
-		'''The callback takes two arguments: the pathname, the copygroup'''
+		'''The callback takes three arguments: the pathname, the copygroup, and arg
+		So, 'arg' can be some var you like to pass along'''
 		
 		for entry in self.entries:
-			pathname = path + '/' + entry.dname
-			callback(pathname, self, entry)
+			callback(self, entry, arg)
 			
 			if entry.subdir != None:
-				entry.subdir.walk(pathname, callback)
+				entry.subdir.walk(callback, arg)
 	
-	def entryindex(self, name):
-		'''see if name is present in this directory
+	def sourceindex(self, name):
+		'''see if source name is present in this directory
 		If so, return the index'''
 		
 		n = 0
 		for direntry in self.entries:
-			if direntry.dname == name:
+			if direntry.src_name == name:
+				return n
+			
+			n = n + 1
+		
+		return -1
+	
+	def destindex(self, name):
+		'''see if destination name is present in this directory
+		If so, return the index'''
+		
+		n = 0
+		for direntry in self.entries:
+			if direntry.dest_name == name:
 				return n
 			
 			n = n + 1
@@ -87,29 +105,47 @@ class MemDir:
 			if groupnum > highest_groupnum:
 				groupnum = highest_groupnum
 			
-			# see if we already had this name in the tree
-			n = self.entryindex(name)
-			if n >= 0:
-				direntry = self.entries[n]
-				# yes, see if this group is more important
-				if groupnum < direntry.groupnum:
-					direntry.groupnum = groupnum
-				
-				if direntry.subdir != None:
-					# recurse into subdir
-					direntry.subdir.overlay(os.path.join(overlay_dir, entry), groupnum)
-				#endif
-			else:
-				# it's a new entry in the MemDir tree
-				# see if it's a directory or a file entry
-				pathname = os.path.join(overlay_dir, entry)
-				if synctool.path_isdir(pathname):
-					memdir = MemDir(self)
-					memdir.ref_entry = MemDirEntry(name, groupnum, memdir)
-					self.entries.append(memdir.ref_entry)
-					memdir.overlay(pathname, groupnum)	# recurse into directory
+			pathname = os.path.join(overlay_dir, entry)
+			
+			present = self.sourceindex(entry)
+			if present >= 0:
+				print 'warning: %s is present in multiple overlay trees' % pathname
+			
+			if synctool.path_isdir(pathname):
+				if present >= 0:
+					if self.entries[present].subdir == None:
+						print 'error: %s is a directory, but it is a file in another overlay tree' % pathname
+						continue
+					
+					self.entries[present].subdir.overlay(pathname, groupnum)	# recurse
 				else:
-					self.entries.append(MemDirEntry(name, groupnum))
+					# it's a new subdir entry
+					memdir = MemDir(self)
+					memdir.ref_entry = MemDirEntry(entry, name, groupnum, memdir)
+					self.entries.append(memdir.ref_entry)
+					memdir.overlay(pathname, groupnum)		# recurse into directory
+			else:
+				# it's a file
+				if present >= 0:
+					if self.entries[present].subdir == None:
+						print 'error: %s is a file, but it is a directory in another overlay tree' % pathname
+						continue
+					
+				else:
+					present = self.destindex(entry)
+					if present >= 0:
+						direntry = self.entries[present]
+						if direntry.subdir != None:
+							print 'error: %s is a file, but it is a directory for a different group' % pathname
+							continue
+						
+						if groupnum < direntry.groupnum:
+							# this group is more important, take over
+							direntry.groupnum = groupnum
+							direntry.src_name = entry
+					else:
+						self.entries.append(MemDirEntry(entry, name, groupnum))
+	
 	
 	def getnode(self, path):
 		'''return the MemDir node pointed to by path
@@ -137,26 +173,10 @@ class MemDir:
 		
 		path = name
 		
-		entry_index = self.entryindex(name)
-		direntry = self.entries[entry_index]
-		if direntry.groupnum < 0:
-			return None
-		
-		if direntry.groupnum <= GROUP_ALL:
-			path = path + '._%s' % synctool_config.MY_GROUPS[direntry.groupnum]
-		
 		node = self
 		while node != None and node.ref_entry != None:
 			direntry = node.ref_entry
-			
-			if direntry.groupnum < 0:
-				return None
-			
-			if direntry.groupnum <= GROUP_ALL:
-				path = direntry.dname + '._%s' % synctool_config.MY_GROUPS[direntry.groupnum] + '/' + path
-			else:
-				path = direntry.dname + '/' + path
-			
+			path = direntry.src_name + '/' + path
 			node = node.parent
 		
 		return path
@@ -169,7 +189,7 @@ class MemDir:
 		node = self
 		while node != None and node.ref_entry != None:
 			direntry = node.ref_entry
-			path = direntry.dname + '/' + path
+			path = direntry.dest_name + '/' + path
 			node = node.parent
 		
 		return path
@@ -208,14 +228,25 @@ def split_extension(entryname):
 	return (string.join(arr, '.'), groupnum)
 
 
-def memdir_walk_callback(path, memdir, direntry):
-	if direntry.subdir != None:
-		print 'D', direntry.groupnum, path
-	else:
-		print ' ', direntry.groupnum, path
+def memdir_walk_callback(memdir, direntry, arg = None):
+	print 'TD', direntry.groupnum, 'src_path', memdir.src_path(direntry.src_name)
+	print 'TD', direntry.groupnum, 'dest_path', memdir.dest_path(direntry.dest_name)
+
+
+def squash_tree(memdir, direntry, dict):
+	'''callback function that constructs a dictionary of destination paths
+	Each dictionary element holds a tuple: (source path, groupnum, isdir)'''
 	
-	print 'TD src_path', memdir.src_path(direntry.dname)
-	print 'TD dest_path', memdir.dest_path(direntry.dname)
+	dest_path = memdir.dest_path(direntry.dest_name)
+	
+	if dict.has_key(dest_path):
+		(src_path, groupnum, isdir) = dict[dest_path]
+		if direntry.groupnum > groupnum:
+			return		# do not override
+	
+	isdir = (direntry.subdir != None)
+	
+	dict[dest_path] = (memdir.src_path(direntry.src_name), direntry.groupnum, isdir)
 
 
 if __name__ == '__main__':
@@ -231,7 +262,19 @@ if __name__ == '__main__':
 
 	root.overlay('/Users/walter/src/python/synctool-test/overlay')
 	
-	root.walk('', memdir_walk_callback)
-
+#	root.walk(memdir_walk_callback)
+	
+	squashed_tree = {}
+	root.walk(squash_tree, squashed_tree)
+	
+	for dest_path in squashed_tree.keys():
+		(source_path, groupnum, isdir) = squashed_tree[dest_path]
+		
+		if isdir:
+			print 'src  D', source_path
+			print 'dest D', dest_path
+		else:
+			print 'src   ', source_path
+			print 'dest  ', dest_path
 
 # EOB
