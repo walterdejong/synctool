@@ -19,6 +19,9 @@ import os
 import sys
 import string
 
+# the group number of group 'all'
+GROUP_ALL = 0
+
 
 class MemDirEntry:
 	'''in-memory direntry, which can be a file or directory, and have a group
@@ -41,7 +44,8 @@ class MemDir:
 	of multiple copygroups/ filesystem trees'''
 
 	def __init__(self, parentnode = None):
-		self.parent = parentnode
+		self.parent = parentnode	# pointer to parent dir
+		self.ref_entry = None		# reference back to my MemDirEntry
 		self.entries = []			# array of MemDirEntrys
 	
 	def __repr__(self):
@@ -53,7 +57,7 @@ class MemDir:
 		
 		for entry in self.entries:
 			pathname = path + '/' + entry.dname
-			callback(pathname, entry)
+			callback(pathname, self, entry)
 			
 			if entry.subdir != None:
 				entry.subdir.walk(pathname, callback)
@@ -101,7 +105,8 @@ class MemDir:
 				pathname = os.path.join(overlay_dir, entry)
 				if synctool.path_isdir(pathname):
 					memdir = MemDir(self)
-					self.entries.append(MemDirEntry(name, groupnum, memdir))
+					memdir.ref_entry = MemDirEntry(name, groupnum, memdir)
+					self.entries.append(memdir.ref_entry)
 					memdir.overlay(pathname, groupnum)	# recurse into directory
 				else:
 					self.entries.append(MemDirEntry(name, groupnum))
@@ -126,6 +131,48 @@ class MemDir:
 				raise RuntimeError, 'MemDir::getnode(%s): path %s not found' % (path, elem)
 		
 		return node
+	
+	def src_path(self, name):
+		'''compose full source overlay-path for this node'''
+		
+		path = name
+		
+		entry_index = self.entryindex(name)
+		direntry = self.entries[entry_index]
+		if direntry.groupnum < 0:
+			return None
+		
+		if direntry.groupnum <= GROUP_ALL:
+			path = path + '._%s' % synctool_config.MY_GROUPS[direntry.groupnum]
+		
+		node = self
+		while node != None and node.ref_entry != None:
+			direntry = node.ref_entry
+			
+			if direntry.groupnum < 0:
+				return None
+			
+			if direntry.groupnum <= GROUP_ALL:
+				path = direntry.dname + '._%s' % synctool_config.MY_GROUPS[direntry.groupnum] + '/' + path
+			else:
+				path = direntry.dname + '/' + path
+			
+			node = node.parent
+		
+		return path
+	
+	def dest_path(self, name):
+		'''compose full destination path for this node'''
+		
+		path = name
+		
+		node = self
+		while node != None and node.ref_entry != None:
+			direntry = node.ref_entry
+			path = direntry.dname + '/' + path
+			node = node.parent
+		
+		return path
 
 
 def split_extension(entryname):
@@ -133,11 +180,9 @@ def split_extension(entryname):
 	The group number is the index to MY_GROUPS[] or negative
 	if it is not a relevant group'''
 	
-	group_all = synctool_config.MY_GROUPS.index('all')
-	
 	arr = string.split(entryname, '.')
 	if len(arr) <= 1:
-		return (entryname, group_all)
+		return (entryname, GROUP_ALL+1)
 	
 	ext = arr.pop()
 	if ext == 'post':
@@ -145,11 +190,11 @@ def split_extension(entryname):
 		return (None, -1)
 	
 	if ext[0] != '_':
-		return (entryname, group_all)
+		return (entryname, GROUP_ALL+1)
 	
 	ext = ext[1:]
 	if not ext:
-		return (entryname, group_all)
+		return (entryname, GROUP_ALL+1)
 	
 	try:
 		groupnum = synctool_config.MY_GROUPS.index(ext)
@@ -163,18 +208,21 @@ def split_extension(entryname):
 	return (string.join(arr, '.'), groupnum)
 
 
-def memdir_walk_callback(path, direntry):
+def memdir_walk_callback(path, memdir, direntry):
 	if direntry.subdir != None:
 		print 'D', direntry.groupnum, path
 	else:
 		print ' ', direntry.groupnum, path
-
+	
+	print 'TD src_path', memdir.src_path(direntry.dname)
+	print 'TD dest_path', memdir.dest_path(direntry.dname)
 
 
 if __name__ == '__main__':
 	## test program ##
 	
 	synctool_config.MY_GROUPS = ['node1', 'group1', 'group2', 'all']
+	GROUP_ALL = synctool_config.MY_GROUPS.index('all')
 	
 	root = MemDir()
 #	root.overlay('/Users/walter/src')
