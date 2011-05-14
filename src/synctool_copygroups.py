@@ -71,13 +71,17 @@ class MemDir:
 		
 		return -1
 	
-	def overlay(self, overlay_dir):
+	def overlay(self, overlay_dir, highest_groupnum = sys.maxint):
 		'''lay contents of on-disk overlay_dir over the MemDir'''
 		
 		for entry in os.listdir(overlay_dir):
 			(name, groupnum) = split_extension(entry)
 			if groupnum < 0:				# not a relevant group
 				continue
+			
+			# inherit lower group level from parent directory
+			if groupnum > highest_groupnum:
+				groupnum = highest_groupnum
 			
 			# see if we already had this name in the tree
 			n = self.entryindex(name)
@@ -89,7 +93,7 @@ class MemDir:
 				
 				if direntry.subdir != None:
 					# recurse into subdir
-					direntry.subdir.overlay(os.path.join(overlay_dir, entry))
+					direntry.subdir.overlay(os.path.join(overlay_dir, entry), groupnum)
 				#endif
 			else:
 				# it's a new entry in the MemDir tree
@@ -98,7 +102,7 @@ class MemDir:
 				if synctool.path_isdir(pathname):
 					memdir = MemDir(self)
 					self.entries.append(MemDirEntry(name, groupnum, memdir))
-					memdir.overlay(pathname)	# recurse into directory
+					memdir.overlay(pathname, groupnum)	# recurse into directory
 				else:
 					self.entries.append(MemDirEntry(name, groupnum))
 	
