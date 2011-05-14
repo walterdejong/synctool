@@ -110,6 +110,7 @@ if __name__ == '__main__':
 	
 	filelist = []
 	overlay_pass1('/Users/walter/src/python/synctool-test/overlay', filelist)
+	overlay_pass1('/Users/walter/src/python/synctool-test/overlay_2', filelist)
 	
 	# dump filelist
 #	for entry in filelist:
