@@ -111,7 +111,6 @@ def upload(interface, upload_filename, upload_suffix=None):
 	synctool_config.MY_GROUPS = synctool_config.get_my_groups()
 
 	# see if file is already in the repository
-	synctool_overlay.load_overlay_tree()
 	repos_filename = synctool_overlay.find_synctree('overlay', upload_filename)
 	if not repos_filename:
 		repos_filename = os.path.join(synctool_config.OVERLAY_DIRS[0], trimmed_upload_fn)
