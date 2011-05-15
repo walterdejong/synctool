@@ -19,14 +19,24 @@ import os
 import sys
 import string
 
+# enums for designating trees
+OV_OVERLAY = 0
+OV_DELETE = 1
+OV_TASKS = 2
+
 GROUP_ALL = 0
 OVERLAY_DICT = {}
 OVERLAY_FILES = []		# sorted list, index to OVERLAY_DICT{}
+OVERLAY_LOADED = False
 POST_SCRIPTS = {}
+
 DELETE_DICT = {}
 DELETE_FILES = []
+DELETE_LOADED = False
+
 TASKS_DICT = {}
 TASKS_FILES = []
+TASKS_LOADED = False
 
 
 class OverlayEntry:
@@ -157,12 +167,21 @@ def find_synctree(subdir, pathname):
 	'''find the source of a full destination path'''
 	
 	if subdir == 'overlay':
+		if not OVERLAY_LOADED:		# 'demand loading'
+			load_overlay_tree()
+		
 		dict = OVERLAY_DICT
 	
 	elif subdir == 'delete':
+		if not DELETE_LOADED:
+			load_delete_tree()
+		
 		dict = DELETE_DICT
 	
 	elif subdir == 'tasks':
+		if not TASKS_LOADED:
+			load_tasks_tree()
+		
 		dict = TASKS_DICT
 
 	if not dict.has_key(pathname):
@@ -177,7 +196,10 @@ def load_overlay_tree():
 	in OVERLAY_DICT is an OverlayEntry
 	This also prepares POST_SCRIPTS'''
 	
-	global OVERLAY_DICT, OVERLAY_FILES, POST_SCRIPTS, GROUP_ALL
+	global OVERLAY_DICT, OVERLAY_FILES, OVERLAY_LOADED, POST_SCRIPTS, GROUP_ALL
+	
+	if OVERLAY_LOADED:
+		return
 	
 	OVERLAY_DICT = {}
 	POST_SCRIPTS = {}
@@ -197,6 +219,8 @@ def load_overlay_tree():
 	# sort the filelist
 	OVERLAY_FILES = OVERLAY_DICT.keys()
 	OVERLAY_FILES.sort()
+	
+	OVERLAY_LOADED = True
 
 
 def load_delete_tree():
@@ -204,7 +228,10 @@ def load_delete_tree():
 	which is a dict indexed by destination path, and every element
 	in DELETE_DICT is an OverlayEntry'''
 	
-	global DELETE_DICT, DELETE_FILES, GROUP_ALL
+	global DELETE_DICT, DELETE_FILES, DELETE_LOADED, GROUP_ALL
+	
+	if DELETE_LOADED:
+		return
 	
 	DELETE_DICT = {}
 	
@@ -223,6 +250,8 @@ def load_delete_tree():
 	# sort the filelist
 	DELETE_FILES = DELETE_DICT.keys()
 	DELETE_FILES.sort()
+	
+	DELETE_LOADED = True
 
 
 def load_tasks_tree():
@@ -236,7 +265,10 @@ def load_tasks_tree():
 	# Still, there is not really a 'destination' for a task script, other than
 	# that you can call it with its destination name
 	
-	global TASKS_DICT, TASKS_FILES, GROUP_ALL
+	global TASKS_DICT, TASKS_FILES, TASKS_LOADED, GROUP_ALL
+	
+	if TASKS_LOADED:
+		return
 	
 	TASKS_DICT = {}
 	
@@ -255,6 +287,48 @@ def load_tasks_tree():
 	# sort the filelist
 	TASKS_FILES = TASKS_DICT.keys()
 	TASKS_FILES.sort()
+	
+	TASKS_LOADED = True
+
+
+def postscript_for_path(path):
+	'''return the .post script for a given destination path'''
+	
+	if not OVERLAY_LOADED:
+		load_overlay_tree()
+	
+	if POST_SCRIPTS.has_key(path):
+		return POST_SCRIPTS[path].src_path
+
+	return None
+
+
+def visit(treedef, callback):
+	'''call the callback function on every entry in the tree
+	callback will called with two arguments: src_path, dest_path'''
+	
+	if treedef == OV_OVERLAY:
+		load_overlay_tree()
+		dict = OVERLAY_DICT
+		filelist = OVERLAY_FILES
+	
+	elif treedef == OV_DELETE:
+		load_overlay_tree()			# is needed for .post scripts on directories that change
+		load_delete_tree()
+		dict = DELETE_DICT
+		filelist = DELETE_FILES
+	
+	elif treedef == OV_TASKS:
+		load_tasks_tree()
+		dict = TASKS_DICT
+		filelist = TASKS_FILES
+	
+	else:
+		raise RuntimeError, 'unknown treedef %d' % treedef
+	
+	# now call the callback function
+	for dest_path in filelist:
+		callback(dict[dest_path].src_path, dest_path)
 
 
 if __name__ == '__main__':

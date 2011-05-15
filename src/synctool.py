@@ -11,7 +11,7 @@
 
 import synctool_config
 import synctool_lib
-import synctool_core
+import synctool_overlay
 
 from synctool_lib import verbose,stdout,stderr,unix_out
 
@@ -789,70 +789,56 @@ def run_command_in_dir(dest_dir, cmd):
 			stderr('error changing directory to %s: %s' % (cwd, reason))
 
 
-def overlay_callback(src_dir, dest_dir, filename, ext):
-	'''compare files and run post-script if needed'''
-
-	if ext:
-		src = os.path.join(src_dir, '%s._%s' % (filename, ext))
+def run_post(dest):
+	'''run any on_update or .post script commands for destination path'''
+	
+	isDir = path_isdir(dest):
+	if isDir:
+		dest_dir = dest
 	else:
-		src = os.path.join(src_dir, filename)
+		dest_dir = os.path.dirname(dest)
+	
+	# file has changed, run on_update command
+	if synctool_config.ON_UPDATE.has_key(dest):
+		run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest])
 
-	dest = os.path.join(dest_dir, filename)
+	# file has changed, run appropriate .post script
+	
+	postscript = synctool_overlay.postscript_for_path(dest)
+	if postscript:
+		run_command_in_dir(dest_dir, postscript)
+	
+	# if it was not a directory (but a file or symlink), check if the directory
+	# has a .post script, too
+	if not isDir:
+		if synctool_config.ON_UPDATE.has_key(dest_dir):
+			run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest_dir])
+		
+		postscript = synctool_overlay.postscript_for_path(dest_dir)
+		if postscript:
+			run_command_in_dir(dest_dir, postscript)
+
+
+def overlay_callback(src, dest):
+	'''compare files and run post-script if needed'''
 
 	verbose('checking $masterdir/%s' % src[synctool_config.MASTER_LEN:])
 
 	if compare_files(src, dest):
-		# file has changed, run on_update command
-		if synctool_config.ON_UPDATE.has_key(dest):
-			run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest])
-
-		# file has changed, run appropriate .post script
-		if synctool_core.POST_SCRIPTS.has_key(filename):
-			run_command_in_dir(dest_dir, os.path.join(src_dir, synctool_core.POST_SCRIPTS[filename][0]))
-
-		# file in dir has changed, flag it
-		synctool_core.DIR_CHANGED = True
-
-	return True
-
-
-def overlay_dir_updated(src_dir, dest_dir):
-	'''this def gets called if there were any updates in this dir'''
-
-	# dir has changed, run on_update command
-	if synctool_config.ON_UPDATE.has_key(dest_dir):
-		run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest_dir])
-
-	# dir has changed, run appropriate .post script
-	basename = os.path.basename(dest_dir)
-	dirname = os.path.dirname(src_dir)
-	if synctool_core.POST_SCRIPTS.has_key(basename):
-		run_command_in_dir(os.path.dirname(dest_dir), os.path.join(dirname, synctool_core.POST_SCRIPTS[basename][0]))
+		run_post(dest)
 
 
 def overlay_files():
 	'''run the overlay function'''
 
-	base_path = os.path.join(synctool_config.MASTERDIR, 'overlay')
-	if not os.path.isdir(base_path):
-		stderr('error: $masterdir/overlay/ not found')
-		return
-
-	synctool_core.treewalk(base_path, '/', overlay_callback, overlay_dir_updated)
+	synctool_overlay.visit(synctool_overlay.OV_OVERLAY, overlay_callback)
 
 
-def delete_callback(src_dir, dest_dir, filename, ext):
+def delete_callback(src, dest):
 	'''delete files'''
-
-	if ext:
-		src = os.path.join(src_dir, '%s._%s' % (filename, ext))
-	else:
-		src = os.path.join(src_dir, filename)
-
-	dest = os.path.join(dest_dir, filename)
-
+	
 	if path_isdir(dest):			# do not delete directories
-		return True
+		return
 
 	if path_exists(dest):
 		if synctool_lib.DRY_RUN:
@@ -862,11 +848,9 @@ def delete_callback(src_dir, dest_dir, filename, ext):
 
 		stdout('%sdeleting $masterdir/%s : %s' % (not_str, src[synctool_config.MASTER_LEN:], dest))
 		hard_delete_file(dest)
-
-		# file in dir has changed, flag it
-		synctool_core.DIR_CHANGED = True
-
-	return True
+		
+		# content of dir has changed, so run .post script on dir
+		run_post(os.path.dirname(dest))
 
 
 def delete_dir_updated(src_dir, dest_dir):
@@ -877,39 +861,24 @@ def delete_dir_updated(src_dir, dest_dir):
 
 
 def delete_files():
-	base_path = os.path.join(synctool_config.MASTERDIR, 'delete')
-	if not os.path.isdir(base_path):
-		stderr('error: $masterdir/delete/ not found')
-		return
-
-	synctool_core.treewalk(base_path, '/', delete_callback, delete_dir_updated)
+	synctool_overlay.visit(synctool_overlay.OV_DELETE, delete_callback)
 
 
-def tasks_callback(src_dir, dest_dir, filename, ext):
+def tasks_callback(src, dest):
 	'''run tasks'''
-
-	if ext:
-		src = os.path.join(src_dir, '%s._%s' % (filename, ext))
-	else:
-		src = os.path.join(src_dir, filename)
-
-	run_command(src)
-	unix_out('')
-	return True
+	
+	if not os.path.isdir(src):
+		run_command(src)
+		unix_out('')
 
 
 def run_tasks():
-	base_path = os.path.join(synctool_config.MASTERDIR, 'tasks')
-	if not os.path.isdir(base_path):
-		stderr('error: $masterdir/tasks/ not found')
-		return
-
-	synctool_core.treewalk(base_path, '/', tasks_callback)
+	synctool_overlay.visit(synctool_overlay.OV_TASKS, tasks_callback)
 
 
 def always_run():
 	'''always run these commands'''
-
+	
 	for cmd in synctool_config.ALWAYS_RUN:
 		run_command(cmd)
 		unix_out('')
@@ -917,59 +886,25 @@ def always_run():
 
 def single_files(filename):
 	'''check/update a single file'''
-	'''returns (1, path_in_synctree) if file is different'''
-
+	'''returns (True, path_in_synctree) if file is different'''
+	
 	if not filename:
 		stderr('missing filename')
-		return (0, None)
-
-	src = synctool_core.find_synctree('overlay', filename)
+		return (False, None)
+	
+	src = synctool_overlay.find_synctree('overlay', filename)
 	if not src:
 		stdout('%s is not in the overlay tree' % filename)
-		return (0, None)
-
+		return (False, None)
+	
 	verbose('checking against %s' % src)
-
+	
 	changed = compare_files(src, filename)
 	if not changed:
 		stdout('%s is up to date' % filename)
 		unix_out('# %s is up to date\n' % filename)
-
+	
 	return (changed, src)
-
-
-def on_update_single(src, dest):
-	'''a single file has been updated. Run on_update command or appropriate .post script'''
-
-	dest_dir = os.path.dirname(dest)
-
-	# file has changed, run on_update command
-	if synctool_config.ON_UPDATE.has_key(dest):
-		run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest])
-
-	# file has changed, run appropriate .post script
-
-	src_dir = os.path.dirname(src)
-	filename = os.path.basename(dest)
-
-	synctool_core.treewalk(src_dir, dest_dir, None, None, False)		# this constructs new synctool_core.POST_SCRIPTS dictionary
-
-	if synctool_core.POST_SCRIPTS.has_key(filename):
-		run_command_in_dir(dest_dir, os.path.join(src_dir, synctool_core.POST_SCRIPTS[filename][0]))
-
-	# if it was a indeed a file and not a directory, check if the directory has a .post script, too
-	if os.path.isfile(src):
-		src_dir = os.path.dirname(src_dir)
-		basename = os.path.basename(dest_dir)
-		dest_dir = os.path.dirname(dest_dir)
-
-		if synctool_config.ON_UPDATE.has_key(dest_dir):
-			run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest_dir])
-
-		synctool_core.treewalk(src_dir, dest_dir, None, None, False)		# this constructs new synctool_core.POST_SCRIPTS dictionary
-
-		if synctool_core.POST_SCRIPTS.has_key(basename):
-			run_command_in_dir(dest_dir, os.path.join(src_dir, synctool_core.POST_SCRIPTS[basename][0]))
 
 
 def single_task(filename):
@@ -983,7 +918,7 @@ def single_task(filename):
 	if task_script[0] != '/':				# trick to make find_synctree() work for tasks, too
 		task_script = '/' + task_script
 
-	src = synctool_core.find_synctree('tasks', task_script)
+	src = synctool_overlay.find_synctree('tasks', task_script)
 	if not src:
 		stderr("no such task '%s'" % filename)
 		return
@@ -999,7 +934,7 @@ def reference(filename):
 		stderr('missing filename')
 		return
 
-	src = synctool_core.find_synctree('overlay', filename)
+	src = synctool_overlay.find_synctree('overlay', filename)
 	if not src:
 		stdout('%s is not in the overlay tree' % filename)
 		return
@@ -1016,7 +951,7 @@ def diff_files(filename):
 
 	synctool_lib.DRY_RUN = True						# be sure that it doesn't do any updates
 
-	sync_path = synctool_core.find_synctree('overlay', filename)
+	sync_path = synctool_overlay.find_synctree('overlay', filename)
 	if not sync_path:
 		return
 
@@ -1309,7 +1244,7 @@ if __name__ == '__main__':
 		else:
 			(changed, src) = single_files(single_file)
 			if changed:
-				on_update_single(src, single_file)
+				run_post(single_file)
 
 	elif reference_file:
 		reference(reference_file)
