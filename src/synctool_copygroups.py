@@ -106,6 +106,30 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/', highest_groupnum = sys.
 			overlay_pass1(src_path, filelist, dest_path, groupnum)
 
 
+def overlay_pass1_without_post_scripts(overlay_dir, filelist, dest_dir = '/', highest_groupnum = sys.maxint):
+	'''do pass #1 of 2; create list of source and dest files
+	Each element in the list in a tuple: (src, dest, groupnum)
+	Do not handle .post scripts'''
+	
+	for entry in os.listdir(overlay_dir):
+		(name, groupnum, isPost) = split_extension(entry)
+		if groupnum < 0:				# not a relevant group
+			continue
+		
+		src_path = os.path.join(overlay_dir, entry)
+		dest_path = os.path.join(dest_dir, name)
+		
+		# inherit lower group level from parent directory
+		if groupnum > highest_groupnum:
+			groupnum = highest_groupnum
+		
+		filelist.append(OverlayEntry(src_path, dest_path, groupnum))
+		
+		if synctool.path_isdir(src_path):
+			# recurse into subdir
+			overlay_pass1_without_post_scripts(src_path, filelist, dest_path, groupnum)
+
+
 def overlay_pass2(filelist, filedict):
 	'''do pass #2 of 2; create dictionary of destination paths from list
 	Each element in the dictionary is a tuple: (src_path, dest_path, groupnum)'''
@@ -140,7 +164,7 @@ def find_synctree(subdir, pathname):
 	return dict[pathname].src_path
 
 
-def load_overlays():
+def load_overlay_tree():
 	'''scans all overlay dirs in and loads them into OVERLAY_DICT
 	which is a dict indexed by destination path, and every element
 	in OVERLAY_DICT is an OverlayEntry
@@ -168,6 +192,64 @@ def load_overlays():
 	OVERLAY_FILES.sort()
 
 
+def load_delete_tree():
+	'''scans all delete dirs in and loads them into DELETE_DICT
+	which is a dict indexed by destination path, and every element
+	in DELETE_DICT is an OverlayEntry'''
+	
+	global DELETE_DICT, DELETE_FILES, GROUP_ALL
+	
+	DELETE_DICT = {}
+	
+	# ensure that GROUP_ALL is set correctly
+	GROUP_ALL = synctool_config.MY_GROUPS.index('all')
+	
+	filelist = []
+	
+	# do pass #1 for multiple delete dirs: load them into filelist
+	for delete_dir in synctool_config.DELETE_DIRS:
+		overlay_pass1_without_post_scripts(delete_dir, filelist)
+	
+	# run pass #2 : 'squash' filelist into OVERLAY_DICT
+	overlay_pass2(filelist, DELETE_DICT)
+	
+	# sort the filelist
+	DELETE_FILES = DELETE_DICT.keys()
+	DELETE_FILES.sort()
+
+
+def load_tasks_tree():
+	'''scans all tasks dirs in and loads them into TASKS_DICT
+	which is a dict indexed by destination path, and every element
+	in TASKS_DICT is an OverlayEntry'''
+	
+	# tasks/ is usually a very 'flat' directory with no complex structure at all
+	# However, because it is treated in the same way as overlay/ and delete/,
+	# complex structure is possible
+	# Still, there is not really a 'destination' for a task script, other than
+	# that you can call it with its destination name
+	
+	global TASKS_DICT, TASKS_FILES, GROUP_ALL
+	
+	TASKS_DICT = {}
+	
+	# ensure that GROUP_ALL is set correctly
+	GROUP_ALL = synctool_config.MY_GROUPS.index('all')
+	
+	filelist = []
+	
+	# do pass #1 for multiple overlay dirs: load them into filelist
+	for tasks_dir in synctool_config.TASKS_DIRS:
+		overlay_pass1_with_post_scripts(overlay_dir, filelist)
+	
+	# run pass #2 : 'squash' filelist into TASKS_DICT
+	overlay_pass2(filelist, TASKS_DICT)
+	
+	# sort the filelist
+	TASKS_FILES = TASKS_DICT.keys()
+	TASKS_FILES.sort()
+
+
 if __name__ == '__main__':
 	## test program ##
 	
@@ -175,7 +257,7 @@ if __name__ == '__main__':
 	synctool_config.read_config()
 	synctool_config.MY_GROUPS = ['node1', 'group1', 'group2', 'all']
 	
-	load_overlays()
+	load_overlay_tree()
 	
 	for dest_path in OVERLAY_FILES:
 		print 'dest', dest_path
