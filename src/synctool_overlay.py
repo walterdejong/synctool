@@ -348,20 +348,24 @@ if __name__ == '__main__':
 	synctool_config.read_config()
 	synctool_config.MY_GROUPS = ['node1', 'group1', 'group2', 'all']
 	
-	load_overlay_tree()
-	
-	for dest_path in OVERLAY_FILES:
-		print 'dest', dest_path
-		entry = OVERLAY_DICT[dest_path]
-		print 'src %d %s' % (entry.groupnum, entry.src_path)
+	def visit_callback(src, dest):
+		print 'dest', dest
+		
+		# normally you wouldn't use this ... it's just for debugging the group number
+		direntry = OVERLAY_DICT[dest]
+		print 'grp', direntry.groupnum
+		
+		print 'src ', src
 		
 		# check for .post script
-		if POST_SCRIPTS.has_key(dest_path):
-			post_script = POST_SCRIPTS[dest_path]
-			print 'post %d %s' % (post_script.groupnum, post_script.src_path)
-
+		postscript = postscript_for_path(dest)
+		if postscript:
+			print 'post %s' % postscript
+	
+	visit(OV_OVERLAY, visit_callback)
+	
 	print
-	print 'find_synctree() test:', find_synctree('overlay', '/Users/walter/src/python/synctool-test/testroot/etc/hosts.allow')
+	print 'find() test:', find(OV_OVERLAY, '/Users/walter/src/python/synctool-test/testroot/etc/hosts.allow')
 
 
 # EOB
