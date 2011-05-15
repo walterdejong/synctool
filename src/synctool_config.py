@@ -10,6 +10,7 @@
 #
 
 import synctool_param
+import synctool_lib
 
 import os
 import sys
@@ -1111,7 +1112,7 @@ if __name__ == '__main__':
 	get_options()
 	
 	if ACTION == ACTION_VERSION:
-		print VERSION
+		print synctool_param.VERSION
 		sys.exit(0)
 	
 	read_config()
