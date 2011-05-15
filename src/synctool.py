@@ -695,72 +695,51 @@ def move_dir(dir):
 
 def run_command(cmd):
 	'''run a shell command'''
-
+	
 	if synctool_lib.DRY_RUN:
 		not_str = 'not '
 	else:
 		not_str = ''
-
+	
+	if cmd[0] != '/':
+		# if relative path, use scriptdir
+		cmd = synctool_config.SCRIPT_DIR + '/' + cmd
+	
 	# a command can have arguments
-	arr = string.split(cmd)
-	if not arr:
-		cmdfile = cmd
-	else:
-		cmdfile = arr[0]
-
-	# cmd1 is the pretty printed version of the command
-	cmd1 = cmdfile
-	if cmd1[0] != '/':
-		cmd1 = '$masterdir/scripts/%s' % cmd1
-		#
-		#	if relative path, use script_path
-		#
-		script_path = os.path.join(synctool_config.MASTERDIR, 'scripts')
-		if not os.path.isdir(script_path):
-			stderr('error: no such directory $masterdir/scripts')
-			return
-
-		cmdfile = os.path.join(script_path, cmdfile)
-
-		arr[0] = cmdfile
-		cmd = string.join(arr)
-
-	elif len(cmd1) > synctool_config.MASTER_LEN and cmd1[:synctool_config.MASTER_LEN] == synctool_config.MASTERDIR + '/':
-		cmd1 = '$masterdir/%s' % cmd1[synctool_config.MASTER_LEN:]
-
+	arr = shlex.split(cmd)
+	cmdfile = arr[0]
+	
 	if not path_exists(cmdfile):
-		stderr('error: command %s not found' % cmd1)
+		stderr('error: command %s not found' % synctool_lib.prettypath(cmdfile))
 		return
-
+	
 	if not path_isexec(cmdfile):
-		stderr("warning: file '%s' is not executable" % cmdfile)
+		stderr("warning: file '%s' is not executable" % synctool_lib.prettypath(cmdfile))
 		return
-
-	arr[0] = cmd1
-	cmd1 = string.join(arr)
+	
 	if not synctool_lib.QUIET:
-		stdout('%srunning command %s' % (not_str, cmd1))
-
+		stdout('%srunning command %s' % (not_str, cmd))
+	
 	unix_out('# run command %s' % cmd1)
 	unix_out(cmd)
-
+	
 	if not synctool_lib.DRY_RUN:
 		verbose('  os.system("%s")' % cmd1)
-
+		
 		sys.stdout.flush()
 		sys.stderr.flush()
-
+		
 		if use_subprocess:
 			try:
 				subprocess.Popen(cmd, shell=True)
 			except:
-				stderr("failed to run shell command '%s' : %s" % (cmd1, reason))
+				stderr("failed to run shell command '%s' : %s" % (synctool_lib.prettypath(cmd), reason))
 		else:
 			try:
 				os.system(cmd)
 			except OSError, reason:
-				stderr("failed to run shell command '%s' : %s" % (cmd1, reason))
-
+				stderr("failed to run shell command '%s' : %s" % (synctool_lib.prettypath(cmd), reason))
+		
 		sys.stdout.flush()
 		sys.stderr.flush()
 	else:
@@ -769,32 +748,32 @@ def run_command(cmd):
 
 def run_command_in_dir(dest_dir, cmd):
 	'''change directory to dest_dir, and run the shell command'''
-
+	
 	verbose('  os.chdir(%s)' % dest_dir)
 	unix_out('cd %s' % dest_dir)
-
+	
 	cwd = os.getcwd()
-
+	
 	# if dry run, the target directory may not exist yet (mkdir has not been called for real, for a dry run)
 	if synctool_lib.DRY_RUN:
 		run_command(cmd)
-
+		
 		verbose('  os.chdir(%s)' % cwd)
 		unix_out('cd %s' % cwd)
 		unix_out('')
 		return
-
+	
 	try:
 		os.chdir(dest_dir)
 	except OSError, reason:
 		stderr('error changing directory to %s: %s' % (dest_dir, reason))
 	else:
 		run_command(cmd)
-
+		
 		verbose('  os.chdir(%s)' % cwd)
 		unix_out('cd %s' % cwd)
 		unix_out('')
-
+		
 		try:
 			os.chdir(cwd)
 		except OSError, reason:
@@ -815,7 +794,7 @@ def run_post(dest):
 	# file has changed, run on_update command
 	if synctool_config.ON_UPDATE.has_key(dest):
 		run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest])
-
+	
 	# file has changed, run appropriate .post script
 	postscript = synctool_overlay.postscript_for_path(dest)
 	if postscript:
@@ -832,7 +811,7 @@ def run_post_on_directory(dest):
 	
 	if synctool_config.ON_UPDATE.has_key(dest):
 		run_command_in_dir(dest, synctool_config.ON_UPDATE[dest])
-
+	
 	# run appropriate .post script
 	postscript = synctool_overlay.postscript_for_path(dest)
 	if postscript:
@@ -852,16 +831,16 @@ def run_post_on_directories():
 
 def overlay_callback(src, dest):
 	'''compare files and run post-script if needed'''
-
-	verbose('checking $masterdir/%s' % src[synctool_config.MASTER_LEN:])
-
+	
+	verbose('checking %s' % synctool_lib.prettypath(src))
+	
 	if compare_files(src, dest):
 		run_post(dest)
 
 
 def overlay_files():
 	'''run the overlay function'''
-
+	
 	synctool_overlay.visit(synctool_overlay.OV_OVERLAY, overlay_callback)
 	run_post_on_directories()
 
@@ -869,20 +848,22 @@ def overlay_files():
 def delete_callback(src, dest):
 	'''delete files'''
 	
+	global DIR_CHANGED
+	
 	if path_isdir(dest):			# do not delete directories
 		return
-
+	
 	if path_exists(dest):
 		if synctool_lib.DRY_RUN:
 			not_str = 'not '
 		else:
 			not_str = ''
-
-		stdout('%sdeleting $masterdir/%s : %s' % (not_str, src[synctool_config.MASTER_LEN:], dest))
+		
+		stdout('%sdeleting %s : %s' % (not_str, synctool_lib.prettypath(src), dest))
 		hard_delete_file(dest)
 		
 		# content of dir has changed, so run .post script on dir
-		run_post(os.path.dirname(dest))
+		DIR_CHANGED[os.path.dirname(dest)] = True
 
 
 def delete_files():
@@ -923,7 +904,7 @@ def single_files(filename):
 		stdout('%s is not in the overlay tree' % filename)
 		return (False, None)
 	
-	verbose('checking against %s' % src)
+	verbose('checking against %s' % synctool_lib.prettypath(src))
 	
 	changed = compare_files(src, filename)
 	if not changed:
@@ -939,56 +920,56 @@ def single_task(filename):
 	if not filename:
 		stderr('missing task filename')
 		return
-
+	
 	task_script = filename
 	if task_script[0] != '/':				# trick to make find() work for tasks, too
 		task_script = '/' + task_script
-
+	
 	src = synctool_overlay.find(synctool_overlay.OV_TASKS, task_script)
 	if not src:
 		stderr("no such task '%s'" % filename)
 		return
-
+	
 	run_command(src)
 	unix_out('')
 
 
 def reference(filename):
 	'''show which source file in the repository synctool chooses to use'''
-
+	
 	if not filename:
 		stderr('missing filename')
 		return
-
+	
 	src = synctool_overlay.find(synctool_overlay.OV_OVERLAY, filename)
 	if not src:
 		stdout('%s is not in the overlay tree' % filename)
 		return
-
+	
 	stdout(src)
 
 
 def diff_files(filename):
 	'''display a diff of the file'''
-
+	
 	if not synctool_config.DIFF_CMD:
 		stderr('error: diff_cmd is undefined in %s' % synctool_config.CONF_FILE)
 		return
-
+	
 	synctool_lib.DRY_RUN = True						# be sure that it doesn't do any updates
-
+	
 	sync_path = synctool_overlay.find(synctool_overlay.OV_OVERLAY, filename)
 	if not sync_path:
 		return
-
+	
 	if synctool_lib.UNIX_CMD:
 		unix_out('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
 	else:
-		verbose('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
-
+		verbose('%s %s %s' % (synctool_config.DIFF_CMD, filename, synctool_lib.prettypath(sync_path)))
+		
 		sys.stdout.flush()
 		sys.stderr.flush()
-
+		
 		if use_subprocess:
 			cmd_arr = shlex.split(synctool_config.DIFF_CMD)
 			cmd_arr.append(filename)
@@ -996,7 +977,7 @@ def diff_files(filename):
 			subprocess.Popen(cmd_arr, shell=False)
 		else:
 			os.system('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
-
+		
 		sys.stdout.flush()
 		sys.stderr.flush()
 
@@ -1008,10 +989,10 @@ def be_careful_with_getopt():
 	# because '-f' might run --fix because of the way that getopt() works
 	
 	for arg in sys.argv:
-
+		
 		# This is probably going to give stupid-looking output in some cases,
 		# but it's better to be safe than sorry
-
+		
 		if arg[:2] == '-d' and string.find(arg, 'f') > -1:
 			print "Did you mean '--diff'?"
 			sys.exit(1)
@@ -1070,14 +1051,14 @@ def usage():
 
 def get_options():
 	global RUN_TASKS, OPT_VERSION, SINGLE_FILES
-
+	
 	progname = os.path.basename(sys.argv[0])
-
+	
 	synctool_lib.DRY_RUN = True				# set default dry-run
-
+	
 	if len(sys.argv) <= 1:
 		return (None, None, None)
-
+	
 	be_careful_with_getopt()	# check for dangerous common typo's on the command-line
 	
 	try:
@@ -1087,25 +1068,25 @@ def get_options():
 		print '%s: %s' % (progname, reason)
 		usage()
 		sys.exit(1)
-
+	
 	except getopt.GetoptError, (reason):
 		print '%s: %s' % (progname, reason)
 		usage()
 		sys.exit(1)
-
+	
 	except:
 		usage()
 		sys.exit(1)
-
+	
 	if args != None and len(args) > 0:
 		stderr('error: excessive arguments on command line')
 		sys.exit(1)
-
+	
 	errors = 0
-
+	
 	action = ACTION_DEFAULT
 	SINGLE_FILES = []
-
+	
 	# these are only used for checking the validity of command-line option combinations
 	opt_diff = False
 	opt_single = False
@@ -1114,47 +1095,47 @@ def get_options():
 	opt_upload = False
 	opt_suffix = False
 	opt_fix = False
-
+	
 	for opt, arg in opts:
 		if opt in ('-h', '--help', '-?'):
 			usage()
 			sys.exit(1)
-
+		
 		if opt in ('-c', '--conf'):
 			synctool_config.CONF_FILE = arg
 			continue
-
+		
 # dry run already is default
 #
 #			if opt in ('-n', '--dry-run'):
 #				synctool_lib.DRY_RUN = True
 #				continue
-
+		
 		if opt in ('-f', '--fix'):
 			opt_fix = True
 			synctool_lib.DRY_RUN = False
 			continue
-
+		
 		if opt in ('-e', '--erase-saved'):
 			synctool_config.ERASE_SAVED = True
 			continue
-
+		
 		if opt in ('-v', '--verbose'):
 			synctool_lib.VERBOSE = True
 			continue
-
+		
 		if opt in ('-q', '--quiet'):
 			synctool_lib.QUIET = True
 			continue
-
+		
 		if opt == '--unix':
 			synctool_lib.UNIX_CMD = True
 			continue
-
+		
 		if opt == '--masterlog':
 			synctool_lib.MASTERLOG = True
 			continue
-
+		
 		if opt in ('-d', '--diff'):
 			opt_diff = True
 			action = ACTION_DIFF
@@ -1162,7 +1143,7 @@ def get_options():
 			if not file in SINGLE_FILES:
 				SINGLE_FILES.append(file)
 			continue
-
+		
 		if opt in ('-1', '--single'):
 			opt_single = True
 			file = synctool_lib.strip_multiple_slashes(arg)
@@ -1172,13 +1153,13 @@ def get_options():
 			if not file in SINGLE_FILES:
 				SINGLE_FILES.append(file)
 			continue
-
+		
 		if opt in ('-t', '--task', '--tasks'):
 			opt_tasks = True
 			RUN_TASKS = True
 			action = ACTION_RUN_TASKS
 			continue
-
+		
 		if opt in ('-r', '--ref', '--reference'):
 			opt_reference = True
 			action = ACTION_REFERENCE
@@ -1186,18 +1167,18 @@ def get_options():
 			if not file in SINGLE_FILES:
 				SINGLE_FILES.append(file)
 			continue
-
+		
 		if opt == '--version':
 			OPT_VERSION = True
 			continue
-
+		
 		stderr("unknown command line option '%s'" % opt)
 		errors = errors + 1
 
 	if errors:
 		usage()
 		sys.exit(1)
-
+	
 	option_combinations(opt_diff, opt_single, opt_reference, opt_tasks, opt_upload, opt_suffix, opt_fix)
 	
 	return action
@@ -1205,30 +1186,30 @@ def get_options():
 
 if __name__ == '__main__':
 	action = get_options()
-
+	
 	if OPT_VERSION:
 		print synctool_config.VERSION
 		sys.exit(0)
-
+	
 	synctool_config.read_config()
 	synctool_config.add_myhostname()
-
+	
 	if synctool_config.NODENAME == None:
 		stderr('unable to determine my nodename, please check %s' % synctool_config.CONF_FILE)
 		sys.exit(1)
-
+	
 	if synctool_config.NODENAME in synctool_config.IGNORE_GROUPS:
 		stderr('%s: node %s is disabled in the config file' % (synctool_config.CONF_FILE, synctool_config.NODENAME))
 		sys.exit(1)
-
+	
 	synctool_config.remove_ignored_groups()
-
+	
 	synctool_config.MY_GROUPS = synctool_config.get_my_groups()
 	synctool_config.ALL_GROUPS = synctool_config.make_all_groups()
-
+	
 	if synctool_lib.UNIX_CMD:
 		t = time.localtime(time.time())
-
+		
 		unix_out('#')
 		unix_out('# script generated by synctool on %04d/%02d/%02d %02d:%02d:%02d' % (t[0], t[1], t[2], t[3], t[4], t[5]))
 		unix_out('#')
@@ -1237,11 +1218,11 @@ if __name__ == '__main__':
 		unix_out('# MASTERDIR=%s' % synctool_config.MASTERDIR)
 		unix_out('# SYMLINK_MODE=0%o' % synctool_config.SYMLINK_MODE)
 		unix_out('#')
-
+		
 		if not synctool_lib.DRY_RUN:
 			unix_out('# NOTE: --fix specified, applying updates')
 			unix_out('#')
-
+		
 		unix_out('')
 	else:
 		if not synctool_lib.QUIET:
@@ -1249,23 +1230,23 @@ if __name__ == '__main__':
 			verbose('my hostname: %s' % synctool_config.HOSTNAME)
 			verbose('masterdir: %s' % synctool_config.MASTERDIR)
 			verbose('symlink_mode: 0%o' % synctool_config.SYMLINK_MODE)
-
+			
 			if synctool_config.LOGFILE != None and not synctool_lib.DRY_RUN:
 				verbose('logfile: %s' % synctool_config.LOGFILE)
-
+			
 			verbose('')
-
+			
 			if synctool_lib.DRY_RUN:
 				stdout('DRY RUN, not doing any updates')
 			else:
 				stdout('--fix specified, applying changes')
 			verbose('')
-
+	
 	synctool_lib.openlog()
-
+	
 	os.putenv('SYNCTOOL_NODENAME', synctool_config.NODENAME)
 	os.putenv('SYNCTOOL_MASTERDIR', synctool_config.MASTERDIR)
-
+	
 	if action == ACTION_DIFF:
 		for file in SINGLE_FILES:
 			diff_files(file)
@@ -1298,9 +1279,9 @@ if __name__ == '__main__':
 		overlay_files()
 		delete_files()
 		always_run()
-
+	
 	unix_out('# EOB')
-
+	
 	synctool_lib.closelog()
 
 

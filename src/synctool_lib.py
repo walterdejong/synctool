@@ -55,6 +55,15 @@ def unix_out(str):
 		print str
 
 
+def prettypath(path):
+	'''print long paths as "$masterdir/path"'''
+	
+	if path[:synctool_config.MASTER_LEN] == synctool_config.MASTERDIR + '/':
+		return '$masterdir/' + path[synctool_config.MASTER_LEN:]
+	
+	return path
+
+
 def openlog():
 	global LOGFD
 
@@ -107,7 +116,7 @@ def popen(cmd_args):
 	pipe = os.pipe()
 
 	if not os.fork():
-# redirect child's output to write end of the pipe
+		# redirect child's output to write end of the pipe
 		os.close(2)
 		os.close(1)
 		os.dup2(pipe[1], 1)
@@ -138,10 +147,10 @@ def popen(cmd_args):
 
 def search_path(cmd):
 	'''search the PATH for the location of cmd'''
-
-# NB. I'm sure this will fail miserably on the Windows platform
-# ah well
-
+	
+	# NB. I'm sure this will fail miserably on the Windows platform
+	# ah well
+	
 	if string.find(cmd, '/') >= 0:
 		return cmd
 
@@ -161,11 +170,11 @@ def search_path(cmd):
 def strip_multiple_slashes(path):
 	# although generally harmless in Unix, pathnames that contain multiple
 	# slashes can/will give problems in synctool : so strip them
-
+	
 	# odd ... string methods are actually faster than string.function()s
 	while path.find('//') != -1:
 		path = path.replace('//', '/')
-
+	
 	return path
 
 
