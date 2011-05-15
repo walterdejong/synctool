@@ -94,6 +94,12 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/', highest_groupnum = sys.
 		if groupnum < 0:				# not a relevant group
 			continue
 		
+		if name in synctool_config.IGNORE_FILES:
+			continue
+		
+		if synctool_config.IGNORE_DOTFILES and name[0] == '.':
+			continue
+		
 		src_path = os.path.join(overlay_dir, entry)
 		dest_path = os.path.join(dest_dir, name)
 		
@@ -110,11 +116,17 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/', highest_groupnum = sys.
 		if groupnum > highest_groupnum:
 			groupnum = highest_groupnum
 		
-		filelist.append(OverlayEntry(src_path, dest_path, groupnum))
-		
 		if synctool.path_isdir(src_path):
+			if synctool_config.IGNORE_DOTDIRS and name[0] == '.':
+				continue
+			
+			filelist.append(OverlayEntry(src_path, dest_path, groupnum))
+		
 			# recurse into subdir
 			overlay_pass1(src_path, filelist, dest_path, groupnum)
+		
+		else:
+			filelist.append(OverlayEntry(src_path, dest_path, groupnum))
 
 
 def overlay_pass1_without_post_scripts(overlay_dir, filelist, dest_dir = '/', highest_groupnum = sys.maxint):
@@ -125,6 +137,12 @@ def overlay_pass1_without_post_scripts(overlay_dir, filelist, dest_dir = '/', hi
 	for entry in os.listdir(overlay_dir):
 		(name, groupnum, isPost) = split_extension(entry)
 		if groupnum < 0:				# not a relevant group
+			continue
+		
+		if name in synctool_config.IGNORE_FILES:
+			continue
+		
+		if synctool_config.IGNORE_DOTFILES and name[0] == '.':
 			continue
 		
 		src_path = os.path.join(overlay_dir, entry)
@@ -140,11 +158,17 @@ def overlay_pass1_without_post_scripts(overlay_dir, filelist, dest_dir = '/', hi
 		if groupnum > highest_groupnum:
 			groupnum = highest_groupnum
 		
-		filelist.append(OverlayEntry(src_path, dest_path, groupnum))
-		
 		if synctool.path_isdir(src_path):
+			if synctool_config.IGNORE_DOTDIRS and name[0] == '.':
+				continue
+			
+			filelist.append(OverlayEntry(src_path, dest_path, groupnum))
+			
 			# recurse into subdir
 			overlay_pass1_without_post_scripts(src_path, filelist, dest_path, groupnum)
+		
+		else:
+			filelist.append(OverlayEntry(src_path, dest_path, groupnum))
 
 
 def overlay_pass2(filelist, filedict):
