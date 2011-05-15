@@ -900,7 +900,7 @@ def single_files(filename):
 		stderr('missing filename')
 		return (False, None)
 	
-	src = synctool_overlay.find_synctree('overlay', filename)
+	src = synctool_overlay.find(synctool_overlay.OV_OVERLAY, filename)
 	if not src:
 		stdout('%s is not in the overlay tree' % filename)
 		return (False, None)
@@ -923,10 +923,10 @@ def single_task(filename):
 		return
 
 	task_script = filename
-	if task_script[0] != '/':				# trick to make find_synctree() work for tasks, too
+	if task_script[0] != '/':				# trick to make find() work for tasks, too
 		task_script = '/' + task_script
 
-	src = synctool_overlay.find_synctree('tasks', task_script)
+	src = synctool_overlay.find(synctool_overlay.OV_TASKS, task_script)
 	if not src:
 		stderr("no such task '%s'" % filename)
 		return
@@ -942,7 +942,7 @@ def reference(filename):
 		stderr('missing filename')
 		return
 
-	src = synctool_overlay.find_synctree('overlay', filename)
+	src = synctool_overlay.find(synctool_overlay.OV_OVERLAY, filename)
 	if not src:
 		stdout('%s is not in the overlay tree' % filename)
 		return
@@ -959,7 +959,7 @@ def diff_files(filename):
 
 	synctool_lib.DRY_RUN = True						# be sure that it doesn't do any updates
 
-	sync_path = synctool_overlay.find_synctree('overlay', filename)
+	sync_path = synctool_overlay.find(synctool_overlay.OV_OVERLAY, filename)
 	if not sync_path:
 		return
 

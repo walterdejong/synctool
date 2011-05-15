@@ -90,7 +90,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 	if upload_suffix and not upload_suffix in synctool_config.ALL_GROUPS:
 		stderr("no such group '%s'" % upload_suffix)
 		sys.exit(-1)
-		
+	
 	# shadow DRY_RUN because that var can not be used correctly here
 	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
 		dry_run = False
@@ -102,7 +102,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 	node = NODESET.get_nodename_from_interface(interface)
 
 	# pretend that the current node is now the given node;
-	# this is needed for find_synctree() to find the most optimal reference for the file
+	# this is needed for find() to find the most optimal reference for the file
 	orig_NODENAME = synctool_config.NODENAME
 	synctool_config.NODENAME = node
 	synctool_config.insert_group(node, node)
@@ -111,7 +111,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 	synctool_config.MY_GROUPS = synctool_config.get_my_groups()
 
 	# see if file is already in the repository
-	repos_filename = synctool_overlay.find_synctree('overlay', upload_filename)
+	repos_filename = synctool_overlay.find(synctool_overlay.OV_OVERLAY, upload_filename)
 	if not repos_filename:
 		repos_filename = os.path.join(synctool_config.OVERLAY_DIRS[0], trimmed_upload_fn)
 		if upload_suffix:
