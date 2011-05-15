@@ -36,7 +36,8 @@ ACTION_CMDS = 6
 ACTION_NUMPROC = 7
 ACTION_VERSION = 8
 ACTION_PREFIX = 9
-ACTION_NODENAME = 10
+ACTION_LIST_DIRS = 10
+ACTION_NODENAME = 11
 
 # optional: do not list hosts/groups that are ignored
 OPT_FILTER_IGNORED = False
@@ -104,7 +105,7 @@ def stderr(str):
 #	These ought to be in a seperate module, but they use synctool_config.MASTERDIR ...
 #	(which would cause a circular import. Lots of code would have to be changed)
 #
-def strip_multiple_slashes():
+def strip_multiple_slashes(path):
 	if not path:
 		return path
 	
@@ -143,6 +144,8 @@ def prepare_path(path):
 	path = strip_multiple_slashes(path)
 	path = strip_trailing_slash(path)
 	path = subst_masterdir(path)
+	
+	return path
 
 
 def read_config():
@@ -1050,6 +1053,26 @@ def list_commands(cmds):
 			stderr("no such command '%s' available in synctool" % cmd)
 
 
+def list_dirs():
+	'''display directory settings'''
+	
+	print 'masterdir', MASTERDIR
+	
+	# Note: do not use prettypath() here, for shell scripters
+	# They will still have to awk, and multiple paths are possible ...
+	
+	for path in OVERLAY_DIRS:
+		print 'overlaydir', path
+
+	for path in DELETE_DIRS:
+		print 'deletedir', path
+
+	for path in TASKS_DIRS:
+		print 'tasksdir', path
+
+	print 'scriptdir', SCRIPT_DIR
+
+
 def set_action(a, opt):
 	global ACTION, ACTION_OPTION
 
@@ -1077,6 +1100,7 @@ def usage():
 	print '  -C, --command=command    Display setting for command'
 	print '  -p, --numproc            Display numproc setting'
 	print '  -m, --masterdir          Display the masterdir setting'
+	print '  -d, --list-dirs          Display directory settings'
 	print '      --prefix             Display installation prefix'
 	print '      --nodename           Display my nodename'
 	print '  -v, --version            Display synctool version'
@@ -1090,43 +1114,43 @@ def usage():
 def get_options():
 	global CONF_FILE, ARG_NODENAMES, ARG_GROUPS, ARG_CMDS
 	global OPT_FILTER_IGNORED, OPT_INTERFACE
-
+	
 	progname = os.path.basename(sys.argv[0])
-
+	
 	if len(sys.argv) <= 1:
 		usage()
 		sys.exit(1)
-
+	
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:mlLn:g:ifC:pv',
-			['help', 'conf=', 'masterdir', 'list-nodes', 'list-groups',
-			'node=', 'group=', 'interface', 'filter-ignored', 'command',
-			'numproc', 'version', 'prefix', 'nodename'])
-
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:mdlLn:g:ifC:pv',
+			['help', 'conf=', 'masterdir', 'list-dirs', 'list-nodes', 'list-groups',
+			'node=', 'group=', 'interface', 'filter-ignored', 'command', 'numproc',
+			'version', 'prefix', 'nodename'])
+	
 	except getopt.error, (reason):
 		print
 		print '%s: %s' % (progname, reason)
 		print
 		usage()
 		sys.exit(1)
-
+	
 	except getopt.GetoptError, (reason):
 		print
 		print '%s: %s' % (progname, reason)
 		print
 		usage()
 		sys.exit(1)
-
+	
 	except:
 		usage()
 		sys.exit(1)
-
+	
 	if args != None and len(args) > 0:
 		stderr('error: excessive arguments on command-line')
 		sys.exit(1)
-
+	
 	errors = 0
-
+	
 	for opt, arg in opts:
 		if opt in ('-h', '--help', '-?'):
 			usage()
@@ -1139,7 +1163,11 @@ def get_options():
 		if opt in ('-m', '--masterdir'):
 			set_action(ACTION_MASTERDIR, '--masterdir')
 			continue
-
+		
+		if opt in ('-d', '--list-dirs'):
+			set_action(ACTION_LIST_DIRS, '--list-dirs')
+			continue
+		
 		if opt in ('-l', '--list-nodes'):
 			set_action(ACTION_LIST_NODES, '--list-nodes')
 			continue
@@ -1239,6 +1267,12 @@ if __name__ == '__main__':
 
 	elif ACTION == ACTION_PREFIX:
 		print os.path.abspath(os.path.dirname(sys.argv[0]))
+	
+	elif ACTION == ACTION_LIST_DIRS:
+		list_dirs()
+	
+	else:
+		raise RuntimeError, 'bug: unknown ACTION code %d' % ACTION
 
 	elif ACTION == ACTION_NODENAME:
 		add_myhostname()
