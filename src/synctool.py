@@ -714,13 +714,13 @@ def run_command(cmd):
 		return
 	
 	if not synctool_lib.QUIET:
-		stdout('%srunning command %s' % (not_str, cmd))
+		stdout('%srunning command %s' % (not_str, synctool_lib.prettypath(cmd)))
 	
-	unix_out('# run command %s' % cmd1)
+	unix_out('# run command %s' % cmdfile)
 	unix_out(cmd)
 	
 	if not synctool_lib.DRY_RUN:
-		verbose('  os.system("%s")' % cmd1)
+		verbose('  os.system("%s")' % synctool_lib.prettypath(cmd))
 		
 		sys.stdout.flush()
 		sys.stderr.flush()
@@ -739,7 +739,7 @@ def run_command(cmd):
 		sys.stdout.flush()
 		sys.stderr.flush()
 	else:
-		verbose('  os.system("%s")             # dry run, action not performed' % cmd)
+		verbose('  os.system("%s")             # dry run, action not performed' % synctool_lib.prettypath(cmd))
 
 
 def run_command_in_dir(dest_dir, cmd):
@@ -1110,6 +1110,7 @@ def get_options():
 #				continue
 		
 		if opt in ('-f', '--fix'):
+			opt_fix = True
 			synctool_lib.DRY_RUN = False
 			continue
 		
@@ -1261,7 +1262,9 @@ if __name__ == '__main__':
 		for single_file in SINGLE_FILES:
 			(changed, src) = single_files(single_file)
 			if changed:
-				on_update_single(src, single_file)
+				run_post(single_file)
+		
+		run_post_on_directories()
 	
 	else:
 		overlay_files()
