@@ -35,6 +35,7 @@ ACTION_NUMPROC = 7
 ACTION_VERSION = 8
 ACTION_PREFIX = 9
 ACTION_LIST_DIRS = 10
+ACTION_LOGFILE = 11
 
 # optional: do not list hosts/groups that are ignored
 OPT_FILTER_IGNORED = False
@@ -989,6 +990,7 @@ def usage():
 	print '  -m, --masterdir          Display the masterdir setting'
 	print '  -d, --list-dirs          Display directory settings'
 	print '      --prefix             Display installation prefix'
+	print '      --logfile            Display configured logfile'
 	print '  -v, --version            Display synctool version'
 	print
 	print 'A node/group list can be a single value, or a comma-separated list'
@@ -1010,7 +1012,7 @@ def get_options():
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:mdlLn:g:ifC:pv',
 			['help', 'conf=', 'masterdir', 'list-dirs', 'list-nodes', 'list-groups',
 			'node=', 'group=', 'interface', 'filter-ignored', 'command', 'numproc',
-			'version', 'prefix'])
+			'version', 'prefix', 'logfile'])
 	
 	except getopt.error, (reason):
 		print
@@ -1096,6 +1098,10 @@ def get_options():
 			set_action(ACTION_PREFIX, '--prefix')
 			continue
 		
+		if opt == '--logfile':
+			set_action(ACTION_LOGFILE, '--logfile')
+			continue
+		
 		stderr("unknown command line option '%s'" % opt)
 		errors = errors + 1
 	
@@ -1151,6 +1157,9 @@ if __name__ == '__main__':
 	
 	elif ACTION == ACTION_LIST_DIRS:
 		list_dirs()
+	
+	elif ACTION == ACTION_LOGFILE:
+		print synctool_param.LOGFILE
 	
 	else:
 		raise RuntimeError, 'bug: unknown ACTION code %d' % ACTION
