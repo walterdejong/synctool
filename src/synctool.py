@@ -128,7 +128,7 @@ def checksum_files(file1, file2):
 
 
 def stat_islink(stat_struct):
-	'''returns if a file is a symbolic link'''
+	'''returns whether a file is a symbolic link or not'''
 	'''this function is needed because os.path.islink() returns False for dead symlinks, which is not what I want ...'''
 
 	if not stat_struct:
@@ -138,7 +138,7 @@ def stat_islink(stat_struct):
 
 
 def stat_isdir(stat_struct):
-	'''returns if a file is a directory'''
+	'''returns whether a file is a directory or not'''
 	'''this function is needed because os.path.isdir() returns True for symlinks to directories ...'''
 
 	if not stat_struct:
@@ -148,7 +148,7 @@ def stat_isdir(stat_struct):
 
 
 def stat_isfile(stat_struct):
-	'''returns if a file is a regular file'''
+	'''returns whether a file is a regular file or not'''
 	'''this function is needed because os.path.isfile() returns True for symlinks to files ...'''
 
 	if not stat_struct:
@@ -227,7 +227,7 @@ def compare_files(src_path, dest_path):
 --
 	The structure of this long function is as follows;
 
-		stat(src)				this stat is 'sacred' and dest should be set accordingly
+		stat(src)		this stat is 'sacred' and dest should be set accordingly
 		stat(dest)
 
 		if src is symlink:
@@ -271,9 +271,9 @@ def compare_files(src_path, dest_path):
 	done = False
 	need_update = False
 
-#
-#	is source is a symbolic link ...
-#
+	#
+	# if source is a symbolic link ...
+	#
 	if not done and stat_islink(src_stat):
 		need_update = False
 		try:
@@ -314,18 +314,18 @@ def compare_files(src_path, dest_path):
 			move_dir(dest_path)
 			need_update = True
 
-#
-#	treat as file ...
-#
+		#
+		# treat as file ...
+		#
 		if not done:
 			stdout('%s should be a symbolic link' % dest_path)
 			unix_out('# target should be a symbolic link')
 			delete_file(dest_path)
 			need_update = True
 
-#
-#	(re)create the symbolic link
-#
+		#
+		# (re)create the symbolic link
+		#
 		if need_update:
 			symlink_file(src_link, dest_path)
 			unix_out('')
@@ -333,9 +333,9 @@ def compare_files(src_path, dest_path):
 
 		done = True
 
-#
-#	if the source is a directory ...
-#
+	#
+	# if the source is a directory ...
+	#
 	if not done and stat_isdir(src_stat):
 		if not stat_exists(dest_stat):
 			done = True
@@ -350,9 +350,9 @@ def compare_files(src_path, dest_path):
 			delete_file(dest_path)
 			need_update = True
 
-#
-#	treat as a regular file
-#
+		#
+		# treat as a regular file
+		#
 		if not done and not stat_isdir(dest_stat):
 			done = True
 			stdout('%s should be a directory' % dest_path)
@@ -360,9 +360,9 @@ def compare_files(src_path, dest_path):
 			delete_file(dest_path)
 			need_update = True
 
-#
-#	make the directory
-#
+		#
+		# make the directory
+		#
 		if need_update:
 			make_dir(dest_path)
 			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
@@ -372,9 +372,9 @@ def compare_files(src_path, dest_path):
 
 		done = True
 
-#
-#	if source is a file ...
-#
+	#
+	# if source is a file ...
+	#
 	if not done and stat_isfile(src_stat):
 		if not stat_exists(dest_stat):
 			done = True
@@ -396,9 +396,9 @@ def compare_files(src_path, dest_path):
 			move_dir(dest_path)
 			need_update = True
 
-#
-#	check file size
-#
+		#
+		# check file size
+		#
 		if stat_isfile(dest_stat):
 			if src_stat[stat.ST_SIZE] != dest_stat[stat.ST_SIZE]:
 				done = True
@@ -409,9 +409,9 @@ def compare_files(src_path, dest_path):
 				unix_out('# updating file %s' % dest_path)
 				need_update = True
 			else:
-#
-#	check file contents (SHA1 or MD5 checksum)
-#
+				#
+				# check file contents (SHA1 or MD5 checksum)
+				#
 				try:
 					src_sum, dest_sum = checksum_files(src_path, dest_path)
 				except IOError, (err, reason):
@@ -446,9 +446,9 @@ def compare_files(src_path, dest_path):
 		done = True
 
 	elif not done:
-#
-#	source is not a symbolic link, not a directory, and not a regular file
-#
+		#
+		# source is not a symbolic link, not a directory, and not a regular file
+		#
 		stderr("be advised: don't know how to handle %s" % src_path)
 
 		if not stat_exists(dest_stat):
@@ -465,13 +465,14 @@ def compare_files(src_path, dest_path):
 				else:
 					stderr("don't know how to handle %s" % dest_path)
 
-#
-#	check mode and owner/group of files and/or directories
-#
-#	os.chmod() and os.chown() don't work well with symbolic links as they work on the destination
-#	python lacks an os.lchmod() and os.lchown() as they are not portable
-#	anyway, symbolic links have been dealt with already ...
-#
+	#
+	# check mode and owner/group of files and/or directories
+	#
+	# os.chmod() and os.chown() don't work well with symbolic links as they work
+	# on the destination rather than the symlink itself
+	# python lacks an os.lchmod() and os.lchown() as they are not portable
+	# anyway, symbolic links have been dealt with already ...
+	#
 	if stat_exists(dest_stat) and not stat_islink(dest_stat):
 		if src_stat[stat.ST_UID] != dest_stat[stat.ST_UID] or src_stat[stat.ST_GID] != dest_stat[stat.ST_GID]:
 			stdout('%s should have owner %s.%s (%d.%d), but has %s.%s (%d.%d)' % (dest_path, ascii_uid(src_stat[stat.ST_UID]), ascii_gid(src_stat[stat.ST_GID]), src_stat[stat.ST_UID], src_stat[stat.ST_GID], ascii_uid(dest_stat[stat.ST_UID]), ascii_gid(dest_stat[stat.ST_GID]), dest_stat[stat.ST_UID], dest_stat[stat.ST_GID]))
@@ -551,10 +552,11 @@ def symlink_file(oldpath, newpath):
 	if path_exists(newpath):
 		unix_out('mv %s %s.saved' % (newpath, newpath))
 
-#
-#	actually, if we want the ownership of the symlink to be correct, we should do setuid() here
-#	matching ownerships of symbolic links is not yet implemented
-#
+	#
+	# actually, if we want the ownership of the symlink to be correct,
+	# we should do setuid() here
+	# matching ownerships of symbolic links is not yet implemented
+	#
 
 	unix_out('umask 022')
 	unix_out('ln -s %s %s' % (oldpath, newpath))
@@ -687,20 +689,20 @@ def run_command(cmd):
 	else:
 		not_str = ''
 
-# a command can have arguments
+	# a command can have arguments
 	arr = string.split(cmd)
 	if not arr:
 		cmdfile = cmd
 	else:
 		cmdfile = arr[0]
 
-# cmd1 is the pretty printed version of the command
+	# cmd1 is the pretty printed version of the command
 	cmd1 = cmdfile
 	if cmd1[0] != '/':
 		cmd1 = '$masterdir/scripts/%s' % cmd1
-#
-#	if relative path, use script_path
-#
+		#
+		#	if relative path, use script_path
+		#
 		script_path = os.path.join(synctool_config.MASTERDIR, 'scripts')
 		if not os.path.isdir(script_path):
 			stderr('error: no such directory $masterdir/scripts')
@@ -761,7 +763,7 @@ def run_command_in_dir(dest_dir, cmd):
 
 	cwd = os.getcwd()
 
-# if dry run, the target directory may not exist yet (mkdir has not been called for real, for a dry run)
+	# if dry run, the target directory may not exist yet (mkdir has not been called for real, for a dry run)
 	if synctool_lib.DRY_RUN:
 		run_command(cmd)
 
@@ -800,15 +802,15 @@ def overlay_callback(src_dir, dest_dir, filename, ext):
 	verbose('checking $masterdir/%s' % src[synctool_config.MASTER_LEN:])
 
 	if compare_files(src, dest):
-# file has changed, run on_update command
+		# file has changed, run on_update command
 		if synctool_config.ON_UPDATE.has_key(dest):
 			run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest])
 
-# file has changed, run appropriate .post script
+		# file has changed, run appropriate .post script
 		if synctool_core.POST_SCRIPTS.has_key(filename):
 			run_command_in_dir(dest_dir, os.path.join(src_dir, synctool_core.POST_SCRIPTS[filename][0]))
 
-# file in dir has changed, flag it
+		# file in dir has changed, flag it
 		synctool_core.DIR_CHANGED = True
 
 	return True
@@ -817,11 +819,11 @@ def overlay_callback(src_dir, dest_dir, filename, ext):
 def overlay_dir_updated(src_dir, dest_dir):
 	'''this def gets called if there were any updates in this dir'''
 
-# dir has changed, run on_update command
+	# dir has changed, run on_update command
 	if synctool_config.ON_UPDATE.has_key(dest_dir):
 		run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest_dir])
 
-# dir has changed, run appropriate .post script
+	# dir has changed, run appropriate .post script
 	basename = os.path.basename(dest_dir)
 	dirname = os.path.dirname(src_dir)
 	if synctool_core.POST_SCRIPTS.has_key(basename):
@@ -861,7 +863,7 @@ def delete_callback(src_dir, dest_dir, filename, ext):
 		stdout('%sdeleting $masterdir/%s : %s' % (not_str, src[synctool_config.MASTER_LEN:], dest))
 		hard_delete_file(dest)
 
-# file in dir has changed, flag it
+		# file in dir has changed, flag it
 		synctool_core.DIR_CHANGED = True
 
 	return True
@@ -870,7 +872,7 @@ def delete_callback(src_dir, dest_dir, filename, ext):
 def delete_dir_updated(src_dir, dest_dir):
 	'''this def gets called when a file in the dir was deleted'''
 
-# do the same as for overlay; run .post scripts
+	# do the same as for overlay; run .post scripts
 	overlay_dir_updated(src_dir, dest_dir)
 
 
@@ -941,11 +943,11 @@ def on_update_single(src, dest):
 
 	dest_dir = os.path.dirname(dest)
 
-# file has changed, run on_update command
+	# file has changed, run on_update command
 	if synctool_config.ON_UPDATE.has_key(dest):
 		run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest])
 
-# file has changed, run appropriate .post script
+	# file has changed, run appropriate .post script
 
 	src_dir = os.path.dirname(src)
 	filename = os.path.basename(dest)
@@ -955,7 +957,7 @@ def on_update_single(src, dest):
 	if synctool_core.POST_SCRIPTS.has_key(filename):
 		run_command_in_dir(dest_dir, os.path.join(src_dir, synctool_core.POST_SCRIPTS[filename][0]))
 
-# if it was a indeed a file and not a directory, check if the directory has a .post script, too
+	# if it was a indeed a file and not a directory, check if the directory has a .post script, too
 	if os.path.isfile(src):
 		src_dir = os.path.dirname(src_dir)
 		basename = os.path.basename(dest_dir)
@@ -1146,7 +1148,7 @@ def get_options():
 	single_file = None
 	reference_file = None
 
-# these are only used for checking the validity of command-line option combinations
+	# these are only used for checking the validity of command-line option combinations
 	opt_diff = False
 	opt_single = False
 	opt_reference = False
