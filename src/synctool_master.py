@@ -49,11 +49,11 @@ def run_remote_synctool(nodes):
 
 	cmds = []
 
-# append rsync command
+	# append rsync command
 	if not OPT_SKIP_RSYNC:
 		cmds.append([ shlex.split(synctool_config.RSYNC_CMD) + [ '%s/' % synctool_config.MASTERDIR ], [ '%s/' % synctool_config.MASTERDIR ], ':' ])
 
-# append synctool command
+	# append synctool command
 	cmds.append([ shlex.split(synctool_config.SSH_CMD), shlex.split(synctool_config.SYNCTOOL_CMD) + PASS_ARGS, None ])
 
 	synctool_ssh.run_parallel_cmds(nodes, cmds)
@@ -77,9 +77,9 @@ def upload(interface, upload_filename, upload_suffix=None):
 
 	trimmed_upload_fn = upload_filename[1:]			# remove leading slash
 
-	import synctool_core
+	import synctool_overlay
 
-# make the known groups lists
+	# make the known groups lists
 	synctool_config.remove_ignored_groups()
 	synctool_config.MY_GROUPS = synctool_config.get_my_groups()
 	synctool_config.ALL_GROUPS = synctool_config.make_all_groups()
@@ -88,7 +88,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 		stderr("no such group '%s'" % upload_suffix)
 		sys.exit(-1)
 		
-# shadow DRY_RUN because that var can not be used correctly here
+	# shadow DRY_RUN because that var can not be used correctly here
 	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
 		dry_run = False
 	else:
@@ -98,8 +98,8 @@ def upload(interface, upload_filename, upload_suffix=None):
 
 	node = synctool_ssh.get_nodename_from_interface(interface)
 
-# pretend that the current node is now the given node;
-# this is needed for find_synctree() to find the most optimal reference for the file
+	# pretend that the current node is now the given node;
+	# this is needed for find_synctree() to find the most optimal reference for the file
 	orig_NODENAME = synctool_config.NODENAME
 	synctool_config.NODENAME = node
 	synctool_config.insert_group(node, node)
@@ -107,10 +107,11 @@ def upload(interface, upload_filename, upload_suffix=None):
 	orig_MY_GROUPS = synctool_config.MY_GROUPS[:]
 	synctool_config.MY_GROUPS = synctool_config.get_my_groups()
 
-# see if file is already in the repository
-	repos_filename = synctool_core.find_synctree('overlay', upload_filename)
+	# see if file is already in the repository
+	synctool_overlay.load_overlay_tree()
+	repos_filename = synctool_overlay.find_synctree('overlay', upload_filename)
 	if not repos_filename:
-		repos_filename = os.path.join(synctool_config.MASTERDIR, 'overlay', trimmed_upload_fn)
+		repos_filename = os.path.join(synctool_config.OVERLAY_DIRS[0], trimmed_upload_fn)
 		if upload_suffix:
 			repos_filename = repos_filename + '._' + upload_suffix
 		else:
@@ -129,7 +130,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 	verbose('%s:%s uploaded as %s' % (node, upload_filename, repos_filename))
 	unix_out('%s %s:%s %s' % (synctool_config.SCP_CMD, interface, upload_filename, repos_filename))
 
-# display short path name
+	# display short path name
 	masterlen = len(synctool_config.MASTERDIR) + 1
 	short_repos_filename = '$masterdir/%s' % repos_filename[masterlen:]
 
@@ -220,7 +221,7 @@ def get_options():
 	upload_filename = None
 	upload_suffix = None
 
-# these are only used for checking the validity of command-line option combinations
+	# these are only used for checking the validity of command-line option combinations
 	opt_diff = False
 	opt_single = False
 	opt_reference = False
@@ -345,7 +346,7 @@ def get_options():
 		if arg:
 			PASS_ARGS.append(arg)
 
-# enable logging at the master node
+	# enable logging at the master node
 	PASS_ARGS.append('--masterlog')
 
 	if args != None:
@@ -382,7 +383,7 @@ def main():
 	synctool_config.read_config()
 	synctool_config.add_myhostname()
 
-# ooh ... testing for DRY_RUN doesn't work here
+	# ooh ... testing for DRY_RUN doesn't work here
 	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
 		synctool_lib.openlog()
 
@@ -403,9 +404,9 @@ def main():
 		local_interface = synctool_config.get_node_interface(synctool_config.NODENAME)
 
 		for node in nodes:
-		#
-		#	is this node the localhost? then run locally
-		#
+			#
+			#	is this node the localhost? then run locally
+			#
 			if node == local_interface:
 				run_local_synctool()
 				nodes.remove(node)
