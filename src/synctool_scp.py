@@ -16,6 +16,7 @@ import synctool_param
 import synctool_config
 import synctool_lib
 import synctool_ssh
+import synctool_nodeset
 
 from synctool_lib import verbose,stdout,stderr,unix_out
 
@@ -24,6 +25,8 @@ import sys
 import string
 import getopt
 import shlex
+
+NODESET = synctool_nodeset.NodeSet()
 
 DESTDIR = None
 SCP_OPTIONS = None
@@ -135,7 +138,7 @@ def usage():
 
 
 def get_options():
-	global DESTDIR, SCP_OPTIONS
+	global NODESET, DESTDIR, SCP_OPTIONS
 
 	if len(sys.argv) <= 1:
 		usage()
@@ -162,9 +165,6 @@ def get_options():
 		usage()
 		sys.exit(1)
 
-	synctool_ssh.NODELIST = ''
-	synctool_ssh.GROUPLIST = ''
-
 	for opt, arg in opts:
 		if opt in ('-h', '--help', '-?'):
 			usage()
@@ -187,31 +187,19 @@ def get_options():
 			continue
 
 		if opt in ('-n', '--node'):
-			if not synctool_ssh.NODELIST:
-				synctool_ssh.NODELIST = arg
-			else:
-				synctool_ssh.NODELIST = NODELIST + ',' + arg
+			NODESET.add_node(arg)
 			continue
 
 		if opt in ('-g', '--group'):
-			if not synctool_ssh.GROUPLIST:
-				synctool_ssh.GROUPLIST = arg
-			else:
-				synctool_ssh.GROUPLIST = synctool_ssh.GROUPLIST + ',' + arg
+			NODESET.add_group(arg)
 			continue
 
 		if opt in ('-x', '--exclude'):
-			if not synctool_ssh.EXCLUDELIST:
-				synctool_ssh.EXCLUDELIST = arg
-			else:
-				synctool_ssh.EXCLUDELIST = synctool_ssh.EXCLUDELIST + ',' + arg
+			NODESET.exclude_node(arg)
 			continue
 
 		if opt in ('-X', '--exclude-group'):
-			if not synctool_ssh.EXCLUDEGROUPS:
-				synctool_ssh.EXCLUDEGROUPS = arg
-			else:
-				synctool_ssh.EXCLUDEGROUPS = synctool_ssh.EXCLUDEGROUPS + ',' + arg
+			NODESET.exclude_group(arg)
 			continue
 
 		if opt == '--unix':
@@ -241,7 +229,7 @@ if __name__ == '__main__':
 	synctool_config.read_config()
 	synctool_config.add_myhostname()
 
-	nodes = synctool_ssh.make_nodeset()
+	nodes = NODESET.interfaces()
 	if nodes == None or len(nodes) <= 0:
 		print 'no valid nodes specified'
 		sys.exit(1)

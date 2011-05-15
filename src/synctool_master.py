@@ -16,6 +16,7 @@ import synctool_config
 import synctool_aggr
 import synctool_lib
 import synctool_unbuffered
+import synctool_nodeset
 
 from synctool_lib import verbose,stdout,stderr,unix_out
 
@@ -24,6 +25,8 @@ import sys
 import string
 import getopt
 import shlex
+
+NODESET = synctool_nodeset.NodeSet()
 
 OPT_SKIP_RSYNC = False
 OPT_AGGREGATE = False
@@ -97,7 +100,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 		if not synctool_lib.QUIET:
 			stdout('DRY RUN, not uploading any files')
 
-	node = synctool_ssh.get_nodename_from_interface(interface)
+	node = NODESET.get_nodename_from_interface(interface)
 
 	# pretend that the current node is now the given node;
 	# this is needed for find() to find the most optimal reference for the file
@@ -184,7 +187,8 @@ def usage():
 
 
 def get_options():
-	global PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE, OPT_VERSION, OPT_CHECK_UPDATE, OPT_DOWNLOAD, MASTER_OPTS
+	global NODESET, PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE, OPT_VERSION
+	global OPT_CHECK_UPDATE, OPT_DOWNLOAD, MASTER_OPTS
 
 #	if len(sys.argv) <= 1:
 #		usage()
@@ -214,9 +218,6 @@ def get_options():
 	if args != None and len(args) > 0:
 		stderr('error: excessive arguments on command line')
 		sys.exit(1)
-
-	synctool_ssh.NODELIST = ''
-	synctool_ssh.GROUPLIST = ''
 
 	upload_filename = None
 	upload_suffix = None
@@ -256,36 +257,19 @@ def get_options():
 			continue
 
 		if opt in ('-n', '--node'):
-			if not synctool_ssh.NODELIST:
-				synctool_ssh.NODELIST = arg
-			else:
-				synctool_ssh.NODELIST = synctool_ssh.NODELIST + ',' + arg
-			continue
-
-		if opt in ('-e', '--erase-saved'):
-			synctool_param.ERASE_SAVED = True
-			PASS_ARGS.append(opt)
+			NODESET.add_node(arg)
 			continue
 
 		if opt in ('-g', '--group'):
-			if not synctool_ssh.GROUPLIST:
-				synctool_ssh.GROUPLIST = arg
-			else:
-				synctool_ssh.GROUPLIST = synctool_ssh.GROUPLIST + ',' + arg
+			NODESET.add_group(arg)
 			continue
 
 		if opt in ('-x', '--exclude'):
-			if not synctool_ssh.EXCLUDELIST:
-				synctool_ssh.EXCLUDELIST = arg
-			else:
-				synctool_ssh.EXCLUDELIST = synctool_ssh.EXCLUDELIST + ',' + arg
+			NODESET.exclude_node(arg)
 			continue
 
 		if opt in ('-X', '--exclude-group'):
-			if not synctool_ssh.EXCLUDEGROUPS:
-				synctool_ssh.EXCLUDEGROUPS = arg
-			else:
-				synctool_ssh.EXCLUDEGROUPS = synctool_ssh.EXCLUDEGROUPS + ',' + arg
+			NODESET.exclude_group(arg)
 			continue
 
 		if opt in ('-d', '--diff'):
@@ -309,6 +293,11 @@ def get_options():
 
 		if opt in ('-t', '--tasks'):
 			opt_tasks = True
+
+		if opt in ('-e', '--erase-saved'):
+			synctool_param.ERASE_SAVED = True
+			PASS_ARGS.append(opt)
+			continue
 
 		if opt in ('-q', '--quiet'):
 			synctool_lib.QUIET = True
@@ -387,7 +376,7 @@ def main():
 	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
 		synctool_lib.openlog()
 
-	nodes = synctool_ssh.make_nodeset()
+	nodes = NODESET.interfaces()
 	if nodes == None or len(nodes) <= 0:
 		print 'no valid nodes specified'
 		sys.exit(1)
