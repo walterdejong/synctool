@@ -1300,10 +1300,7 @@ if __name__ == '__main__':
 
 	elif single_file:
 		if RUN_TASKS:
-			cmd = single_task(single_file)
-			if cmd:
-				run_command(cmd)
-				unix_out('')
+			single_task(single_file)
 		else:
 			(changed, src) = single_files(single_file)
 			if changed:

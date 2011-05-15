@@ -1,3 +1,6 @@
+15 May 2011:
+- bugfix for running a single task
+
 13 May 2011:
 - added contributions by Onno Zweers:
   - synctool-diff patches
