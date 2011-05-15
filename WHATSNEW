@@ -9,8 +9,8 @@ See the INSTALL file for information on how to deploy synctool.
 See the DOCUMENTATION file for information on how to use synctool.
 
 
-What's new in synctool version 4.7 ? 
-====================================
+What's new in synctool version 4.7.1 ? 
+======================================
 
 Only two tiny things:
  - bugfix for the "ignore" keyword that ignores files or directories

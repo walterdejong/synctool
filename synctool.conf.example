@@ -4,6 +4,21 @@
 
 masterdir /var/lib/synctool
 
+#
+# Note that multiple overlay dirs are supported, so you can do things like
+#overlaydir /var/lib/synctool/overlay-common
+#overlaydir /var/lib/synctool/overlay-subcluster1
+#overlaydir /var/lib/synctool/overlay-all
+#
+# Same goes for deletedir and tasksdir, but not for scriptdir ...
+#
+
+# these are defaults:
+#overlaydir /var/lib/synctool/overlay
+#deletedir /var/lib/synctool/delete
+#tasksdir /var/lib/synctool/tasks
+#scriptdir /var/lib/synctool/scripts
+
 # use mode 0777 on Linux
 #symlink_mode 0777
 # use mode 0755 on most other Unix platforms

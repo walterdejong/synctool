@@ -1,3 +1,10 @@
+15 May 2011:
+- dumped synctool_core for synctool_overlay, which has much cleaner code
+  and supports having multiple overlay dirs, which are merged together
+  in memory
+- fixed possible bug for on_update where quotation was lost for the command
+- added new config parameters for overlaydir, deletedir, tasksdir, scriptdir
+
 13 May 2011:
 - added contributions by Onno Zweers:
   - synctool-diff patches
