@@ -6,18 +6,18 @@ masterdir /var/lib/synctool
 
 #
 # Note that multiple overlay dirs are supported, so you can do things like
-#overlaydir /var/lib/synctool/overlay-common
-#overlaydir /var/lib/synctool/overlay-subcluster1
-#overlaydir /var/lib/synctool/overlay-all
+#overlaydir $masterdir/overlay-common
+#overlaydir $masterdir/overlay-subcluster1
+#overlaydir $masterdir/overlay-all
 #
 # Same goes for deletedir and tasksdir, but not for scriptdir ...
 #
 
 # these are defaults:
-#overlaydir /var/lib/synctool/overlay
-#deletedir /var/lib/synctool/delete
-#tasksdir /var/lib/synctool/tasks
-#scriptdir /var/lib/synctool/scripts
+#overlaydir $masterdir/overlay
+#deletedir $masterdir/delete
+#tasksdir $masterdir/tasks
+#scriptdir $masterdir/scripts
 
 # use mode 0777 on Linux
 #symlink_mode 0777
@@ -39,7 +39,7 @@ ping_cmd /bin/ping -q -c 2 -t 4
 ssh_cmd /usr/bin/ssh -o ConnectTimeout=10 -q
 scp_cmd /usr/bin/scp -o ConnectTimeout=10 -p
 rsync_cmd /usr/bin/rsync -ar --delete -e 'ssh -o ConnectTimeout=10 -q'
-synctool_cmd /var/lib/synctool/sbin/synctool.py -c /var/lib/synctool/synctool.conf
+synctool_cmd $masterdir/sbin/synctool.py -c $masterdir/synctool.conf
 
 # max amount of parallel processes that synctool_master and synctool-ssh use
 num_proc 64

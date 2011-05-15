@@ -102,6 +102,28 @@ def stderr(str):
 	sys.stderr.write(str + '\n')
 
 
+def strip_trailing_slash(path):
+	if not path:
+		return path
+	
+	if path[-1] == '/':
+		return path[:-1]
+	
+	return path
+
+
+def subst_masterdir(path):
+	if path.find('$masterdir/') >= 0:
+		if not MASTERDIR:
+			stderr('error: $masterdir referenced before it was set')
+			sys.exit(-1)
+	
+		while path.find('$masterdir/') >= 0:
+			path.replace('$masterdir/', MASTERDIR + '/')
+	
+	return path
+
+
 def read_config():
 	'''read the config file and set a bunch of globals'''
 	
@@ -225,14 +247,6 @@ def read_config_file(configfile):
 		keyword = string.lower(arr[0])
 
 		#
-		#	keyword: include
-		#
-		if keyword == 'include':
-			# recursively read the given config file
-			errors = errors + read_config_file(arr[1])
-			continue
-
-		#
 		#	keyword: masterdir
 		#
 		if keyword == 'masterdir':
@@ -246,8 +260,26 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			MASTERDIR = arr[1]
+			MASTERDIR = strip_trailing_slash(arr[1])
 			MASTER_LEN = len(MASTERDIR) + 1
+			
+			if MASTERDIR == '$masterdir':
+				stderr("%s:%d: masterdir can not be set to '$masterdir', sorry" % (configfile, lineno))
+				errors = errors + 1
+				MASTERDIR = ''
+				continue
+			
+			continue
+
+		#
+		#	keyword: include
+		#
+		if keyword == 'include':
+			# recursively read the given config file
+			include_file = strip_trailing_slash(arr[1])
+			include_file = subst_masterdir(include_file)
+			
+			errors = errors + read_config_file(include_file)
 			continue
 
 		#
@@ -264,7 +296,10 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			OVERLAY_DIRS.append(arr[1])
+			the_dir = strip_trailing_slash(arr[1])
+			the_dir = subst_masterdir(the_dir)
+			
+			OVERLAY_DIRS.append(the_dir)
 			continue
 		
 		#
@@ -281,7 +316,10 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			DELETE_DIRS.append(arr[1])
+			the_dir = strip_trailing_slash(arr[1])
+			the_dir = subst_masterdir(the_dir)
+			
+			DELETE_DIRS.append(the_dir)
 			continue
 		
 		#
@@ -298,7 +336,10 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			TASKS_DIRS.append(arr[1])
+			the_dir = strip_trailing_slash(arr[1])
+			the_dir = subst_masterdir(the_dir)
+			
+			TASKS_DIRS.append(the_dir)
 			continue
 		
 		#
@@ -315,7 +356,10 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			SCRIPT_DIR = arr[1]
+			the_dir = strip_trailing_slash(arr[1])
+			the_dir = subst_masterdir(the_dir)
+			
+			SCRIPT_DIR = the_dir
 			continue
 		
 		#
@@ -499,33 +543,35 @@ def read_config_file(configfile):
 				stderr("%s:%d: 'on_update' requires at least 2 arguments: filename and shell command to run" % (configfile, lineno))
 				errors = errors + 1
 				continue
-
-			file = arr[1]
+			
+			file = strip_trailing_slash(arr[1])
 			cmd = string.join(arr[2:])
-
+			cmd = subst_masterdir(cmd)
+			
 			#
 			#	check if the script exists
 			#
-			if arr[2][0] != '/':
-				master = '.'
-				if MASTERDIR != None:
-					master = MASTERDIR
-				else:
-					stderr("%s:%d: note: masterdir not defined, using current working directory" % (configfile, lineno))
-
-				scripts = os.path.join(master, 'scripts')
-				full_cmd = os.path.join(scripts, arr[2])
-			else:
-				full_cmd = arr[2]
-
-			if not os.path.isfile(full_cmd):
-				stderr("%s:%d: no such command '%s'" % (configfile, lineno, full_cmd))
+			if cmd[0] != '/':
+				# if relative path, use scriptdir
+				# but what to do if scriptdir hasn't been set yet? Use default ...
+				if not SCRIPT_DIR:
+					SCRIPT_DIR = os.path.join(MASTERDIR, 'scripts')
+				
+				# do not use os.path.join() on dir+cmd+arguments
+				cmd = SCRIPT_DIR + '/' + cmd
+			
+			# get the command file
+			arr = string.split(cmd)
+			cmdfile = arr[0]
+			
+			if not os.path.isfile(cmdfile):
+				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmdfile))
 				errors = errors + 1
 				continue
-
+			
 			ON_UPDATE[file] = cmd
 			continue
-
+		
 		#
 		#	keyword: always_run
 		#
@@ -534,37 +580,39 @@ def read_config_file(configfile):
 				stderr("%s:%d: 'always_run' requires an argument: the shell command to run" % (configfile, lineno))
 				errors = errors + 1
 				continue
-
+			
 			cmd = string.join(arr[1:])
-
+			cmd = subst_masterdir(cmd)
+			
 			if cmd in ALWAYS_RUN:
 				stderr("%s:%d: same command defined again: %s" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
-
+			
 			#
 			#	check if the script exists
 			#
-			if arr[1][0] != '/':
-				master = '.'
-				if MASTERDIR != None:
-					master = MASTERDIR
-				else:
-					stderr("%s:%d: note: masterdir not defined, using current working directory" % (configfile, lineno))
-
-				scripts = os.path.join(master, 'scripts')
-				full_cmd = os.path.join(scripts, arr[1])
-			else:
-				full_cmd = arr[1]
-
-			if not os.path.isfile(full_cmd):
-				stderr("%s:%d: no such command '%s'" % (configfile, lineno, full_cmd))
+			if cmd[0] != '/':
+				# if relative path, use scriptdir
+				# but what to do if scriptdir hasn't been set yet? Use default ...
+				if not SCRIPT_DIR:
+					SCRIPT_DIR = os.path.join(MASTERDIR, 'scripts')
+				
+				# do not use os.path.join() on dir+cmd+arguments
+				cmd = SCRIPT_DIR + '/' + cmd
+			
+			# get the command file
+			arr = string.split(cmd)
+			cmdfile = arr[1]
+			
+			if not os.path.isfile(cmdfile):
+				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmdfile))
 				errors = errors + 1
 				continue
-
+			
 			ALWAYS_RUN.append(cmd)
 			continue
-
+		
 		#
 		#	keyword: diff_cmd
 		#
@@ -573,14 +621,15 @@ def read_config_file(configfile):
 				stderr("%s:%d: 'diff_cmd' requires an argument: the full path to the 'diff' command" % (configfile, lineno))
 				errors = errors + 1
 				continue
-
-			cmd = arr[1]
+			
+			cmd = subst_masterdir(arr[1])
+			
 			if not os.path.isfile(cmd):
 				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
-
-			DIFF_CMD = string.join(arr[1:])
+			
+			DIFF_CMD = subst_masterdir(string.join(arr[1:]))
 			continue
 
 		#
@@ -591,16 +640,16 @@ def read_config_file(configfile):
 				stderr("%s:%d: 'ping_cmd' requires an argument: the full path to the 'ping' command" % (configfile, lineno))
 				errors = errors + 1
 				continue
-
-			cmd = arr[1]
+			
+			cmd = subst_masterdir(arr[1])
 			if not os.path.isfile(cmd):
 				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
 
-			PING_CMD = string.join(arr[1:])
+			PING_CMD = subst_masterdir(string.join(arr[1:]))
 			continue
-
+		
 		#
 		#	keyword: ssh_cmd
 		#
@@ -609,16 +658,16 @@ def read_config_file(configfile):
 				stderr("%s:%d: 'ssh_cmd' requires an argument: the full path to the 'ssh' command" % (configfile, lineno))
 				errors = errors + 1
 				continue
-
-			cmd = arr[1]
+			
+			cmd = subst_masterdir(arr[1])
 			if not os.path.isfile(cmd):
 				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
-
-			SSH_CMD = string.join(arr[1:])
+			
+			SSH_CMD = subst_masterdir(string.join(arr[1:]))
 			continue
-
+		
 		#
 		#	keyword: scp_cmd
 		#
@@ -627,16 +676,16 @@ def read_config_file(configfile):
 				stderr("%s:%d: 'scp_cmd' requires an argument: the full path to the 'scp' command" % (configfile, lineno))
 				errors = errors + 1
 				continue
-
-			cmd = arr[1]
+			
+			cmd = subst_masterdir(arr[1])
 			if not os.path.isfile(cmd):
 				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
-
-			SCP_CMD = string.join(arr[1:])
+			
+			SCP_CMD = subst_masterdir(string.join(arr[1:]))
 			continue
-
+		
 		#
 		#	keyword: rsync_cmd
 		#
@@ -645,16 +694,16 @@ def read_config_file(configfile):
 				stderr("%s:%d: 'rsync_cmd' requires an argument: the full path to the 'rsync' command" % (configfile, lineno))
 				errors = errors + 1
 				continue
-
-			cmd = arr[1]
+			
+			cmd = subst_masterdir(arr[1])
 			if not os.path.isfile(cmd):
 				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
-
-			RSYNC_CMD = string.join(arr[1:])
+			
+			RSYNC_CMD = subst_masterdir(string.join(arr[1:]))
 			continue
-
+		
 		#
 		#	keyword: synctool_cmd
 		#
@@ -663,16 +712,16 @@ def read_config_file(configfile):
 				stderr("%s:%d: 'synctool_cmd' requires an argument: the full path to the remote 'synctool' command" % (configfile, lineno))
 				errors = errors + 1
 				continue
-
-			cmd = arr[1]
+			
+			cmd = subst_masterdir(arr[1])
 			if not os.path.isfile(cmd):
 				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
-
-			SYNCTOOL_CMD = string.join(arr[1:])
+			
+			SYNCTOOL_CMD = subst_masterdir(string.join(arr[1:]))
 			continue
-
+		
 		#
 		#	keyword: logfile
 		#
@@ -681,10 +730,10 @@ def read_config_file(configfile):
 				stderr("%s:%d: 'logfile' requires an argument: the full path to the file to write log messages to" % (configfile, lineno))
 				errors = errors + 1
 				continue
-
-			LOGFILE = string.join(arr[1:])
+			
+			LOGFILE = subst_masterdir(string.join(arr[1:]))
 			continue
-
+		
 		#
 		#	keyword: num_proc
 		#
@@ -695,26 +744,26 @@ def read_config_file(configfile):
 				stderr("%s:%d: invalid argument for num_proc" % (configfile, lineno))
 				errors = errors + 1
 				continue
-
+			
 			if num_proc < 1:
 				stderr("%s:%d: invalid argument for num_proc" % (configfile, lineno))
 				errors = errors + 1
 				continue
-
+			
 			NUM_PROC = num_proc
 			continue
-
+		
 		stderr("%s:%d: unknown keyword '%s'" % (configfile, lineno, keyword))
 		errors = errors + 1
-
+	
 	f.close()
 	return errors
 
 
 def expand_grouplist(grouplist):
 	'''expand a list of (compound) groups recursively
-	Returns the expanded group list
-'''
+	Returns the expanded group list'''
+	
 	global GROUP_DEFS
 	
 	groups = []
