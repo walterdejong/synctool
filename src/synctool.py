@@ -9,6 +9,7 @@
 #   License.
 #
 
+import synctool_param
 import synctool_config
 import synctool_lib
 import synctool_overlay
@@ -314,8 +315,8 @@ def compare_files(src_path, dest_path):
 				delete_file(dest_path)
 				need_update = True
 
-			if (dest_stat[stat.ST_MODE] & 07777) != synctool_config.SYMLINK_MODE:
-				stdout('%s should have mode %04o (symlink), but has %04o' % (dest_path, synctool_config.SYMLINK_MODE, dest_stat[stat.ST_MODE] & 07777))
+			if (dest_stat[stat.ST_MODE] & 07777) != synctool_param.SYMLINK_MODE:
+				stdout('%s should have mode %04o (symlink), but has %04o' % (dest_path, synctool_param.SYMLINK_MODE, dest_stat[stat.ST_MODE] & 07777))
 				unix_out('# fix permissions of symbolic link %s' % dest_path)
 				need_update = True
 
@@ -514,7 +515,7 @@ def compare_files(src_path, dest_path):
 
 
 def erase_saved(dst):
-	if synctool_config.ERASE_SAVED:
+	if synctool_param.ERASE_SAVED:
 		if path_isfile('%s.saved' % dst):
 			unix_out('rm %s.saved' % dst)
 			
@@ -538,7 +539,7 @@ def copy_file(src, dest):
 	if not synctool_lib.DRY_RUN:
 		old_umask = os.umask(077)
 
-		if not synctool_config.ERASE_SAVED:
+		if not synctool_param.ERASE_SAVED:
 			if path_isfile(dest):
 				verbose('  saving %s as %s.saved' % (dest, dest))
 				try:
@@ -554,7 +555,7 @@ def copy_file(src, dest):
 
 		os.umask(old_umask)
 	else:
-		if path_isfile(dest) and not synctool_config.ERASE_SAVED:
+		if path_isfile(dest) and not synctool_param.ERASE_SAVED:
 			verbose('  saving %s as %s.saved' % (dest, dest))
 
 		verbose('  cp %s %s             # dry run, update not performed' % (src, dest))
@@ -623,7 +624,7 @@ def set_owner(file, uid, gid):
 
 def delete_file(file):
 	if not synctool_lib.DRY_RUN:
-		if not synctool_config.ERASE_SAVED:
+		if not synctool_param.ERASE_SAVED:
 			unix_out('mv %s %s.saved' % (file, file))
 
 			verbose('moving %s to %s.saved' % (file, file))
@@ -639,7 +640,7 @@ def delete_file(file):
 			except OSError, reason:
 				stderr('failed to delete %s : %s' % (file, reason))
 	else:
-		if not synctool_config.ERASE_SAVED:
+		if not synctool_param.ERASE_SAVED:
 			verbose('moving %s to %s.saved             # dry run, update not performed' % (file, file))
 		else:
 			verbose('deleting %s    # dry run, delete not performed' % file)
@@ -703,7 +704,7 @@ def run_command(cmd):
 	
 	if cmd[0] != '/':
 		# if relative path, use scriptdir
-		cmd = synctool_config.SCRIPT_DIR + '/' + cmd
+		cmd = synctool_param.SCRIPT_DIR + '/' + cmd
 	
 	# a command can have arguments
 	arr = shlex.split(cmd)
@@ -792,8 +793,8 @@ def run_post(dest):
 	dest_dir = os.path.dirname(dest)
 	
 	# file has changed, run on_update command
-	if synctool_config.ON_UPDATE.has_key(dest):
-		run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest])
+	if synctool_param.ON_UPDATE.has_key(dest):
+		run_command_in_dir(dest_dir, synctool_param.ON_UPDATE[dest])
 	
 	# file has changed, run appropriate .post script
 	postscript = synctool_overlay.postscript_for_path(dest)
@@ -809,8 +810,8 @@ def run_post_on_directory(dest):
 	
 	# Note that the script is executed with the changed dir as current working dir
 	
-	if synctool_config.ON_UPDATE.has_key(dest):
-		run_command_in_dir(dest, synctool_config.ON_UPDATE[dest])
+	if synctool_param.ON_UPDATE.has_key(dest):
+		run_command_in_dir(dest, synctool_param.ON_UPDATE[dest])
 	
 	# run appropriate .post script
 	postscript = synctool_overlay.postscript_for_path(dest)
@@ -886,7 +887,7 @@ def run_tasks():
 def always_run():
 	'''always run these commands'''
 	
-	for cmd in synctool_config.ALWAYS_RUN:
+	for cmd in synctool_param.ALWAYS_RUN:
 		run_command(cmd)
 		unix_out('')
 
@@ -952,8 +953,8 @@ def reference(filename):
 def diff_files(filename):
 	'''display a diff of the file'''
 	
-	if not synctool_config.DIFF_CMD:
-		stderr('error: diff_cmd is undefined in %s' % synctool_config.CONF_FILE)
+	if not synctool_param.DIFF_CMD:
+		stderr('error: diff_cmd is undefined in %s' % synctool_param.CONF_FILE)
 		return
 	
 	synctool_lib.DRY_RUN = True						# be sure that it doesn't do any updates
@@ -963,20 +964,20 @@ def diff_files(filename):
 		return
 	
 	if synctool_lib.UNIX_CMD:
-		unix_out('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
+		unix_out('%s %s %s' % (synctool_param.DIFF_CMD, filename, sync_path))
 	else:
-		verbose('%s %s %s' % (synctool_config.DIFF_CMD, filename, synctool_lib.prettypath(sync_path)))
+		verbose('%s %s %s' % (synctool_param.DIFF_CMD, filename, synctool_lib.prettypath(sync_path)))
 		
 		sys.stdout.flush()
 		sys.stderr.flush()
 		
 		if use_subprocess:
-			cmd_arr = shlex.split(synctool_config.DIFF_CMD)
+			cmd_arr = shlex.split(synctool_param.DIFF_CMD)
 			cmd_arr.append(filename)
 			cmd_arr.append(sync_path)
 			subprocess.Popen(cmd_arr, shell=False)
 		else:
-			os.system('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
+			os.system('%s %s %s' % (synctool_param.DIFF_CMD, filename, sync_path))
 		
 		sys.stdout.flush()
 		sys.stderr.flush()
@@ -1030,7 +1031,7 @@ def usage():
 	print 'options:'
 	print '  -h, --help            Display this information'
 	print '  -c, --conf=dir/file   Use this config file'
-	print '                        (default: %s)' % synctool_config.DEFAULT_CONF
+	print '                        (default: %s)' % synctool_param.DEFAULT_CONF
 #	print '  -n, --dry-run         Show what would have been updated'
 	print '  -d, --diff=file       Show diff for file'
 	print '  -e, --erase-saved     Erase *.saved backup files'
@@ -1102,7 +1103,7 @@ def get_options():
 			sys.exit(1)
 		
 		if opt in ('-c', '--conf'):
-			synctool_config.CONF_FILE = arg
+			synctool_param.CONF_FILE = arg
 			continue
 		
 # dry run already is default
@@ -1117,7 +1118,7 @@ def get_options():
 			continue
 		
 		if opt in ('-e', '--erase-saved'):
-			synctool_config.ERASE_SAVED = True
+			synctool_param.ERASE_SAVED = True
 			continue
 		
 		if opt in ('-v', '--verbose'):
@@ -1139,17 +1140,14 @@ def get_options():
 		if opt in ('-d', '--diff'):
 			opt_diff = True
 			action = ACTION_DIFF
-			file = synctool_config.prepare_path(arg)
+			file = synctool_lib.prepare_path(arg)
 			if not file in SINGLE_FILES:
 				SINGLE_FILES.append(file)
 			continue
 		
 		if opt in ('-1', '--single'):
 			opt_single = True
-			file = synctool_config.prepare_path(arg)
-			while len(file) > 1 and file[-1] == '/':		# strip trailing slashes (single directories)
-				file = file[:-1]
-			
+			file = synctool_lib.prepare_path(arg)
 			if not file in SINGLE_FILES:
 				SINGLE_FILES.append(file)
 			continue
@@ -1163,7 +1161,7 @@ def get_options():
 		if opt in ('-r', '--ref', '--reference'):
 			opt_reference = True
 			action = ACTION_REFERENCE
-			file = synctool_config.prepare_path(arg)
+			file = synctool_lib.prepare_path(arg)
 			if not file in SINGLE_FILES:
 				SINGLE_FILES.append(file)
 			continue
@@ -1187,25 +1185,25 @@ def get_options():
 if __name__ == '__main__':
 	action = get_options()
 	
-	if OPT_VERSION:
-		print synctool_config.VERSION
+	if action == ACTION_VERSION:
+		print synctool_param.VERSION
 		sys.exit(0)
 	
 	synctool_config.read_config()
 	synctool_config.add_myhostname()
 	
-	if synctool_config.NODENAME == None:
-		stderr('unable to determine my nodename, please check %s' % synctool_config.CONF_FILE)
+	if synctool_param.NODENAME == None:
+		stderr('unable to determine my nodename, please check %s' % synctool_param.CONF_FILE)
 		sys.exit(1)
 	
-	if synctool_config.NODENAME in synctool_config.IGNORE_GROUPS:
-		stderr('%s: node %s is disabled in the config file' % (synctool_config.CONF_FILE, synctool_config.NODENAME))
+	if synctool_param.NODENAME in synctool_param.IGNORE_GROUPS:
+		stderr('%s: node %s is disabled in the config file' % (synctool_param.CONF_FILE, synctool_param.NODENAME))
 		sys.exit(1)
 	
 	synctool_config.remove_ignored_groups()
 	
-	synctool_config.MY_GROUPS = synctool_config.get_my_groups()
-	synctool_config.ALL_GROUPS = synctool_config.make_all_groups()
+	synctool_param.MY_GROUPS = synctool_config.get_my_groups()
+	synctool_param.ALL_GROUPS = synctool_config.make_all_groups()
 	
 	if synctool_lib.UNIX_CMD:
 		t = time.localtime(time.time())
@@ -1213,10 +1211,10 @@ if __name__ == '__main__':
 		unix_out('#')
 		unix_out('# script generated by synctool on %04d/%02d/%02d %02d:%02d:%02d' % (t[0], t[1], t[2], t[3], t[4], t[5]))
 		unix_out('#')
-		unix_out('# NODENAME=%s' % synctool_config.NODENAME)
-		unix_out('# HOSTNAME=%s' % synctool_config.HOSTNAME)
-		unix_out('# MASTERDIR=%s' % synctool_config.MASTERDIR)
-		unix_out('# SYMLINK_MODE=0%o' % synctool_config.SYMLINK_MODE)
+		unix_out('# NODENAME=%s' % synctool_param.NODENAME)
+		unix_out('# HOSTNAME=%s' % synctool_param.HOSTNAME)
+		unix_out('# MASTERDIR=%s' % synctool_param.MASTERDIR)
+		unix_out('# SYMLINK_MODE=0%o' % synctool_param.SYMLINK_MODE)
 		unix_out('#')
 		
 		if not synctool_lib.DRY_RUN:
@@ -1226,13 +1224,13 @@ if __name__ == '__main__':
 		unix_out('')
 	else:
 		if not synctool_lib.QUIET:
-			verbose('my nodename: %s' % synctool_config.NODENAME)
-			verbose('my hostname: %s' % synctool_config.HOSTNAME)
-			verbose('masterdir: %s' % synctool_config.MASTERDIR)
-			verbose('symlink_mode: 0%o' % synctool_config.SYMLINK_MODE)
+			verbose('my nodename: %s' % synctool_param.NODENAME)
+			verbose('my hostname: %s' % synctool_param.HOSTNAME)
+			verbose('masterdir: %s' % synctool_param.MASTERDIR)
+			verbose('symlink_mode: 0%o' % synctool_param.SYMLINK_MODE)
 			
-			if synctool_config.LOGFILE != None and not synctool_lib.DRY_RUN:
-				verbose('logfile: %s' % synctool_config.LOGFILE)
+			if synctool_param.LOGFILE != None and not synctool_lib.DRY_RUN:
+				verbose('logfile: %s' % synctool_param.LOGFILE)
 			
 			verbose('')
 			
@@ -1244,8 +1242,8 @@ if __name__ == '__main__':
 	
 	synctool_lib.openlog()
 	
-	os.putenv('SYNCTOOL_NODENAME', synctool_config.NODENAME)
-	os.putenv('SYNCTOOL_MASTERDIR', synctool_config.MASTERDIR)
+	os.putenv('SYNCTOOL_NODENAME', synctool_param.NODENAME)
+	os.putenv('SYNCTOOL_MASTERDIR', synctool_param.MASTERDIR)
 	
 	if action == ACTION_DIFF:
 		for file in SINGLE_FILES:

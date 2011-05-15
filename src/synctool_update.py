@@ -9,7 +9,7 @@
 #   License.
 #
 
-import synctool_config
+import synctool_param
 
 from synctool_lib import verbose,stdout,stderr
 
@@ -79,7 +79,7 @@ def check():
 
 	latest_version = get_latest_version()
 
-	if latest_version == synctool_config.VERSION:
+	if latest_version == synctool_param.VERSION:
 		stdout('You are running the latest version of synctool')
 		return 0
 	else:

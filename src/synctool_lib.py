@@ -11,7 +11,7 @@
 #	- common functions/variables for synctool suite programs
 #
 
-import synctool_config
+import synctool_param
 
 import os
 import sys
@@ -58,8 +58,8 @@ def unix_out(str):
 def prettypath(path):
 	'''print long paths as "$masterdir/path"'''
 	
-	if path[:synctool_config.MASTER_LEN] == synctool_config.MASTERDIR + '/':
-		return '$masterdir/' + path[synctool_config.MASTER_LEN:]
+	if path[:synctool_param.MASTER_LEN] == synctool_param.MASTERDIR + '/':
+		return '$masterdir/' + path[synctool_param.MASTER_LEN:]
 	
 	return path
 
@@ -67,14 +67,14 @@ def prettypath(path):
 def openlog():
 	global LOGFD
 
-	if synctool_config.LOGFILE == None or synctool_config.LOGFILE == '' or DRY_RUN:
+	if synctool_param.LOGFILE == None or synctool_param.LOGFILE == '' or DRY_RUN:
 		return
 
 	LOGFD = None
 	try:
-		LOGFD = open(synctool_config.LOGFILE, 'a')
+		LOGFD = open(synctool_param.LOGFILE, 'a')
 	except IOError, (err, reason):
-		print 'error: failed to open logfile %s : %s' % (synctool_config.LOGFILE, reason)
+		print 'error: failed to open logfile %s : %s' % (synctool_param.LOGFILE, reason)
 		sys.exit(-1)
 
 #	log('start run')
@@ -165,6 +165,52 @@ def search_path(cmd):
 			return full_path
 
 	return cmd
+
+
+#
+#	functions straigthening out paths that were given by the user
+#
+def strip_multiple_slashes(path):
+	if not path:
+		return path
+	
+	while path.find('//') != -1:
+		path = path.replace('//', '/')
+	
+	return path
+
+
+def strip_trailing_slash(path):
+	if not path:
+		return path
+	
+	while len(path) > 1 and path[-1] == '/':
+		path = path[:-1]
+	
+	return path
+
+
+def subst_masterdir(path):
+	if path.find('$masterdir/') >= 0:
+		if not synctool_param.MASTERDIR:
+			stderr('error: $masterdir referenced before it was set')
+			sys.exit(-1)
+	
+		while path.find('$masterdir/') >= 0:
+			path.replace('$masterdir/', synctool_param.MASTERDIR + '/')
+	
+	return path
+
+
+def prepare_path(path):
+	if not path:
+		return path
+	
+	path = strip_multiple_slashes(path)
+	path = strip_trailing_slash(path)
+	path = subst_masterdir(path)
+	
+	return path
 
 
 if __name__ == '__main__':

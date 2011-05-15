@@ -9,7 +9,7 @@
 #   License.
 #
 
-import synctool_config
+import synctool_param
 import synctool_lib
 import synctool
 
@@ -71,7 +71,7 @@ def split_extension(entryname):
 		return (entryname, GROUP_ALL+1, False)
 	
 	try:
-		groupnum = synctool_config.MY_GROUPS.index(ext)
+		groupnum = synctool_param.MY_GROUPS.index(ext)
 	except ValueError:
 		return (None, -1, False)
 	
@@ -94,10 +94,10 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/', highest_groupnum = sys.
 		if groupnum < 0:				# not a relevant group
 			continue
 		
-		if name in synctool_config.IGNORE_FILES:
+		if name in synctool_param.IGNORE_FILES:
 			continue
 		
-		if synctool_config.IGNORE_DOTFILES and name[0] == '.':
+		if synctool_param.IGNORE_DOTFILES and name[0] == '.':
 			continue
 		
 		src_path = os.path.join(overlay_dir, entry)
@@ -117,7 +117,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/', highest_groupnum = sys.
 			groupnum = highest_groupnum
 		
 		if synctool.path_isdir(src_path):
-			if synctool_config.IGNORE_DOTDIRS and name[0] == '.':
+			if synctool_param.IGNORE_DOTDIRS and name[0] == '.':
 				continue
 			
 			filelist.append(OverlayEntry(src_path, dest_path, groupnum))
@@ -139,10 +139,10 @@ def overlay_pass1_without_post_scripts(overlay_dir, filelist, dest_dir = '/', hi
 		if groupnum < 0:				# not a relevant group
 			continue
 		
-		if name in synctool_config.IGNORE_FILES:
+		if name in synctool_param.IGNORE_FILES:
 			continue
 		
-		if synctool_config.IGNORE_DOTFILES and name[0] == '.':
+		if synctool_param.IGNORE_DOTFILES and name[0] == '.':
 			continue
 		
 		src_path = os.path.join(overlay_dir, entry)
@@ -159,7 +159,7 @@ def overlay_pass1_without_post_scripts(overlay_dir, filelist, dest_dir = '/', hi
 			groupnum = highest_groupnum
 		
 		if synctool.path_isdir(src_path):
-			if synctool_config.IGNORE_DOTDIRS and name[0] == '.':
+			if synctool_param.IGNORE_DOTDIRS and name[0] == '.':
 				continue
 			
 			filelist.append(OverlayEntry(src_path, dest_path, groupnum))
@@ -202,12 +202,12 @@ def load_overlay_tree():
 	POST_SCRIPTS = {}
 	
 	# ensure that GROUP_ALL is set correctly
-	GROUP_ALL = synctool_config.MY_GROUPS.index('all')
+	GROUP_ALL = synctool_param.MY_GROUPS.index('all')
 	
 	filelist = []
 	
 	# do pass #1 for multiple overlay dirs: load them into filelist
-	for overlay_dir in synctool_config.OVERLAY_DIRS:
+	for overlay_dir in synctool_param.OVERLAY_DIRS:
 		overlay_pass1(overlay_dir, filelist)
 	
 	# run pass #2 : 'squash' filelist into OVERLAY_DICT
@@ -233,12 +233,12 @@ def load_delete_tree():
 	DELETE_DICT = {}
 	
 	# ensure that GROUP_ALL is set correctly
-	GROUP_ALL = synctool_config.MY_GROUPS.index('all')
+	GROUP_ALL = synctool_param.MY_GROUPS.index('all')
 	
 	filelist = []
 	
 	# do pass #1 for multiple delete dirs: load them into filelist
-	for delete_dir in synctool_config.DELETE_DIRS:
+	for delete_dir in synctool_param.DELETE_DIRS:
 		overlay_pass1_without_post_scripts(delete_dir, filelist)
 	
 	# run pass #2 : 'squash' filelist into OVERLAY_DICT
@@ -270,12 +270,12 @@ def load_tasks_tree():
 	TASKS_DICT = {}
 	
 	# ensure that GROUP_ALL is set correctly
-	GROUP_ALL = synctool_config.MY_GROUPS.index('all')
+	GROUP_ALL = synctool_param.MY_GROUPS.index('all')
 	
 	filelist = []
 	
 	# do pass #1 for multiple overlay dirs: load them into filelist
-	for tasks_dir in synctool_config.TASKS_DIRS:
+	for tasks_dir in synctool_param.TASKS_DIRS:
 		overlay_pass1_with_post_scripts(overlay_dir, filelist)
 	
 	# run pass #2 : 'squash' filelist into TASKS_DICT
@@ -344,9 +344,11 @@ def visit(treedef, callback):
 if __name__ == '__main__':
 	## test program ##
 	
-	synctool_config.CONF_FILE = '../../synctool-test/synctool.conf'
+	import synctool_config
+	
+	synctool_param.CONF_FILE = '../../synctool-test/synctool.conf'
 	synctool_config.read_config()
-	synctool_config.MY_GROUPS = ['node1', 'group1', 'group2', 'all']
+	synctool_param.MY_GROUPS = ['node1', 'group1', 'group2', 'all']
 	
 	def visit_callback(src, dest):
 		print 'dest', dest
