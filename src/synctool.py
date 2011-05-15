@@ -50,6 +50,8 @@ BLOCKSIZE = 16 * 1024
 
 OPT_VERSION = False
 
+SINGLE_FILES = []
+
 
 def ascii_uid(uid):
 	'''get the name for this uid'''
@@ -1108,7 +1110,7 @@ def usage():
 
 
 def get_options():
-	global RUN_TASKS, OPT_VERSION
+	global RUN_TASKS, OPT_VERSION, SINGLE_FILES
 
 	progname = os.path.basename(sys.argv[0])
 
@@ -1143,8 +1145,8 @@ def get_options():
 	errors = 0
 
 	diff_file = None
-	single_file = None
 	reference_file = None
+	SINGLE_FILES = []
 
 # these are only used for checking the validity of command-line option combinations
 	opt_diff = False
@@ -1204,6 +1206,9 @@ def get_options():
 			single_file = synctool_lib.strip_multiple_slashes(arg)
 			while len(single_file) > 1 and single_file[-1] == '/':		# strip trailing slashes (single directories)
 				single_file = single_file[:-1]
+			
+			if not single_file in SINGLE_FILES:
+				SINGLE_FILES.append(single_file)
 			continue
 
 		if opt in ('-t', '--task', '--tasks'):
@@ -1229,11 +1234,11 @@ def get_options():
 
 	option_combinations(opt_diff, opt_single, opt_reference, opt_tasks, opt_upload, opt_suffix, opt_fix)
 
-	return (diff_file, single_file, reference_file)
+	return (diff_file, reference_file)
 
 
 if __name__ == '__main__':
-	(diff_file, single_file, reference_file) = get_options()
+	(diff_file, reference_file) = get_options()
 
 	if OPT_VERSION:
 		print synctool_config.VERSION
@@ -1298,13 +1303,15 @@ if __name__ == '__main__':
 	if diff_file:
 		diff_files(diff_file)
 
-	elif single_file:
+	elif SINGLE_FILES:
 		if RUN_TASKS:
-			single_task(single_file)
+			for single_file in SINGLE_FILES:
+				single_task(single_file)
 		else:
-			(changed, src) = single_files(single_file)
-			if changed:
-				on_update_single(src, single_file)
+			for single_file in SINGLE_FILES:
+				(changed, src) = single_files(single_file)
+				if changed:
+					on_update_single(src, single_file)
 
 	elif reference_file:
 		reference(reference_file)

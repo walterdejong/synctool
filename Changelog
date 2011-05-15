@@ -1,5 +1,6 @@
 15 May 2011:
 - bugfix for running a single task
+- option -1 or --single can be given multiple times on a single command-line
 
 13 May 2011:
 - added contributions by Onno Zweers:
