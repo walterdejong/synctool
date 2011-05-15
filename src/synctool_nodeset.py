@@ -8,6 +8,7 @@
 #   License.
 #
 
+import synctool_param
 import synctool_lib
 
 from synctool_lib import verbose,stdout,stderr,unix_out
@@ -93,14 +94,14 @@ class NodeSet:
 		ifaces = []
 		
 		for node in self.nodelist:
-			if node in synctool_config.IGNORE_GROUPS and not node in explicit_includes:
+			if node in synctool_param.IGNORE_GROUPS and not node in explicit_includes:
 				verbose('node %s is ignored' % node)
 				continue
 			
 			groups = synctool_config.get_groups(node)
 			do_continue = False
 			for group in groups:
-				if group in synctool_config.IGNORE_GROUPS:
+				if group in synctool_param.IGNORE_GROUPS:
 					verbose('group %s is ignored' % group)
 					do_continue = True
 					break
