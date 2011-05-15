@@ -4,6 +4,11 @@
   single command-line to handle multiple files
 - 'synctool-config --nodename' displays my nodename
   Which comes in handy when scripting .post scripts
+- dumped synctool_core for synctool_overlay, which has much cleaner code
+  and supports having multiple overlay dirs, which are merged together
+  in memory
+- fixed possible bug for on_update where quotation was lost for the command
+- added new config parameters for overlaydir, deletedir, tasksdir, scriptdir
 
 13 May 2011:
 - added contributions by Onno Zweers:
