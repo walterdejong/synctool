@@ -163,33 +163,6 @@ def overlay_pass2(filelist, filedict):
 		filedict[entry.dest_path] = entry
 
 
-def find_synctree(subdir, pathname):
-	'''find the source of a full destination path'''
-	
-	if subdir == 'overlay':
-		if not OVERLAY_LOADED:		# 'demand loading'
-			load_overlay_tree()
-		
-		dict = OVERLAY_DICT
-	
-	elif subdir == 'delete':
-		if not DELETE_LOADED:
-			load_delete_tree()
-		
-		dict = DELETE_DICT
-	
-	elif subdir == 'tasks':
-		if not TASKS_LOADED:
-			load_tasks_tree()
-		
-		dict = TASKS_DICT
-
-	if not dict.has_key(pathname):
-		return None
-	
-	return dict[pathname].src_path
-
-
 def load_overlay_tree():
 	'''scans all overlay dirs in and loads them into OVERLAY_DICT
 	which is a dict indexed by destination path, and every element
@@ -303,28 +276,41 @@ def postscript_for_path(path):
 	return None
 
 
-def visit(treedef, callback):
-	'''call the callback function on every entry in the tree
-	callback will called with two arguments: src_path, dest_path'''
+def select_tree(treedef):
+	'''returns tuple (dict, filelist) for the corresponding treedef number'''
 	
 	if treedef == OV_OVERLAY:
 		load_overlay_tree()
-		dict = OVERLAY_DICT
-		filelist = OVERLAY_FILES
+		return (OVERLAY_DICT, OVERLAY_FILES)
 	
 	elif treedef == OV_DELETE:
 		load_overlay_tree()			# is needed for .post scripts on directories that change
 		load_delete_tree()
-		dict = DELETE_DICT
-		filelist = DELETE_FILES
+		return (DELETE_DICT, DELETE_FILES)
 	
 	elif treedef == OV_TASKS:
 		load_tasks_tree()
-		dict = TASKS_DICT
-		filelist = TASKS_FILES
+		return (TASKS_DICT, TASKS_FILES)
 	
-	else:
-		raise RuntimeError, 'unknown treedef %d' % treedef
+	raise RuntimeError, 'unknown treedef %d' % treedef
+
+
+def find(treedef, dest_path):
+	'''find the source for a full destination path'''
+	
+	(dict, filelist) = select_tree(treedef)
+	
+	if not dict.has_key(dest_path):
+		return None
+	
+	return dict[dest_path].src_path
+
+
+def visit(treedef, callback):
+	'''call the callback function on every entry in the tree
+	callback will called with two arguments: src_path, dest_path'''
+	
+	(dict, filelist) = select_tree(treedef)
 	
 	# now call the callback function
 	for dest_path in filelist:
