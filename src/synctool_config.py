@@ -221,7 +221,12 @@ def read_config_file(configfile):
 				stderr("%s:%d: redefinition of masterdir" % (configfile, lineno))
 				errors = errors + 1
 				continue
-
+			
+			if not os.path.isdir(arr[1]):
+				stderr('%s:%d: no such directory for masterdir' % (configfile, lineno))
+				errors = errors + 1
+				continue
+			
 			MASTERDIR = arr[1]
 			MASTER_LEN = len(MASTERDIR) + 1
 			continue
