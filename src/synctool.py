@@ -1073,21 +1073,19 @@ def	option_combinations(opt_diff, opt_single, opt_reference, opt_tasks, opt_uplo
 	'''some combinations of command-line options don't make sense; alert the user and abort'''
 	
 	if opt_upload and (opt_diff or opt_single or opt_reference or opt_tasks):
-		stderr("the '--upload' option can not be combined with '--diff', '--single', '--ref',")
-		stderr("or '--tasks'")
+		stderr("the --upload option can not be combined with --diff, --single, --ref, or --tasks")
 		sys.exit(1)
-
+	
 	if opt_suffix and not opt_upload:
-		stderr("option '--suffix' can only be used together with '--upload'")
+		stderr("option --suffix can only be used together with --upload")
 		sys.exit(1)
-
+	
 	if opt_diff and (opt_single or opt_reference or opt_tasks or opt_fix):
-		stderr("option '--diff' can not be combined with '--single', '--ref', '--tasks',")
-		stderr("or '--fix'")
+		stderr("option --diff can not be combined with --single, --ref, --tasks, or --fix")
 		sys.exit(1)
-		
+	
 	if opt_reference and (opt_single or opt_tasks or opt_fix):
-		stderr("option '--reference' can not be combined with '--single', '--tasks', or '--fix'")
+		stderr("option --reference can not be combined with --single, --tasks, or --fix")
 		sys.exit(1)
 
 
@@ -1178,6 +1176,7 @@ def get_options():
 #				continue
 
 		if opt in ('-f', '--fix'):
+			opt_fix = True
 			synctool_lib.DRY_RUN = False
 			continue
 
