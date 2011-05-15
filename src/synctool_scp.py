@@ -12,6 +12,7 @@
 #
 
 import synctool_unbuffered
+import synctool_param
 import synctool_config
 import synctool_lib
 import synctool_ssh
@@ -31,14 +32,14 @@ SCP_OPTIONS = None
 def run_remote_copy(nodes, files):
 	'''copy files[] to nodes[]'''
 
-	if not synctool_config.SCP_CMD:
-		stderr('%s: error: scp_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
+	if not synctool_param.SCP_CMD:
+		stderr('%s: error: scp_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
 
 	files_str = string.join(files)
 
 # prepare cmd_args[] for exec() outside the loop
-	cmd_args = shlex.split(synctool_config.SCP_CMD)
+	cmd_args = shlex.split(synctool_param.SCP_CMD)
 
 	if SCP_OPTIONS:
 		cmd_args.extend(shlex.split(SCP_OPTIONS))
@@ -47,7 +48,7 @@ def run_remote_copy(nodes, files):
 
 # run scp in serial, not parallel
 	for node in nodes:
-		if node == synctool_config.NODENAME:
+		if node == synctool_param.NODENAME:
 			verbose('skipping node %s' % node)
 			continue
 
@@ -55,17 +56,17 @@ def run_remote_copy(nodes, files):
 			verbose('copying %s to %s:%s' % (files_str, node, DESTDIR))
 
 			if SCP_OPTIONS:
-				unix_out('%s %s %s %s:%s' % (synctool_config.SCP_CMD, SCP_OPTIONS, files_str, node, DESTDIR))
+				unix_out('%s %s %s %s:%s' % (synctool_param.SCP_CMD, SCP_OPTIONS, files_str, node, DESTDIR))
 			else:
-				unix_out('%s %s %s:%s' % (synctool_config.SCP_CMD, files_str, node, DESTDIR))
+				unix_out('%s %s %s:%s' % (synctool_param.SCP_CMD, files_str, node, DESTDIR))
 
 		else:
 			verbose('copying %s to %s' % (files_str, node))
 
 			if SCP_OPTIONS:
-				unix_out('%s %s %s %s:' % (synctool_config.SCP_CMD, SCP_OPTIONS, files_str, node))
+				unix_out('%s %s %s %s:' % (synctool_param.SCP_CMD, SCP_OPTIONS, files_str, node))
 			else:
-				unix_out('%s %s %s:' % (synctool_config.SCP_CMD, files_str, node))
+				unix_out('%s %s %s:' % (synctool_param.SCP_CMD, files_str, node))
 
 		if synctool_lib.DRY_RUN:
 			continue
@@ -115,7 +116,7 @@ def usage():
 	print 'options:'
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=dir/file            Use this config file'
-	print '                                 (default: %s)' % synctool_config.DEFAULT_CONF
+	print '                                 (default: %s)' % synctool_param.DEFAULT_CONF
 	print '  -n, --node=nodelist            Execute only on these nodes'
 	print '  -g, --group=grouplist          Execute only on these groups of nodes'
 	print '  -x, --exclude=nodelist         Exclude these nodes from the selected group'
@@ -170,7 +171,7 @@ def get_options():
 			sys.exit(1)
 
 		if opt in ('-c', '--conf'):
-			synctool_config.CONF_FILE = arg
+			synctool_param.CONF_FILE = arg
 			continue
 
 		if opt in ('-v', '--verbose'):

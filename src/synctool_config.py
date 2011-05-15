@@ -9,16 +9,13 @@
 #   License.
 #
 
+import synctool_param
+
 import os
 import sys
 import string
 import socket
 import getopt
-
-VERSION = '5.0-beta'
-
-DEFAULT_CONF = '/var/lib/synctool/synctool.conf'
-CONF_FILE = DEFAULT_CONF
 
 ACTION = 0
 ACTION_OPTION = None
@@ -43,57 +40,6 @@ OPT_FILTER_IGNORED = False
 # optional: list interface names for the selected nodes
 OPT_INTERFACE = False
 
-#
-#	config variables
-#
-MASTERDIR = None
-OVERLAY_DIRS = []
-DELETE_DIRS = []
-TASKS_DIRS = []
-SCRIPT_DIR = None
-HOSTNAME = None
-NODENAME = None
-
-DIFF_CMD = None
-PING_CMD = None
-SSH_CMD = None
-SCP_CMD = None
-RSYNC_CMD = None
-SYNCTOOL_CMD = None
-LOGFILE = None
-NUM_PROC = 16				# use sensible default
-
-#
-#	default symlink mode
-#	Linux makes them 0777 no matter what umask you have ...
-#	but how do you like them on a different platform?
-#
-#	The symlink mode can be set in the config file with keyword symlink_mode
-#
-SYMLINK_MODE = 0755
-
-ERASE_SAVED = False
-IGNORE_DOTFILES = False
-IGNORE_DOTDIRS = False
-IGNORE_FILES = []
-IGNORE_GROUPS = []
-ON_UPDATE = {}
-ALWAYS_RUN = []
-
-NODES = {}
-INTERFACES = {}
-
-GROUP_DEFS = {}
-
-# to be initialized externally ... (see synctool.py)
-# these are lists of group names
-MY_GROUPS = None
-ALL_GROUPS = None
-
-# string length of the 'MASTERDIR' variable
-# although silly to keep this in a var, it makes it easier to print messages
-MASTER_LEN = 0
-
 
 def stdout(str):
 	print str
@@ -103,92 +49,41 @@ def stderr(str):
 	sys.stderr.write(str + '\n')
 
 
-#
-#	functions straigthening out paths that were given by the user
-#	These ought to be in a seperate module, but they use synctool_config.MASTERDIR ...
-#	(which would cause a circular import. Lots of code would have to be changed)
-#
-def strip_multiple_slashes(path):
-	if not path:
-		return path
-	
-	while path.find('//') != -1:
-		path = path.replace('//', '/')
-	
-	return path
-
-
-def strip_trailing_slash(path):
-	if not path:
-		return path
-	
-	while len(path) > 1 and path[-1] == '/':
-		path = path[:-1]
-	
-	return path
-
-
-def subst_masterdir(path):
-	if path.find('$masterdir/') >= 0:
-		if not MASTERDIR:
-			stderr('error: $masterdir referenced before it was set')
-			sys.exit(-1)
-	
-		while path.find('$masterdir/') >= 0:
-			path.replace('$masterdir/', MASTERDIR + '/')
-	
-	return path
-
-
-def prepare_path(path):
-	if not path:
-		return path
-	
-	path = strip_multiple_slashes(path)
-	path = strip_trailing_slash(path)
-	path = subst_masterdir(path)
-	
-	return path
-
-
 def read_config():
 	'''read the config file and set a bunch of globals'''
 	
-	global MASTERDIR, GROUP_DEFS, NODES, IGNORE_GROUPS
-	global OVERLAY_DIRS, DELETE_DIRS, TASKS_DIRS, SCRIPT_DIR
-	
-	if not os.path.isfile(CONF_FILE):
-		stderr("no such config file '%s'" % CONF_FILE)
+	if not os.path.isfile(synctool_param.CONF_FILE):
+		stderr("no such config file '%s'" % synctool_param.CONF_FILE)
 		sys.exit(-1)
 	
-	errors = read_config_file(CONF_FILE)
+	errors = read_config_file(synctool_param.CONF_FILE)
 	
 	# if missing, set default directories
-	if MASTERDIR == None:
-		MASTERDIR = '.'			# hmmm ... nice for debugging, but shouldn't this be /var/lib/synctool ?
+	if synctool_param.MASTERDIR == None:
+		synctool_param.MASTERDIR = '.'			# hmmm ... nice for debugging, but shouldn't this be /var/lib/synctool ?
 	
-	if not OVERLAY_DIRS:
-		OVERLAY_DIRS.append(os.path.join(MASTERDIR, 'overlay'))
-		if not os.path.isdir(OVERLAY_DIRS[0]):
-			stderr('error: no such directory: %s' % OVERLAY_DIRS[0])
+	if not synctool_param.OVERLAY_DIRS:
+		synctool_param.OVERLAY_DIRS.append(os.path.join(synctool_param.MASTERDIR, 'overlay'))
+		if not os.path.isdir(synctool_param.OVERLAY_DIRS[0]):
+			stderr('error: no such directory: %s' % synctool_param.OVERLAY_DIRS[0])
 			errors = errors + 1
 	
-	if not DELETE_DIRS:
-		DELETE_DIRS.append(os.path.join(MASTERDIR, 'delete'))
-		if not os.path.isdir(DELETE_DIRS[0]):
-			stderr('error: no such directory: %s' % DELETE_DIRS[0])
+	if not synctool_param.DELETE_DIRS:
+		synctool_param.DELETE_DIRS.append(os.path.join(synctool_param.MASTERDIR, 'delete'))
+		if not os.path.isdir(synctool_param.DELETE_DIRS[0]):
+			stderr('error: no such directory: %s' % synctool_param.DELETE_DIRS[0])
 			errors = errors + 1
 	
-	if not TASKS_DIRS:
-		TASKS_DIRS.append(os.path.join(MASTERDIR, 'tasks'))
-		if not os.path.isdir(TASKS_DIRS[0]):
-			stderr('error: no such directory: %s' % TASKS_DIRS[0])
+	if not synctool_param.TASKS_DIRS:
+		synctool_param.TASKS_DIRS.append(os.path.join(synctool_param.MASTERDIR, 'tasks'))
+		if not os.path.isdir(synctool_param.TASKS_DIRS[0]):
+			stderr('error: no such directory: %s' % synctool_param.TASKS_DIRS[0])
 			errors = errors + 1
 	
-	if not SCRIPT_DIR:
-		SCRIPT_DIR = os.path.join(MASTERDIR, 'scripts')
-		if not os.path.isdir(SCRIPT_DIR):
-			stderr('error: no such directory: %s' % SCRIPT_DIR)
+	if not synctool_param.SCRIPT_DIR:
+		synctool_param.SCRIPT_DIR = os.path.join(synctool_param.MASTERDIR, 'scripts')
+		if not os.path.isdir(synctool_param.SCRIPT_DIR):
+			stderr('error: no such directory: %s' % synctool_param.SCRIPT_DIR)
 			errors = errors + 1
 	
 	if errors > 0:
@@ -199,31 +94,24 @@ def read_config():
 		insert_group(node, node)
 	
 	# implicitly add group 'all'
-	if not GROUP_DEFS.has_key('all'):
-		GROUP_DEFS['all'] = None
+	if not synctool_param.GROUP_DEFS.has_key('all'):
+		synctool_param.GROUP_DEFS['all'] = None
 	
 	for node in get_all_nodes():
-		if not 'all' in NODES[node]:
-			NODES[node].append('all')
+		if not 'all' in synctool_param.NODES[node]:
+			synctool_param.NODES[node].append('all')
 	
 	# implicitly add group 'none'
-	if not GROUP_DEFS.has_key('none'):
-		GROUP_DEFS['none'] = None
+	if not synctool_param.GROUP_DEFS.has_key('none'):
+		synctool_param.GROUP_DEFS['none'] = None
 	
-	if not 'none' in IGNORE_GROUPS:
-		IGNORE_GROUPS.append('none')
+	if not 'none' in synctool_param.IGNORE_GROUPS:
+		synctool_param.IGNORE_GROUPS.append('none')
 
 
 def read_config_file(configfile):
 	'''read a (included) config file'''
 	'''returns 0 on success, or error count on errors'''
-	
-	global MASTERDIR, MASTER_LEN, DIFF_CMD, PING_CMD, SSH_CMD, SCP_CMD, RSYNC_CMD, SYNCTOOL_CMD
-	global LOGFILE, NUM_PROC, SYMLINK_MODE, ERASE_SAVED
-	global IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
-	global ON_UPDATE, ALWAYS_RUN
-	global NODES, INTERFACES, GROUP_DEFS
-	global OVERLAY_DIRS, DELETE_DIRS, TASKS_DIRS, SCRIPT_DIR
 	
 	try:
 		f = open(configfile, 'r')
@@ -277,7 +165,7 @@ def read_config_file(configfile):
 		#	keyword: masterdir
 		#
 		if keyword == 'masterdir':
-			if MASTERDIR != None:
+			if synctool_param.MASTERDIR != None:
 				stderr("%s:%d: redefinition of masterdir" % (configfile, lineno))
 				errors = errors + 1
 				continue
@@ -287,15 +175,13 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			MASTERDIR = strip_multiple_slashes(arr[1])
-			MASTERDIR = strip_trailing_slash(MASTERDIR)
-			MASTER_LEN = len(MASTERDIR) + 1
+			synctool_param.MASTERDIR = synctool_lib.strip_multiple_slashes(arr[1])
+			synctool_param.MASTERDIR = synctool_lib.strip_trailing_slash(synctool_param.MASTERDIR)
+			synctool_param.MASTER_LEN = len(synctool_param.MASTERDIR) + 1
 			
-			if MASTERDIR == '$masterdir':
+			if synctool_param.MASTERDIR == '$masterdir':
 				stderr("%s:%d: masterdir can not be set to '$masterdir', sorry" % (configfile, lineno))
-				errors = errors + 1
-				MASTERDIR = ''
-				continue
+				sys.exit(1)
 			
 			continue
 
@@ -304,7 +190,7 @@ def read_config_file(configfile):
 		#
 		if keyword == 'include':
 			# recursively read the given config file
-			file = prepare_path(arr[1])
+			file = synctool_lib.prepare_path(arr[1])
 			errors = errors + read_config_file(file)
 			continue
 
@@ -312,7 +198,7 @@ def read_config_file(configfile):
 		#	keyword: overlaydir
 		#
 		if keyword == 'overlaydir':
-			if arr[1] in OVERLAY_DIRS:
+			if arr[1] in synctool_param.OVERLAY_DIRS:
 				stderr("%s:%d: already in overlaydir" % (configfile, lineno))
 				errors = errors + 1
 				continue
@@ -322,15 +208,15 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			the_dir = prepare_path(arr[1])
-			OVERLAY_DIRS.append(the_dir)
+			the_dir = synctool_lib.prepare_path(arr[1])
+			synctool_param.OVERLAY_DIRS.append(the_dir)
 			continue
 		
 		#
 		#	keyword: deletedir
 		#
 		if keyword == 'deletedir':
-			if arr[1] in DELETE_DIRS:
+			if arr[1] in synctool_param.DELETE_DIRS:
 				stderr("%s:%d: already in deletedir" % (configfile, lineno))
 				errors = errors + 1
 				continue
@@ -340,15 +226,15 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			the_dir = prepare_path(arr[1])
-			DELETE_DIRS.append(the_dir)
+			the_dir = synctool_lib.prepare_path(arr[1])
+			synctool_param.DELETE_DIRS.append(the_dir)
 			continue
 		
 		#
 		#	keyword: tasksdir
 		#
 		if keyword == 'tasksdir':
-			if arr[1] in TASKS_DIRS:
+			if arr[1] in synctool_param.TASKS_DIRS:
 				stderr("%s:%d: already in tasksdir" % (configfile, lineno))
 				errors = errors + 1
 				continue
@@ -358,15 +244,15 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			the_dir = prepare_path(arr[1])
-			TASKS_DIRS.append(the_dir)
+			the_dir = synctool_lib.prepare_path(arr[1])
+			synctool_param.TASKS_DIRS.append(the_dir)
 			continue
 		
 		#
 		#	keyword: scriptdir
 		#
 		if keyword == 'scriptdir':
-			if SCRIPT_DIR != None:
+			if synctool_param.SCRIPT_DIR != None:
 				stderr("%s:%d: redefinition of scriptdir" % (configfile, lineno))
 				errors = errors + 1
 				continue
@@ -376,8 +262,8 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			the_dir = prepare_path(arr[1])
-			SCRIPT_DIR = the_dir
+			the_dir = synctool_lib.prepare_path(arr[1])
+			synctool_param.SCRIPT_DIR = the_dir
 			continue
 		
 		#
@@ -390,55 +276,55 @@ def read_config_file(configfile):
 				stderr("%s:%d: invalid argument for symlink_mode" % (configfile, lineno))
 				errors = errors + 1
 				continue
-
-			SYMLINK_MODE = mode
+			
+			synctool_param.SYMLINK_MODE = mode
 			continue
-
+		
 		#
 		#	keyword: erase_saved
 		#
 		if keyword == 'erase_saved':
 			if arr[1] in ('1', 'on', 'yes'):
-				ERASE_SAVED = True
+				synctool_param.ERASE_SAVED = True
 			
 			elif arr[1] in ('0', 'off', 'no'):
-				ERASE_SAVED = False
+				synctool_param.ERASE_SAVED = False
 			
 			else:
-				stderr("%s:%d: invalid argument for erase_saved" % (CONF_FILE, lineno))
+				stderr("%s:%d: invalid argument for erase_saved" % (synctool_param.CONF_FILE, lineno))
 				errors = errors + 1
 			continue
-
+		
 		#
 		#	keyword: ignore_dotfiles
 		#
 		if keyword == 'ignore_dotfiles':
 			if arr[1] in ('1', 'on', 'yes'):
-				IGNORE_DOTFILES = True
-
+				synctool_param.IGNORE_DOTFILES = True
+			
 			elif arr[1] in ('0', 'off', 'no'):
-				IGNORE_DOTFILES = False
-
+				synctool_param.IGNORE_DOTFILES = False
+			
 			else:
 				stderr("%s:%d: invalid argument for ignore_dotfiles" % (configfile, lineno))
 				errors = errors + 1
 			continue
-
+		
 		#
 		#	keyword: ignore_dotdirs
 		#
 		if keyword == 'ignore_dotdirs':
 			if arr[1] in ('1', 'on', 'yes'):
-				IGNORE_DOTDIRS = True
-
+				synctool_param.IGNORE_DOTDIRS = True
+			
 			elif arr[1] in ('0', 'off', 'no'):
-				IGNORE_DOTDIRS = False
-
+				synctool_param.IGNORE_DOTDIRS = False
+			
 			else:
 				stderr("%s:%d: invalid argument for ignore_dotdirs" % (configfile, lineno))
 				errors = errors + 1
 			continue
-
+		
 		#
 		#	keyword: ignore
 		#
@@ -448,7 +334,7 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 
-			IGNORE_FILES.extend(arr[1:])
+			synctool_param.IGNORE_FILES.extend(arr[1:])
 			continue
 
 		#
@@ -462,18 +348,18 @@ def read_config_file(configfile):
 			
 			group = arr[1]
 			
-			if GROUP_DEFS.has_key(group):
+			if synctool_param.GROUP_DEFS.has_key(group):
 				stderr("%s:%d: redefiniton of group %s" % (configfile, lineno, group))
 				errors = errors + 1
 				continue
 			
-			if NODES.has_key(group):
+			if synctool_param.NODES.has_key(group):
 				stderr("%s:%d: %s was previously defined as a node" % (configfile, lineno, group))
 				errors = errors + 1
 				continue
 			
 			try:
-				GROUP_DEFS[group] = expand_grouplist(arr[2:])
+				synctool_param.GROUP_DEFS[group] = expand_grouplist(arr[2:])
 			except RuntimeError, e:
 				stderr("%s:%d: compound groups can not contain node names" % (configfile, lineno))
 				errors = errors + 1
@@ -489,16 +375,16 @@ def read_config_file(configfile):
 				stderr("%s:%d: '%s' requires at least 1 argument: the nodename" % (configfile, lineno, keyword))
 				errors = errors + 1
 				continue
-
+			
 			node = arr[1]
 			groups = arr[2:]
-
-			if NODES.has_key(node):
+			
+			if synctool_param.NODES.has_key(node):
 				stderr("%s:%d: redefinition of node %s" % (configfile, lineno, node))
 				errors = errors + 1
 				continue
-
-			if GROUP_DEFS.has_key(node):
+			
+			if synctool_param.GROUP_DEFS.has_key(node):
 				stderr("%s:%d: %s was previously defined as a group" % (configfile, lineno, node))
 				errors = errors + 1
 				continue
@@ -506,16 +392,16 @@ def read_config_file(configfile):
 			if len(groups) >= 1 and groups[-1][:10] == 'interface:':
 				interface = groups[-1][10:]
 				groups = groups[:-1]
-
-				if INTERFACES.has_key(node):
+				
+				if synctool_param.INTERFACES.has_key(node):
 					stderr("%s:%d: redefinition of interface for node %s" % (configfile, lineno, node))
 					errors = errors + 1
 					continue
-
-				INTERFACES[node] = interface
-
+				
+				synctool_param.INTERFACES[node] = interface
+			
 			try:
-				NODES[node] = expand_grouplist(groups)
+				synctool_param.NODES[node] = expand_grouplist(groups)
 			except RuntimeError, e:
 				stderr("%s:%d: a group list can not contain node names" % (configfile, lineno))
 				errors = errors + 1
@@ -531,10 +417,10 @@ def read_config_file(configfile):
 				stderr("%s:%d: '%s' requires 1 argument: the nodename to ignore" % (configfile, lineno, keyword))
 				errors = errors + 1
 				continue
-
-			IGNORE_GROUPS.append(arr[1])
+			
+			synctool_param.IGNORE_GROUPS.append(arr[1])
 			continue
-
+		
 		#
 		#	keyword: ignore_group
 		#
@@ -543,16 +429,16 @@ def read_config_file(configfile):
 				stderr("%s:%d: 'ignore_group' requires at least 1 argument: the group to ignore" % (configfile, lineno))
 				errors = errors + 1
 				continue
-
-			IGNORE_GROUPS.extend(arr[1:])
+			
+			synctool_param.IGNORE_GROUPS.extend(arr[1:])
 			
 			# add any (yet) unknown group names to the group_defs dict
 			for elem in arr[1:]:
-				if not GROUP_DEFS.has_key(elem):
-					GROUP_DEFS[elem] = None
+				if not synctool_param.GROUP_DEFS.has_key(elem):
+					synctool_param.GROUP_DEFS[elem] = None
 			
 			continue
-
+		
 		#
 		#	keyword: on_update
 		#
@@ -562,9 +448,9 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			file = prepare_path(arr[1])
+			file = synctool_lib.prepare_path(arr[1])
 			cmd = string.join(arr[2:])
-			cmd = prepare_path(cmd)
+			cmd = synctool_lib.prepare_path(cmd)
 			
 			#
 			#	check if the script exists
@@ -572,11 +458,11 @@ def read_config_file(configfile):
 			if cmd[0] != '/':
 				# if relative path, use scriptdir
 				# but what to do if scriptdir hasn't been set yet? Use default ...
-				if not SCRIPT_DIR:
-					SCRIPT_DIR = os.path.join(MASTERDIR, 'scripts')
+				if not synctool_param.SCRIPT_DIR:
+					synctool_param.SCRIPT_DIR = os.path.join(synctool_param.MASTERDIR, 'scripts')
 				
 				# do not use os.path.join() on dir+cmd+arguments
-				cmd = SCRIPT_DIR + '/' + cmd
+				cmd = synctool_param.SCRIPT_DIR + '/' + cmd
 			
 			# get the command file
 			arr = string.split(cmd)
@@ -587,7 +473,7 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			ON_UPDATE[file] = cmd
+			synctool_param.ON_UPDATE[file] = cmd
 			continue
 		
 		#
@@ -600,9 +486,9 @@ def read_config_file(configfile):
 				continue
 			
 			cmd = string.join(arr[1:])
-			cmd = prepare_path(cmd)
+			cmd = synctool_lib.prepare_path(cmd)
 			
-			if cmd in ALWAYS_RUN:
+			if cmd in synctool_param.ALWAYS_RUN:
 				stderr("%s:%d: same command defined again: %s" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
@@ -613,11 +499,11 @@ def read_config_file(configfile):
 			if cmd[0] != '/':
 				# if relative path, use scriptdir
 				# but what to do if scriptdir hasn't been set yet? Use default ...
-				if not SCRIPT_DIR:
-					SCRIPT_DIR = os.path.join(MASTERDIR, 'scripts')
+				if not synctool_param.SCRIPT_DIR:
+					synctool_param.SCRIPT_DIR = os.path.join(synctool_param.MASTERDIR, 'scripts')
 				
 				# do not use os.path.join() on dir+cmd+arguments
-				cmd = SCRIPT_DIR + '/' + cmd
+				cmd = synctool_param.SCRIPT_DIR + '/' + cmd
 			
 			# get the command file
 			arr = string.split(cmd)
@@ -628,7 +514,7 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			ALWAYS_RUN.append(cmd)
+			synctool_param.ALWAYS_RUN.append(cmd)
 			continue
 		
 		#
@@ -640,14 +526,14 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			cmd = prepare_path(arr[1])
+			cmd = synctool_lib.prepare_path(arr[1])
 			
 			if not os.path.isfile(cmd):
 				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
 			
-			DIFF_CMD = prepare_path(string.join(arr[1:]))
+			synctool_param.DIFF_CMD = synctool_lib.prepare_path(string.join(arr[1:]))
 			continue
 
 		#
@@ -659,13 +545,13 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			cmd = prepare_path(arr[1])
+			cmd = synctool_lib.prepare_path(arr[1])
 			if not os.path.isfile(cmd):
 				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
-
-			PING_CMD = prepare_path(string.join(arr[1:]))
+			
+			synctool_param.PING_CMD = synctool_lib.prepare_path(string.join(arr[1:]))
 			continue
 		
 		#
@@ -677,13 +563,13 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			cmd = prepare_path(arr[1])
+			cmd = synctool_lib.prepare_path(arr[1])
 			if not os.path.isfile(cmd):
 				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
 			
-			SSH_CMD = prepare_path(string.join(arr[1:]))
+			synctool_param.SSH_CMD = synctool_lib.prepare_path(string.join(arr[1:]))
 			continue
 		
 		#
@@ -695,13 +581,13 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			cmd = prepare_path(arr[1])
+			cmd = synctool_lib.prepare_path(arr[1])
 			if not os.path.isfile(cmd):
 				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
 			
-			SCP_CMD = prepare_path(string.join(arr[1:]))
+			synctool_param.SCP_CMD = synctool_lib.prepare_path(string.join(arr[1:]))
 			continue
 		
 		#
@@ -713,15 +599,16 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			cmd = prepare_path(arr[1])
+			cmd = synctool_lib.prepare_path(arr[1])
 			if not os.path.isfile(cmd):
 				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
 			
 			# argh ... strip_multiple_slashes() will break "rsync://" paths
-			# let's hope nobody configures those on the nodes
-			RSYNC_CMD = prepare_path(string.join(arr[1:]))
+			# and strip_trailing_slashes() may break rsync paths
+			# but these are usually not used in rsync_cmd
+			synctool_param.RSYNC_CMD = synctool_lib.prepare_path(string.join(arr[1:]))
 			continue
 		
 		#
@@ -733,13 +620,13 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			cmd = prepare_path(arr[1])
+			cmd = synctool_lib.prepare_path(arr[1])
 			if not os.path.isfile(cmd):
 				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
 			
-			SYNCTOOL_CMD = prepare_path(string.join(arr[1:]))
+			synctool_param.SYNCTOOL_CMD = synctool_lib.prepare_path(string.join(arr[1:]))
 			continue
 		
 		#
@@ -751,7 +638,7 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			LOGFILE = prepare_path(string.join(arr[1:]))
+			synctool_param.LOGFILE = synctool_lib.prepare_path(string.join(arr[1:]))
 			continue
 		
 		#
@@ -770,7 +657,7 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			NUM_PROC = num_proc
+			synctool_param.NUM_PROC = num_proc
 			continue
 		
 		stderr("%s:%d: unknown keyword '%s'" % (configfile, lineno, keyword))
@@ -784,15 +671,13 @@ def expand_grouplist(grouplist):
 	'''expand a list of (compound) groups recursively
 	Returns the expanded group list'''
 	
-	global GROUP_DEFS
-	
 	groups = []
 	
 	for elem in grouplist:
 		groups.append(elem)
 		
-		if GROUP_DEFS.has_key(elem):
-			compound_groups = GROUP_DEFS[elem]
+		if synctool_param.GROUP_DEFS.has_key(elem):
+			compound_groups = synctool_param.GROUP_DEFS[elem]
 			
 			# mind that GROUP_DEFS[group] can be None
 			# for any groups that have no subgroups
@@ -802,10 +687,10 @@ def expand_grouplist(grouplist):
 			# node names are often treated in the code as groups too ...
 			# but they are special groups, and can not be in a compound group just
 			# to prevent odd things from happening
-			if NODES.has_key(elem):
+			if synctool_param.NODES.has_key(elem):
 				raise RuntimeError, 'node %s can not be part of compound group list' % elem
 			
-			GROUP_DEFS[elem] = None
+			synctool_param.GROUP_DEFS[elem] = None
 	
 	# remove duplicates
 	# this looks pretty lame ... but Python sets are not usable here;
@@ -822,31 +707,29 @@ def expand_grouplist(grouplist):
 def add_myhostname():
 	'''add the hostname of the current host to the configuration, so that it can be used'''
 	'''also determine the nodename of the current host'''
-
-	global NODENAME, HOSTNAME
-
+	
 	#
 	#	get my hostname
 	#
-	HOSTNAME = hostname = socket.gethostname()
-
+	synctool_param.HOSTNAME = hostname = socket.gethostname()
+	
 	arr = string.split(hostname, '.')
 	short_hostname = arr[0]
-
+	
 	all_nodes = get_all_nodes()
-
+	
 	if hostname != short_hostname and hostname in all_nodes and short_hostname in all_nodes:
-		stderr("%s: conflict; node %s and %s are both defined" % (CONF_FILE, hostname, arr[0]))
+		stderr("%s: conflict; node %s and %s are both defined" % (synctool_param.CONF_FILE, hostname, arr[0]))
 		sys.exit(-1)
-
+	
 	nodename = None
-
+	
 	if short_hostname in all_nodes:
 		nodename = short_hostname
-
+	
 	elif hostname in all_nodes:
 		nodename = hostname
-
+	
 	else:
 		# try to find a node that has the (short) hostname listed as interface
 		# or as a group
@@ -855,14 +738,14 @@ def add_myhostname():
 			if iface == short_hostname or iface == hostname:
 				nodename = node
 				break
-
+			
 			groups = get_groups(node)
 			if short_hostname in groups or hostname in groups:
 				nodename = node
 				break
-
-	NODENAME = nodename
-
+	
+	synctool_param.NODENAME = nodename
+	
 	if nodename != None:
 		# implicitly add hostname as first group
 		insert_group(nodename, hostname)
@@ -870,86 +753,86 @@ def add_myhostname():
 		insert_group(nodename, nodename)
 
 
-# remove ignored groups from all hosts
 def remove_ignored_groups():
-	for host in NODES.keys():
+	'''remove ignored groups from all node definitions'''
+	
+	for host in synctool_param.NODES.keys():
 		changed = False
-		groups = NODES[host]
-		for ignore in IGNORE_GROUPS:
+		groups = synctool_param.NODES[host]
+		for ignore in synctool_param.IGNORE_GROUPS:
 			if ignore in groups:
 				groups.remove(ignore)
 				changed = True
 
 		if changed:
-			NODES[host] = groups
+			synctool_param.NODES[host] = groups
 
 
 def insert_group(node, group):
 	'''add group to node definition'''
 
-	if NODES.has_key(node):
-		if group in NODES[node]:
-			NODES[node].remove(group)		# this is to make sure it comes first
+	if synctool_param.NODES.has_key(node):
+		if group in synctool_param.NODES[node]:
+			synctool_param.NODES[node].remove(group)		# this is to make sure it comes first
 
-		NODES[node].insert(0, group)
+		synctool_param.NODES[node].insert(0, group)
 	else:
-		NODES[node] = [group]
+		synctool_param.NODES[node] = [group]
 
 
 def get_all_nodes():
-	return NODES.keys()
+	return synctool_param.NODES.keys()
 
 
 def get_node_interface(node):
-	if INTERFACES.has_key(node):
-		return INTERFACES[node]
-
+	if synctool_param.INTERFACES.has_key(node):
+		return synctool_param.INTERFACES[node]
+	
 	return node
 
 
 def list_all_nodes():
 	nodes = get_all_nodes()
 	nodes.sort()
-
-	if IGNORE_GROUPS != None:
-		ignore_nodes = get_nodes_in_groups(IGNORE_GROUPS)
+	
+	if synctool_param.IGNORE_GROUPS != None:
+		ignore_nodes = get_nodes_in_groups(synctool_param.IGNORE_GROUPS)
 	else:
 		ignore_nodes = []
-
+	
 	for host in nodes:
 		if host in ignore_nodes:
 			if OPT_INTERFACE:
 				host = get_node_interface(host)
-
+			
 			if not OPT_FILTER_IGNORED:
 				print '%s (ignored)' % host
 		else:
 			if OPT_INTERFACE:
 				host = get_node_interface(host)
-
+			
 			print host
 
 
 def make_all_groups():
 	'''make a list of all possible groups
-	This is a set of all group names plus all node names
-'''
-
-	arr = GROUP_DEFS.keys()
-	arr.extend(NODES.keys())
-
-#	older versions of python do not support sets BUT that doesn't matter ...
-#	all groups + nodes should have no duplicates anyway
+	This is a set of all group names plus all node names'''
+	
+	arr = synctool_param.GROUP_DEFS.keys()
+	arr.extend(synctool_param.NODES.keys())
+	
+# older versions of python do not support sets BUT that doesn't matter ...
+# all groups + nodes should have no duplicates anyway
 #	return list(set(arr))
 	return arr
 
 
 def list_all_groups():
-	groups = GROUP_DEFS.keys()
+	groups = synctool_param.GROUP_DEFS.keys()
 	groups.sort()
-
+	
 	for group in groups:
-		if group in IGNORE_GROUPS:
+		if group in synctool_param.IGNORE_GROUPS:
 			if not OPT_FILTER_IGNORED:
 				print '%s (ignored)' % group
 		else:
@@ -958,38 +841,38 @@ def list_all_groups():
 
 def get_groups(nodename):
 	'''returns the groups for the node'''
-
-	if NODES.has_key(nodename):
-		return NODES[nodename]
-
+	
+	if synctool_param.NODES.has_key(nodename):
+		return synctool_param.NODES[nodename]
+	
 	return []
 
 
 def get_my_groups():
 	'''returns the groups for this node'''
-
-	if NODES.has_key(NODENAME):
-		return NODES[NODENAME]
-
+	
+	if synctool_param.NODES.has_key(NODENAME):
+		return synctool_param.NODES[NODENAME]
+	
 	return []
 
 
 def list_nodes(nodenames):
 	groups = []
-
+	
 	for nodename in nodenames:
-		if not NODES.has_key(nodename):
+		if not synctool_param.NODES.has_key(nodename):
 			stderr("no such node '%s' defined" % nodename)
 			sys.exit(1)
-
+		
 		for group in get_groups(nodename):
 			if not group in groups:
 				groups.append(group)
-
+	
 #	groups.sort()							# group order is important
-
+	
 	for group in groups:
-		if group in IGNORE_GROUPS:
+		if group in synctool_param.IGNORE_GROUPS:
 			if not OPT_FILTER_IGNORED:
 				print '%s (ignored)' % group
 		else:
@@ -998,60 +881,60 @@ def list_nodes(nodenames):
 
 def get_nodes_in_groups(nodegroups):
 	'''returns the nodes that are in [groups]'''
-
+	
 	arr = []
-
-	nodes = NODES.keys()
-
+	
+	nodes = synctool_param.NODES.keys()
+	
 	for nodegroup in nodegroups:
 		for node in nodes:
-			if nodegroup in NODES[node] and not node in arr:
+			if nodegroup in synctool_param.NODES[node] and not node in arr:
 				arr.append(node)
-
+	
 	return arr
 
 
 def list_nodegroups(nodegroups):
 	all_groups = make_all_groups()
-
+	
 	for nodegroup in nodegroups:
 		if not nodegroup in all_groups:
 			stderr("no such nodegroup '%s' defined" % nodegroup)
 			sys.exit(1)
-
+	
 	arr = get_nodes_in_groups(nodegroups)
 	arr.sort()
-
+	
 	for node in arr:
-		if node in IGNORE_GROUPS:
+		if node in synctool_param.IGNORE_GROUPS:
 			if OPT_INTERFACE:
 				node = get_node_interface(node)
-
+			
 			if not OPT_FILTER_IGNORED:
 				print '%s (ignored)' % node
 		else:
 			if OPT_INTERFACE:
 				node = get_node_interface(node)
-
+			
 			print node
 
 
 def list_commands(cmds):
 	'''display command setting'''
-
+	
 	for cmd in cmds:
 		if cmd == 'diff':
-			print DIFF_CMD
-
+			print synctool_param.DIFF_CMD
+		
 		elif cmd == 'ssh':
-			print SSH_CMD
-
+			print synctool_param.SSH_CMD
+		
 		elif cmd == 'rsync':
-			print RSYNC_CMD
-
+			print synctool_param.RSYNC_CMD
+		
 		elif cmd == 'synctool':
-			print SYNCTOOL_CMD
-
+			print synctool_param.SYNCTOOL_CMD
+		
 		else:
 			stderr("no such command '%s' available in synctool" % cmd)
 
@@ -1059,30 +942,30 @@ def list_commands(cmds):
 def list_dirs():
 	'''display directory settings'''
 	
-	print 'masterdir', MASTERDIR
+	print 'masterdir', synctool_param.MASTERDIR
 	
 	# Note: do not use prettypath() here, for shell scripters
 	# They will still have to awk, and multiple paths are possible ...
 	
-	for path in OVERLAY_DIRS:
+	for path in synctool_param.OVERLAY_DIRS:
 		print 'overlaydir', path
-
-	for path in DELETE_DIRS:
+	
+	for path in synctool_param.DELETE_DIRS:
 		print 'deletedir', path
-
-	for path in TASKS_DIRS:
+	
+	for path in synctool_param.TASKS_DIRS:
 		print 'tasksdir', path
-
-	print 'scriptdir', SCRIPT_DIR
+	
+	print 'scriptdir', synctool_param.SCRIPT_DIR
 
 
 def set_action(a, opt):
 	global ACTION, ACTION_OPTION
-
+	
 	if ACTION > 0:
 		stderr('the options %s and %s can not be combined' % (ACTION_OPTION, opt))
 		sys.exit(1)
-
+	
 	ACTION = a
 	ACTION_OPTION = opt
 
@@ -1092,7 +975,7 @@ def usage():
 	print 'options:'
 	print '  -h, --help               Display this information'
 	print '  -c, --conf=dir/file      Use this config file'
-	print '                           (default: %s)' % DEFAULT_CONF
+	print '                           (default: %s)' % synctool_param.DEFAULT_CONF
 	print '  -l, --list-nodes         List all configured nodes'
 	print '  -L, --list-groups        List all configured groups'
 	print '  -n, --node=nodelist      List all groups this node is in'
@@ -1114,53 +997,53 @@ def usage():
 
 
 def get_options():
-	global CONF_FILE, ARG_NODENAMES, ARG_GROUPS, ARG_CMDS, OPT_FILTER_IGNORED, OPT_INTERFACE
-
+	global ARG_NODENAMES, ARG_GROUPS, ARG_CMDS, OPT_FILTER_IGNORED, OPT_INTERFACE
+	
 	progname = os.path.basename(sys.argv[0])
-
+	
 	if len(sys.argv) <= 1:
 		usage()
 		sys.exit(1)
-
+	
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:mdlLn:g:ifC:pv',
 			['help', 'conf=', 'masterdir', 'list-dirs', 'list-nodes', 'list-groups',
 			'node=', 'group=', 'interface', 'filter-ignored', 'command', 'numproc',
 			'version', 'prefix'])
-
+	
 	except getopt.error, (reason):
 		print
 		print '%s: %s' % (progname, reason)
 		print
 		usage()
 		sys.exit(1)
-
+	
 	except getopt.GetoptError, (reason):
 		print
 		print '%s: %s' % (progname, reason)
 		print
 		usage()
 		sys.exit(1)
-
+	
 	except:
 		usage()
 		sys.exit(1)
-
+	
 	if args != None and len(args) > 0:
 		stderr('error: excessive arguments on command-line')
 		sys.exit(1)
-
+	
 	errors = 0
-
+	
 	for opt, arg in opts:
 		if opt in ('-h', '--help', '-?'):
 			usage()
 			sys.exit(1)
-
+		
 		if opt in ('-c', '--conf'):
-			CONF_FILE=arg
+			synctool_param.CONF_FILE=arg
 			continue
-
+		
 		if opt in ('-m', '--masterdir'):
 			set_action(ACTION_MASTERDIR, '--masterdir')
 			continue
@@ -1172,53 +1055,53 @@ def get_options():
 		if opt in ('-l', '--list-nodes'):
 			set_action(ACTION_LIST_NODES, '--list-nodes')
 			continue
-
+		
 		if opt in ('-L', '--list-groups'):
 			set_action(ACTION_LIST_GROUPS, '--list-groups')
 			continue
-
+		
 		if opt in ('-n', '--node'):
 			set_action(ACTION_NODES, '--node')
 			ARG_NODENAMES = string.split(arg, ',')
 			continue
-
+		
 		if opt in ('-g', '--group'):
 			set_action(ACTION_GROUPS, '--group')
 			ARG_GROUPS = string.split(arg, ',')
 			continue
-
+		
 		if opt in ('-i', '--interface'):
 			OPT_INTERFACE = True
 			continue
-
+		
 		if opt in ('-f', '--filter-ignored'):
 			OPT_FILTER_IGNORED = True
 			continue
-
+		
 		if opt in ('-C', '--command'):
 			set_action(ACTION_CMDS, '--command')
 			ARG_CMDS = string.split(arg, ',')
 			continue
-
+		
 		if opt in ('-p', '--numproc'):
 			set_action(ACTION_NUMPROC, '--numproc')
 			continue
-
+		
 		if opt in ('-v', '--version'):
 			set_action(ACTION_VERSION, '--version')
 			continue
-
+		
 		if opt == '--prefix':
 			set_action(ACTION_PREFIX, '--prefix')
 			continue
-
+		
 		stderr("unknown command line option '%s'" % opt)
 		errors = errors + 1
-
+	
 	if errors:
 		usage()
 		sys.exit(1)
-
+	
 	if not ACTION:
 		usage()
 		sys.exit(1)
@@ -1226,42 +1109,42 @@ def get_options():
 
 if __name__ == '__main__':
 	get_options()
-
+	
 	if ACTION == ACTION_VERSION:
 		print VERSION
 		sys.exit(0)
-
+	
 	read_config()
-
+	
 	if ACTION == ACTION_LIST_NODES:
 		list_all_nodes()
-
+	
 	elif ACTION == ACTION_LIST_GROUPS:
 		list_all_groups()
-
+	
 	elif ACTION == ACTION_NODES:
 		if not ARG_NODENAMES:
 			stderr("option '--node' requires an argument; the node name")
 			sys.exit(1)
-
+		
 		list_nodes(ARG_NODENAMES)
-
+	
 	elif ACTION == ACTION_GROUPS:
 		if not ARG_GROUPS:
 			stderr("option '--node-group' requires an argument; the node group name")
 			sys.exit(1)
-
+		
 		list_nodegroups(ARG_GROUPS)
-
+	
 	elif ACTION == ACTION_MASTERDIR:
-		print MASTERDIR
-
+		print synctool_param.MASTERDIR
+	
 	elif ACTION == ACTION_CMDS:
 		list_commands(ARG_CMDS)
-
+	
 	elif ACTION == ACTION_NUMPROC:
-		print NUM_PROC
-
+		print synctool_param.NUM_PROC
+	
 	elif ACTION == ACTION_PREFIX:
 		print os.path.abspath(os.path.dirname(sys.argv[0]))
 	

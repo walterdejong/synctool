@@ -10,6 +10,7 @@
 #
 
 import synctool_unbuffered
+import synctool_param
 import synctool_config
 import synctool_aggr
 import synctool_lib
@@ -89,14 +90,14 @@ def make_nodeset():
 	nodeset = []
 
 	for node in nodes:
-		if node in synctool_config.IGNORE_GROUPS and not node in explicit_includes:
+		if node in synctool_param.IGNORE_GROUPS and not node in explicit_includes:
 			verbose('node %s is ignored' % node)
 			continue
 
 		groups = synctool_config.get_groups(node)
 		do_continue = 0
 		for group in groups:
-			if group in synctool_config.IGNORE_GROUPS:
+			if group in synctool_param.IGNORE_GROUPS:
 				verbose('group %s is ignored' % group)
 				do_continue = 1
 				break
@@ -125,11 +126,11 @@ def run_remote_cmd(nodes, remote_cmd_args):
 	'''remote_cmd_args[] is array of command + arguments'''
 	'''join_char is ':' or None'''
 
-	if not synctool_config.SSH_CMD:
-		stderr('%s: error: ssh_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
+	if not synctool_param.SSH_CMD:
+		stderr('%s: error: ssh_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
 
-	cmd = synctool_config.SSH_CMD
+	cmd = synctool_param.SSH_CMD
 	cmd_args = shlex.split(cmd)
 
 # cmd_str is used for printing info only
@@ -138,7 +139,7 @@ def run_remote_cmd(nodes, remote_cmd_args):
 	parallel = 0
 
 	for node in nodes:
-		if node == synctool_config.NODENAME:
+		if node == synctool_param.NODENAME:
 			verbose('running %s' % cmd_str)
 			unix_out(cmd_str)
 		else:
@@ -151,7 +152,7 @@ def run_remote_cmd(nodes, remote_cmd_args):
 #
 #	run commands in parallel, as many as defined
 #
-		if parallel > synctool_config.NUM_PROC:
+		if parallel > synctool_param.NUM_PROC:
 			try:
 				if os.wait() != -1:
 					parallel = parallel - 1
@@ -190,7 +191,7 @@ def _run_command(cmd_arr, node, join_char, cmd_args):
 #
 #	is this node the local node?
 #
-	if node == synctool_config.NODENAME:
+	if node == synctool_param.NODENAME:
 		run_local_cmd(cmd_args)
 		return
 
@@ -243,7 +244,7 @@ def run_parallel_cmds(nodes, cmds):
 #
 #	run commands in parallel, as many as defined
 #
-		if parallel > synctool_config.NUM_PROC:
+		if parallel > synctool_param.NUM_PROC:
 			try:
 				if os.wait() != -1:
 					parallel = parallel - 1
@@ -260,7 +261,7 @@ def run_parallel_cmds(nodes, cmds):
 			for (cmd_arr, cmd_args, join_char) in cmds:
 # show what we're going to do
 				the_command = os.path.basename(cmd_arr[0])
-				if node == synctool_config.NODENAME:
+				if node == synctool_param.NODENAME:
 					cmd_str = string.join(cmd_args)
 					verbose('running %s %s' % (the_command, cmd_str))
 					unix_out('%s %s' % (string.join(cmd_arr), cmd_str))
@@ -330,9 +331,9 @@ def run_local_cmd(cmd_args):
 			if line[15:] == '--':
 				pass
 			else:
-				synctool_lib.masterlog('%s: %s' % (synctool_config.NODENAME, line[15:]))
+				synctool_lib.masterlog('%s: %s' % (synctool_param.NODENAME, line[15:]))
 		else:
-			print '%s: %s' % (synctool_config.NODENAME, line)
+			print '%s: %s' % (synctool_param.NODENAME, line)
 
 	f.close()
 
@@ -342,7 +343,7 @@ def usage():
 	print 'options:'
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=dir/file            Use this config file'
-	print '                                 (default: %s)' % synctool_config.DEFAULT_CONF
+	print '                                 (default: %s)' % synctool_param.DEFAULT_CONF
 	print '  -n, --node=nodelist            Execute only on these nodes'
 	print '  -g, --group=grouplist          Execute only on these groups of nodes'
 	print '  -x, --exclude=nodelist         Exclude these nodes from the selected group'
@@ -399,7 +400,7 @@ def get_options():
 			sys.exit(1)
 
 		if opt in ('-c', '--conf'):
-			synctool_config.CONF_FILE = arg
+			synctool_param.CONF_FILE = arg
 			continue
 
 		if opt in ('-v', '--verbose'):

@@ -10,6 +10,7 @@
 #
 
 import synctool_unbuffered
+import synctool_param
 import synctool_config
 import synctool_aggr
 import synctool_lib
@@ -86,14 +87,14 @@ def make_nodeset():
 	nodeset = []
 
 	for node in nodes:
-		if node in synctool_config.IGNORE_GROUPS and not node in explicit_includes:
+		if node in synctool_param.IGNORE_GROUPS and not node in explicit_includes:
 			verbose('node %s is ignored' % node)
 			continue
 
 		groups = synctool_config.get_groups(node)
 		do_continue = 0
 		for group in groups:
-			if group in synctool_config.IGNORE_GROUPS:
+			if group in synctool_param.IGNORE_GROUPS:
 				verbose('group %s is ignored' % group)
 				do_continue = 1
 				break
@@ -114,25 +115,25 @@ def ping_nodes(nodes):
 	'''ping nodes in parallel'''
 	'''nodes is a list of interfaces, really'''
 	
-	if not synctool_config.PING_CMD:
-		stderr('%s: error: ping_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
+	if not synctool_param.PING_CMD:
+		stderr('%s: error: ping_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
 	
 	parallel = 0
 	
 	for node in nodes:
 		nodename = NAMEMAP[node]
-		if nodename == synctool_config.NODENAME:
+		if nodename == synctool_param.NODENAME:
 			print '%s: up' % nodename
 			continue
 		
 		verbose('pinging %s' % nodename)
-		unix_out('%s %s' % (synctool_config.PING_CMD, node))
+		unix_out('%s %s' % (synctool_param.PING_CMD, node))
 		
 		#
 		#	run commands in parallel, as many as defined
 		#
-		if parallel > synctool_config.NUM_PROC:
+		if parallel > synctool_param.NUM_PROC:
 			try:
 				if os.wait() != -1:
 					parallel = parallel - 1
@@ -169,7 +170,7 @@ def ping_node(node):
 	packets_received = 0
 	
 	# execute ping command and show output with the nodename
-	cmd = '%s %s' % (synctool_config.PING_CMD, node)
+	cmd = '%s %s' % (synctool_param.PING_CMD, node)
 	cmd_arr = string.split(cmd)
 	f = synctool_lib.popen(cmd_arr)
 	
@@ -208,7 +209,7 @@ def usage():
 	print 'options:'
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=dir/file            Use this config file'
-	print '                                 (default: %s)' % synctool_config.DEFAULT_CONF
+	print '                                 (default: %s)' % synctool_param.DEFAULT_CONF
 	print '  -n, --node=nodelist            Execute only on these nodes'
 	print '  -g, --group=grouplist          Execute only on these groups of nodes'
 	print '  -x, --exclude=nodelist         Exclude these nodes from the selected group'
@@ -259,7 +260,7 @@ def get_options():
 			sys.exit(1)
 		
 		if opt in ('-c', '--conf'):
-			synctool_config.CONF_FILE = arg
+			synctool_param.CONF_FILE = arg
 			continue
 		
 		if opt in ('-v', '--verbose'):
