@@ -196,10 +196,7 @@ def subst_masterdir(path):
 			stderr('error: $masterdir referenced before it was set')
 			sys.exit(-1)
 	
-		while path.find('$masterdir/') >= 0:
-			path.replace('$masterdir/', synctool_param.MASTERDIR + '/')
-	
-	return path
+	return path.replace('$masterdir/', synctool_param.MASTERDIR + '/')
 
 
 def prepare_path(path):
