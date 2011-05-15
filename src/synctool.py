@@ -42,6 +42,12 @@ try:
 except ImportError:
 	use_subprocess = False
 
+# get_options() returns these action codes
+ACTION_DEFAULT = 0
+ACTION_DIFF = 1
+ACTION_RUN_TASKS = 3
+ACTION_REFERENCE = 4
+
 # extra command-line option --tasks
 RUN_TASKS = False
 
@@ -1144,8 +1150,7 @@ def get_options():
 
 	errors = 0
 
-	diff_file = None
-	reference_file = None
+	action = ACTION_DEFAULT
 	SINGLE_FILES = []
 
 # these are only used for checking the validity of command-line option combinations
@@ -1198,27 +1203,34 @@ def get_options():
 
 		if opt in ('-d', '--diff'):
 			opt_diff = True
-			diff_file = synctool_lib.strip_multiple_slashes(arg)
+			action = ACTION_DIFF
+			file = synctool_lib.strip_multiple_slashes(arg)
+			if not file in SINGLE_FILES:
+				SINGLE_FILES.append(file)
 			continue
 
 		if opt in ('-1', '--single'):
 			opt_single = True
-			single_file = synctool_lib.strip_multiple_slashes(arg)
-			while len(single_file) > 1 and single_file[-1] == '/':		# strip trailing slashes (single directories)
-				single_file = single_file[:-1]
+			file = synctool_lib.strip_multiple_slashes(arg)
+			while len(file) > 1 and file[-1] == '/':		# strip trailing slashes (single directories)
+				file = file[:-1]
 			
-			if not single_file in SINGLE_FILES:
-				SINGLE_FILES.append(single_file)
+			if not file in SINGLE_FILES:
+				SINGLE_FILES.append(file)
 			continue
 
 		if opt in ('-t', '--task', '--tasks'):
 			opt_tasks = True
 			RUN_TASKS = True
+			action = ACTION_RUN_TASKS
 			continue
 
 		if opt in ('-r', '--ref', '--reference'):
 			opt_reference = True
-			reference_file = synctool_lib.strip_multiple_slashes(arg)
+			action = ACTION_REFERENCE
+			file = synctool_lib.strip_multiple_slashes(arg)
+			if not file in SINGLE_FILES:
+				SINGLE_FILES.append(file)
 			continue
 
 		if opt == '--version':
@@ -1233,12 +1245,12 @@ def get_options():
 		sys.exit(1)
 
 	option_combinations(opt_diff, opt_single, opt_reference, opt_tasks, opt_upload, opt_suffix, opt_fix)
-
-	return (diff_file, reference_file)
+	
+	return action
 
 
 if __name__ == '__main__':
-	(diff_file, reference_file) = get_options()
+	action = get_options()
 
 	if OPT_VERSION:
 		print synctool_config.VERSION
@@ -1300,25 +1312,27 @@ if __name__ == '__main__':
 	os.putenv('SYNCTOOL_NODENAME', synctool_config.NODENAME)
 	os.putenv('SYNCTOOL_MASTERDIR', synctool_config.MASTERDIR)
 
-	if diff_file:
-		diff_files(diff_file)
-
-	elif SINGLE_FILES:
-		if RUN_TASKS:
+	if action == ACTION_DIFF:
+		for file in SINGLE_FILES:
+			diff_files(file)
+	
+	elif action == ACTION_RUN_TASKS:
+		if SINGLE_FILES:
 			for single_file in SINGLE_FILES:
 				single_task(single_file)
 		else:
-			for single_file in SINGLE_FILES:
-				(changed, src) = single_files(single_file)
-				if changed:
-					on_update_single(src, single_file)
-
-	elif reference_file:
-		reference(reference_file)
-
-	elif RUN_TASKS:
-		run_tasks()
-
+			run_tasks()
+	
+	elif action == ACTION_REFERENCE:
+		for file in SINGLE_FILES:
+			reference(file)
+	
+	elif SINGLE_FILES:
+		for single_file in SINGLE_FILES:
+			(changed, src) = single_files(single_file)
+			if changed:
+				on_update_single(src, single_file)
+	
 	else:
 		overlay_files()
 		delete_files()
