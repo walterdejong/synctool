@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#	synctool_copygroups.py	WJ111
+#	synctool_overlay.py	WJ111
 #
 #   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2011
 #
@@ -27,6 +27,7 @@ DELETE_DICT = {}
 DELETE_FILES = []
 TASKS_DICT = {}
 TASKS_FILES = []
+
 
 class OverlayEntry:
 	def __init__(self, src, dest, groupnum):
