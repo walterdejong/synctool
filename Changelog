@@ -9,6 +9,7 @@
   in memory
 - fixed possible bug for on_update where quotation was lost for the command
 - added new config parameters for overlaydir, deletedir, tasksdir, scriptdir
+- $masterdir can be used in the config file to reference parameter 'masterdir'
 
 13 May 2011:
 - added contributions by Onno Zweers:
