@@ -7,6 +7,11 @@
 - dumped synctool_core for synctool_overlay, which has much cleaner code
   and supports having multiple overlay dirs, which are merged together
   in memory
+- .post scripts for directories are now run _in_ that directory rather than
+  in the parent dir. So the current working dir has changed
+- .post scripts for directories are run at the very end after making changes
+  to all files. This shouldn't break anything unless you have (weird)
+  dependancies over multiple directories with .post scripts
 - fixed possible bug for on_update where quotation was lost for the command
 - added new config parameters for overlaydir, deletedir, tasksdir, scriptdir
 - $masterdir can be used in the config file to reference parameter 'masterdir'
