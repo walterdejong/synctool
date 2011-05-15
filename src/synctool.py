@@ -58,6 +58,10 @@ OPT_VERSION = False
 
 SINGLE_FILES = []
 
+# dict of changed directories
+# This is for running .post scripts on changed directories
+DIR_CHANGED = {}
+
 
 def ascii_uid(uid):
 	'''get the name for this uid'''
@@ -800,31 +804,50 @@ def run_command_in_dir(dest_dir, cmd):
 def run_post(dest):
 	'''run any on_update or .post script commands for destination path'''
 	
-	isDir = path_isdir(dest):
-	if isDir:
-		dest_dir = dest
-	else:
-		dest_dir = os.path.dirname(dest)
+	global DIR_CHANGED
+	
+	if path_isdir(dest):
+		DIR_CHANGED[dest] = True		# changed dirs are handled later
+		return
+	
+	dest_dir = os.path.dirname(dest)
 	
 	# file has changed, run on_update command
 	if synctool_config.ON_UPDATE.has_key(dest):
 		run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest])
 
 	# file has changed, run appropriate .post script
-	
 	postscript = synctool_overlay.postscript_for_path(dest)
 	if postscript:
 		run_command_in_dir(dest_dir, postscript)
 	
-	# if it was not a directory (but a file or symlink), check if the directory
-	# has a .post script, too
-	if not isDir:
-		if synctool_config.ON_UPDATE.has_key(dest_dir):
-			run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest_dir])
-		
-		postscript = synctool_overlay.postscript_for_path(dest_dir)
-		if postscript:
-			run_command_in_dir(dest_dir, postscript)
+	# content of directory was changed, so flag it
+	DIR_CHANGED[os.path.dirname(dest)] = True
+
+
+def run_post_on_directory(dest):
+	'''run .post script for a changed directory'''
+	
+	# Note that the script is executed with the changed dir as current working dir
+	
+	if synctool_config.ON_UPDATE.has_key(dest):
+		run_command_in_dir(dest, synctool_config.ON_UPDATE[dest])
+
+	# run appropriate .post script
+	postscript = synctool_overlay.postscript_for_path(dest)
+	if postscript:
+		run_command_in_dir(dest, postscript)
+
+
+def run_post_on_directories():
+	'''run pending .post scripts on directories that were changed'''
+	
+	all_dirs = DIR_CHANGED.keys()
+	all_dirs.sort()
+	all_dirs.reverse()		# handle deepest dir first
+	
+	for directory in all_dirs:
+		run_post_on_directory(directory)
 
 
 def overlay_callback(src, dest):
@@ -840,6 +863,7 @@ def overlay_files():
 	'''run the overlay function'''
 
 	synctool_overlay.visit(synctool_overlay.OV_OVERLAY, overlay_callback)
+	run_post_on_directories()
 
 
 def delete_callback(src, dest):
@@ -861,15 +885,9 @@ def delete_callback(src, dest):
 		run_post(os.path.dirname(dest))
 
 
-def delete_dir_updated(src_dir, dest_dir):
-	'''this def gets called when a file in the dir was deleted'''
-
-	# do the same as for overlay; run .post scripts
-	overlay_dir_updated(src_dir, dest_dir)
-
-
 def delete_files():
 	synctool_overlay.visit(synctool_overlay.OV_DELETE, delete_callback)
+	run_post_on_directories()
 
 
 def tasks_callback(src, dest):
@@ -1268,6 +1286,7 @@ if __name__ == '__main__':
 			(changed, src) = single_files(single_file)
 			if changed:
 				run_post(single_file)
+				run_post_on_directories()
 	
 	elif reference_file:
 		reference(reference_file)
