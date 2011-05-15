@@ -167,17 +167,6 @@ def search_path(cmd):
 	return cmd
 
 
-def strip_multiple_slashes(path):
-	# although generally harmless in Unix, pathnames that contain multiple
-	# slashes can/will give problems in synctool : so strip them
-	
-	# odd ... string methods are actually faster than string.function()s
-	while path.find('//') != -1:
-		path = path.replace('//', '/')
-	
-	return path
-
-
 if __name__ == '__main__':
 	print "synctool_lib doesn't do anything by itself, really"
 
