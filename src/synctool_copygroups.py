@@ -21,6 +21,9 @@ import string
 
 GROUP_ALL = 0
 POST_SCRIPTS = {}
+OVERLAY_DICT = {}
+DELETE_DICT = {}
+TASKS_DICT = {}
 
 class OverlayEntry:
 	def __init__(self, src, dest, groupnum):
@@ -116,6 +119,24 @@ def overlay_pass2(filelist, filedict):
 		filedict[entry.dest_path] = entry
 
 
+def find_synctree(subdir, pathname):
+	'''find the source of a full destination path'''
+	
+	if subdir == 'overlay':
+		dict = OVERLAY_DICT
+	
+	elif subdir == 'delete':
+		dict = DELETE_DICT
+	
+	elif subdir == 'tasks':
+		dict = TASKS_DICT
+
+	if not dict.has_key(pathname):
+		return None
+	
+	return dict[pathname].src_path
+
+
 if __name__ == '__main__':
 	## test program ##
 	
@@ -131,19 +152,23 @@ if __name__ == '__main__':
 #	for entry in filelist:
 #		print entry
 	
-	filedict = {}
-	overlay_pass2(filelist, filedict)
+	OVERLAY_DICT = {}
+	overlay_pass2(filelist, OVERLAY_DICT)
 	
-	all_destinations = filedict.keys()
+	all_destinations = OVERLAY_DICT.keys()
 	all_destinations.sort()
 	for dest_path in all_destinations:
 		print 'dest', dest_path
-		entry = filedict[dest_path]
+		entry = OVERLAY_DICT[dest_path]
 		print 'src %d %s' % (entry.groupnum, entry.src_path)
 		
 		# check for .post script
 		if POST_SCRIPTS.has_key(dest_path):
 			post_script = POST_SCRIPTS[dest_path]
 			print 'post %d %s' % (post_script.groupnum, post_script.src_path)
+
+	print
+	print 'find_synctree() test:', find_synctree('overlay', '/Users/walter/src/python/synctool-test/testroot/etc/hosts.allow')
+
 
 # EOB
