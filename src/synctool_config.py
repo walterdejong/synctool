@@ -15,7 +15,7 @@ import string
 import socket
 import getopt
 
-VERSION = '4.7.2-beta'
+VERSION = '5.0-beta'
 
 DEFAULT_CONF = '/var/lib/synctool/synctool.conf'
 CONF_FILE = DEFAULT_CONF
@@ -49,6 +49,7 @@ MASTERDIR = None
 OVERLAY_DIRS = []
 DELETE_DIRS = []
 TASKS_DIRS = []
+SCRIPT_DIR = None
 HOSTNAME = None
 NODENAME = None
 
@@ -105,7 +106,7 @@ def read_config():
 	'''read the config file and set a bunch of globals'''
 	
 	global MASTERDIR, GROUP_DEFS, NODES, IGNORE_GROUPS
-	global OVERLAY_DIRS, DELETE_DIRS, TASKS_DIRS
+	global OVERLAY_DIRS, DELETE_DIRS, TASKS_DIRS, SCRIPT_DIR
 	
 	if not os.path.isfile(CONF_FILE):
 		stderr("no such config file '%s'" % CONF_FILE)
@@ -113,21 +114,36 @@ def read_config():
 	
 	errors = read_config_file(CONF_FILE)
 	
-	if errors > 0:
-		sys.exit(-1)
-	
 	# if missing, set default directories
 	if MASTERDIR == None:
 		MASTERDIR = '.'			# hmmm ... nice for debugging, but shouldn't this be /var/lib/synctool ?
 	
 	if not OVERLAY_DIRS:
 		OVERLAY_DIRS.append(os.path.join(MASTERDIR, 'overlay'))
+		if not os.path.isdir(OVERLAY_DIRS[0]):
+			stderr('error: no such directory: %s' % OVERLAY_DIRS[0])
+			errors = errors + 1
 	
 	if not DELETE_DIRS:
 		DELETE_DIRS.append(os.path.join(MASTERDIR, 'delete'))
+		if not os.path.isdir(DELETE_DIRS[0]):
+			stderr('error: no such directory: %s' % DELETE_DIRS[0])
+			errors = errors + 1
 	
 	if not TASKS_DIRS:
 		TASKS_DIRS.append(os.path.join(MASTERDIR, 'tasks'))
+		if not os.path.isdir(TASKS_DIRS[0]):
+			stderr('error: no such directory: %s' % TASKS_DIRS[0])
+			errors = errors + 1
+	
+	if not SCRIPT_DIR:
+		SCRIPT_DIR = os.path.join(MASTERDIR, 'scripts')
+		if not os.path.isdir(SCRIPT_DIR):
+			stderr('error: no such directory: %s' % SCRIPT_DIR)
+			errors = errors + 1
+	
+	if errors > 0:
+		sys.exit(-1)
 	
 	# implicitly add 'nodename' as first group
 	for node in get_all_nodes():
@@ -158,7 +174,7 @@ def read_config_file(configfile):
 	global IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
 	global ON_UPDATE, ALWAYS_RUN
 	global NODES, INTERFACES, GROUP_DEFS
-	global OVERLAY_DIRS, DELETE_DIRS, TASKS_DIRS
+	global OVERLAY_DIRS, DELETE_DIRS, TASKS_DIRS, SCRIPT_DIR
 	
 	try:
 		f = open(configfile, 'r')
@@ -283,6 +299,23 @@ def read_config_file(configfile):
 				continue
 			
 			TASKS_DIRS.append(arr[1])
+			continue
+		
+		#
+		#	keyword: scriptdir
+		#
+		if keyword == 'scriptdir':
+			if SCRIPT_DIR != None:
+				stderr("%s:%d: redefinition of scriptdir" % (configfile, lineno))
+				errors = errors + 1
+				continue
+			
+			if not os.path.isdir(arr[1]):
+				stderr('%s:%d: no such directory for scriptdir' % (configfile, lineno))
+				errors = errors + 1
+				continue
+			
+			SCRIPT_DIR = arr[1]
 			continue
 		
 		#
