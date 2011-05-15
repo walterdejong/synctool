@@ -119,6 +119,12 @@ def overlay_pass1_without_post_scripts(overlay_dir, filelist, dest_dir = '/', hi
 		src_path = os.path.join(overlay_dir, entry)
 		dest_path = os.path.join(dest_dir, name)
 		
+		if isPost:
+			# unfortunately, the name has been messed up already
+			# so therefore just ignore the file and issue a warning
+			stderr('warning: ignoring .post script %s' % src_path)
+			continue
+		
 		# inherit lower group level from parent directory
 		if groupnum > highest_groupnum:
 			groupnum = highest_groupnum
