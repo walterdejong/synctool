@@ -13,6 +13,7 @@ import synctool_unbuffered
 import synctool_config
 import synctool_aggr
 import synctool_lib
+import synctool_nodeset
 
 from synctool_lib import verbose,stdout,stderr,unix_out
 
@@ -21,93 +22,9 @@ import sys
 import string
 import getopt
 
-# these are set by command-line options
-NODELIST = None
-GROUPLIST = None
-EXCLUDELIST = None
-EXCLUDEGROUPS = None
-
-# map interface names back to node definition names
-NAMEMAP = {}
+NODESET = synctool_nodeset.NodeSet()
 
 OPT_AGGREGATE = False
-
-
-def make_nodeset():
-	global NAMEMAP
-
-	nodes = []
-	explicit_includes = []
-
-	if not NODELIST and not GROUPLIST:
-		nodes = synctool_config.get_all_nodes()
-
-	if NODELIST:
-		nodes = string.split(NODELIST, ',')
-		explicit_includes = nodes[:]
-
-# check if the nodes exist at all
-	all_nodes = synctool_config.get_all_nodes()
-	for node in nodes:
-		if not node in all_nodes:
-			stderr("no such node '%s'" % node)
-			return None
-
-	if GROUPLIST:
-		groups = string.split(GROUPLIST, ',')
-
-# check if the groups exist at all
-		all_groups = synctool_config.make_all_groups()
-		for group in groups:
-			if not group in all_groups:
-				stderr("no such group '%s'" % group)
-				return None
-
-		nodes_in_groups = synctool_config.get_nodes_in_groups(groups)
-		nodes.extend(nodes_in_groups)
-
-	excludes = []
-
-	if EXCLUDELIST:
-		excludes = string.split(EXCLUDELIST, ',')
-
-	if EXCLUDEGROUPS:
-		groups = string.split(EXCLUDEGROUPS, ',')
-		nodes_in_groups = synctool_config.get_nodes_in_groups(groups)
-		excludes.extend(nodes_in_groups)
-
-	for node in excludes:
-		if node in nodes and not node in explicit_includes:
-			nodes.remove(node)
-
-	if len(nodes) <= 0:
-		return []
-
-	nodeset = []
-
-	for node in nodes:
-		if node in synctool_config.IGNORE_GROUPS and not node in explicit_includes:
-			verbose('node %s is ignored' % node)
-			continue
-
-		groups = synctool_config.get_groups(node)
-		do_continue = 0
-		for group in groups:
-			if group in synctool_config.IGNORE_GROUPS:
-				verbose('group %s is ignored' % group)
-				do_continue = 1
-				break
-
-		if do_continue:
-			continue
-
-		iface = synctool_config.get_node_interface(node)
-		NAMEMAP[iface] = node
-
-		if not iface in nodeset:			# make sure we do not have duplicates
-			nodeset.append(iface)
-
-	return nodeset
 
 
 def ping_nodes(nodes):
@@ -121,8 +38,8 @@ def ping_nodes(nodes):
 	parallel = 0
 	
 	for node in nodes:
-		nodename = NAMEMAP[node]
-		if nodename == synctool_config.NODENAME:
+		nodename = NODESET.get_nodename_from_interface(node)
+		if nodename == synctool_param.NODENAME:
 			print '%s: up' % nodename
 			continue
 		
@@ -165,7 +82,7 @@ def ping_nodes(nodes):
 def ping_node(node):
 	'''ping a single node'''
 	
-	nodename = NAMEMAP[node]
+	nodename = NODESET.get_nodename_from_interface(node)
 	packets_received = 0
 	
 	# execute ping command and show output with the nodename
@@ -224,11 +141,11 @@ def usage():
 
 
 def get_options():
-	global NODELIST, GROUPLIST, EXCLUDELIST, EXCLUDEGROUPS, REMOTE_CMD, MASTER_OPTS, OPT_AGGREGATE
+	global NODESET, REMOTE_CMD, MASTER_OPTS, OPT_AGGREGATE
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:aNq', ['help', 'conf=', 'verbose',
-			'node=', 'group=', 'exclude=', 'exclude-group=', 'aggregate', 'unix', 'dry-run', 'quiet'])
+			'node=', 'group=', 'exclude=', 'exclude-group=', 'aggregate', 'unix', 'quiet'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -242,9 +159,6 @@ def get_options():
 	except:
 		usage()
 		sys.exit(1)
-	
-	NODELIST = ''
-	GROUPLIST = ''
 	
 	MASTER_OPTS = [ sys.argv[0] ]
 	
@@ -267,33 +181,21 @@ def get_options():
 			continue
 		
 		if opt in ('-n', '--node'):
-			if not NODELIST:
-				NODELIST = arg
-			else:
-				NODELIST = NODELIST + ',' + arg
+			NODESET.add_node(arg)
 			continue
-		
+
 		if opt in ('-g', '--group'):
-			if not GROUPLIST:
-				GROUPLIST = arg
-			else:
-				GROUPLIST = GROUPLIST + ',' + arg
+			NODESET.add_group(arg)
 			continue
-		
+
 		if opt in ('-x', '--exclude'):
-			if not EXCLUDELIST:
-				EXCLUDELIST = arg
-			else:
-				EXCLUDELIST = EXCLUDELIST + ',' + arg
+			NODESET.exclude_node(arg)
 			continue
-		
+
 		if opt in ('-X', '--exclude-group'):
-			if not EXCLUDEGROUPS:
-				EXCLUDEGROUPS = arg
-			else:
-				EXCLUDEGROUPS = EXCLUDEGROUPS + ',' + arg
+			NODESET.exclude_group(arg)
 			continue
-		
+
 		if opt in ('-a', '--aggregate'):
 			OPT_AGGREGATE = True
 			continue
@@ -325,7 +227,7 @@ if __name__ == '__main__':
 	synctool_config.read_config()
 	synctool_config.add_myhostname()
 	
-	nodes = make_nodeset()
+	nodes = NODESET.interfaces()
 	if nodes == None or len(nodes) <= 0:
 		print 'no valid nodes specified'
 		sys.exit(1)
