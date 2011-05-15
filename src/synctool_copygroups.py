@@ -20,10 +20,13 @@ import sys
 import string
 
 GROUP_ALL = 0
-POST_SCRIPTS = {}
 OVERLAY_DICT = {}
+OVERLAY_FILES = []		# sorted list, index to OVERLAY_DICT{}
+POST_SCRIPTS = {}
 DELETE_DICT = {}
+DELETE_FILES = []
 TASKS_DICT = {}
+TASKS_FILES = []
 
 class OverlayEntry:
 	def __init__(self, src, dest, groupnum):
@@ -101,7 +104,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/', highest_groupnum = sys.
 		if synctool.path_isdir(src_path):
 			# recurse into subdir
 			overlay_pass1(src_path, filelist, dest_path, groupnum)
-	
+
 
 def overlay_pass2(filelist, filedict):
 	'''do pass #2 of 2; create dictionary of destination paths from list
@@ -137,27 +140,44 @@ def find_synctree(subdir, pathname):
 	return dict[pathname].src_path
 
 
+def load_overlays():
+	'''scans all overlay dirs in and loads them into OVERLAY_DICT
+	which is a dict indexed by destination path, and every element
+	in OVERLAY_DICT is an OverlayEntry
+	This also prepares POST_SCRIPTS'''
+	
+	global OVERLAY_DICT, OVERLAY_FILES, POST_SCRIPTS, GROUP_ALL
+	
+	OVERLAY_DICT = {}
+	POST_SCRIPTS = {}
+	
+	# ensure that GROUP_ALL is set correctly
+	GROUP_ALL = synctool_config.MY_GROUPS.index('all')
+	
+	filelist = []
+	
+	# do pass #1 for multiple overlay dirs: load them into filelist
+	for overlay_dir in synctool_config.OVERLAY_DIRS:
+		overlay_pass1(overlay_dir, filelist)
+	
+	# run pass #2 : 'squash' filelist into OVERLAY_DICT
+	overlay_pass2(filelist, OVERLAY_DICT)
+	
+	# sort the filelist
+	OVERLAY_FILES = OVERLAY_DICT.keys()
+	OVERLAY_FILES.sort()
+
+
 if __name__ == '__main__':
 	## test program ##
 	
+	synctool_config.CONF_FILE = '../../synctool-test/synctool.conf'
+	synctool_config.read_config()
 	synctool_config.MY_GROUPS = ['node1', 'group1', 'group2', 'all']
-	GROUP_ALL = synctool_config.MY_GROUPS.index('all')
-	POST_SCRIPTS = {}
 	
-	filelist = []
-	overlay_pass1('/Users/walter/src/python/synctool-test/overlay', filelist)
-	overlay_pass1('/Users/walter/src/python/synctool-test/overlay_2', filelist)
+	load_overlays()
 	
-	# dump filelist
-#	for entry in filelist:
-#		print entry
-	
-	OVERLAY_DICT = {}
-	overlay_pass2(filelist, OVERLAY_DICT)
-	
-	all_destinations = OVERLAY_DICT.keys()
-	all_destinations.sort()
-	for dest_path in all_destinations:
+	for dest_path in OVERLAY_FILES:
 		print 'dest', dest_path
 		entry = OVERLAY_DICT[dest_path]
 		print 'src %d %s' % (entry.groupnum, entry.src_path)

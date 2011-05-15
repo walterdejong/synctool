@@ -46,6 +46,9 @@ OPT_INTERFACE = False
 #	config variables
 #
 MASTERDIR = None
+OVERLAY_DIRS = []
+DELETE_DIRS = []
+TASKS_DIRS = []
 HOSTNAME = None
 NODENAME = None
 
@@ -100,37 +103,48 @@ def stderr(str):
 
 def read_config():
 	'''read the config file and set a bunch of globals'''
-
+	
 	global MASTERDIR, GROUP_DEFS, NODES, IGNORE_GROUPS
-
+	global OVERLAY_DIRS, DELETE_DIRS, TASKS_DIRS
+	
 	if not os.path.isfile(CONF_FILE):
 		stderr("no such config file '%s'" % CONF_FILE)
 		sys.exit(-1)
-
+	
 	errors = read_config_file(CONF_FILE)
-
+	
 	if errors > 0:
 		sys.exit(-1)
-
+	
+	# if missing, set default directories
 	if MASTERDIR == None:
-		MASTERDIR = '.'
-
+		MASTERDIR = '.'			# hmmm ... nice for debugging, but shouldn't this be /var/lib/synctool ?
+	
+	if not OVERLAY_DIRS:
+		OVERLAY_DIRS.append(os.path.join(MASTERDIR, 'overlay'))
+	
+	if not DELETE_DIRS:
+		DELETE_DIRS.append(os.path.join(MASTERDIR, 'delete'))
+	
+	if not TASKS_DIRS:
+		TASKS_DIRS.append(os.path.join(MASTERDIR, 'tasks'))
+	
 	# implicitly add 'nodename' as first group
 	for node in get_all_nodes():
 		insert_group(node, node)
-
+	
 	# implicitly add group 'all'
 	if not GROUP_DEFS.has_key('all'):
 		GROUP_DEFS['all'] = None
-
+	
 	for node in get_all_nodes():
 		if not 'all' in NODES[node]:
 			NODES[node].append('all')
-
+	
 	# implicitly add group 'none'
 	if not GROUP_DEFS.has_key('none'):
 		GROUP_DEFS['none'] = None
-
+	
 	if not 'none' in IGNORE_GROUPS:
 		IGNORE_GROUPS.append('none')
 
@@ -144,6 +158,7 @@ def read_config_file(configfile):
 	global IGNORE_DOTFILES, IGNORE_DOTDIRS, IGNORE_FILES, IGNORE_GROUPS
 	global ON_UPDATE, ALWAYS_RUN
 	global NODES, INTERFACES, GROUP_DEFS
+	global OVERLAY_DIRS, DELETE_DIRS, TASKS_DIRS
 	
 	try:
 		f = open(configfile, 'r')
@@ -214,6 +229,57 @@ def read_config_file(configfile):
 			MASTER_LEN = len(MASTERDIR) + 1
 			continue
 
+		#
+		#	keyword: overlaydir
+		#
+		if keyword == 'overlaydir':
+			if arr[1] in OVERLAY_DIRS:
+				stderr("%s:%d: already in overlaydir" % (configfile, lineno))
+				errors = errors + 1
+				continue
+			
+			if not os.path.isdir(arr[1]):
+				stderr('%s:%d: no such directory for overlaydir' % (configfile, lineno))
+				errors = errors + 1
+				continue
+			
+			OVERLAY_DIRS.append(arr[1])
+			continue
+		
+		#
+		#	keyword: deletedir
+		#
+		if keyword == 'deletedir':
+			if arr[1] in DELETE_DIRS:
+				stderr("%s:%d: already in deletedir" % (configfile, lineno))
+				errors = errors + 1
+				continue
+			
+			if not os.path.isdir(arr[1]):
+				stderr('%s:%d: no such directory for deletedir' % (configfile, lineno))
+				errors = errors + 1
+				continue
+			
+			DELETE_DIRS.append(arr[1])
+			continue
+		
+		#
+		#	keyword: tasksdir
+		#
+		if keyword == 'tasksdir':
+			if arr[1] in TASKS_DIRS:
+				stderr("%s:%d: already in tasksdir" % (configfile, lineno))
+				errors = errors + 1
+				continue
+			
+			if not os.path.isdir(arr[1]):
+				stderr('%s:%d: no such directory for tasksdir' % (configfile, lineno))
+				errors = errors + 1
+				continue
+			
+			TASKS_DIRS.append(arr[1])
+			continue
+		
 		#
 		#	keyword: symlink_mode
 		#
