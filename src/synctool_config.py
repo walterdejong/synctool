@@ -102,12 +102,27 @@ def stderr(str):
 	sys.stderr.write(str + '\n')
 
 
+#
+#	functions straigthening out paths that were given by the user
+#	These ought to be in a seperate module, but they use synctool_config.MASTERDIR ...
+#	(which would cause a circular import. Lots of code would have to be changed)
+#
+def strip_multiple_slashes():
+	if not path:
+		return path
+	
+	while path.find('//') != -1:
+		path = path.replace('//', '/')
+	
+	return path
+
+
 def strip_trailing_slash(path):
 	if not path:
 		return path
 	
-	if path[-1] == '/':
-		return path[:-1]
+	while len(path) > 1 and path[-1] == '/':
+		path = path[:-1]
 	
 	return path
 
@@ -122,6 +137,15 @@ def subst_masterdir(path):
 			path.replace('$masterdir/', MASTERDIR + '/')
 	
 	return path
+
+
+def prepare_path(path):
+	if not path:
+		return path
+	
+	path = strip_multiple_slashes(path)
+	path = strip_trailing_slash(path)
+	path = subst_masterdir(path)
 
 
 def read_config():
@@ -260,7 +284,8 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			MASTERDIR = strip_trailing_slash(arr[1])
+			MASTERDIR = strip_multiple_slashes(arr[1])
+			MASTERDIR = strip_trailing_slash(MASTERDIR)
 			MASTER_LEN = len(MASTERDIR) + 1
 			
 			if MASTERDIR == '$masterdir':
@@ -276,10 +301,8 @@ def read_config_file(configfile):
 		#
 		if keyword == 'include':
 			# recursively read the given config file
-			include_file = strip_trailing_slash(arr[1])
-			include_file = subst_masterdir(include_file)
-			
-			errors = errors + read_config_file(include_file)
+			file = prepare_path(arr[1])
+			errors = errors + read_config_file(file)
 			continue
 
 		#
@@ -296,9 +319,7 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			the_dir = strip_trailing_slash(arr[1])
-			the_dir = subst_masterdir(the_dir)
-			
+			the_dir = prepare_path(arr[1])
 			OVERLAY_DIRS.append(the_dir)
 			continue
 		
@@ -316,9 +337,7 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			the_dir = strip_trailing_slash(arr[1])
-			the_dir = subst_masterdir(the_dir)
-			
+			the_dir = prepare_path(arr[1])
 			DELETE_DIRS.append(the_dir)
 			continue
 		
@@ -336,9 +355,7 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			the_dir = strip_trailing_slash(arr[1])
-			the_dir = subst_masterdir(the_dir)
-			
+			the_dir = prepare_path(arr[1])
 			TASKS_DIRS.append(the_dir)
 			continue
 		
@@ -356,9 +373,7 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			the_dir = strip_trailing_slash(arr[1])
-			the_dir = subst_masterdir(the_dir)
-			
+			the_dir = prepare_path(arr[1])
 			SCRIPT_DIR = the_dir
 			continue
 		
@@ -544,9 +559,9 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			file = strip_trailing_slash(arr[1])
+			file = prepare_path(arr[1])
 			cmd = string.join(arr[2:])
-			cmd = subst_masterdir(cmd)
+			cmd = prepare_path(cmd)
 			
 			#
 			#	check if the script exists
@@ -582,7 +597,7 @@ def read_config_file(configfile):
 				continue
 			
 			cmd = string.join(arr[1:])
-			cmd = subst_masterdir(cmd)
+			cmd = prepare_path(cmd)
 			
 			if cmd in ALWAYS_RUN:
 				stderr("%s:%d: same command defined again: %s" % (configfile, lineno, cmd))
@@ -622,14 +637,14 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			cmd = subst_masterdir(arr[1])
+			cmd = prepare_path(arr[1])
 			
 			if not os.path.isfile(cmd):
 				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
 			
-			DIFF_CMD = subst_masterdir(string.join(arr[1:]))
+			DIFF_CMD = prepare_path(string.join(arr[1:]))
 			continue
 
 		#
@@ -641,13 +656,13 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			cmd = subst_masterdir(arr[1])
+			cmd = prepare_path(arr[1])
 			if not os.path.isfile(cmd):
 				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
 
-			PING_CMD = subst_masterdir(string.join(arr[1:]))
+			PING_CMD = prepare_path(string.join(arr[1:]))
 			continue
 		
 		#
@@ -659,13 +674,13 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			cmd = subst_masterdir(arr[1])
+			cmd = prepare_path(arr[1])
 			if not os.path.isfile(cmd):
 				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
 			
-			SSH_CMD = subst_masterdir(string.join(arr[1:]))
+			SSH_CMD = prepare_path(string.join(arr[1:]))
 			continue
 		
 		#
@@ -677,13 +692,13 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			cmd = subst_masterdir(arr[1])
+			cmd = prepare_path(arr[1])
 			if not os.path.isfile(cmd):
 				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
 			
-			SCP_CMD = subst_masterdir(string.join(arr[1:]))
+			SCP_CMD = prepare_path(string.join(arr[1:]))
 			continue
 		
 		#
@@ -695,13 +710,15 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			cmd = subst_masterdir(arr[1])
+			cmd = prepare_path(arr[1])
 			if not os.path.isfile(cmd):
 				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
 			
-			RSYNC_CMD = subst_masterdir(string.join(arr[1:]))
+			# argh ... strip_multiple_slashes() will break "rsync://" paths
+			# let's hope nobody configures those on the nodes
+			RSYNC_CMD = prepare_path(string.join(arr[1:]))
 			continue
 		
 		#
@@ -713,13 +730,13 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			cmd = subst_masterdir(arr[1])
+			cmd = prepare_path(arr[1])
 			if not os.path.isfile(cmd):
 				stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
 				errors = errors + 1
 				continue
 			
-			SYNCTOOL_CMD = subst_masterdir(string.join(arr[1:]))
+			SYNCTOOL_CMD = prepare_path(string.join(arr[1:]))
 			continue
 		
 		#
@@ -731,7 +748,7 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			LOGFILE = subst_masterdir(string.join(arr[1:]))
+			LOGFILE = prepare_path(string.join(arr[1:]))
 			continue
 		
 		#
