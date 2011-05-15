@@ -13,7 +13,7 @@ MASTERDIR=/var/lib/synctool
 MASTERBIN=$(MASTERDIR)/sbin
 
 SCRIPTS=synctool.py synctool_config.py synctool_ping.py synctool_ssh.py synctool_scp.py synctool_master.py synctool_aggr.py
-LIBS=synctool_lib.py synctool_core.py synctool_update.py synctool_unbuffered.py
+LIBS=synctool_lib.py synctool_overlay.py synctool_update.py synctool_unbuffered.py
 
 all:
 	@echo "synctool Makefile"
@@ -32,6 +32,7 @@ install:
 	@mkdir -m 755 -p $(MASTERBIN)
 	@install -m 755 $(SCRIPTS) $(MASTERBIN)
 	@install -m 644 $(LIBS) $(MASTERBIN)
+	@rm -f $(MASTERBIN)/synctool_core.py
 	@( cd $(MASTERBIN) && ln -sf synctool_master.py synctool )
 	@( cd $(MASTERBIN) && ln -sf synctool_master.py synctool-master )
 	@( cd $(MASTERBIN) && ln -sf synctool_config.py synctool-config )
