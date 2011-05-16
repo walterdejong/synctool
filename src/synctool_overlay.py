@@ -40,6 +40,13 @@ TASKS_LOADED = False
 
 
 class OverlayEntry:
+	'''a structure holding the source path (file in the repository)
+	and the destination path (target file on the system).
+	The group number denotes the importance of the group'''
+	
+	# groupnum is really the index of the file's group in MY_GROUPS[]
+	# a lower groupnum is more important; negative is invalid/irrelevant group
+	
 	def __init__(self, src, dest, groupnum):
 		self.src_path = src
 		self.dest_path = dest
@@ -85,7 +92,7 @@ def split_extension(entryname):
 
 def overlay_pass1(overlay_dir, filelist, dest_dir = '/', highest_groupnum = sys.maxint):
 	'''do pass #1 of 2; create list of source and dest files
-	Each element in the list in a tuple: (src, dest, groupnum)'''
+	Each element in the list is an instance of OverlayEntry'''
 	
 	global POST_SCRIPTS
 	
@@ -131,8 +138,8 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/', highest_groupnum = sys.
 
 def overlay_pass1_without_post_scripts(overlay_dir, filelist, dest_dir = '/', highest_groupnum = sys.maxint):
 	'''do pass #1 of 2; create list of source and dest files
-	Each element in the list in a tuple: (src, dest, groupnum)
-	Do not handle .post scripts'''
+	Each element in the list an instance of OverlayEntry
+	This function does not handle .post scripts; used for tasks/'''
 	
 	for entry in os.listdir(overlay_dir):
 		(name, groupnum, isPost) = split_extension(entry)
@@ -173,7 +180,7 @@ def overlay_pass1_without_post_scripts(overlay_dir, filelist, dest_dir = '/', hi
 
 def overlay_pass2(filelist, filedict):
 	'''do pass #2 of 2; create dictionary of destination paths from list
-	Each element in the dictionary is a tuple: (src_path, dest_path, groupnum)'''
+	Each element in the dictionary is an instance of OverlayEntry'''
 	
 	for entry in filelist:
 		if filedict.has_key(entry.dest_path):
@@ -190,7 +197,7 @@ def overlay_pass2(filelist, filedict):
 def load_overlay_tree():
 	'''scans all overlay dirs in and loads them into OVERLAY_DICT
 	which is a dict indexed by destination path, and every element
-	in OVERLAY_DICT is an OverlayEntry
+	in OVERLAY_DICT is an instance of OverlayEntry
 	This also prepares POST_SCRIPTS'''
 	
 	global OVERLAY_DICT, OVERLAY_FILES, OVERLAY_LOADED, POST_SCRIPTS, GROUP_ALL
@@ -223,7 +230,7 @@ def load_overlay_tree():
 def load_delete_tree():
 	'''scans all delete dirs in and loads them into DELETE_DICT
 	which is a dict indexed by destination path, and every element
-	in DELETE_DICT is an OverlayEntry'''
+	in DELETE_DICT is an instance of OverlayEntry'''
 	
 	global DELETE_DICT, DELETE_FILES, DELETE_LOADED, GROUP_ALL
 	
@@ -254,11 +261,11 @@ def load_delete_tree():
 def load_tasks_tree():
 	'''scans all tasks dirs in and loads them into TASKS_DICT
 	which is a dict indexed by destination path, and every element
-	in TASKS_DICT is an OverlayEntry'''
+	in TASKS_DICT is an instance of OverlayEntry'''
 	
 	# tasks/ is usually a very 'flat' directory with no complex structure at all
 	# However, because it is treated in the same way as overlay/ and delete/,
-	# complex structure is possible
+	# so complex structure is possible
 	# Still, there is not really a 'destination' for a task script, other than
 	# that you can call it with its destination name
 	
@@ -276,7 +283,7 @@ def load_tasks_tree():
 	
 	# do pass #1 for multiple overlay dirs: load them into filelist
 	for tasks_dir in synctool_param.TASKS_DIRS:
-		overlay_pass1_with_post_scripts(overlay_dir, filelist)
+		overlay_pass1_without_post_scripts(overlay_dir, filelist)
 	
 	# run pass #2 : 'squash' filelist into TASKS_DICT
 	overlay_pass2(filelist, TASKS_DICT)
