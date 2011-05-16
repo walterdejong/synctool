@@ -989,6 +989,7 @@ def usage():
 	print '      --prefix             Display installation prefix'
 	print '      --nodename           Display my nodename'
 	print '      --logfile            Display configured logfile'
+	print '      --nodename           Display my nodename'
 	print '  -v, --version            Display synctool version'
 	print
 	print 'A node/group list can be a single value, or a comma-separated list'
@@ -1105,6 +1106,10 @@ def get_options():
 			set_action(ACTION_LOGFILE, '--logfile')
 			continue
 		
+		if opt == '--nodename':
+			set_action(ACTION_NODENAME, '--nodename')
+			continue
+		
 		stderr("unknown command line option '%s'" % opt)
 		errors = errors + 1
 	
@@ -1164,9 +1169,27 @@ if __name__ == '__main__':
 	elif ACTION == ACTION_LOGFILE:
 		print synctool_param.LOGFILE
 	
-	else:
-		raise RuntimeError, 'bug: unknown ACTION code %d' % ACTION
-
+	elif ACTION == ACTION_NODENAME:
+		add_myhostname()
+		
+		if synctool_param.NODENAME == None:
+			stderr('unable to determine my nodename, please check %s' % synctool_param.CONF_FILE)
+			sys.exit(1)
+		
+		if synctool_param.NODENAME in synctool_param.IGNORE_GROUPS:
+			if not synctool_param.OPT_FILTER_IGNORED:
+				if synctool_param.OPT_INTERFACE:
+					print 'none (%s ignored)' % get_node_interface(synctool_param.NODENAME)
+				else:
+					print 'none (%s ignored)' % synctool_param.NODENAME
+			
+			sys.exit(0)
+		
+		if synctool_param.OPT_INTERFACE:
+			print get_node_interface(synctool_param.NODENAME)
+		else:
+			print synctool_param.NODENAME
+	
 	elif ACTION == ACTION_NODENAME:
 		add_myhostname()
 		
@@ -1190,5 +1213,6 @@ if __name__ == '__main__':
 	
 	else:
 		raise RuntimeError, 'bug: unknown ACTION %d' % ACTION
+
 
 # EOB
