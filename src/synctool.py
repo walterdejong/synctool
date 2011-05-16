@@ -857,9 +857,7 @@ def delete_callback(src, dest):
 		
 		stdout('%sdeleting %s : %s' % (not_str, synctool_lib.prettypath(src), dest))
 		hard_delete_file(dest)
-		
-		# content of dir has changed, so run .post script on dir
-		DIR_CHANGED[os.path.dirname(dest)] = True
+		run_post(dest)
 
 
 def delete_files():
