@@ -1,5 +1,13 @@
 #
-#	unbuffered output
+#	synctool_unbuffered.py	WJ110
+#
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2011
+#
+#   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
+#   synctool is distributed under terms described in the GNU General Public
+#   License.
+#
+#	- unbuffered output, needed for synctool_master
 #
 
 class Unbuffered:

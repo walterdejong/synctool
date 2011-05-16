@@ -8,8 +8,6 @@
 #   synctool is distributed under terms described in the GNU General Public
 #   License.
 #
-#	- simply use synctool-ssh because lots of code would be the same
-#
 
 import synctool_unbuffered
 import synctool_param
