@@ -2,13 +2,13 @@
 #
 #	synctool_aggr.py	WJ109
 #
-#	group together output that is the same
-#
 #   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2011
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
 #   License.
+#
+#	- aggregate: group together output that is the same
 #
 
 import os

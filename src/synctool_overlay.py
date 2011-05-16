@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 #
 #	synctool_overlay.py	WJ111
 #
