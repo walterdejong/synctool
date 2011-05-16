@@ -510,31 +510,16 @@ def compare_files(src_path, dest_path):
 	return need_update
 
 
-def erase_saved(dst):
-	if synctool_param.ERASE_SAVED:
-		if path_isfile('%s.saved' % dst):
-			unix_out('rm %s.saved' % dst)
-			
-			if synctool_lib.DRY_RUN:
-				verbose('backup copy %s.saved not erased    # dry run, update not performed' % dst)
-			else:
-				verbose('erasing backup copy %s.saved' % dst)
-				try:
-					os.unlink('%s.saved' % dst)
-				except OSError, reason:
-					stderr('failed to delete %s : %s' % (file, reason))
-
-
 def copy_file(src, dest):
 	if path_isfile(dest):
 		unix_out('cp %s %s.saved' % (dest, dest))
-
+	
 	unix_out('umask 077')
 	unix_out('cp %s %s' % (src, dest))
-
+	
 	if not synctool_lib.DRY_RUN:
 		old_umask = os.umask(077)
-
+		
 		if not synctool_param.ERASE_SAVED:
 			if path_isfile(dest):
 				verbose('  saving %s as %s.saved' % (dest, dest))
@@ -542,18 +527,18 @@ def copy_file(src, dest):
 					shutil.copy2(dest, '%s.saved' % dest)
 				except:
 					stderr('failed to save %s as %s.saved' % (dest, dest))
-
+		
 		verbose('  cp %s %s' % (src, dest))
 		try:
 			shutil.copy2(src, dest)			# copy file and stats
 		except:
 			stderr('failed to copy %s to %s' % (src, dest))
-
+		
 		os.umask(old_umask)
 	else:
 		if path_isfile(dest) and not synctool_param.ERASE_SAVED:
 			verbose('  saving %s as %s.saved' % (dest, dest))
-
+		
 		verbose('  cp %s %s             # dry run, update not performed' % (src, dest))
 
 
@@ -653,6 +638,20 @@ def hard_delete_file(file):
 			stderr('failed to delete %s : %s' % (file, reason))
 	else:
 		verbose('deleting %s             # dry run, update not performed' % file)
+
+
+def erase_saved(dst):
+	if synctool_param.ERASE_SAVED and path_isfile('%s.saved' % dst):
+		unix_out('rm %s.saved' % dst)
+		
+		if synctool_lib.DRY_RUN:
+			verbose('backup copy %s.saved not erased    # dry run, update not performed' % dst)
+		else:
+			verbose('erasing backup copy %s.saved' % dst)
+			try:
+				os.unlink('%s.saved' % dst)
+			except OSError, reason:
+				stderr('failed to delete %s : %s' % (file, reason))
 
 
 def make_dir(path):
