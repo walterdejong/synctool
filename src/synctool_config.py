@@ -34,17 +34,14 @@ ACTION_CMDS = 6
 ACTION_NUMPROC = 7
 ACTION_VERSION = 8
 ACTION_PREFIX = 9
-ACTION_LIST_DIRS = 10
-ACTION_LOGFILE = 11
+ACTION_LOGFILE = 10
+ACTION_NODENAME = 11
+ACTION_LIST_DIRS = 12
 
 # optional: do not list hosts/groups that are ignored
 OPT_FILTER_IGNORED = False
 # optional: list interface names for the selected nodes
 OPT_INTERFACE = False
-
-
-def stdout(str):
-	print str
 
 
 def stderr(str):
@@ -991,6 +988,7 @@ def usage():
 	print '  -d, --list-dirs          Display directory settings'
 	print '      --prefix             Display installation prefix'
 	print '      --logfile            Display configured logfile'
+	print '      --nodename           Display my nodename'
 	print '  -v, --version            Display synctool version'
 	print
 	print 'A node/group list can be a single value, or a comma-separated list'
@@ -1000,7 +998,8 @@ def usage():
 
 
 def get_options():
-	global ARG_NODENAMES, ARG_GROUPS, ARG_CMDS, OPT_FILTER_IGNORED, OPT_INTERFACE
+	global CONF_FILE, ARG_NODENAMES, ARG_GROUPS, ARG_CMDS
+	global OPT_FILTER_IGNORED, OPT_INTERFACE
 	
 	progname = os.path.basename(sys.argv[0])
 	
@@ -1009,10 +1008,10 @@ def get_options():
 		sys.exit(1)
 	
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:mdlLn:g:ifC:pv',
-			['help', 'conf=', 'masterdir', 'list-dirs', 'list-nodes', 'list-groups',
-			'node=', 'group=', 'interface', 'filter-ignored', 'command', 'numproc',
-			'version', 'prefix', 'logfile'])
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:mlLn:g:ifC:pv',
+			['help', 'conf=', 'masterdir', 'list-nodes', 'list-groups',
+			'node=', 'group=', 'interface', 'filter-ignored', 'command',
+			'numproc', 'version', 'prefix', 'logfile', 'nodename'])
 	
 	except getopt.error, (reason):
 		print
@@ -1102,6 +1101,10 @@ def get_options():
 			set_action(ACTION_LOGFILE, '--logfile')
 			continue
 		
+		if opt == '--nodename':
+			set_action(ACTION_NODENAME, '--nodename')
+			continue
+		
 		stderr("unknown command line option '%s'" % opt)
 		errors = errors + 1
 	
@@ -1161,8 +1164,28 @@ if __name__ == '__main__':
 	elif ACTION == ACTION_LOGFILE:
 		print synctool_param.LOGFILE
 	
+	elif ACTION == ACTION_NODENAME:
+		add_myhostname()
+		
+		if synctool_param.NODENAME == None:
+			stderr('unable to determine my nodename, please check %s' % synctool_param.CONF_FILE)
+			sys.exit(1)
+		
+		if synctool_param.NODENAME in synctool_param.IGNORE_GROUPS:
+			if not synctool_param.OPT_FILTER_IGNORED:
+				if synctool_param.OPT_INTERFACE:
+					print 'none (%s ignored)' % get_node_interface(synctool_param.NODENAME)
+				else:
+					print 'none (%s ignored)' % synctool_param.NODENAME
+			
+			sys.exit(0)
+		
+		if synctool_param.OPT_INTERFACE:
+			print get_node_interface(synctool_param.NODENAME)
+		else:
+			print synctool_param.NODENAME
+	
 	else:
 		raise RuntimeError, 'bug: unknown ACTION code %d' % ACTION
-
 
 # EOB
