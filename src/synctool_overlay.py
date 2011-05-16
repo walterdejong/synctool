@@ -230,7 +230,8 @@ def load_overlay_tree():
 def load_delete_tree():
 	'''scans all delete dirs in and loads them into DELETE_DICT
 	which is a dict indexed by destination path, and every element
-	in DELETE_DICT is an instance of OverlayEntry'''
+	in DELETE_DICT is an instance of OverlayEntry
+	This also prepares POST_SCRIPTS that may be in the delete/ tree'''
 	
 	global DELETE_DICT, DELETE_FILES, DELETE_LOADED, GROUP_ALL
 	
@@ -246,7 +247,7 @@ def load_delete_tree():
 	
 	# do pass #1 for multiple delete dirs: load them into filelist
 	for delete_dir in synctool_param.DELETE_DIRS:
-		overlay_pass1_without_post_scripts(delete_dir, filelist)
+		overlay_pass1(delete_dir, filelist)
 	
 	# run pass #2 : 'squash' filelist into OVERLAY_DICT
 	overlay_pass2(filelist, DELETE_DICT)
@@ -261,7 +262,8 @@ def load_delete_tree():
 def load_tasks_tree():
 	'''scans all tasks dirs in and loads them into TASKS_DICT
 	which is a dict indexed by destination path, and every element
-	in TASKS_DICT is an instance of OverlayEntry'''
+	in TASKS_DICT is an instance of OverlayEntry
+	.post scripts are not handled for the tasks/ tree'''
 	
 	# tasks/ is usually a very 'flat' directory with no complex structure at all
 	# However, because it is treated in the same way as overlay/ and delete/,
