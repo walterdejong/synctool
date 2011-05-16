@@ -36,6 +36,7 @@ ACTION_CMDS = 6
 ACTION_NUMPROC = 7
 ACTION_VERSION = 8
 ACTION_PREFIX = 9
+ACTION_NODENAME = 10
 
 # optional: do not list hosts/groups that are ignored
 OPT_FILTER_IGNORED = False
@@ -88,10 +89,6 @@ ALL_GROUPS = None
 # string length of the 'MASTERDIR' variable
 # although silly to keep this in a var, it makes it easier to print messages
 MASTER_LEN = 0
-
-
-def stdout(str):
-	print str
 
 
 def stderr(str):
@@ -730,7 +727,7 @@ def get_all_nodes():
 def get_node_interface(node):
 	if INTERFACES.has_key(node):
 		return INTERFACES[node]
-
+	
 	return node
 
 
@@ -911,6 +908,7 @@ def usage():
 	print '  -p, --numproc            Display numproc setting'
 	print '  -m, --masterdir          Display the masterdir setting'
 	print '      --prefix             Display installation prefix'
+	print '      --nodename           Display my nodename'
 	print '  -v, --version            Display synctool version'
 	print
 	print 'A node/group list can be a single value, or a comma-separated list'
@@ -920,7 +918,8 @@ def usage():
 
 
 def get_options():
-	global CONF_FILE, ARG_NODENAMES, ARG_GROUPS, ARG_CMDS, OPT_FILTER_IGNORED, OPT_INTERFACE
+	global CONF_FILE, ARG_NODENAMES, ARG_GROUPS, ARG_CMDS
+	global OPT_FILTER_IGNORED, OPT_INTERFACE
 
 	progname = os.path.basename(sys.argv[0])
 
@@ -929,8 +928,10 @@ def get_options():
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:mlLn:g:ifC:pv', ['help', 'conf=', 'masterdir', 'list-nodes', 'list-groups',
-			'node=', 'group=', 'interface', 'filter-ignored', 'command', 'numproc', 'version', 'prefix'])
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:mlLn:g:ifC:pv',
+			['help', 'conf=', 'masterdir', 'list-nodes', 'list-groups',
+			'node=', 'group=', 'interface', 'filter-ignored', 'command',
+			'numproc', 'version', 'prefix', 'nodename'])
 
 	except getopt.error, (reason):
 		print
@@ -1012,6 +1013,10 @@ def get_options():
 			set_action(ACTION_PREFIX, '--prefix')
 			continue
 
+		if opt == '--nodename':
+			set_action(ACTION_NODENAME, '--nodename')
+			continue
+
 		stderr("unknown command line option '%s'" % opt)
 		errors = errors + 1
 
@@ -1065,5 +1070,28 @@ if __name__ == '__main__':
 	elif ACTION == ACTION_PREFIX:
 		print os.path.abspath(os.path.dirname(sys.argv[0]))
 
+	elif ACTION == ACTION_NODENAME:
+		add_myhostname()
+		
+		if NODENAME == None:
+			stderr('unable to determine my nodename, please check %s' % CONF_FILE)
+			sys.exit(1)
+		
+		if NODENAME in IGNORE_GROUPS:
+			if not OPT_FILTER_IGNORED:
+				if OPT_INTERFACE:
+					print 'none (%s ignored)' % get_node_interface(NODENAME)
+				else:
+					print 'none (%s ignored)' % NODENAME
+			
+			sys.exit(0)
+		
+		if OPT_INTERFACE:
+			print get_node_interface(NODENAME)
+		else:
+			print NODENAME
+	
+	else:
+		raise RuntimeError, 'bug: unknown ACTION %d' % ACTION
 
 # EOB
