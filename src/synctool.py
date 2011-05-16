@@ -55,9 +55,10 @@ BLOCKSIZE = 16 * 1024
 
 SINGLE_FILES = []
 
-# dict of changed directories
+# list of changed directories
 # This is for running .post scripts on changed directories
-DIR_CHANGED = {}
+# every element is a tuple: (src_path, dest_path)
+DIR_CHANGED = []
 
 
 def ascii_uid(uid):
@@ -776,13 +777,15 @@ def run_command_in_dir(dest_dir, cmd):
 			stderr('error changing directory to %s: %s' % (cwd, reason))
 
 
-def run_post(dest):
+def run_post(src, dest):
 	'''run any on_update or .post script commands for destination path'''
 	
 	global DIR_CHANGED
 	
 	if path_isdir(dest):
-		DIR_CHANGED[dest] = True		# changed dirs are handled later
+		# directories will be handled later, so save this pair
+		pair = (src, dest)
+		DIR_CHANGED.append(pair)
 		return
 	
 	dest_dir = os.path.dirname(dest)
@@ -792,15 +795,17 @@ def run_post(dest):
 		run_command_in_dir(dest_dir, synctool_param.ON_UPDATE[dest])
 	
 	# file has changed, run appropriate .post script
-	postscript = synctool_overlay.postscript_for_path(dest)
+	postscript = synctool_overlay.postscript_for_path(src, dest)
 	if postscript:
 		run_command_in_dir(dest_dir, postscript)
 	
-	# content of directory was changed, so flag it
-	DIR_CHANGED[os.path.dirname(dest)] = True
+	# content of directory was changed, so save this pair
+	pair = (os.path.dirname(src), dest_dir)
+	if not pair in DIR_CHANGED:
+		DIR_CHANGED.append(pair)
 
 
-def run_post_on_directory(dest):
+def run_post_on_directory(src, dest):
 	'''run .post script for a changed directory'''
 	
 	# Note that the script is executed with the changed dir as current working dir
@@ -809,20 +814,36 @@ def run_post_on_directory(dest):
 		run_command_in_dir(dest, synctool_param.ON_UPDATE[dest])
 	
 	# run appropriate .post script
-	postscript = synctool_overlay.postscript_for_path(dest)
+	postscript = synctool_overlay.postscript_for_path(src, dest)
 	if postscript:
 		run_command_in_dir(dest, postscript)
+
+
+def sort_directory_pair(a, b):
+	'''sort function for directory pairs
+	a and b are directory pair tuples: (src, dest)
+	sort the deepest destination directories first'''
+	
+	n = -cmp(len(a[1]), len(b[1]))
+	if not n:
+		return cmp(a[1], b[1])
+	
+	return n
 
 
 def run_post_on_directories():
 	'''run pending .post scripts on directories that were changed'''
 	
-	all_dirs = DIR_CHANGED.keys()
-	all_dirs.sort()
-	all_dirs.reverse()		# handle deepest dir first
+	global DIR_CHANGED
 	
-	for directory in all_dirs:
-		run_post_on_directory(directory)
+	# sort by dest_dir with deepest dirs first
+	DIR_CHANGED.sort(sort_directory_pair)
+	
+	# run .post scripts on every dir
+	# Note how you can have multiple sources for the same destination,
+	# and this triggers all .post scripts for those sources
+	for (src, dest) in DIR_CHANGED:
+		run_post_on_directory(src, dest)
 
 
 def overlay_callback(src, dest):
@@ -831,7 +852,7 @@ def overlay_callback(src, dest):
 	verbose('checking %s' % synctool_lib.prettypath(src))
 	
 	if compare_files(src, dest):
-		run_post(dest)
+		run_post(src, dest)
 
 
 def overlay_files():
@@ -844,8 +865,6 @@ def overlay_files():
 def delete_callback(src, dest):
 	'''delete files'''
 	
-	global DIR_CHANGED
-	
 	if path_isdir(dest):			# do not delete directories
 		return
 	
@@ -857,7 +876,7 @@ def delete_callback(src, dest):
 		
 		stdout('%sdeleting %s : %s' % (not_str, synctool_lib.prettypath(src), dest))
 		hard_delete_file(dest)
-		run_post(dest)
+		run_post(src, dest)
 
 
 def delete_files():

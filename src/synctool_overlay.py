@@ -27,7 +27,7 @@ GROUP_ALL = 0
 OVERLAY_DICT = {}
 OVERLAY_FILES = []		# sorted list, index to OVERLAY_DICT{}
 OVERLAY_LOADED = False
-POST_SCRIPTS = {}
+POST_SCRIPTS = {}		# dict indexed by trigger: full source path without final extension
 
 DELETE_DICT = {}
 DELETE_FILES = []
@@ -45,6 +45,10 @@ class OverlayEntry:
 	
 	# groupnum is really the index of the file's group in MY_GROUPS[]
 	# a lower groupnum is more important; negative is invalid/irrelevant group
+	
+	# POST_SCRIPTS uses the same OverlayEntry class, but interprets src_path
+	# as the path of the .post script and dest_path as the destination directory
+	# where the script is to be run
 	
 	def __init__(self, src, dest, groupnum):
 		self.src_path = src
@@ -100,7 +104,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 	
 	for entry in os.listdir(overlay_dir):
 		(name, groupnum, isPost) = split_extension(entry)
-		if groupnum < 0:				# not a relevant group
+		if groupnum < 0:
 			# not a relevant group, so skip it
 			# Note that this also prunes trees if you have group-specific subdirs
 			continue
@@ -111,17 +115,23 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 		if synctool_param.IGNORE_DOTFILES and name[0] == '.':
 			continue
 		
+		# inherit lower group level from parent directory
+		if groupnum > highest_groupnum:
+			groupnum = highest_groupnum
+		
 		src_path = os.path.join(overlay_dir, entry)
-		dest_path = os.path.join(dest_dir, name)
 		
 		if isPost:
 			if handle_postscripts:
 				# register .post script
-				if POST_SCRIPTS.has_key(dest_path):
-					if groupnum >= POST_SCRIPTS[dest_path].groupnum:
+				# trigger is the source file that would trigger the .post script to run
+				trigger = os.path.join(overlay_dir, name)
+				
+				if POST_SCRIPTS.has_key(trigger):
+					if groupnum >= POST_SCRIPTS[trigger].groupnum:
 						continue
 				
-				POST_SCRIPTS[dest_path] = OverlayEntry(src_path, dest_path, groupnum)
+				POST_SCRIPTS[trigger] = OverlayEntry(src_path, dest_dir, groupnum)
 			else:
 				# unfortunately, the name has been messed up already
 				# so therefore just ignore the file and issue a warning
@@ -129,9 +139,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 			
 			continue
 		
-		# inherit lower group level from parent directory
-		if groupnum > highest_groupnum:
-			groupnum = highest_groupnum
+		dest_path = os.path.join(dest_dir, name)
 		
 		if synctool.path_isdir(src_path):
 			if synctool_param.IGNORE_DOTDIRS and name[0] == '.':
@@ -266,15 +274,25 @@ def load_tasks_tree():
 	TASKS_LOADED = True
 
 
-def postscript_for_path(path):
-	'''return the .post script for a given destination path'''
+def postscript_for_path(src, dest):
+	'''return the .post script for a given source and destination path'''
 	
 	if not OVERLAY_LOADED:
 		load_overlay_tree()
 	
-	if POST_SCRIPTS.has_key(path):
-		return POST_SCRIPTS[path].src_path
-
+	# the trigger for .post scripts is the source path of the script with the
+	# .post and group extensions stripped off -- which is the same as taking
+	# the source dir and appending the dest basename
+	# This ensures that the .post script that is chosen, is always the one
+	# that is next to the source file in the overlay tree
+	# This is important because otherwise having multiple overlay trees could
+	# lead to ambiguity regarding what .post script to run
+	
+	trigger = os.path.join(os.path.dirname(src), os.path.basename(dest))
+	
+	if POST_SCRIPTS.has_key(trigger):
+		return POST_SCRIPTS[trigger].src_path
+	
 	return None
 
 
