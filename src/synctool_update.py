@@ -64,8 +64,8 @@ def get_latest_version_and_checksum():
 
 	data = string.strip(data)
 
-# format of the data in LATEST.txt is:
-# <version> <MD5 checksum>
+	# format of the data in LATEST.txt is:
+	# <version> <MD5 checksum>
 	arr = string.split(data)
 	if len(arr) != 2:
 		return None
@@ -96,7 +96,7 @@ def make_local_filename_for_version(version):
 	if not os.path.isfile(filename):
 		return filename
 
-# file already exists, add sequence number
+	# file already exists, add sequence number
 	n = 2
 	while True:
 		filename = 'synctool-%s(%d).tar.gz' % (version, n)
@@ -124,8 +124,9 @@ def download_progress(seqnumber, blocksize, totalsize):
 
 def download():
 	'''download latest version'''
-
-	global DOWNLOAD_FILENAME, DOWNLOAD_BYTES			# ugly globals because of callback function
+	
+	# ugly globals because of callback function
+	global DOWNLOAD_FILENAME, DOWNLOAD_BYTES
 
 	tup = get_latest_version_and_checksum()
 	if not tup:
@@ -150,11 +151,12 @@ def download():
 		return 1
 	else:
 		print
-#
-#	compute and compare MD5 checksums
-#	sadly, there is no easy way to do this 'live' while downloading,
-#	because the download callback does not see the downloaded data blocks
-#
+	
+	#
+	#	compute and compare MD5 checksums
+	#	sadly, there is no easy way to do this 'live' while downloading,
+	#	because the download callback does not see the downloaded data blocks
+	#
 	downloaded_sum = checksum_file(DOWNLOAD_FILENAME)
 	if downloaded_sum != checksum:
 		stderr('ERROR: checksum failed for %s' % DOWNLOAD_FILENAME)
