@@ -202,12 +202,13 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			if not os.path.isdir(arr[1]):
+			the_dir = synctool_lib.prepare_path(arr[1])
+			
+			if not os.path.isdir(the_dir):
 				stderr('%s:%d: no such directory for overlaydir' % (configfile, lineno))
 				errors = errors + 1
 				continue
 			
-			the_dir = synctool_lib.prepare_path(arr[1])
 			synctool_param.OVERLAY_DIRS.append(the_dir)
 			continue
 		
@@ -220,12 +221,13 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			if not os.path.isdir(arr[1]):
+			the_dir = synctool_lib.prepare_path(arr[1])
+			
+			if not os.path.isdir(the_dir):
 				stderr('%s:%d: no such directory for deletedir' % (configfile, lineno))
 				errors = errors + 1
 				continue
 			
-			the_dir = synctool_lib.prepare_path(arr[1])
 			synctool_param.DELETE_DIRS.append(the_dir)
 			continue
 		
@@ -238,12 +240,13 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			if not os.path.isdir(arr[1]):
+			the_dir = synctool_lib.prepare_path(arr[1])
+			
+			if not os.path.isdir(the_dir):
 				stderr('%s:%d: no such directory for tasksdir' % (configfile, lineno))
 				errors = errors + 1
 				continue
 			
-			the_dir = synctool_lib.prepare_path(arr[1])
 			synctool_param.TASKS_DIRS.append(the_dir)
 			continue
 		
@@ -256,12 +259,13 @@ def read_config_file(configfile):
 				errors = errors + 1
 				continue
 			
-			if not os.path.isdir(arr[1]):
+			the_dir = synctool_lib.prepare_path(arr[1])
+			
+			if not os.path.isdir(the_dir):
 				stderr('%s:%d: no such directory for scriptdir' % (configfile, lineno))
 				errors = errors + 1
 				continue
 			
-			the_dir = synctool_lib.prepare_path(arr[1])
 			synctool_param.SCRIPT_DIR = the_dir
 			continue
 		
