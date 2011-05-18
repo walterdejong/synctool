@@ -199,6 +199,16 @@ def subst_masterdir(path):
 	return path.replace('$masterdir/', synctool_param.MASTERDIR + '/')
 
 
+def strip_path(path):
+	if not path:
+		return path
+	
+	path = strip_multiple_slashes(path)
+	path = strip_trailing_slash(path)
+	
+	return path
+
+
 def prepare_path(path):
 	if not path:
 		return path

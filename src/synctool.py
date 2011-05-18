@@ -1152,14 +1152,14 @@ def get_options():
 		if opt in ('-d', '--diff'):
 			opt_diff = True
 			action = ACTION_DIFF
-			file = synctool_lib.prepare_path(arg)
+			file = synctool_lib.strip_path(arg)
 			if not file in SINGLE_FILES:
 				SINGLE_FILES.append(file)
 			continue
 		
 		if opt in ('-1', '--single'):
 			opt_single = True
-			file = synctool_lib.prepare_path(arg)
+			file = synctool_lib.strip_path(arg)
 			if not file in SINGLE_FILES:
 				SINGLE_FILES.append(file)
 			continue
@@ -1172,7 +1172,7 @@ def get_options():
 		if opt in ('-r', '--ref', '--reference'):
 			opt_reference = True
 			action = ACTION_REFERENCE
-			file = synctool_lib.prepare_path(arg)
+			file = synctool_lib.strip_path(arg)
 			if not file in SINGLE_FILES:
 				SINGLE_FILES.append(file)
 			continue
