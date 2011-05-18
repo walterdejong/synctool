@@ -39,7 +39,7 @@ def run_remote_copy(nodes, files):
 
 	files_str = string.join(files)
 
-# prepare cmd_args[] for exec() outside the loop
+	# prepare cmd_args[] for exec() outside the loop
 	cmd_args = shlex.split(synctool_param.SCP_CMD)
 
 	if SCP_OPTIONS:
@@ -47,7 +47,7 @@ def run_remote_copy(nodes, files):
 
 	cmd_args.extend(files)
 
-# run scp in serial, not parallel
+	# run scp in serial, not parallel
 	for node in nodes:
 		if node == synctool_param.NODENAME:
 			verbose('skipping node %s' % node)

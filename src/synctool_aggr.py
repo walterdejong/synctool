@@ -75,9 +75,9 @@ def aggregate(f):
 def run(cmd_args):
 	'''pipe the output through the aggregator'''
 
-#
-#	simply re-run this command, but with a pipe
-#
+	#
+	#	simply re-run this command, but with a pipe
+	#
 	if '-a' in cmd_args:
 		cmd_args.remove('-a')
 
