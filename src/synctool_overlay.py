@@ -119,7 +119,7 @@ def ov_perror(errorcode, src_path):
 	
 	elif errorcode == OV_UNKNOWN_GROUP:
 		stderr('unknown group on %s, skipped' % synctool_lib.prettypath(src_path))
-	
+
 
 def overlay_pass1(overlay_dir, filelist, dest_dir = '/', 
 	highest_groupnum = sys.maxint, handle_postscripts = True):
