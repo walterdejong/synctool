@@ -60,7 +60,7 @@ def run_remote_synctool(nodes):
 	# append synctool command
 	cmds.append([ shlex.split(synctool_param.SSH_CMD), shlex.split(synctool_param.SYNCTOOL_CMD) + PASS_ARGS, None ])
 
-	synctool_ssh.run_parallel_cmds(nodes, cmds)
+	synctool_ssh.run_parallel_cmds(nodes, cmds, NODESET)
 
 
 def run_local_synctool():
