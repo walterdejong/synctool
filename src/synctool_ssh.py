@@ -43,7 +43,7 @@ def run_remote_cmd(nodes, remote_cmd_args, nodeset):
 	cmd = synctool_param.SSH_CMD
 	cmd_args = shlex.split(cmd)
 
-# cmd_str is used for printing info only
+	# cmd_str is used for printing info only
 	cmd_str = string.join(remote_cmd_args)
 
 	parallel = 0
@@ -59,9 +59,9 @@ def run_remote_cmd(nodes, remote_cmd_args, nodeset):
 
 		if synctool_lib.DRY_RUN:
 			continue
-#
-#	run commands in parallel, as many as defined
-#
+		#
+		#	run commands in parallel, as many as defined
+		#
 		if parallel > synctool_param.NUM_PROC:
 			try:
 				if os.wait() != -1:
@@ -81,9 +81,9 @@ def run_remote_cmd(nodes, remote_cmd_args, nodeset):
 		else:
 			parallel = parallel + 1
 
-#
-#	wait for children to terminate
-#
+	#
+	#	wait for children to terminate
+	#
 	while True:
 		try:
 			if os.wait() == -1:
@@ -98,23 +98,23 @@ def _run_command(cmd_arr, node, join_char, cmd_args, nodeset):
 	cmd_args[] contains the additional arguments to the command
 	The resulting command will be: cmd_arr + node + join_char + cmd_args'''
 
-#
-#	is this node the local node?
-#
+	#
+	#	is this node the local node?
+	#
 	if node == synctool_param.NODENAME:
 		run_local_cmd(cmd_args)
 		return
 
 	nodename = nodeset.get_nodename_from_interface(node)
 
-# make the command arguments ready for synctool_lib.popen()
+	# make the command arguments ready for synctool_lib.popen()
 	if join_char:
 		cmd_args[0] = '%s%s%s' % (node, join_char, cmd_args[0])
 	else:
 		cmd_arr.append(node)
 	cmd_arr.extend(cmd_args)
 
-# execute remote command and show output with the nodename
+	# execute remote command and show output with the nodename
 	f = synctool_lib.popen(cmd_arr)
 
 	while True:
@@ -124,8 +124,9 @@ def _run_command(cmd_arr, node, join_char, cmd_args, nodeset):
 
 		line = string.strip(line)
 
-# pass output on; simply use 'print' rather than 'stdout()'
-# do not prepend the nodename of this node to the output if option --no-nodename was given
+		# pass output on; simply use 'print' rather than 'stdout()'
+		# do not prepend the nodename of this node to the output
+		# if option --no-nodename was given
 		if line[:15] == '%synctool-log% ':
 			if line[15:] == '--':
 				pass
@@ -151,9 +152,9 @@ def run_parallel_cmds(nodes, cmds, nodeset):
 	parallel = 0
 
 	for node in nodes:
-#
-#	run commands in parallel, as many as defined
-#
+		#
+		#	run commands in parallel, as many as defined
+		#
 		if parallel > synctool_param.NUM_PROC:
 			try:
 				if os.wait() != -1:
@@ -165,11 +166,11 @@ def run_parallel_cmds(nodes, cmds, nodeset):
 		pid = os.fork()
 
 		if not pid:
-#
-#	run the commands one after another
-#
+			#
+			#	run the commands one after another
+			#
 			for (cmd_arr, cmd_args, join_char) in cmds:
-# show what we're going to do
+				# show what we're going to do
 				the_command = os.path.basename(cmd_arr[0])
 				if node == synctool_param.NODENAME:
 					cmd_str = string.join(cmd_args)
@@ -196,7 +197,7 @@ def run_parallel_cmds(nodes, cmds, nodeset):
 
 				_run_command(cmd_arr, node, join_char, cmd_args, nodeset)
 
-# all done, child exits
+			# all done, child exits
 			sys.exit(0)
 
 		if pid == -1:
@@ -204,9 +205,9 @@ def run_parallel_cmds(nodes, cmds, nodeset):
 		else:
 			parallel = parallel + 1
 
-#
-#	wait for children to terminate
-#
+	#
+	#	wait for children to terminate
+	#
 	while True:
 		try:
 			if os.wait() == -1:
@@ -236,7 +237,7 @@ def run_local_cmd(cmd_args):
 
 		line = string.strip(line)
 
-# pass output on; simply use 'print' rather than 'stdout()'
+		# pass output on; simply use 'print' rather than 'stdout()'
 		if line[:15] == '%synctool-log% ':
 			if line[15:] == '--':
 				pass
