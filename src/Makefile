@@ -16,7 +16,7 @@ SCRIPTS=synctool.py synctool_config.py  synctool_master.py synctool_aggr.py \
 	synctool_ping.py synctool_ssh.py synctool_scp.py
 
 LIBS=synctool_lib.py synctool_update.py synctool_unbuffered.py \
-	synctool_nodeset.py
+	synctool_overlay.py synctool_nodeset.py synctool_param.py
 
 all:
 	@echo "synctool Makefile"
