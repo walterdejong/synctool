@@ -31,7 +31,7 @@ OPT_NODENAME = True
 MASTER_OPTS = None
 
 
-def run_remote_cmd(nodes, remote_cmd_args):
+def run_remote_cmd(nodes, remote_cmd_args, nodeset):
 	'''nodes[] is a list of interfaces to run on'''
 	'''remote_cmd_args[] is array of command + arguments'''
 	'''join_char is ':' or None'''
@@ -54,7 +54,7 @@ def run_remote_cmd(nodes, remote_cmd_args):
 			unix_out(cmd_str)
 		else:
 			the_command = os.path.basename(cmd_args[0])
-			verbose('running %s to %s %s' % (the_command, NODESET.get_nodename_from_interface(node), cmd_str))
+			verbose('running %s to %s %s' % (the_command, nodeset.get_nodename_from_interface(node), cmd_str))
 			unix_out('%s %s %s' % (cmd, node, cmd_str))
 
 		if synctool_lib.DRY_RUN:
@@ -73,7 +73,7 @@ def run_remote_cmd(nodes, remote_cmd_args):
 		pid = os.fork()
 
 		if not pid:
-			_run_command(cmd_args, node, None, remote_cmd_args)
+			_run_command(cmd_args, node, None, remote_cmd_args, nodeset)
 			sys.exit(0)
 
 		if pid == -1:
@@ -93,7 +93,7 @@ def run_remote_cmd(nodes, remote_cmd_args):
 			break
 
 
-def _run_command(cmd_arr, node, join_char, cmd_args):
+def _run_command(cmd_arr, node, join_char, cmd_args, nodeset):
 	'''cmd_arr[] is an array that can be passed to e.g. os.execv(), or synctool_lib.popen()
 	cmd_args[] contains the additional arguments to the command
 	The resulting command will be: cmd_arr + node + join_char + cmd_args'''
@@ -105,7 +105,7 @@ def _run_command(cmd_arr, node, join_char, cmd_args):
 		run_local_cmd(cmd_args)
 		return
 
-	nodename = NODESET.get_nodename_from_interface(node)
+	nodename = nodeset.get_nodename_from_interface(node)
 
 # make the command arguments ready for synctool_lib.popen()
 	if join_char:
@@ -140,7 +140,7 @@ def _run_command(cmd_arr, node, join_char, cmd_args):
 	f.close()
 
 
-def run_parallel_cmds(nodes, cmds):
+def run_parallel_cmds(nodes, cmds, nodeset):
 	'''fork and run multiple commands in sequence
 	cmds[] is an array of tuples (cmd_arr[], cmd_args[], join_char)
 	cmd_arr[] is an array that can be passed to e.g. os.execv(), or synctool_lib.popen()
@@ -177,9 +177,9 @@ def run_parallel_cmds(nodes, cmds):
 					unix_out('%s %s' % (string.join(cmd_arr), cmd_str))
 				else:
 					if join_char:
-						cmd_str = '%s%s%s' % (NODESET.get_nodename_from_interface(node), join_char, string.join(cmd_args))
+						cmd_str = '%s%s%s' % (nodeset.get_nodename_from_interface(node), join_char, string.join(cmd_args))
 					else:
-						cmd_str = '%s %s' % (NODESET.get_nodename_from_interface(node), string.join(cmd_args))
+						cmd_str = '%s %s' % (nodeset.get_nodename_from_interface(node), string.join(cmd_args))
 
 					verbose('running %s %s' % (the_command, cmd_str))
 
@@ -194,7 +194,7 @@ def run_parallel_cmds(nodes, cmds):
 #				if synctool_lib.DRY_RUN:
 #					continue
 
-				_run_command(cmd_arr, node, join_char, cmd_args)
+				_run_command(cmd_arr, node, join_char, cmd_args, nodeset)
 
 # all done, child exits
 			sys.exit(0)
@@ -378,7 +378,7 @@ if __name__ == '__main__':
 		print 'no valid nodes specified'
 		sys.exit(1)
 
-	run_remote_cmd(nodes, cmd_args)
+	run_remote_cmd(nodes, cmd_args, nodeset)
 
 
 # EOB
