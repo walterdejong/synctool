@@ -23,6 +23,11 @@ OV_OVERLAY = 0
 OV_DELETE = 1
 OV_TASKS = 2
 
+# error codes for split_extension()
+OV_NOT_MY_GROUP = -1
+OV_NO_GROUP_EXT = -2
+OV_UNKNOWN_GROUP = -3
+
 GROUP_ALL = 0
 OVERLAY_DICT = {}
 OVERLAY_FILES = []		# sorted list, index to OVERLAY_DICT{}
@@ -76,16 +81,19 @@ def split_extension(entryname):
 		return (string.join(arr, '.'), GROUP_ALL+1, True)
 	
 	if ext[0] != '_':
-		return (entryname, GROUP_ALL, False)
+		return (None, OV_NO_GROUP_EXT, False)
 	
 	ext = ext[1:]
 	if not ext:
-		return (entryname, GROUP_ALL, False)
+		return (None, OV_NO_GROUP_EXT, False)
 	
 	try:
 		groupnum = synctool_param.MY_GROUPS.index(ext)
 	except ValueError:
-		return (None, -1, False)
+		if not ext in synctool_param.ALL_GROUPS.index(ext):
+			return (None, OV_UNKNOWN_GROUP, False)
+		
+		return (None, OV_NOT_MY_GROUP, False)
 	
 	if len(arr) > 1 and arr[-1] == 'post':
 		# register group-specific .post script
@@ -94,6 +102,24 @@ def split_extension(entryname):
 	
 	return (string.join(arr, '.'), groupnum, False)
 
+
+def ov_perror(errorcode, src_path):
+	'''print error message for source path'''
+	
+	if errorcode >= 0:
+		# this is not an error but a valid group number
+		return
+	
+	if errorcode == OV_NOT_MY_GROUP:
+		# this is not an error but a normal condition
+		return
+	
+	if errorcode == OV_NO_GROUP_EXT:
+		stderr('no underscored group extension on %s, skipped' % synctool_lib.prettypath(src_path))
+	
+	elif errorcode == OV_UNKNOWN_GROUP:
+		stderr('unknown group on %s, skipped' % synctool_lib.prettypath(src_path))
+	
 
 def overlay_pass1(overlay_dir, filelist, dest_dir = '/', 
 	highest_groupnum = sys.maxint, handle_postscripts = True):
@@ -107,6 +133,12 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 		if groupnum < 0:
 			# not a relevant group, so skip it
 			# Note that this also prunes trees if you have group-specific subdirs
+			
+			if groupnum != OV_NOT_MY_GROUP:
+				# "not my group" is a rather normal error code, but if it is
+				# something else, it's a serious error that we should report
+				ov_perror(groupnum, os.path.join(overlay_dir, entry))
+			
 			continue
 		
 		if name in synctool_param.IGNORE_FILES:
