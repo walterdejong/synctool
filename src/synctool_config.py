@@ -850,8 +850,8 @@ def get_groups(nodename):
 def get_my_groups():
 	'''returns the groups for this node'''
 	
-	if synctool_param.NODES.has_key(NODENAME):
-		return synctool_param.NODES[NODENAME]
+	if synctool_param.NODES.has_key(synctool_param.NODENAME):
+		return synctool_param.NODES[synctool_param.NODENAME]
 	
 	return []
 
