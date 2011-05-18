@@ -1274,7 +1274,7 @@ if __name__ == '__main__':
 		for single_file in SINGLE_FILES:
 			(changed, src) = single_files(single_file)
 			if changed:
-				run_post(single_file)
+				run_post(src, single_file)
 		
 		run_post_on_directories()
 	
