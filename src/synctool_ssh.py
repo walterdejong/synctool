@@ -379,7 +379,7 @@ if __name__ == '__main__':
 		print 'no valid nodes specified'
 		sys.exit(1)
 
-	run_remote_cmd(nodes, cmd_args, nodeset)
+	run_remote_cmd(nodes, cmd_args, NODESET)
 
 
 # EOB
