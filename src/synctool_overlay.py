@@ -90,7 +90,7 @@ def split_extension(entryname):
 	try:
 		groupnum = synctool_param.MY_GROUPS.index(ext)
 	except ValueError:
-		if not ext in synctool_param.ALL_GROUPS.index(ext):
+		if not ext in synctool_param.ALL_GROUPS:
 			return (None, OV_UNKNOWN_GROUP, False)
 		
 		return (None, OV_NOT_MY_GROUP, False)
