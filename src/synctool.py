@@ -61,6 +61,28 @@ SINGLE_FILES = []
 DIR_CHANGED = []
 
 
+def dryrun_msg(str, action = 'update'):
+	'''print a "dry run" message filled to (almost) 80 chars
+	so that it looks nice on the terminal'''
+	
+	l1 = len(str) + 4
+	
+	msg = '# dry run, %s not performed' % action
+	l2 = len(msg)
+	
+	if l1 + l2 <= 79:
+		return str + (' ' * (79 - (l1 + l2))) + msg
+	
+	if l1 + 13 <= 79:
+		# message is long, but we can shorten and it will fit on a line
+		msg = '# dry run'
+		l2 = 9
+		return str + (' ' * (79 - (l1 + l2))) + msg
+	
+	# don't bother, return a long message
+	return str + '    ' + msg
+
+
 def ascii_uid(uid):
 	'''get the name for this uid'''
 
@@ -540,7 +562,7 @@ def copy_file(src, dest):
 		if path_isfile(dest) and not synctool_param.ERASE_SAVED:
 			verbose('  saving %s as %s.saved' % (dest, dest))
 		
-		verbose('  cp %s %s             # dry run, update not performed' % (src, dest))
+		verbose(dryrun_msg('  cp %s %s' % (src, dest)))
 
 
 def symlink_file(oldpath, newpath):
@@ -575,7 +597,7 @@ def symlink_file(oldpath, newpath):
 		os.umask(old_umask)
 
 	else:
-		verbose('  os.symlink(%s, %s)             # dry run, update not performed' % (oldpath, newpath))
+		verbose(dryrun_msg('  os.symlink(%s, %s)' % (oldpath, newpath)))
 
 
 def set_permissions(file, mode):
@@ -588,7 +610,7 @@ def set_permissions(file, mode):
 		except OSError, reason:
 			stderr('failed to chmod %04o %s : %s' % (mode & 07777, file, reason))
 	else:
-		verbose('  os.chmod(%s, %04o)             # dry run, update not performed' % (file, mode & 07777))
+		verbose(dryrun_msg('  os.chmod(%s, %04o)' % (file, mode & 07777)))
 
 
 def set_owner(file, uid, gid):
@@ -601,7 +623,7 @@ def set_owner(file, uid, gid):
 		except OSError, reason:
 			stderr('failed to chown %s.%s %s : %s' % (ascii_uid(uid), ascii_gid(gid), file, reason))
 	else:
-		verbose('  os.chown(%s, %d, %d)             # dry run, update not performed' % (file, uid, gid))
+		verbose(dryrun_msg('  os.chown(%s, %d, %d)' % (file, uid, gid)))
 
 
 def delete_file(file):
@@ -623,9 +645,9 @@ def delete_file(file):
 				stderr('failed to delete %s : %s' % (file, reason))
 	else:
 		if not synctool_param.ERASE_SAVED:
-			verbose('moving %s to %s.saved             # dry run, update not performed' % (file, file))
+			verbose(dryrun_msg('moving %s to %s.saved' % (file, file)))
 		else:
-			verbose('deleting %s    # dry run, delete not performed' % file)
+			verbose(dryrun_msg('deleting %s' % file, 'delete'))
 
 
 def hard_delete_file(file):
@@ -638,7 +660,7 @@ def hard_delete_file(file):
 		except OSError, reason:
 			stderr('failed to delete %s : %s' % (file, reason))
 	else:
-		verbose('deleting %s             # dry run, update not performed' % file)
+		verbose(dryrun_msg('deleting %s' % file, 'delete'))
 
 
 def erase_saved(dest):
@@ -646,7 +668,7 @@ def erase_saved(dest):
 		unix_out('rm %s.saved' % dest)
 		
 		if synctool_lib.DRY_RUN:
-			stdout('erase %s.saved             # dry run, update not performed' % dest)
+			stdout(dryrun_msg('erase %s.saved' % dest, 'erase'))
 		else:
 			stdout('erase %s.saved' % dest)
 			verbose('  os.unlink(%s.saved)' % dest)
@@ -671,7 +693,7 @@ def make_dir(path):
 
 		os.umask(old_umask)
 	else:
-		verbose('  os.mkdir(%s)             # dry run, update not performed' % path)
+		verbose(dryrun_msg('  os.mkdir(%s)' % path))
 
 
 def move_dir(dir):
@@ -688,7 +710,7 @@ def move_dir(dir):
 			stderr('failed to move directory to %s.saved : %s' % (dir, reason))
 
 	else:
-		verbose('moving %s to %s.saved             # dry run, update not performed' % (dir, dir))
+		verbose(dryrun_msg('moving %s to %s.saved' % (dir, dir), 'move'))
 
 
 def run_command(cmd):
@@ -741,7 +763,7 @@ def run_command(cmd):
 		sys.stdout.flush()
 		sys.stderr.flush()
 	else:
-		verbose('  os.system("%s")             # dry run, action not performed' % synctool_lib.prettypath(cmd))
+		verbose(dryrun_msg('  os.system("%s")' % synctool_lib.prettypath(cmd), 'action'))
 
 
 def run_command_in_dir(dest_dir, cmd):
@@ -1121,9 +1143,9 @@ def get_options():
 		
 # dry run already is default
 #
-#			if opt in ('-n', '--dry-run'):
-#				synctool_lib.DRY_RUN = True
-#				continue
+#		if opt in ('-n', '--dry-run'):
+#			synctool_lib.DRY_RUN = True
+#			continue
 		
 		if opt in ('-f', '--fix'):
 			opt_fix = True
