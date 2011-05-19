@@ -89,14 +89,14 @@ def split_extension(entryname, requireExtension):
 		if requireExtension:
 			return (None, OV_NO_GROUP_EXT, False)
 
-		return (entryname, GROUP_ALL, True)
+		return (entryname, GROUP_ALL, False)
 	
 	ext = ext[1:]
 	if not ext:
 		if requireExtension:
 			return (None, OV_NO_GROUP_EXT, False)
 
-		return (entryname, GROUP_ALL, True)
+		return (entryname, GROUP_ALL, False)
 	
 	try:
 		groupnum = synctool_param.MY_GROUPS.index(ext)
@@ -143,7 +143,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 		src_path = os.path.join(overlay_dir, entry)
 
 		if synctool.path_isdir(src_path):
-			if synctool_param.IGNORE_DOTDIRS and name[0] == '.':
+			if synctool_param.IGNORE_DOTDIRS and entry[0] == '.':
 				continue
 			
 			isDir = True
