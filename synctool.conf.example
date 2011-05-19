@@ -24,8 +24,8 @@ masterdir /var/lib/synctool
 # use mode 0755 on most other Unix platforms
 symlink_mode 0755
 
+require_extension yes
 erase_saved no
-
 ignore_dotfiles no
 ignore_dotdirs yes
 ignore .svn

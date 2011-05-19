@@ -64,28 +64,39 @@ class OverlayEntry:
 		return '[<OverlayEntry> %d (%s) (%s)]' % (self.groupnum, self.src_path, self.dest_path)
 
 
-def split_extension(entryname):
+def split_extension(entryname, requireExtension):
 	'''split a simple filename (without leading path) in a tuple: (name, group number, isPost)
 	The group number is the index to MY_GROUPS[] or negative if it is not a relevant group
 	The return parameter isPost is a boolean showing whether it is a .post script
 	
 	Pre-req: GROUP_ALL must be set to MY_GROUPS.index('all')'''
 	
+	requireExtension = requireExtension and synctool_param.REQUIRE_EXTENSION
+	
 	arr = string.split(entryname, '.')
 	if len(arr) <= 1:
+		if requireExtension:
+			return (None, OV_NO_GROUP_EXT, False)
+
 		return (entryname, GROUP_ALL, False)
 	
 	ext = arr.pop()
 	if ext == 'post':
 		# register generic .post script
-		return (string.join(arr, '.'), GROUP_ALL+1, True)
+		return (string.join(arr, '.'), GROUP_ALL, True)
 	
 	if ext[0] != '_':
-		return (None, OV_NO_GROUP_EXT, False)
+		if requireExtension:
+			return (None, OV_NO_GROUP_EXT, False)
+
+		return (entryname, GROUP_ALL, True)
 	
 	ext = ext[1:]
 	if not ext:
-		return (None, OV_NO_GROUP_EXT, False)
+		if requireExtension:
+			return (None, OV_NO_GROUP_EXT, False)
+
+		return (entryname, GROUP_ALL, True)
 	
 	try:
 		groupnum = synctool_param.MY_GROUPS.index(ext)
@@ -129,7 +140,17 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 	global POST_SCRIPTS
 	
 	for entry in os.listdir(overlay_dir):
-		(name, groupnum, isPost) = split_extension(entry)
+		src_path = os.path.join(overlay_dir, entry)
+
+		if synctool.path_isdir(src_path):
+			if synctool_param.IGNORE_DOTDIRS and name[0] == '.':
+				continue
+			
+			isDir = True
+		else:
+			isDir = False
+		
+		(name, groupnum, isPost) = split_extension(entry, not isDir)
 		if groupnum < 0:
 			# not a relevant group, so skip it
 			# Note that this also prunes trees if you have group-specific subdirs
@@ -151,8 +172,6 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 		if groupnum > highest_groupnum:
 			groupnum = highest_groupnum
 		
-		src_path = os.path.join(overlay_dir, entry)
-		
 		if isPost:
 			if handle_postscripts:
 				# register .post script
@@ -173,10 +192,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 		
 		dest_path = os.path.join(dest_dir, name)
 		
-		if synctool.path_isdir(src_path):
-			if synctool_param.IGNORE_DOTDIRS and name[0] == '.':
-				continue
-			
+		if isDir:
 			filelist.append(OverlayEntry(src_path, dest_path, groupnum))
 		
 			# recurse into subdir
