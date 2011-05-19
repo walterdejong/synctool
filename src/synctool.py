@@ -310,7 +310,7 @@ def compare_files(src_path, dest_path):
 	#
 	# if source is a symbolic link ...
 	#
-	if not done and stat_islink(src_stat):
+	if stat_islink(src_stat):
 		need_update = False
 		try:
 			src_link = os.readlink(src_path)
@@ -324,7 +324,7 @@ def compare_files(src_path, dest_path):
 			unix_out('# create symbolic link %s' % dest_path)
 			need_update = True
 
-		if stat_islink(dest_stat):
+		elif stat_islink(dest_stat):
 			done = True
 			try:
 				dest_link = os.readlink(dest_path)
@@ -353,7 +353,7 @@ def compare_files(src_path, dest_path):
 		#
 		# treat as file ...
 		#
-		if not done:
+		else:
 			stdout('%s should be a symbolic link' % dest_path)
 			unix_out('# target should be a symbolic link')
 			delete_file(dest_path)
@@ -372,14 +372,14 @@ def compare_files(src_path, dest_path):
 	#
 	# if the source is a directory ...
 	#
-	if not done and stat_isdir(src_stat):
+	elif stat_isdir(src_stat):
 		if not stat_exists(dest_stat):
 			done = True
 			stdout('%s/ does not exist' % dest_path)
 			unix_out('# make directory %s' % dest_path)
 			need_update = True
 
-		if stat_islink(dest_stat):
+		elif stat_islink(dest_stat):
 			done = True
 			stdout('%s is a symbolic link, but should be a directory' % dest_path)
 			unix_out('# target should be a directory instead of a symbolic link')
@@ -389,7 +389,7 @@ def compare_files(src_path, dest_path):
 		#
 		# treat as a regular file
 		#
-		if not done and not stat_isdir(dest_stat):
+		elif not stat_isdir(dest_stat):
 			done = True
 			stdout('%s should be a directory' % dest_path)
 			unix_out('# target should be a directory')
@@ -411,21 +411,21 @@ def compare_files(src_path, dest_path):
 	#
 	# if source is a file ...
 	#
-	if not done and stat_isfile(src_stat):
+	elif stat_isfile(src_stat):
 		if not stat_exists(dest_stat):
 			done = True
 			stdout('%s does not exist' % dest_path)
 			unix_out('# copy file %s' % dest_path)
 			need_update = True
 
-		if stat_islink(dest_stat):
+		elif stat_islink(dest_stat):
 			done = True
 			stdout('%s is a symbolic link, but should not be' % dest_path)
 			unix_out('# target should be a file instead of a symbolic link')
 			delete_file(dest_path)
 			need_update = True
 
-		if stat_isdir(dest_stat):
+		elif stat_isdir(dest_stat):
 			done = True
 			stdout('%s is a directory, but should not be' % dest_path)
 			unix_out('# target should be a file instead of a directory')
@@ -435,7 +435,7 @@ def compare_files(src_path, dest_path):
 		#
 		# check file size
 		#
-		if stat_isfile(dest_stat):
+		elif stat_isfile(dest_stat):
 			if src_stat[stat.ST_SIZE] != dest_stat[stat.ST_SIZE]:
 				done = True
 				if synctool_lib.DRY_RUN:
@@ -466,7 +466,7 @@ def compare_files(src_path, dest_path):
 					unix_out('# updating file %s' % dest_path)
 					need_update = True
 
-		elif not done:
+		else:
 			done = True
 			stdout('%s should be a regular file' % dest_path)
 			unix_out('# target should be a regular file')
@@ -481,7 +481,7 @@ def compare_files(src_path, dest_path):
 
 		done = True
 
-	elif not done:
+	else:
 		#
 		# source is not a symbolic link, not a directory, and not a regular file
 		#
