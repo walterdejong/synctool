@@ -284,17 +284,34 @@ def read_config_file(configfile):
 			continue
 		
 		#
+		#	keyword: require_extension
+		#
+		if keyword == 'require_extension':
+			value = string.lower(arr[1])
+			if value in synctool_param.BOOLEAN_VALUE_TRUE:
+				synctool_param.REQUIRE_EXTENSION = True
+			
+			elif value in synctool_param.BOOLEAN_VALUE_FALSE:
+				synctool_param.REQUIRE_EXTENSION = False
+			
+			else:
+				stderr('%s:%d: invalid argument for require_extension' % (synctool_param.CONF_FILE, lineno))
+				errors = errors + 1
+			continue
+		
+		#
 		#	keyword: erase_saved
 		#
 		if keyword == 'erase_saved':
-			if arr[1] in ('1', 'on', 'yes'):
+			value = string.lower(arr[1])
+			if value in synctool_param.BOOLEAN_VALUE_TRUE:
 				synctool_param.ERASE_SAVED = True
 			
-			elif arr[1] in ('0', 'off', 'no'):
+			elif value in synctool_param.BOOLEAN_VALUE_FALSE:
 				synctool_param.ERASE_SAVED = False
 			
 			else:
-				stderr("%s:%d: invalid argument for erase_saved" % (synctool_param.CONF_FILE, lineno))
+				stderr('%s:%d: invalid argument for erase_saved' % (synctool_param.CONF_FILE, lineno))
 				errors = errors + 1
 			continue
 		
@@ -302,14 +319,15 @@ def read_config_file(configfile):
 		#	keyword: ignore_dotfiles
 		#
 		if keyword == 'ignore_dotfiles':
-			if arr[1] in ('1', 'on', 'yes'):
+			value = string.lower(arr[1])
+			if value in synctool_param.BOOLEAN_VALUE_TRUE:
 				synctool_param.IGNORE_DOTFILES = True
 			
-			elif arr[1] in ('0', 'off', 'no'):
+			elif value in synctool_param.BOOLEAN_VALUE_FALSE:
 				synctool_param.IGNORE_DOTFILES = False
 			
 			else:
-				stderr("%s:%d: invalid argument for ignore_dotfiles" % (configfile, lineno))
+				stderr('%s:%d: invalid argument for ignore_dotfiles' % (configfile, lineno))
 				errors = errors + 1
 			continue
 		
@@ -317,14 +335,15 @@ def read_config_file(configfile):
 		#	keyword: ignore_dotdirs
 		#
 		if keyword == 'ignore_dotdirs':
-			if arr[1] in ('1', 'on', 'yes'):
+			value = string.lower(arr[1])
+			if value in synctool_param.BOOLEAN_VALUE_TRUE:
 				synctool_param.IGNORE_DOTDIRS = True
 			
-			elif arr[1] in ('0', 'off', 'no'):
+			elif value in synctool_param.BOOLEAN_VALUE_FALSE:
 				synctool_param.IGNORE_DOTDIRS = False
 			
 			else:
-				stderr("%s:%d: invalid argument for ignore_dotdirs" % (configfile, lineno))
+				stderr('%s:%d: invalid argument for ignore_dotdirs' % (configfile, lineno))
 				errors = errors + 1
 			continue
 		

@@ -13,6 +13,9 @@ VERSION = '5.0-beta'
 DEFAULT_CONF = '/var/lib/synctool/synctool.conf'
 CONF_FILE = DEFAULT_CONF
 
+BOOLEAN_VALUE_TRUE = ('1', 'on', 'yes', 'true')
+BOOLEAN_VALUE_FALSE = ('0', 'off', 'no', 'false')
+
 #
 #	config variables
 #
@@ -42,6 +45,7 @@ NUM_PROC = 16				# use sensible default
 #
 SYMLINK_MODE = 0755
 
+REQUIRE_EXTENSION = True
 ERASE_SAVED = False
 IGNORE_DOTFILES = False
 IGNORE_DOTDIRS = False
