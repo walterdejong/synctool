@@ -856,10 +856,6 @@ def overlay_callback(src, dest):
 	
 	verbose('checking %s' % synctool_lib.prettypath(src))
 	
-	# erase any .saved files that are on the system
-	if synctool_param.ERASE_SAVED:
-		erase_saved(dest)
-	
 	if compare_files(src, dest):
 		run_post(src, dest)
 
