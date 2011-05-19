@@ -645,18 +645,19 @@ def hard_delete_file(file):
 		verbose('deleting %s             # dry run, update not performed' % file)
 
 
-def erase_saved(dst):
-	if synctool_param.ERASE_SAVED and path_isfile('%s.saved' % dst):
-		unix_out('rm %s.saved' % dst)
+def erase_saved(dest):
+	if synctool_param.ERASE_SAVED and path_exists('%s.saved' % dest) and not path_isdir('%s.saved' % dest):
+		unix_out('rm %s.saved' % dest)
 		
 		if synctool_lib.DRY_RUN:
-			verbose('backup copy %s.saved not erased    # dry run, update not performed' % dst)
+			stdout('erase %s.saved             # dry run, update not performed' % dest)
 		else:
-			verbose('erasing backup copy %s.saved' % dst)
+			stdout('erase %s.saved' % dest)
+			verbose('  os.unlink(%s.saved)' % dest)
 			try:
-				os.unlink('%s.saved' % dst)
+				os.unlink('%s.saved' % dest)
 			except OSError, reason:
-				stderr('failed to delete %s : %s' % (file, reason))
+				stderr('failed to delete %s : %s' % (dest, reason))
 
 
 def make_dir(path):
@@ -854,6 +855,10 @@ def overlay_callback(src, dest):
 	'''compare files and run post-script if needed'''
 	
 	verbose('checking %s' % synctool_lib.prettypath(src))
+	
+	# erase any .saved files that are on the system
+	if synctool_param.ERASE_SAVED:
+		erase_saved(dest)
 	
 	if compare_files(src, dest):
 		run_post(src, dest)
@@ -1061,7 +1066,7 @@ def usage():
 	print '      --version         Print current version number'
 	print
 	print 'synctool can help you administer your cluster of machines'
-	print 'Note that by default, it does a dry-run, unless you specify --fix'
+	print 'Note that synctool does a dry run unless you specify --fix'
 	print
 	print 'Written by Walter de Jong <walter@heiho.net> (c) 2003-2011'
 
