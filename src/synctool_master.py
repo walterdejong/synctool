@@ -163,7 +163,7 @@ def usage():
 	print '  -X, --exclude-group=grouplist  Exclude these groups from the selection'
 	print
 	print '  -d, --diff=file                Show diff for file'
-	print '  -e, --erase-saved              Erase .saved files'
+	print '  -e, --erase-saved              Erase *.saved backup files'
 	print '  -1, --single=file              Update a single file/run single task'
 	print '  -r, --ref=file                 Show which source file synctool chooses'
 	print '  -u, --upload=file              Pull a remote file into the overlay tree'
@@ -181,7 +181,7 @@ def usage():
 	print '  -a, --aggregate                Condense output; list nodes per change'
 	print
 	print 'A nodelist or grouplist is a comma-separated list'
-	print 'Note that by default, it does a dry-run, unless you specify --fix'
+	print 'Note that synctool does a dry run unless you specify --fix'
 	print
 	print 'Written by Walter de Jong <walter@heiho.net> (c) 2003-2011'
 

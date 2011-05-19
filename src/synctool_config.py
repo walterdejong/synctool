@@ -308,7 +308,11 @@ def read_config_file(configfile):
 				synctool_param.ERASE_SAVED = True
 			
 			elif value in synctool_param.BOOLEAN_VALUE_FALSE:
-				synctool_param.ERASE_SAVED = False
+				# this does nothing!
+				# The default value for ERASE_SAVED is False
+				# This value can be overridden on the command-line in which
+				# case ERASE_SAVED will be set to True from get_options()
+				pass
 			
 			else:
 				stderr('%s:%d: invalid argument for erase_saved' % (synctool_param.CONF_FILE, lineno))
