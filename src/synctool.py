@@ -867,7 +867,6 @@ def overlay_files():
 	'''run the overlay function'''
 	
 	synctool_overlay.visit(synctool_overlay.OV_OVERLAY, overlay_callback)
-	run_post_on_directories()
 
 
 def delete_callback(src, dest):
@@ -889,7 +888,6 @@ def delete_callback(src, dest):
 
 def delete_files():
 	synctool_overlay.visit(synctool_overlay.OV_DELETE, delete_callback)
-	run_post_on_directories()
 
 
 def tasks_callback(src, dest):
@@ -1291,6 +1289,7 @@ if __name__ == '__main__':
 	else:
 		overlay_files()
 		delete_files()
+		run_post_on_directories()
 		always_run()
 	
 	unix_out('# EOB')
