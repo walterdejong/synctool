@@ -1060,6 +1060,7 @@ def usage():
 	print '  -r, --ref=file        Show which source file synctool chooses'
 	print '  -t, --tasks           Run the scripts in the tasks/ directory'
 	print '  -f, --fix             Perform updates (otherwise, do dry-run)'
+	print '  -F, --fullpath        Show full paths instead of shortened ones'
 	print '  -v, --verbose         Be verbose'
 	print '  -q, --quiet           Suppress informational startup messages'
 	print '      --unix            Output actions as unix shell commands'
@@ -1081,11 +1082,14 @@ def get_options():
 	if len(sys.argv) <= 1:
 		return (None, None, None)
 	
-	be_careful_with_getopt()	# check for dangerous common typo's on the command-line
+	# check for dangerous common typo's on the command-line
+	be_careful_with_getopt()
 	
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:etfvq', ['help', 'conf=', 'diff=', 'single=', 'ref=', 'erase-saved', 'tasks', 'fix', 'verbose', 'quiet',
-			'unix', 'masterlog', 'version'])
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:etfFvq',
+			['help', 'conf=', 'diff=', 'single=', 'ref=', 'erase-saved',
+			'tasks', 'fix', 'fullpath', 'verbose', 'quiet', 'unix',
+			'masterlog', 'version'])
 	except getopt.error, (reason):
 		print '%s: %s' % (progname, reason)
 		usage()
@@ -1133,13 +1137,17 @@ def get_options():
 #			synctool_lib.DRY_RUN = True
 #			continue
 		
+		if opt in ('-e', '--erase-saved'):
+			synctool_param.ERASE_SAVED = True
+			continue
+		
 		if opt in ('-f', '--fix'):
 			opt_fix = True
 			synctool_lib.DRY_RUN = False
 			continue
 		
-		if opt in ('-e', '--erase-saved'):
-			synctool_param.ERASE_SAVED = True
+		if opt in ('-F', '--fullpath'):
+			synctool_param.FULL_PATH = True
 			continue
 		
 		if opt in ('-v', '--verbose'):

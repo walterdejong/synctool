@@ -166,6 +166,7 @@ def usage():
 	print '  -s, --suffix=group             Give group suffix for the uploaded file'
 	print '  -t, --tasks                    Run the scripts in the tasks/ directory'
 	print '  -f, --fix                      Perform updates (otherwise, do dry-run)'
+	print '  -F, --fullpath                 Show full paths instead of shortened ones'
 	print '      --unix                     Output actions as unix shell commands'
 	print '      --skip-rsync               Do not sync the repository'
 	print '                                 (eg. when it is on a shared filesystem)'
@@ -194,9 +195,12 @@ def get_options():
 	synctool.be_careful_with_getopt()
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:r:u:s:etfqa', ['help', 'conf=', 'verbose', 'node=', 'group=',
-			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=', 'upload=', 'suffix=', 'erase-saved', 'tasks', 'fix', 'quiet', 'aggregate',
-			'skip-rsync', 'unix', 'version', 'check-update', 'download'])
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:r:u:s:etfFqa',
+			['help', 'conf=', 'verbose', 'node=', 'group=',
+			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=',
+			'upload=', 'suffix=', 'erase-saved', 'tasks', 'fix', 'fullpath',
+			'quiet', 'aggregate', 'skip-rsync', 'unix',
+			'version', 'check-update', 'download'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -306,6 +310,9 @@ def get_options():
 		if opt in ('-f', '--fix'):
 			opt_fix = True
 			synctool_lib.DRY_RUN = False
+
+		if opt in ('-F', '--fullpath'):
+			synctool_param.FULL_PATH = True
 
 		if opt in ('-a', '--aggregate'):
 			OPT_AGGREGATE = True
