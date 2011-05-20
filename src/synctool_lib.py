@@ -53,7 +53,7 @@ TERSE_TXT = (
 )
 
 TERSE_COLORS = {
-	'info' : 'white',
+	'info' : 'white',		# note: white is not visible on white background
 	'WARN' : 'yellow',		# note: yellow is not really visible on white background
 	'ERROR': 'red',
 	'FAIL' : 'cyan',
