@@ -46,6 +46,7 @@ NUM_PROC = 16				# use sensible default
 SYMLINK_MODE = 0755
 
 REQUIRE_EXTENSION = True
+FULL_PATH = False
 ERASE_SAVED = False
 IGNORE_DOTFILES = False
 IGNORE_DOTDIRS = False

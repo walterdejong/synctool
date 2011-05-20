@@ -133,12 +133,8 @@ def upload(interface, upload_filename, upload_suffix=None):
 	verbose('%s:%s uploaded as %s' % (node, upload_filename, repos_filename))
 	unix_out('%s %s:%s %s' % (synctool_param.SCP_CMD, interface, upload_filename, repos_filename))
 
-	# display short path name
-	masterlen = len(synctool_param.MASTERDIR) + 1
-	short_repos_filename = '$masterdir/%s' % repos_filename[masterlen:]
-
 	if dry_run:
-		stdout('would be uploaded as %s' % short_repos_filename)
+		stdout('would be uploaded as %s' % synctool_lib.prettypath(repos_filename))
 	else:
 		# make scp command array
 		cmd_arr = shlex.split(synctool_param.SCP_CMD)
@@ -148,7 +144,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 		synctool_ssh.run_local_cmd(cmd_arr)
 
 		if os.path.isfile(repos_filename):
-			stdout('uploaded %s' % short_repos_filename)
+			stdout('uploaded %s' % synctool_lib.prettypath(repos_filename))
 
 
 def usage():

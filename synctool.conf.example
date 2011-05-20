@@ -4,7 +4,8 @@
 
 masterdir /var/lib/synctool
 
-#
+#overlaydir $masterdir/overlay
+
 # Note that multiple overlay dirs are supported, so you can do things like
 #overlaydir $masterdir/overlay-common
 #overlaydir $masterdir/overlay-subcluster1
@@ -12,9 +13,7 @@ masterdir /var/lib/synctool
 #
 # Same goes for deletedir and tasksdir, but not for scriptdir ...
 #
-
 # these are defaults:
-#overlaydir $masterdir/overlay
 #deletedir $masterdir/delete
 #tasksdir $masterdir/tasks
 #scriptdir $masterdir/scripts
@@ -24,13 +23,26 @@ masterdir /var/lib/synctool
 # use mode 0755 on most other Unix platforms
 symlink_mode 0755
 
+# all files in the repository must have a group extension
 require_extension yes
+
+# display full paths or just '$masterdir/overlay/...'
+full_path no
+
+# make backup copies named *.saved
 erase_saved no
+
+# ignore all files beginning with a dot (like .profile, .bashrc, ...)
 ignore_dotfiles no
+
+# ignore all directories beginning with a dot (like .git, .svn, ...)
 ignore_dotdirs yes
+
+# ignore specific files/directories
 ignore .svn
 ignore .gitignore
 
+# log to file
 logfile /var/log/synctool.log
 
 # configure external commands that synctool uses
@@ -57,35 +69,45 @@ group g1 batch test wn
 node node0 master
 
 node node1 fs sched interface:node1-mgmt
-node node2 login interface:node2-mgmt
-node node3 wn interface:node3-mgmt
-node node4 wn interface:node4-mgmt
-node node5 wn interface:node5-mgmt
-node node6 wn interface:node6-mgmt
-node node7 wn interface:node7-mgmt
-node node8 test interface:node8-mgmt
-node node9 batch interface:node9-mgmt
+node node2 login    interface:node2-mgmt
+node node3 wn       interface:node3-mgmt
+node node4 wn       interface:node4-mgmt
+node node5 wn       interface:node5-mgmt
+node node6 wn       interface:node6-mgmt
+node node7 wn       interface:node7-mgmt
+node node8 test     interface:node8-mgmt
+node node9 batch    interface:node9-mgmt
 
+# ignore a specific node
 ignore_node node0
+ignore_node node9 any arguments here are ignored: this node is broken
 
-ignore_node node9 any_arguments_here_are_ignored batch test
+# ignore a number of groups
 ignore_group test test2
 
 #
-#	run command when dir entry gets updated
+# run command when file or directory is updated
+# This is an alternative method to using .post scripts
+# Note that the command on the right hand side must be a full path, or
+# else the command will be looked for under scriptdir ($masterdir/scripts)
+#
+# The exact commands to reload system daemons are operating system dependant
+# so adapt these to fit your situation
 #
 on_update	/etc/aliases					/usr/bin/newaliases
 on_update	/etc/ssh/sshd_config			/etc/init.d/ssh reload
 on_update	/etc/syslog-ng/syslog-ng.conf	/etc/init.d/syslog-ng reload
-on_update	/etc/crontab					/etc/init.d/cron reload
-on_update	/etc/ntp.conf					/etc/init.d/ntpd reload
+on_update	/etc/ntp.conf					/sbin/service ntp reload
 
 on_update	/etc/logrotate.d				/bin/rm -f /etc/logrotate.d/*.saved
 on_update	/etc/cron.d						/bin/rm -f /etc/cron.d/*.saved
 on_update	/etc/cron.daily					/bin/rm -f /etc/cron.daily/*.saved
+on_update	/etc/init.d						/bin/rm -f /etc/init.d/*.saved
 
-# always_run /bin/date
+# always run this command
+#always_run /bin/date
 
-# include /etc/synctool_local.conf
+# include a local synctool config file on the target node
+#include /etc/synctool_local.conf
 
 # EOB

@@ -300,6 +300,22 @@ def read_config_file(configfile):
 			continue
 		
 		#
+		#	keyword: full_path
+		#
+		if keyword == 'full_path':
+			value = string.lower(arr[1])
+			if value in synctool_param.BOOLEAN_VALUE_TRUE:
+				synctool_param.FULL_PATH = True
+			
+			elif value in synctool_param.BOOLEAN_VALUE_FALSE:
+				synctool_param.FULL_PATH = False
+			
+			else:
+				stderr('%s:%d: invalid argument for full_path' % (synctool_param.CONF_FILE, lineno))
+				errors = errors + 1
+			continue
+		
+		#
 		#	keyword: erase_saved
 		#
 		if keyword == 'erase_saved':
