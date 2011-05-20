@@ -295,7 +295,7 @@ def get_options():
 			opt_tasks = True
 
 		if opt in ('-e', '--erase-saved'):
-			synctool_param.ERASE_SAVED = True
+			synctool_lib.ERASE_SAVED = True		# doesn't do anything in master, really
 
 		if opt in ('-q', '--quiet'):
 			synctool_lib.QUIET = True

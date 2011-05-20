@@ -247,35 +247,34 @@ def path_isexec(path):
 
 def compare_files(src_path, dest_path):
 	'''see what the differences are between src and dest, and fix it if not a dry run
-
+	
 	src_path is the file in the synctool/overlay tree
 	dest_path is the file in the system
-
-	done is a local boolean saying if a path has been checked
+	
 	need_update is a local boolean saying if a path needs to be updated
-
-	return value is 0 when file is not changed, 1 when file is updated
-
+	
+	return value is False when file is not changed, True when file is updated
+	
 --
 	The structure of this long function is as follows;
-
+	
 		stat(src)		this stat is 'sacred' and dest should be set accordingly
 		stat(dest)
-
+		
 		if src is symlink:
 			check if dest exists
 			check if dest is symlink
 			check if dest is dir
 			treat dest as file
 			fix if needed
-
+		
 		if src is directory:
 			check if dest exists
 			check if dest is symlink
 			check if dest is dir
 			treat dest as file
 			fix if needed
-
+		
 		if src is file:
 			check if dest exists
 			check if dest is symlink
@@ -284,24 +283,24 @@ def compare_files(src_path, dest_path):
 			check filesize
 			do md5 checksum
 			fix if needed
-
+		
 		don't know what type src is
-
+		
 		check ownership
 		check permissions
-		return 0
+		return False
 '''
-
+	
 	src_stat = stat_path(src_path)
 	if not src_stat:
 		return False
-
+	
 	dest_stat = stat_path(dest_path)
 #	if not dest_path:
 #		pass					# destination does not exist
-
+	
 	need_update = False
-
+	
 	#
 	# if source is a symbolic link ...
 	#
@@ -312,36 +311,36 @@ def compare_files(src_path, dest_path):
 		except OSError, reason:
 			stderr('failed to readlink %s : %s' % (src_path, reason))
 			return False
-
+		
 		if not stat_exists(dest_stat):
 			stdout('symbolic link %s does not exist' % dest_path)
 			unix_out('# create symbolic link %s' % dest_path)
 			need_update = True
-
+		
 		elif stat_islink(dest_stat):
 			try:
 				dest_link = os.readlink(dest_path)
 			except OSError, reason:
 				stderr('failed to readlink %s : %s (but ignoring this error)' % (src_path, reason))
 				dest_link = None
-
+			
 			if src_link != dest_link:
 				stdout('%s should point to %s, but points to %s' % (dest_path, src_link, dest_link))
 				unix_out('# relink symbolic link %s' % dest_path)
 				delete_file(dest_path)
 				need_update = True
-
+			
 			if (dest_stat[stat.ST_MODE] & 07777) != synctool_param.SYMLINK_MODE:
 				stdout('%s should have mode %04o (symlink), but has %04o' % (dest_path, synctool_param.SYMLINK_MODE, dest_stat[stat.ST_MODE] & 07777))
 				unix_out('# fix permissions of symbolic link %s' % dest_path)
 				need_update = True
-
+		
 		elif stat_isdir(dest_stat):
 			stdout('%s should be a symbolic link' % dest_path)
 			unix_out('# target should be a symbolic link')
-			move_dir(dest_path)
+			save_dir(dest_path)
 			need_update = True
-
+		
 		#
 		# treat as file ...
 		#
@@ -350,7 +349,7 @@ def compare_files(src_path, dest_path):
 			unix_out('# target should be a symbolic link')
 			delete_file(dest_path)
 			need_update = True
-
+		
 		#
 		# (re)create the symbolic link
 		#
@@ -358,7 +357,7 @@ def compare_files(src_path, dest_path):
 			symlink_file(src_link, dest_path)
 			unix_out('')
 			return True
-
+	
 	#
 	# if the source is a directory ...
 	#
@@ -367,13 +366,13 @@ def compare_files(src_path, dest_path):
 			stdout('%s/ does not exist' % dest_path)
 			unix_out('# make directory %s' % dest_path)
 			need_update = True
-
+		
 		elif stat_islink(dest_stat):
 			stdout('%s is a symbolic link, but should be a directory' % dest_path)
 			unix_out('# target should be a directory instead of a symbolic link')
 			delete_file(dest_path)
 			need_update = True
-
+		
 		#
 		# treat as a regular file
 		#
@@ -382,7 +381,7 @@ def compare_files(src_path, dest_path):
 			unix_out('# target should be a directory')
 			delete_file(dest_path)
 			need_update = True
-
+		
 		#
 		# make the directory
 		#
@@ -392,7 +391,7 @@ def compare_files(src_path, dest_path):
 			set_permissions(dest_path, src_stat[stat.ST_MODE])
 			unix_out('')
 			return True
-
+	
 	#
 	# if source is a file ...
 	#
@@ -401,19 +400,19 @@ def compare_files(src_path, dest_path):
 			stdout('%s does not exist' % dest_path)
 			unix_out('# copy file %s' % dest_path)
 			need_update = True
-
+		
 		elif stat_islink(dest_stat):
 			stdout('%s is a symbolic link, but should not be' % dest_path)
 			unix_out('# target should be a file instead of a symbolic link')
 			delete_file(dest_path)
 			need_update = True
-
+		
 		elif stat_isdir(dest_stat):
 			stdout('%s is a directory, but should not be' % dest_path)
 			unix_out('# target should be a file instead of a directory')
-			move_dir(dest_path)
+			save_dir(dest_path)
 			need_update = True
-
+		
 		#
 		# check file size
 		#
@@ -434,7 +433,7 @@ def compare_files(src_path, dest_path):
 				except IOError, (err, reason):
 #	error was already printed				stderr('error: %s' % reason)
 					return False
-
+				
 				if src_sum != dest_sum:
 					if synctool_lib.DRY_RUN:
 #						stdout('%s mismatch (SHA1 checksum)' % dest_path)
@@ -445,28 +444,28 @@ def compare_files(src_path, dest_path):
 
 					unix_out('# updating file %s' % dest_path)
 					need_update = True
-
+		
 		else:
 			stdout('%s should be a regular file' % dest_path)
 			unix_out('# target should be a regular file')
 			need_update = True
-
+		
 		if need_update:
 			copy_file(src_path, dest_path)
 			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
 			set_permissions(dest_path, src_stat[stat.ST_MODE])
 			unix_out('')
 			return True
-
+	
 	else:
 		#
 		# source is not a symbolic link, not a directory, and not a regular file
 		#
 		stderr("be advised: don't know how to handle %s" % src_path)
-
+		
 		if not stat_exists(dest_stat):
 			return False
-
+		
 		if stat_islink(dest_stat):
 			stdout('%s should not be a symbolic link' % dest_path)
 		else:
@@ -477,7 +476,7 @@ def compare_files(src_path, dest_path):
 					stdout('%s should not be a regular file' % dest_path)
 				else:
 					stderr("don't know how to handle %s" % dest_path)
-
+	
 	#
 	# check mode and owner/group of files and/or directories
 	#
@@ -490,26 +489,26 @@ def compare_files(src_path, dest_path):
 		if src_stat[stat.ST_UID] != dest_stat[stat.ST_UID] or src_stat[stat.ST_GID] != dest_stat[stat.ST_GID]:
 			stdout('%s should have owner %s.%s (%d.%d), but has %s.%s (%d.%d)' % (dest_path, ascii_uid(src_stat[stat.ST_UID]), ascii_gid(src_stat[stat.ST_GID]), src_stat[stat.ST_UID], src_stat[stat.ST_GID], ascii_uid(dest_stat[stat.ST_UID]), ascii_gid(dest_stat[stat.ST_GID]), dest_stat[stat.ST_UID], dest_stat[stat.ST_GID]))
 			unix_out('# changing ownership on %s' % dest_path)
-
+			
 			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
-
+			
 			unix_out('')
 			need_update = True
-
+		
 		if (src_stat[stat.ST_MODE] & 07777) != (dest_stat[stat.ST_MODE] & 07777):
 			stdout('%s should have mode %04o, but has %04o' % (dest_path, src_stat[stat.ST_MODE] & 07777, dest_stat[stat.ST_MODE] & 07777))
 			unix_out('# changing permissions on %s' % dest_path)
-
+			
 			set_permissions(dest_path, src_stat[stat.ST_MODE])
-
+			
 			unix_out('')
 			need_update = True
-
+		
 #		if src_stat[stat.ST_MTIME] != dest_stat[stat.ST_MTIME]:
 #			stdout('%s should have mtime %d, but has %d' % (dest_path, src_stat[stat.ST_MTIME], dest_stat[stat.ST_MTIME]))
 #		if src_stat[stat.ST_CTIME] != dest_stat[stat.ST_CTIME]:
 #			stdout('%s should have ctime %d, but has %d' % (dest_path, src_stat[stat.ST_CTIME], dest_stat[stat.ST_CTIME]))
-
+	
 	erase_saved(dest_path)
 	return need_update
 
@@ -524,7 +523,7 @@ def copy_file(src, dest):
 	if not synctool_lib.DRY_RUN:
 		old_umask = os.umask(077)
 		
-		if not synctool_param.ERASE_SAVED:
+		if synctool_param.BACKUP_COPIES:
 			if path_isfile(dest):
 				verbose('  saving %s as %s.saved' % (dest, dest))
 				try:
@@ -540,7 +539,7 @@ def copy_file(src, dest):
 		
 		os.umask(old_umask)
 	else:
-		if path_isfile(dest) and not synctool_param.ERASE_SAVED:
+		if path_isfile(dest) and synctool_param.BACKUP_COPIES:
 			verbose('  saving %s as %s.saved' % (dest, dest))
 		
 		verbose(dryrun_msg('  cp %s %s' % (src, dest)))
@@ -609,7 +608,7 @@ def set_owner(file, uid, gid):
 
 def delete_file(file):
 	if not synctool_lib.DRY_RUN:
-		if not synctool_param.ERASE_SAVED:
+		if synctool_param.BACKUP_COPIES:
 			unix_out('mv %s %s.saved' % (file, file))
 
 			verbose('moving %s to %s.saved' % (file, file))
@@ -625,7 +624,7 @@ def delete_file(file):
 			except OSError, reason:
 				stderr('failed to delete %s : %s' % (file, reason))
 	else:
-		if not synctool_param.ERASE_SAVED:
+		if synctool_param.BACKUP_COPIES:
 			verbose(dryrun_msg('moving %s to %s.saved' % (file, file)))
 		else:
 			verbose(dryrun_msg('deleting %s' % file, 'delete'))
@@ -645,7 +644,7 @@ def hard_delete_file(file):
 
 
 def erase_saved(dest):
-	if synctool_param.ERASE_SAVED and path_exists('%s.saved' % dest) and not path_isdir('%s.saved' % dest):
+	if synctool_lib.ERASE_SAVED and path_exists('%s.saved' % dest) and not path_isdir('%s.saved' % dest):
 		unix_out('rm %s.saved' % dest)
 		
 		if synctool_lib.DRY_RUN:
@@ -677,14 +676,14 @@ def make_dir(path):
 		verbose(dryrun_msg('  os.mkdir(%s)' % path))
 
 
-def move_dir(dir):
+def save_dir(dir):
+	if not synctool_param.BACKUP_COPIES:
+		return
+	
 	unix_out('mv %s %s.saved' % (dir, dir))
 
 	if not synctool_lib.DRY_RUN:
 		verbose('moving %s to %s.saved' % (dir, dir))
-		#
-		#	directories are kept no matter what config.ERASE_SAVED says
-		#
 		try:
 			os.rename(dir, '%s.saved' % dir)
 		except OSError, reason:
@@ -1134,7 +1133,7 @@ def get_options():
 #			continue
 		
 		if opt in ('-e', '--erase-saved'):
-			synctool_param.ERASE_SAVED = True
+			synctool_lib.ERASE_SAVED = True
 			continue
 		
 		if opt in ('-f', '--fix'):

@@ -24,16 +24,16 @@ masterdir /var/lib/synctool
 symlink_mode 0755
 
 # all files in the repository must have a group extension
-require_extension yes
+#require_extension yes
 
 # display full paths or just '$masterdir/overlay/...'
-full_path no
+#full_path no
 
 # make backup copies named *.saved
-erase_saved no
+#backup_copies yes
 
 # ignore all files beginning with a dot (like .profile, .bashrc, ...)
-ignore_dotfiles no
+#ignore_dotfiles no
 
 # ignore all directories beginning with a dot (like .git, .svn, ...)
 ignore_dotdirs yes
