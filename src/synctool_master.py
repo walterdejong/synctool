@@ -296,8 +296,6 @@ def get_options():
 
 		if opt in ('-e', '--erase-saved'):
 			synctool_param.ERASE_SAVED = True
-			PASS_ARGS.append(opt)
-			continue
 
 		if opt in ('-q', '--quiet'):
 			synctool_lib.QUIET = True
