@@ -15,6 +15,8 @@
 - fixed possible bug for on_update where quotation was lost for the command
 - added new config parameters for overlaydir, deletedir, tasksdir, scriptdir
 - added new config parameter require_extension (default: yes)
+- added new config parameter full_path (default: no)
+- full_path can be set from cmdline using -F and/or --fullpath
 - $masterdir can be used in the config file to reference parameter 'masterdir'
 
 13 May 2011:
