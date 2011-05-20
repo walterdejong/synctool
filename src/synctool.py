@@ -14,7 +14,7 @@ import synctool_config
 import synctool_lib
 import synctool_overlay
 
-from synctool_lib import verbose,stdout,stderr,unix_out
+from synctool_lib import verbose,stdout,stderr,terse,unix_out
 
 import sys
 import os
@@ -314,10 +314,12 @@ def compare_files(src_path, dest_path):
 			src_link = os.readlink(src_path)
 		except OSError, reason:
 			stderr('failed to readlink %s : %s' % (src_path, reason))
+			terse(synctool_lib.TERSE_FAIL, 'readlink %s' % src_path)
 			return False
 		
 		if not stat_exists(dest_stat):
 			stdout('symbolic link %s does not exist' % dest_path)
+			terse(synctool_lib.TERSE_LINK, dest_path)
 			unix_out('# create symbolic link %s' % dest_path)
 			need_update = True
 		
@@ -326,21 +328,25 @@ def compare_files(src_path, dest_path):
 				dest_link = os.readlink(dest_path)
 			except OSError, reason:
 				stderr('failed to readlink %s : %s (but ignoring this error)' % (src_path, reason))
+				terse(synctool_lib.TERSE_FAIL, 'readlink %s' % src_path)
 				dest_link = None
 			
 			if src_link != dest_link:
 				stdout('%s should point to %s, but points to %s' % (dest_path, src_link, dest_link))
+				terse(synctool_lib.TERSE_LINK, dest_path)
 				unix_out('# relink symbolic link %s' % dest_path)
 				delete_file(dest_path)
 				need_update = True
 			
 			if (dest_stat[stat.ST_MODE] & 07777) != synctool_param.SYMLINK_MODE:
 				stdout('%s should have mode %04o (symlink), but has %04o' % (dest_path, synctool_param.SYMLINK_MODE, dest_stat[stat.ST_MODE] & 07777))
+				terse(synctool_lib.TERSE_MODE, '%04o %s' % (synctool_param.SYMLINK_MODE, dest_path))
 				unix_out('# fix permissions of symbolic link %s' % dest_path)
 				need_update = True
 		
 		elif stat_isdir(dest_stat):
 			stdout('%s should be a symbolic link' % dest_path)
+			terse(synctool_lib.TERSE_LINK, dest_path)
 			unix_out('# target should be a symbolic link')
 			save_dir(dest_path)
 			need_update = True
@@ -350,6 +356,7 @@ def compare_files(src_path, dest_path):
 		#
 		else:
 			stdout('%s should be a symbolic link' % dest_path)
+			terse(synctool_lib.TERSE_LINK, dest_path)
 			unix_out('# target should be a symbolic link')
 			delete_file(dest_path)
 			need_update = True
@@ -368,11 +375,13 @@ def compare_files(src_path, dest_path):
 	elif stat_isdir(src_stat):
 		if not stat_exists(dest_stat):
 			stdout('%s/ does not exist' % dest_path)
+			terse(synctool_lib.TERSE_MKDIR, dest_path)
 			unix_out('# make directory %s' % dest_path)
 			need_update = True
 		
 		elif stat_islink(dest_stat):
 			stdout('%s is a symbolic link, but should be a directory' % dest_path)
+			terse(synctool_lib.TERSE_MKDIR, dest_path)
 			unix_out('# target should be a directory instead of a symbolic link')
 			delete_file(dest_path)
 			need_update = True
@@ -382,6 +391,7 @@ def compare_files(src_path, dest_path):
 		#
 		elif not stat_isdir(dest_stat):
 			stdout('%s should be a directory' % dest_path)
+			terse(synctool_lib.TERSE_MKDIR, dest_path)
 			unix_out('# target should be a directory')
 			delete_file(dest_path)
 			need_update = True
@@ -402,17 +412,20 @@ def compare_files(src_path, dest_path):
 	elif stat_isfile(src_stat):
 		if not stat_exists(dest_stat):
 			stdout('%s does not exist' % dest_path)
+			terse(synctool_lib.TERSE_SYNC, dest_path)
 			unix_out('# copy file %s' % dest_path)
 			need_update = True
 		
 		elif stat_islink(dest_stat):
 			stdout('%s is a symbolic link, but should not be' % dest_path)
+			terse(synctool_lib.TERSE_SYNC, dest_path)
 			unix_out('# target should be a file instead of a symbolic link')
 			delete_file(dest_path)
 			need_update = True
 		
 		elif stat_isdir(dest_stat):
 			stdout('%s is a directory, but should not be' % dest_path)
+			terse(synctool_lib.TERSE_SYNC, dest_path)
 			unix_out('# target should be a file instead of a directory')
 			save_dir(dest_path)
 			need_update = True
@@ -426,6 +439,7 @@ def compare_files(src_path, dest_path):
 					stdout('%s mismatch (file size)' % dest_path)
 				else:
 					stdout('%s updated (file size mismatch)' % dest_path)
+				terse(synctool_lib.TERSE_SYNC, dest_path)
 				unix_out('# updating file %s' % dest_path)
 				need_update = True
 			else:
@@ -446,11 +460,13 @@ def compare_files(src_path, dest_path):
 #						stdout('%s updated (SHA1 mismatch)' % dest_path)
 						stdout('%s updated (MD5 mismatch)' % dest_path)
 
+					terse(synctool_lib.TERSE_SYNC, dest_path)
 					unix_out('# updating file %s' % dest_path)
 					need_update = True
 		
 		else:
 			stdout('%s should be a regular file' % dest_path)
+			terse(synctool_lib.TERSE_SYNC, dest_path)
 			unix_out('# target should be a regular file')
 			need_update = True
 		
@@ -466,20 +482,25 @@ def compare_files(src_path, dest_path):
 		# source is not a symbolic link, not a directory, and not a regular file
 		#
 		stderr("be advised: don't know how to handle %s" % src_path)
+		terse(synctool_lib.TERSE_WARNING, 'unknown type %s' % src_path)
 		
 		if not stat_exists(dest_stat):
 			return False
 		
 		if stat_islink(dest_stat):
 			stdout('%s should not be a symbolic link' % dest_path)
+			terse(synctool_lib.TERSE_WARNING, 'wrong type %s' % dest_path)
 		else:
 			if stat_isdir(dest_stat):
 				stdout('%s should not be a directory' % dest_path)
+				terse(synctool_lib.TERSE_WARNING, 'wrong type %s' % dest_path)
 			else:
 				if stat_isfile(dest_stat):
 					stdout('%s should not be a regular file' % dest_path)
+					terse(synctool_lib.TERSE_WARNING, 'wrong type %s' % dest_path)
 				else:
 					stderr("don't know how to handle %s" % dest_path)
+					terse(synctool_lib.TERSE_WARNING, 'unknown type %s' % dest_path)
 	
 	#
 	# check mode and owner/group of files and/or directories
@@ -491,7 +512,10 @@ def compare_files(src_path, dest_path):
 	#
 	if stat_exists(dest_stat) and not stat_islink(dest_stat):
 		if src_stat[stat.ST_UID] != dest_stat[stat.ST_UID] or src_stat[stat.ST_GID] != dest_stat[stat.ST_GID]:
-			stdout('%s should have owner %s.%s (%d.%d), but has %s.%s (%d.%d)' % (dest_path, ascii_uid(src_stat[stat.ST_UID]), ascii_gid(src_stat[stat.ST_GID]), src_stat[stat.ST_UID], src_stat[stat.ST_GID], ascii_uid(dest_stat[stat.ST_UID]), ascii_gid(dest_stat[stat.ST_GID]), dest_stat[stat.ST_UID], dest_stat[stat.ST_GID]))
+			owner = ascii_uid(src_stat[stat.ST_UID])
+			group = ascii_gid(src_stat[stat.ST_GID])
+			stdout('%s should have owner %s.%s (%d.%d), but has %s.%s (%d.%d)' % (dest_path, owner, group, src_stat[stat.ST_UID], src_stat[stat.ST_GID], ascii_uid(dest_stat[stat.ST_UID]), ascii_gid(dest_stat[stat.ST_GID]), dest_stat[stat.ST_UID], dest_stat[stat.ST_GID]))
+			terse(synctool_lib.TERSE_OWNER, '%s.%s %s' % (owner, group, dest_path))
 			unix_out('# changing ownership on %s' % dest_path)
 			
 			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
@@ -501,6 +525,7 @@ def compare_files(src_path, dest_path):
 		
 		if (src_stat[stat.ST_MODE] & 07777) != (dest_stat[stat.ST_MODE] & 07777):
 			stdout('%s should have mode %04o, but has %04o' % (dest_path, src_stat[stat.ST_MODE] & 07777, dest_stat[stat.ST_MODE] & 07777))
+			terse(synctool_lib.TERSE_MODE, '%04o %s' % (src_stat[stat.ST_MODE] & 07777, dest_path))
 			unix_out('# changing permissions on %s' % dest_path)
 			
 			set_permissions(dest_path, src_stat[stat.ST_MODE])
@@ -569,6 +594,7 @@ def symlink_file(oldpath, newpath):
 				os.rename(newpath, '%s.saved' % newpath)
 			except OSError, reason:
 				stderr('failed to save %s as %s.saved : %s' % (newpath, newpath, reason))
+				terse(synctool_lib.TERSE_FAIL, 'save %s.saved' % newpath)
 
 		old_umask = os.umask(022)		# we want symlinks to have mode 0755, but linux makes them 0777 anyway
 
@@ -577,6 +603,7 @@ def symlink_file(oldpath, newpath):
 			os.symlink(oldpath, newpath)
 		except OSError, reason:
 			stderr('failed to create symlink %s -> %s : %s' % (newpath, oldpath, reason))
+			terse(synctool_lib.TERSE_FAIL, 'link %s' % newpath)
 
 		os.umask(old_umask)
 
