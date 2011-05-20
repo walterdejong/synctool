@@ -106,7 +106,11 @@ def read_config():
 	
 	if not 'none' in synctool_param.IGNORE_GROUPS:
 		synctool_param.IGNORE_GROUPS.append('none')
-
+	
+	# do not make new backup copies when --erase was given
+	if synctool_lib.ERASE_SAVED:
+		synctool_param.BACKUP_COPIES = False
+	
 
 def read_config_file(configfile):
 	'''read a (included) config file'''
@@ -320,22 +324,19 @@ def read_config_file(configfile):
 			continue
 		
 		#
-		#	keyword: erase_saved
+		#	keyword: backup_copies
 		#
-		if keyword == 'erase_saved':
+		if keyword == 'backup_copies':
 			value = string.lower(arr[1])
 			if value in synctool_param.BOOLEAN_VALUE_TRUE:
-				synctool_param.ERASE_SAVED = True
+				synctool_param.BACKUP_COPIES = True
 			
 			elif value in synctool_param.BOOLEAN_VALUE_FALSE:
-				# this does nothing!
-				# The default value for ERASE_SAVED is False
-				# This value can be overridden on the command-line in which
-				# case ERASE_SAVED will be set to True from get_options()
+				synctool_param.BACKUP_COPIES = False
 				pass
 			
 			else:
-				stderr('%s:%d: invalid argument for erase_saved' % (synctool_param.CONF_FILE, lineno))
+				stderr('%s:%d: invalid argument for backup_copies' % (synctool_param.CONF_FILE, lineno))
 				errors = errors + 1
 			continue
 		
