@@ -848,6 +848,9 @@ def run_post_on_directories():
 	# and this triggers all .post scripts for those sources
 	for (src, dest) in DIR_CHANGED:
 		run_post_on_directory(src, dest)
+	
+	# they have run, now cleanup DIR_CHANGED
+	DIR_CHANGED = {}
 
 
 def overlay_callback(src, dest):
