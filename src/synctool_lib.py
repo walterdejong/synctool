@@ -11,7 +11,7 @@
 #	- common functions/variables for synctool suite programs
 #
 
-import synctool_config
+import synctool_param
 
 import os
 import sys
@@ -23,8 +23,13 @@ DRY_RUN = False
 VERBOSE = False
 QUIET = False
 UNIX_CMD = False
+ERASE_SAVED = False
 MASTERLOG = False
 LOGFD = None
+
+# print nodename in output?
+# This option is pretty useless except in synctool-ssh it may be useful
+OPT_NODENAME = True
 
 MONTHS = ( 'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec' )
 
@@ -55,17 +60,29 @@ def unix_out(str):
 		print str
 
 
+def prettypath(path):
+	'''print long paths as "$masterdir/path"'''
+	
+	if synctool_param.FULL_PATH:		# synctool.conf: full_path yes
+		return path
+	
+	if path[:synctool_param.MASTER_LEN] == synctool_param.MASTERDIR + '/':
+		return '$masterdir/' + path[synctool_param.MASTER_LEN:]
+	
+	return path
+
+
 def openlog():
 	global LOGFD
 
-	if synctool_config.LOGFILE == None or synctool_config.LOGFILE == '' or DRY_RUN:
+	if synctool_param.LOGFILE == None or synctool_param.LOGFILE == '' or DRY_RUN:
 		return
 
 	LOGFD = None
 	try:
-		LOGFD = open(synctool_config.LOGFILE, 'a')
+		LOGFD = open(synctool_param.LOGFILE, 'a')
 	except IOError, (err, reason):
-		print 'error: failed to open logfile %s : %s' % (synctool_config.LOGFILE, reason)
+		print 'error: failed to open logfile %s : %s' % (synctool_param.LOGFILE, reason)
 		sys.exit(-1)
 
 #	log('start run')
@@ -103,11 +120,12 @@ def log(str):
 
 def popen(cmd_args):
 	'''same as os.popen(), but use an array of command+arguments'''
+	# TODO use subprocess, or else os.popen()
 
 	pipe = os.pipe()
 
 	if not os.fork():
-# redirect child's output to write end of the pipe
+		# redirect child's output to write end of the pipe
 		os.close(2)
 		os.close(1)
 		os.dup2(pipe[1], 1)
@@ -128,20 +146,48 @@ def popen(cmd_args):
 
 	else:
 		os.close(pipe[1])
-
-		f = os.fdopen(pipe[0], 'r')
-
-		return f
-
+		return os.fdopen(pipe[0], 'r')
+	
 	return None
+
+
+def run_with_nodename(cmd_arr, nodename):
+	'''run command and show output with nodename'''
+	
+	f = popen(cmd_arr)
+	if not f:
+		return
+	
+	while True:
+		line = f.readline()
+		if not line:
+			break
+		
+		line = string.strip(line)
+		
+		# pass output on; simply use 'print' rather than 'stdout()'
+		if line[:15] == '%synctool-log% ':
+			if line[15:] == '--':
+				pass
+			else:
+				masterlog('%s: %s' % (nodename, line[15:]))
+		else:
+			if OPT_NODENAME:
+				print '%s: %s' % (nodename, line)
+			else:
+				# do not prepend the nodename of this node to the output
+				# if option --no-nodename was given
+				print line
+	
+	f.close()
 
 
 def search_path(cmd):
 	'''search the PATH for the location of cmd'''
-
-# NB. I'm sure this will fail miserably on the Windows platform
-# ah well
-
+	
+	# NB. I'm sure this will fail miserably on the Windows platform
+	# ah well
+	
 	if string.find(cmd, '/') >= 0:
 		return cmd
 
@@ -158,15 +204,121 @@ def search_path(cmd):
 	return cmd
 
 
+#
+#	functions straigthening out paths that were given by the user
+#
 def strip_multiple_slashes(path):
-	# although generally harmless in Unix, pathnames that contain multiple
-	# slashes can/will give problems in synctool : so strip them
-
-	# odd ... string methods are actually faster than string.function()s
+	if not path:
+		return path
+	
 	while path.find('//') != -1:
 		path = path.replace('//', '/')
-
+	
 	return path
+
+
+def strip_trailing_slash(path):
+	if not path:
+		return path
+	
+	while len(path) > 1 and path[-1] == '/':
+		path = path[:-1]
+	
+	return path
+
+
+def subst_masterdir(path):
+	if path.find('$masterdir/') >= 0:
+		if not synctool_param.MASTERDIR:
+			stderr('error: $masterdir referenced before it was set')
+			sys.exit(-1)
+	
+	return path.replace('$masterdir/', synctool_param.MASTERDIR + '/')
+
+
+def strip_path(path):
+	if not path:
+		return path
+	
+	path = strip_multiple_slashes(path)
+	path = strip_trailing_slash(path)
+	
+	return path
+
+
+def prepare_path(path):
+	if not path:
+		return path
+	
+	path = strip_multiple_slashes(path)
+	path = strip_trailing_slash(path)
+	path = subst_masterdir(path)
+	
+	return path
+
+
+def run_parallel(master_func, worker_func, args, worklen):
+	'''runs a callback functions with arguments in parallel
+	master_func is called in the master; worker_func is called in the worker
+	master_func and worker_func are called with two arguments: rank, args
+	All arguments 'args' are always passed; check the rank to see what rank
+	this parallel process has
+	worklen is the total amount of work items to be processed
+	This function will not fork more than NUM_PROC processes'''
+	
+	# Note: I guess using Python's multiprocessing module would be
+	# more elegant. However, it needs Python >= 2.6 and some systems
+	# still ship with the older Python 2.4 (at the time of writing this)
+	
+	parallel = 0
+	n = 0
+	while n < worklen:
+		if parallel > synctool_param.NUM_PROC:
+			try:
+				(pid, status) = os.wait()
+			except OSError:
+				# odd condition?
+				pass
+			
+			else:
+				parallel = parallel - 1
+		
+		try:
+			pid = os.fork()
+			if not pid:
+				try:
+					# the nth thread gets rank n
+					worker_func(n, args)
+				except KeyboardInterrupt:
+					print
+				
+				sys.exit(0)
+			
+			if pid == -1:
+				stderr('error: fork() failed, breaking off forking loop')
+				break
+			
+			else:
+				master_func(n, args)
+				
+				parallel = parallel + 1
+				n = n + 1
+		
+		except KeyboardInterrupt:
+			print
+			break
+	
+	# wait for all children to terminate
+	while True:
+		try:
+			(pid, status) = os.wait()
+		except OSError:
+			# no more child processes
+			break
+		
+		except KeyboardInterrupt:
+			print
+			break
 
 
 if __name__ == '__main__':

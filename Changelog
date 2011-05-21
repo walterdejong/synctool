@@ -1,16 +1,30 @@
-15 May 2011:
-- bugfix for running a single task
-- options -1, --single, --diff, --ref can be given multiple times on a
-  single command-line to handle multiple files
-- 'synctool-config --nodename' displays my nodename
-  Which comes in handy when scripting .post scripts
-
-13 May 2011:
+May 2011:
 - added contributions by Onno Zweers:
   - synctool-diff patches
   - tasks/functions shell scripting library
   - a script that cleans dirs but also has whitelisting capability
 - checksum performance gain when there is no match
+- bugfix for running a single task
+- options -1, --single, --diff, --ref can be given multiple times on a
+  single command-line to handle multiple files
+- 'synctool-config --nodename' displays my nodename
+  Which comes in handy when scripting .post scripts
+- dumped synctool_core for synctool_overlay, which has much cleaner code
+  and supports having multiple overlay dirs, which are merged together
+  in memory
+- .post scripts for directories are now run _in_ that directory rather than
+  in the parent dir. So the current working dir has changed
+- .post scripts for directories are run at the very end after making changes
+  to all files. This shouldn't break anything unless you have (weird)
+  dependancies over multiple directories with .post scripts
+- fixed possible bug for on_update where quotation was lost for the command
+- added new config parameters for overlaydir, deletedir, tasksdir, scriptdir
+- added new config parameter require_extension (default: yes)
+- added new config parameter backup_copies (default: yes)
+- added new config parameter full_path (default: no)
+- full_path can be set from cmdline using -F and/or --fullpath
+- $masterdir can be used in the config file to reference parameter 'masterdir'
+- synctool-ssh/dsh now has option '-o' for passing additional options to ssh
 
 17 April 2011:
 - use '-e' to erase .saved files: patch by Werner Maier

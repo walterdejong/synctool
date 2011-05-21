@@ -8,10 +8,9 @@
 #   synctool is distributed under terms described in the GNU General Public
 #   License.
 #
-#	- simply use synctool-ssh because lots of code would be the same
-#
 
 import synctool_unbuffered
+import synctool_param
 import synctool_config
 import synctool_lib
 import synctool_ssh
@@ -33,84 +32,73 @@ SCP_OPTIONS = None
 
 def run_remote_copy(nodes, files):
 	'''copy files[] to nodes[]'''
-
-	if not synctool_config.SCP_CMD:
-		stderr('%s: error: scp_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
+	
+	if not synctool_param.SCP_CMD:
+		stderr('%s: error: scp_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
-
-	files_str = string.join(files)
-
-# prepare cmd_args[] for exec() outside the loop
-	cmd_args = shlex.split(synctool_config.SCP_CMD)
-
+	
+	scp_cmd_arr = shlex.split(synctool_param.SCP_CMD)
+	
 	if SCP_OPTIONS:
-		cmd_args.extend(shlex.split(SCP_OPTIONS))
-
-	cmd_args.extend(files)
-
-# run scp in serial, not parallel
+		scp_cmd_arr.extend(shlex.split(SCP_OPTIONS))
+	
 	for node in nodes:
-		if node == synctool_config.NODENAME:
+		if node == synctool_param.NODENAME:
 			verbose('skipping node %s' % node)
-			continue
-
-		if DESTDIR:
-			verbose('copying %s to %s:%s' % (files_str, node, DESTDIR))
-
-			if SCP_OPTIONS:
-				unix_out('%s %s %s %s:%s' % (synctool_config.SCP_CMD, SCP_OPTIONS, files_str, node, DESTDIR))
-			else:
-				unix_out('%s %s %s:%s' % (synctool_config.SCP_CMD, files_str, node, DESTDIR))
-
-		else:
-			verbose('copying %s to %s' % (files_str, node))
-
-			if SCP_OPTIONS:
-				unix_out('%s %s %s %s:' % (synctool_config.SCP_CMD, SCP_OPTIONS, files_str, node))
-			else:
-				unix_out('%s %s %s:' % (synctool_config.SCP_CMD, files_str, node))
-
-		if synctool_lib.DRY_RUN:
-			continue
-
-		sys.stdout.flush()
-
-		try:
-			if not os.fork():
-				if DESTDIR:
-					cmd_args.append('%s:%s' % (node, DESTDIR))
-				else:
-					cmd_args.append('%s:' % node)
-
-				try:
-					os.execv(cmd_args[0], cmd_args)
-				except OSError, reason:
-					stderr('failed to execute %s: %s' % (cmd_args[0], reason))
-
-				except:
-					stderr('failed to execute %s' % cmd_args[0])
-
-				sys.exit(1)
-
-			else:
-				user_interrupt = False
-				while True:
-					try:
-						os.wait()
-					except OSError:
-						break
-
-					except KeyboardInterrupt:
-						user_interrupt = True
-						break
-
-				if user_interrupt:
-					print
-					break
-
-		except KeyboardInterrupt:
-			print
+			nodes.remove(node)
 			break
+	
+	scp_cmd_arr.extend(files)
+	
+	files_str = string.join(files)		# this is used only for printing
+	
+	synctool_lib.run_parallel(master_scp, worker_scp, (scp_cmd_arr, files_str), len(nodes))
+
+
+def master_scp(rank, args):
+	(scp_cmd_arr, files_str) = args
+	
+	node = nodes[rank]
+	nodename = NODESET.get_nodename_from_interface(node)
+	
+	# master thread only displays what we're running
+	
+	if DESTDIR:
+		verbose('copying %s to %s:%s' % (files_str, nodename, DESTDIR))
+		
+		if SCP_OPTIONS:
+			unix_out('%s %s %s %s:%s' % (synctool_param.SCP_CMD, SCP_OPTIONS, files_str, node, DESTDIR))
+		else:
+			unix_out('%s %s %s:%s' % (synctool_param.SCP_CMD, files_str, node, DESTDIR))
+	
+	else:
+		verbose('copying %s to %s' % (files_str, nodename))
+		
+		if SCP_OPTIONS:
+			unix_out('%s %s %s %s:' % (synctool_param.SCP_CMD, SCP_OPTIONS, files_str, node))
+		else:
+			unix_out('%s %s %s:' % (synctool_param.SCP_CMD, files_str, node))
+
+
+def worker_scp(rank, args):
+	'''runs scp (remote copy) to node'''
+	
+	if synctool_lib.DRY_RUN:		# got here for nothing
+		return
+
+	(scp_cmd_arr, files_str) = args
+	
+	node = nodes[rank]
+	nodename = NODESET.get_nodename_from_interface(node)
+	
+	# note that the fileset already had been added to scp_cmd_arr
+	
+	if DESTDIR:
+		scp_cmd_arr.append('%s:%s' % (node, DESTDIR))
+	else:
+		scp_cmd_arr.append('%s:' % node)
+	
+	synctool_lib.run_with_nodename(scp_cmd_arr, nodename)
 
 
 def usage():
@@ -118,7 +106,7 @@ def usage():
 	print 'options:'
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=dir/file            Use this config file'
-	print '                                 (default: %s)' % synctool_config.DEFAULT_CONF
+	print '                                 (default: %s)' % synctool_param.DEFAULT_CONF
 	print '  -n, --node=nodelist            Execute only on these nodes'
 	print '  -g, --group=grouplist          Execute only on these groups of nodes'
 	print '  -x, --exclude=nodelist         Exclude these nodes from the selected group'
@@ -127,6 +115,7 @@ def usage():
 	print '  -d, --dest=dir/file            Set destination name to copy to'
 	print '  -o, --options=options          Set additional scp options'
 	print
+	print '  -N, --no-nodename              Do not prepend nodename to output'
 	print '  -v, --verbose                  Be verbose'
 	print '      --unix                     Output actions as unix shell commands'
 	print '      --dry-run                  Do not run the remote copy command'
@@ -147,9 +136,10 @@ def get_options():
 	SCP_OPTIONS = None
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vd:o:n:g:x:X:q', ['help', 'conf=', 'verbose',
-			'dest=', 'options=',
-			'node=', 'group=', 'exclude=', 'exclude-group=', 'unix', 'dry-run', 'quiet'])
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vd:o:n:g:x:X:Nq',
+			['help', 'conf=', 'verbose', 'dest=', 'options=',
+			'node=', 'group=', 'exclude=', 'exclude-group=',
+			'no-nodename', 'unix', 'dry-run', 'quiet'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -170,7 +160,7 @@ def get_options():
 			sys.exit(1)
 
 		if opt in ('-c', '--conf'):
-			synctool_config.CONF_FILE = arg
+			synctool_param.CONF_FILE = arg
 			continue
 
 		if opt in ('-v', '--verbose'):
@@ -199,6 +189,10 @@ def get_options():
 
 		if opt in ('-X', '--exclude-group'):
 			NODESET.exclude_group(arg)
+			continue
+
+		if opt in ('-N', '--no-nodename'):
+			synctool_lib.OPT_NODENAME = False
 			continue
 
 		if opt == '--unix':

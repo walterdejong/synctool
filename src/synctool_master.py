@@ -11,6 +11,7 @@
 
 import synctool
 import synctool_ssh
+import synctool_param
 import synctool_config
 import synctool_aggr
 import synctool_lib
@@ -38,40 +39,85 @@ MASTER_OPTS = None
 
 
 def run_remote_synctool(nodes):
-	if not synctool_config.RSYNC_CMD:
-		stderr('%s: error: rsync_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
+	if not synctool_param.RSYNC_CMD:
+		stderr('%s: error: rsync_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
 
-	if not synctool_config.SSH_CMD:
-		stderr('%s: error: ssh_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
+	if not synctool_param.SSH_CMD:
+		stderr('%s: error: ssh_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
 
-	if not synctool_config.SYNCTOOL_CMD:
-		stderr('%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
+	if not synctool_param.SYNCTOOL_CMD:
+		stderr('%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
 
-	cmds = []
-
-# append rsync command
+	# prepare rsync command
 	if not OPT_SKIP_RSYNC:
-		cmds.append([ shlex.split(synctool_config.RSYNC_CMD) + [ '%s/' % synctool_config.MASTERDIR ], [ '%s/' % synctool_config.MASTERDIR ], ':' ])
+		rsync_cmd_arr = shlex.split(synctool_param.RSYNC_CMD)
+		rsync_cmd_arr.append('%s/' % synctool_param.MASTERDIR)
+	else:
+		rsync_cmd_arr = None
 
-# append synctool command
-	cmds.append([ shlex.split(synctool_config.SSH_CMD), shlex.split(synctool_config.SYNCTOOL_CMD) + PASS_ARGS, None ])
+	# prepare remote synctool command
+	ssh_cmd_arr = shlex.split(synctool_param.SSH_CMD)
+	synctool_cmd_arr = shlex.split(synctool_param.SYNCTOOL_CMD)
+	synctool_cmd_arr.extend(PASS_ARGS)
+	
+	# run in parallel
+	synctool_lib.run_parallel(master_synctool, worker_synctool,
+		(nodes, rsync_cmd_arr, ssh_cmd_arr, synctool_cmd_arr), len(nodes))
 
-	synctool_ssh.run_parallel_cmds(nodes, cmds)
+
+def master_synctool(rank, args):
+	# the master node only displays what we're running
+	(nodes, rsync_cmd_arr, ssh_cmd_arr, synctool_cmd_arr) = args
+	
+	node = nodes[rank]
+	nodename = NODESET.get_nodename_from_interface(node)
+	
+	if rsync_cmd_arr != None:
+		verbose('running rsync $masterdir/ to node %s' % nodename)
+		unix_out('%s %s:%s/' % (string.join(rsync_cmd_arr), node, synctool_param.MASTERDIR))
+	
+	verbose('running synctool on node %s' % nodename)
+	unix_out('%s %s %s' % (string.join(cmd_ssh_arr), node, string.join(synctool_cmd_arr)))
+
+
+def worker_synctool(rank, args):
+	'''runs rsync of $masterdir to the nodes and ssh+synctool in parallel'''
+	
+	(nodes, rsync_cmd_arr, ssh_cmd_arr, synctool_cmd_arr) = args
+	
+	node = nodes[rank]
+	nodename = NODESET.get_nodename_from_interface(node)
+	
+	if rsync_cmd_arr != None:
+		# rsync masterdir to the node
+		rsync_cmd_arr.append('%s:%s/' % (nodes[rank], synctool_param.MASTERDIR))
+		synctool_lib.run_with_nodename(rsync_cmd_arr, nodename)
+	
+	# run 'ssh node synctool_cmd'
+	ssh_cmd_arr.append(node)
+	ssh_cmd_arr.extend(synctool_cmd_arr)
+	
+	synctool_lib.run_with_nodename(ssh_cmd_arr)
 
 
 def run_local_synctool():
-	cmd_arr = shlex.split(synctool_config.SYNCTOOL_CMD) + PASS_ARGS
-	synctool_ssh.run_local_cmd(cmd_arr)
+	if not synctool_param.SYNCTOOL_CMD:
+		stderr('%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
+		sys.exit(-1)
+
+	cmd_arr = shlex.split(synctool_param.SYNCTOOL_CMD) + PASS_ARGS
+	
+	synctool_lib.run_with_nodename(cmd_arr, synctool_param.NODENAME)
 
 
 def upload(interface, upload_filename, upload_suffix=None):
 	'''copy a file from a node into the overlay/ tree'''
 
-	if not synctool_config.SCP_CMD:
-		stderr('%s: error: scp_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_config.CONF_FILE))
+	if not synctool_param.SCP_CMD:
+		stderr('%s: error: scp_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
 
 	if upload_filename[0] != '/':
@@ -80,18 +126,18 @@ def upload(interface, upload_filename, upload_suffix=None):
 
 	trimmed_upload_fn = upload_filename[1:]			# remove leading slash
 
-	import synctool_core
+	import synctool_overlay
 
-# make the known groups lists
+	# make the known groups lists
 	synctool_config.remove_ignored_groups()
-	synctool_config.MY_GROUPS = synctool_config.get_my_groups()
-	synctool_config.ALL_GROUPS = synctool_config.make_all_groups()
+	synctool_param.MY_GROUPS = synctool_config.get_my_groups()
+	synctool_param.ALL_GROUPS = synctool_config.make_all_groups()
 
-	if upload_suffix and not upload_suffix in synctool_config.ALL_GROUPS:
+	if upload_suffix and not upload_suffix in synctool_param.ALL_GROUPS:
 		stderr("no such group '%s'" % upload_suffix)
 		sys.exit(-1)
-		
-# shadow DRY_RUN because that var can not be used correctly here
+	
+	# shadow DRY_RUN because that var can not be used correctly here
 	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
 		dry_run = False
 	else:
@@ -101,19 +147,19 @@ def upload(interface, upload_filename, upload_suffix=None):
 
 	node = NODESET.get_nodename_from_interface(interface)
 
-# pretend that the current node is now the given node;
-# this is needed for find_synctree() to find the most optimal reference for the file
-	orig_NODENAME = synctool_config.NODENAME
-	synctool_config.NODENAME = node
+	# pretend that the current node is now the given node;
+	# this is needed for find() to find the most optimal reference for the file
+	orig_NODENAME = synctool_param.NODENAME
+	synctool_param.NODENAME = node
 	synctool_config.insert_group(node, node)
 
-	orig_MY_GROUPS = synctool_config.MY_GROUPS[:]
-	synctool_config.MY_GROUPS = synctool_config.get_my_groups()
+	orig_MY_GROUPS = synctool_param.MY_GROUPS[:]
+	synctool_param.MY_GROUPS = synctool_config.get_my_groups()
 
-# see if file is already in the repository
-	repos_filename = synctool_core.find_synctree('overlay', upload_filename)
+	# see if file is already in the repository
+	repos_filename = synctool_overlay.find(synctool_overlay.OV_OVERLAY, upload_filename)
 	if not repos_filename:
-		repos_filename = os.path.join(synctool_config.MASTERDIR, 'overlay', trimmed_upload_fn)
+		repos_filename = os.path.join(synctool_param.OVERLAY_DIRS[0], trimmed_upload_fn)
 		if upload_suffix:
 			repos_filename = repos_filename + '._' + upload_suffix
 		else:
@@ -126,28 +172,24 @@ def upload(interface, upload_filename, upload_suffix=None):
 
 			repos_filename = repos_filename + '._' + upload_suffix
 
-	synctool_config.NODENAME = orig_NODENAME
-	synctool_config.MY_GROUPS = orig_MY_GROUPS
+	synctool_param.NODENAME = orig_NODENAME
+	synctool_param.MY_GROUPS = orig_MY_GROUPS
 
 	verbose('%s:%s uploaded as %s' % (node, upload_filename, repos_filename))
-	unix_out('%s %s:%s %s' % (synctool_config.SCP_CMD, interface, upload_filename, repos_filename))
-
-# display short path name
-	masterlen = len(synctool_config.MASTERDIR) + 1
-	short_repos_filename = '$masterdir/%s' % repos_filename[masterlen:]
+	unix_out('%s %s:%s %s' % (synctool_param.SCP_CMD, interface, upload_filename, repos_filename))
 
 	if dry_run:
-		stdout('would be uploaded as %s' % short_repos_filename)
+		stdout('would be uploaded as %s' % synctool_lib.prettypath(repos_filename))
 	else:
 		# make scp command array
-		cmd_arr = shlex.split(synctool_config.SCP_CMD)
+		cmd_arr = shlex.split(synctool_param.SCP_CMD)
 		cmd_arr.append('%s:%s' % (interface, upload_filename))
 		cmd_arr.append(repos_filename)
 
 		synctool_ssh.run_local_cmd(cmd_arr)
 
 		if os.path.isfile(repos_filename):
-			stdout('uploaded %s' % short_repos_filename)
+			stdout('uploaded %s' % synctool_lib.prettypath(repos_filename))
 
 
 def usage():
@@ -155,20 +197,21 @@ def usage():
 	print 'options:'
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=dir/file            Use this config file'
-	print '                                 (default: %s)' % synctool_config.DEFAULT_CONF
+	print '                                 (default: %s)' % synctool_param.DEFAULT_CONF
 	print '  -n, --node=nodelist            Execute only on these nodes'
 	print '  -g, --group=grouplist          Execute only on these groups of nodes'
 	print '  -x, --exclude=nodelist         Exclude these nodes from the selected group'
 	print '  -X, --exclude-group=grouplist  Exclude these groups from the selection'
 	print
 	print '  -d, --diff=file                Show diff for file'
-	print '  -e, --erase-saved              Erase .saved files'
+	print '  -e, --erase-saved              Erase *.saved backup files'
 	print '  -1, --single=file              Update a single file/run single task'
 	print '  -r, --ref=file                 Show which source file synctool chooses'
 	print '  -u, --upload=file              Pull a remote file into the overlay tree'
 	print '  -s, --suffix=group             Give group suffix for the uploaded file'
 	print '  -t, --tasks                    Run the scripts in the tasks/ directory'
 	print '  -f, --fix                      Perform updates (otherwise, do dry-run)'
+	print '  -F, --fullpath                 Show full paths instead of shortened ones'
 	print '      --unix                     Output actions as unix shell commands'
 	print '      --skip-rsync               Do not sync the repository'
 	print '                                 (eg. when it is on a shared filesystem)'
@@ -180,7 +223,7 @@ def usage():
 	print '  -a, --aggregate                Condense output; list nodes per change'
 	print
 	print 'A nodelist or grouplist is a comma-separated list'
-	print 'Note that by default, it does a dry-run, unless you specify --fix'
+	print 'Note that synctool does a dry run unless you specify --fix'
 	print
 	print 'Written by Walter de Jong <walter@heiho.net> (c) 2003-2011'
 
@@ -197,9 +240,12 @@ def get_options():
 	synctool.be_careful_with_getopt()
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:r:u:s:etfqa', ['help', 'conf=', 'verbose', 'node=', 'group=',
-			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=', 'upload=', 'suffix=', 'erase-saved', 'tasks', 'fix', 'quiet', 'aggregate',
-			'skip-rsync', 'unix', 'version', 'check-update', 'download'])
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:r:u:s:etfFqa',
+			['help', 'conf=', 'verbose', 'node=', 'group=',
+			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=',
+			'upload=', 'suffix=', 'erase-saved', 'tasks', 'fix', 'fullpath',
+			'quiet', 'aggregate', 'skip-rsync', 'unix',
+			'version', 'check-update', 'download'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -221,7 +267,7 @@ def get_options():
 	upload_filename = None
 	upload_suffix = None
 
-# these are only used for checking the validity of command-line option combinations
+	# these are only used for checking the validity of command-line option combinations
 	opt_diff = False
 	opt_single = False
 	opt_reference = False
@@ -245,7 +291,7 @@ def get_options():
 			sys.exit(1)
 
 		if opt in ('-c', '--conf'):
-			synctool_config.CONF_FILE = arg
+			synctool_param.CONF_FILE = arg
 			PASS_ARGS.append(opt)
 			PASS_ARGS.append(arg)
 			continue
@@ -282,7 +328,7 @@ def get_options():
 
 		if opt in ('-u', '--upload'):
 			opt_upload = True
-			upload_filename = synctool_lib.strip_multiple_slashes(arg)
+			upload_filename = synctool_lib.strip_path(arg)
 			continue
 
 		if opt in ('-s', '--suffix'):
@@ -294,9 +340,7 @@ def get_options():
 			opt_tasks = True
 
 		if opt in ('-e', '--erase-saved'):
-			synctool_param.ERASE_SAVED = True
-			PASS_ARGS.append(opt)
-			continue
+			synctool_lib.ERASE_SAVED = True		# doesn't do anything in master, really
 
 		if opt in ('-q', '--quiet'):
 			synctool_lib.QUIET = True
@@ -304,6 +348,9 @@ def get_options():
 		if opt in ('-f', '--fix'):
 			opt_fix = True
 			synctool_lib.DRY_RUN = False
+
+		if opt in ('-F', '--fullpath'):
+			synctool_param.FULL_PATH = True
 
 		if opt in ('-a', '--aggregate'):
 			OPT_AGGREGATE = True
@@ -334,7 +381,7 @@ def get_options():
 		if arg:
 			PASS_ARGS.append(arg)
 
-# enable logging at the master node
+	# enable logging at the master node
 	PASS_ARGS.append('--masterlog')
 
 	if args != None:
@@ -353,7 +400,7 @@ def main():
 	(upload_filename, upload_suffix) = get_options()
 
 	if OPT_VERSION:
-		print synctool_config.VERSION
+		print synctool_param.VERSION
 		sys.exit(0)
 
 	if OPT_CHECK_UPDATE:
@@ -371,7 +418,7 @@ def main():
 	synctool_config.read_config()
 	synctool_config.add_myhostname()
 
-# ooh ... testing for DRY_RUN doesn't work here
+	# ooh ... testing for DRY_RUN doesn't work here
 	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
 		synctool_lib.openlog()
 
@@ -389,12 +436,12 @@ def main():
 		upload(nodes[0], upload_filename, upload_suffix)
 
 	else:						# do regular synctool run
-		local_interface = synctool_config.get_node_interface(synctool_config.NODENAME)
+		local_interface = synctool_config.get_node_interface(synctool_param.NODENAME)
 
 		for node in nodes:
-		#
-		#	is this node the localhost? then run locally
-		#
+			#
+			#	is this node the localhost? then run locally
+			#
 			if node == local_interface:
 				run_local_synctool()
 				nodes.remove(node)

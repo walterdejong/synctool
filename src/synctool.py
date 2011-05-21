@@ -9,9 +9,10 @@
 #   License.
 #
 
+import synctool_param
 import synctool_config
 import synctool_lib
-import synctool_core
+import synctool_overlay
 
 from synctool_lib import verbose,stdout,stderr,unix_out
 
@@ -47,16 +48,39 @@ ACTION_DEFAULT = 0
 ACTION_DIFF = 1
 ACTION_RUN_TASKS = 3
 ACTION_REFERENCE = 4
-
-# extra command-line option --tasks
-RUN_TASKS = False
+ACTION_VERSION = 5
 
 # blocksize for doing I/O while checksumming files
 BLOCKSIZE = 16 * 1024
 
-OPT_VERSION = False
-
 SINGLE_FILES = []
+
+# list of changed directories
+# This is for running .post scripts on changed directories
+# every element is a tuple: (src_path, dest_path)
+DIR_CHANGED = []
+
+
+def dryrun_msg(str, action = 'update'):
+	'''print a "dry run" message filled to (almost) 80 chars
+	so that it looks nice on the terminal'''
+	
+	l1 = len(str) + 4
+	
+	msg = '# dry run, %s not performed' % action
+	l2 = len(msg)
+	
+	if l1 + l2 <= 79:
+		return str + (' ' * (79 - (l1 + l2))) + msg
+	
+	if l1 + 13 <= 79:
+		# message is long, but we can shorten and it will fit on a line
+		msg = '# dry run'
+		l2 = 9
+		return str + (' ' * (79 - (l1 + l2))) + msg
+	
+	# don't bother, return a long message
+	return str + '    ' + msg
 
 
 def ascii_uid(uid):
@@ -136,7 +160,7 @@ def checksum_files(file1, file2):
 
 
 def stat_islink(stat_struct):
-	'''returns if a file is a symbolic link'''
+	'''returns whether a file is a symbolic link or not'''
 	'''this function is needed because os.path.islink() returns False for dead symlinks, which is not what I want ...'''
 
 	if not stat_struct:
@@ -146,7 +170,7 @@ def stat_islink(stat_struct):
 
 
 def stat_isdir(stat_struct):
-	'''returns if a file is a directory'''
+	'''returns whether a file is a directory or not'''
 	'''this function is needed because os.path.isdir() returns True for symlinks to directories ...'''
 
 	if not stat_struct:
@@ -156,7 +180,7 @@ def stat_isdir(stat_struct):
 
 
 def stat_isfile(stat_struct):
-	'''returns if a file is a regular file'''
+	'''returns whether a file is a regular file or not'''
 	'''this function is needed because os.path.isfile() returns True for symlinks to files ...'''
 
 	if not stat_struct:
@@ -223,35 +247,34 @@ def path_isexec(path):
 
 def compare_files(src_path, dest_path):
 	'''see what the differences are between src and dest, and fix it if not a dry run
-
+	
 	src_path is the file in the synctool/overlay tree
 	dest_path is the file in the system
-
-	done is a local boolean saying if a path has been checked
+	
 	need_update is a local boolean saying if a path needs to be updated
-
-	return value is 0 when file is not changed, 1 when file is updated
-
+	
+	return value is False when file is not changed, True when file is updated
+	
 --
 	The structure of this long function is as follows;
-
-		stat(src)				this stat is 'sacred' and dest should be set accordingly
+	
+		stat(src)		this stat is 'sacred' and dest should be set accordingly
 		stat(dest)
-
+		
 		if src is symlink:
 			check if dest exists
 			check if dest is symlink
 			check if dest is dir
 			treat dest as file
 			fix if needed
-
+		
 		if src is directory:
 			check if dest exists
 			check if dest is symlink
 			check if dest is dir
 			treat dest as file
 			fix if needed
-
+		
 		if src is file:
 			check if dest exists
 			check if dest is symlink
@@ -260,156 +283,141 @@ def compare_files(src_path, dest_path):
 			check filesize
 			do md5 checksum
 			fix if needed
-
+		
 		don't know what type src is
-
+		
 		check ownership
 		check permissions
-		return 0
+		return False
 '''
-
+	
 	src_stat = stat_path(src_path)
 	if not src_stat:
 		return False
-
+	
 	dest_stat = stat_path(dest_path)
 #	if not dest_path:
 #		pass					# destination does not exist
-
-	done = False
+	
 	need_update = False
-
-#
-#	is source is a symbolic link ...
-#
-	if not done and stat_islink(src_stat):
+	
+	#
+	# if source is a symbolic link ...
+	#
+	if stat_islink(src_stat):
 		need_update = False
 		try:
 			src_link = os.readlink(src_path)
 		except OSError, reason:
 			stderr('failed to readlink %s : %s' % (src_path, reason))
 			return False
-
+		
 		if not stat_exists(dest_stat):
-			done = True
 			stdout('symbolic link %s does not exist' % dest_path)
 			unix_out('# create symbolic link %s' % dest_path)
 			need_update = True
-
-		if stat_islink(dest_stat):
-			done = True
+		
+		elif stat_islink(dest_stat):
 			try:
 				dest_link = os.readlink(dest_path)
 			except OSError, reason:
 				stderr('failed to readlink %s : %s (but ignoring this error)' % (src_path, reason))
 				dest_link = None
-
+			
 			if src_link != dest_link:
 				stdout('%s should point to %s, but points to %s' % (dest_path, src_link, dest_link))
 				unix_out('# relink symbolic link %s' % dest_path)
 				delete_file(dest_path)
 				need_update = True
-
-			if (dest_stat[stat.ST_MODE] & 07777) != synctool_config.SYMLINK_MODE:
-				stdout('%s should have mode %04o (symlink), but has %04o' % (dest_path, synctool_config.SYMLINK_MODE, dest_stat[stat.ST_MODE] & 07777))
+			
+			if (dest_stat[stat.ST_MODE] & 07777) != synctool_param.SYMLINK_MODE:
+				stdout('%s should have mode %04o (symlink), but has %04o' % (dest_path, synctool_param.SYMLINK_MODE, dest_stat[stat.ST_MODE] & 07777))
 				unix_out('# fix permissions of symbolic link %s' % dest_path)
 				need_update = True
-
+		
 		elif stat_isdir(dest_stat):
-			done = True
 			stdout('%s should be a symbolic link' % dest_path)
 			unix_out('# target should be a symbolic link')
-			move_dir(dest_path)
+			save_dir(dest_path)
 			need_update = True
-
-#
-#	treat as file ...
-#
-		if not done:
+		
+		#
+		# treat as file ...
+		#
+		else:
 			stdout('%s should be a symbolic link' % dest_path)
 			unix_out('# target should be a symbolic link')
 			delete_file(dest_path)
 			need_update = True
-
-#
-#	(re)create the symbolic link
-#
+		
+		#
+		# (re)create the symbolic link
+		#
 		if need_update:
 			symlink_file(src_link, dest_path)
 			unix_out('')
 			return True
-
-		done = True
-
-#
-#	if the source is a directory ...
-#
-	if not done and stat_isdir(src_stat):
+	
+	#
+	# if the source is a directory ...
+	#
+	elif stat_isdir(src_stat):
 		if not stat_exists(dest_stat):
-			done = True
 			stdout('%s/ does not exist' % dest_path)
 			unix_out('# make directory %s' % dest_path)
 			need_update = True
-
-		if stat_islink(dest_stat):
-			done = True
+		
+		elif stat_islink(dest_stat):
 			stdout('%s is a symbolic link, but should be a directory' % dest_path)
 			unix_out('# target should be a directory instead of a symbolic link')
 			delete_file(dest_path)
 			need_update = True
-
-#
-#	treat as a regular file
-#
-		if not done and not stat_isdir(dest_stat):
-			done = True
+		
+		#
+		# treat as a regular file
+		#
+		elif not stat_isdir(dest_stat):
 			stdout('%s should be a directory' % dest_path)
 			unix_out('# target should be a directory')
 			delete_file(dest_path)
 			need_update = True
-
-#
-#	make the directory
-#
+		
+		#
+		# make the directory
+		#
 		if need_update:
 			make_dir(dest_path)
 			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
 			set_permissions(dest_path, src_stat[stat.ST_MODE])
 			unix_out('')
 			return True
-
-		done = True
-
-#
-#	if source is a file ...
-#
-	if not done and stat_isfile(src_stat):
+	
+	#
+	# if source is a file ...
+	#
+	elif stat_isfile(src_stat):
 		if not stat_exists(dest_stat):
-			done = True
 			stdout('%s does not exist' % dest_path)
 			unix_out('# copy file %s' % dest_path)
 			need_update = True
-
-		if stat_islink(dest_stat):
-			done = True
+		
+		elif stat_islink(dest_stat):
 			stdout('%s is a symbolic link, but should not be' % dest_path)
 			unix_out('# target should be a file instead of a symbolic link')
 			delete_file(dest_path)
 			need_update = True
-
-		if stat_isdir(dest_stat):
-			done = True
+		
+		elif stat_isdir(dest_stat):
 			stdout('%s is a directory, but should not be' % dest_path)
 			unix_out('# target should be a file instead of a directory')
-			move_dir(dest_path)
+			save_dir(dest_path)
 			need_update = True
-
-#
-#	check file size
-#
-		if stat_isfile(dest_stat):
+		
+		#
+		# check file size
+		#
+		elif stat_isfile(dest_stat):
 			if src_stat[stat.ST_SIZE] != dest_stat[stat.ST_SIZE]:
-				done = True
 				if synctool_lib.DRY_RUN:
 					stdout('%s mismatch (file size)' % dest_path)
 				else:
@@ -417,17 +425,16 @@ def compare_files(src_path, dest_path):
 				unix_out('# updating file %s' % dest_path)
 				need_update = True
 			else:
-#
-#	check file contents (SHA1 or MD5 checksum)
-#
+				#
+				# check file contents (SHA1 or MD5 checksum)
+				#
 				try:
 					src_sum, dest_sum = checksum_files(src_path, dest_path)
 				except IOError, (err, reason):
 #	error was already printed				stderr('error: %s' % reason)
 					return False
-
+				
 				if src_sum != dest_sum:
-					done = True
 					if synctool_lib.DRY_RUN:
 #						stdout('%s mismatch (SHA1 checksum)' % dest_path)
 						stdout('%s mismatch (MD5 checksum)' % dest_path)
@@ -437,31 +444,28 @@ def compare_files(src_path, dest_path):
 
 					unix_out('# updating file %s' % dest_path)
 					need_update = True
-
-		elif not done:
-			done = True
+		
+		else:
 			stdout('%s should be a regular file' % dest_path)
 			unix_out('# target should be a regular file')
 			need_update = True
-
+		
 		if need_update:
 			copy_file(src_path, dest_path)
 			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
 			set_permissions(dest_path, src_stat[stat.ST_MODE])
 			unix_out('')
 			return True
-
-		done = True
-
-	elif not done:
-#
-#	source is not a symbolic link, not a directory, and not a regular file
-#
+	
+	else:
+		#
+		# source is not a symbolic link, not a directory, and not a regular file
+		#
 		stderr("be advised: don't know how to handle %s" % src_path)
-
+		
 		if not stat_exists(dest_stat):
 			return False
-
+		
 		if stat_islink(dest_stat):
 			stdout('%s should not be a symbolic link' % dest_path)
 		else:
@@ -472,97 +476,84 @@ def compare_files(src_path, dest_path):
 					stdout('%s should not be a regular file' % dest_path)
 				else:
 					stderr("don't know how to handle %s" % dest_path)
-
-#
-#	check mode and owner/group of files and/or directories
-#
-#	os.chmod() and os.chown() don't work well with symbolic links as they work on the destination
-#	python lacks an os.lchmod() and os.lchown() as they are not portable
-#	anyway, symbolic links have been dealt with already ...
-#
+	
+	#
+	# check mode and owner/group of files and/or directories
+	#
+	# os.chmod() and os.chown() don't work well with symbolic links as they work
+	# on the destination rather than the symlink itself
+	# python lacks an os.lchmod() and os.lchown() as they are not portable
+	# anyway, symbolic links have been dealt with already ...
+	#
 	if stat_exists(dest_stat) and not stat_islink(dest_stat):
 		if src_stat[stat.ST_UID] != dest_stat[stat.ST_UID] or src_stat[stat.ST_GID] != dest_stat[stat.ST_GID]:
 			stdout('%s should have owner %s.%s (%d.%d), but has %s.%s (%d.%d)' % (dest_path, ascii_uid(src_stat[stat.ST_UID]), ascii_gid(src_stat[stat.ST_GID]), src_stat[stat.ST_UID], src_stat[stat.ST_GID], ascii_uid(dest_stat[stat.ST_UID]), ascii_gid(dest_stat[stat.ST_GID]), dest_stat[stat.ST_UID], dest_stat[stat.ST_GID]))
 			unix_out('# changing ownership on %s' % dest_path)
-
+			
 			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
-
+			
 			unix_out('')
 			need_update = True
-
+		
 		if (src_stat[stat.ST_MODE] & 07777) != (dest_stat[stat.ST_MODE] & 07777):
 			stdout('%s should have mode %04o, but has %04o' % (dest_path, src_stat[stat.ST_MODE] & 07777, dest_stat[stat.ST_MODE] & 07777))
 			unix_out('# changing permissions on %s' % dest_path)
-
+			
 			set_permissions(dest_path, src_stat[stat.ST_MODE])
-
+			
 			unix_out('')
 			need_update = True
-
+		
 #		if src_stat[stat.ST_MTIME] != dest_stat[stat.ST_MTIME]:
 #			stdout('%s should have mtime %d, but has %d' % (dest_path, src_stat[stat.ST_MTIME], dest_stat[stat.ST_MTIME]))
 #		if src_stat[stat.ST_CTIME] != dest_stat[stat.ST_CTIME]:
 #			stdout('%s should have ctime %d, but has %d' % (dest_path, src_stat[stat.ST_CTIME], dest_stat[stat.ST_CTIME]))
-
+	
 	erase_saved(dest_path)
 	return need_update
-
-
-def erase_saved(dst):
-	if synctool_config.ERASE_SAVED:
-		if path_isfile('%s.saved' % dst):
-			unix_out('rm %s.saved' % dst)
-			
-			if synctool_lib.DRY_RUN:
-				verbose('backup copy %s.saved not erased    # dry run, update not performed' % dst)
-			else:
-				verbose('erasing backup copy %s.saved' % dst)
-				try:
-					os.unlink('%s.saved' % dst)
-				except OSError, reason:
-					stderr('failed to delete %s : %s' % (file, reason))
 
 
 def copy_file(src, dest):
 	if path_isfile(dest):
 		unix_out('cp %s %s.saved' % (dest, dest))
-
+	
 	unix_out('umask 077')
 	unix_out('cp %s %s' % (src, dest))
-
+	
 	if not synctool_lib.DRY_RUN:
 		old_umask = os.umask(077)
-
-		if not synctool_config.ERASE_SAVED:
+		
+		if synctool_param.BACKUP_COPIES:
 			if path_isfile(dest):
 				verbose('  saving %s as %s.saved' % (dest, dest))
 				try:
 					shutil.copy2(dest, '%s.saved' % dest)
 				except:
 					stderr('failed to save %s as %s.saved' % (dest, dest))
-
+		
 		verbose('  cp %s %s' % (src, dest))
 		try:
 			shutil.copy2(src, dest)			# copy file and stats
 		except:
 			stderr('failed to copy %s to %s' % (src, dest))
-
+		
 		os.umask(old_umask)
 	else:
-		if path_isfile(dest) and not synctool_config.ERASE_SAVED:
+		if path_isfile(dest) and synctool_param.BACKUP_COPIES:
 			verbose('  saving %s as %s.saved' % (dest, dest))
-
-		verbose('  cp %s %s             # dry run, update not performed' % (src, dest))
+		
+		verbose(dryrun_msg('  cp %s %s' % (src, dest)))
 
 
 def symlink_file(oldpath, newpath):
 	if path_exists(newpath):
 		unix_out('mv %s %s.saved' % (newpath, newpath))
 
-#
-#	actually, if we want the ownership of the symlink to be correct, we should do setuid() here
-#	matching ownerships of symbolic links is not yet implemented
-#
+	#
+	# actually, if we want the ownership of the symlink to be correct,
+	# we should do setuid() here
+	# matching ownerships of symbolic links is not yet implemented
+	#
 
 	unix_out('umask 022')
 	unix_out('ln -s %s %s' % (oldpath, newpath))
@@ -586,7 +577,7 @@ def symlink_file(oldpath, newpath):
 		os.umask(old_umask)
 
 	else:
-		verbose('  os.symlink(%s, %s)             # dry run, update not performed' % (oldpath, newpath))
+		verbose(dryrun_msg('  os.symlink(%s, %s)' % (oldpath, newpath)))
 
 
 def set_permissions(file, mode):
@@ -599,7 +590,7 @@ def set_permissions(file, mode):
 		except OSError, reason:
 			stderr('failed to chmod %04o %s : %s' % (mode & 07777, file, reason))
 	else:
-		verbose('  os.chmod(%s, %04o)             # dry run, update not performed' % (file, mode & 07777))
+		verbose(dryrun_msg('  os.chmod(%s, %04o)' % (file, mode & 07777)))
 
 
 def set_owner(file, uid, gid):
@@ -612,12 +603,12 @@ def set_owner(file, uid, gid):
 		except OSError, reason:
 			stderr('failed to chown %s.%s %s : %s' % (ascii_uid(uid), ascii_gid(gid), file, reason))
 	else:
-		verbose('  os.chown(%s, %d, %d)             # dry run, update not performed' % (file, uid, gid))
+		verbose(dryrun_msg('  os.chown(%s, %d, %d)' % (file, uid, gid)))
 
 
 def delete_file(file):
 	if not synctool_lib.DRY_RUN:
-		if not synctool_config.ERASE_SAVED:
+		if synctool_param.BACKUP_COPIES:
 			unix_out('mv %s %s.saved' % (file, file))
 
 			verbose('moving %s to %s.saved' % (file, file))
@@ -633,10 +624,10 @@ def delete_file(file):
 			except OSError, reason:
 				stderr('failed to delete %s : %s' % (file, reason))
 	else:
-		if not synctool_config.ERASE_SAVED:
-			verbose('moving %s to %s.saved             # dry run, update not performed' % (file, file))
+		if synctool_param.BACKUP_COPIES:
+			verbose(dryrun_msg('moving %s to %s.saved' % (file, file)))
 		else:
-			verbose('deleting %s    # dry run, delete not performed' % file)
+			verbose(dryrun_msg('deleting %s' % file, 'delete'))
 
 
 def hard_delete_file(file):
@@ -649,7 +640,22 @@ def hard_delete_file(file):
 		except OSError, reason:
 			stderr('failed to delete %s : %s' % (file, reason))
 	else:
-		verbose('deleting %s             # dry run, update not performed' % file)
+		verbose(dryrun_msg('deleting %s' % file, 'delete'))
+
+
+def erase_saved(dest):
+	if synctool_lib.ERASE_SAVED and path_exists('%s.saved' % dest) and not path_isdir('%s.saved' % dest):
+		unix_out('rm %s.saved' % dest)
+		
+		if synctool_lib.DRY_RUN:
+			stdout(dryrun_msg('erase %s.saved' % dest, 'erase'))
+		else:
+			stdout('erase %s.saved' % dest)
+			verbose('  os.unlink(%s.saved)' % dest)
+			try:
+				os.unlink('%s.saved' % dest)
+			except OSError, reason:
+				stderr('failed to delete %s : %s' % (dest, reason))
 
 
 def make_dir(path):
@@ -667,315 +673,262 @@ def make_dir(path):
 
 		os.umask(old_umask)
 	else:
-		verbose('  os.mkdir(%s)             # dry run, update not performed' % path)
+		verbose(dryrun_msg('  os.mkdir(%s)' % path))
 
 
-def move_dir(dir):
+def save_dir(dir):
+	if not synctool_param.BACKUP_COPIES:
+		return
+	
 	unix_out('mv %s %s.saved' % (dir, dir))
 
 	if not synctool_lib.DRY_RUN:
 		verbose('moving %s to %s.saved' % (dir, dir))
-		#
-		#	directories are kept no matter what config.ERASE_SAVED says
-		#
 		try:
 			os.rename(dir, '%s.saved' % dir)
 		except OSError, reason:
 			stderr('failed to move directory to %s.saved : %s' % (dir, reason))
 
 	else:
-		verbose('moving %s to %s.saved             # dry run, update not performed' % (dir, dir))
+		verbose(dryrun_msg('moving %s to %s.saved' % (dir, dir), 'move'))
 
 
 def run_command(cmd):
 	'''run a shell command'''
-
+	
 	if synctool_lib.DRY_RUN:
 		not_str = 'not '
 	else:
 		not_str = ''
-
-# a command can have arguments
-	arr = string.split(cmd)
-	if not arr:
-		cmdfile = cmd
-	else:
-		cmdfile = arr[0]
-
-# cmd1 is the pretty printed version of the command
-	cmd1 = cmdfile
-	if cmd1[0] != '/':
-		cmd1 = '$masterdir/scripts/%s' % cmd1
-#
-#	if relative path, use script_path
-#
-		script_path = os.path.join(synctool_config.MASTERDIR, 'scripts')
-		if not os.path.isdir(script_path):
-			stderr('error: no such directory $masterdir/scripts')
-			return
-
-		cmdfile = os.path.join(script_path, cmdfile)
-
-		arr[0] = cmdfile
-		cmd = string.join(arr)
-
-	elif len(cmd1) > synctool_config.MASTER_LEN and cmd1[:synctool_config.MASTER_LEN] == synctool_config.MASTERDIR + '/':
-		cmd1 = '$masterdir/%s' % cmd1[synctool_config.MASTER_LEN:]
-
+	
+	if cmd[0] != '/':
+		# if relative path, use scriptdir
+		cmd = synctool_param.SCRIPT_DIR + '/' + cmd
+	
+	# a command can have arguments
+	arr = shlex.split(cmd)
+	cmdfile = arr[0]
+	
 	if not path_exists(cmdfile):
-		stderr('error: command %s not found' % cmd1)
+		stderr('error: command %s not found' % synctool_lib.prettypath(cmdfile))
 		return
-
+	
 	if not path_isexec(cmdfile):
-		stderr("warning: file '%s' is not executable" % cmdfile)
+		stderr("warning: file '%s' is not executable" % synctool_lib.prettypath(cmdfile))
 		return
-
-	arr[0] = cmd1
-	cmd1 = string.join(arr)
+	
 	if not synctool_lib.QUIET:
-		stdout('%srunning command %s' % (not_str, cmd1))
-
-	unix_out('# run command %s' % cmd1)
+		stdout('%srunning command %s' % (not_str, synctool_lib.prettypath(cmd)))
+	
+	unix_out('# run command %s' % cmdfile)
 	unix_out(cmd)
-
+	
 	if not synctool_lib.DRY_RUN:
-		verbose('  os.system("%s")' % cmd1)
-
+		verbose('  os.system("%s")' % synctool_lib.prettypath(cmd))
+		
 		sys.stdout.flush()
 		sys.stderr.flush()
-
+		
 		if use_subprocess:
 			try:
 				subprocess.Popen(cmd, shell=True)
 			except:
-				stderr("failed to run shell command '%s' : %s" % (cmd1, reason))
+				stderr("failed to run shell command '%s' : %s" % (synctool_lib.prettypath(cmd), reason))
 		else:
 			try:
 				os.system(cmd)
 			except OSError, reason:
-				stderr("failed to run shell command '%s' : %s" % (cmd1, reason))
-
+				stderr("failed to run shell command '%s' : %s" % (synctool_lib.prettypath(cmd), reason))
+		
 		sys.stdout.flush()
 		sys.stderr.flush()
 	else:
-		verbose('  os.system("%s")             # dry run, action not performed' % cmd)
+		verbose(dryrun_msg('  os.system("%s")' % synctool_lib.prettypath(cmd), 'action'))
 
 
 def run_command_in_dir(dest_dir, cmd):
 	'''change directory to dest_dir, and run the shell command'''
-
+	
 	verbose('  os.chdir(%s)' % dest_dir)
 	unix_out('cd %s' % dest_dir)
-
+	
 	cwd = os.getcwd()
-
-# if dry run, the target directory may not exist yet (mkdir has not been called for real, for a dry run)
+	
+	# if dry run, the target directory may not exist yet (mkdir has not been called for real, for a dry run)
 	if synctool_lib.DRY_RUN:
 		run_command(cmd)
-
+		
 		verbose('  os.chdir(%s)' % cwd)
 		unix_out('cd %s' % cwd)
 		unix_out('')
 		return
-
+	
 	try:
 		os.chdir(dest_dir)
 	except OSError, reason:
 		stderr('error changing directory to %s: %s' % (dest_dir, reason))
 	else:
 		run_command(cmd)
-
+		
 		verbose('  os.chdir(%s)' % cwd)
 		unix_out('cd %s' % cwd)
 		unix_out('')
-
+		
 		try:
 			os.chdir(cwd)
 		except OSError, reason:
 			stderr('error changing directory to %s: %s' % (cwd, reason))
 
 
-def overlay_callback(src_dir, dest_dir, filename, ext):
+def run_post(src, dest):
+	'''run any on_update or .post script commands for destination path'''
+	
+	global DIR_CHANGED
+	
+	if path_isdir(dest):
+		# directories will be handled later, so save this pair
+		pair = (src, dest)
+		DIR_CHANGED.append(pair)
+		return
+	
+	dest_dir = os.path.dirname(dest)
+	
+	# file has changed, run on_update command
+	if synctool_param.ON_UPDATE.has_key(dest):
+		run_command_in_dir(dest_dir, synctool_param.ON_UPDATE[dest])
+	
+	# file has changed, run appropriate .post script
+	postscript = synctool_overlay.postscript_for_path(src, dest)
+	if postscript:
+		run_command_in_dir(dest_dir, postscript)
+	
+	# content of directory was changed, so save this pair
+	pair = (os.path.dirname(src), dest_dir)
+	if not pair in DIR_CHANGED:
+		DIR_CHANGED.append(pair)
+
+
+def run_post_on_directory(src, dest):
+	'''run .post script for a changed directory'''
+	
+	# Note that the script is executed with the changed dir as current working dir
+	
+	if synctool_param.ON_UPDATE.has_key(dest):
+		run_command_in_dir(dest, synctool_param.ON_UPDATE[dest])
+	
+	# run appropriate .post script
+	postscript = synctool_overlay.postscript_for_path(src, dest)
+	if postscript:
+		run_command_in_dir(dest, postscript)
+
+
+def sort_directory_pair(a, b):
+	'''sort function for directory pairs
+	a and b are directory pair tuples: (src, dest)
+	sort the deepest destination directories first'''
+	
+	n = -cmp(len(a[1]), len(b[1]))
+	if not n:
+		return cmp(a[1], b[1])
+	
+	return n
+
+
+def run_post_on_directories():
+	'''run pending .post scripts on directories that were changed'''
+	
+	global DIR_CHANGED
+	
+	# sort by dest_dir with deepest dirs first
+	DIR_CHANGED.sort(sort_directory_pair)
+	
+	# run .post scripts on every dir
+	# Note how you can have multiple sources for the same destination,
+	# and this triggers all .post scripts for those sources
+	for (src, dest) in DIR_CHANGED:
+		run_post_on_directory(src, dest)
+	
+	# they have run, now cleanup DIR_CHANGED
+	DIR_CHANGED = {}
+
+
+def overlay_callback(src, dest):
 	'''compare files and run post-script if needed'''
-
-	if ext:
-		src = os.path.join(src_dir, '%s._%s' % (filename, ext))
-	else:
-		src = os.path.join(src_dir, filename)
-
-	dest = os.path.join(dest_dir, filename)
-
-	verbose('checking $masterdir/%s' % src[synctool_config.MASTER_LEN:])
-
+	
+	verbose('checking %s' % synctool_lib.prettypath(src))
+	
 	if compare_files(src, dest):
-# file has changed, run on_update command
-		if synctool_config.ON_UPDATE.has_key(dest):
-			run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest])
-
-# file has changed, run appropriate .post script
-		if synctool_core.POST_SCRIPTS.has_key(filename):
-			run_command_in_dir(dest_dir, os.path.join(src_dir, synctool_core.POST_SCRIPTS[filename][0]))
-
-# file in dir has changed, flag it
-		synctool_core.DIR_CHANGED = True
-
-	return True
-
-
-def overlay_dir_updated(src_dir, dest_dir):
-	'''this def gets called if there were any updates in this dir'''
-
-# dir has changed, run on_update command
-	if synctool_config.ON_UPDATE.has_key(dest_dir):
-		run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest_dir])
-
-# dir has changed, run appropriate .post script
-	basename = os.path.basename(dest_dir)
-	dirname = os.path.dirname(src_dir)
-	if synctool_core.POST_SCRIPTS.has_key(basename):
-		run_command_in_dir(os.path.dirname(dest_dir), os.path.join(dirname, synctool_core.POST_SCRIPTS[basename][0]))
+		run_post(src, dest)
 
 
 def overlay_files():
 	'''run the overlay function'''
-
-	base_path = os.path.join(synctool_config.MASTERDIR, 'overlay')
-	if not os.path.isdir(base_path):
-		stderr('error: $masterdir/overlay/ not found')
-		return
-
-	synctool_core.treewalk(base_path, '/', overlay_callback, overlay_dir_updated)
+	
+	synctool_overlay.visit(synctool_overlay.OV_OVERLAY, overlay_callback)
 
 
-def delete_callback(src_dir, dest_dir, filename, ext):
+def delete_callback(src, dest):
 	'''delete files'''
-
-	if ext:
-		src = os.path.join(src_dir, '%s._%s' % (filename, ext))
-	else:
-		src = os.path.join(src_dir, filename)
-
-	dest = os.path.join(dest_dir, filename)
-
+	
 	if path_isdir(dest):			# do not delete directories
-		return True
-
+		return
+	
 	if path_exists(dest):
 		if synctool_lib.DRY_RUN:
 			not_str = 'not '
 		else:
 			not_str = ''
-
-		stdout('%sdeleting $masterdir/%s : %s' % (not_str, src[synctool_config.MASTER_LEN:], dest))
+		
+		stdout('%sdeleting %s : %s' % (not_str, synctool_lib.prettypath(src), dest))
 		hard_delete_file(dest)
-
-# file in dir has changed, flag it
-		synctool_core.DIR_CHANGED = True
-
-	return True
-
-
-def delete_dir_updated(src_dir, dest_dir):
-	'''this def gets called when a file in the dir was deleted'''
-
-# do the same as for overlay; run .post scripts
-	overlay_dir_updated(src_dir, dest_dir)
+		run_post(src, dest)
 
 
 def delete_files():
-	base_path = os.path.join(synctool_config.MASTERDIR, 'delete')
-	if not os.path.isdir(base_path):
-		stderr('error: $masterdir/delete/ not found')
-		return
-
-	synctool_core.treewalk(base_path, '/', delete_callback, delete_dir_updated)
+	synctool_overlay.visit(synctool_overlay.OV_DELETE, delete_callback)
 
 
-def tasks_callback(src_dir, dest_dir, filename, ext):
+def tasks_callback(src, dest):
 	'''run tasks'''
-
-	if ext:
-		src = os.path.join(src_dir, '%s._%s' % (filename, ext))
-	else:
-		src = os.path.join(src_dir, filename)
-
-	run_command(src)
-	unix_out('')
-	return True
+	
+	if not os.path.isdir(src):
+		run_command(src)
+		unix_out('')
 
 
 def run_tasks():
-	base_path = os.path.join(synctool_config.MASTERDIR, 'tasks')
-	if not os.path.isdir(base_path):
-		stderr('error: $masterdir/tasks/ not found')
-		return
-
-	synctool_core.treewalk(base_path, '/', tasks_callback)
+	synctool_overlay.visit(synctool_overlay.OV_TASKS, tasks_callback)
 
 
 def always_run():
 	'''always run these commands'''
-
-	for cmd in synctool_config.ALWAYS_RUN:
+	
+	for cmd in synctool_param.ALWAYS_RUN:
 		run_command(cmd)
 		unix_out('')
 
 
 def single_files(filename):
 	'''check/update a single file'''
-	'''returns (1, path_in_synctree) if file is different'''
-
+	'''returns (True, path_in_synctree) if file is different'''
+	
 	if not filename:
 		stderr('missing filename')
-		return (0, None)
-
-	src = synctool_core.find_synctree('overlay', filename)
+		return (False, None)
+	
+	src = synctool_overlay.find(synctool_overlay.OV_OVERLAY, filename)
 	if not src:
 		stdout('%s is not in the overlay tree' % filename)
-		return (0, None)
-
-	verbose('checking against %s' % src)
-
+		return (False, None)
+	
+	verbose('checking against %s' % synctool_lib.prettypath(src))
+	
 	changed = compare_files(src, filename)
 	if not changed:
 		stdout('%s is up to date' % filename)
 		unix_out('# %s is up to date\n' % filename)
-
+	
 	return (changed, src)
-
-
-def on_update_single(src, dest):
-	'''a single file has been updated. Run on_update command or appropriate .post script'''
-
-	dest_dir = os.path.dirname(dest)
-
-# file has changed, run on_update command
-	if synctool_config.ON_UPDATE.has_key(dest):
-		run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest])
-
-# file has changed, run appropriate .post script
-
-	src_dir = os.path.dirname(src)
-	filename = os.path.basename(dest)
-
-	synctool_core.treewalk(src_dir, dest_dir, None, None, False)		# this constructs new synctool_core.POST_SCRIPTS dictionary
-
-	if synctool_core.POST_SCRIPTS.has_key(filename):
-		run_command_in_dir(dest_dir, os.path.join(src_dir, synctool_core.POST_SCRIPTS[filename][0]))
-
-# if it was a indeed a file and not a directory, check if the directory has a .post script, too
-	if os.path.isfile(src):
-		src_dir = os.path.dirname(src_dir)
-		basename = os.path.basename(dest_dir)
-		dest_dir = os.path.dirname(dest_dir)
-
-		if synctool_config.ON_UPDATE.has_key(dest_dir):
-			run_command_in_dir(dest_dir, synctool_config.ON_UPDATE[dest_dir])
-
-		synctool_core.treewalk(src_dir, dest_dir, None, None, False)		# this constructs new synctool_core.POST_SCRIPTS dictionary
-
-		if synctool_core.POST_SCRIPTS.has_key(basename):
-			run_command_in_dir(dest_dir, os.path.join(src_dir, synctool_core.POST_SCRIPTS[basename][0]))
 
 
 def single_task(filename):
@@ -984,64 +937,64 @@ def single_task(filename):
 	if not filename:
 		stderr('missing task filename')
 		return
-
+	
 	task_script = filename
-	if task_script[0] != '/':				# trick to make find_synctree() work for tasks, too
+	if task_script[0] != '/':				# trick to make find() work for tasks, too
 		task_script = '/' + task_script
-
-	src = synctool_core.find_synctree('tasks', task_script)
+	
+	src = synctool_overlay.find(synctool_overlay.OV_TASKS, task_script)
 	if not src:
 		stderr("no such task '%s'" % filename)
 		return
-
+	
 	run_command(src)
 	unix_out('')
 
 
 def reference(filename):
 	'''show which source file in the repository synctool chooses to use'''
-
+	
 	if not filename:
 		stderr('missing filename')
 		return
-
-	src = synctool_core.find_synctree('overlay', filename)
+	
+	src = synctool_overlay.find(synctool_overlay.OV_OVERLAY, filename)
 	if not src:
 		stdout('%s is not in the overlay tree' % filename)
 		return
-
+	
 	stdout(src)
 
 
 def diff_files(filename):
 	'''display a diff of the file'''
-
-	if not synctool_config.DIFF_CMD:
-		stderr('error: diff_cmd is undefined in %s' % synctool_config.CONF_FILE)
+	
+	if not synctool_param.DIFF_CMD:
+		stderr('error: diff_cmd is undefined in %s' % synctool_param.CONF_FILE)
 		return
-
+	
 	synctool_lib.DRY_RUN = True						# be sure that it doesn't do any updates
-
-	sync_path = synctool_core.find_synctree('overlay', filename)
+	
+	sync_path = synctool_overlay.find(synctool_overlay.OV_OVERLAY, filename)
 	if not sync_path:
 		return
-
+	
 	if synctool_lib.UNIX_CMD:
-		unix_out('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
+		unix_out('%s %s %s' % (synctool_param.DIFF_CMD, filename, sync_path))
 	else:
-		verbose('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
-
+		verbose('%s %s %s' % (synctool_param.DIFF_CMD, filename, synctool_lib.prettypath(sync_path)))
+		
 		sys.stdout.flush()
 		sys.stderr.flush()
-
+		
 		if use_subprocess:
-			cmd_arr = shlex.split(synctool_config.DIFF_CMD)
+			cmd_arr = shlex.split(synctool_param.DIFF_CMD)
 			cmd_arr.append(filename)
 			cmd_arr.append(sync_path)
 			subprocess.Popen(cmd_arr, shell=False)
 		else:
-			os.system('%s %s %s' % (synctool_config.DIFF_CMD, filename, sync_path))
-
+			os.system('%s %s %s' % (synctool_param.DIFF_CMD, filename, sync_path))
+		
 		sys.stdout.flush()
 		sys.stderr.flush()
 
@@ -1053,10 +1006,10 @@ def be_careful_with_getopt():
 	# because '-f' might run --fix because of the way that getopt() works
 	
 	for arg in sys.argv:
-
+		
 		# This is probably going to give stupid-looking output in some cases,
 		# but it's better to be safe than sorry
-
+		
 		if arg[:2] == '-d' and string.find(arg, 'f') > -1:
 			print "Did you mean '--diff'?"
 			sys.exit(1)
@@ -1094,7 +1047,7 @@ def usage():
 	print 'options:'
 	print '  -h, --help            Display this information'
 	print '  -c, --conf=dir/file   Use this config file'
-	print '                        (default: %s)' % synctool_config.DEFAULT_CONF
+	print '                        (default: %s)' % synctool_param.DEFAULT_CONF
 #	print '  -n, --dry-run         Show what would have been updated'
 	print '  -d, --diff=file       Show diff for file'
 	print '  -e, --erase-saved     Erase *.saved backup files'
@@ -1102,56 +1055,60 @@ def usage():
 	print '  -r, --ref=file        Show which source file synctool chooses'
 	print '  -t, --tasks           Run the scripts in the tasks/ directory'
 	print '  -f, --fix             Perform updates (otherwise, do dry-run)'
+	print '  -F, --fullpath        Show full paths instead of shortened ones'
 	print '  -v, --verbose         Be verbose'
 	print '  -q, --quiet           Suppress informational startup messages'
 	print '      --unix            Output actions as unix shell commands'
 	print '      --version         Print current version number'
 	print
 	print 'synctool can help you administer your cluster of machines'
-	print 'Note that by default, it does a dry-run, unless you specify --fix'
+	print 'Note that synctool does a dry run unless you specify --fix'
 	print
 	print 'Written by Walter de Jong <walter@heiho.net> (c) 2003-2011'
 
 
 def get_options():
-	global RUN_TASKS, OPT_VERSION, SINGLE_FILES
-
+	global SINGLE_FILES
+	
 	progname = os.path.basename(sys.argv[0])
-
+	
 	synctool_lib.DRY_RUN = True				# set default dry-run
-
+	
 	if len(sys.argv) <= 1:
 		return (None, None, None)
-
-	be_careful_with_getopt()	# check for dangerous common typo's on the command-line
+	
+	# check for dangerous common typo's on the command-line
+	be_careful_with_getopt()
 	
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:etfvq', ['help', 'conf=', 'diff=', 'single=', 'ref=', 'erase-saved', 'tasks', 'fix', 'verbose', 'quiet',
-			'unix', 'masterlog', 'version'])
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:etfFvq',
+			['help', 'conf=', 'diff=', 'single=', 'ref=', 'erase-saved',
+			'tasks', 'fix', 'fullpath', 'verbose', 'quiet', 'unix',
+			'masterlog', 'version'])
 	except getopt.error, (reason):
 		print '%s: %s' % (progname, reason)
 		usage()
 		sys.exit(1)
-
+	
 	except getopt.GetoptError, (reason):
 		print '%s: %s' % (progname, reason)
 		usage()
 		sys.exit(1)
-
+	
 	except:
 		usage()
 		sys.exit(1)
-
+	
 	if args != None and len(args) > 0:
 		stderr('error: excessive arguments on command line')
 		sys.exit(1)
-
+	
 	errors = 0
-
+	
 	action = ACTION_DEFAULT
 	SINGLE_FILES = []
-
-# these are only used for checking the validity of command-line option combinations
+	
+	# these are only used for checking the validity of command-line option combinations
 	opt_diff = False
 	opt_single = False
 	opt_reference = False
@@ -1159,90 +1116,89 @@ def get_options():
 	opt_upload = False
 	opt_suffix = False
 	opt_fix = False
-
+	
 	for opt, arg in opts:
 		if opt in ('-h', '--help', '-?'):
 			usage()
 			sys.exit(1)
-
+		
 		if opt in ('-c', '--conf'):
-			synctool_config.CONF_FILE = arg
+			synctool_param.CONF_FILE = arg
 			continue
-
+		
 # dry run already is default
 #
-#			if opt in ('-n', '--dry-run'):
-#				synctool_lib.DRY_RUN = True
-#				continue
-
+#		if opt in ('-n', '--dry-run'):
+#			synctool_lib.DRY_RUN = True
+#			continue
+		
+		if opt in ('-e', '--erase-saved'):
+			synctool_lib.ERASE_SAVED = True
+			continue
+		
 		if opt in ('-f', '--fix'):
 			opt_fix = True
 			synctool_lib.DRY_RUN = False
 			continue
-
-		if opt in ('-e', '--erase-saved'):
-			synctool_config.ERASE_SAVED = True
+		
+		if opt in ('-F', '--fullpath'):
+			synctool_param.FULL_PATH = True
 			continue
-
+		
 		if opt in ('-v', '--verbose'):
 			synctool_lib.VERBOSE = True
 			continue
-
+		
 		if opt in ('-q', '--quiet'):
 			synctool_lib.QUIET = True
 			continue
-
+		
 		if opt == '--unix':
 			synctool_lib.UNIX_CMD = True
 			continue
-
+		
 		if opt == '--masterlog':
 			synctool_lib.MASTERLOG = True
 			continue
-
+		
 		if opt in ('-d', '--diff'):
 			opt_diff = True
 			action = ACTION_DIFF
-			file = synctool_lib.strip_multiple_slashes(arg)
+			file = synctool_lib.strip_path(arg)
 			if not file in SINGLE_FILES:
 				SINGLE_FILES.append(file)
 			continue
-
+		
 		if opt in ('-1', '--single'):
 			opt_single = True
-			file = synctool_lib.strip_multiple_slashes(arg)
-			while len(file) > 1 and file[-1] == '/':		# strip trailing slashes (single directories)
-				file = file[:-1]
-			
+			file = synctool_lib.strip_path(arg)
 			if not file in SINGLE_FILES:
 				SINGLE_FILES.append(file)
 			continue
-
+		
 		if opt in ('-t', '--task', '--tasks'):
 			opt_tasks = True
-			RUN_TASKS = True
 			action = ACTION_RUN_TASKS
 			continue
-
+		
 		if opt in ('-r', '--ref', '--reference'):
 			opt_reference = True
 			action = ACTION_REFERENCE
-			file = synctool_lib.strip_multiple_slashes(arg)
+			file = synctool_lib.strip_path(arg)
 			if not file in SINGLE_FILES:
 				SINGLE_FILES.append(file)
 			continue
-
+		
 		if opt == '--version':
-			OPT_VERSION = True
-			continue
-
+			return ACTION_VERSION
+		
 		stderr("unknown command line option '%s'" % opt)
 		errors = errors + 1
 
 	if errors:
 		usage()
 		sys.exit(1)
-
+	
 	option_combinations(opt_diff, opt_single, opt_reference, opt_tasks, opt_upload, opt_suffix, opt_fix)
 	
 	return action
@@ -1250,67 +1206,67 @@ def get_options():
 
 if __name__ == '__main__':
 	action = get_options()
-
-	if OPT_VERSION:
-		print synctool_config.VERSION
+	
+	if action == ACTION_VERSION:
+		print synctool_param.VERSION
 		sys.exit(0)
-
+	
 	synctool_config.read_config()
 	synctool_config.add_myhostname()
-
-	if synctool_config.NODENAME == None:
-		stderr('unable to determine my nodename, please check %s' % synctool_config.CONF_FILE)
+	
+	if synctool_param.NODENAME == None:
+		stderr('unable to determine my nodename, please check %s' % synctool_param.CONF_FILE)
 		sys.exit(1)
-
-	if synctool_config.NODENAME in synctool_config.IGNORE_GROUPS:
-		stderr('%s: node %s is disabled in the config file' % (synctool_config.CONF_FILE, synctool_config.NODENAME))
+	
+	if synctool_param.NODENAME in synctool_param.IGNORE_GROUPS:
+		stderr('%s: node %s is disabled in the config file' % (synctool_param.CONF_FILE, synctool_param.NODENAME))
 		sys.exit(1)
-
+	
 	synctool_config.remove_ignored_groups()
-
-	synctool_config.MY_GROUPS = synctool_config.get_my_groups()
-	synctool_config.ALL_GROUPS = synctool_config.make_all_groups()
-
+	
+	synctool_param.MY_GROUPS = synctool_config.get_my_groups()
+	synctool_param.ALL_GROUPS = synctool_config.make_all_groups()
+	
 	if synctool_lib.UNIX_CMD:
 		t = time.localtime(time.time())
-
+		
 		unix_out('#')
 		unix_out('# script generated by synctool on %04d/%02d/%02d %02d:%02d:%02d' % (t[0], t[1], t[2], t[3], t[4], t[5]))
 		unix_out('#')
-		unix_out('# NODENAME=%s' % synctool_config.NODENAME)
-		unix_out('# HOSTNAME=%s' % synctool_config.HOSTNAME)
-		unix_out('# MASTERDIR=%s' % synctool_config.MASTERDIR)
-		unix_out('# SYMLINK_MODE=0%o' % synctool_config.SYMLINK_MODE)
+		unix_out('# NODENAME=%s' % synctool_param.NODENAME)
+		unix_out('# HOSTNAME=%s' % synctool_param.HOSTNAME)
+		unix_out('# MASTERDIR=%s' % synctool_param.MASTERDIR)
+		unix_out('# SYMLINK_MODE=0%o' % synctool_param.SYMLINK_MODE)
 		unix_out('#')
-
+		
 		if not synctool_lib.DRY_RUN:
 			unix_out('# NOTE: --fix specified, applying updates')
 			unix_out('#')
-
+		
 		unix_out('')
 	else:
 		if not synctool_lib.QUIET:
-			verbose('my nodename: %s' % synctool_config.NODENAME)
-			verbose('my hostname: %s' % synctool_config.HOSTNAME)
-			verbose('masterdir: %s' % synctool_config.MASTERDIR)
-			verbose('symlink_mode: 0%o' % synctool_config.SYMLINK_MODE)
-
-			if synctool_config.LOGFILE != None and not synctool_lib.DRY_RUN:
-				verbose('logfile: %s' % synctool_config.LOGFILE)
-
+			verbose('my nodename: %s' % synctool_param.NODENAME)
+			verbose('my hostname: %s' % synctool_param.HOSTNAME)
+			verbose('masterdir: %s' % synctool_param.MASTERDIR)
+			verbose('symlink_mode: 0%o' % synctool_param.SYMLINK_MODE)
+			
+			if synctool_param.LOGFILE != None and not synctool_lib.DRY_RUN:
+				verbose('logfile: %s' % synctool_param.LOGFILE)
+			
 			verbose('')
-
+			
 			if synctool_lib.DRY_RUN:
 				stdout('DRY RUN, not doing any updates')
 			else:
 				stdout('--fix specified, applying changes')
 			verbose('')
-
+	
 	synctool_lib.openlog()
-
-	os.putenv('SYNCTOOL_NODENAME', synctool_config.NODENAME)
-	os.putenv('SYNCTOOL_MASTERDIR', synctool_config.MASTERDIR)
-
+	
+	os.putenv('SYNCTOOL_NODENAME', synctool_param.NODENAME)
+	os.putenv('SYNCTOOL_MASTERDIR', synctool_param.MASTERDIR)
+	
 	if action == ACTION_DIFF:
 		for file in SINGLE_FILES:
 			diff_files(file)
@@ -1330,15 +1286,18 @@ if __name__ == '__main__':
 		for single_file in SINGLE_FILES:
 			(changed, src) = single_files(single_file)
 			if changed:
-				on_update_single(src, single_file)
+				run_post(src, single_file)
+		
+		run_post_on_directories()
 	
 	else:
 		overlay_files()
 		delete_files()
+		run_post_on_directories()
 		always_run()
-
+	
 	unix_out('# EOB')
-
+	
 	synctool_lib.closelog()
 
 

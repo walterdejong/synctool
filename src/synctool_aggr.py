@@ -2,13 +2,13 @@
 #
 #	synctool_aggr.py	WJ109
 #
-#	group together output that is the same
-#
 #   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2011
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
 #   License.
+#
+#	- aggregate: group together output that is the same
 #
 
 import os
@@ -75,9 +75,9 @@ def aggregate(f):
 def run(cmd_args):
 	'''pipe the output through the aggregator'''
 
-#
-#	simply re-run this command, but with a pipe
-#
+	#
+	#	simply re-run this command, but with a pipe
+	#
 	if '-a' in cmd_args:
 		cmd_args.remove('-a')
 
