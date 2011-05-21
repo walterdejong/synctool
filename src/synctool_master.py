@@ -51,21 +51,66 @@ def run_remote_synctool(nodes):
 		stderr('%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
 
-	cmds = []
-
-	# append rsync command
+	# prepare rsync command
 	if not OPT_SKIP_RSYNC:
-		cmds.append([ shlex.split(synctool_param.RSYNC_CMD) + [ '%s/' % synctool_param.MASTERDIR ], [ '%s/' % synctool_param.MASTERDIR ], ':' ])
+		rsync_cmd_arr = shlex.split(synctool_param.RSYNC_CMD)
+		rsync_cmd_arr.append('%s/' % synctool_param.MASTERDIR)
+	else:
+		rsync_cmd_arr = None
 
-	# append synctool command
-	cmds.append([ shlex.split(synctool_param.SSH_CMD), shlex.split(synctool_param.SYNCTOOL_CMD) + PASS_ARGS, None ])
+	# prepare remote synctool command
+	ssh_cmd_arr = shlex.split(synctool_param.SSH_CMD)
+	synctool_cmd_arr = shlex.split(synctool_param.SYNCTOOL_CMD)
+	synctool_cmd_arr.extend(PASS_ARGS)
+	
+	# run in parallel
+	synctool_lib.run_parallel(master_synctool, worker_synctool,
+		(nodes, rsync_cmd_arr, ssh_cmd_arr, synctool_cmd_arr), len(nodes))
 
-	synctool_ssh.run_parallel_cmds(nodes, cmds, NODESET)
+
+def master_synctool(rank, args):
+	# the master node only displays what we're running
+	(nodes, rsync_cmd_arr, ssh_cmd_arr, synctool_cmd_arr) = args
+	
+	node = nodes[rank]
+	nodename = NODESET.get_nodename_from_interface(node)
+	
+	if rsync_cmd_arr != None:
+		verbose('running rsync $masterdir/ to node %s' % nodename)
+		unix_out('%s %s:%s/' % (string.join(rsync_cmd_arr), node, synctool_param.MASTERDIR))
+	
+	verbose('running synctool on node %s' % nodename)
+	unix_out('%s %s %s' % (string.join(cmd_ssh_arr), node, string.join(synctool_cmd_arr)))
+
+
+def worker_synctool(rank, args):
+	'''runs rsync of $masterdir to the nodes and ssh+synctool in parallel'''
+	
+	(nodes, rsync_cmd_arr, ssh_cmd_arr, synctool_cmd_arr) = args
+	
+	node = nodes[rank]
+	nodename = NODESET.get_nodename_from_interface(node)
+	
+	if rsync_cmd_arr != None:
+		# rsync masterdir to the node
+		rsync_cmd_arr.append('%s:%s/' % (nodes[rank], synctool_param.MASTERDIR))
+		synctool_lib.run_with_nodename(rsync_cmd_arr, nodename)
+	
+	# run 'ssh node synctool_cmd'
+	ssh_cmd_arr.append(node)
+	ssh_cmd_arr.extend(synctool_cmd_arr)
+	
+	synctool_lib.run_with_nodename(ssh_cmd_arr)
 
 
 def run_local_synctool():
+	if not synctool_param.SYNCTOOL_CMD:
+		stderr('%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
+		sys.exit(-1)
+
 	cmd_arr = shlex.split(synctool_param.SYNCTOOL_CMD) + PASS_ARGS
-	synctool_ssh.run_local_cmd(cmd_arr)
+	
+	synctool_lib.run_with_nodename(cmd_arr, synctool_param.NODENAME)
 
 
 def upload(interface, upload_filename, upload_suffix=None):
