@@ -32,6 +32,10 @@ COLORIZE_FULL_LINE = False
 MASTERLOG = False
 LOGFD = None
 
+# print nodename in output?
+# This option is pretty useless except in synctool-ssh it may be useful
+OPT_NODENAME = True
+
 MONTHS = ( 'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec' )
 
 # enums for terse output
@@ -251,12 +255,40 @@ def popen(cmd_args):
 
 	else:
 		os.close(pipe[1])
-
-		f = os.fdopen(pipe[0], 'r')
-
-		return f
-
+		return os.fdopen(pipe[0], 'r')
+	
 	return None
+
+
+def run_with_nodename(cmd_arr, nodename):
+	'''run command and show output with nodename'''
+	
+	f = popen(cmd_arr)
+	if not f:
+		return
+	
+	while True:
+		line = f.readline()
+		if not line:
+			break
+		
+		line = string.strip(line)
+		
+		# pass output on; simply use 'print' rather than 'stdout()'
+		if line[:15] == '%synctool-log% ':
+			if line[15:] == '--':
+				pass
+			else:
+				masterlog('%s: %s' % (nodename, line[15:]))
+		else:
+			if OPT_NODENAME:
+				print '%s: %s' % (nodename, line)
+			else:
+				# do not prepend the nodename of this node to the output
+				# if option --no-nodename was given
+				print line
+	
+	f.close()
 
 
 def search_path(cmd):
