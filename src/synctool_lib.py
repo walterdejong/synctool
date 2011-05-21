@@ -54,12 +54,12 @@ TERSE_TXT = (
 
 TERSE_COLORS = {
 	'info' : 'default',
-	'WARN' : 'yellow',		# note: yellow is not really visible on white background
+	'WARN' : 'magenta',
 	'ERROR': 'red',
 	'FAIL' : 'cyan',
 	'sync' : 'default',
 	'link' : 'cyan',
-	'mkdir': 'yellow',
+	'mkdir': 'blue',		# I'd use yellow on a black background, blue on white
 	'rm'   : 'yellow',
 	'chown': 'cyan',
 	'chmod': 'cyan',
