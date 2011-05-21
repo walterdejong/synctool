@@ -225,6 +225,7 @@ def log(str):
 
 def popen(cmd_args):
 	'''same as os.popen(), but use an array of command+arguments'''
+	# TODO use subprocess, or else os.popen()
 
 	pipe = os.pipe()
 
@@ -331,6 +332,51 @@ def prepare_path(path):
 	path = subst_masterdir(path)
 	
 	return path
+
+
+def run_parallel(callback, args, worklen):
+	'''runs a callback function with arguments 'args' in parallel
+	worklen is the total amount of work items to be processed
+	This function will not fork more than NUM_PROC processes'''
+	
+	# Note: I guess using Python's multiprocessing module would be
+	# more elegant. However, it needs Python >= 2.6 and some systems
+	# still ship with the older Python 2.4 (at the time of writing this)
+	
+	parallel = 0
+	n = 0
+	while n < worklen:
+		if parallel > synctool_param.NUM_PROC:
+			try:
+				(pid, status) = os.wait()
+			except OSError:
+				# odd condition?
+				pass
+			
+			else:
+				parallel = parallel - 1
+		
+		pid = os.fork()
+		if not pid:
+			# the nth thread gets rank n
+			callback(n, args)
+			sys.exit(0)
+		
+		if pid == -1:
+			stderr('error: fork() failed, breaking off forking loop')
+			break
+		
+		else:
+			parallel = parallel + 1
+			n = n + 1
+	
+	# wait for all children to terminate
+	while True:
+		try:
+			(pid, status) = os.wait()
+		except OSError:
+			# no more child processes
+			break
 
 
 if __name__ == '__main__':
