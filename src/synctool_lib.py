@@ -26,9 +26,6 @@ QUIET = False
 UNIX_CMD = False
 ERASE_SAVED = False
 TERSE = True
-COLORIZE = True
-COLORIZE_BRIGHT = True
-COLORIZE_FULL_LINE = False
 MASTERLOG = False
 LOGFD = None
 
@@ -55,20 +52,6 @@ TERSE_TXT = (
 	'info', 'WARN', 'ERROR', 'FAIL',
 	'sync', 'link', 'mkdir', 'rm', 'chown', 'chmod', 'exec'
 )
-
-TERSE_COLORS = {
-	'info' : 'default',
-	'WARN' : 'magenta',
-	'ERROR': 'red',
-	'FAIL' : 'cyan',
-	'sync' : 'default',
-	'link' : 'cyan',
-	'mkdir': 'blue',		# I'd use yellow on a black background, blue on white
-	'rm'   : 'yellow',
-	'chown': 'cyan',
-	'chmod': 'cyan',
-	'exec' : 'green'
-}
 
 COLORMAP = {
 	'black'   : 30,
@@ -118,16 +101,16 @@ def terse(code, msg):
 			if msg[0] == '/':
 				msg = terse_path(msg)
 		
-		if COLORIZE:		# and sys.stdout.isatty():
+		if synctool_param.COLORIZE:		# and sys.stdout.isatty():
 			txt = TERSE_TXT[code]
-			color = COLORMAP[TERSE_COLORS[TERSE_TXT[code]]]
+			color = COLORMAP[synctool_param.TERSE_COLORS[string.lower(TERSE_TXT[code])]]
 			
-			if COLORIZE_BRIGHT:
+			if synctool_param.COLORIZE_BRIGHT:
 				bright = ';1'
 			else:
 				bright = ''
 			
-			if COLORIZE_FULL_LINE:
+			if synctool_param.COLORIZE_FULL_LINE:
 				print '\x1b[%d%sm%s %s\x1b[0m' % (color, bright, txt, msg)
 			else:
 				print '\x1b[%d%sm%s\x1b[0m %s' % (color, bright, txt, msg)

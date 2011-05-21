@@ -69,5 +69,23 @@ ALL_GROUPS = None
 # although silly to keep this in a var, it makes it easier to print messages
 MASTER_LEN = 0
 
+# colorize output
+COLORIZE = True
+COLORIZE_FULL_LINE = False
+COLORIZE_BRIGHT = True
+
+TERSE_COLORS = {
+	'info' : 'default',
+	'warn' : 'magenta',
+	'error': 'red',
+	'fail' : 'red',
+	'sync' : 'default',
+	'link' : 'cyan',
+	'mkdir': 'blue',		# I'd use yellow on a black background, blue on white
+	'rm'   : 'yellow',
+	'chown': 'cyan',
+	'chmod': 'cyan',
+	'exec' : 'green'
+}
 
 # EOB
