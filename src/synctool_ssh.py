@@ -31,92 +31,61 @@ OPT_NODENAME = True
 MASTER_OPTS = None
 
 
-def run_remote_cmd(nodes, remote_cmd_args, nodeset):
-	'''nodes[] is a list of interfaces to run on'''
-	'''remote_cmd_args[] is array of command + arguments'''
-	'''join_char is ':' or None'''
-
+def ssh_nodeset(nodeset, remote_cmd_arr):
+	'''run remote command to a set of nodes using ssh (param ssh_cmd)'''
+	
+	nodes = NODESET.interfaces()
+	if nodes == None or len(nodes) <= 0:
+		print 'no valid nodes specified'
+		sys.exit(1)
+	
 	if not synctool_param.SSH_CMD:
 		stderr('%s: error: ssh_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
 
-	cmd = synctool_param.SSH_CMD
-	cmd_args = shlex.split(cmd)
-
-	# cmd_str is used for printing info only
-	cmd_str = string.join(remote_cmd_args)
-
-	parallel = 0
-
-	for node in nodes:
-		if node == synctool_param.NODENAME:
-			verbose('running %s' % cmd_str)
-			unix_out(cmd_str)
-		else:
-			the_command = os.path.basename(cmd_args[0])
-			verbose('running %s to %s %s' % (the_command, nodeset.get_nodename_from_interface(node), cmd_str))
-			unix_out('%s %s %s' % (cmd, node, cmd_str))
-
-		if synctool_lib.DRY_RUN:
-			continue
-		#
-		#	run commands in parallel, as many as defined
-		#
-		if parallel > synctool_param.NUM_PROC:
-			try:
-				if os.wait() != -1:
-					parallel = parallel - 1
-
-			except OSError:
-				pass
-
-		pid = os.fork()
-
-		if not pid:
-			_run_command(cmd_args, node, None, remote_cmd_args, nodeset)
-			sys.exit(0)
-
-		if pid == -1:
-			stderr('error: failed to fork()')
-		else:
-			parallel = parallel + 1
-
-	#
-	#	wait for children to terminate
-	#
-	while True:
-		try:
-			if os.wait() == -1:
-				break
-
-		except OSError:
-			break
+	ssh_cmd_arr = shlex.split(synctool_param.SSH_CMD)
+	
+	synctool_lib.run_parallel(master_ssh, worker_ssh,
+		(nodes, nodeset, ssh_cmd_arr, remote_cmd_arr), len(nodes))
 
 
-def _run_command(cmd_arr, node, join_char, cmd_args, nodeset):
-	'''cmd_arr[] is an array that can be passed to e.g. os.execv(), or synctool_lib.popen()
-	cmd_args[] contains the additional arguments to the command
-	The resulting command will be: cmd_arr + node + join_char + cmd_args'''
-
-	#
-	#	is this node the local node?
-	#
+def master_ssh(rank, args):
+	(nodes, nodeset, ssh_cmd_arr, remote_cmd_arr) = args
+	
+	node = nodes[rank]
+	cmd_str = string.join(remote_cmd_arr)
+	
 	if node == synctool_param.NODENAME:
-		run_local_cmd(cmd_args)
-		return
-
-	nodename = nodeset.get_nodename_from_interface(node)
-
-	# make the command arguments ready for synctool_lib.popen()
-	if join_char:
-		cmd_args[0] = '%s%s%s' % (node, join_char, cmd_args[0])
+		verbose('running %s' % cmd_str)
+		unix_out(cmd_str)
 	else:
-		cmd_arr.append(node)
-	cmd_arr.extend(cmd_args)
+		verbose('running %s to %s %s' % (os.path.basename(ssh_cmd_arr[0]),
+			nodeset.get_nodename_from_interface(node), cmd_str))
+		
+		unix_out('%s %s %s' % (string.join(ssh_cmd_arr), node, cmd_str))
 
+
+def worker_ssh(rank, args):
+	if synctool_lib.DRY_RUN:		# got here for nothing
+		return
+	
+	(nodes, nodeset, ssh_cmd_arr, remote_cmd_arr) = args
+	
+	node = nodes[rank]
+	nodename = nodeset.get_nodename_from_interface(node)
+	
+	if nodename == synctool_param.NODENAME:
+		# is this node the local node? Then do not use ssh
+		ssh_cmd_arr = []
+	else:
+		ssh_cmd_arr.append(node)
+	
+	ssh_cmd_arr.extend(cmd_args)
+	
 	# execute remote command and show output with the nodename
-	f = synctool_lib.popen(cmd_arr)
-
+	# TODO move this block to synctool_lib.run_command()
+	f = synctool_lib.popen(ssh_cmd_arr)
+	
 	while True:
 		line = f.readline()
 		if not line:
@@ -125,8 +94,6 @@ def _run_command(cmd_arr, node, join_char, cmd_args, nodeset):
 		line = string.strip(line)
 
 		# pass output on; simply use 'print' rather than 'stdout()'
-		# do not prepend the nodename of this node to the output
-		# if option --no-nodename was given
 		if line[:15] == '%synctool-log% ':
 			if line[15:] == '--':
 				pass
@@ -136,12 +103,16 @@ def _run_command(cmd_arr, node, join_char, cmd_args, nodeset):
 			if OPT_NODENAME:
 				print '%s: %s' % (nodename, line)
 			else:
+				# do not prepend the nodename of this node to the output
+				# if option --no-nodename was given
 				print line
 
 	f.close()
 
 
 def run_parallel_cmds(nodes, cmds, nodeset):
+# TODO run_parallel_cmds is only used by synctool_master
+# TODO so move it there
 	'''fork and run multiple commands in sequence
 	cmds[] is an array of tuples (cmd_arr[], cmd_args[], join_char)
 	cmd_arr[] is an array that can be passed to e.g. os.execv(), or synctool_lib.popen()
@@ -215,38 +186,6 @@ def run_parallel_cmds(nodes, cmds, nodeset):
 
 		except OSError:
 			break
-
-
-def run_local_cmd(cmd_args):
-	'''run command on the local host'''
-
-	cmd_str = string.join(cmd_args)
-
-	verbose('running command %s' % cmd_str)
-	unix_out(cmd_str)
-
-	if synctool_lib.DRY_RUN:
-		return
-
-	f = synctool_lib.popen(cmd_args)
-
-	while True:
-		line = f.readline()
-		if not line:
-			break
-
-		line = string.strip(line)
-
-		# pass output on; simply use 'print' rather than 'stdout()'
-		if line[:15] == '%synctool-log% ':
-			if line[15:] == '--':
-				pass
-			else:
-				synctool_lib.masterlog('%s: %s' % (synctool_param.NODENAME, line[15:]))
-		else:
-			print '%s: %s' % (synctool_param.NODENAME, line)
-
-	f.close()
 
 
 def usage():
@@ -374,12 +313,7 @@ if __name__ == '__main__':
 	synctool_config.read_config()
 	synctool_config.add_myhostname()
 
-	nodes = NODESET.interfaces()
-	if nodes == None or len(nodes) <= 0:
-		print 'no valid nodes specified'
-		sys.exit(1)
-
-	run_remote_cmd(nodes, cmd_args, NODESET)
+	ssh_nodeset(NODESET, cmd_args)
 
 
 # EOB
