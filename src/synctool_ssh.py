@@ -30,7 +30,7 @@ OPT_AGGREGATE = False
 MASTER_OPTS = None
 
 
-def ssh_nodeset(nodeset, remote_cmd_arr):
+def run_dsh(remote_cmd_arr):
 	'''run remote command to a set of nodes using ssh (param ssh_cmd)'''
 	
 	nodes = NODESET.interfaces()
@@ -45,11 +45,11 @@ def ssh_nodeset(nodeset, remote_cmd_arr):
 	ssh_cmd_arr = shlex.split(synctool_param.SSH_CMD)
 	
 	synctool_lib.run_parallel(master_ssh, worker_ssh,
-		(nodes, nodeset, ssh_cmd_arr, remote_cmd_arr), len(nodes))
+		(nodes, ssh_cmd_arr, remote_cmd_arr), len(nodes))
 
 
 def master_ssh(rank, args):
-	(nodes, nodeset, ssh_cmd_arr, remote_cmd_arr) = args
+	(nodes, ssh_cmd_arr, remote_cmd_arr) = args
 	
 	node = nodes[rank]
 	cmd_str = string.join(remote_cmd_arr)
@@ -59,7 +59,7 @@ def master_ssh(rank, args):
 		unix_out(cmd_str)
 	else:
 		verbose('running %s to %s %s' % (os.path.basename(ssh_cmd_arr[0]),
-			nodeset.get_nodename_from_interface(node), cmd_str))
+			NODESET.get_nodename_from_interface(node), cmd_str))
 		
 		unix_out('%s %s %s' % (string.join(ssh_cmd_arr), node, cmd_str))
 
@@ -68,10 +68,10 @@ def worker_ssh(rank, args):
 	if synctool_lib.DRY_RUN:		# got here for nothing
 		return
 	
-	(nodes, nodeset, ssh_cmd_arr, remote_cmd_arr) = args
+	(nodes, ssh_cmd_arr, remote_cmd_arr) = args
 	
 	node = nodes[rank]
-	nodename = nodeset.get_nodename_from_interface(node)
+	nodename = NODESET.get_nodename_from_interface(node)
 	
 	if nodename == synctool_param.NODENAME:
 		# is this node the local node? Then do not use ssh
@@ -210,7 +210,7 @@ if __name__ == '__main__':
 	synctool_config.read_config()
 	synctool_config.add_myhostname()
 
-	ssh_nodeset(NODESET, cmd_args)
+	run_dsh(cmd_args)
 
 
 # EOB
