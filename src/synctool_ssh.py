@@ -27,7 +27,6 @@ import shlex
 NODESET = synctool_nodeset.NodeSet()
 
 OPT_AGGREGATE = False
-OPT_NODENAME = True
 MASTER_OPTS = None
 
 
@@ -82,32 +81,8 @@ def worker_ssh(rank, args):
 	
 	ssh_cmd_arr.extend(cmd_args)
 	
-	# execute remote command and show output with the nodename
-	# TODO move this block to synctool_lib.run_command()
-	f = synctool_lib.popen(ssh_cmd_arr)
-	
-	while True:
-		line = f.readline()
-		if not line:
-			break
-
-		line = string.strip(line)
-
-		# pass output on; simply use 'print' rather than 'stdout()'
-		if line[:15] == '%synctool-log% ':
-			if line[15:] == '--':
-				pass
-			else:
-				synctool_lib.masterlog('%s: %s' % (nodename, line[15:]))
-		else:
-			if OPT_NODENAME:
-				print '%s: %s' % (nodename, line)
-			else:
-				# do not prepend the nodename of this node to the output
-				# if option --no-nodename was given
-				print line
-
-	f.close()
+	# execute ssh+remote command and show output with the nodename
+	synctool_lib.run_with_nodename(ssh_cmd_arr, nodename)
 
 
 def run_parallel_cmds(nodes, cmds, nodeset):
@@ -211,7 +186,7 @@ def usage():
 
 
 def get_options():
-	global NODESET, REMOTE_CMD, MASTER_OPTS, OPT_AGGREGATE, OPT_NODENAME
+	global NODESET, REMOTE_CMD, MASTER_OPTS, OPT_AGGREGATE
 	
 	if len(sys.argv) <= 1:
 		usage()
@@ -275,7 +250,7 @@ def get_options():
 			continue
 
 		if opt in ('-N', '--no-nodename'):
-			OPT_NODENAME = False
+			synctool_lib.OPT_NODENAME = False
 			continue
 
 		if opt == '--unix':
