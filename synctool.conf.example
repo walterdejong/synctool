@@ -56,6 +56,33 @@ synctool_cmd $masterdir/sbin/synctool.py -c $masterdir/synctool.conf
 # max amount of parallel processes that synctool_master and synctool-ssh use
 num_proc 64
 
+# colorize output? Note that colors only work for 'terse' output!
+colorize yes
+
+# colorize full lines of output (yes) or just one word (no) ?
+#colorize_full_lines no
+
+# use bright/bold attribute?
+#colorize_bright yes
+
+# specify colors
+# valid values are: black, darkgray, red, green, yellow, blue,
+# magenta, cyan, white, bold, default
+# 'default' means that no color is used
+#color_info  default
+#color_warn  magenta
+#color_error red
+#color_fail  red
+#color_sync  default
+#color_link  cyan
+#color_mkdir blue
+#color_rm    yellow
+#color_chown cyan
+#color_chmod cyan
+#color_exec  green
+
+# specify groups and nodes
+
 # compound groups may be specified like this
 group wn workernode batch
 group test wn

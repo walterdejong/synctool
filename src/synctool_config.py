@@ -383,7 +383,71 @@ def read_config_file(configfile):
 
 			synctool_param.IGNORE_FILES.extend(arr[1:])
 			continue
-
+		
+		#
+		#	keyword: colorize
+		#
+		if keyword == 'colorize':
+			value = string.lower(arr[1])
+			if value in synctool_param.BOOLEAN_VALUE_TRUE:
+				synctool_param.COLORIZE = True
+			
+			elif value in synctool_param.BOOLEAN_VALUE_FALSE:
+				# TODO this may be overridden from the cmdline
+				synctool_param.COLORIZE = False
+			
+			else:
+				stderr('%s:%d: invalid argument for colorize' % (synctool_param.CONF_FILE, lineno))
+				errors = errors + 1
+			continue
+		
+		#
+		#	keyword: colorize_full_lines
+		#
+		if keyword == 'colorize_full_lines':
+			value = string.lower(arr[1])
+			if value in synctool_param.BOOLEAN_VALUE_TRUE:
+				synctool_param.COLORIZE_FULL_LINES = True
+			
+			elif value in synctool_param.BOOLEAN_VALUE_FALSE:
+				synctool_param.COLORIZE_FULL_LINES = False
+			
+			else:
+				stderr('%s:%d: invalid argument for colorize_full_lines' % (synctool_param.CONF_FILE, lineno))
+				errors = errors + 1
+			continue
+		
+		#
+		#	keyword: colorize_bright/colorize_bold
+		#
+		if keyword == 'colorize_bright' or keyword == 'colorize_bold':
+			value = string.lower(arr[1])
+			if value in synctool_param.BOOLEAN_VALUE_TRUE:
+				synctool_param.COLORIZE_BRIGHT = True
+			
+			elif value in synctool_param.BOOLEAN_VALUE_FALSE:
+				synctool_param.COLORIZE_BRIGHT = False
+			
+			else:
+				stderr('%s:%d: invalid argument for colorize_bright/colorize_bold' % (synctool_param.CONF_FILE, lineno))
+				errors = errors + 1
+			continue
+		
+		#
+		#	keyword: color_xxx
+		#
+		if keyword in ('color_info', 'color_warning', 'color_error', 'color_fail',
+			'color_sync', 'color_link', 'color_mkdir', 'color_rm',
+			'color_chown', 'color_chmod', 'color_exec'):
+			value = string.lower(arr[1])
+			if value in synctool_lib.COLORMAP.keys():
+				synctool_param.TERSE_COLORS[keyword[6:]] = value
+			
+			else:
+				stderr('%s:%d: invalid argument for %s' % (synctool_param.CONF_FILE, lineno, keyword))
+				errors = errors + 1
+			continue
+		
 		#
 		#	keyword: group
 		#
