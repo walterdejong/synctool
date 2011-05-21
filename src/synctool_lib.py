@@ -19,11 +19,16 @@ import string
 import time
 
 
+# options (mostly) set by command-line arguments
 DRY_RUN = False
 VERBOSE = False
 QUIET = False
 UNIX_CMD = False
 ERASE_SAVED = False
+TERSE = True
+COLORIZE = True
+COLORIZE_BRIGHT = True
+COLORIZE_FULL_LINE = False
 MASTERLOG = False
 LOGFD = None
 
@@ -32,6 +37,52 @@ LOGFD = None
 OPT_NODENAME = True
 
 MONTHS = ( 'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec' )
+
+# enums for terse output
+TERSE_INFO = 0
+TERSE_WARNING = 1
+TERSE_ERROR = 2
+TERSE_FAIL = 3
+TERSE_SYNC = 4
+TERSE_LINK = 5
+TERSE_MKDIR = 6
+TERSE_DELETE = 7
+TERSE_OWNER = 8
+TERSE_MODE = 9
+TERSE_EXEC = 10
+
+TERSE_TXT = (
+	'info', 'WARN', 'ERROR', 'FAIL',
+	'sync', 'link', 'mkdir', 'rm', 'chown', 'chmod', 'exec'
+)
+
+TERSE_COLORS = {
+	'info' : 'default',
+	'WARN' : 'magenta',
+	'ERROR': 'red',
+	'FAIL' : 'cyan',
+	'sync' : 'default',
+	'link' : 'cyan',
+	'mkdir': 'blue',		# I'd use yellow on a black background, blue on white
+	'rm'   : 'yellow',
+	'chown': 'cyan',
+	'chmod': 'cyan',
+	'exec' : 'green'
+}
+
+COLORMAP = {
+	'black'   : 30,
+	'darkgray': 30,
+	'red'     : 31,
+	'green'   : 32,
+	'yellow'  : 33,
+	'blue'    : 34,
+	'magenta' : 35,
+	'cyan'    : 36,
+	'white'   : 37,
+	'bold'    : 1,
+	'default' : 0,
+}
 
 
 def verbose(str):
@@ -42,15 +93,46 @@ def verbose(str):
 
 
 def stdout(str):
-	if not UNIX_CMD:
+	if not (UNIX_CMD or TERSE):
 		print str
 
 	log(str)
 
 
 def stderr(str):
-	print str
+	if not TERSE:
+		print str
 	log(str)
+
+
+def terse(code, msg):
+	if TERSE:
+		# convert any path to terse path
+		if string.find(msg, ' ') >= 0:
+			arr = string.split(msg)
+			if arr[-1][0] == '/':
+				arr[-1] = terse_path(arr[-1])
+				msg = string.join(arr)
+		
+		else:
+			if msg[0] == '/':
+				msg = terse_path(msg)
+		
+		if COLORIZE:		# and sys.stdout.isatty():
+			txt = TERSE_TXT[code]
+			color = COLORMAP[TERSE_COLORS[TERSE_TXT[code]]]
+			
+			if COLORIZE_BRIGHT:
+				bright = ';1'
+			else:
+				bright = ''
+			
+			if COLORIZE_FULL_LINE:
+				print '\x1b[%d%sm%s %s\x1b[0m' % (color, bright, txt, msg)
+			else:
+				print '\x1b[%d%sm%s\x1b[0m %s' % (color, bright, txt, msg)
+		else:
+			print TERSE_TXT[code], msg
 
 
 def unix_out(str):
@@ -63,11 +145,38 @@ def unix_out(str):
 def prettypath(path):
 	'''print long paths as "$masterdir/path"'''
 	
+	return terse_path(path)
+	
 	if synctool_param.FULL_PATH:		# synctool.conf: full_path yes
 		return path
 	
 	if path[:synctool_param.MASTER_LEN] == synctool_param.MASTERDIR + '/':
 		return '$masterdir/' + path[synctool_param.MASTER_LEN:]
+	
+	return path
+
+
+def terse_path(path, maxlen = 55):
+	'''print long path as "//overlay/.../dir/file"'''
+	
+	if synctool_param.FULL_PATH:
+		return path
+	
+	if path[:synctool_param.MASTER_LEN] == synctool_param.MASTERDIR + '/':
+		path = '//' + path[synctool_param.MASTER_LEN:]
+	
+	if len(path) > maxlen:
+		arr = string.split(path, '/')
+		
+		while len(arr) >= 3:
+			idx = len(arr) / 2
+			arr[idx] = '...'
+			new_path = string.join(arr, '/')
+			
+			if len(new_path) > maxlen:
+				arr.pop(idx)
+			else:
+				return new_path
 	
 	return path
 
