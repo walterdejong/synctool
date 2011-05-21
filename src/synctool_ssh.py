@@ -102,8 +102,8 @@ def usage():
 	print '  -a, --aggregate                Condense output'
 	print '  -o, --options=options          Set additional ssh options'
 	print
-	print '  -v, --verbose                  Be verbose'
 	print '  -N, --no-nodename              Do not prepend nodename to output'
+	print '  -v, --verbose                  Be verbose'
 	print '      --unix                     Output actions as unix shell commands'
 	print '      --dry-run                  Do not run the remote command'
 	print
