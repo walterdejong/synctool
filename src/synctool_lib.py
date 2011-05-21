@@ -53,11 +53,11 @@ TERSE_TXT = (
 )
 
 TERSE_COLORS = {
-	'info' : 'white',		# note: white is not visible on white background
+	'info' : 'default',
 	'WARN' : 'yellow',		# note: yellow is not really visible on white background
 	'ERROR': 'red',
 	'FAIL' : 'cyan',
-	'sync' : 'white',
+	'sync' : 'default',
 	'link' : 'cyan',
 	'mkdir': 'yellow',
 	'rm'   : 'yellow',
@@ -77,7 +77,7 @@ COLORMAP = {
 	'cyan'    : 36,
 	'white'   : 37,
 	'bold'    : 1,
-	'reset'   : 0,
+	'default' : 0,
 }
 
 
