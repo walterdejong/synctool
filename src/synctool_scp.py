@@ -115,6 +115,7 @@ def usage():
 	print '  -d, --dest=dir/file            Set destination name to copy to'
 	print '  -o, --options=options          Set additional scp options'
 	print
+	print '  -N, --no-nodename              Do not prepend nodename to output'
 	print '  -v, --verbose                  Be verbose'
 	print '      --unix                     Output actions as unix shell commands'
 	print '      --dry-run                  Do not run the remote copy command'
@@ -135,9 +136,10 @@ def get_options():
 	SCP_OPTIONS = None
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vd:o:n:g:x:X:q', ['help', 'conf=', 'verbose',
-			'dest=', 'options=',
-			'node=', 'group=', 'exclude=', 'exclude-group=', 'unix', 'dry-run', 'quiet'])
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vd:o:n:g:x:X:Nq',
+			['help', 'conf=', 'verbose', 'dest=', 'options=',
+			'node=', 'group=', 'exclude=', 'exclude-group=',
+			'no-nodename', 'unix', 'dry-run', 'quiet'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -187,6 +189,10 @@ def get_options():
 
 		if opt in ('-X', '--exclude-group'):
 			NODESET.exclude_group(arg)
+			continue
+
+		if opt in ('-N', '--no-nodename'):
+			synctool_lib.OPT_NODENAME = False
 			continue
 
 		if opt == '--unix':
