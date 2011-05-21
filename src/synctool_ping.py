@@ -36,53 +36,23 @@ def ping_nodes(nodes):
 		stderr('%s: error: ping_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
 	
-	parallel = 0
+	synctool_lib.run_parallel(master_ping, worker_ping, nodes, len(nodes))
+
 	
-	for node in nodes:
-		nodename = NODESET.get_nodename_from_interface(node)
-		if nodename == synctool_param.NODENAME:
-			print '%s: up' % nodename
-			continue
-		
-		verbose('pinging %s' % nodename)
-		unix_out('%s %s' % (synctool_param.PING_CMD, node))
-		
-		#
-		#	run commands in parallel, as many as defined
-		#
-		if parallel > synctool_param.NUM_PROC:
-			try:
-				if os.wait() != -1:
-					parallel = parallel - 1
-			
-			except OSError:
-				pass
-			
-		pid = os.fork()
-		
-		if not pid:
-			ping_node(node)
-			sys.exit(0)
-		
-		if pid == -1:
-			stderr('error: failed to fork()')
-		else:
-			parallel = parallel + 1
-	#
-	#	wait for children to terminate
-	#
-	while True:
-		try:
-			if os.wait() == -1:
-				break
-		
-		except OSError:
-			break
+def master_ping(rank, nodes):
+	nodename = NODESET.get_nodename_from_interface(nodes[rank])
+	if nodename == synctool_param.NODENAME:
+		print '%s: up' % nodename
+		return
+	
+	verbose('pinging %s' % nodename)
+	unix_out('%s %s' % (synctool_param.PING_CMD, nodes[rank]))
 
 
-def ping_node(node):
+def worker_ping(rank, nodes):
 	'''ping a single node'''
 	
+	node = nodes[rank]
 	nodename = NODESET.get_nodename_from_interface(node)
 	packets_received = 0
 	
