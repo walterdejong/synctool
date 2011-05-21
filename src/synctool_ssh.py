@@ -28,6 +28,7 @@ NODESET = synctool_nodeset.NodeSet()
 
 OPT_AGGREGATE = False
 MASTER_OPTS = None
+SSH_OPTIONS = None
 
 
 def run_dsh(remote_cmd_arr):
@@ -43,6 +44,9 @@ def run_dsh(remote_cmd_arr):
 		sys.exit(-1)
 
 	ssh_cmd_arr = shlex.split(synctool_param.SSH_CMD)
+	
+	if SSH_OPTIONS:
+		ssh_cmd_arr.extend(shlex.split(SSH_OPTIONS))
 	
 	synctool_lib.run_parallel(master_ssh, worker_ssh,
 		(nodes, ssh_cmd_arr, remote_cmd_arr), len(nodes))
@@ -96,6 +100,7 @@ def usage():
 	print '  -x, --exclude=nodelist         Exclude these nodes from the selected group'
 	print '  -X, --exclude-group=grouplist  Exclude these groups from the selection'
 	print '  -a, --aggregate                Condense output'
+	print '  -o, --options=options          Set additional ssh options'
 	print
 	print '  -v, --verbose                  Be verbose'
 	print '  -N, --no-nodename              Do not prepend nodename to output'
@@ -108,15 +113,17 @@ def usage():
 
 
 def get_options():
-	global NODESET, REMOTE_CMD, MASTER_OPTS, OPT_AGGREGATE
+	global NODESET, REMOTE_CMD, MASTER_OPTS, OPT_AGGREGATE, SSH_OPTIONS
 	
 	if len(sys.argv) <= 1:
 		usage()
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:aNq', ['help', 'conf=', 'verbose',
-			'node=', 'group=', 'exclude=', 'exclude-group=', 'aggregate', 'no-nodename', 'unix', 'dry-run', 'quiet'])
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:ao:Nq',
+			['help', 'conf=', 'verbose', 'node=', 'group=', 'exclude=',
+			'exclude-group=', 'aggregate', 'options=', 'no-nodename',
+			'unix', 'dry-run', 'quiet'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -169,6 +176,10 @@ def get_options():
 
 		if opt in ('-a', '--aggregate'):
 			OPT_AGGREGATE = True
+			continue
+
+		if opt in ('-o', '--options'):
+			SSH_OPTIONS = arg
 			continue
 
 		if opt in ('-N', '--no-nodename'):

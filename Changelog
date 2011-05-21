@@ -1,4 +1,9 @@
-15 May 2011:
+May 2011:
+- added contributions by Onno Zweers:
+  - synctool-diff patches
+  - tasks/functions shell scripting library
+  - a script that cleans dirs but also has whitelisting capability
+- checksum performance gain when there is no match
 - bugfix for running a single task
 - options -1, --single, --diff, --ref can be given multiple times on a
   single command-line to handle multiple files
@@ -19,13 +24,7 @@
 - added new config parameter full_path (default: no)
 - full_path can be set from cmdline using -F and/or --fullpath
 - $masterdir can be used in the config file to reference parameter 'masterdir'
-
-13 May 2011:
-- added contributions by Onno Zweers:
-  - synctool-diff patches
-  - tasks/functions shell scripting library
-  - a script that cleans dirs but also has whitelisting capability
-- checksum performance gain when there is no match
+- synctool-ssh/dsh now has option '-o' for passing additional options to ssh
 
 17 April 2011:
 - use '-e' to erase .saved files: patch by Werner Maier
