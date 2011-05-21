@@ -225,8 +225,12 @@ def prepare_path(path):
 	return path
 
 
-def run_parallel(callback, args, worklen):
-	'''runs a callback function with arguments 'args' in parallel
+def run_parallel(master_func, worker_func, args, worklen):
+	'''runs a callback functions with arguments in parallel
+	master_func is called in the master; worker_func is called in the worker
+	master_func and worker_func are called with two arguments: rank, args
+	All arguments 'args' are always passed; check the rank to see what rank
+	this parallel process has
 	worklen is the total amount of work items to be processed
 	This function will not fork more than NUM_PROC processes'''
 	
@@ -250,7 +254,7 @@ def run_parallel(callback, args, worklen):
 		pid = os.fork()
 		if not pid:
 			# the nth thread gets rank n
-			callback(n, args)
+			worker_func(n, args)
 			sys.exit(0)
 		
 		if pid == -1:
@@ -258,6 +262,8 @@ def run_parallel(callback, args, worklen):
 			break
 		
 		else:
+			master_func(n, args)
+			
 			parallel = parallel + 1
 			n = n + 1
 	
