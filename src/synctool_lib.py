@@ -251,21 +251,30 @@ def run_parallel(master_func, worker_func, args, worklen):
 			else:
 				parallel = parallel - 1
 		
-		pid = os.fork()
-		if not pid:
-			# the nth thread gets rank n
-			worker_func(n, args)
-			sys.exit(0)
-		
-		if pid == -1:
-			stderr('error: fork() failed, breaking off forking loop')
-			break
-		
-		else:
-			master_func(n, args)
+		try:
+			pid = os.fork()
+			if not pid:
+				try:
+					# the nth thread gets rank n
+					worker_func(n, args)
+				except KeyboardInterrupt:
+					print
+				
+				sys.exit(0)
 			
-			parallel = parallel + 1
-			n = n + 1
+			if pid == -1:
+				stderr('error: fork() failed, breaking off forking loop')
+				break
+			
+			else:
+				master_func(n, args)
+				
+				parallel = parallel + 1
+				n = n + 1
+		
+		except KeyboardInterrupt:
+			print
+			break
 	
 	# wait for all children to terminate
 	while True:
@@ -273,6 +282,10 @@ def run_parallel(master_func, worker_func, args, worklen):
 			(pid, status) = os.wait()
 		except OSError:
 			# no more child processes
+			break
+		
+		except KeyboardInterrupt:
+			print
 			break
 
 
