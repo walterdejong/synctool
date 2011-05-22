@@ -252,10 +252,6 @@ def get_options():
 	global NODESET, PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE
 	global OPT_CHECK_UPDATE, OPT_DOWNLOAD, MASTER_OPTS
 
-#	if len(sys.argv) <= 1:
-#		usage()
-#		sys.exit(1)
-
 	# check for typo's on the command-line; things like "-diff" will trigger "-f" => "--fix"
 	synctool.be_careful_with_getopt()
 
@@ -301,7 +297,7 @@ def get_options():
 	MASTER_OPTS = [ sys.argv[0] ]
 	
 	# first read the config file
-	for opt, args in opts:
+	for opt, arg in opts:
 		if opt in ('-h', '--help', '-?'):
 			usage()
 			sys.exit(1)

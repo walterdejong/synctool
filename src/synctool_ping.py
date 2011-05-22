@@ -133,7 +133,7 @@ def get_options():
 		sys.exit(1)
 	
 	# first read the config file
-	for opt, args in opts:
+	for opt, arg in opts:
 		if opt in ('-h', '--help', '-?'):
 			usage()
 			sys.exit(1)
