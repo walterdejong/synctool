@@ -392,6 +392,26 @@ def config_color_exec(arr, configfile, lineno):
 	return _config_color_variant('color_exec', arr[1], configfile, lineno)
 
 
+# keyword: config_color_up
+def config_color_up(arr, configfile, lineno):
+	return _config_color_variant('color_up', arr[1], configfile, lineno)
+
+
+# keyword: config_color_upload
+def config_color_upload(arr, configfile, lineno):
+	return _config_color_variant('color_up', arr[1], configfile, lineno)
+
+
+# keyword: config_color_new
+def config_color_new(arr, configfile, lineno):
+	return _config_color_variant('color_new', arr[1], configfile, lineno)
+
+
+# keyword: config_color_type
+def config_color_type(arr, configfile, lineno):
+	return _config_color_variant('color_type', arr[1], configfile, lineno)
+
+
 # keyword: group
 def config_group(arr, configfile, lineno):
 	if len(arr) < 3:

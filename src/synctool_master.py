@@ -166,7 +166,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 	if not repos_filename:
 		# no source path found
 		if string.find(upload_filename, '...') >= 0:
-			stdout("%s is not in the repository, don't know what to map this path to\n"
+			stderr("%s is not in the repository, don't know what to map this path to\n"
 				"Please give the full path instead of a terse path, or touch the source file\n"
 				"in the repository first and try again"
 				% os.path.basename(upload_filename))
@@ -193,6 +193,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 	synctool_param.MY_GROUPS = orig_MY_GROUPS
 	
 	verbose('%s:%s uploaded as %s' % (node, upload_filename, repos_filename))
+	terse(synctool_lib.TERSE_UPLOAD, repos_filename)
 	unix_out('%s %s:%s %s' % (synctool_param.SCP_CMD, interface, dest, repos_filename))
 	
 	if dry_run:

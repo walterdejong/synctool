@@ -12,7 +12,7 @@ import synctool_param
 import synctool_lib
 import synctool
 
-from synctool_lib import verbose,stdout,stderr
+from synctool_lib import stderr, terse
 
 import os
 import sys
@@ -126,10 +126,16 @@ def ov_perror(errorcode, src_path):
 		return
 	
 	if errorcode == OV_NO_GROUP_EXT:
-		stderr('no underscored group extension on %s, skipped' % synctool_lib.prettypath(src_path))
+		if synctool_param.TERSE:
+			terse(synctool_lib.TERSE_ERROR, 'no group on %s' % src_path)
+		else:
+			stderr('no underscored group extension on %s, skipped' % synctool_lib.prettypath(src_path))
 	
 	elif errorcode == OV_UNKNOWN_GROUP:
-		stderr('unknown group on %s, skipped' % synctool_lib.prettypath(src_path))
+		if synctool_param.TERSE:
+			terse(synctool_lib.TERSE_ERROR, 'invalid group on %s' % src_path)
+		else:
+			stderr('unknown group on %s, skipped' % synctool_lib.prettypath(src_path))
 
 
 def overlay_pass1(overlay_dir, filelist, dest_dir = '/', 
@@ -186,7 +192,10 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 			else:
 				# unfortunately, the name has been messed up already
 				# so therefore just ignore the file and issue a warning
-				stderr('warning: ignoring .post script %s' % synctool_lib.prettypath(src_path))
+				if synctool_param.TERSE:
+					terse(synctool_lib.TERSE_WARNING, 'ignoring %s' % src_path)
+				else:
+					stderr('warning: ignoring .post script %s' % synctool_lib.prettypath(src_path))
 			
 			continue
 		
@@ -387,7 +396,10 @@ def find_terse(treedef, terse_path):
 	idx = string.find(terse_path, '...')
 	if idx == -1:
 		# this is not really a terse path, return a regular find()
-		return find(terse_path)
+		if len(terse_path) >= 2 and terse_path[:1] == '//':
+			terse_path = synctool_param.MASTERDIR + terse_path[1:]
+		
+		return find(treedef, terse_path)
 	
 	if idx >= 0:
 		ending = terse_path[(idx+3):]
@@ -424,11 +436,11 @@ def find_terse(treedef, terse_path):
 		return (None, terse_path)
 	
 	if len(matches) > 1:
-		stdout('There are multiple possible sources for this terse path. Pick one:')
+		stderr('There are multiple possible sources for this terse path. Pick one:')
 		
 		n = 0
 		for overlay_entry in matches:
-			stdout('%2d. %s' % (n, overlay_entry.dest_path))
+			stderr('%2d. %s' % (n, overlay_entry.dest_path))
 			n = n + 1
 		
 		return (None, None)
