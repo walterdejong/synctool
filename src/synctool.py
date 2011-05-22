@@ -943,17 +943,22 @@ def single_files(filename):
 		stderr('missing filename')
 		return (False, None)
 	
-	src = synctool_overlay.find(synctool_overlay.OV_OVERLAY, filename)
+	(src, dest) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, filename)
+	if not dest:
+		# multiple source possible
+		# possibilities have already been printed
+		sys.exit(1)
+	
 	if not src:
 		stdout('%s is not in the overlay tree' % filename)
 		return (False, None)
 	
 	verbose('checking against %s' % synctool_lib.prettypath(src))
 	
-	changed = compare_files(src, filename)
+	changed = compare_files(src, dest)
 	if not changed:
 		stdout('%s is up to date' % filename)
-		unix_out('# %s is up to date\n' % filename)
+		unix_out('# %s is up to date\n' % dest)
 	
 	return (changed, src)
 
@@ -969,7 +974,12 @@ def single_task(filename):
 	if task_script[0] != '/':				# trick to make find() work for tasks, too
 		task_script = '/' + task_script
 	
-	src = synctool_overlay.find(synctool_overlay.OV_TASKS, task_script)
+	(src, dest) = synctool_overlay.find_terse(synctool_overlay.OV_TASKS, task_script)
+	if not dest:
+		# multiple source possible
+		# possibilities have already been printed
+		sys.exit(1)
+	
 	if not src:
 		stderr("no such task '%s'" % filename)
 		return
@@ -985,7 +995,12 @@ def reference(filename):
 		stderr('missing filename')
 		return
 	
-	src = synctool_overlay.find(synctool_overlay.OV_OVERLAY, filename)
+	(src, dest) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, filename)
+	if not dest:
+		# multiple source possible
+		# possibilities have already been printed
+		sys.exit(1)
+	
 	if not src:
 		stdout('%s is not in the overlay tree' % filename)
 		return
@@ -1002,25 +1017,30 @@ def diff_files(filename):
 	
 	synctool_lib.DRY_RUN = True						# be sure that it doesn't do any updates
 	
-	sync_path = synctool_overlay.find(synctool_overlay.OV_OVERLAY, filename)
+	(sync_path, dest) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, filename)
+	if not dest:
+		# multiple source possible
+		# possibilities have already been printed
+		sys.exit(1)
+	
 	if not sync_path:
 		return
 	
 	if synctool_lib.UNIX_CMD:
-		unix_out('%s %s %s' % (synctool_param.DIFF_CMD, filename, sync_path))
+		unix_out('%s %s %s' % (synctool_param.DIFF_CMD, dest, sync_path))
 	else:
-		verbose('%s %s %s' % (synctool_param.DIFF_CMD, filename, synctool_lib.prettypath(sync_path)))
+		verbose('%s %s %s' % (synctool_param.DIFF_CMD, dest, synctool_lib.prettypath(sync_path)))
 		
 		sys.stdout.flush()
 		sys.stderr.flush()
 		
 		if use_subprocess:
 			cmd_arr = shlex.split(synctool_param.DIFF_CMD)
-			cmd_arr.append(filename)
+			cmd_arr.append(dest)
 			cmd_arr.append(sync_path)
 			subprocess.Popen(cmd_arr, shell=False)
 		else:
-			os.system('%s %s %s' % (synctool_param.DIFF_CMD, filename, sync_path))
+			os.system('%s %s %s' % (synctool_param.DIFF_CMD, dest, sync_path))
 		
 		sys.stdout.flush()
 		sys.stderr.flush()

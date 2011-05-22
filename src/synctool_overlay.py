@@ -364,14 +364,78 @@ def select_tree(treedef):
 
 
 def find(treedef, dest_path):
-	'''find the source for a full destination path'''
+	'''find the source for a full destination path
+	Return value is a tuple: (src, dest)
+	Return value is (None, dest) if source does not exist'''
 	
 	(dict, filelist) = select_tree(treedef)
 	
 	if not dict.has_key(dest_path):
-		return None
+		return (None, dest_path)
 	
-	return dict[dest_path].src_path
+	return (dict[dest_path].src_path, dest_path)
+
+
+def find_terse(treedef, terse_path):
+	'''find the full source and dest paths for a terse destination path
+	Return value is a tuple (src_path, dest_path)
+	Return value is (None, dest_path) if source does not exist
+	Return value is (None, None) if there are multiple sources possible'''
+	
+	(dict, filelist) = select_tree(treedef)
+	
+	idx = string.find(terse_path, '...')
+	if idx == -1:
+		# this is not really a terse path, return a regular find()
+		return find(terse_path)
+	
+	if idx >= 0:
+		ending = terse_path[(idx+3):]
+	else:
+		ending = terse_path[1:]
+	
+	matches = []
+	len_ending = len(ending)
+	
+	# do a stupid linear search and find all matches,
+	# which means keep on scanning even though you've already found a match ...
+	# but it must be done because we want to be sure that we have found
+	# the one perfect match
+	#
+	# A possibility to improve on the linear search would be to break
+	# the paths down into a in-memory directory tree and walk it from the
+	# leaves up to the root rather than from the root down to the leaves
+	# Yeah, well ...
+	#
+	for entry in filelist:
+		overlay_entry = dict[entry]
+		
+		l = len(overlay_entry.dest_path)
+		if l > len_ending:
+			# first do a quick test
+			if overlay_entry.dest_path[-1] != ending[-1]:
+				continue
+			
+			# check the ending path
+			if overlay_entry.dest_path[(l - len_ending):] == ending:
+				matches.append(overlay_entry)
+	
+	if not matches:
+		return (None, terse_path)
+	
+	if len(matches) > 1:
+		stdout('There are multiple possible sources for this terse path. Pick one:')
+		
+		n = 0
+		for overlay_entry in matches:
+			stdout('%2d. %s' % (n, overlay_entry.dest_path))
+			n = n + 1
+		
+		return (None, None)
+	
+	# good, there was only one match
+	
+	return (matches[0].src_path, matches[0].dest_path)
 
 
 def visit(treedef, callback):
@@ -393,6 +457,7 @@ if __name__ == '__main__':
 	synctool_param.CONF_FILE = '../../synctool-test/synctool.conf'
 	synctool_config.read_config()
 	synctool_param.MY_GROUPS = ['node1', 'group1', 'group2', 'all']
+	synctool_param.ALL_GROUPS = synctool_config.make_all_groups()
 	
 	def visit_callback(src, dest):
 		print 'dest', dest
@@ -404,7 +469,7 @@ if __name__ == '__main__':
 		print 'src ', src
 		
 		# check for .post script
-		postscript = postscript_for_path(dest)
+		postscript = postscript_for_path(src, dest)
 		if postscript:
 			print 'post %s' % postscript
 	
@@ -412,6 +477,7 @@ if __name__ == '__main__':
 	
 	print
 	print 'find() test:', find(OV_OVERLAY, '/Users/walter/src/python/synctool-test/testroot/etc/hosts.allow')
+	print 'find_terse() test:', find_terse(OV_OVERLAY, '/Users/walter/.../etc/hosts.allow')
 
 
 # EOB
