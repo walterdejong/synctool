@@ -22,6 +22,7 @@ import os
 import sys
 import string
 import getopt
+import shlex
 
 NODESET = synctool_nodeset.NodeSet()
 
@@ -59,8 +60,11 @@ def worker_ping(rank, nodes):
 	
 	# execute ping command and show output with the nodename
 	cmd = '%s %s' % (synctool_param.PING_CMD, node)
-	cmd_arr = string.split(cmd)
+	cmd_arr = shlex.split(cmd)
 	f = synctool_lib.popen(cmd_arr)
+	if not f:
+		stderr('failed to run command %s' % cmd_arr[0])
+		return
 	
 	while True:
 		line = f.readline()
