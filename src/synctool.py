@@ -1122,9 +1122,6 @@ def get_options():
 	
 	synctool_lib.DRY_RUN = True				# set default dry-run
 	
-	if len(sys.argv) <= 1:
-		return (None, None, None)
-	
 	# check for dangerous common typo's on the command-line
 	be_careful_with_getopt()
 	
@@ -1152,7 +1149,7 @@ def get_options():
 		sys.exit(1)
 	
 	# first read the config file
-	for opt, args in opts:
+	for opt, arg in opts:
 		if opt in ('-h', '--help', '-?'):
 			usage()
 			sys.exit(1)
