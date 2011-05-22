@@ -18,6 +18,11 @@ import sys
 import string
 import time
 
+try:
+	import subprocess
+	use_subprocess = True
+except ImportError:
+	use_subprocess = False
 
 # options (mostly) set by command-line arguments
 DRY_RUN = False
@@ -222,37 +227,47 @@ def log(str):
 			print '%synctool-log%', str
 
 
-def popen(cmd_args):
+def popen(cmd_arr):
 	'''same as os.popen(), but use an array of command+arguments'''
-	# TODO use subprocess, or else os.popen()
-
+	
+	if 'subprocess' in sys.modules:
+		try:
+			f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096, stdout=subprocess.PIPE).stdout
+		except OSError:
+			f = None
+		
+		return f
+	
+	# we do not have subprocess module (Python version < 2.4, very old)
+	
 	pipe = os.pipe()
-
-	if not os.fork():
+	
+	pid = os.fork():
+	if not pid:
 		# redirect child's output to write end of the pipe
 		os.close(2)
 		os.close(1)
 		os.dup2(pipe[1], 1)
 		os.dup2(pipe[1], 2)
-
+		
 		os.close(pipe[0])
-
-		cmd = cmd_args.pop(0)
+		
+		cmd = cmd_arr.pop(0)
 		cmd = search_path(cmd)
-		cmd_args.insert(0, cmd)
-
+		cmd_arr.insert(0, cmd)
+		
 		try:
-			os.execv(cmd, cmd_args)
+			os.execv(cmd, cmd_arr)
 		except OSError, reason:
 			stderr("failed to run '%s': %s" % (cmd, reason))
 
 		sys.exit(1)
-
-	else:
-		os.close(pipe[1])
-		return os.fdopen(pipe[0], 'r')
 	
-	return None
+	if pid == -1:
+		return None
+	
+	os.close(pipe[1])
+	return os.fdopen(pipe[0], 'r')
 
 
 def run_with_nodename(cmd_arr, nodename):
@@ -260,6 +275,7 @@ def run_with_nodename(cmd_arr, nodename):
 	
 	f = popen(cmd_arr)
 	if not f:
+		stderr('failed to run command %s' % cmd_arr[0])
 		return
 	
 	while True:

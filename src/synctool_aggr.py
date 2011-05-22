@@ -16,12 +16,11 @@ import sys
 import string
 import getopt
 
-try:
-	import subprocess
-	use_subprocess = True
-except ImportError:
-	# well, your Python version is ancient
-	use_subprocess = False
+from synctool_lib import popen
+
+# popen() calls stderr()
+def stderr(msg):
+	print msg
 
 
 def aggregate(f):
@@ -83,11 +82,10 @@ def run(cmd_args):
 
 	if '--aggregate' in cmd_args:
 		cmd_args.remove('--aggregate')
-
-	if use_subprocess:
-		f = subprocess.Popen(cmd_args, shell=False, bufsize=4096, stdout=subprocess.PIPE).stdout
-	else:
-		f = os.popen(string.join(cmd_args), 'r')
+	
+	f = popen(cmd_args)
+	if not f:
+		stderr('failed to run %s' % cmd_args[0])
 
 	aggregate(f)
 	f.close()
