@@ -27,6 +27,8 @@ import shlex
 NODESET = synctool_nodeset.NodeSet()
 
 DESTDIR = None
+OPT_AGGREGATE = False
+MASTER_OPTS = None
 SCP_OPTIONS = None
 
 
@@ -111,9 +113,9 @@ def usage():
 	print '  -g, --group=grouplist          Execute only on these groups of nodes'
 	print '  -x, --exclude=nodelist         Exclude these nodes from the selected group'
 	print '  -X, --exclude-group=grouplist  Exclude these groups from the selection'
-	print
-	print '  -d, --dest=dir/file            Set destination name to copy to'
+	print '  -a, --aggregate                Condense output'
 	print '  -o, --options=options          Set additional scp options'
+	print '  -d, --dest=dir/file            Set destination name to copy to'
 	print
 	print '  -N, --no-nodename              Do not prepend nodename to output'
 	print '  -v, --verbose                  Be verbose'
@@ -127,7 +129,7 @@ def usage():
 
 
 def get_options():
-	global NODESET, DESTDIR, SCP_OPTIONS
+	global NODESET, DESTDIR, MASTER_OPTS, OPT_AGGREGATE, SCP_OPTIONS
 
 	if len(sys.argv) <= 1:
 		usage()
@@ -172,21 +174,20 @@ def get_options():
 	synctool_config.read_config()
 	
 	# then process the other options
+	MASTER_OPTS = [ sys.argv[0] ]
+
 	for opt, arg in opts:
+		if opt:
+			MASTER_OPTS.append(opt)
+		if arg:
+			MASTER_OPTS.append(arg)
+
 		if opt in ('-h', '--help', '-?', '-c', '--conf', '--version'):
 			# already done
 			continue
 
 		if opt in ('-v', '--verbose'):
 			synctool_lib.VERBOSE = True
-			continue
-
-		if opt in ('-d', '--dest'):
-			DESTDIR = arg
-			continue
-
-		if opt in ('-o', '--options'):
-			SCP_OPTIONS = arg
 			continue
 
 		if opt in ('-n', '--node'):
@@ -203,6 +204,18 @@ def get_options():
 
 		if opt in ('-X', '--exclude-group'):
 			NODESET.exclude_group(arg)
+			continue
+
+		if opt in ('-a', '--aggregate'):
+			OPT_AGGREGATE = True
+			continue
+
+		if opt in ('-o', '--options'):
+			SCP_OPTIONS = arg
+			continue
+
+		if opt in ('-d', '--dest'):
+			DESTDIR = arg
 			continue
 
 		if opt in ('-N', '--no-nodename'):
@@ -224,22 +237,29 @@ def get_options():
 	if args == None or len(args) <= 0:
 		print '%s: missing file to copy' % os.path.basename(sys.argv[0])
 		sys.exit(1)
-
+	
+	MASTER_OPTS.extend(args)
+	
 	return args
 
 
 if __name__ == '__main__':
 	sys.stdout = synctool_unbuffered.Unbuffered(sys.stdout)
 	sys.stderr = synctool_unbuffered.Unbuffered(sys.stderr)
-
+	
 	files = get_options()
+	
+	if OPT_AGGREGATE:
+		synctool_aggr.run(MASTER_OPTS)
+		sys.exit(0)
+	
 	synctool_config.add_myhostname()
-
+	
 	nodes = NODESET.interfaces()
 	if nodes == None or len(nodes) <= 0:
 		print 'no valid nodes specified'
 		sys.exit(1)
-
+	
 	run_remote_copy(nodes, files)
 
 
