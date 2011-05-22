@@ -128,10 +128,11 @@ def unix_out(str):
 def prettypath(path):
 	'''print long paths as "$masterdir/path"'''
 	
-	return terse_path(path)
-	
-	if synctool_param.FULL_PATH:		# synctool.conf: full_path yes
+	if synctool_param.FULL_PATH:
 		return path
+	
+	if TERSE:
+		return terse_path(path)
 	
 	if path[:synctool_param.MASTER_LEN] == synctool_param.MASTERDIR + '/':
 		return '$masterdir/' + path[synctool_param.MASTER_LEN:]
