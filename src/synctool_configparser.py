@@ -9,6 +9,12 @@
 #   License.
 #
 
+#
+#	To make a new keyword for the config file, simply define a
+#	function here like: def config_xxx(arr, configfile, lineno):
+#	and it will just work (magic trick with getattr(module, functionname))
+#
+
 import synctool_param
 import synctool_lib
 
