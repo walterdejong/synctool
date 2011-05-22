@@ -325,13 +325,13 @@ repository:
 
 For any file synctool updates, it keeps a backup copy around on the target
 node with the extension '.saved'. If you don't like this, you can tell
-synctool to erase all backup copies using
+synctool to not make any backup copies with
 
-  erase_saved yes
+  backup_copies no
 
-It is however highly recommended that you run with 'erase_saved no'.
-You can manually specify that you want to remove backup copies using
-synctool -e or synctool --erase-saved.
+It is however highly recommended that you run with 'backup_copies yes'.
+You can manually specify that you want to remove all backup copies using
+synctool -e or synctool --erase-saved --fix.
 
 
 The settings in synctool.conf can be overridden locally by including a
