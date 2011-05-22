@@ -996,7 +996,6 @@ def reference(filename):
 		stderr('missing filename')
 		return
 	
-	print 'TD 1'
 	(src, dest) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, filename)
 	if not dest:
 		print 'TD kut'
@@ -1004,20 +1003,14 @@ def reference(filename):
 		# possibilities have already been printed
 		sys.exit(1)
 	
-	print 'TD a'
 	if not src:
-		print 'TD b'
 		stderr('%s is not in the overlay tree' % filename)
 		return
 	
-	print 'TD A'
 	stdout(synctool_lib.prettypath(src))
 	
-	print 'TD B'
 	if synctool_param.TERSE:
-		print 'TD C'
 		print synctool_lib.terse_path(src)
-	print 'TD D'
 
 
 def diff_files(filename):
@@ -1338,8 +1331,11 @@ if __name__ == '__main__':
 			
 			if synctool_lib.DRY_RUN:
 				stdout('DRY RUN, not doing any updates')
+				terse(synctool_lib.TERSE_DRYRUN, 'not doing any updates')
 			else:
 				stdout('--fix specified, applying changes')
+				terse(synctool_lib.TERSE_FIXING, ' applying changes')
+			
 			verbose('')
 	
 	synctool_lib.openlog()
