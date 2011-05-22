@@ -407,20 +407,20 @@ def compare_files(src_path, dest_path):
 	elif stat_isfile(src_stat):
 		if not stat_exists(dest_stat):
 			stdout('%s does not exist' % dest_path)
-			terse(synctool_lib.TERSE_SYNC, dest_path)
+			terse(synctool_lib.TERSE_NEW, dest_path)
 			unix_out('# copy file %s' % dest_path)
 			need_update = True
 		
 		elif stat_islink(dest_stat):
 			stdout('%s is a symbolic link, but should not be' % dest_path)
-			terse(synctool_lib.TERSE_SYNC, dest_path)
+			terse(synctool_lib.TERSE_TYPE, dest_path)
 			unix_out('# target should be a file instead of a symbolic link')
 			delete_file(dest_path)
 			need_update = True
 		
 		elif stat_isdir(dest_stat):
 			stdout('%s is a directory, but should not be' % dest_path)
-			terse(synctool_lib.TERSE_SYNC, dest_path)
+			terse(synctool_lib.TERSE_TYPE, dest_path)
 			unix_out('# target should be a file instead of a directory')
 			save_dir(dest_path)
 			need_update = True
@@ -461,7 +461,7 @@ def compare_files(src_path, dest_path):
 		
 		else:
 			stdout('%s should be a regular file' % dest_path)
-			terse(synctool_lib.TERSE_SYNC, dest_path)
+			terse(synctool_lib.TERSE_TYPE, dest_path)
 			unix_out('# target should be a regular file')
 			need_update = True
 		
@@ -671,6 +671,7 @@ def hard_delete_file(file):
 
 def erase_saved(dest):
 	if synctool_lib.ERASE_SAVED and path_exists('%s.saved' % dest) and not path_isdir('%s.saved' % dest):
+		terse(synctool_lib.TERSE_RM, '%s.saved' % dest)
 		unix_out('rm %s.saved' % dest)
 		
 		if synctool_lib.DRY_RUN:
@@ -746,6 +747,7 @@ def run_command(cmd):
 	if not synctool_lib.QUIET:
 		stdout('%srunning command %s' % (not_str, synctool_lib.prettypath(cmd)))
 	
+	terse(synctool_lib.TERSE_EXEC, cmdfile)
 	unix_out('# run command %s' % cmdfile)
 	unix_out(cmd)
 	
@@ -949,7 +951,7 @@ def single_files(filename):
 		sys.exit(1)
 	
 	if not src:
-		stdout('%s is not in the overlay tree' % filename)
+		stderr('%s is not in the overlay tree' % filename)
 		return (False, None)
 	
 	verbose('checking against %s' % synctool_lib.prettypath(src))
@@ -994,17 +996,28 @@ def reference(filename):
 		stderr('missing filename')
 		return
 	
+	print 'TD 1'
 	(src, dest) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, filename)
 	if not dest:
+		print 'TD kut'
 		# multiple source possible
 		# possibilities have already been printed
 		sys.exit(1)
 	
+	print 'TD a'
 	if not src:
-		stdout('%s is not in the overlay tree' % filename)
+		print 'TD b'
+		stderr('%s is not in the overlay tree' % filename)
 		return
 	
-	stdout(src)
+	print 'TD A'
+	stdout(synctool_lib.prettypath(src))
+	
+	print 'TD B'
+	if synctool_param.TERSE:
+		print 'TD C'
+		print synctool_lib.terse_path(src)
+	print 'TD D'
 
 
 def diff_files(filename):
@@ -1164,6 +1177,14 @@ def get_options():
 	
 	synctool_config.read_config()
 	
+	if not synctool_param.TERSE:
+		# giving --terse changes program behavior as early as
+		# in the get_options() loop itself, so set it here already
+		for opt, args in opts:
+			if opt in ('-T', '--terse'):
+				synctool_param.TERSE = True
+				continue
+	
 	# then go process all the other options
 	errors = 0
 	
@@ -1180,7 +1201,7 @@ def get_options():
 	opt_fix = False
 	
 	for opt, arg in opts:
-		if opt in ('-h', '--help', '-?', '-c', '--conf', '--version'):
+		if opt in ('-h', '--help', '-?', '-c', '--conf', '-T', '--terse', '--version'):
 			# already done
 			continue
 		
@@ -1202,10 +1223,6 @@ def get_options():
 		
 		if opt in ('-F', '--fullpath'):
 			synctool_param.FULL_PATH = True
-			continue
-		
-		if opt in ('-T', '--terse'):
-			synctool_lib.TERSE = True
 			continue
 		
 		if opt == '--color':

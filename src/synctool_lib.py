@@ -24,7 +24,6 @@ DRY_RUN = False
 VERBOSE = False
 QUIET = False
 UNIX_CMD = False
-TERSE = True
 ERASE_SAVED = False
 MASTERLOG = False
 LOGFD = None
@@ -47,10 +46,14 @@ TERSE_DELETE = 7
 TERSE_OWNER = 8
 TERSE_MODE = 9
 TERSE_EXEC = 10
+TERSE_UPLOAD = 11
+TERSE_NEW = 12
+TERSE_TYPE = 13
 
 TERSE_TXT = (
 	'info', 'WARN', 'ERROR', 'FAIL',
-	'sync', 'link', 'mkdir', 'rm', 'chown', 'chmod', 'exec'
+	'sync', 'link', 'mkdir', 'rm', 'chown', 'chmod', 'exec',
+	'up', 'new', 'type'
 )
 
 COLORMAP = {
@@ -76,20 +79,21 @@ def verbose(str):
 
 
 def stdout(str):
-	if not (UNIX_CMD or TERSE):
+	if not (UNIX_CMD or synctool_param.TERSE):
 		print str
 
 	log(str)
 
 
 def stderr(str):
-	if not TERSE:
-		print str
+	print str
 	log(str)
 
 
 def terse(code, msg):
-	if TERSE:
+	'''print short message + shortened filename'''
+	
+	if synctool_param.TERSE:
 		# convert any path to terse path
 		if string.find(msg, ' ') >= 0:
 			arr = string.split(msg)
@@ -131,7 +135,7 @@ def prettypath(path):
 	if synctool_param.FULL_PATH:
 		return path
 	
-	if TERSE:
+	if synctool_param.TERSE:
 		return terse_path(path)
 	
 	if path[:synctool_param.MASTER_LEN] == synctool_param.MASTERDIR + '/':
@@ -145,6 +149,11 @@ def terse_path(path, maxlen = 55):
 	
 	if synctool_param.FULL_PATH:
 		return path
+	
+	# by the way, this function will misbehave a bit for a _destination_
+	# path named "/var/lib/synctool/" again
+	# because this function doesn't know whether it is working with
+	# a source or a destination path and it treats them both in the same way
 	
 	if path[:synctool_param.MASTER_LEN] == synctool_param.MASTERDIR + '/':
 		path = '//' + path[synctool_param.MASTER_LEN:]
@@ -335,6 +344,29 @@ def strip_path(path):
 	
 	path = strip_multiple_slashes(path)
 	path = strip_trailing_slash(path)
+	
+	return path
+
+
+def strip_terse_path(path):
+	if not path:
+		return path
+	
+	if not synctool_param.TERSE:
+		return strip_path(path)
+	
+	# terse paths may start with two slashes
+	if len(path) >= 2 and path[:1] == '//':
+		isTerse = True
+	else:
+		isTerse = False
+	
+	path = strip_multiple_slashes(path)
+	path = strip_trailing_slash(path)
+	
+	# the first slash was accidentally stripped, so restore it
+	if isTerse:
+		path = '/' + path
 	
 	return path
 

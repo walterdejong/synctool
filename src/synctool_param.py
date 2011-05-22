@@ -47,6 +47,7 @@ SYMLINK_MODE = 0755
 
 REQUIRE_EXTENSION = True
 FULL_PATH = False
+TERSE = True
 BACKUP_COPIES = True
 IGNORE_DOTFILES = False
 IGNORE_DOTDIRS = False
@@ -85,7 +86,10 @@ TERSE_COLORS = {
 	'rm'   : 'yellow',
 	'chown': 'cyan',
 	'chmod': 'cyan',
-	'exec' : 'green'
+	'exec' : 'green',
+	'up'   : 'magenta',
+	'new'  : 'default',
+	'type' : 'magenta'
 }
 
 # EOB

@@ -83,6 +83,9 @@ num_proc 64
 #color_chown cyan
 #color_chmod cyan
 #color_exec  green
+#color_upload magenta
+#color_new   default
+#color_type  magenta
 
 # specify groups and nodes
 
