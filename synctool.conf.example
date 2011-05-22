@@ -62,8 +62,8 @@ num_proc 64
 # colorize output? Note that colors only work for 'terse' output!
 #colorize yes
 
-# colorize full lines of output (yes) or just one word (no) ?
-#colorize_full_lines no
+# colorize the full line of output (yes) or just one word (no) ?
+#colorize_full_line no
 
 # use bright/bold attribute?
 #colorize_bright yes
