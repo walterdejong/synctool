@@ -450,7 +450,7 @@ def visit(treedef, callback):
 
 
 if __name__ == '__main__':
-	## test program ##
+	## unit test program ##
 	
 	import synctool_config
 	

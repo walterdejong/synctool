@@ -26,9 +26,6 @@ symlink_mode 0755
 # all files in the repository must have a group extension
 #require_extension yes
 
-# display full paths or just '$masterdir/overlay/...'
-#full_path no
-
 # make backup copies named *.saved
 #backup_copies yes
 
@@ -56,8 +53,14 @@ synctool_cmd $masterdir/sbin/synctool.py -c $masterdir/synctool.conf
 # max amount of parallel processes that synctool_master and synctool-ssh use
 num_proc 64
 
+# display full paths or just '$masterdir/overlay/...'
+#full_path no
+
+# show terse output with shortened paths?
+#terse yes
+
 # colorize output? Note that colors only work for 'terse' output!
-colorize yes
+#colorize yes
 
 # colorize full lines of output (yes) or just one word (no) ?
 #colorize_full_lines no

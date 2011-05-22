@@ -49,9 +49,6 @@ ACTION_DIFF = 1
 ACTION_RUN_TASKS = 3
 ACTION_REFERENCE = 4
 
-# extra command-line option --tasks
-RUN_TASKS = False
-
 # blocksize for doing I/O while checksumming files
 BLOCKSIZE = 16 * 1024
 
@@ -1099,7 +1096,6 @@ def usage():
 	print '  -h, --help            Display this information'
 	print '  -c, --conf=dir/file   Use this config file'
 	print '                        (default: %s)' % synctool_param.DEFAULT_CONF
-#	print '  -n, --dry-run         Show what would have been updated'
 	print '  -d, --diff=file       Show diff for file'
 	print '  -e, --erase-saved     Erase *.saved backup files'
 	print '  -1, --single=file     Update a single file/run single task'
@@ -1107,9 +1103,12 @@ def usage():
 	print '  -t, --tasks           Run the scripts in the tasks/ directory'
 	print '  -f, --fix             Perform updates (otherwise, do dry-run)'
 	print '  -F, --fullpath        Show full paths instead of shortened ones'
+	print '  -T, --terse           Show terse, shortened paths'
+	print '      --color           Use colored output (only for terse mode)'
+	print '      --no-color        Do not color output'
+	print '      --unix            Output actions as unix shell commands'
 	print '  -v, --verbose         Be verbose'
 	print '  -q, --quiet           Suppress informational startup messages'
-	print '      --unix            Output actions as unix shell commands'
 	print '      --version         Print current version number'
 	print
 	print 'synctool can help you administer your cluster of machines'
@@ -1134,8 +1133,8 @@ def get_options():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:etfFvq',
 			['help', 'conf=', 'diff=', 'single=', 'ref=', 'erase-saved',
-			'tasks', 'fix', 'fullpath', 'verbose', 'quiet', 'unix',
-			'masterlog', 'version'])
+			'tasks', 'fix', 'fullpath', 'terse', 'color', 'no-color',
+			'verbose', 'quiet', 'unix', 'masterlog', 'version'])
 	except getopt.error, (reason):
 		print '%s: %s' % (progname, reason)
 		usage()
@@ -1154,6 +1153,23 @@ def get_options():
 		stderr('error: excessive arguments on command line')
 		sys.exit(1)
 	
+	# first read the config file
+	for opt, args in opts:
+		if opt in ('-h', '--help', '-?'):
+			usage()
+			sys.exit(1)
+		
+		if opt in ('-c', '--conf'):
+			synctool_param.CONF_FILE = arg
+			continue
+		
+		if opt == '--version':
+			print synctool_param.VERSION
+			sys.exit(0)
+	
+	synctool_config.read_config()
+	
+	# then go process all the other options
 	errors = 0
 	
 	action = ACTION_DEFAULT
@@ -1169,12 +1185,8 @@ def get_options():
 	opt_fix = False
 	
 	for opt, arg in opts:
-		if opt in ('-h', '--help', '-?'):
-			usage()
-			sys.exit(1)
-		
-		if opt in ('-c', '--conf'):
-			synctool_param.CONF_FILE = arg
+		if opt in ('-h', '--help', '-?', '-c', '--conf', '--version'):
+			# already done
 			continue
 		
 # dry run already is default
@@ -1185,6 +1197,7 @@ def get_options():
 		
 		if opt in ('-e', '--erase-saved'):
 			synctool_lib.ERASE_SAVED = True
+			synctool_param.BACKUP_COPIES = False
 			continue
 		
 		if opt in ('-f', '--fix'):
@@ -1196,6 +1209,18 @@ def get_options():
 			synctool_param.FULL_PATH = True
 			continue
 		
+		if opt in ('-T', '--terse'):
+			synctool_lib.TERSE = True
+			continue
+		
+		if opt == '--color':
+			synctool_param.COLORIZE = True
+			continue
+		
+		if opt == '--no-color':
+			synctool_param.COLORIZE = False
+			continue
+
 		if opt in ('-v', '--verbose'):
 			synctool_lib.VERBOSE = True
 			continue
@@ -1260,11 +1285,6 @@ def get_options():
 if __name__ == '__main__':
 	action = get_options()
 	
-	if action == ACTION_VERSION:
-		print synctool_param.VERSION
-		sys.exit(0)
-	
-	synctool_config.read_config()
 	synctool_config.add_myhostname()
 	
 	if synctool_param.NODENAME == None:

@@ -30,7 +30,6 @@ NODESET = synctool_nodeset.NodeSet()
 
 OPT_SKIP_RSYNC = False
 OPT_AGGREGATE = False
-OPT_VERSION = False
 OPT_CHECK_UPDATE = False
 OPT_DOWNLOAD = False
 
@@ -230,6 +229,9 @@ def usage():
 	print '  -t, --tasks                    Run the scripts in the tasks/ directory'
 	print '  -f, --fix                      Perform updates (otherwise, do dry-run)'
 	print '  -F, --fullpath                 Show full paths instead of shortened ones'
+	print '  -T, --terse                    Show terse, shortened paths'
+	print '      --color                    Use colored output (only for terse mode)'
+	print '      --no-color                 Do not color output'
 	print '      --unix                     Output actions as unix shell commands'
 	print '      --skip-rsync               Do not sync the repository'
 	print '                                 (eg. when it is on a shared filesystem)'
@@ -247,7 +249,7 @@ def usage():
 
 
 def get_options():
-	global NODESET, PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE, OPT_VERSION
+	global NODESET, PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE
 	global OPT_CHECK_UPDATE, OPT_DOWNLOAD, MASTER_OPTS
 
 #	if len(sys.argv) <= 1:
@@ -258,10 +260,11 @@ def get_options():
 	synctool.be_careful_with_getopt()
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:r:u:s:etfFqa',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:r:u:s:etfFTqa',
 			['help', 'conf=', 'verbose', 'node=', 'group=',
 			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=',
-			'upload=', 'suffix=', 'erase-saved', 'tasks', 'fix', 'fullpath',
+			'upload=', 'suffix=', 'erase-saved', 'tasks', 'fix',
+			'fullpath', 'terse', 'color', 'no-color',
 			'quiet', 'aggregate', 'skip-rsync', 'unix',
 			'version', 'check-update', 'download'])
 	except getopt.error, (reason):
@@ -296,7 +299,30 @@ def get_options():
 
 	PASS_ARGS = []
 	MASTER_OPTS = [ sys.argv[0] ]
-
+	
+	# first read the config file
+	for opt, args in opts:
+		if opt in ('-h', '--help', '-?'):
+			usage()
+			sys.exit(1)
+		
+		if opt in ('-c', '--conf'):
+			synctool_param.CONF_FILE = arg
+			PASS_ARGS.append(opt)
+			PASS_ARGS.append(arg)
+			continue
+		
+		if opt == '--version':
+			print synctool_param.VERSION
+			sys.exit(0)
+	
+	synctool_config.read_config()
+	
+	# then process all the other options
+	#
+	# Note: some options are passed on to synctool on the node, while
+	#       others are not. Therefore some 'continue', while others don't
+	#
 	for opt, arg in opts:
 		if opt:
 			MASTER_OPTS.append(opt)
@@ -304,14 +330,8 @@ def get_options():
 		if arg:
 			MASTER_OPTS.append(arg)
 
-		if opt in ('-h', '--help', '-?'):
-			usage()
-			sys.exit(1)
-
-		if opt in ('-c', '--conf'):
-			synctool_param.CONF_FILE = arg
-			PASS_ARGS.append(opt)
-			PASS_ARGS.append(arg)
+		if opt in ('-h', '--help', '-?', '-c', '--conf', '--version'):
+			# already done
 			continue
 
 		if opt in ('-v', '--verbose'):
@@ -363,7 +383,10 @@ def get_options():
 			opt_tasks = True
 
 		if opt in ('-e', '--erase-saved'):
-			synctool_lib.ERASE_SAVED = True		# doesn't do anything in master, really
+			# This doesn't do anything in master, really
+			# because it doesn't use these settings, but hey
+			synctool_lib.ERASE_SAVED = True
+			synctool_param.BACKUP_COPIES = False
 
 		if opt in ('-q', '--quiet'):
 			synctool_lib.QUIET = True
@@ -375,6 +398,15 @@ def get_options():
 		if opt in ('-F', '--fullpath'):
 			synctool_param.FULL_PATH = True
 
+		if opt in ('-T', '--terse'):
+			synctool_lib.TERSE = True
+		
+		if opt == '--color':
+			synctool_param.COLORIZE = True
+		
+		if opt == '--no-color':
+			synctool_param.COLORIZE = False
+
 		if opt in ('-a', '--aggregate'):
 			OPT_AGGREGATE = True
 			continue
@@ -385,10 +417,6 @@ def get_options():
 
 		if opt == '--unix':
 			synctool_lib.UNIX_CMD = True
-
-		if opt == '--version':
-			OPT_VERSION = True
-			continue
 
 		if opt == '--check-update':
 			OPT_CHECK_UPDATE = True
@@ -422,10 +450,6 @@ def main():
 
 	(upload_filename, upload_suffix) = get_options()
 
-	if OPT_VERSION:
-		print synctool_param.VERSION
-		sys.exit(0)
-
 	if OPT_CHECK_UPDATE:
 		import synctool_update
 		sys.exit(synctool_update.check())
@@ -438,7 +462,6 @@ def main():
 		synctool_aggr.run(MASTER_OPTS)
 		sys.exit(0)
 
-	synctool_config.read_config()
 	synctool_config.add_myhostname()
 
 	# ooh ... testing for DRY_RUN doesn't work here

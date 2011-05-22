@@ -105,6 +105,7 @@ def usage():
 	print
 	print '  -v, --verbose                  Be verbose'
 	print '      --unix                     Output actions as unix shell commands'
+	print '      --version                  Print current version number'
 	print
 	print 'A nodelist or grouplist is a comma-separated list'
 	print
@@ -131,6 +132,23 @@ def get_options():
 		usage()
 		sys.exit(1)
 	
+	# first read the config file
+	for opt, args in opts:
+		if opt in ('-h', '--help', '-?'):
+			usage()
+			sys.exit(1)
+		
+		if opt in ('-c', '--conf'):
+			synctool_param.CONF_FILE = arg
+			continue
+		
+		if opt == '--version':
+			print synctool_param.VERSION
+			sys.exit(0)
+	
+	synctool_config.read_config()
+	
+	# then process the other options
 	MASTER_OPTS = [ sys.argv[0] ]
 	
 	for opt, arg in opts:
@@ -139,12 +157,8 @@ def get_options():
 		if arg:
 			MASTER_OPTS.append(arg)
 		
-		if opt in ('-h', '--help', '-?'):
-			usage()
-			sys.exit(1)
-		
-		if opt in ('-c', '--conf'):
-			synctool_param.CONF_FILE = arg
+		if opt in ('-h', '--help', '-?', '-c', '--conf', '--version'):
+			# already done
 			continue
 		
 		if opt in ('-v', '--verbose'):
@@ -195,7 +209,6 @@ if __name__ == '__main__':
 		synctool_aggr.run(MASTER_OPTS)
 		sys.exit(0)
 	
-	synctool_config.read_config()
 	synctool_config.add_myhostname()
 	
 	nodes = NODESET.interfaces()
