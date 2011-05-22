@@ -312,11 +312,7 @@ def read_config_file(configfile):
 				synctool_param.FULL_PATH = True
 			
 			elif value in synctool_param.BOOLEAN_VALUE_FALSE:
-				# this does nothing!
-				# The default value for FULL_PATH is False
-				# This value can be overridden on the command-line in which
-				# case FULL_PATH will be set to True from get_options()
-				pass
+				synctool_param.FULL_PATH = False
 			
 			else:
 				stderr('%s:%d: invalid argument for full_path' % (synctool_param.CONF_FILE, lineno))
@@ -333,7 +329,6 @@ def read_config_file(configfile):
 			
 			elif value in synctool_param.BOOLEAN_VALUE_FALSE:
 				synctool_param.BACKUP_COPIES = False
-				pass
 			
 			else:
 				stderr('%s:%d: invalid argument for backup_copies' % (synctool_param.CONF_FILE, lineno))
@@ -393,7 +388,6 @@ def read_config_file(configfile):
 				synctool_param.COLORIZE = True
 			
 			elif value in synctool_param.BOOLEAN_VALUE_FALSE:
-				# TODO this may be overridden from the cmdline
 				synctool_param.COLORIZE = False
 			
 			else:
