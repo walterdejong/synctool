@@ -115,24 +115,24 @@ def run_local_synctool():
 
 def upload(interface, upload_filename, upload_suffix=None):
 	'''copy a file from a node into the overlay/ tree'''
-
+	
 	if not synctool_param.SCP_CMD:
 		stderr('%s: error: scp_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
-
+	
 	if upload_filename[0] != '/':
 		stderr('error: the filename to upload must be an absolute path')
 		sys.exit(-1)
-
+	
 	trimmed_upload_fn = upload_filename[1:]			# remove leading slash
-
+	
 	import synctool_overlay
-
+	
 	# make the known groups lists
 	synctool_config.remove_ignored_groups()
 	synctool_param.MY_GROUPS = synctool_config.get_my_groups()
 	synctool_param.ALL_GROUPS = synctool_config.make_all_groups()
-
+	
 	if upload_suffix and not upload_suffix in synctool_param.ALL_GROUPS:
 		stderr("no such group '%s'" % upload_suffix)
 		sys.exit(-1)
@@ -144,21 +144,38 @@ def upload(interface, upload_filename, upload_suffix=None):
 		dry_run = True
 		if not synctool_lib.QUIET:
 			stdout('DRY RUN, not uploading any files')
-
+	
 	node = NODESET.get_nodename_from_interface(interface)
-
+	
 	# pretend that the current node is now the given node;
 	# this is needed for find() to find the most optimal reference for the file
 	orig_NODENAME = synctool_param.NODENAME
 	synctool_param.NODENAME = node
 	synctool_config.insert_group(node, node)
-
+	
 	orig_MY_GROUPS = synctool_param.MY_GROUPS[:]
 	synctool_param.MY_GROUPS = synctool_config.get_my_groups()
-
+	
 	# see if file is already in the repository
-	repos_filename = synctool_overlay.find(synctool_overlay.OV_OVERLAY, upload_filename)
+	(repos_filename, dest) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, upload_filename)
+	
+	if not dest:
+		# multiple source possible
+		# possibilities have already been printed
+		sys.exit(1)
+	
 	if not repos_filename:
+		# no source path found
+		if string.find(upload_filename, '...') >= 0:
+			stdout("%s is not in the repository, don't know what to map this path to\n"
+				"Please give the full path instead of a terse path, or touch the source file\n"
+				"in the repository first and try again"
+				% os.path.basename(upload_filename))
+			sys.exit(1)
+		
+		# it wasn't a terse path, throw a source path together
+		# This picks the first overlay dir as default source, which may not be correct
+		# but it is a good guess
 		repos_filename = os.path.join(synctool_param.OVERLAY_DIRS[0], trimmed_upload_fn)
 		if upload_suffix:
 			repos_filename = repos_filename + '._' + upload_suffix
@@ -166,28 +183,29 @@ def upload(interface, upload_filename, upload_suffix=None):
 			repos_filename = repos_filename + '._' + node		# use _nodename as default suffix
 	else:
 		if upload_suffix:
+			# remove the current group suffix an add the specified suffix to the filename
 			arr = string.split(repos_filename, '.')
 			if len(arr) > 1 and arr[-1][0] == '_':
 				repos_filename = string.join(arr[:-1], '.')
-
+			
 			repos_filename = repos_filename + '._' + upload_suffix
-
+	
 	synctool_param.NODENAME = orig_NODENAME
 	synctool_param.MY_GROUPS = orig_MY_GROUPS
-
+	
 	verbose('%s:%s uploaded as %s' % (node, upload_filename, repos_filename))
-	unix_out('%s %s:%s %s' % (synctool_param.SCP_CMD, interface, upload_filename, repos_filename))
-
+	unix_out('%s %s:%s %s' % (synctool_param.SCP_CMD, interface, dest, repos_filename))
+	
 	if dry_run:
 		stdout('would be uploaded as %s' % synctool_lib.prettypath(repos_filename))
 	else:
 		# make scp command array
-		cmd_arr = shlex.split(synctool_param.SCP_CMD)
-		cmd_arr.append('%s:%s' % (interface, upload_filename))
-		cmd_arr.append(repos_filename)
-
-		synctool_ssh.run_local_cmd(cmd_arr)
-
+		scp_cmd_arr = shlex.split(synctool_param.SCP_CMD)
+		scp_cmd_arr.append('%s:%s' % (interface, dest))
+		scp_cmd_arr.append(repos_filename)
+		
+		synctool_lib.run_with_nodename(scp_cmd_arr, NODES.get_nodename_from_interface(interface))
+		
 		if os.path.isfile(repos_filename):
 			stdout('uploaded %s' % synctool_lib.prettypath(repos_filename))
 
