@@ -316,9 +316,17 @@ def config_colorize(arr, configfile, lineno):
 	return err
 
 	
+# keyword: colorize_full_line
+def config_colorize_full_line(arr, configfile, lineno):
+	(err, synctool_param.COLORIZE_FULL_LINE) = _config_boolean('colorize_full_line',
+		arr[1], configfile, lineno)
+	return err
+
+		
 # keyword: colorize_full_lines
+# nice for typo's
 def config_colorize_full_lines(arr, configfile, lineno):
-	(err, synctool_param.COLORIZE_FULL_LINES) = _config_boolean('colorize_full_lines',
+	(err, synctool_param.COLORIZE_FULL_LINE) = _config_boolean('colorize_full_line',
 		arr[1], configfile, lineno)
 	return err
 
