@@ -18,7 +18,7 @@ import synctool_lib
 import synctool_unbuffered
 import synctool_nodeset
 
-from synctool_lib import verbose,stdout,stderr,unix_out
+from synctool_lib import verbose,stdout,stderr,terse,unix_out
 
 import os
 import sys
@@ -143,6 +143,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 		dry_run = True
 		if not synctool_lib.QUIET:
 			stdout('DRY RUN, not uploading any files')
+			terse(synctool_lib.TERSE_DRYRUN, 'not uploading any files')
 	
 	node = NODESET.get_nodename_from_interface(interface)
 	

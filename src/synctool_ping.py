@@ -16,7 +16,7 @@ import synctool_aggr
 import synctool_lib
 import synctool_nodeset
 
-from synctool_lib import verbose,stdout,stderr,unix_out
+from synctool_lib import verbose,stderr,unix_out
 
 import os
 import sys

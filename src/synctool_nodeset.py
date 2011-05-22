@@ -11,7 +11,7 @@
 import synctool_param
 import synctool_lib
 
-from synctool_lib import verbose,stdout,stderr,unix_out
+from synctool_lib import verbose,stderr
 
 import synctool_config
 

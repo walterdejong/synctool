@@ -72,20 +72,22 @@ num_proc 64
 # valid values are: black, darkgray, red, green, yellow, blue,
 # magenta, cyan, white, bold, default
 # 'default' means that no color is used
-#color_info  default
-#color_warn  magenta
-#color_error red
-#color_fail  red
-#color_sync  default
-#color_link  cyan
-#color_mkdir blue
-#color_rm    yellow
-#color_chown cyan
-#color_chmod cyan
-#color_exec  green
+#color_info   default
+#color_warn   magenta
+#color_error  red
+#color_fail   red
+#color_sync   default
+#color_link   cyan
+#color_mkdir  blue
+#color_rm     yellow
+#color_chown  cyan
+#color_chmod  cyan
+#color_exec   green
 #color_upload magenta
-#color_new   default
-#color_type  magenta
+#color_new    default
+#color_type   magenta
+#color_dryrun default
+#color_fixing default
 
 # specify groups and nodes
 
