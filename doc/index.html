@@ -643,6 +643,232 @@ on the master node. These functions connect to the main website at
 
 <h2 id="part_four">4. All configuration parameters explained</h2>
 <div class="chapter">
+This chapter lists and explains all parameters that you can use in
+synctool's configuration file.
+
+<dl>
+<dt>masterdir &lt;directory&gt;</dt>
+<dd>Directory that is the base path to the repository. The default value is
+<span class="path">/var/lib/synctool</span>. The order of the statements in
+the <span class="path">synctool.conf</span> file is generally not important,
+but if you want to use the <span class="system">$masterdir</span> macro in
+the config file, you must define <span class="system">masterdir</span> first.
+</dd>
+
+<dt>overlaydir &lt;directory&gt;</dt>
+<dd>Directory containing files and directories that are to be synced to
+the nodes. Default value is <span class="system">$masterdir/overlay/</span>.
+Multiple <span class="system">overlaydir</span> declarations are allowed,
+and all overlays will be &lsquo;merged&rsquo; together on the target nodes.
+Example:
+<pre class="example">
+overlaydir $masterdir/overlay/common
+overlaydir $masterdir/overlay/software
+overlaydir $masterdir/overlay/patches
+</pre>
+Note that this is just an example of how multiple overlays can be used.
+Overall, it is probably easier to start with just one single overlay directory.
+</dd>
+
+<dt>deletedir &lt;directory&gt;</dt>
+<dd>Directory containing files that are to be deleted from the target nodes.
+Default value is <span class="system">$masterdir/delete/</span>.
+Multiple <span class="system">deletedir</span> declarations are allowed.</dd>
+
+<dt>tasksdir &lt;directory&gt;</dt>
+<dd>Directory containing executables (scripts) that are to be run on
+the target nodes when <span class="cmd">synctool --tasks</span> is run.
+Default value is <span class="system">$masterdir/tasks/</span>.
+Multiple <span class="system">tasksdir</span> declarations are allowed.</dd>
+
+<dt>scriptdir &lt;directory&gt;</dt>
+<dd>Directory containing scripts that synctool may run through
+<span class="system">on_update</span> statements. If you do not use a full
+path there, synctool will look in the <span class="path">scriptdir</span>.
+Default value is <span class="path">$masterdir/scriptdir</span>. There may
+be only one <span class="system">scriptdir</span> defined.
+</dd>
+
+<dt>symlink_mode &lt;octal number&gt;</dt>
+<dd>Specifies the <span class="smallcaps">UNIX</span> file mode for symbolic
+links. This value is an octal number. Default value is
+<span class="system">0755</span> and should do for most platforms.
+For Linux, set this value to <span class="system">0777</span>.
+</dd>
+
+<dt>require_extension &lt;yes/no&gt;</dt>
+<dd>When set to &ldquo;yes,&rdquo; a generic file in the
+repository must have the extension <span class="system">.all</span>.
+When set to &ldquo;no,&rdquo; an extension is not required and the group
+<span class="system">all</span> is automatically implied. Default value is
+<span class="system">yes</span>.
+</dd>
+
+<dt>backup_copies &lt;yes/no&gt;</dt>
+<dd>When set to &ldquo;yes,&rdquo; synctool creates backup copies on the
+target nodes of files that it updates. These backup files will be named
+<span class="path">*.saved</span>.
+Default value for this parameter is <span class="system">yes</span>.
+</dd>
+
+<dt>ignore_dotfiles &lt;yes/no&gt;</dt>
+<dd>Setting this to &ldquo;yes&rdquo; results in synctool ignoring all
+files in the repository that begin with a dot. This can be convenient like
+for example for <span class="path">.bashrc</span> and
+<span class="path">.gitignore</span>.
+Default value is <span class="system">no</span>.
+</dd>
+
+<dt>ignore_dotdirs &lt;yes/no&gt;</dt>
+<dd>Setting this to &ldquo;yes&rdquo; results in synctool ignoring all
+directories in the repository that begin with a dot. This can be convenient
+like for example for <span class="path">.svn/</span>.
+Default value is <span class="system">no</span>.
+</dd>
+
+<dt>ignore &lt;filename or directory name&gt;</dt>
+<dd>This parameter enables you to have synctool ignore specific files or
+directories in the repository.
+Multiple <span class="system">ignore</span> definitions are allowed.<br>
+There is no default value. Example:
+<pre class="example">
+ignore .gitignore
+ignore .git
+ignore .svn
+</pre>
+</dd>
+
+<dt>logfile &lt;filename&gt;</dt>
+<dd>Have synctool log any updates to file. Nothing is logged for dry runs.
+By default, no logfile is specified. Example:
+<pre class="example">
+logfile /var/log/synctool.log
+</pre>
+</dd>
+
+<dt>diff_cmd &lt;diff UNIX command&gt;</dt>
+<dd>Give the full path and arguments to execute <span class="cmd">diff</span>.
+&nbsp; synctool runs this command when you use the <span class="system">--diff</span>
+option.  The exact location and arguments of the <span class="cmd">diff</span>
+command are operating system specific.
+There is no default, but synctool ships with the following in the
+example configuration file:
+<pre class="example">
+diff_cmd /usr/bin/diff -u
+</pre>
+</dd>
+
+<dt>ping_cmd &lt;ping UNIX command&gt;</dt>
+<dd>Give the full path and arguments to execute <span class="cmd">ping</span>.
+&nbsp; <span class="cmd">dsh-ping</span> uses this command to check what nodes
+are responding. The exact location and arguments of the <span class="cmd">ping</span>
+command are operating system specific.
+There is no default, but synctool ships with the following in the example
+configuration file:
+<pre class="example">
+ping_cmd /bin/ping -q -c 2 -t 4
+</pre>
+</dd>
+
+<dt>ssh_cmd &lt;ssh UNIX command&gt;</dt>
+<dd>Give the full path and arguments to execute <span class="cmd">ssh</span>.
+&nbsp; synctool and <span class="cmd">dsh</span> use this command to execute
+remote commands on the target nodes.
+The exact location of the <span class="cmd">ssh</span> command is operating
+system specific.
+There is no default, and you must configure this parameter correctly for
+synctool to work. synctool ships with the following sensible setting in the
+example configuration file:
+<pre class="example">
+/usr/bin/ssh -o ConnectTimeout=10 -q
+</pre>
+</dd>
+
+<dt>scp_cmd &lt;scp UNIX command&gt;</dt>
+<dd>Give the full path and arguments to execute <span class="cmd">scp</span>.
+&nbsp; <span class="cmd">dcp</span> uses this command to do a remote copy
+of files to the target nodes.
+The exact location of the <span class="cmd">scp</span> command is operating
+system specific.
+There is no default, but synctool ships with the following in the example
+configuration file:
+<pre class="example">
+/usr/bin/scp -o ConnectTimeout=10 -p
+</pre>
+</dd>
+
+<dt>rsync_cmd &lt;rsync UNIX command&gt;</dt>
+<dd>Give the full path and arguments to execute <span class="cmd">rsync</span>.
+&nbsp; synctool uses this command to distribute the repository to the target
+nodes. The exact location of the <span class="cmd">rsync</span> command is
+operating system specific. Unless you keep the repository in a high performance
+shared filesystem, you must configure this parameter correctly for synctool
+to work.
+There is no default, but synctool ships with the following in the example
+configuration file:
+<pre class="example">
+/usr/bin/rsync -ar --delete -e 'ssh -o ConnectTimeout=10 -q'
+</pre>
+</dd>
+
+<dt>synctool_cmd &lt;synctool UNIX command&gt;</dt>
+<dd>Give the full path and arguments to execute <span class="cmd">synctool.py</span>.
+&nbsp; This is needed because synctool executes <span class="cmd">synctool.py</span>
+on the target nodes.
+The exact location of the <span class="cmd">synctool.py</span> command is
+installation dependent.
+There is no default, and you must configure this parameter correctly for
+synctool to work. synctool ships with the following sensible setting in the
+example configuration file:
+<pre class="example">
+synctool_cmd $masterdir/sbin/synctool.py -c $masterdir/synctool.conf
+</pre>
+</dd>
+
+<dt>num_proc &lt;number&gt;</dt>
+<dd>This specifies the maximum amount of parallel processes that synctool
+will use. For large clusters, you will want to increase this value, but mind
+that this will increase the load on your master node. Setting this value higher
+than the amount of nodes you have, has no effect.
+The default hardcoded value is <span class="system">16</span>.
+</dd>
+
+<dt>full_path &lt;yes/no&gt;</dt>
+<dd>synctool likes to abbreviate paths to <span class="path">$masterdir/overlay/some/dir/file</span>.
+When you set this option to &ldquo;no, &rdquo; synctool will display the true
+full path instead of the abbreviated one.
+Default value is <span class="system">no</span>.
+</dd>
+
+<dt>terse &lt;yes/no&gt;</dt>
+<dd>In terse mode, synctool shows a very brief output with paths abbreviated
+to <span class="path">//overlay/dir/.../file</span>.
+Default value is <span class="system">no</span>.
+</dd>
+
+<dt>colorize &lt;yes/no&gt;</dt>
+<dd>In terse mode, synctool output can be made to show colors. Mind that this
+parameter only works when <span class="system">terse</span> is set to
+<span class="system">yes</span>.
+Default value is <span class="system">yes</span>.
+</dd>
+
+<dt>colorize_full_line &lt;yes/no&gt;</dt>
+<dd>In terse mode, synctool output can be made to show colors. This option
+colors the full output line rather than just the leading keyword.
+Mind that this parameter only works when both <span class="system">terse</span>
+and <span class="system">colorize</span> are enabled.
+Default value is <span class="system">no</span>.
+</dd>
+
+<dt></dt>
+<dd></dd>
+
+<dt></dt>
+<dd></dd>
+
+</dl>
+
 This part of the documentation has not been completely written yet.
 </div>
 

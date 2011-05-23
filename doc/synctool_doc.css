@@ -85,6 +85,19 @@ ol.subindex {
 	list-style-type: lower-roman;
 }
 
+dl {
+	padding: 1em;
+}
+
+dt {
+	font-family: menlo, courier, monospace;
+	font-weight: bold;
+}
+
+dd {
+	padding-bottom: .5em;
+}
+
 .logo {
 	background: #fff url(../images/synctool_logo.jpg) no-repeat top right;
 }
@@ -112,11 +125,11 @@ ol.subindex {
 .example {
 	border: solid 1px #000;
 	background-color: #eee;
-	font-family: monospace, courier;
-	font-size: .97em;
+	font-family: menlo, courier, monospace;
+	font-size: .95em;
 	margin: 1em auto 1em auto;
 	padding: 1em;
-	padding-left: 2em;
+	padding-left: 1.5em;
 }
 
 .note {
@@ -127,20 +140,20 @@ ol.subindex {
 }
 
 .system {
-	font-family: courier, monospace;
-	font-size: .98em;
+	font-family: menlo, courier, monospace;
+	font-size: .95em;
 	word-break: keep-all;
 }
 
 .cmd {
-	font-family: courier, monospace;
-	font-size: .98em;
+	font-family: menlo, courier, monospace;
+	font-size: .95em;
 	word-break: keep-all;
 }
 
 .path {
-	font-family: courier, monospace;
-	font-size: .96em;
+	font-family: menlo, courier, monospace;
+	font-size: .95em;
 }
 
 .vtab {
