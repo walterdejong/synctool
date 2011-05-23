@@ -1,0 +1,158 @@
+/*
+	synctool_doc.css	WJ111
+
+	synctool by Walter de Jong <walter@heiho.net> (c) 2003-2011
+
+	synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
+	synctool is distributed under terms described in the GNU General Public
+	License.
+*/
+
+/* reset default browser CSS */
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, font, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+	background: transparent;
+	border: 0;
+	margin: 0;
+	padding: 0;
+	vertical-align: baseline;
+}
+
+body {
+	background-color: #eee;
+	font-color: #000;
+	font-family: georgia, times, serif;
+}
+
+h1 {
+	font-family: helvetica, arial, sans-serif;
+	font-size: 2em;
+	font-weight: bold;
+	text-transform: capitalize;
+	margin: 0 0 .5em 0;
+}
+
+h2 {
+	font-family: helvetica, arial, sans-serif;
+	font-size: 1.5em;
+	font-weight: normal;
+	margin-top: 1em;
+	margin-bottom: .5em;
+}
+
+h3 {
+	font-size: 1.1em;
+	font-weight: bold;
+	margin-bottom: .25em;
+}
+
+p { margin: 1em 0 0 0; }
+
+strong {
+	font-family: helvetica, arial, sans-serif;
+	font-style: bold;
+	text-transform: uppercase;
+}
+
+em { font-style: italic; }
+
+a {
+	text-decoration: none;
+}
+
+a:link {
+	color: #00e;
+}
+
+a:visited {
+	color: #c0c;
+}
+
+ul,ol {
+	padding: 1em;
+}
+
+.logo {
+	background: #fff url(../images/synctool_logo.jpg) no-repeat top right;
+}
+
+/* all text is put into a div class=page */
+.page {
+    width: 80%;
+    margin: 1em auto 1em auto;
+	padding: 1em;
+	background-color: #fff;
+}
+
+.center {
+	width: 50%;
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+}
+
+.chapter {
+	width: 80%;
+	text-align: justify;
+}
+
+.example {
+	border: solid 1px #000;
+	background-color: #eee;
+	font-family: monospace, courier;
+	font-size: .97em;
+	margin: 1em auto 1em auto;
+	padding: 1em;
+	padding-left: 2em;
+}
+
+.note {
+	border: dashed 1px #aaa;
+	background-color: #eee;
+	margin: 1em auto 1em auto;
+	padding: 1em;
+}
+
+.system {
+	font-family: courier, monospace;
+	font-size: .98em;
+	word-break: keep-all;
+}
+
+.cmd {
+	font-family: courier, monospace;
+	font-size: .98em;
+	word-break: keep-all;
+}
+
+.path {
+	font-family: courier, monospace;
+	font-size: .96em;
+}
+
+.vtab {
+	display: block;
+	margin: 1em auto 1em auto;
+	padding: .5em;
+}
+
+.line {
+	border: dashed 2px #eee;
+}
+
+.smallcaps {
+	text-transform: uppercase;
+	font-size: 80%;
+}
+
+/* EOB */
+/*
+:vim:ts=4:sw=4
+*/
