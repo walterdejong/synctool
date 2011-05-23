@@ -76,7 +76,13 @@ a:visited {
 }
 
 ul,ol {
-	padding: 1em;
+	padding-left: 1.5em;
+	padding-bottom: .5em;
+}
+
+/* used in the table of contents */
+ol.subindex {
+	list-style-type: lower-roman;
 }
 
 .logo {

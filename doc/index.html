@@ -25,12 +25,34 @@ synctool is distributed under terms described in the
 
 <p>
 <h2>Table of contents</h2>
-<p>
-<a href="#part_one">1.&nbsp; What is synctool</a><br>
-<a href="#part_two">2.&nbsp; Installation</a><br>
-<a href="#part_three">3.&nbsp; Using synctool</a><br>
-<a href="#part_four">4.&nbsp; All configuration parameters explained</a><br>
-<a href="#part_five">5.&nbsp; Best practices</a><br>
+<ol>
+<li><a href="#part_one">What is synctool</a>
+<li><a href="#part_two">Installation</a><br>
+ <ol class="subindex">
+ <li><a href="#passwordless_ssh">Passwordless SSH</a>
+ <li><a href="#make_install">make install</a>
+ <li><a href="#config_nodes_groups">synctool configuration: nodes and groups</a>
+ <li><a href="#testing_with_dsh">Testing with dsh</a>
+ <li><a href="#your_first_synctool_run">Your first synctool run</a>
+ <li><a href="#client_install">Client installation</a>
+ </ol>
+<li><a href="#part_three">Using synctool</a><br>
+ <ol class="subindex">
+ <li><a href="#masterdir">The masterdir</a>
+ <li><a href="#running_synctool">Running synctool</a>
+ <li><a href="#adding_actions_to_updates">Adding actions to updates</a>
+ <li><a href="#special_groups">Special groups</a>
+ <li><a href="#useful_options">Useful options</a>
+ <li><a href="#logging">Logging</a>
+ <li><a href="#ignoring">Ignoring them: I'm not touching you</a>
+ <li><a href="#about_symlinks">About symbolic links</a>
+ <li><a href="#backup_copies">Backup copies</a>
+ <li><a href="#local_config">Node-specific local configuration adjustments</a>
+ <li><a href="#checking_for_updates">Checking for updates</a>
+ </ol>
+<li><a href="#part_four">All configuration parameters explained</a><br>
+<li><a href="#part_five">Best practices</a><br>
+</ol>
 <p>
 <div class="line"> </div>
 
@@ -78,7 +100,7 @@ In synctool terminology, a &ldquo;node&rdquo; is a host, a computer in a group o
 computers. A group of computers is called a cluster.
 </div>
 <p>
-<h3>Passwordless SSH</h3>
+<h3 id="passwordless_ssh">Passwordless SSH</h3>
 First of all, synctool requires passwordless SSH from the master node to
 each cluster node as root. Exactly how to do this is beyond the scope
 of this document (see the SSH documentation or just google around), but
@@ -98,7 +120,7 @@ suits your security needs.
 <p>
 When passwordless SSH as root works, proceed to installing the software.
 <p>
-<h3>make install</h3>
+<h3 id="make_install">make install</h3>
 Edit the provided <span class="cmd">Makefile</span> and adjust <span class="cmd">PREFIX</span> to point to your
 desired location where the software should reside. Some prefer
 <span class="path">/usr/local</span>, others prefer <span class="path">/usr/local/synctool</span>, while others
@@ -120,7 +142,7 @@ synctool-aggr   -&gt; synctool_aggr.py
 </pre>
 It also creates the master repository under <span class="path">/var/lib/synctool/</span>.
 <p>
-<h3>synctool configuration: nodes and groups</h3>
+<h3 id="config_nodes_groups">synctool configuration: nodes and groups</h3>
 Copy the <span class="path">synctool.conf.example</span> to <span class="path">/var/lib/synctool/synctool.conf</span>
 and edit it, adjusting it as needed. For an explanation of all configurable parameters,
 see <a href="#part_four">chapter 4</a>.
@@ -182,7 +204,7 @@ group wn workernode debian plasma mathworks solar \
 
 node 101 wn interface:if0-n101
 </pre>
-<h3>Testing with dsh</h3>
+<h3 id="testing_with_dsh">Testing with dsh</h3>
 After filling in a couple of nodes in <span class="path">synctool.conf</span>, try the command
 <span class="cmd">dsh-ping</span> to see if the nodes are &lsquo;up&rsquo;.
 If they are, try <span class="cmd">dsh hostname</span>, <span class="cmd">dsh uptime</span>,
@@ -196,7 +218,7 @@ In synctool, <span class="cmd">dsh</span> is a symbolic link to
 <span class="cmd">synctool-ssh</span>. The same goes for <span class="cmd">dcp</span>,
 which is a symlink to <span class="cmd">synctool-scp</span>.
 </div>
-<h3>Your first synctool run</h3>
+<h3 id="your_first_synctool_run">Your first synctool run</h3>
 Now that you have a rough setup on the master node, try running
 synctool to a single node:
 <pre class="example">
@@ -219,7 +241,7 @@ we tested the setup using <span class="cmd">dsh</span>.
 When synctool to every node works, the basic setup is done and
 you can start filling your repository with useful files.
 <p>
-<h3>Client installation</h3>
+<h3 id="client_install">Client installation</h3>
 As you may have noticed, we never installed any client software on the nodes.
 There is no client installation step; the master node automatically
 updates synctool on the client nodes. The binaries needed for this are
@@ -244,7 +266,7 @@ In the configuration file, the nodename is associated with one or more groups.
 The nodename itself can also be used as a group to indicate that a file
 belongs to that node.
 <p>
-<h3>The masterdir</h3>
+<h3 id="#masterdir">The masterdir</h3>
 Once you've installed and setup synctool, you will have a <span class="system">masterdir</span>
 repository on the master node of your cluster. This <span class="system">masterdir</span>
 is configured in the <span class="path">synctool.conf</span> file, and is by default set to
@@ -295,7 +317,7 @@ Isn't this an odd place to put binaries? Yes, but these are the &lsquo;master co
 of the synctool software. These are also synced to every node so that synctool
 can run there.
 <p>
-<h3>Running synctool</h3>
+<h3 id="running_synctool">Running synctool</h3>
 For example:
 <pre class="example">
 root@masternode:/# synctool -qf
@@ -309,7 +331,7 @@ By default synctool does a <em>dry run</em>. It will not do anything but show wh
 would happen if this would not be a dry run. Use <span class="system">-f</span> or
 <span class="system">--fix</span> to apply any changes.
 <p>
-<h3>Adding actions to updates</h3>
+<h3 id="adding_actions_to_synctool">Adding actions to updates</h3>
 Now I would like the <span class="cmd">xinetd</span> to be automatically
 reloaded after I change the <span class="path">identd</span> file.
 There are two ways to do this in synctool:
@@ -346,7 +368,7 @@ or <span class="path">$masterdir/overlay/etc/xinetd.d.post</span>:
 <pre class="example">
 /etc/init.d/xinetd reload
 </pre>
-<h3>Special group names</h3>
+<h3 id="special_groups">Special groups</h3>
 The next example shows that the nodename can be used as a group.
 In the example, the <span class="path">fstab</span> file is identical
 throughout the cluster, with the exception of node5 and node7.
@@ -362,7 +384,7 @@ to no nodes. Group <span class="system">none</span> can be
 convenient when you to have a copy of a file around, but do not wish to push
 it to any nodes yet.
 <p>
-<h3>Useful options</h3>
+<h3 id="useful_options">Useful options</h3>
 The <span class="system">-q</span> option of synctool gives less output:
 <pre class="example">
 root@masternode:/# synctool -q
@@ -505,7 +527,7 @@ around synctool that first runs <span class="cmd">rsync</span> to a
 single node to update the shared repository, and then run synctool with
 the <span class="system">--skip-rsync</span> option.
 <p>
-<h3>Logging</h3>
+<h3 id="logging">Logging</h3>
 When using <span class="system">--fix</span> to apply changes, synctool can
 log the performed actions in a log file.
 Use the <span class="system">logfile</span> directive in
@@ -516,7 +538,7 @@ logfile /var/log/synctool.log
 synctool will write this logfile on each node seperately, and a concatenated
 log on the master node.
 <p>
-<h3>Ignoring them: I'm not touching you</h3>
+<h3 id="ignoring">Ignoring them: I'm not touching you</h3>
 By using directives in the <span class="path">synctool.conf</span> file,
 synctool can be told to ignore certain files, nodes, or groups.
 These will be excluded, skipped. For example:
@@ -530,7 +552,7 @@ ignore_group oldgroup
 ignore_group test
 </pre>
 <p>
-<h3>About symbolic links</h3>
+<h3 id="about_symlinks">About symbolic links</h3>
 On the Linux operating system, symbolic links always have mode 0777
 (shown in the directory as mode <span class="system">lrwxrwxrwx</span>).
 This is awkward, because this mode seems to imply that owners, group members,
@@ -562,7 +584,7 @@ not exist &lsquo;as is&rsquo; in the repository:
 $masterdir/overlay/etc/motd._red -&gt; file
 $masterdir/overlay/etc/file._red
 </pre>
-<h3>Backup copies</h3>
+<h3 id="backup_copies">Backup copies</h3>
 For any file synctool updates, it keeps a backup copy around on the target
 node with the extension <span class="system">.saved</span>. If you don't
 like this, you can tell synctool to not make any backup copies with:
@@ -575,7 +597,7 @@ You can manually specify that you want to remove all backup copies using
 <span class="cmd">synctool -e</span> or
 <span class="cmd">synctool --erase-saved</span>.
 <p>
-<h3>Node-specific local configuration adjustments</h3>
+<h3 id="local_config">Node-specific local configuration adjustments</h3>
 The settings in <span class="path">synctool.conf</span> can be overridden
 locally by including a second config file that is present on the node.
 <p>
@@ -606,7 +628,7 @@ include /var/lib/synctool/on_update.conf
 In this example all the nodes get the same config, because the masterdir
 <span class="path">/var/lib/synctool/</span> is synced to all nodes.
 <p>
-<h3>Checking for updates</h3>
+<h3 id="checking_for_updates">Checking for updates</h3>
 synctool can check whether a new version of synctool itself is available by
 using the <span class="system">--check-update</span> option on the master node.
 You can check periodically for updates by using
