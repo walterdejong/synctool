@@ -104,7 +104,8 @@ def worker_synctool(rank, args):
 
 def run_local_synctool():
 	if not synctool_param.SYNCTOOL_CMD:
-		stderr('%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
+		stderr('%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]),
+			synctool_param.CONF_FILE))
 		sys.exit(-1)
 
 	cmd_arr = shlex.split(synctool_param.SYNCTOOL_CMD) + PASS_ARGS
@@ -116,7 +117,8 @@ def upload(interface, upload_filename, upload_suffix=None):
 	'''copy a file from a node into the overlay/ tree'''
 	
 	if not synctool_param.SCP_CMD:
-		stderr('%s: error: scp_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
+		stderr('%s: error: scp_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]),
+			synctool_param.CONF_FILE))
 		sys.exit(-1)
 	
 	if upload_filename[0] != '/':
@@ -397,7 +399,7 @@ def get_options():
 			synctool_param.FULL_PATH = True
 
 		if opt in ('-T', '--terse'):
-			synctool_lib.TERSE = True
+			synctool_param.TERSE = True
 		
 		if opt == '--color':
 			synctool_param.COLORIZE = True
