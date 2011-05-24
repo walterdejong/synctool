@@ -397,9 +397,11 @@ def get_options():
 
 		if opt in ('-F', '--fullpath'):
 			synctool_param.FULL_PATH = True
+			synctool_param.TERSE = False
 
 		if opt in ('-T', '--terse'):
 			synctool_param.TERSE = True
+			synctool_param.FULL_PATH = False
 		
 		if opt == '--color':
 			synctool_param.COLORIZE = True

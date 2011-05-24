@@ -316,6 +316,12 @@ def config_ignore_dirs(arr, configfile, lineno):
 		configfile, lineno)
 
 
+# keyword: terse
+def config_terse(arr, configfile, lineno):
+	(err, synctool_param.TERSE) = _config_boolean('terse', arr[1], configfile, lineno)
+	return err
+
+
 # keyword: colorize
 def config_colorize(arr, configfile, lineno):
 	(err, synctool_param.COLORIZE) = _config_boolean('colorize', arr[1], configfile, lineno)
