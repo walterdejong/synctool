@@ -18,6 +18,7 @@
 synctool comes with <strong>no warranty</strong>. synctool is <strong>free software</strong>.
 synctool is distributed under terms described in the
 <a href="http://www.gnu.org/licenses/gpl-2.0.html">GNU General Public License</a>.
+</p>
 </div>
 
 <div class="vtab"> </div>
@@ -26,68 +27,138 @@ synctool is distributed under terms described in the
 <p>
 <h2>Table of contents</h2>
 <ol>
-<li><a href="#part_one">What is synctool</a>
-<li><a href="#part_two">Installation</a><br>
+<li><a href="#part_one">What is synctool</a></li>
+<li><a href="#part_two">Installation</a></li>
  <ol class="subindex">
- <li><a href="#passwordless_ssh">Passwordless SSH</a>
- <li><a href="#make_install">make install</a>
- <li><a href="#config_nodes_groups">synctool configuration: nodes and groups</a>
- <li><a href="#testing_with_dsh">Testing with dsh</a>
- <li><a href="#your_first_synctool_run">Your first synctool run</a>
- <li><a href="#client_install">Client installation</a>
+ <li><a href="#passwordless_ssh">Passwordless SSH</a></l>
+ <li><a href="#make_install">make install</a></li>
+ <li><a href="#config_nodes_groups">synctool configuration: nodes and groups</a></li>
+ <li><a href="#testing_with_dsh">Testing with dsh</a></li>
+ <li><a href="#your_first_synctool_run">Your first synctool run</a></li>
+ <li><a href="#client_install">Client installation</a></li>
  </ol>
-<li><a href="#part_three">Using synctool</a><br>
+<li><a href="#part_three">Using synctool</a></li>
  <ol class="subindex">
- <li><a href="#masterdir">The masterdir</a>
- <li><a href="#running_synctool">Running synctool</a>
- <li><a href="#adding_actions_to_updates">Adding actions to updates</a>
- <li><a href="#special_groups">Special groups</a>
- <li><a href="#useful_options">Useful options</a>
- <li><a href="#logging">Logging</a>
- <li><a href="#ignoring">Ignoring them: I'm not touching you</a>
- <li><a href="#about_symlinks">About symbolic links</a>
- <li><a href="#backup_copies">Backup copies</a>
- <li><a href="#local_config">Node-specific local configuration adjustments</a>
- <li><a href="#checking_for_updates">Checking for updates</a>
+ <li><a href="#masterdir">The masterdir</a></li>
+ <li><a href="#running_synctool">Running synctool</a></li>
+ <li><a href="#adding_actions_to_updates">Adding actions to updates</a></li>
+ <li><a href="#special_groups">Special groups</a></li>
+ <li><a href="#useful_options">Useful options</a></li>
+ <li><a href="#logging">Logging</a></li>
+ <li><a href="#ignoring">Ignoring them: I'm not touching you</a></li>
+ <li><a href="#about_symlinks">About symbolic links</a></li>
+ <li><a href="#backup_copies">Backup copies</a></li>
+ <li><a href="#local_config">Node-specific local configuration adjustments</a></li>
+ <li><a href="#checking_for_updates">Checking for updates</a></li>
  </ol>
-<li><a href="#part_four">All configuration parameters explained</a><br>
-<li><a href="#part_five">Best practices</a><br>
+<li><a href="#part_four">All configuration parameters explained</a></li>
+<li><a href="#part_five">Best practices</a></li>
 </ol>
+</p>
+
 <p>
 <div class="line"> </div>
+</p>
 
 <h2 id="part_one">1. What is synctool</h2>
 <div class="chapter">
-synctool is a tool that can help you administer your cluster of computers.
-It is meant for copying configuration files to groups (or classes) of
-computers within a cluster.
-There are other tools in existence that do the same thing, and ironically,
-none of them are as easy to understand and use as synctool.
 <p>
-synctool simplifies things by working with the following concepts:
+synctool is a tool that can help you administer your cluster of computers.
+Its primary function is keeping configuration files &lsquo;in sync,&rsquo;
+i.e.: as they ought to be. Its core business is copying configuration files
+to groups (or classes) of computers within a cluster and comparing such
+files with a normative copy that you keep in a repository.
+The repository, by the way, is not some database system, but an
+&lsquo;overlay&rsquo; directory tree in a file system, that looks very
+much like the directories of the managed target systems. The only
+things missing from the repository are the files and directories that you
+do not <em>want</em> or need synctool to manage. In the repository, you can
+manage directories with conventional <span class="smallcaps">Unix</span> tools
+&ndash; <span class="cmd">cp</span>, <span class="cmd">mv</span>,
+<span class="cmd">mkdir</span> &ndash;
+or any tool you like, and you can edit files with the editor of preference.
+</p>
+
+<p>
+There are other tools in existence that do the same thing as synctool,
+and ironically, none of them are as easy to understand and use as synctool.
+Perhaps this is so, because other tools try to do the same thing, among
+many other things as well. synctool does <em>not</em> try to be an all
+encompassing system administation tool, and it does not have its own little
+scripting language to define your system in. It does not strive to automate
+all aspects of the system administrator's work. Rather, it focuses on
+its core business only and concentrates on doing that very well.
+This is very much in line with the traditional
+<span class="smallcaps">Unix</span> design philosophy &mdash;
+and with common sense. The powerful set of now common shell tools grew by
+adding commands that were designed to do only specific tasks very well and
+to be used easily in combination with other tools that specialize in other
+tasks.    
+</p>
+
+<p>
+Because of that design philosophy:
 <ul>
-<li>a host can be part of a logical group;
-<li>files are designated a group by means of filename extension;
-<li>the &lsquo;overlay&rsquo; directory tree contains the files
-that are synced to the target hosts;
-<li>when certain files are updated, you will want to execute a script;
-(e.g, <span class="system">/etc/init.d/daemon restart</span>)
-<li>simplicity. synctool uses the power of <span class="cmd">rsync</span>
-and <span class="cmd">ssh</span> to distribute the files;
-<li>extendibility. Make synctool more powerful by writing plugin scripts.
+<li>synctool is very easily integrated into existing system adminstration
+    practices as an add-on tool, specifically to do configuration file management.
+    It does not interfere with other things and does not need much either:
+    It is written in the <span="cmd">Python</span> language, and it uses the power of
+    <span class="cmd">rsync</span> and <span class="cmd">ssh</span> to distribute
+    and check the consistency of files.
+</li>
+<li>It is possible to use synctool in the style that suits you best: Warn you
+    whenever things are out of &lsquo;sync&rsquo; or do automated repairs of
+    deviations. It is even possible to manage some files with synctool and leave
+    other files to other mechanisms &mdash; what is not represented in the
+    synctool repository is not managed by it.
+</li>
+<li>Although synctool has many command-line options, its set of core functions
+    is very small and easy to understand. There is not that much you need to
+    know to use it, so there is virtually no learning curve to get you started
+    with synctool.
+</li>
 </ul>
+</p>
+
+<p>In addition, synctool simplifies things by working with the following
+concepts:
+<ul>
+<li>Some clusters are more homogeneous than others. To handle differentiation
+    within a cluster, a host can be part of one or more logical groups;
+</li>
+<li>Files are designated to a group by means of filename extension;</li>
+<li>The &lsquo;overlay&rsquo; directory tree contains the files that are
+    &lsquo;synced&rsquo; to the target hosts;
+</li>
+<li>When certain files are updated, you will want to execute a script 
+    (e.g, <span class="cmd">/etc/init.d/daemon restart</span>).
+    synctool has a mechanism for this. You can make synctool more powerful
+    by writing plugin scripts that run the commands you want whenever
+    a particular file has been updated.  
+</li>
+</ul>
+
+<p>
 synctool manages configuration files, not processes, and not full system
-installations. However, synctool does more than just this. synctool is
-extensible in the sense that it can run scripts on hosts (via the
-&lsquo;tasks&rsquo; mechanism). This is primarily meant to do synchronized
-updates of software packages on all systems in the cluster, but can also be
-used to check daemons, or perform other system administration tasks.<br>
+installations. However, synctool can be made to do more than just this.
+synctool is extensible in the sense that it can run scripts on hosts
+(via the &lsquo;tasks&rsquo; mechanism). This is primarily meant to do
+synchronized updates of software packages on all systems in the cluster,
+but can also be used to check daemons, or perform other system administration
+tasks.
+</p>
+
+<p>
 synctool does not hide <span class="smallcaps">UNIX</span> from you.
 Making clever use of synctool makes it a very powerful tool.
+</p>
+
 <p>
 synctool is successfully being used to administer several clusters at the
-Dutch national supercomputer facility for over 7 years now. Hopefully
-it will be of some value to you as well.
+Dutch national supercomputer facility for over 7 years now. Hopefully it will
+be of some value to you as well.
+</p>
+
 </div>
 
 <div class="vtab"> </div>
@@ -99,6 +170,7 @@ it will be of some value to you as well.
 In synctool terminology, a &ldquo;node&rdquo; is a host, a computer in a group of
 computers. A group of computers is called a cluster.
 </div>
+
 <p>
 <h3 id="passwordless_ssh">Passwordless SSH</h3>
 First of all, synctool requires passwordless SSH from the master node to
@@ -106,27 +178,35 @@ each cluster node as root. Exactly how to do this is beyond the scope
 of this document (see the SSH documentation or just google around), but
 I'd like to say this about it:
 <ul>
-<li>use SSH keypairs
-<li>or use hostbased authentication, also for root
-<li>set <span class="path">sshd_config</span> <span class="system">PermitRootLogin without-password</span>
-<li>run <span class="cmd">sshd</span> only the internal network interface to secure your system
+<li>use SSH keypairs</li>
+<li>or use hostbased authentication, also for root</li>
+<li>set <span class="path">sshd_config</span>
+    <span class="system">PermitRootLogin without-password</span></li>
+<li>run <span class="cmd">sshd</span> only the internal network interface to
+    secure your system</li>
 <li>in general, passwordless SSH from any cluster node to your master node
-should <em>not</em> work or be allowed; or at least, synctool does not need this
+    should <em>not</em> work or be allowed; or at least, synctool does not
+    need this</li>
 </ul>
 For sites with extra tight security, it is possible to configure ssh to run
 only specific (synctool) commands, or maybe you want to change the
 ssh_cmd in the configuration so that it runs a different command, that
 suits your security needs.
+</p>
 <p>
 When passwordless SSH as root works, proceed to installing the software.
+</p>
+
 <p>
 <h3 id="make_install">make install</h3>
-Edit the provided <span class="cmd">Makefile</span> and adjust <span class="cmd">PREFIX</span> to point to your
-desired location where the software should reside. Some prefer
-<span class="path">/usr/local</span>, others prefer <span class="path">/usr/local/synctool</span>, while others
+Edit the provided <span class="cmd">Makefile</span> and adjust
+<span class="cmd">PREFIX</span> to point to your desired location where the
+software should reside. Some prefer <span class="path">/usr/local</span>,
+others prefer <span class="path">/usr/local/synctool</span>, while others
 prefer <span class="path">/opt</span>. Pick whatever you think is best.
-<p>
+</p>
 
+<p>
 On your master node, run <span class="cmd">make install</span>. This copies the commands
 to the selected location and sets up symlinks for:
 <pre class="example">
@@ -140,15 +220,21 @@ synctool-scp    -&gt; synctool_scp.py
 dcp             -&gt; synctool_scp.py
 synctool-aggr   -&gt; synctool_aggr.py
 </pre>
-It also creates the master repository under <span class="path">/var/lib/synctool/</span>.
+It also creates the master repository under
+<span class="path">/var/lib/synctool/</span>.
+</p>
+
 <p>
 <h3 id="config_nodes_groups">synctool configuration: nodes and groups</h3>
-Copy the <span class="path">synctool.conf.example</span> to <span class="path">/var/lib/synctool/synctool.conf</span>
-and edit it, adjusting it as needed. For an explanation of all configurable parameters,
-see <a href="#part_four">chapter 4</a>.
+Copy the <span class="path">synctool.conf.example</span> to
+<span class="path">/var/lib/synctool/synctool.conf</span>
+and edit it, adjusting it as needed. For an explanation of all configurable
+parameters, see <a href="#part_four">chapter 4</a>.
+</p>
+
 <p>
-<span style="path">synctool.conf</span> describes what your cluster looks like; what nodes
-have what roles, and how synctool can contact them.
+<span style="path">synctool.conf</span> describes what your cluster looks like;
+what nodes have what roles, and how synctool can contact them.
 Think a bit about what role each machine has. There is no need to
 go into great depth right now; you can always adjust the configuration
 later.
@@ -162,13 +248,18 @@ The interface specifies how synctool can contact the node; this can be an
 IP address or a DNS name of the host you wish to contact. In clusters, there
 is often a management network interface &mdash; configure that interface name
 here.
+</p>
+
 <p>
-It is good practice to label your master node as &lsquo;master&rsquo; or &lsquo;install&rsquo;.
+It is good practice to label your master node as &lsquo;master&rsquo; or
+&lsquo;install&rsquo;.
 <pre class="example">
 node n1 master interface:machine-n01
 </pre>
 Now <span class="system">n1</span> responds to the groups <span class="system">n1</span>
 and <span class="system">master</span>.
+</p>
+
 <p>
 Some people don't like managing the master node itself with synctool.
 While it <em>is</em> possible and perfectly alright to do this, some like to
@@ -178,9 +269,11 @@ ignore_node n1
 </pre>
 You have to list each and every host.
 In the <span class="path">contrib/</span> directory, there is a script that
-uses <span class="cmd">nmap ping</span> with
-which you can scan your management network and quickly turn it into
-a synctool configuration. This makes life a bit easier.
+uses <span class="cmd">nmap ping</span> with which you can scan your management
+network and quickly turn it into a synctool configuration. This makes life
+a bit easier.
+</p>
+
 <p>
 Nodes can be in as many different groups as you like. You can split
 long lines of node definitions by ending them with a backslash:
@@ -194,6 +287,8 @@ maintainable with as few groups as possible. Make sure to use
 logical names for logical groups, and use a top-down group structure.
 Make things easy on yourself.
 </div>
+</p>
+
 <p>
 If you have many nodes that all share the same long list of groups,
 the groups may be abbreviated by defining a <em>compound</em> group. This
@@ -218,6 +313,9 @@ In synctool, <span class="cmd">dsh</span> is a symbolic link to
 <span class="cmd">synctool-ssh</span>. The same goes for <span class="cmd">dcp</span>,
 which is a symlink to <span class="cmd">synctool-scp</span>.
 </div>
+</p>
+
+<p>
 <h3 id="your_first_synctool_run">Your first synctool run</h3>
 Now that you have a rough setup on the master node, try running
 synctool to a single node:
@@ -240,6 +338,8 @@ Check that every node responds. If it doesn't, go back to the step where
 we tested the setup using <span class="cmd">dsh</span>.
 When synctool to every node works, the basic setup is done and
 you can start filling your repository with useful files.
+</p>
+
 <p>
 <h3 id="client_install">Client installation</h3>
 As you may have noticed, we never installed any client software on the nodes.
@@ -247,44 +347,56 @@ There is no client installation step; the master node automatically
 updates synctool on the client nodes. The binaries needed for this are
 located under <span class="path">/var/lib/synctool/sbin/</span>, and this
 directory gets synced to the nodes with <span class="cmd">rsync</span>.
+</p>
+
 </div>
 
 <div class="vtab"> </div>
 <div class="line"> </div>
 
+<p>
 <h2 id="part_three">3. Using synctool</h2>
 <div class="chapter">
 <div class="note">
-In synctool terminology, a &ldquo;node&rdquo; is a host, a computer in a group of
-computers. A group of computers is called a cluster.
+In synctool terminology, a &ldquo;node&rdquo; is a host, a computer in a group
+of computers. A group of computers is called a cluster.
 </div>
 The main power of synctool is the fact that you can define logical groups,
 and you can add these to a filename as a filename extension. This will result
 in the file being copied, only if the node belongs to the same group.
-The groups a node is in, are defined in the <span class="path">synctool.conf</span> file.
+The groups a node is in, are defined in the
+<span class="path">synctool.conf</span> file.
 In the configuration file, the nodename is associated with one or more groups.
 The nodename itself can also be used as a group to indicate that a file
 belongs to that node.
+</p>
+
 <p>
 <h3 id="#masterdir">The masterdir</h3>
-Once you've installed and setup synctool, you will have a <span class="system">masterdir</span>
-repository on the master node of your cluster. This <span class="system">masterdir</span>
-is configured in the <span class="path">synctool.conf</span> file, and is by default set to
+Once you've installed and setup synctool, you will have a
+<span class="system">masterdir</span> repository on the master node of your
+cluster. This <span class="system">masterdir</span> is configured in the
+<span class="path">synctool.conf</span> file, and is by default set to
 <span class="path">/var/lib/synctool</span>.
+</p>
+
 <p>
-synctool is usually run from the master node.
-It will use <span class="cmd">rsync</span> to mirror the
+synctool is usually run from the master node. It will use
+<span class="cmd">rsync</span> to mirror the
 <span class="system">masterdir</span> to all the nodes in the cluster.
-If you do have the luxury of a high performance shared filesystem on your cluster,
-you may use the option <span class="system">--skip-rsync</span>
-to skip the mirroring of the repository.<br>
-Note that it is perfectly possible to run <span class="cmd">synctool.py</span> &lsquo;stand alone&rsquo; on a
-node, in which case it will check its local copy of the repository. It will
-not synchronize with the master repository, since it all works with <em>server push</em>
-and not client pull.
+If you do have the luxury of a high performance shared filesystem on your
+cluster, you may put the masterdir on there and use the option
+<span class="system">--skip-rsync</span> to skip the mirroring of the
+repository.<br />
+Note that it is perfectly possible to run <span class="cmd">synctool.py</span>
+&lsquo;stand alone&rsquo; on a node, in which case it will check its local
+copy of the repository. It will not synchronize with the master repository,
+since it all works with <em>server push</em> and not client pull.
+</p>
+
 <p>
-In the synctool masterdir there are by default five subdirectories, each having its own
-function:
+In the synctool masterdir there are by default five subdirectories, each having
+its own function:
 <pre class="example">
 * overlay/
 * delete/
@@ -292,30 +404,43 @@ function:
 * tasks/
 * sbin/
 </pre>
-The <span class="path">overlay/</span> tree contains files that have to be copied. When synctool
-detects a difference between a file on the system and a file in the overlay
-tree, the file will be copied from the <span class="path">overlay</span> tree onto the system.
+The <span class="path">overlay/</span> tree contains files that have to be
+copied. When synctool detects a difference between a file on the system and a
+file in the overlay tree, the file will be copied from the
+<span class="path">overlay</span> tree onto the system.
+</p>
+
 <p>
-The <span class="path">delete/</span> tree contains files that always have to be deleted from the
-system. Only the filename matters, so it is OK if the files in this tree are
-only 0 bytes in size.
+The <span class="path">delete/</span> tree contains files that always have to
+be deleted from the system. Only the filename matters, so it is alright if the
+files in this tree are only <span class="system">0</span> bytes in size.
+</p>
+
 <p>
-The executables in the <span class="path">scripts/</span> directory are executables that synctool can
-run when needed. By means of the <span class="system">on_update</span> directive
-in the <span class="path">synctool.conf</span> file, a designated script may be executed
-when a certain file is changed.
+The executables in the <span class="path">scripts/</span> directory are
+executables that synctool can run when needed. By means of the
+<span class="system">on_update</span> directive in the
+<span class="path">synctool.conf</span> file, a designated script may be
+executed when a certain file is changed.
 For example: when <span class="path">/etc/inetd.conf</span> is updated,
 the script <span class="cmd">hupdaemon.sh inetd</span> must be run.
+</p>
+
 <p>
-The executables in de <span class="path">tasks/</span> directory are run when synctool is invoked with
-the <span class="system">-t</span> or <span class="system">--tasks</span> argument.
-This makes it possible to run scripts on hosts, which is very convenient for doing
-change management.
+The executables in de <span class="path">tasks/</span> directory are run when
+synctool is invoked with the <span class="system">-t</span> or
+<span class="system">--tasks</span> argument.
+This makes it possible to run scripts on hosts, which is very convenient for
+doing change management.
+</p>
+
 <p>
 The <span class="path">sbin/</span> directory contains the synctool programs.
-Isn't this an odd place to put binaries? Yes, but these are the &lsquo;master copies&rsquo;
-of the synctool software. These are also synced to every node so that synctool
-can run there.
+Isn't this an odd place to put binaries? Yes, but these are the
+&lsquo;master copies&rsquo; of the synctool software. These are also synced
+to every node so that synctool can run there.
+</p>
+
 <p>
 <h3 id="running_synctool">Running synctool</h3>
 For example:
@@ -326,41 +451,54 @@ node3: /etc/xinetd.d/identd updated (file size mismatch)
 The file is being updated because there is a mismatch in the file size.
 Should the file size be the same, synctool will calculate an MD5 checksum to
 see whether the file was changed or not.
+</p>
+
 <p>
-By default synctool does a <em>dry run</em>. It will not do anything but show what
-would happen if this would not be a dry run. Use <span class="system">-f</span> or
-<span class="system">--fix</span> to apply any changes.
+By default synctool does a <em>dry run</em>. It will not do anything but show
+what would happen if this would not be a dry run.
+Use <span class="system">-f</span> or <span class="system">--fix</span>
+to apply any changes.
+</p>
+
 <p>
 <h3 id="adding_actions_to_synctool">Adding actions to updates</h3>
 Now I would like the <span class="cmd">xinetd</span> to be automatically
 reloaded after I change the <span class="path">identd</span> file.
 There are two ways to do this in synctool:
 <ol>
-<li>Old, classic way, the way it was done in synctool version <= 3.0.<br>
-Put in <span class="path">synctool.conf</span>:
+<li>Old, classic way; Put in <span class="path">synctool.conf</span>:
 <pre class="example">
 on_update  /etc/xinetd.d/identd    /etc/init.d/xinetd reload
 </pre>
-<li>Modern way, synctool version >= 4.0, much easier;<br>
-Put in file <span class="path">$masterdir/overlay/etc/xinetd.d/identd.post</span>:
+</li>
+<li>Modern way, much easier; Put in file
+    <span class="path">$masterdir/overlay/etc/xinetd.d/identd.post</span>:
 <pre class="example">
- /etc/init.d/xinetd reload
+/etc/init.d/xinetd reload
 </pre>
-The <span class="system">.post</span> script will be run when the file changes:
+Use <span class="cmd">chmod</span> to make the 
+<span class="system">.post</span> script executable as you would do with any
+other shell script. The <span class="system">.post</span> script will be run
+when the file changes:
 <pre class="example">
 root@masternode:/# synctool -qf
 node3: /etc/xinetd.d/identd updated (file size mismatch)
 node3: running command $masterdir/overlay/etc/xinetd.d/identd.post
 </pre>
+</li>
 </ol>
-It is possible to put a group extension on the <span class="system">.post</span> script,
-so that you can have one group of nodes perform different actions than an other.
+It is possible to add a group extension to the
+<span class="system">.post</span> script, so that you can have one group of
+nodes perform different actions than another.
+</p>
+
 <p>
-The example for <span class="path">/etc/xinetd.d</span> is interesting because you
-can also put an <span class="system">on_update</span> trigger or <span class="system">.post</span>
-script on the directory itself.
-Whenever a file in the directory gets modified, the trigger will be called.
-So, we can simplify the situation for <span class="path">/etc/xinetd.d</span> to:
+The example for <span class="path">/etc/xinetd.d</span> is interesting because
+you can also put an <span class="system">on_update</span> trigger or
+<span class="system">.post</span> script on the directory itself.
+Whenever a file in the directory gets modified, that trigger will be called.
+So, we can simplify the situation for <span class="path">/etc/xinetd.d</span>
+to:
 <pre class="example">
 on_update   /etc/xinetd.d    /etc/init.d/xinetd reload
 </pre>
@@ -368,21 +506,26 @@ or <span class="path">$masterdir/overlay/etc/xinetd.d.post</span>:
 <pre class="example">
 /etc/init.d/xinetd reload
 </pre>
+</p>
+
+<p>
 <h3 id="special_groups">Special groups</h3>
 The next example shows that the nodename can be used as a group.
 In the example, the <span class="path">fstab</span> file is identical
 throughout the cluster, with the exception of node5 and node7.
 <pre class="example">
 root@masternode:/# ls -F /var/lib/synctool/overlay/etc
-fstab._all          motd.production._batch  sudoers._all
-fstab._node5        nsswitch.conf._all      sysconfig/
-fstab._node7        nsswitch.conf.old._all  sysctl.conf._all
+fstab._all      motd.production._batch   sudoers._all
+fstab._node5    nsswitch.conf._all       sysconfig/
+fstab._node7    nsswitch.conf.old._all   sysctl.conf._all
 </pre>
 Group <span class="system">all</span> implictly applies to all nodes.
-Likewise, there is an implicit group <span class="system">none</span> that applies
-to no nodes. Group <span class="system">none</span> can be
+Likewise, there is an implicit group <span class="system">none</span> that
+applies to no nodes. Group <span class="system">none</span> can be
 convenient when you to have a copy of a file around, but do not wish to push
 it to any nodes yet.
+</p>
+
 <p>
 <h3 id="useful_options">Useful options</h3>
 The <span class="system">-q</span> option of synctool gives less output:
@@ -392,13 +535,14 @@ node3: /etc/xinetd.d/identd updated (file size mismatch)
 node3: running command /bin/rm /etc/xinetd.d/*.saved ;
 /etc/init.d/xinetd reload
 </pre>
-If <span class="system">-q</span> still gives too much output, because you have
-many nodes in your cluster, it is possible to specify <span class="system">-a</span>
-to condense (aggregate) output.
-The condensed output groups together output that is the same for many nodes.<br>
+If <span class="system">-q</span> still gives too much output, because you
+have many nodes in your cluster, it is possible to specify
+<span class="system">-a</span> to condense (aggregate) output. The condensed
+output groups together output that is the same for many nodes.<br />
 <span class="cmd">synctool -qa</span> is one of my favorite commands.
-synctool does this by piping the output through the <span class="cmd">synctool-aggr</span> command.
-You may also use this to condense output from <span class="cmd">dsh</span>, for example
+synctool does this by piping the output through the
+<span class="cmd">synctool-aggr</span> command. You may also use this to
+condense output from <span class="cmd">dsh</span>, for example
 <pre class="example">
 # dsh date | synctool-aggr
 </pre>
@@ -414,28 +558,35 @@ at least once as a dry run! (without <span class="system">-f</span>).
 Mind that synctool does not lock the repository and does not guard against
 concurrent use by multiple sysadmins at once. In practice, this hardly ever
 leads to any problems.
+</p>
+
 <p>
 To update only a single file rather than all files, use the option
 <span class="system">--single</span> or <span class="system">-1</span>
 (that's a number one, not the letter ell).
+</p>
+
 <p>
 If you want to check what file synctool is using for a given destination
-file, use the <span class="system">-r</span> or <span class="system">--ref</span> option:
+file, use the <span class="system">-r</span> or
+<span class="system">--ref</span> option:
 <pre class="example">
 root@masternode:/# synctool -q -n node1 -r /etc/resolv.conf
 node1: /etc/resolv.conf._somegroup
 </pre>
 To inspect differences between the master copy and the client copy of a file,
 use <span class="system">--diff</span> or <span class="system">-d</span>.
+</p>
+
 <p>
 synctool can be run on a subset of nodes, a group, or even on individual
 nodes using the options <span class="system">--group</span> or
 <span class="system">-g</span>, <span class="system">--node</span>
 or <span class="system">-n</span>, <span class="system">--exclude</span>
 or <span class="system">-x</span>, and <span class="system">--exclude-group</span>
-or <span class="system">-X</span>. This also works for <span class="cmd">dsh</span>
-and <span class="cmd">dcp</span>, as well as <span class="cmd">dsh-ping</span>.
-For example:
+or <span class="system">-X</span>. This also works for
+<span class="cmd">dsh</span> and <span class="cmd">dcp</span>, as well as
+<span class="cmd">dsh-ping</span>. For example:
 <pre class="example">
 # synctool -g batch,sched -X rack8
 </pre>
@@ -465,7 +616,7 @@ yet. You may also do this on a group of nodes:
 The <span class="system">-t</span> or <span class="system">--tasks</span>
 option runs the de executables that are in <span class="path">tasks/</span>
 (if you also supply <span class="system">-f</span>..!)
-These executables can also have classnames as filename extension.
+These executables can also have group names as filename extension.
 They can be shell scripts or any other kind of executables.
 This option is particularly useful for making system changes
 that cannot be done easily by replacing a configuration file, like for
@@ -474,11 +625,15 @@ see whether the system change has already been made, or else it will always
 keep installing the same software when it was already there. Doing system
 changes through the tasks mechanism is recommended for two reasons:
 <ul>
-<li>easy to see what changes are being done; all tasks are in <span class="system">tasks/</span>
-<li>whenever a node is down, it can do the updates later to get back in sync
+<li>It is easy to see what changes are being done; all tasks are in
+    <span class="system">tasks/</span></li>
+<li>Whenever a node is down, it can do the updates later to get back in sync
+    </li>
 </ul>
 By default, <span class="system">--tasks</span> is not being run.
 You have to explicitly specify this argument to run tasks.
+</p>
+
 <p>
 The <span class="system">-v</span> option gives verbose output.
 This is another way of displaying the logic that synctool performs:
@@ -511,8 +666,8 @@ node3: /bin/rm /etc/xinetd.d/*.saved ; /etc/init.d/xinetd reload
 </pre>
 <div class="note">
 synctool does not apply changes by executing shell commands; all
-operations are programmed in Python. The <span class="system">--unix</span> option
-is only a way of displaying what synctool does, and may be useful
+operations are programmed in Python. The <span class="system">--unix</span>
+option is only a way of displaying what synctool does, and may be useful
 when debugging.
 </div>
 The <span class="system">--skip-rsync</span> option skips the
@@ -526,6 +681,8 @@ not shared with the master server, you may want to write a wrapper script
 around synctool that first runs <span class="cmd">rsync</span> to a
 single node to update the shared repository, and then run synctool with
 the <span class="system">--skip-rsync</span> option.
+</p>
+
 <p>
 <h3 id="logging">Logging</h3>
 When using <span class="system">--fix</span> to apply changes, synctool can
@@ -537,6 +694,8 @@ logfile /var/log/synctool.log
 </pre>
 synctool will write this logfile on each node seperately, and a concatenated
 log on the master node.
+</p>
+
 <p>
 <h3 id="ignoring">Ignoring them: I'm not touching you</h3>
 By using directives in the <span class="path">synctool.conf</span> file,
@@ -551,6 +710,8 @@ ignore_node node1 node2
 ignore_group oldgroup
 ignore_group test
 </pre>
+</p>
+
 <p>
 <h3 id="about_symlinks">About symbolic links</h3>
 On the Linux operating system, symbolic links always have mode 0777
@@ -596,10 +757,14 @@ It is however highly recommended that you run with
 You can manually specify that you want to remove all backup copies using
 <span class="cmd">synctool -e</span> or
 <span class="cmd">synctool --erase-saved</span>.
+</p>
+
 <p>
 <h3 id="local_config">Node-specific local configuration adjustments</h3>
 The settings in <span class="path">synctool.conf</span> can be overridden
 locally by including a second config file that is present on the node.
+</p>
+
 <p>
 <span class="system">synctool.conf</span>:
 <pre class="example">
@@ -612,11 +777,13 @@ differences in the synctool configuration for certain nodes. For example,
 this can be used to change the <span class="system">symlink_mode</span>
 in heterogeneous clusters.
 Beware that the local config file is read upon startup and may be synced
-afterwards, if the file was changed.<br>
+afterwards, if the file was changed.<br />
 Mind that including node specific configs increases the complexity of your
 overall synctool configuration, so in general it is recommended that you
 stick to using the master <span class="path">synctool.conf</span> only,
 and not including any local configs at all.
+</p>
+
 <p>
 The <span class="system">include</span> keyword can also be used to
 clean up your config a little, for example:
@@ -627,6 +794,8 @@ include /var/lib/synctool/on_update.conf
 </pre>
 In this example all the nodes get the same config, because the masterdir
 <span class="path">/var/lib/synctool/</span> is synced to all nodes.
+</p>
+
 <p>
 <h3 id="checking_for_updates">Checking for updates</h3>
 synctool can check whether a new version of synctool itself is available by
@@ -636,6 +805,8 @@ You can check periodically for updates by using
 To download the latest version, run <span class="cmd">synctool --download</span>
 on the master node. These functions connect to the main website at
 <a href="http://www.heiho.net/synctool/">http://www.heiho.net/synctool</a>.
+</p>
+
 </div>
 
 <div class="vtab"> </div>
@@ -729,7 +900,7 @@ Default value is <span class="system">no</span>.
 <dt>ignore &lt;filename or directory name&gt;</dt>
 <dd>This parameter enables you to have synctool ignore specific files or
 directories in the repository.
-Multiple <span class="system">ignore</span> definitions are allowed.<br>
+Multiple <span class="system">ignore</span> definitions are allowed.<br />
 There is no default value. Example:
 <pre class="example">
 ignore .gitignore
