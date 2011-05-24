@@ -27,13 +27,12 @@ synctool is distributed under terms described in the
 <div class="vtab"> </div>
 <div class="line"> </div>
 
-<p>
 <h2>Table of contents</h2>
 <ol>
 <li><a href="#part_one">What is synctool</a></li>
 <li><a href="#part_two">Installation</a>
  <ol class="subindex">
-  <li><a href="#passwordless_ssh">Passwordless SSH</a></l>
+  <li><a href="#passwordless_ssh">Passwordless SSH</a></li>
   <li><a href="#make_install">make install</a></li>
   <li><a href="#config_nodes_groups">synctool configuration: nodes and groups</a></li>
   <li><a href="#testing_with_dsh">Testing with dsh</a></li>
@@ -61,11 +60,8 @@ synctool is distributed under terms described in the
 <li><a href="#part_four">All configuration parameters explained</a></li>
 <li><a href="#part_five">Best practices</a></li>
 </ol>
-</p>
 
-<p>
 <div class="line"> </div>
-</p>
 
 <h2 id="part_one">1. What is synctool</h2>
 <div class="chapter">
@@ -107,11 +103,12 @@ tasks.
 Because of that design philosophy:
 <ul>
 <li>synctool is very easily integrated into existing system adminstration
-    practices as an add-on tool, specifically to do configuration file management.
-    It does not interfere with other things and does not need much either:
-    It is written in the <span="cmd">Python</span> language, and it uses the power of
-    <span class="cmd">rsync</span> and <span class="cmd">ssh</span> to distribute
-    and check the consistency of files.
+    practices as an add-on tool, specifically to do configuration file
+    management. It does not interfere with other things and does not need
+    much either: It is written in the <span class="cmd">Python</span> language,
+    and it uses the power of <span class="cmd">rsync</span> and
+    <span class="cmd">ssh</span> to distribute and check the consistency of
+    files.
 </li>
 <li>It is possible to use synctool in the style that suits you best: Warn you
     whenever things are out of &lsquo;sync&rsquo; or do automated repairs of
