@@ -79,7 +79,7 @@ def master_synctool(rank, args):
 		unix_out('%s %s:%s/' % (string.join(rsync_cmd_arr), node, synctool_param.MASTERDIR))
 	
 	verbose('running synctool on node %s' % nodename)
-	unix_out('%s %s %s' % (string.join(cmd_ssh_arr), node, string.join(synctool_cmd_arr)))
+	unix_out('%s %s %s' % (string.join(ssh_cmd_arr), node, string.join(synctool_cmd_arr)))
 
 
 def worker_synctool(rank, args):
@@ -92,19 +92,20 @@ def worker_synctool(rank, args):
 	
 	if rsync_cmd_arr != None:
 		# rsync masterdir to the node
-		rsync_cmd_arr.append('%s:%s/' % (nodes[rank], synctool_param.MASTERDIR))
+		rsync_cmd_arr.append('%s:%s/' % (node, synctool_param.MASTERDIR))
 		synctool_lib.run_with_nodename(rsync_cmd_arr, nodename)
 	
 	# run 'ssh node synctool_cmd'
 	ssh_cmd_arr.append(node)
 	ssh_cmd_arr.extend(synctool_cmd_arr)
 	
-	synctool_lib.run_with_nodename(ssh_cmd_arr)
+	synctool_lib.run_with_nodename(ssh_cmd_arr, nodename)
 
 
 def run_local_synctool():
 	if not synctool_param.SYNCTOOL_CMD:
-		stderr('%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
+		stderr('%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]),
+			synctool_param.CONF_FILE))
 		sys.exit(-1)
 
 	cmd_arr = shlex.split(synctool_param.SYNCTOOL_CMD) + PASS_ARGS
@@ -116,7 +117,8 @@ def upload(interface, upload_filename, upload_suffix=None):
 	'''copy a file from a node into the overlay/ tree'''
 	
 	if not synctool_param.SCP_CMD:
-		stderr('%s: error: scp_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
+		stderr('%s: error: scp_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]),
+			synctool_param.CONF_FILE))
 		sys.exit(-1)
 	
 	if upload_filename[0] != '/':
@@ -205,7 +207,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 		scp_cmd_arr.append('%s:%s' % (interface, dest))
 		scp_cmd_arr.append(repos_filename)
 		
-		synctool_lib.run_with_nodename(scp_cmd_arr, NODES.get_nodename_from_interface(interface))
+		synctool_lib.run_with_nodename(scp_cmd_arr, NODESET.get_nodename_from_interface(interface))
 		
 		if os.path.isfile(repos_filename):
 			stdout('uploaded %s' % synctool_lib.prettypath(repos_filename))
@@ -390,9 +392,11 @@ def get_options():
 
 		if opt in ('-F', '--fullpath'):
 			synctool_param.FULL_PATH = True
+			synctool_param.TERSE = False
 
 		if opt in ('-T', '--terse'):
-			synctool_lib.TERSE = True
+			synctool_param.TERSE = True
+			synctool_param.FULL_PATH = False
 		
 		if opt == '--color':
 			synctool_param.COLORIZE = True
