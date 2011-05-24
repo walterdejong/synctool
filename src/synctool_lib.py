@@ -242,7 +242,7 @@ def popen(cmd_arr):
 	
 	pipe = os.pipe()
 	
-	pid = os.fork():
+	pid = os.fork()
 	if not pid:
 		# redirect child's output to write end of the pipe
 		os.close(2)

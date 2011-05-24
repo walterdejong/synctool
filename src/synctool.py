@@ -1132,7 +1132,7 @@ def get_options():
 	be_careful_with_getopt()
 	
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:etfFvq',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:etfFTvq',
 			['help', 'conf=', 'diff=', 'single=', 'ref=', 'erase-saved',
 			'tasks', 'fix', 'fullpath', 'terse', 'color', 'no-color',
 			'verbose', 'quiet', 'unix', 'masterlog', 'version'])

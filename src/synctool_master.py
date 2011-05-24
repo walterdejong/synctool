@@ -79,7 +79,7 @@ def master_synctool(rank, args):
 		unix_out('%s %s:%s/' % (string.join(rsync_cmd_arr), node, synctool_param.MASTERDIR))
 	
 	verbose('running synctool on node %s' % nodename)
-	unix_out('%s %s %s' % (string.join(cmd_ssh_arr), node, string.join(synctool_cmd_arr)))
+	unix_out('%s %s %s' % (string.join(ssh_cmd_arr), node, string.join(synctool_cmd_arr)))
 
 
 def worker_synctool(rank, args):
@@ -92,14 +92,14 @@ def worker_synctool(rank, args):
 	
 	if rsync_cmd_arr != None:
 		# rsync masterdir to the node
-		rsync_cmd_arr.append('%s:%s/' % (nodes[rank], synctool_param.MASTERDIR))
+		rsync_cmd_arr.append('%s:%s/' % (node, synctool_param.MASTERDIR))
 		synctool_lib.run_with_nodename(rsync_cmd_arr, nodename)
 	
 	# run 'ssh node synctool_cmd'
 	ssh_cmd_arr.append(node)
 	ssh_cmd_arr.extend(synctool_cmd_arr)
 	
-	synctool_lib.run_with_nodename(ssh_cmd_arr)
+	synctool_lib.run_with_nodename(ssh_cmd_arr, nodename)
 
 
 def run_local_synctool():
