@@ -1176,6 +1176,12 @@ def get_options():
 		for opt, args in opts:
 			if opt in ('-T', '--terse'):
 				synctool_param.TERSE = True
+				synctool_param.FULL_PATH = False
+				continue
+			
+			if opt in ('-F', '--fullpath'):
+				synctool_param.TERSE = False
+				synctool_param.FULL_PATH = True
 				continue
 	
 	# then go process all the other options
@@ -1194,7 +1200,7 @@ def get_options():
 	opt_fix = False
 	
 	for opt, arg in opts:
-		if opt in ('-h', '--help', '-?', '-c', '--conf', '-T', '--terse', '--version'):
+		if opt in ('-h', '--help', '-?', '-c', '--conf', '-T', '--terse', '-f', '--fullpath', '--version'):
 			# already done
 			continue
 		
@@ -1212,10 +1218,6 @@ def get_options():
 		if opt in ('-f', '--fix'):
 			opt_fix = True
 			synctool_lib.DRY_RUN = False
-			continue
-		
-		if opt in ('-F', '--fullpath'):
-			synctool_param.FULL_PATH = True
 			continue
 		
 		if opt == '--color':
