@@ -207,7 +207,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 		scp_cmd_arr.append('%s:%s' % (interface, dest))
 		scp_cmd_arr.append(repos_filename)
 		
-		synctool_lib.run_with_nodename(scp_cmd_arr, NODES.get_nodename_from_interface(interface))
+		synctool_lib.run_with_nodename(scp_cmd_arr, NODESET.get_nodename_from_interface(interface))
 		
 		if os.path.isfile(repos_filename):
 			stdout('uploaded %s' % synctool_lib.prettypath(repos_filename))
