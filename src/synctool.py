@@ -999,7 +999,6 @@ def reference(filename):
 	
 	(src, dest) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, filename)
 	if not dest:
-		print 'TD kut'
 		# multiple source possible
 		# possibilities have already been printed
 		sys.exit(1)
