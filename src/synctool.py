@@ -673,7 +673,7 @@ def hard_delete_file(file):
 
 def erase_saved(dest):
 	if synctool_lib.ERASE_SAVED and path_exists('%s.saved' % dest) and not path_isdir('%s.saved' % dest):
-		terse(synctool_lib.TERSE_RM, '%s.saved' % dest)
+		terse(synctool_lib.TERSE_DELETE, '%s.saved' % dest)
 		unix_out('rm %s.saved' % dest)
 		
 		if synctool_lib.DRY_RUN:
