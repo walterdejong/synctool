@@ -55,13 +55,14 @@ class OverlayEntry:
 	# as the path of the .post script and dest_path as the destination directory
 	# where the script is to be run
 	
-	def __init__(self, src, dest, groupnum):
+	def __init__(self, src, dest, groupnum, isdir=False):
 		self.src_path = src
 		self.dest_path = dest
 		self.groupnum = groupnum
+		self.isdir = isdir
 	
 	def __repr__(self):
-		return '[<OverlayEntry> %d (%s) (%s)]' % (self.groupnum, self.src_path, self.dest_path)
+		return '[<OverlayEntry> %d (%s) (%s) %s]' % (self.groupnum, self.src_path, self.dest_path, self.isdir)
 
 
 def split_extension(entryname, requireExtension):
@@ -201,14 +202,11 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 		
 		dest_path = os.path.join(dest_dir, name)
 		
+		filelist.append(OverlayEntry(src_path, dest_path, groupnum, isDir))
+
 		if isDir:
-			filelist.append(OverlayEntry(src_path, dest_path, groupnum))
-		
 			# recurse into subdir
 			overlay_pass1(src_path, filelist, dest_path, groupnum, handle_postscripts)
-		
-		else:
-			filelist.append(OverlayEntry(src_path, dest_path, groupnum))
 
 
 def overlay_pass2(filelist, filedict):
@@ -218,12 +216,31 @@ def overlay_pass2(filelist, filedict):
 	for entry in filelist:
 		if filedict.has_key(entry.dest_path):
 			entry2 = filedict[entry.dest_path]
+			
 			if entry.groupnum < entry2.groupnum:
+				# this group is more important, so override it
 				del filedict[entry.dest_path]
 				entry2 = None
+			
+			# duplicate paths are a problem, unless they are directories ...
+			elif (not (entry.isdir and entry2.isdir)) and entry.groupnum == entry2.groupnum:
+				if synctool_param.TERSE:
+					synctool_lib.terse(synctool_lib.TERSE_ERROR, 'duplicate source paths in repository for:')
+					synctool_lib.terse(synctool_lib.TERSE_ERROR, entry.src_path)
+					synctool_lib.terse(synctool_lib.TERSE_ERROR, entry2.src_path)
+				else:
+					stderr('error: duplicate source paths in repository for:\n'
+						'error: %s\n'
+						'error: %s\n' % (entry.src_path, entry2.src_path)
+					)
+				
+				continue
+			
 			else:
+				# this group is less important, skip it
 				continue
 		
+		# add or update filedict
 		filedict[entry.dest_path] = entry
 
 
