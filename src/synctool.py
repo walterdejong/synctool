@@ -961,6 +961,7 @@ def single_files(filename):
 	changed = compare_files(src, dest)
 	if not changed:
 		stdout('%s is up to date' % filename)
+		terse(synctool_lib.TERSE_OK, filename)
 		unix_out('# %s is up to date\n' % dest)
 	
 	return (changed, src)

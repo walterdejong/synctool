@@ -56,11 +56,12 @@ TERSE_NEW = 12
 TERSE_TYPE = 13
 TERSE_DRYRUN = 14
 TERSE_FIXING = 15
+TERSE_OK = 16
 
 TERSE_TXT = (
 	'info', 'WARN', 'ERROR', 'FAIL',
 	'sync', 'link', 'mkdir', 'rm', 'chown', 'chmod', 'exec',
-	'upload', 'new', 'type', 'DRYRUN', 'FIXING'
+	'upload', 'new', 'type', 'DRYRUN', 'FIXING', 'OK'
 )
 
 COLORMAP = {

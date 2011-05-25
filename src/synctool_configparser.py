@@ -437,6 +437,11 @@ def config_color_fixing(arr, configfile, lineno):
 	return _config_color_variant('color_fixing', arr[1], configfile, lineno)
 
 
+# keyword: config_color_ok
+def config_color_ok(arr, configfile, lineno):
+	return _config_color_variant('color_ok', arr[1], configfile, lineno)
+
+
 # keyword: group
 def config_group(arr, configfile, lineno):
 	if len(arr) < 3:

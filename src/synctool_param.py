@@ -92,6 +92,7 @@ TERSE_COLORS = {
 	'type'   : 'magenta',
 	'dryrun' : 'default',
 	'fixing' : 'default',
+	'ok'     : 'default',
 }
 
 # EOB
