@@ -231,7 +231,8 @@ def overlay_pass2(filelist, filedict):
 				else:
 					stderr('error: duplicate source paths in repository for:\n'
 						'error: %s\n'
-						'error: %s\n' % (entry.src_path, entry2.src_path)
+						'error: %s\n' % (synctool_lib.prettypath(entry.src_path),
+							synctool_lib.prettypath(entry2.src_path))
 					)
 				
 				continue
