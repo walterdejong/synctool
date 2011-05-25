@@ -1183,7 +1183,6 @@ def get_options():
 				continue
 			
 			if opt in ('-F', '--fullpath'):
-				synctool_param.TERSE = False
 				synctool_param.FULL_PATH = True
 				continue
 	
@@ -1203,7 +1202,7 @@ def get_options():
 	opt_fix = False
 	
 	for opt, arg in opts:
-		if opt in ('-h', '--help', '-?', '-c', '--conf', '-T', '--terse', '-f', '--fullpath', '--version'):
+		if opt in ('-h', '--help', '-?', '-c', '--conf', '-T', '--terse', '-F', '--fullpath', '--version'):
 			# already done
 			continue
 		
