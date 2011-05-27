@@ -484,8 +484,8 @@ if __name__ == '__main__':
 		# normally you wouldn't use this ... it's just for debugging the group number
 		print 'grp', obj.groupnum
 		
-		print 'src ', obj.src_path
-		print 'dest', obj.dest_path
+		print 'src ', obj.print_src()
+		print 'dest', obj.print_dest()
 		
 		# check for .post script
 		postscript = postscript_for_path(obj.src_path, obj.dest_path)

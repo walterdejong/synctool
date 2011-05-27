@@ -9,15 +9,20 @@
 #
 
 import synctool_stat
+import synctool_lib
+import synctool_param
 
 
 class SyncObject:
 	'''a structure holding the source path (file in the repository)
 	and the destination path (target file on the system).
-	The group number denotes the importance of the group'''
+	The group number denotes the importance of the group.
+	The SyncObject caches any stat info'''
 	
 	# groupnum is really the index of the file's group in MY_GROUPS[]
 	# a lower groupnum is more important; negative is invalid/irrelevant group
+	
+	# stat info is cached so you don't have to call os.stat() all the time
 	
 	# POST_SCRIPTS uses the same SyncObject class, but interprets src_path
 	# as the path of the .post script and dest_path as the destination directory
@@ -35,6 +40,14 @@ class SyncObject:
 	
 	def __repr__(self):
 		return '[<SyncObject>: (%s) (%s)]' % (self.src_path, self.dest_path)
+	
+	
+	def print_src(self):
+		return synctool_lib.prettypath(self.src_path)
+	
+	
+	def print_dest(self):
+		return synctool_lib.prettypath(self.dest_path)
 	
 	
 	def src_stat(self):

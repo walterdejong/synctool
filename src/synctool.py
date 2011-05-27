@@ -888,7 +888,7 @@ def run_post_on_directories():
 def overlay_callback(obj):
 	'''compare files and run post-script if needed'''
 	
-	verbose('checking %s' % synctool_lib.prettypath(obj.src_path))
+	verbose('checking %s' % obj.print_src())
 	
 	if compare_files(obj.src_path, obj.dest_path):
 		run_post(obj.src_path, obj.dest_path)
@@ -912,12 +912,9 @@ def delete_callback(obj):
 		else:
 			not_str = ''
 		
-		src = obj.src_path
-		dest = obj.dest_path
-		
-		stdout('%sdeleting %s : %s' % (not_str, synctool_lib.prettypath(src), dest))
-		hard_delete_file(dest)
-		run_post(src, dest)
+		stdout('%sdeleting %s : %s' % (not_str, obj.print_src(), obj.print_dest()))
+		hard_delete_file(obj.dest_path)
+		run_post(obj.src_path, obj.dest_path)
 
 
 def delete_files():
