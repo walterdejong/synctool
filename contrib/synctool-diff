@@ -10,6 +10,7 @@
 # 2010-11-18 - will start meld even if files are equal - Onno
 # 2011-03-21 - pointed to default location of synctool.conf - Onno
 # 2011-05-13 - scp can't copy files if root has no access, fixing with rsync - Onno
+# 2011-05-27 - improved regex - Onno
 
 SYNCTOOL_CONF=/var/lib/synctool/synctool.conf
 
@@ -45,7 +46,7 @@ function process_parm() {
     NODE[I]="${PARM%:*}"
     FILE[I]="${PARM#*:}"
 
-    INTERFACE[I]=`grep -e "^node\s*${NODE[I]}\s" $SYNCTOOL_CONF \
+    INTERFACE[I]=`grep -e "^node[[:space:]]*${NODE[I]}[[:space:]]" $SYNCTOOL_CONF \
                 | grep -o 'interface:.*' \
                 | sed 's/interface://'`
     if [ -z "${INTERFACE[I]}" ] ; then
