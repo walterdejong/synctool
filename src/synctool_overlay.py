@@ -8,9 +8,11 @@
 #   License.
 #
 
-import synctool_param
-import synctool_lib
 import synctool
+import synctool_lib
+import synctool_param
+import synctool_object
+import synctool_stat
 
 from synctool_lib import stderr, terse
 
@@ -41,28 +43,6 @@ DELETE_LOADED = False
 TASKS_DICT = {}
 TASKS_FILES = []
 TASKS_LOADED = False
-
-
-class OverlayEntry:
-	'''a structure holding the source path (file in the repository)
-	and the destination path (target file on the system).
-	The group number denotes the importance of the group'''
-	
-	# groupnum is really the index of the file's group in MY_GROUPS[]
-	# a lower groupnum is more important; negative is invalid/irrelevant group
-	
-	# POST_SCRIPTS uses the same OverlayEntry class, but interprets src_path
-	# as the path of the .post script and dest_path as the destination directory
-	# where the script is to be run
-	
-	def __init__(self, src, dest, groupnum, isdir=False):
-		self.src_path = src
-		self.dest_path = dest
-		self.groupnum = groupnum
-		self.isdir = isdir
-	
-	def __repr__(self):
-		return '[<OverlayEntry> %d (%s) (%s) %s]' % (self.groupnum, self.src_path, self.dest_path, self.isdir)
 
 
 def split_extension(entryname, requireExtension):
@@ -142,14 +122,15 @@ def ov_perror(errorcode, src_path):
 def overlay_pass1(overlay_dir, filelist, dest_dir = '/', 
 	highest_groupnum = sys.maxint, handle_postscripts = True):
 	'''do pass #1 of 2; create list of source and dest files
-	Each element in the list is an instance of OverlayEntry'''
+	Each element in the list is an instance of SyncObject'''
 	
 	global POST_SCRIPTS
 	
 	for entry in os.listdir(overlay_dir):
 		src_path = os.path.join(overlay_dir, entry)
-
-		if synctool.path_isdir(src_path):
+		src_statbuf = synctool_stat.SyncStat(src_path)
+		
+		if src_statbuf.isDir():
 			if synctool_param.IGNORE_DOTDIRS and entry[0] == '.':
 				continue
 			
@@ -181,6 +162,10 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 		
 		if isPost:
 			if handle_postscripts:
+				if not src_statbuf.isExec():
+					stderr('warning: .post script %s is not executable, ignored' % synctool_lib.prettypath(src_path))
+					continue
+				
 				# register .post script
 				# trigger is the source file that would trigger the .post script to run
 				trigger = os.path.join(overlay_dir, name)
@@ -189,7 +174,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 					if groupnum >= POST_SCRIPTS[trigger].groupnum:
 						continue
 				
-				POST_SCRIPTS[trigger] = OverlayEntry(src_path, dest_dir, groupnum)
+				POST_SCRIPTS[trigger] = synctool_object.SyncObject(src_path, dest_dir, groupnum, src_statbuf)
 			else:
 				# unfortunately, the name has been messed up already
 				# so therefore just ignore the file and issue a warning
@@ -202,8 +187,8 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 		
 		dest_path = os.path.join(dest_dir, name)
 		
-		filelist.append(OverlayEntry(src_path, dest_path, groupnum, isDir))
-
+		filelist.append(synctool_object.SyncObject(src_path, dest_path, groupnum, src_statbuf))
+		
 		if isDir:
 			# recurse into subdir
 			overlay_pass1(src_path, filelist, dest_path, groupnum, handle_postscripts)
@@ -223,7 +208,9 @@ def overlay_pass2(filelist, filedict):
 				entry2 = None
 			
 			# duplicate paths are a problem, unless they are directories ...
-			elif (not (entry.isdir and entry2.isdir)) and entry.groupnum == entry2.groupnum:
+			elif (not (entry.src_isDir() and entry2.src_isDir())) \
+				and entry.groupnum == entry2.groupnum:
+				
 				if synctool_param.TERSE:
 					synctool_lib.terse(synctool_lib.TERSE_ERROR, 'duplicate source paths in repository for:')
 					synctool_lib.terse(synctool_lib.TERSE_ERROR, entry.src_path)
@@ -484,7 +471,7 @@ if __name__ == '__main__':
 	
 	import synctool_config
 	
-	synctool_param.CONF_FILE = '../../synctool-test/synctool.conf'
+	synctool_param.CONF_FILE = '/Users/walter/synctool-test/synctool.conf'
 	synctool_config.read_config()
 	synctool_param.MY_GROUPS = ['node1', 'group1', 'group2', 'all']
 	synctool_param.ALL_GROUPS = synctool_config.make_all_groups()
