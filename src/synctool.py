@@ -883,13 +883,13 @@ def run_post_on_directories():
 	DIR_CHANGED = {}
 
 
-def overlay_callback(src, dest):
+def overlay_callback(obj):
 	'''compare files and run post-script if needed'''
 	
-	verbose('checking %s' % synctool_lib.prettypath(src))
+	verbose('checking %s' % synctool_lib.prettypath(obj.src_path))
 	
-	if compare_files(src, dest):
-		run_post(src, dest)
+	if compare_files(obj.src_path, obj.dest_path):
+		run_post(obj.src_path, obj.dest_path)
 
 
 def overlay_files():
@@ -898,17 +898,20 @@ def overlay_files():
 	synctool_overlay.visit(synctool_overlay.OV_OVERLAY, overlay_callback)
 
 
-def delete_callback(src, dest):
+def delete_callback(obj):
 	'''delete files'''
 	
-	if path_isdir(dest):			# do not delete directories
+	if obj.dest_isDir():		# do not delete directories
 		return
 	
-	if path_exists(dest):
+	if obj.dest_exists():
 		if synctool_lib.DRY_RUN:
 			not_str = 'not '
 		else:
 			not_str = ''
+		
+		src = obj.src_path
+		dest = obj.dest_path
 		
 		stdout('%sdeleting %s : %s' % (not_str, synctool_lib.prettypath(src), dest))
 		hard_delete_file(dest)
@@ -919,11 +922,11 @@ def delete_files():
 	synctool_overlay.visit(synctool_overlay.OV_DELETE, delete_callback)
 
 
-def tasks_callback(src, dest):
+def tasks_callback(obj):
 	'''run tasks'''
 	
-	if not os.path.isdir(src):
-		run_command(src)
+	if not obj.src_isDir():
+		run_command(obj.src_path)
 		unix_out('')
 
 

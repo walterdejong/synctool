@@ -457,13 +457,17 @@ def find_terse(treedef, terse_path):
 
 def visit(treedef, callback):
 	'''call the callback function on every entry in the tree
-	callback will called with two arguments: src_path, dest_path'''
+	callback will called with one argument: the SyncObject'''
 	
 	(dict, filelist) = select_tree(treedef)
 	
 	# now call the callback function
+	#
+	# note that the order is important, so do not use
+	# "for obj in dict: callback(obj)"
+	#
 	for dest_path in filelist:
-		callback(dict[dest_path].src_path, dest_path)
+		callback(dict[dest_path])
 
 
 if __name__ == '__main__':
@@ -476,17 +480,15 @@ if __name__ == '__main__':
 	synctool_param.MY_GROUPS = ['node1', 'group1', 'group2', 'all']
 	synctool_param.ALL_GROUPS = synctool_config.make_all_groups()
 	
-	def visit_callback(src, dest):
-		print 'dest', dest
-		
+	def visit_callback(obj):
 		# normally you wouldn't use this ... it's just for debugging the group number
-		direntry = OVERLAY_DICT[dest]
-		print 'grp', direntry.groupnum
+		print 'grp', obj.groupnum
 		
-		print 'src ', src
+		print 'src ', obj.src_path
+		print 'dest', obj.dest_path
 		
 		# check for .post script
-		postscript = postscript_for_path(src, dest)
+		postscript = postscript_for_path(obj.src_path, obj.dest_path)
 		if postscript:
 			print 'post %s' % postscript
 	
