@@ -11,6 +11,7 @@
 import os
 import stat
 import pwd
+import grp
 
 
 class SyncStat:

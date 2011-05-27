@@ -30,6 +30,11 @@ OV_NOT_MY_GROUP = -1
 OV_NO_GROUP_EXT = -2
 OV_UNKNOWN_GROUP = -3
 
+# error codes for find() and find_terse()
+OV_FOUND = 0
+OV_NOT_FOUND = 1
+OV_FOUND_MULTIPLE = 2
+
 GROUP_ALL = 0
 OVERLAY_DICT = {}
 OVERLAY_FILES = []		# sorted list, index to OVERLAY_DICT{}
@@ -379,22 +384,22 @@ def select_tree(treedef):
 
 def find(treedef, dest_path):
 	'''find the source for a full destination path
-	Return value is a tuple: (src, dest)
-	Return value is (None, dest) if source does not exist'''
+	Return value is a tuple: (SyncObject, OV_FOUND)
+	Return value is (None, OV_NOT_FOUND) if source does not exist'''
 	
 	(dict, filelist) = select_tree(treedef)
 	
 	if not dict.has_key(dest_path):
-		return (None, dest_path)
+		return (None, OV_NOT_FOUND)
 	
-	return (dict[dest_path].src_path, dest_path)
+	return (dict[dest_path], OV_FOUND)
 
 
 def find_terse(treedef, terse_path):
 	'''find the full source and dest paths for a terse destination path
-	Return value is a tuple (src_path, dest_path)
-	Return value is (None, dest_path) if source does not exist
-	Return value is (None, None) if there are multiple sources possible'''
+	Return value is a tuple (SyncObject, OV_FOUND)
+	Return value is (None, OV_NOT_FOUND) if source does not exist
+	Return value is (None, OV_FOUND_MULTIPLE) if multiple sources are possible'''
 	
 	(dict, filelist) = select_tree(treedef)
 	
@@ -438,7 +443,7 @@ def find_terse(treedef, terse_path):
 				matches.append(overlay_entry)
 	
 	if not matches:
-		return (None, terse_path)
+		return (None, OV_NOT_FOUND)
 	
 	if len(matches) > 1:
 		stderr('There are multiple possible sources for this terse path. Pick one:')
@@ -448,11 +453,11 @@ def find_terse(treedef, terse_path):
 			stderr('%2d. %s' % (n, overlay_entry.dest_path))
 			n = n + 1
 		
-		return (None, None)
+		return (None, OV_FOUND_MULTIPLE)
 	
 	# good, there was only one match
 	
-	return (matches[0].src_path, matches[0].dest_path)
+	return (matches[0], OV_FOUND)
 
 
 def visit(treedef, callback):

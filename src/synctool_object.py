@@ -132,7 +132,6 @@ class SyncObject:
 	def dest_ascii_gid(self):
 		self.dest_stat()
 		return self.dest_statbuf.ascii_gid()
-	
 
 
 # EOB
