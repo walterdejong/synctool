@@ -246,11 +246,12 @@ def path_isexec(path):
 	return False
 
 
-def compare_files(src_path, dest_path):
-	'''see what the differences are between src and dest, and fix it if not a dry run
+def compare_files(obj):
+	'''see what the differences are for this SyncObject, and fix it
+	if not a dry run
 	
-	src_path is the file in the synctool/overlay tree
-	dest_path is the file in the system
+	obj.src_path is the file in the synctool/overlay tree
+	obj.dest_path is the file in the system
 	
 	need_update is a local boolean saying if a path needs to be updated
 	
@@ -292,12 +293,17 @@ def compare_files(src_path, dest_path):
 		return False
 '''
 	
-	src_stat = stat_path(src_path)
+	src_path = obj.src_path
+	dest_path = obj.dest_path
+	
+	obj.src_stat()
+	src_stat = obj.src_statbuf
 	if not src_stat:
 		return False
 	
-	dest_stat = stat_path(dest_path)
-#	if not dest_path:
+	obj.dest_stat()
+	dest_stat = obj.dest_statbuf
+#	if not dest_stat:
 #		pass					# destination does not exist
 	
 	need_update = False
@@ -305,7 +311,7 @@ def compare_files(src_path, dest_path):
 	#
 	# if source is a symbolic link ...
 	#
-	if stat_islink(src_stat):
+	if src_stat.isLink():
 		need_update = False
 		try:
 			src_link = os.readlink(src_path)
@@ -314,13 +320,13 @@ def compare_files(src_path, dest_path):
 			terse(synctool_lib.TERSE_FAIL, 'readlink %s' % src_path)
 			return False
 		
-		if not stat_exists(dest_stat):
+		if not dest_stat.exists():
 			stdout('symbolic link %s does not exist' % dest_path)
 			terse(synctool_lib.TERSE_LINK, dest_path)
 			unix_out('# create symbolic link %s' % dest_path)
 			need_update = True
 		
-		elif stat_islink(dest_stat):
+		elif dest_stat.isLink():
 			try:
 				dest_link = os.readlink(dest_path)
 			except OSError, reason:
@@ -335,13 +341,13 @@ def compare_files(src_path, dest_path):
 				delete_file(dest_path)
 				need_update = True
 			
-			if (dest_stat[stat.ST_MODE] & 07777) != synctool_param.SYMLINK_MODE:
-				stdout('%s should have mode %04o (symlink), but has %04o' % (dest_path, synctool_param.SYMLINK_MODE, dest_stat[stat.ST_MODE] & 07777))
+			if (dest_stat.mode & 07777) != synctool_param.SYMLINK_MODE:
+				stdout('%s should have mode %04o (symlink), but has %04o' % (dest_path, synctool_param.SYMLINK_MODE, dest_stat.mode & 07777))
 				terse(synctool_lib.TERSE_MODE, '%04o %s' % (synctool_param.SYMLINK_MODE, dest_path))
 				unix_out('# fix permissions of symbolic link %s' % dest_path)
 				need_update = True
 		
-		elif stat_isdir(dest_stat):
+		elif dest_stat.isDir():
 			stdout('%s should be a symbolic link' % dest_path)
 			terse(synctool_lib.TERSE_LINK, dest_path)
 			unix_out('# target should be a symbolic link')
@@ -369,14 +375,14 @@ def compare_files(src_path, dest_path):
 	#
 	# if the source is a directory ...
 	#
-	elif stat_isdir(src_stat):
-		if not stat_exists(dest_stat):
+	elif src_stat.isDir():
+		if not dest_stat.exists():
 			stdout('%s/ does not exist' % dest_path)
 			terse(synctool_lib.TERSE_MKDIR, dest_path)
 			unix_out('# make directory %s' % dest_path)
 			need_update = True
 		
-		elif stat_islink(dest_stat):
+		elif dest_stat.isLink():
 			stdout('%s is a symbolic link, but should be a directory' % dest_path)
 			terse(synctool_lib.TERSE_MKDIR, dest_path)
 			unix_out('# target should be a directory instead of a symbolic link')
@@ -386,7 +392,7 @@ def compare_files(src_path, dest_path):
 		#
 		# treat as a regular file
 		#
-		elif not stat_isdir(dest_stat):
+		elif not dest_stat.isDir():
 			stdout('%s should be a directory' % dest_path)
 			terse(synctool_lib.TERSE_MKDIR, dest_path)
 			unix_out('# target should be a directory')
@@ -398,29 +404,29 @@ def compare_files(src_path, dest_path):
 		#
 		if need_update:
 			make_dir(dest_path)
-			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
-			set_permissions(dest_path, src_stat[stat.ST_MODE])
+			set_owner(dest_path, src_stat.uid, src_stat.gid)
+			set_permissions(dest_path, src_stat.mode)
 			unix_out('')
 			return True
 	
 	#
 	# if source is a file ...
 	#
-	elif stat_isfile(src_stat):
-		if not stat_exists(dest_stat):
+	elif src_stat.isFile():
+		if not dest_stat.exists():
 			stdout('%s does not exist' % dest_path)
 			terse(synctool_lib.TERSE_NEW, dest_path)
 			unix_out('# copy file %s' % dest_path)
 			need_update = True
 		
-		elif stat_islink(dest_stat):
+		elif dest_stat.isLink():
 			stdout('%s is a symbolic link, but should not be' % dest_path)
 			terse(synctool_lib.TERSE_TYPE, dest_path)
 			unix_out('# target should be a file instead of a symbolic link')
 			delete_file(dest_path)
 			need_update = True
 		
-		elif stat_isdir(dest_stat):
+		elif dest_stat.isDir():
 			stdout('%s is a directory, but should not be' % dest_path)
 			terse(synctool_lib.TERSE_TYPE, dest_path)
 			unix_out('# target should be a file instead of a directory')
@@ -430,8 +436,8 @@ def compare_files(src_path, dest_path):
 		#
 		# check file size
 		#
-		elif stat_isfile(dest_stat):
-			if src_stat[stat.ST_SIZE] != dest_stat[stat.ST_SIZE]:
+		elif dest_stat.isFile():
+			if src_stat.size != dest_stat.size:
 				if synctool_lib.DRY_RUN:
 					stdout('%s mismatch (file size)' % dest_path)
 				else:
@@ -469,8 +475,8 @@ def compare_files(src_path, dest_path):
 		
 		if need_update:
 			copy_file(src_path, dest_path)
-			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
-			set_permissions(dest_path, src_stat[stat.ST_MODE])
+			set_owner(dest_path, src_stat.uid, src_stat.gid)
+			set_permissions(dest_path, src_stat.mode)
 			unix_out('')
 			return True
 	
@@ -481,18 +487,18 @@ def compare_files(src_path, dest_path):
 		stderr("be advised: don't know how to handle %s" % src_path)
 		terse(synctool_lib.TERSE_WARNING, 'unknown type %s' % src_path)
 		
-		if not stat_exists(dest_stat):
+		if not dest_stat.exists():
 			return False
 		
-		if stat_islink(dest_stat):
+		if dest_stat.isLink():
 			stdout('%s should not be a symbolic link' % dest_path)
 			terse(synctool_lib.TERSE_WARNING, 'wrong type %s' % dest_path)
 		else:
-			if stat_isdir(dest_stat):
+			if dest_stat.isDir():
 				stdout('%s should not be a directory' % dest_path)
 				terse(synctool_lib.TERSE_WARNING, 'wrong type %s' % dest_path)
 			else:
-				if stat_isfile(dest_stat):
+				if dest_stat.isFile():
 					stdout('%s should not be a regular file' % dest_path)
 					terse(synctool_lib.TERSE_WARNING, 'wrong type %s' % dest_path)
 				else:
@@ -507,25 +513,29 @@ def compare_files(src_path, dest_path):
 	# python lacks an os.lchmod() and os.lchown() as they are not portable
 	# anyway, symbolic links have been dealt with already ...
 	#
-	if stat_exists(dest_stat) and not stat_islink(dest_stat):
-		if src_stat[stat.ST_UID] != dest_stat[stat.ST_UID] or src_stat[stat.ST_GID] != dest_stat[stat.ST_GID]:
-			owner = ascii_uid(src_stat[stat.ST_UID])
-			group = ascii_gid(src_stat[stat.ST_GID])
-			stdout('%s should have owner %s.%s (%d.%d), but has %s.%s (%d.%d)' % (dest_path, owner, group, src_stat[stat.ST_UID], src_stat[stat.ST_GID], ascii_uid(dest_stat[stat.ST_UID]), ascii_gid(dest_stat[stat.ST_GID]), dest_stat[stat.ST_UID], dest_stat[stat.ST_GID]))
+	if dest_stat.exists() and not dest_stat.isLink():
+		if src_stat.uid != dest_stat.uid or src_stat.gid != dest_stat.gid:
+			owner = src_stat.ascii_uid()
+			group = src_stat.ascii_gid()
+			stdout('%s should have owner %s.%s (%d.%d), but has %s.%s (%d.%d)' % (dest_path, owner, group,
+				src_stat.uid, src_stat.gid,
+				dest_stat.ascii_uid(), dest_stat.ascii_gid(),
+				dest_stat.uid, dest_stat.gid))
+			
 			terse(synctool_lib.TERSE_OWNER, '%s.%s %s' % (owner, group, dest_path))
 			unix_out('# changing ownership on %s' % dest_path)
 			
-			set_owner(dest_path, src_stat[stat.ST_UID], src_stat[stat.ST_GID])
+			set_owner(dest_path, src_stat.uid, src_stat.gid)
 			
 			unix_out('')
 			need_update = True
 		
-		if (src_stat[stat.ST_MODE] & 07777) != (dest_stat[stat.ST_MODE] & 07777):
-			stdout('%s should have mode %04o, but has %04o' % (dest_path, src_stat[stat.ST_MODE] & 07777, dest_stat[stat.ST_MODE] & 07777))
-			terse(synctool_lib.TERSE_MODE, '%04o %s' % (src_stat[stat.ST_MODE] & 07777, dest_path))
+		if (src_stat.mode & 07777) != (dest_stat.mode & 07777):
+			stdout('%s should have mode %04o, but has %04o' % (dest_path, src_stat.mode & 07777, dest_stat.mode & 07777))
+			terse(synctool_lib.TERSE_MODE, '%04o %s' % (src_stat.mode & 07777, dest_path))
 			unix_out('# changing permissions on %s' % dest_path)
 			
-			set_permissions(dest_path, src_stat[stat.ST_MODE])
+			set_permissions(dest_path, src_stat.mode)
 			
 			unix_out('')
 			need_update = True
@@ -890,7 +900,7 @@ def overlay_callback(obj):
 	
 	verbose('checking %s' % obj.print_src())
 	
-	if compare_files(obj.src_path, obj.dest_path):
+	if compare_files(obj):
 		run_post(obj.src_path, obj.dest_path)
 
 
@@ -949,25 +959,25 @@ def single_files(filename):
 		stderr('missing filename')
 		return (False, None)
 	
-	(src, dest) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, filename)
-	if not dest:
+	(obj, err) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, filename)
+	if err == synctool_overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
 		sys.exit(1)
 	
-	if not src:
+	if err == synctool_overlay.OV_NOT_FOUND:
 		stderr('%s is not in the overlay tree' % filename)
 		return (False, None)
 	
-	verbose('checking against %s' % synctool_lib.prettypath(src))
+	verbose('checking against %s' % obj.print_src())
 	
-	changed = compare_files(src, dest)
+	changed = compare_files(obj)
 	if not changed:
 		stdout('%s is up to date' % filename)
 		terse(synctool_lib.TERSE_OK, filename)
-		unix_out('# %s is up to date\n' % dest)
+		unix_out('# %s is up to date\n' % obj.print_dest())
 	
-	return (changed, src)
+	return (changed, obj.src_path)
 
 
 def single_task(filename):
@@ -981,17 +991,17 @@ def single_task(filename):
 	if task_script[0] != '/':				# trick to make find() work for tasks, too
 		task_script = '/' + task_script
 	
-	(src, dest) = synctool_overlay.find_terse(synctool_overlay.OV_TASKS, task_script)
-	if not dest:
+	(obj, err) = synctool_overlay.find_terse(synctool_overlay.OV_TASKS, task_script)
+	if err == synctool_overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
 		sys.exit(1)
 	
-	if not src:
+	if err == synctool_overlay.OV_NOT_FOUND:
 		stderr("no such task '%s'" % filename)
 		return
 	
-	run_command(src)
+	run_command(obj.src_path)
 	unix_out('')
 
 
@@ -1002,20 +1012,17 @@ def reference(filename):
 		stderr('missing filename')
 		return
 	
-	(src, dest) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, filename)
-	if not dest:
+	(obj, err) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, filename)
+	if err == synctool_overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
 		sys.exit(1)
 	
-	if not src:
+	if err == synctool_overlay.OV_NOT_FOUND:
 		stderr('%s is not in the overlay tree' % filename)
 		return
 	
-	stdout(synctool_lib.prettypath(src))
-	
-	if synctool_param.TERSE:
-		print synctool_lib.terse_path(src)
+	print obj.print_src()
 
 
 def diff_files(filename):
@@ -1027,19 +1034,19 @@ def diff_files(filename):
 	
 	synctool_lib.DRY_RUN = True						# be sure that it doesn't do any updates
 	
-	(sync_path, dest) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, filename)
-	if not dest:
+	(obj, err) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, filename)
+	if err == synctool_overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
 		sys.exit(1)
 	
-	if not sync_path:
+	if err == synctool_overlay.OV_NOT_FOUND:
 		return
 	
 	if synctool_lib.UNIX_CMD:
-		unix_out('%s %s %s' % (synctool_param.DIFF_CMD, dest, sync_path))
+		unix_out('%s %s %s' % (synctool_param.DIFF_CMD, dest, obj.src_path))
 	else:
-		verbose('%s %s %s' % (synctool_param.DIFF_CMD, dest, synctool_lib.prettypath(sync_path)))
+		verbose('%s %s %s' % (synctool_param.DIFF_CMD, dest, obj.print_src()))
 		
 		sys.stdout.flush()
 		sys.stderr.flush()
@@ -1047,10 +1054,10 @@ def diff_files(filename):
 		if use_subprocess:
 			cmd_arr = shlex.split(synctool_param.DIFF_CMD)
 			cmd_arr.append(dest)
-			cmd_arr.append(sync_path)
+			cmd_arr.append(obj.src_path)
 			subprocess.Popen(cmd_arr, shell=False)
 		else:
-			os.system('%s %s %s' % (synctool_param.DIFF_CMD, dest, sync_path))
+			os.system('%s %s %s' % (synctool_param.DIFF_CMD, dest, obj.src_path))
 		
 		sys.stdout.flush()
 		sys.stderr.flush()

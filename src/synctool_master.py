@@ -159,14 +159,14 @@ def upload(interface, upload_filename, upload_suffix=None):
 	synctool_param.MY_GROUPS = synctool_config.get_my_groups()
 	
 	# see if file is already in the repository
-	(repos_filename, dest) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, upload_filename)
+	(obj, err) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, upload_filename)
 	
-	if not dest:
+	if err == synctool_overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
 		sys.exit(1)
 	
-	if not repos_filename:
+	if err == synctool_overlay.OV_NOT_FOUND:
 		# no source path found
 		if string.find(upload_filename, '...') >= 0:
 			stderr("%s is not in the repository, don't know what to map this path to\n"
@@ -186,7 +186,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 	else:
 		if upload_suffix:
 			# remove the current group suffix an add the specified suffix to the filename
-			arr = string.split(repos_filename, '.')
+			arr = string.split(obj.src_path, '.')
 			if len(arr) > 1 and arr[-1][0] == '_':
 				repos_filename = string.join(arr[:-1], '.')
 			
