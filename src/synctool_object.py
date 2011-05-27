@@ -14,7 +14,7 @@ import synctool_param
 
 
 class SyncObject:
-	'''a structure holding the source path (file in the repository)
+	'''a class holding the source path (file in the repository)
 	and the destination path (target file on the system).
 	The group number denotes the importance of the group.
 	The SyncObject caches any stat info'''
