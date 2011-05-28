@@ -1201,6 +1201,8 @@ The <span class="system">ipaddress</span> specifier tells synctool how to
 contact the node. This is optional; when omitted, synctool assumes the
 nodename can be found in DNS. Note that synctool nodenames need not be same
 as DNS names. In older versions of synctool, the
+<span class="system">node</span> keyword was named
+<span class="system">host</span>, and the
 <span class="system">ipaddress</span> specifier was named
 <span class="system">interface</span>.<br />
 Example:
@@ -1217,6 +1219,20 @@ node node7 wn       rack1 ipaddress:node7-mgmt
 node node8 test     rack1 ipaddress:node8-mgmt
 node node9 batch    rack1 ipaddress:node9-mgmt
 </pre>
+</dd>
+
+<dt>ignore_node &lt;nodename&gt; [..]</dt>
+<dd>This tells synctool to ignore one or more nodes. You can use this if you
+want to skip this node for a while for some reason, for example because it
+is broken.<br />
+In older versions of synctool, <span class="system">ignore_node</span>
+was named <span class="system">ignore_host</span>.
+</dd>
+
+<dt>ignore_group &lt;group&gt; [..]</dt>
+<dd>This tells synctool to ignore one or more groups. You can use this to
+temporarily disable the group. This can be particularly useful when doing
+software upgrades.
 </dd>
 
 

@@ -115,9 +115,8 @@ node node7 wn       ipaddress:node7-mgmt
 node node8 test     ipaddress:node8-mgmt
 node node9 batch    ipaddress:node9-mgmt
 
-# ignore a specific node
-ignore_node node0
-ignore_node node9 any arguments here are ignored: this node is broken
+# ignore one or more nodes
+ignore_node node0 node9
 
 # ignore a number of groups
 ignore_group test test2
