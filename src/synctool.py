@@ -472,7 +472,7 @@ def compare_files(obj):
 			need_update = True
 		
 		if need_update:
-			copy_file(src_path, dest_path)
+			copy_file(obj)
 			set_owner(dest_path, src_stat.uid, src_stat.gid)
 			set_permissions(dest_path, src_stat.mode)
 			unix_out('')
@@ -547,8 +547,11 @@ def compare_files(obj):
 	return need_update
 
 
-def copy_file(src, dest):
-	if path_isfile(dest):
+def copy_file(obj):
+	src = obj.src_path
+	dest = obj.dest_path
+	
+	if obj.dest_isFile():
 		unix_out('cp %s %s.saved' % (dest, dest))
 	
 	unix_out('umask 077')
@@ -558,7 +561,7 @@ def copy_file(src, dest):
 		old_umask = os.umask(077)
 		
 		if synctool_param.BACKUP_COPIES:
-			if path_isfile(dest):
+			if obj.dest_isFile():
 				verbose('  saving %s as %s.saved' % (dest, dest))
 				try:
 					shutil.copy2(dest, '%s.saved' % dest)
@@ -569,11 +572,11 @@ def copy_file(src, dest):
 		try:
 			shutil.copy2(src, dest)			# copy file and stats
 		except:
-			stderr('failed to copy %s to %s' % (src, dest))
+			stderr('failed to copy %s to %s' % (obj.print_src(), dest))
 		
 		os.umask(old_umask)
 	else:
-		if path_isfile(dest) and synctool_param.BACKUP_COPIES:
+		if obj.dest_isFile() and synctool_param.BACKUP_COPIES:
 			verbose('  saving %s as %s.saved' % (dest, dest))
 		
 		verbose(dryrun_msg('  cp %s %s' % (src, dest)))
