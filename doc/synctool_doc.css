@@ -25,12 +25,12 @@ table, caption, tbody, tfoot, thead, tr, th, td {
 	vertical-align: baseline;
 }
 
-body {
+html,body {
 	margin: 0;
 	padding: 0;
 	height: 100%;
 	background-color: #eee;
-	font-color: #000;
+	color: #000;
 	font-family: georgia, times, serif;
 }
 
@@ -111,11 +111,11 @@ div#page {
     width: 80%;
     
 	height: auto !important;	/* real browsers */
-	height: 100%;				/* IE6: treaded as min-height*/
+	height: 100%;				/* IE6: treated as min-height*/
 	min-height: 100%;			/* real browsers */
 	
-    margin: 1em auto 1em auto;
-	padding: 1em;
+	margin: 0 auto;
+	padding: 0;
 	background-color: #fff;
 }
 
@@ -140,18 +140,6 @@ div#footer {
 	width: 100%;
 	bottom: 0;				/* stick to bottom */
 	border-top: dashed 3px #eee;
-}
-
-.center {
-	width: 50%;
-	margin-left: auto;
-	margin-right: auto;
-	text-align: center;
-}
-
-.chapter {
-	width: 80%;
-	text-align: justify;
 }
 
 .example {
