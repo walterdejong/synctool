@@ -579,7 +579,10 @@ def symlink_file(oldpath, newpath):
 	# matching ownerships of symbolic links is not yet implemented
 	#
 
-	unix_out('umask 022')
+	# linux makes all symlinks mode 0777, but some other platforms do not
+	umask_mode = synctool_param.symlink_mode ^ 0777
+
+	unix_out('umask %03o' % umask_mode)
 	unix_out('ln -s %s %s' % (oldpath, newpath))
 
 	if not synctool_lib.DRY_RUN:
@@ -591,7 +594,7 @@ def symlink_file(oldpath, newpath):
 				stderr('failed to save %s as %s.saved : %s' % (newpath, newpath, reason))
 				terse(synctool_lib.TERSE_FAIL, 'save %s.saved' % newpath)
 
-		old_umask = os.umask(022)		# we want symlinks to have mode 0755, but linux makes them 0777 anyway
+		old_umask = os.umask(umask_mode)
 
 		verbose('  os.symlink(%s, %s)' % (oldpath, newpath))
 		try:
