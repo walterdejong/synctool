@@ -368,7 +368,7 @@ def compare_files(obj):
 		# (re)create the symbolic link
 		#
 		if need_update:
-			symlink_file(src_link, dest_path)
+			symlink_file(obj, src_link)
 			unix_out('')
 			return True
 	
@@ -584,42 +584,45 @@ def copy_file(obj):
 		verbose(dryrun_msg('  cp %s %s' % (src, dest)))
 
 
-def symlink_file(oldpath, newpath):
-	if path_exists(newpath):
+def symlink_file(obj, oldpath):
+	# note that old_path is the readlink() of the obj.src_path
+	new_path = obj.dest_path
+	
+	if obj.dest_exists():
 		unix_out('mv %s %s.saved' % (newpath, newpath))
-
+	
 	#
 	# actually, if we want the ownership of the symlink to be correct,
 	# we should do setuid() here
 	# matching ownerships of symbolic links is not yet implemented
 	#
-
+	
 	# linux makes all symlinks mode 0777, but some other platforms do not
 	umask_mode = synctool_param.symlink_mode ^ 0777
-
+	
 	unix_out('umask %03o' % umask_mode)
 	unix_out('ln -s %s %s' % (oldpath, newpath))
-
+	
 	if not synctool_lib.DRY_RUN:
-		if path_exists(newpath):
+		if obj.dest_exists():
 			verbose('saving %s as %s.saved' % (newpath, newpath))
 			try:
 				os.rename(newpath, '%s.saved' % newpath)
 			except OSError, reason:
 				stderr('failed to save %s as %s.saved : %s' % (newpath, newpath, reason))
 				terse(synctool_lib.TERSE_FAIL, 'save %s.saved' % newpath)
-
+		
 		old_umask = os.umask(umask_mode)
-
+		
 		verbose('  os.symlink(%s, %s)' % (oldpath, newpath))
 		try:
 			os.symlink(oldpath, newpath)
 		except OSError, reason:
 			stderr('failed to create symlink %s -> %s : %s' % (newpath, oldpath, reason))
 			terse(synctool_lib.TERSE_FAIL, 'link %s' % newpath)
-
+		
 		os.umask(old_umask)
-
+	
 	else:
 		verbose(dryrun_msg('  os.symlink(%s, %s)' % (oldpath, newpath)))
 
