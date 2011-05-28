@@ -2,10 +2,13 @@ include(`header.html')
 
 include(`single_toc.ml')
 
-<div class="vtab"> </div>
+<br />
+
 <div>
 <p>
-View documentation as a <a href="toc.html">multi page</a> document.
+View documentation as a <a href="toc.html">multi page</a> document.<br />
+<br />
+Go to the <a href="../index2.html">main synctool page</a>.
 </p>
 </div>
 
