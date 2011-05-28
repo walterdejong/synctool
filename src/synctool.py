@@ -403,7 +403,7 @@ def compare_files(obj):
 		# make the directory
 		#
 		if need_update:
-			make_dir(dest_path)
+			make_dir(obj)
 			set_owner(obj)
 			set_permissions(obj)
 			unix_out('')
@@ -719,19 +719,21 @@ def erase_saved(obj):
 				stderr('failed to delete %s : %s' % (dest, reason))
 
 
-def make_dir(path):
+def make_dir(obj):
+	path = obj.dest_path
+	
 	unix_out('umask 077')
 	unix_out('mkdir %s' % path)
-
+	
 	if not synctool_lib.DRY_RUN:
 		old_umask = os.umask(077)
-
+		
 		verbose('  os.mkdir(%s)' % path)
 		try:
 			os.mkdir(path)
 		except OSError, reason:
 			stderr('failed to make directory %s : %s' % (path, reason))
-
+		
 		os.umask(old_umask)
 	else:
 		verbose(dryrun_msg('  os.mkdir(%s)' % path))
