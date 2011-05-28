@@ -580,14 +580,14 @@ if __name__ == '__main__':
 		
 		if synctool_param.NODENAME in synctool_param.IGNORE_GROUPS:
 			if not synctool_param.OPT_FILTER_IGNORED:
-				if synctool_param.OPT_INTERFACE:
+				if OPT_INTERFACE:
 					print 'none (%s ignored)' % get_node_interface(synctool_param.NODENAME)
 				else:
 					print 'none (%s ignored)' % synctool_param.NODENAME
 			
 			sys.exit(0)
 		
-		if synctool_param.OPT_INTERFACE:
+		if OPT_INTERFACE:
 			print get_node_interface(synctool_param.NODENAME)
 		else:
 			print synctool_param.NODENAME
