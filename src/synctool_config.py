@@ -269,9 +269,12 @@ def list_nodes(nodenames):
 			stderr("no such node '%s' defined" % nodename)
 			sys.exit(1)
 		
-		for group in get_groups(nodename):
-			if not group in groups:
-				groups.append(group)
+		if OPT_INTERFACE:
+			print get_node_interface(nodename)
+		else:
+			for group in get_groups(nodename):
+				if not group in groups:
+					groups.append(group)
 	
 #	groups.sort()							# group order is important
 	
