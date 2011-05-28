@@ -26,6 +26,9 @@ table, caption, tbody, tfoot, thead, tr, th, td {
 }
 
 body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
 	background-color: #eee;
 	font-color: #000;
 	font-family: georgia, times, serif;
@@ -103,11 +106,45 @@ dd {
 }
 
 /* all text is put into a div class=page */
-.page {
+div#page {
+	position: relative;
     width: 80%;
+    
+	height: auto !important;	/* real browsers */
+	height: 100%;				/* IE6: treaded as min-height*/
+	min-height: 100%;			/* real browsers */
+	
     margin: 1em auto 1em auto;
 	padding: 1em;
 	background-color: #fff;
+}
+
+div#header {
+	padding: 1em;
+	background: #fff url("synctool_logo.jpg") right top no-repeat;
+	border-bottom: dashed 3px #eee;
+}
+
+div#header p {
+	text-align: center;
+}
+
+div#content {
+	width: 80%;
+	text-align: justify;
+	padding: 1em 1em 5em;	/* bottom padding for footer */
+}
+
+div#content p {
+	text-align: justify;
+	padding: 0 1em;
+}
+
+div#footer {
+	position: absolute;
+	width: 100%;
+	bottom: 0;				/* stick to bottom */
+	border-top: dashed 3px #eee;
 }
 
 .center {
