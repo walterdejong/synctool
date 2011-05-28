@@ -1174,6 +1174,54 @@ option.<br />
 Default value is <span class="system">default</span>.
 </dd>
 
+<dt>group &lt;groupname&gt; &lt;subgroup&gt; [..]</dt>
+<dd>
+The <span class="system">group</span> keyword defines <em>compound</em>
+groups. It is a means to group several subgroups together into a single group.
+If the subgroups did not exist yet, they are defined automatically as new,
+empty groups.<br />
+Example:
+<pre class="example">
+group wn workernode batch
+group test wn
+group g1 batch test wn
+</pre>
+</dd>
+
+<dt>node &lt;nodename&gt; &lt;group&gt; [..] [ipaddress:&lt;IP address&gt;]</dt>
+<dd>The <span class="system">node</span> keyword defines what groups a node
+is in. Multiple groups may be given. The order of the groups is important;
+the left-most group is most important, and the right-most group is least
+important. What this means is that if there are files in repository that have
+the same base filename, but a different group extension, synctool will pick
+the file that has the most important group extension for this node.<br />
+Groups can be defined &lsquo;on the fly,&rsquo; there is no need for a group
+to exist before it can be used in a node definition.<br />
+The <span class="system">ipaddress</span> specifier tells synctool how to
+contact the node. This is optional; when omitted, synctool assumes the
+nodename can be found in DNS. Note that synctool nodenames need not be same
+as DNS names. In older versions of synctool, the
+<span class="system">ipaddress</span> specifier was named
+<span class="system">interface</span>.<br />
+Example:
+<pre class="example">
+node node0 master
+
+node node1 fs sched rack1 ipaddress:node1-mgmt
+node node2 login    rack1 ipaddress:node2-mgmt
+node node3 wn       rack1 ipaddress:node3-mgmt
+node node4 wn       rack1 ipaddress:node4-mgmt
+node node5 wn       rack1 ipaddress:node5-mgmt
+node node6 wn       rack1 ipaddress:node6-mgmt
+node node7 wn       rack1 ipaddress:node7-mgmt
+node node8 test     rack1 ipaddress:node8-mgmt
+node node9 batch    rack1 ipaddress:node9-mgmt
+</pre>
+</dd>
+
+
+
+
 </dl>
 
 This part of the documentation has not been completely written yet.
