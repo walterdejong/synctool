@@ -351,7 +351,7 @@ def compare_files(obj):
 			stdout('%s should be a symbolic link' % dest_path)
 			terse(synctool_lib.TERSE_LINK, dest_path)
 			unix_out('# target should be a symbolic link')
-			save_dir(dest_path)
+			save_dir(obj)
 			need_update = True
 		
 		#
@@ -430,7 +430,7 @@ def compare_files(obj):
 			stdout('%s is a directory, but should not be' % dest_path)
 			terse(synctool_lib.TERSE_TYPE, dest_path)
 			unix_out('# target should be a file instead of a directory')
-			save_dir(dest_path)
+			save_dir(obj)
 			need_update = True
 		
 		#
@@ -739,21 +739,23 @@ def make_dir(obj):
 		verbose(dryrun_msg('  os.mkdir(%s)' % path))
 
 
-def save_dir(dir):
+def save_dir(obj):
 	if not synctool_param.BACKUP_COPIES:
 		return
 	
-	unix_out('mv %s %s.saved' % (dir, dir))
-
+	path = obj.dest_path
+	
+	unix_out('mv %s %s.saved' % (path, path))
+	
 	if not synctool_lib.DRY_RUN:
-		verbose('moving %s to %s.saved' % (dir, dir))
+		verbose('moving %s to %s.saved' % (path, path))
 		try:
-			os.rename(dir, '%s.saved' % dir)
+			os.rename(path, '%s.saved' % path)
 		except OSError, reason:
-			stderr('failed to move directory to %s.saved : %s' % (dir, reason))
-
+			stderr('failed to move directory to %s.saved : %s' % (path, reason))
+	
 	else:
-		verbose(dryrun_msg('moving %s to %s.saved' % (dir, dir), 'move'))
+		verbose(dryrun_msg('moving %s to %s.saved' % (path, path), 'move'))
 
 
 def run_command(cmd):
