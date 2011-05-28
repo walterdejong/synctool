@@ -195,7 +195,7 @@ ignore CVS
 ignore .svn
 ignore .git
 
-By the way, synctool was developed using subversion.
+By the way, synctool was developed using subversion. Later, I switched to git.
 
 
 14. When was the first release?
