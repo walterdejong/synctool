@@ -1,7 +1,7 @@
 <h2 id="part_two">2. Installation</h2>
 <div class="note">
-In synctool terminology, a &ldquo;node&rdquo; is a host, a computer in a group
-of computers. A group of computers is called a cluster.
+In synctool terminology, a <em>node</em> is a host, a computer in a group
+of computers. A group of computers is called a <em>cluster</em>.
 </div>
 
 <p>

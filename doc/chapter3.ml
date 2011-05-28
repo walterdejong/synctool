@@ -1,7 +1,7 @@
 <h2 id="part_three">3. Using synctool</h2>
 <div class="note">
-In synctool terminology, a &ldquo;node&rdquo; is a host, a computer in a group
-of computers. A group of computers is called a cluster.
+In synctool terminology, a <em>node</em> is a host, a computer in a group
+of computers. A group of computers is called a <em>cluster</em>.
 </div>
 The main power of synctool is the fact that you can define logical groups,
 and you can add these to a filename as a filename extension. This will result
