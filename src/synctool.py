@@ -402,7 +402,7 @@ def compare_files(obj):
 		#
 		if need_update:
 			make_dir(dest_path)
-			set_owner(dest_path, src_stat.uid, src_stat.gid)
+			set_owner(obj)
 			set_permissions(obj)
 			unix_out('')
 			return True
@@ -473,7 +473,7 @@ def compare_files(obj):
 		
 		if need_update:
 			copy_file(obj)
-			set_owner(dest_path, src_stat.uid, src_stat.gid)
+			set_owner(obj)
 			set_permissions(obj)
 			unix_out('')
 			return True
@@ -523,7 +523,7 @@ def compare_files(obj):
 			terse(synctool_lib.TERSE_OWNER, '%s.%s %s' % (owner, group, dest_path))
 			unix_out('# changing ownership on %s' % dest_path)
 			
-			set_owner(dest_path, src_stat.uid, src_stat.gid)
+			set_owner(obj)
 			
 			unix_out('')
 			need_update = True
@@ -641,9 +641,13 @@ def set_permissions(obj):
 		verbose(dryrun_msg('  os.chmod(%s, %04o)' % (file, mode & 07777)))
 
 
-def set_owner(file, uid, gid):
+def set_owner(obj):
+	file = obj.dest_path
+	uid = obj.src_statbuf.uid
+	gid = obj.src_statbuf.gid
+	
 	unix_out('chown %s.%s %s' % (ascii_uid(uid), ascii_gid(gid), file))
-
+	
 	if not synctool_lib.DRY_RUN:
 		verbose('  os.chown(%s, %d, %d)' % (file, uid, gid))
 		try:
