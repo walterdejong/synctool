@@ -79,7 +79,7 @@ a:visited {
 }
 
 ul,ol {
-	padding-left: 2.5em;
+	padding-left: 1.5em;
 	padding-bottom: .5em;
 }
 
@@ -133,11 +133,6 @@ div#content {
 	width: 80%;
 	text-align: justify;
 	padding: 1em 1em 5em;	/* bottom padding for footer */
-}
-
-div#content p {
-	text-align: justify;
-	padding: 0 1em;
 }
 
 div#footer {
