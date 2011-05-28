@@ -543,7 +543,7 @@ def compare_files(obj):
 #		if src_stat[stat.ST_CTIME] != dest_stat[stat.ST_CTIME]:
 #			stdout('%s should have ctime %d, but has %d' % (dest_path, src_stat[stat.ST_CTIME], dest_stat[stat.ST_CTIME]))
 	
-	erase_saved(dest_path)
+	erase_saved(obj)
 	return need_update
 
 
@@ -699,7 +699,9 @@ def hard_delete_file(obj):
 		verbose(dryrun_msg('deleting %s' % file, 'delete'))
 
 
-def erase_saved(dest):
+def erase_saved(obj):
+	dest = obj.dest_path
+	
 	if synctool_lib.ERASE_SAVED and path_exists('%s.saved' % dest) and not path_isdir('%s.saved' % dest):
 		terse(synctool_lib.TERSE_DELETE, '%s.saved' % dest)
 		unix_out('rm %s.saved' % dest)
