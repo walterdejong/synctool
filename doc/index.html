@@ -1058,11 +1058,121 @@ and <span class="system">colorize</span> are enabled.
 Default value is <span class="system">no</span>.
 </dd>
 
-<dt></dt>
-<dd></dd>
+<dt>colorize_bright &lt;yes/no&gt;</dt>
+<dd>In terse mode, synctool output can be made to show colors. This option
+enables the bright/bold attribute for colors.
+Mind that this parameter only works when both <span class="system">terse</span>
+and <span class="system">colorize</span> are enabled.
+Default value is <span class="system">yes</span>.
+</dd>
 
-<dt></dt>
-<dd></dd>
+<dt>colorize_bold &lt;yes/no&gt;</dt>
+<dd>Same as <span class="system">colorize_bright</span>.</dt>
+
+<div class="note">
+Following are keywords to customize colors. Valid color codes are:
+<span class="system">default</span>, <span class="system">bold</span>,
+<span class="system">white</span>, <span class="system">black</span>,
+<span class="system">darkgray</span>, <span class="system">red</span>,
+<span class="system">green</span>, <span class="system">yellow</span>,
+<span class="system">blue</span>, <span class="system">magenta</span>,
+and <span class="system">cyan</span>.
+</div>
+
+<dt>color_info &lt;color&gt;</dt>
+<dd>Specify the color for informational messages in terse mode.<br />
+Default value is <span class="system">default</span>.
+</dd>
+
+<dt>color_warn &lt;color&gt;</dt>
+<dd>Specify the color for warnings in terse mode.<br />
+Default value is <span class="system">magenta</span>.
+</dd>
+
+<dt>color_error &lt;color&gt;</dt>
+<dd>Specify the color for error messages in terse mode.<br />
+Default value is <span class="system">red</span>.
+</dd>
+
+<dt>color_fail &lt;color&gt;</dt>
+<dd>Specify the color for failure messages in terse mode.<br />
+Default value is <span class="system">red</span>.
+</dd>
+
+<dt>color_sync &lt;color&gt;</dt>
+<dd>Specify the color for <em>sync</em> messages in terse mode. These occur
+when synctool synchronizes file data.<br />
+Default value is <span class="system">default</span>.
+</dd>
+
+<dt>color_link &lt;color&gt;</dt>
+<dd>Specify the color for <em>link</em> messages in terse mode. These occur
+when synctool creates or repairs a symbolic link.<br />
+Default value is <span class="system">cyan</span>.
+</dd>
+
+<dt>color_mkdir &lt;color&gt;</dt>
+<dd>Specify the color for <em>mkdir</em> messages in terse mode. These occur
+when synctool creates a driectory.<br />
+Default value is <span class="system">default</span>.
+</dd>
+
+<dt>color_rm &lt;color&gt;</dt>
+<dd>Specify the color for <em>rm</em> messages in terse mode. These occur when
+synctool deletes a file.<br />
+Default value is <span class="system">yellow</span>.
+</dd>
+
+<dt>color_chown &lt;color&gt;</dt>
+<dd>Specify the color for <em>chown</em> messages in terse mode. These occur
+when synctool changes the ownership of a file or directory.<br />
+Default value is <span class="system">cyan</span>.
+</dd>
+
+<dt>color_chmod &lt;color&gt;</dt>
+<dd>Specify the color for <em>chmod</em> messages in terse mode. These occur
+when synctool changes the access mode of a file or directory.<br />
+Default value is <span class="system">cyan</span>.
+</dd>
+
+<dt>color_exec &lt;color&gt;</dt>
+<dd>Specify the color for <em>exec</em> messages in terse mode. These occur
+when synctool executes a <span class="system">.post</span> script or
+<span class="system">on_update</span> command.<br />
+Default value is <span class="system">green</span>.
+</dd>
+
+<dt>color_upload &lt;color&gt;</dt>
+<dd>Specify the color for <em>upload</em> messages in terse mode. These occur
+when use synctool to upload a file.<br />
+Default value is <span class="system">magenta</span>.
+</dd>
+
+<dt>color_new &lt;color&gt;</dt>
+<dd>Specify the color for <em>new</em> messages in terse mode. These occur when
+a sync operation requires synctool to create a new file.<br />
+Default value is <span class="system">default</span>.
+</dd>
+
+<dt>color_type &lt;color&gt;</dt>
+<dd>Specify the color for <em>type</em> messages in terse mode. These occur
+when the file type of the entry in the repository does not match the file type
+of the target file.<br />
+Default value is <span class="system">magenta</span>.
+</dd>
+
+<dt>color_dryrun &lt;color&gt;</dt>
+<dd>Specify the color for the &lsquo;DRYRUN&rsquo; message in terse mode.
+It occurs when synctool performs a dry run.<br />
+Default value is <span class="system">default</span>.
+</dd>
+
+<dt>color_fixing &lt;color&gt;</dt>
+<dd>Specify the color for the &lsquo;FIXING&rsquo; message in terse mode.
+It occurs when synctool is run with the <span class="system">--fix</span>
+option.<br />
+Default value is <span class="system">default</span>.
+</dd>
 
 </dl>
 
