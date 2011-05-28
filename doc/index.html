@@ -1235,6 +1235,27 @@ temporarily disable the group. This can be particularly useful when doing
 software upgrades.
 </dd>
 
+<dt>on_update &lt;filename&gt; &lt;shell command&gt;</dt>
+<dd>This tells synctool that whenever <em>filename</em> is changed, it should
+execute the <em>shell command</em>. This is an old-fashioned form of
+<span class="system">.post</span> scripts, that is still very useful for
+some common cases. The filename may be a directory as well as the name of a
+regular file. The shell command must start with an absolute path;
+if it does not, synctool will look for the command in
+<span class="system">scriptdir</span>.<br />
+Example:
+<pre class="example">
+on_update   /etc/aliases                    /usr/bin/newaliases
+on_update   /etc/ssh/sshd_config            /etc/init.d/ssh reload
+on_update   /etc/syslog-ng/syslog-ng.conf   /etc/init.d/syslog-ng reload
+on_update   /etc/ntp.conf                   /sbin/service ntp reload
+
+on_update   /etc/logrotate.d                /bin/rm -f /etc/logrotate.d/*.saved
+on_update   /etc/cron.d                     /bin/rm -f /etc/cron.d/*.saved
+on_update   /etc/cron.daily                 /bin/rm -f /etc/cron.daily/*.saved
+on_update   /etc/init.d                     /bin/rm -f /etc/init.d/*.saved
+</pre>
+</dd>
 
 
 
