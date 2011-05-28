@@ -503,9 +503,11 @@ node3: running command $masterdir/overlay/etc/xinetd.d/identd.post
 </pre>
 </li>
 </ol>
-It is possible to add a group extension to the
-<span class="system">.post</span> script, so that you can have one group of
-nodes perform different actions than another.
+The <span class="system">.post</span> script is executed in the directory
+where the accompanying file is in, in this case
+<span class="path">/etc/xinetd.d</span>. It is possible to add a group
+extension to the <span class="system">.post</span> script, so that you can
+have one group of nodes perform different actions than another.
 </p>
 
 <p>
