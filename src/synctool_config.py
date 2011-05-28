@@ -596,5 +596,4 @@ if __name__ == '__main__':
 		raise RuntimeError, 'bug: unknown ACTION code %d' % ACTION
 
 
-
 # EOB
