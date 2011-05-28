@@ -338,7 +338,7 @@ def compare_files(obj):
 				stdout('%s should point to %s, but points to %s' % (dest_path, src_link, dest_link))
 				terse(synctool_lib.TERSE_LINK, dest_path)
 				unix_out('# relink symbolic link %s' % dest_path)
-				delete_file(dest_path)
+				delete_file(obj)
 				need_update = True
 			
 			if (dest_stat.mode & 07777) != synctool_param.SYMLINK_MODE:
@@ -361,7 +361,7 @@ def compare_files(obj):
 			stdout('%s should be a symbolic link' % dest_path)
 			terse(synctool_lib.TERSE_LINK, dest_path)
 			unix_out('# target should be a symbolic link')
-			delete_file(dest_path)
+			delete_file(obj)
 			need_update = True
 		
 		#
@@ -386,7 +386,7 @@ def compare_files(obj):
 			stdout('%s is a symbolic link, but should be a directory' % dest_path)
 			terse(synctool_lib.TERSE_MKDIR, dest_path)
 			unix_out('# target should be a directory instead of a symbolic link')
-			delete_file(dest_path)
+			delete_file(obj)
 			need_update = True
 		
 		#
@@ -396,7 +396,7 @@ def compare_files(obj):
 			stdout('%s should be a directory' % dest_path)
 			terse(synctool_lib.TERSE_MKDIR, dest_path)
 			unix_out('# target should be a directory')
-			delete_file(dest_path)
+			delete_file(obj)
 			need_update = True
 		
 		#
@@ -423,7 +423,7 @@ def compare_files(obj):
 			stdout('%s is a symbolic link, but should not be' % dest_path)
 			terse(synctool_lib.TERSE_TYPE, dest_path)
 			unix_out('# target should be a file instead of a symbolic link')
-			delete_file(dest_path)
+			delete_file(obj)
 			need_update = True
 		
 		elif dest_stat.isDir():
@@ -660,11 +660,13 @@ def set_owner(obj):
 		verbose(dryrun_msg('  os.chown(%s, %d, %d)' % (file, uid, gid)))
 
 
-def delete_file(file):
+def delete_file(obj):
+	file = obj.dest_path
+	
 	if not synctool_lib.DRY_RUN:
 		if synctool_param.BACKUP_COPIES:
 			unix_out('mv %s %s.saved' % (file, file))
-
+			
 			verbose('moving %s to %s.saved' % (file, file))
 			try:
 				os.rename(file, '%s.saved' % file)
