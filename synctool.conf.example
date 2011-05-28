@@ -99,19 +99,21 @@ group g1 batch test wn
 #
 # list all nodes and their groups
 # the nodename is a logical name known only to synctool
-# "interface:" specifies the (short) address where synctool connects to
+# "ipaddress:" specifies the IP address where synctool connects to
+# Instead of "ipaddress:", also the older "interface:" keyword
+# may be used to specify the IP address of a node
 #
 node node0 master
 
-node node1 fs sched interface:node1-mgmt
-node node2 login    interface:node2-mgmt
-node node3 wn       interface:node3-mgmt
-node node4 wn       interface:node4-mgmt
-node node5 wn       interface:node5-mgmt
-node node6 wn       interface:node6-mgmt
-node node7 wn       interface:node7-mgmt
-node node8 test     interface:node8-mgmt
-node node9 batch    interface:node9-mgmt
+node node1 fs sched ipaddress:node1-mgmt
+node node2 login    ipaddress:node2-mgmt
+node node3 wn       ipaddress:node3-mgmt
+node node4 wn       ipaddress:node4-mgmt
+node node5 wn       ipaddress:node5-mgmt
+node node6 wn       ipaddress:node6-mgmt
+node node7 wn       ipaddress:node7-mgmt
+node node8 test     ipaddress:node8-mgmt
+node node9 batch    ipaddress:node9-mgmt
 
 # ignore a specific node
 ignore_node node0

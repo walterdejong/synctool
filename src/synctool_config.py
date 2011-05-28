@@ -384,7 +384,8 @@ def usage():
 	print '  -L, --list-groups        List all configured groups'
 	print '  -n, --node=nodelist      List all groups this node is in'
 	print '  -g, --group=grouplist    List all nodes in this group'
-	print '  -i, --interface          List selected nodes by interface'
+	print '  -i, --ipaddress          List selected nodes by IP address'
+	print '  -i, --interface          Same thing; old form for --ipaddress'
 	print '  -f, --filter-ignored     Do not list ignored nodes and groups'
 	print
 	print '  -C, --command=command    Display setting for command'
@@ -417,8 +418,9 @@ def get_options():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:lLn:g:ifC:pmdv',
 			['help', 'conf=', 'list-nodes', 'list-groups', 'node=', 'group=',
-			'interface', 'filter-ignored', 'command', 'numproc', 'masterdir',
-			'list-dirs', 'prefix', 'logfile', 'nodename', 'version'])
+			'interface', 'ipaddress', 'filter-ignored',
+			'command', 'numproc', 'masterdir', 'list-dirs', 'prefix',
+			'logfile', 'nodename', 'version'])
 	
 	except getopt.error, (reason):
 		print
@@ -471,7 +473,7 @@ def get_options():
 			ARG_GROUPS = string.split(arg, ',')
 			continue
 		
-		if opt in ('-i', '--interface'):
+		if opt in ('-i', '--interface', 'ipaddress'):
 			OPT_INTERFACE = True
 			continue
 		

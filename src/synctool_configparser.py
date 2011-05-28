@@ -489,12 +489,12 @@ def config_node(arr, configfile, lineno):
 		stderr('%s:%d: %s was previously defined as a group' % (configfile, lineno, node))
 		return 1
 	
-	if len(groups) >= 1 and groups[-1][:10] == 'interface:':
+	if len(groups) >= 1 and (groups[-1][:10] == 'interface:' or groups[-1][:10] == 'ipaddress:'):
 		interface = groups[-1][10:]
 		groups = groups[:-1]
 		
 		if synctool_param.INTERFACES.has_key(node):
-			stderr('%s:%d: redefinition of interface for node %s' % (configfile, lineno, node))
+			stderr('%s:%d: redefinition of IP address for node %s' % (configfile, lineno, node))
 			return 1
 		
 		synctool_param.INTERFACES[node] = interface
