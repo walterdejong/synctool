@@ -686,9 +686,11 @@ def delete_file(obj):
 			verbose(dryrun_msg('deleting %s' % file, 'delete'))
 
 
-def hard_delete_file(file):
+def hard_delete_file(obj):
+	file = obj.dest_path
+	
 	unix_out('rm -f %s' % file)
-
+	
 	if not synctool_lib.DRY_RUN:
 		verbose('  os.unlink(%s)' % file)
 		try:
@@ -938,7 +940,7 @@ def delete_callback(obj):
 			not_str = ''
 		
 		stdout('%sdeleting %s : %s' % (not_str, obj.print_src(), obj.print_dest()))
-		hard_delete_file(obj.dest_path)
+		hard_delete_file(obj)
 		run_post(obj.src_path, obj.dest_path)
 
 
