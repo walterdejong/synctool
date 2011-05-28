@@ -650,8 +650,6 @@ class SyncObject:
 		
 		else:
 			verbose(dryrun_msg('moving %s to %s.saved' % (path, path), 'move'))
-	
-	
 
 
 # EOB
