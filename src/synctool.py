@@ -405,7 +405,7 @@ def compare_files(obj):
 		if need_update:
 			make_dir(dest_path)
 			set_owner(dest_path, src_stat.uid, src_stat.gid)
-			set_permissions(dest_path, src_stat.mode)
+			set_permissions(obj)
 			unix_out('')
 			return True
 	
@@ -476,7 +476,7 @@ def compare_files(obj):
 		if need_update:
 			copy_file(obj)
 			set_owner(dest_path, src_stat.uid, src_stat.gid)
-			set_permissions(dest_path, src_stat.mode)
+			set_permissions(obj)
 			unix_out('')
 			return True
 	
@@ -535,7 +535,7 @@ def compare_files(obj):
 			terse(synctool_lib.TERSE_MODE, '%04o %s' % (src_stat.mode & 07777, dest_path))
 			unix_out('# changing permissions on %s' % dest_path)
 			
-			set_permissions(dest_path, src_stat.mode)
+			set_permissions(obj)
 			
 			unix_out('')
 			need_update = True
@@ -627,9 +627,12 @@ def symlink_file(obj, oldpath):
 		verbose(dryrun_msg('  os.symlink(%s, %s)' % (oldpath, newpath)))
 
 
-def set_permissions(file, mode):
+def set_permissions(obj):
+	file = obj.dest_path
+	mode = obj.src_statbuf.mode
+	
 	unix_out('chmod 0%o %s' % (mode & 07777, file))
-
+	
 	if not synctool_lib.DRY_RUN:
 		verbose('  os.chmod(%s, %04o)' % (file, mode & 07777))
 		try:
