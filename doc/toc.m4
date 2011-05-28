@@ -9,6 +9,4 @@ View documentation as a <a href="single.html">single page</a> document.
 </p>
 </div>
 
-</div>    <!-- end content -->
-
 include(`footer.html')

@@ -135,7 +135,11 @@ div#footer {
 	position: absolute;
 	width: 100%;
 	bottom: 0;				/* stick to bottom */
-	border-top: dashed 3px #eee;
+	padding: 0em 0em .5em;
+	
+	font-family: georgia, times, serif;
+	font-style: italic;
+	font-size: .8em;
 }
 
 .example {
