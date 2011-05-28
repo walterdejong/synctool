@@ -18,9 +18,10 @@
 <div class="center">
 <em>synctool by Walter de Jong &lt;walter@heiho.net&gt; (c) 2003-2011</em>
 <p>
-synctool comes with <strong>no warranty</strong>. synctool is <strong>free software</strong>.
-synctool is distributed under terms described in the
-<a href="http://www.gnu.org/licenses/gpl-2.0.html">GNU General Public License</a>.
+synctool comes with <strong>no warranty</strong>. synctool is
+<strong>free software</strong>. synctool is distributed under terms described
+in the <a href="http://www.gnu.org/licenses/gpl-2.0.html">GNU General Public
+License</a>.
 </p>
 </div>
 
@@ -34,7 +35,8 @@ synctool is distributed under terms described in the
  <ol class="subindex">
   <li><a href="#passwordless_ssh">Passwordless SSH</a></li>
   <li><a href="#make_install">make install</a></li>
-  <li><a href="#config_nodes_groups">synctool configuration: nodes and groups</a></li>
+  <li><a href="#config_nodes_groups">synctool configuration: nodes and
+    groups</a></li>
   <li><a href="#testing_with_dsh">Testing with dsh</a></li>
   <li><a href="#your_first_synctool_run">Your first synctool run</a></li>
   <li><a href="#client_install">Client installation</a></li>
@@ -52,7 +54,8 @@ synctool is distributed under terms described in the
   <li><a href="#ignoring">Ignoring them: I'm not touching you</a></li>
   <li><a href="#about_symlinks">About symbolic links</a></li>
   <li><a href="#backup_copies">Backup copies</a></li>
-  <li><a href="#local_config">Node-specific local configuration adjustments</a></li>
+  <li><a href="#local_config">Node-specific local configuration
+    adjustments</a></li>
   <li><a href="#checking_for_updates">Checking for updates</a></li>
   </ol>
  </li>
@@ -112,9 +115,9 @@ Because of that design philosophy:
 </li>
 <li>It is possible to use synctool in the style that suits you best: Warn you
     whenever things are out of &lsquo;sync&rsquo; or do automated repairs of
-    deviations. It is even possible to manage some files with synctool and leave
-    other files to other mechanisms &mdash; what is not represented in the
-    synctool repository is not managed by it.
+    deviations. It is even possible to manage some files with synctool and
+    leave other files to other mechanisms &mdash; what is not represented in
+    the synctool repository is not managed by it.
 </li>
 <li>Although synctool has many command-line options, its set of core functions
     is very small and easy to understand. There is not that much you need to
@@ -172,8 +175,8 @@ be of some value to you as well.
 <h2 id="part_two">2. Installation</h2>
 <div class="chapter">
 <div class="note">
-In synctool terminology, a &ldquo;node&rdquo; is a host, a computer in a group of
-computers. A group of computers is called a cluster.
+In synctool terminology, a &ldquo;node&rdquo; is a host, a computer in a group
+of computers. A group of computers is called a cluster.
 </div>
 
 <p>
@@ -212,8 +215,8 @@ prefer <span class="path">/opt</span>. Pick whatever you think is best.
 </p>
 
 <p>
-On your master node, run <span class="cmd">make install</span>. This copies the commands
-to the selected location and sets up symlinks for:
+On your master node, run <span class="cmd">make install</span>. This copies
+the commands to the selected location and sets up symlinks for:
 <pre class="example">
 synctool        -&gt; synctool_master.py
 synctool-config -&gt; synctool_config.py
@@ -244,25 +247,31 @@ Think a bit about what role each machine has. There is no need to
 go into great depth right now; you can always adjust the configuration
 later.
 <pre class="example">
-node n1 interface:machine-n01
+node n1 ipaddress:machine-n01
 </pre>
 The nodename is the &ldquo;synctool name that the node has.&rdquo; It is in
 general the short hostname of the host, but in fact it can be anything you
 like. The nodename has nothing to do with hostnames or DNS entries.
-The interface specifies how synctool can contact the node; this can be an
-IP address or a DNS name of the host you wish to contact. In clusters, there
-is often a management network interface &mdash; configure that interface name
-here.
+The <span class="system">ipaddress</span> specifier tells synctool how to
+contact the node; this can be an IP address or a DNS name of the host you wish
+to contact. In clusters, there is often a management network interface &mdash;
+configure its IP address here.
 </p>
+<div class="note">
+In older versions of synctool, <span class="system">ipaddress</span> was
+called <span class="system">interface</span>.
+The <span class="system">interface</span> keyword still works, but is
+discouraged because it really is an IP address and not a network interface.
+</div>
 
 <p>
 It is good practice to label your master node as &lsquo;master&rsquo; or
 &lsquo;install&rsquo;.
 <pre class="example">
-node n1 master interface:machine-n01
+node n1 master ipaddress:machine-n01
 </pre>
-Now <span class="system">n1</span> responds to the groups <span class="system">n1</span>
-and <span class="system">master</span>.
+Now <span class="system">n1</span> responds to the groups
+<span class="system">n1</span> and <span class="system">master</span>.
 </p>
 
 <p>
@@ -284,7 +293,7 @@ Nodes can be in as many different groups as you like. You can split
 long lines of node definitions by ending them with a backslash:
 <pre class="example">
 node n101 workernode debian plasma mathworks solar \
-          fsmounted backup interface:if0-n101
+          fsmounted backup ipaddress:if0-n101
 </pre>
 <div class="note">
 Mind that in practice, synctool repositories are generally easiest
@@ -302,21 +311,22 @@ compound group must be defined before defining the nodes:
 group wn workernode debian plasma mathworks solar \
          fsmounted backup
 
-node 101 wn interface:if0-n101
+node 101 wn ipaddress:if0-n101
 </pre>
 <h3 id="testing_with_dsh">Testing with dsh</h3>
-After filling in a couple of nodes in <span class="path">synctool.conf</span>, try the command
-<span class="cmd">dsh-ping</span> to see if the nodes are &lsquo;up&rsquo;.
-If they are, try <span class="cmd">dsh hostname</span>, <span class="cmd">dsh uptime</span>,
-or <span class="cmd">dsh date</span>.
-If you correctly set up passwordless SSH, <span class="cmd">dsh</span> should run the commands
-on every node without problems or needed manual intervention.
+After filling in a couple of nodes in <span class="path">synctool.conf</span>,
+try the command <span class="cmd">dsh-ping</span> to see if the nodes are
+&lsquo;up&rsquo;. If they are, try <span class="cmd">dsh hostname</span>,
+<span class="cmd">dsh uptime</span>, or <span class="cmd">dsh date</span>.
+If you correctly set up passwordless SSH, <span class="cmd">dsh</span> should
+run the commands on every node without problems or needed manual intervention.
 It is important that this works, before proceeding.
 <div class="note">
 Some (mostly IBM) systems already have a <span class="cmd">dsh</span> command.
 In synctool, <span class="cmd">dsh</span> is a symbolic link to
-<span class="cmd">synctool-ssh</span>. The same goes for <span class="cmd">dcp</span>,
-which is a symlink to <span class="cmd">synctool-scp</span>.
+<span class="cmd">synctool-ssh</span>. The same goes for
+<span class="cmd">dcp</span>, which is a symlink to
+<span class="cmd">synctool-scp</span>.
 </div>
 </p>
 
@@ -335,7 +345,8 @@ By default, the full path to the command is:
 /opt/synctool/sbin/synctool -n anodename
 </pre>
 There should be some output message saying <span class="system">DRY RUN</span>.
-This means that synctool is now working. You can try running synctool across all nodes:
+This means that synctool is now working. You can try running synctool across
+all nodes:
 <pre class="example">
 synctool
 </pre>
