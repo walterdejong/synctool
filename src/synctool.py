@@ -26,13 +26,6 @@ import time
 import shlex
 
 try:
-	import hashlib
-	use_hashlib = True
-except ImportError:
-	import md5
-	use_hashlib = False
-
-try:
 	import subprocess
 	use_subprocess = True
 except ImportError:
