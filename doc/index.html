@@ -740,6 +740,14 @@ symlink_mode 0777
 # sensible mode for most other UNIX systems
 symlink_mode 0755
 </pre>
+<div class="note">
+<em>unix.com</em> says about this:
+<p>
+&ldquo;The permission settings on a symbolic link are a little special
+[as well]. They are completely ignored. Many versions of Unix have no way to
+change them.&rdquo;
+</p>
+</div>
 As synctool requires all files in the repository to have an extension,
 symbolic links must have extensions too. Symbolic links in the repository
 will be <em>dead</em> symlinks but they will point to the correct destination
