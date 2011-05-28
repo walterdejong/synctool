@@ -101,10 +101,6 @@ dd {
 	padding-bottom: .5em;
 }
 
-.logo {
-	background: #fff url(../images/synctool_logo.jpg) no-repeat top right;
-}
-
 /* all text is put into a div class=page */
 div#page {
 	position: relative;
@@ -121,7 +117,7 @@ div#page {
 
 div#header {
 	padding: 1em;
-	background: #fff url("synctool_logo.jpg") right top no-repeat;
+	background: #fff url("synctool_logo.jpg") 98% 10px no-repeat;
 	border-bottom: dashed 3px #eee;
 }
 
