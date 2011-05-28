@@ -55,6 +55,7 @@ def worker_ping(rank, nodes):
 	
 	node = nodes[rank]
 	nodename = NODESET.get_nodename_from_interface(node)
+	
 	packets_received = 0
 	
 	# execute ping command and show output with the nodename

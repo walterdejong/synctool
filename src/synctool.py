@@ -47,8 +47,6 @@ ACTION_REFERENCE = 4
 # blocksize for doing I/O while checksumming files
 BLOCKSIZE = 16 * 1024
 
-OPT_VERSION = False
-
 SINGLE_FILES = []
 
 # list of changed directories
@@ -460,7 +458,7 @@ def usage():
 
 
 def get_options():
-	global RUN_TASKS, OPT_VERSION, SINGLE_FILES
+	global SINGLE_FILES
 	
 	progname = os.path.basename(sys.argv[0])
 	
@@ -598,7 +596,6 @@ def get_options():
 		
 		if opt in ('-t', '--task', '--tasks'):
 			opt_tasks = True
-			RUN_TASKS = True
 			action = ACTION_RUN_TASKS
 			continue
 		
@@ -608,10 +605,6 @@ def get_options():
 			file = synctool_lib.strip_path(arg)
 			if not file in SINGLE_FILES:
 				SINGLE_FILES.append(file)
-			continue
-		
-		if opt == '--version':
-			OPT_VERSION = True
 			continue
 		
 		stderr("unknown command line option '%s'" % opt)

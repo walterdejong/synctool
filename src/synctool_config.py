@@ -392,6 +392,7 @@ def usage():
 	print '  -m, --masterdir          Display the masterdir setting'
 	print '  -d, --list-dirs          Display directory settings'
 	print '      --prefix             Display installation prefix'
+	print '      --logfile            Display configured logfile'
 	print '      --nodename           Display my nodename'
 	print '      --logfile            Display configured logfile'
 	print '      --nodename           Display my nodename'
@@ -499,10 +500,6 @@ def get_options():
 			set_action(ACTION_PREFIX, '--prefix')
 			continue
 		
-		if opt == '--nodename':
-			set_action(ACTION_NODENAME, '--nodename')
-			continue
-		
 		if opt == '--logfile':
 			set_action(ACTION_LOGFILE, '--logfile')
 			continue
@@ -595,29 +592,9 @@ if __name__ == '__main__':
 		else:
 			print synctool_param.NODENAME
 	
-	elif ACTION == ACTION_NODENAME:
-		add_myhostname()
-		
-		if NODENAME == None:
-			stderr('unable to determine my nodename, please check %s' % CONF_FILE)
-			sys.exit(1)
-		
-		if NODENAME in IGNORE_GROUPS:
-			if not OPT_FILTER_IGNORED:
-				if OPT_INTERFACE:
-					print 'none (%s ignored)' % get_node_interface(NODENAME)
-				else:
-					print 'none (%s ignored)' % NODENAME
-			
-			sys.exit(0)
-		
-		if OPT_INTERFACE:
-			print get_node_interface(NODENAME)
-		else:
-			print NODENAME
-	
 	else:
-		raise RuntimeError, 'bug: unknown ACTION %d' % ACTION
+		raise RuntimeError, 'bug: unknown ACTION code %d' % ACTION
+
 
 
 # EOB

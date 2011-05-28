@@ -100,6 +100,7 @@ class NodeSet:
 			
 			groups = synctool_config.get_groups(node)
 			do_continue = False
+			
 			for group in groups:
 				if group in synctool_param.IGNORE_GROUPS:
 					verbose('group %s is ignored' % group)
