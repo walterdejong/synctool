@@ -8,7 +8,7 @@ include(`single_toc.ml')
 <p>
 View documentation as a <a href="toc.html">multi page</a> document.<br />
 <br />
-Go to the <a href="../index2.html">main synctool page</a>.
+Go to the <a href="../index.html">main synctool page</a>.
 </p>
 </div>
 
