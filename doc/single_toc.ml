@@ -35,4 +35,5 @@
 
 <li><a href="#part_four">All configuration parameters explained</a></li>
 <li><a href="#part_five">Best practices</a></li>
+<li><a href="#thank_you">Thank you</a></li>
 </ol>

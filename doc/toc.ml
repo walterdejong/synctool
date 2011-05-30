@@ -35,4 +35,5 @@
 
 <li><a href="chapter4.html">All configuration parameters explained</a></li>
 <li><a href="chapter5.html">Best practices</a></li>
+<li><a href="thank_you.html">Thank you</a></li>
 </ol>

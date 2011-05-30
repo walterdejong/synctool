@@ -37,4 +37,9 @@ include(`chapter4.ml')
 
 include(`chapter5.ml')
 
+<div class="vtab"> </div>
+<div class="line"> </div>
+
+include(`thank_you.ml')
+
 include(`footer.html')
