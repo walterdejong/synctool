@@ -42,17 +42,17 @@ prefer <span class="path">/opt</span>. Pick whatever you think is best.
 <p>
 On your master node, run <span class="cmd">make install</span>. This copies
 the commands to the selected location and sets up symlinks for:
-<pre class="example">
-synctool        -&gt; synctool_master.py
-synctool-config -&gt; synctool_config.py
-synctool-ping   -&gt; synctool_ping.py
-dsh-ping        -&gt; synctool_ping.py
-synctool-ssh    -&gt; synctool_ssh.py
-dsh             -&gt; synctool_ssh.py
-synctool-scp    -&gt; synctool_scp.py
-dcp             -&gt; synctool_scp.py
-synctool-aggr   -&gt; synctool_aggr.py
-</pre>
+<div class="example">
+synctool &nbsp; &nbsp; &nbsp;&nbsp; -&gt; synctool_master.py<br />
+synctool-config -&gt; synctool_config.py<br />
+synctool-ping &nbsp; -&gt; synctool_ping.py<br />
+dsh-ping &nbsp; &nbsp; &nbsp;&nbsp; -&gt; synctool_ping.py<br />
+synctool-ssh &nbsp;&nbsp; -&gt; synctool_ssh.py<br />
+dsh &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; -&gt; synctool_ssh.py<br />
+synctool-scp &nbsp;&nbsp; -&gt; synctool_scp.py<br />
+dcp &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; -&gt; synctool_scp.py<br />
+synctool-aggr &nbsp; -&gt; synctool_aggr.py<br />
+</div>
 It also creates the master repository under
 <span class="path">/var/lib/synctool/</span>.
 </p>
@@ -90,9 +90,9 @@ discouraged because it really is an IP address and not a network interface.
 <p>
 It is good practice to label your master node as &lsquo;master&rsquo; or
 &lsquo;install&rsquo;.
-<pre class="example">
+<div class="example">
 node n1 master ipaddress:machine-n01
-</pre>
+</div>
 Now <span class="system">n1</span> responds to the groups
 <span class="system">n1</span> and <span class="system">master</span>.
 </p>
@@ -101,9 +101,9 @@ Now <span class="system">n1</span> responds to the groups
 Some people don't like managing the master node itself with synctool.
 While it <em>is</em> possible and perfectly alright to do this, some like to
 exclude the master node by default:
-<pre class="example">
+<div class="example">
 ignore_node n1
-</pre>
+</div>
 You have to list each and every host.
 In the <span class="path">contrib/</span> directory, there is a script that
 uses <span class="cmd">nmap ping</span> with which you can scan your management
@@ -114,10 +114,10 @@ a bit easier.
 <p>
 Nodes can be in as many different groups as you like. You can split
 long lines of node definitions by ending them with a backslash:
-<pre class="example">
-node n101 workernode debian plasma mathworks solar \
-          fsmounted backup ipaddress:if0-n101
-</pre>
+<div class="example">
+node n101 workernode debian plasma mathworks solar \ <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; fsmounted backup ipaddress:if0-n101
+</div>
 <div class="note">
 Mind that in practice, synctool repositories are generally easiest
 maintainable with as few groups as possible. Make sure to use
@@ -130,12 +130,12 @@ Make things easy on yourself.
 If you have many nodes that all share the same long list of groups,
 the groups may be abbreviated by defining a <em>compound</em> group. This
 compound group must be defined before defining the nodes:
-<pre class="example">
-group wn workernode debian plasma mathworks solar \
-         fsmounted backup
-
+<div class="example">
+group wn workernode debian plasma mathworks solar \ <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;fsmounted backup<br />
+<br />
 node 101 wn ipaddress:if0-n101
-</pre>
+</div>
 <h3 id="testing_with_dsh">Testing with dsh</h3>
 After filling in a couple of nodes in <span class="path">synctool.conf</span>,
 try the command <span class="cmd">dsh-ping</span> to see if the nodes are
@@ -157,22 +157,22 @@ In synctool, <span class="cmd">dsh</span> is a symbolic link to
 <h3 id="your_first_synctool_run">Your first synctool run</h3>
 Now that you have a rough setup on the master node, try running
 synctool to a single node:
-<pre class="example">
+<div class="example">
 synctool -n anodename
-</pre>
+</div>
 If you get <span class="system">command not found</span>, add
 <span class="path">/opt/synctool/sbin</span> to your
 <span class="system">PATH</span> environment variable.
 By default, the full path to the command is:
-<pre class="example">
+<div class="example">
 /opt/synctool/sbin/synctool -n anodename
-</pre>
+</div>
 There should be some output message saying <span class="system">DRY RUN</span>.
 This means that synctool is now working. You can try running synctool across
 all nodes:
-<pre class="example">
+<div class="example">
 synctool
-</pre>
+</div>
 Check that every node responds. If it doesn't, go back to the step where
 we tested the setup using <span class="cmd">dsh</span>.
 When synctool to every node works, the basic setup is done and
