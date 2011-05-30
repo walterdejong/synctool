@@ -56,7 +56,7 @@ reboot your cluster.
 
 <p>
 <h3 id="use_extension_on_dirs_sparingly">Use group extensions on directories
-sparingly</h3>
+  sparingly</h3>
 The ability to add a group extension to a directory is a powerful feature.
 As you may know, with great power comes great responsibility. This feature will
 make a big mess of your repository when used incorrectly. If you catch yourself
@@ -66,11 +66,51 @@ harder on yourself than ought to be.<br />
 There are situations where adding a group extension to a directory makes
 perfect sense. For example, when having an <span class="path">/usr/local</span>
 tree that only exists on a small group of nodes. Personally, I like to move 
-such trees out of the main <span style="system">overlay</span> tree and park it
-under a different <span class="system">overlaydir</span> just to get it out
-of sight and clean up the repository a little.
+such trees out of the main <span style="system">overlay</span> tree and park
+them under a different <span class="system">overlaydir</span> just to get them
+out of sight and clean up the repository a little.
 Note that <span class="system">overlaydir</span> works on all nodes so you will
 still have the group extension on the directory,
 but <span class="system">overlaydir</span> is just another way of organizing
 your repository.
+</p>
+
+<p>
+<h3 id="write_templates">Write templates for &lsquo;dynamic&rsquo; config
+  files</h3>
+There are a number of rather standard configuration files that require the
+IP address of a node to be listed. These are not particularly &lsquo;synctool
+friendly.&rsquo; You are free to upload each and every unique instance of the
+config file in question into the repository, however, if your cluster is large
+this is does not make your repository look very nice, nor does it make them
+any easier to handle. Instead, make a template and couple it with a
+<span class="system">.post</span> script to generate the config file on the
+node. As an example, I will use a fictional snippet of config file, but this
+trick applies to things like an <span class="system">sshd_config</span> with
+a specific <span class="system">ListenAddress</span> in it, and network
+configuration files that have static IPs configured.<br />
+<pre class="example">
+# config_file_template._all
+
+MyPort 22
+MyIPAddress @IPADDR@
+SomeOption no
+PrintMotd yes
+</pre>
+And the accompanying <span class="system">.post</span> script:
+<pre class="example">
+IPADDR=&#96;ifconfig en0 | awk '/inet / { print $2 }'&#96;
+sed "s/@IPADDR@/$IPADDR/" config_file_template >fiction.conf
+service fiction reload
+</pre>
+This example uses <span class="cmd">ifconfig</span> to get the IP address of
+the node. You may also consult DNS or you might be able to use
+<span class="cmd">synctool-config</span> to get what you need.<br />
+Now, when you want to change the configuration, edit the template file instead.
+synctool will see the change in the template, and update the template on the
+node. The change in the template will trigger the
+<span class="system">.post</span> script to be run, thus generating
+the new config file on the node.
+It may sound complicated, but once you have this in place it will be very easy
+to change the config file as you like by using the template.
 </p>
