@@ -26,6 +26,7 @@ May 2011:
 - $masterdir can be used in the config file to reference parameter 'masterdir'
 - synctool-ssh/dsh now has option '-o' for passing additional options to ssh
 - possible bugfix for symlink mode on platforms where it matters
+- added documentation in html format
 
 17 April 2011:
 - use '-e' to erase .saved files: patch by Werner Maier
