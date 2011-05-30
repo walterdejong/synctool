@@ -162,8 +162,6 @@ in a clever way. For example, make a group of 'syncnodes' that are
 synced by the master server. Every syncnode runs synctool-master to their
 own subcluster or their own racks. synctool-ssh has an option --no-nodename
 to make sure the output comes out right in such a multi-tiered setup.
-See the contrib directory for an example script that runs a multi-tiered
-synctool.
 
 One other thing, synctool was meant to manage configuration files and not
 large databases (for example). If you put a great number (thousands,
