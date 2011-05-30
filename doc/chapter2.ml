@@ -61,20 +61,18 @@ It also creates the master repository under
 <h3 id="config_nodes_groups">synctool configuration: nodes and groups</h3>
 Copy the <span class="path">synctool.conf.example</span> to
 <span class="path">/var/lib/synctool/synctool.conf</span>
-and edit it, adjusting it as needed. For an explanation of all configurable
-parameters, see <a href="#part_four">chapter 4</a>.
+and edit it, adjusting it as needed.
 </p>
 
 <p>
-<span style="path">synctool.conf</span> describes what your cluster looks like;
+<span class="path">synctool.conf</span> describes what your cluster looks like;
 what nodes have what roles, and how synctool can contact them.
-Think a bit about what role each machine has. There is no need to
-go into great depth right now; you can always adjust the configuration
-later.
-<pre class="example">
+Think a bit about what role each machine has. There is no need to go into
+great depth right now; you can always adjust the configuration later.
+<div class="example">
 node n1 ipaddress:machine-n01
-</pre>
-The nodename is the &ldquo;synctool name that the node has.&rdquo; It is in
+</div>
+The nodename is the &lsquo;synctool name that the node has.&rsquo; It is in
 general the short hostname of the host, but in fact it can be anything you
 like. The nodename has nothing to do with hostnames or DNS entries.
 The <span class="system">ipaddress</span> specifier tells synctool how to

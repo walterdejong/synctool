@@ -55,7 +55,7 @@ reboot your cluster.
 </p>
 
 <p>
-<h3 id="use_extension_on_dirs_sparingly">Use group extensions on directories
+<h3 id="use_ext_on_dirs_sparingly">Use group extensions on directories
   sparingly</h3>
 The ability to add a group extension to a directory is a powerful feature.
 As you may know, with great power comes great responsibility. This feature will
@@ -66,7 +66,7 @@ harder on yourself than ought to be.<br />
 There are situations where adding a group extension to a directory makes
 perfect sense. For example, when having an <span class="path">/usr/local</span>
 tree that only exists on a small group of nodes. Personally, I like to move 
-such trees out of the main <span style="system">overlay</span> tree and park
+such trees out of the main <span class="system">overlay</span> tree and park
 them under a different <span class="system">overlaydir</span> just to get them
 out of sight and clean up the repository a little.
 Note that <span class="system">overlaydir</span> works on all nodes so you will
