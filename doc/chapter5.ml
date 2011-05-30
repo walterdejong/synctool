@@ -167,5 +167,34 @@ $masterdir/overlay/cluster3/
 
 <p>
 <h3 id="tiered_setup">Use a tiered setup for large clusters</h3>
+If you have a large cluster consisting of hundreds or thousands (or maybe more)
+nodes, you will run into a scaling issue at the master node.
+synctool doesn't care how many nodes you manage with it, but doing a
+synctool run to a large number of nodes will take considerable time. You can
+increase the <span class="system">num_proc</span> parameter to have synctool
+do more work in parallel, but this will put more load on your master node.
+To manage such a large cluster with synctool, a different approach is needed.
+<br />
+The solution is to make a tiered setup. In such a setup, the master node syncs
+to other master nodes (for example, the first node in a rack), which in turn
+sync to subsets of nodes. In reality, I have tested such a setup with success,
+but only on a relatively small cluster (120 nodes). In order to run a tiered
+setup, script it something like this:
+<pre class="example">
+#! /bin/bash
+/opt/synctool/sbin/synctool -g syncmaster "$@"
 
+for RACK in &#96;synctool-config -L | grep rack&#96;
+do
+  /opt/synctool/sbin/dsh -g syncmaster --no-nodename \
+    /var/lib/synctool/sbin/synctool-master.py -g $RACK "$@"
+done
+</pre>
+So, the master node syncs to &lsquo;rack masters,&rsquo; and then it instructs
+the rack masters to sync to the nodes.
+The option <span class="system">--no-nodename</span> is used to make the output
+come out right.<br />
+This tip is mentioned here mostly for completeness; personally I would only
+recommend running with a setup like this if you are truly experiencing problems
+due to the scale of your cluster.
 </p>
