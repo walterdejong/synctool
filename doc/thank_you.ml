@@ -7,13 +7,16 @@ who contributed to synctool in one way or another. synctool would not be what
 it is today without their contributions.
 </p>
 <p style="padding-left: 1em;">
-Onno Zweers<br />
 Huub Stoffers<br />
+Onno Zweers<br />
 Werner Maier<br />
 Tim Dittler<br />
 Chuck Lane<br />
 Brad Olson<br />
 Olof Schonbeck<br />
+NLUUG<br />
+Various teams at SARA for adoption and thereby functioning as primary beta
+testers<br />
 </p>
 <p>
 If you also want to contribute to synctool, drop me an e-mail. If you are a
