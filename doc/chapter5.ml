@@ -12,19 +12,19 @@ However, it is much better practice to put that node in a certain group, and
 let it be the only member of that group. Now label the file as belonging to
 that group, and your done.<br />
 Bad:
-<pre class="example">
-overlay/etc/hosts.allow._all
-overlay/etc/hosts.allow._node1
-overlay/etc/motd._all
+<div class="example">
+overlay/etc/hosts.allow._all<br />
+overlay/etc/hosts.allow._node1<br />
+overlay/etc/motd._all<br />
 overlay/etc/motd._node1
-</pre>
+</div>
 Good:
-<pre class="example">
-overlay/etc/hosts.allow._all
-overlay/etc/hosts.allow._login
-overlay/etc/motd._all
+<div class="example">
+overlay/etc/hosts.allow._all<br />
+overlay/etc/hosts.allow._login<br />
+overlay/etc/motd._all<br />
 overlay/etc/motd._login
-</pre>
+</div>
 The advantage is that you will be able to shift the service to another node
 simply by changing the synctool configuration, rather than having to rename
 all files in the repository.
@@ -45,10 +45,10 @@ It also often means doing double work; the config files of the master node
 tend to differ from the ones on your nodes.<br />
 It is good practice though to label the master node as <em>master</em>,
 and to simply ignore it:
-<pre class="example">
-node n01 master
+<div class="example">
+node n01 master<br />
 ignore_group master
-</pre>
+</div>
 If you still want to manage the master with synctool, do as you must. Just be
 sure to call <span class="cmd">dsh -X master reboot</span> when you want to
 reboot your cluster.
@@ -89,20 +89,20 @@ node. As an example, I will use a fictional snippet of config file, but this
 trick applies to things like an <span class="system">sshd_config</span> with
 a specific <span class="system">ListenAddress</span> in it, and network
 configuration files that have static IPs configured.<br />
-<pre class="example">
-# config_file_template._all
-
-MyPort 22
-MyIPAddress @IPADDR@
-SomeOption no
+<div class="example">
+# config_file_template._all<br />
+<br />
+MyPort 22<br />
+MyIPAddress @IPADDR@<br />
+SomeOption no<br />
 PrintMotd yes
-</pre>
+</div>
 And the accompanying <span class="system">.post</span> script:
-<pre class="example">
-IPADDR=&#96;ifconfig en0 | awk '/inet / { print $2 }'&#96;
-sed "s/@IPADDR@/$IPADDR/" config_file_template >fiction.conf
+<div class="example">
+IPADDR=&#96;ifconfig en0 | awk '/inet / { print $2 }'&#96;<br />
+sed "s/@IPADDR@/$IPADDR/" config_file_template &gt;fiction.conf<br />
 service fiction reload
-</pre>
+</div>
 This example uses <span class="cmd">ifconfig</span> to get the IP address of
 the node. You may also consult DNS or you might be able to use
 <span class="cmd">synctool-config</span> to get what you need.<br />
@@ -133,12 +133,12 @@ you like best.
  <span class="system">overlaydir</span> declarations in
  <span class="path">synctool.conf</span>. Your repository will look something
  like this:
-<pre class="example">
-$masterdir/overlay/common/
-$masterdir/overlay/cluster1/
-$masterdir/overlay/cluster2/
+<div class="example">
+$masterdir/overlay/common/<br />
+$masterdir/overlay/cluster1/<br />
+$masterdir/overlay/cluster2/<br />
 $masterdir/overlay/cluster3/
-</pre>
+</div>
  Note that synctool internally treats multiple
  <span class="system">overlay</span> directories as if they were one flat
  directory, so you will still need to put the correct group extensions on the
@@ -152,9 +152,9 @@ $masterdir/overlay/cluster3/
  <span class="path">synctool.conf</span> file and its own repository.
  Wrap the synctool command with a script that points to the relevant synctool
  tree:
-<pre class="example">
+<div class="example">
 /opt/synctool/sbin/synctool -c /var/lib/synctool/cluster1/synctool.conf
-</pre>
+</div>
  A big advantage of this approach is that it is clear where each file
  should go. Another big advantage is that each cluster can have its own set of
  groups. In the previous solutions, all groups are shared among the clusters.
@@ -180,16 +180,16 @@ to other master nodes (for example, the first node in a rack), which in turn
 sync to subsets of nodes. In reality, I have tested such a setup with success,
 but only on a relatively small cluster (120 nodes). In order to run a tiered
 setup, script it something like this:
-<pre class="example">
-#! /bin/bash
-/opt/synctool/sbin/synctool -g syncmaster "$@"
-
-for RACK in &#96;synctool-config -L | grep rack&#96;
-do
-  /opt/synctool/sbin/dsh -g syncmaster --no-nodename \
-    /var/lib/synctool/sbin/synctool-master.py -g $RACK "$@"
+<div class="example">
+#! /bin/bash<br />
+/opt/synctool/sbin/synctool -g syncmaster "$@"<br />
+<br />
+for RACK in &#96;synctool-config -L | grep rack&#96;<br />
+do<br />
+&nbsp; /opt/synctool/sbin/dsh -g syncmaster --no-nodename \<br />
+&nbsp; &nbsp; /var/lib/synctool/sbin/synctool-master.py -g $RACK "$@"<br />
 done
-</pre>
+</div>
 So, the master node syncs to &lsquo;rack masters,&rsquo; and then it instructs
 the rack masters to sync to the nodes.
 The option <span class="system">--no-nodename</span> is used to make the output
