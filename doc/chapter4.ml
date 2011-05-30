@@ -19,11 +19,11 @@ Multiple <span class="system">overlaydir</span> declarations are allowed,
 and all overlays will be &lsquo;merged&rsquo; together on the target
 nodes.<br />
 Example:
-<pre class="example">
-overlaydir $masterdir/overlay/common
-overlaydir $masterdir/overlay/software
+<div class="example">
+overlaydir $masterdir/overlay/common<br />
+overlaydir $masterdir/overlay/software<br />
 overlaydir $masterdir/overlay/patches
-</pre>
+</div>
 Note that this is just an example of how multiple overlays can be used.
 Overall, it is probably easier to start with just one single overlay directory.
 </dd>
@@ -91,20 +91,20 @@ Default value is <span class="system">no</span>.
 directories in the repository.
 Multiple <span class="system">ignore</span> definitions are allowed.<br />
 Example:
-<pre class="example">
-ignore .gitignore
-ignore .git
+<div class="example">
+ignore .gitignore<br />
+ignore .git<br />
 ignore .svn
-</pre>
+</div>
 </dd>
 
 <dt>logfile &lt;filename&gt;</dt>
 <dd>Have synctool log any updates to file. Nothing is logged for dry runs.<br />
 By default, no logfile is specified.<br />
 Example:
-<pre class="example">
+<div class="example">
 logfile /var/log/synctool.log
-</pre>
+</div>
 </dd>
 
 <dt>diff_cmd &lt;diff UNIX command&gt;</dt>
@@ -114,9 +114,9 @@ option.  The exact location and arguments of the <span class="cmd">diff</span>
 command are operating system specific.<br />
 There is no default, but synctool ships with the following in the
 example configuration file:
-<pre class="example">
+<div class="example">
 diff_cmd /usr/bin/diff -u
-</pre>
+</div>
 </dd>
 
 <dt>ping_cmd &lt;ping UNIX command&gt;</dt>
@@ -126,9 +126,9 @@ are responding. The exact location and arguments of the <span class="cmd">ping</
 command are operating system specific.<br />
 There is no default, but synctool ships with the following in the example
 configuration file:
-<pre class="example">
+<div class="example">
 ping_cmd /bin/ping -q -c 2 -t 4
-</pre>
+</div>
 </dd>
 
 <dt>ssh_cmd &lt;ssh UNIX command&gt;</dt>
@@ -140,9 +140,9 @@ system specific.<br />
 There is no default, and you must configure this parameter correctly for
 synctool to work. synctool ships with the following sensible setting in the
 example configuration file:
-<pre class="example">
+<div class="example">
 /usr/bin/ssh -o ConnectTimeout=10 -q
-</pre>
+</div>
 </dd>
 
 <dt>scp_cmd &lt;scp UNIX command&gt;</dt>
@@ -153,9 +153,9 @@ The exact location of the <span class="cmd">scp</span> command is operating
 system specific.<br />
 There is no default, but synctool ships with the following in the example
 configuration file:
-<pre class="example">
+<div class="example">
 /usr/bin/scp -o ConnectTimeout=10 -p
-</pre>
+</div>
 </dd>
 
 <dt>rsync_cmd &lt;rsync UNIX command&gt;</dt>
@@ -167,9 +167,9 @@ shared filesystem, you must configure this parameter correctly for synctool
 to work.<br />
 There is no default, but synctool ships with the following in the example
 configuration file:
-<pre class="example">
+<div class="example">
 /usr/bin/rsync -ar --delete -e 'ssh -o ConnectTimeout=10 -q'
-</pre>
+</div>
 </dd>
 
 <dt>synctool_cmd &lt;synctool UNIX command&gt;</dt>
@@ -181,9 +181,9 @@ installation dependent.<br />
 There is no default, and you must configure this parameter correctly for
 synctool to work. synctool ships with the following sensible setting in the
 example configuration file:
-<pre class="example">
+<div class="example">
 synctool_cmd $masterdir/sbin/synctool.py -c $masterdir/synctool.conf
-</pre>
+</div>
 </dd>
 
 <dt>num_proc &lt;number&gt;</dt>
@@ -208,11 +208,11 @@ groups. It is a means to group several subgroups together into a single group.
 If the subgroups did not exist yet, they are defined automatically as new,
 empty groups.<br />
 Example:
-<pre class="example">
-group wn workernode batch
-group test wn
+<div class="example">
+group wn workernode batch<br />
+group test wn<br />
 group g1 batch test wn
-</pre>
+</div>
 </dd>
 
 <dt>node &lt;nodename&gt; &lt;group&gt; [..] [ipaddress:&lt;IP address&gt;]</dt>
@@ -233,19 +233,19 @@ as DNS names. In older versions of synctool, the
 <span class="system">ipaddress</span> specifier was named
 <span class="system">interface</span>.<br />
 Example:
-<pre class="example">
-node node0 master
-
-node node1 fs sched rack1 ipaddress:node1-mgmt
-node node2 login    rack1 ipaddress:node2-mgmt
-node node3 wn       rack1 ipaddress:node3-mgmt
-node node4 wn       rack1 ipaddress:node4-mgmt
-node node5 wn       rack1 ipaddress:node5-mgmt
-node node6 wn       rack1 ipaddress:node6-mgmt
-node node7 wn       rack1 ipaddress:node7-mgmt
-node node8 test     rack1 ipaddress:node8-mgmt
-node node9 batch    rack1 ipaddress:node9-mgmt
-</pre>
+<div class="example">
+node node0 master<br />
+<br />
+node node1 fs sched rack1 ipaddress:node1-mgmt<br />
+node node2 login &nbsp; &nbsp;rack1 ipaddress:node2-mgmt<br />
+node node3 wn &nbsp; &nbsp; &nbsp; rack1 ipaddress:node3-mgmt<br />
+node node4 wn &nbsp; &nbsp; &nbsp; rack1 ipaddress:node4-mgmt<br />
+node node5 wn &nbsp; &nbsp; &nbsp; rack1 ipaddress:node5-mgmt<br />
+node node6 wn &nbsp; &nbsp; &nbsp; rack1 ipaddress:node6-mgmt<br />
+node node7 wn &nbsp; &nbsp; &nbsp; rack1 ipaddress:node7-mgmt<br />
+node node8 test &nbsp; &nbsp; rack1 ipaddress:node8-mgmt<br />
+node node9 batch &nbsp; &nbsp;rack1 ipaddress:node9-mgmt
+</div>
 </dd>
 
 <dt>ignore_node &lt;nodename&gt; [..]</dt>
@@ -271,17 +271,17 @@ regular file. The shell command must start with an absolute path;
 if it does not, synctool will look for the command in
 <span class="system">scriptdir</span>.<br />
 Example:
-<pre class="example">
-on_update   /etc/aliases                    /usr/bin/newaliases
-on_update   /etc/ssh/sshd_config            /etc/init.d/ssh reload
-on_update   /etc/syslog-ng/syslog-ng.conf   /etc/init.d/syslog-ng reload
-on_update   /etc/ntp.conf                   /sbin/service ntp reload
-
-on_update   /etc/logrotate.d                /bin/rm -f /etc/logrotate.d/*.saved
-on_update   /etc/cron.d                     /bin/rm -f /etc/cron.d/*.saved
-on_update   /etc/cron.daily                 /bin/rm -f /etc/cron.daily/*.saved
-on_update   /etc/init.d                     /bin/rm -f /etc/init.d/*.saved
-</pre>
+<div class="example">
+on_update &nbsp; /etc/aliases&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; /usr/bin/newaliases<br />
+on_update &nbsp; /etc/ssh/sshd_config &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;/etc/init.d/ssh reload<br />
+on_update &nbsp; /etc/syslog-ng/syslog-ng.conf &nbsp; /etc/init.d/syslog-ng reload<br />
+on_update &nbsp; /etc/ntp.conf&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;/sbin/service ntp reload<br />
+<br />
+on_update &nbsp; /etc/logrotate.d&nbsp; &nbsp; &nbsp; /bin/rm -f /etc/logrotate.d/*.saved<br />
+on_update &nbsp; /etc/cron.d&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;/bin/rm -f /etc/cron.d/*.saved<br />
+on_update &nbsp; /etc/cron.daily&nbsp; &nbsp; &nbsp; &nbsp;/bin/rm -f /etc/cron.daily/*.saved<br />
+on_update &nbsp; /etc/init.d&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;/bin/rm -f /etc/init.d/*.saved<br />
+</div>
 </dd>
 
 <dt>always_run &lt;shell command&gt;</dt>
@@ -298,9 +298,9 @@ the target node. You can use this to give certain nodes a slightly different
 synctool configuration than others. This can be important, especially in
 heterogeneous clusters.<br />
 Example:
-<pre class="example">
+<div class="example">
 include /etc/synctool_local.conf
-</pre>
+</div>
 </dd>
 
 <dt>terse &lt;yes/no&gt;</dt>
