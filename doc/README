@@ -1,0 +1,9 @@
+For synctool documentation, point your web browser to:
+
+  http://www.heiho.net/synctool/
+
+and click the link for documentation.
+
+This directory contains the source for that documentation, which
+may be rebuilt using the build.sh script.
+
