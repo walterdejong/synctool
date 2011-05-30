@@ -39,13 +39,13 @@ since it all works with <em>server push</em> and not client pull.
 <p>
 In the synctool masterdir there are by default five subdirectories, each having
 its own function:
-<pre class="example">
-* overlay/
-* delete/
-* scripts/
-* tasks/
+<div class="example">
+* overlay/ <br />
+* delete/ <br />
+* scripts/ <br />
+* tasks/ <br />
 * sbin/
-</pre>
+</div>
 The <span class="path">overlay/</span> tree contains files that have to be
 copied. When synctool detects a difference between a file on the system and a
 file in the overlay tree, the file will be copied from the
@@ -86,12 +86,12 @@ to every node so that synctool can run there.
 <p>
 <h3 id="running_synctool">Running synctool</h3>
 For example:
-<pre class="example">
-root@masternode:/# synctool
-node3: DRY RUN, not doing any updates
-node3: /etc/xinetd.d/identd updated (file size mismatch)
+<div class="example">
+root@masternode:/# synctool<br />
+node3: DRY RUN, not doing any updates<br />
+node3: /etc/xinetd.d/identd updated (file size mismatch)<br />
 node3: running command /etc/init.d/xinetd reload
-</pre>
+</div>
 The file is being updated because there is a mismatch in the file size.
 Should the file size be the same, synctool will calculate an MD5 checksum to
 see whether the file was changed or not.
@@ -111,24 +111,25 @@ reloaded after I change the <span class="path">identd</span> file.
 There are two ways to do this in synctool:
 <ol>
 <li>Old, classic way; Put in <span class="path">synctool.conf</span>:
-<pre class="example">
-on_update  /etc/xinetd.d/identd    /etc/init.d/xinetd reload
-</pre>
+<div class="example">
+on_update &nbsp; /etc/xinetd.d/identd &nbsp; &nbsp; &nbsp;
+/etc/init.d/xinetd reload
+</div>
 </li>
 <li>Modern way, much easier; Put in file
     <span class="path">$masterdir/overlay/etc/xinetd.d/identd.post</span>:
-<pre class="example">
+<div class="example">
 /etc/init.d/xinetd reload
-</pre>
+</div>
 Use <span class="cmd">chmod</span> to make the 
 <span class="system">.post</span> script executable as you would do with any
 other shell script. The <span class="system">.post</span> script will be run
 when the file changes:
-<pre class="example">
-root@masternode:/# synctool -qf
-node3: /etc/xinetd.d/identd updated (file size mismatch)
-node3: running command $masterdir/overlay/etc/xinetd.d/identd.post
-</pre>
+<div class="example">
+root@masternode:/# synctool -f<br />
+node3: /etc/xinetd.d/identd updated (file size mismatch)<br />
+node3: running command $masterdir/overlay/etc/xinetd.d/identd.post<br />
+</div>
 </li>
 </ol>
 The <span class="system">.post</span> script is executed in the directory
@@ -145,13 +146,13 @@ you can also put an <span class="system">on_update</span> trigger or
 Whenever a file in the directory gets modified, that trigger will be called.
 So, we can simplify the situation for <span class="path">/etc/xinetd.d</span>
 to:
-<pre class="example">
-on_update   /etc/xinetd.d    /etc/init.d/xinetd reload
-</pre>
+<div class="example">
+on_update &nbsp; /etc/xinetd.d &nbsp; &nbsp; &nbsp; /etc/init.d/xinetd reload
+</div>
 or <span class="path">$masterdir/overlay/etc/xinetd.d.post</span>:
-<pre class="example">
+<div class="example">
 /etc/init.d/xinetd reload
-</pre>
+</div>
 </p>
 
 <p>
@@ -159,12 +160,12 @@ or <span class="path">$masterdir/overlay/etc/xinetd.d.post</span>:
 The next example shows that the nodename can be used as a group.
 In the example, the <span class="path">fstab</span> file is identical
 throughout the cluster, with the exception of node5 and node7.
-<pre class="example">
-root@masternode:/# ls -F /var/lib/synctool/overlay/etc
-fstab._all      motd.production._batch   sudoers._all
-fstab._node5    nsswitch.conf._all       sysconfig/
-fstab._node7    nsswitch.conf.old._all   sysctl.conf._all
-</pre>
+<div class="example">
+root@masternode:/# ls -F /var/lib/synctool/overlay/etc<br />
+fstab._all &nbsp; &nbsp; motd.production._batch &nbsp; sudoers._all<br />
+fstab._node5 &nbsp; nsswitch.conf._all &nbsp; &nbsp; &nbsp; sysconfig/<br />
+fstab._node7 &nbsp; nsswitch.conf.old._all &nbsp; sysctl.conf._all
+</div>
 Group <span class="system">all</span> implictly applies to all nodes.
 Likewise, there is an implicit group <span class="system">none</span> that
 applies to no nodes. Group <span class="system">none</span> can be
@@ -175,10 +176,10 @@ it to any nodes yet.
 <p>
 <h3 id="useful_options">Useful options</h3>
 The <span class="system">-q</span> option of synctool gives less output:
-<pre class="example">
-root@masternode:/# synctool -q
+<div class="example">
+root@masternode:/# synctool -q<br />
 node3: /etc/xinetd.d/identd updated (file size mismatch)
-</pre>
+</div>
 If <span class="system">-q</span> still gives too much output, because you
 have many nodes in your cluster, it is possible to specify
 <span class="system">-a</span> to condense (aggregate) output. The condensed
@@ -187,15 +188,15 @@ output groups together output that is the same for many nodes.<br />
 synctool does this by piping the output through the
 <span class="cmd">synctool-aggr</span> command. You may also use this to
 condense output from <span class="cmd">dsh</span>, for example
-<pre class="example">
+<div class="example">
 # dsh date | synctool-aggr
-</pre>
+</div>
 or just
-<pre class="example">
-# dsh -a date
-
+<div class="example">
+# dsh -a date<br />
+<br />
 # dsh-ping -a
-</pre>
+</div>
 The <span class="system">-f</span> or <span class="system">--fix</span> option
 applies all changes. Always be sure to run synctool
 at least once as a dry run! (without <span class="system">-f</span>).
@@ -214,10 +215,10 @@ To update only a single file rather than all files, use the option
 If you want to check what file synctool is using for a given destination
 file, use the <span class="system">-r</span> or
 <span class="system">--ref</span> option:
-<pre class="example">
-root@masternode:/# synctool -q -n node1 -r /etc/resolv.conf
+<div class="example">
+root@masternode:/# synctool -q -n node1 -r /etc/resolv.conf<br />
 node1: /etc/resolv.conf._somegroup
-</pre>
+</div>
 To inspect differences between the master copy and the client copy of a file,
 use <span class="system">--diff</span> or <span class="system">-d</span>.
 </p>
@@ -231,32 +232,32 @@ or <span class="system">-x</span>, and <span class="system">--exclude-group</spa
 or <span class="system">-X</span>. This also works for
 <span class="cmd">dsh</span> and <span class="cmd">dcp</span>, as well as
 <span class="cmd">dsh-ping</span>. For example:
-<pre class="example">
+<div class="example">
 # synctool -g batch,sched -X rack8
-</pre>
+</div>
 Another example:
-<pre class="example">
+<div class="example">
 # dsh -n node1,node2,node3 date
-</pre>
+</div>
 or copy a file to these three nodes:
-<pre class="example">
+<div class="example">
 # dcp -n node1,node2,node3 -d /tmp patchfile-1.0.tar.gz
-</pre>
+</div>
 You may also wish to pull a file from a node into the repository. You can do
 this from the masternode like this:
-<pre class="example">
+<div class="example">
 # synctool -n node1 --upload /path/to/file
-</pre>
+</div>
 It may be desirable to give the file a different group extension than the
 default proposed by synctool:
-<pre class="example">
+<div class="example">
 # synctool -n node1 --upload /path/to/file --suffix=somegroup
-</pre>
+</div>
 After rebooting a cluster, use dsh-ping to see if the nodes respond to ping
 yet. You may also do this on a group of nodes:
-<pre class="example">
+<div class="example">
 # dsh-ping -g rack4
-</pre>
+</div>
 The <span class="system">-t</span> or <span class="system">--tasks</span>
 option runs the de executables that are in <span class="path">tasks/</span>
 (if you also supply <span class="system">-f</span>..!)
@@ -281,33 +282,37 @@ You have to explicitly specify this argument to run tasks.
 <p>
 The <span class="system">-v</span> option gives verbose output.
 This is another way of displaying the logic that synctool performs:
-<pre class="example">
-# synctool -v
-node3: checking $masterdir/overlay/etc/tcpd_banner.production._all
-node3: overridden by $masterdir/overlay/etc/tcpd_banner.production._batch
-node3: checking $masterdir/overlay/etc/issue.net.production._all
-node3: checking $masterdir/overlay/etc/syslog.conf._all
-node3: checking $masterdir/overlay/etc/issue.production._all
-node3: checking $masterdir/overlay/etc/modules.conf._all
-node3: checking $masterdir/overlay/etc/hosts.allow.production._interactive
-node3: skipping $masterdir/overlay/etc/hosts.allow.production._interactive,
+<div class="example">
+# synctool -v<br />
+node3: checking $masterdir/overlay/etc/tcpd_banner.production._all<br />
+node3: overridden by $masterdir/overlay/etc/tcpd_banner.production._batch<br />
+node3: checking $masterdir/overlay/etc/issue.net.production._all<br />
+node3: checking $masterdir/overlay/etc/syslog.conf._all<br />
+node3: checking $masterdir/overlay/etc/issue.production._all<br />
+node3: checking $masterdir/overlay/etc/modules.conf._all<br />
+node3: checking
+$masterdir/overlay/etc/hosts.allow.production._interactive<br />
+node3: skipping
+$masterdir/overlay/etc/hosts.allow.production._interactive,<br />
 it is not one of my groups
-</pre>
+</div>
 The <span class="system">--unix</span> option produces
 <span class="smallcaps">UNIX</span>-style output.
 This shows in standard shell syntax just what synctool is about to do.
-<pre class="example">
-root@masternode:/# synctool --unix
-node3: # updating file /etc/xinetd.d/identd
-node3: mv /etc/xinetd.d/identd /etc/xinetd.d/identd.saved
-node3: umask 077
-node3: cp /var/lib/synctool/overlay/etc/xinetd.d/identd._all /etc/xinetd.d/identd
-node3: chown root.root /etc/xinetd.d/identd
-node3: chmod 0644 /etc/xinetd.d/identd
-node3:
-node3: # run command /bin/rm /etc/xinetd.d/*.saved ; /etc/init.d/xinetd reload
-node3: /bin/rm /etc/xinetd.d/*.saved ; /etc/init.d/xinetd reload
-</pre>
+<div class="example">
+root@masternode:/# synctool --unix<br />
+node3: # updating file /etc/xinetd.d/identd<br />
+node3: mv /etc/xinetd.d/identd /etc/xinetd.d/identd.saved<br />
+node3: umask 077<br />
+node3: cp /var/lib/synctool/overlay/etc/xinetd.d/identd._all
+/etc/xinetd.d/identd<br />
+node3: chown root.root /etc/xinetd.d/identd<br />
+node3: chmod 0644 /etc/xinetd.d/identd<br />
+node3:<br />
+node3: # run command /bin/rm /etc/xinetd.d/*.saved ;
+/etc/init.d/xinetd reload<br />
+node3: /bin/rm /etc/xinetd.d/*.saved ; /etc/init.d/xinetd reload<br />
+</div>
 <div class="note">
 synctool does not apply changes by executing shell commands; all
 operations are programmed in Python. The <span class="system">--unix</span>
@@ -333,9 +338,9 @@ When using <span class="system">--fix</span> to apply changes, synctool can
 log the performed actions in a log file.
 Use the <span class="system">logfile</span> directive in
 <span class="path">synctool.conf</span> to specify that you want logging:
-<pre class="example">
+<div class="example">
 logfile /var/log/synctool.log
-</pre>
+</div>
 synctool will write this logfile on each node seperately, and a concatenated
 log on the master node.
 </p>
@@ -345,15 +350,15 @@ log on the master node.
 By using directives in the <span class="path">synctool.conf</span> file,
 synctool can be told to ignore certain files, nodes, or groups.
 These will be excluded, skipped. For example:
-<pre class="example">
-ignore_dotfiles no
-ignore_dotdirs yes
-ignore .svn
-ignore .gitignore
-ignore_node node1 node2
-ignore_group oldgroup
+<div class="example">
+ignore_dotfiles no<br />
+ignore_dotdirs yes<br />
+ignore .svn<br />
+ignore .gitignore<br />
+ignore_node node1 node2<br />
+ignore_group oldgroup<br />
 ignore_group test
-</pre>
+</div>
 </p>
 
 <p>
@@ -364,21 +369,21 @@ This is awkward, because this mode seems to imply that owners, group members,
 and others have write access to the symbolic link &mdash;
 which is not the case. This results in synctool complaining about the mode
 of the symbolic link:
-<pre class="example">
+<div class="example">
 /path/subdir/symlink should have mode 0755 (symlink), but has 0777
-</pre>
+</div>
 As a workaround, synctool forces the mode of the symbolic link to what
 you set it to in <span class="system">synctool.conf</span>.
 The hardcoded default value is 0755. Linux users should configure the
 value 0777 in <span class="system">synctool.conf</span>:
-<pre class="example">
-# Linux
+<div class="example">
+# Linux<br />
 symlink_mode 0777
-</pre>
-<pre class="example">
-# sensible mode for most other UNIX systems
+</div>
+<div class="example">
+# sensible mode for most other UNIX systems<br />
 symlink_mode 0755
-</pre>
+</div>
 <div class="note">
 <em>unix.com</em> says about this:
 <p>
@@ -393,17 +398,17 @@ will be <em>dead</em> symlinks but they will point to the correct destination
 on the target node.
 Consider the following example, where <span class="system">file</span> does
 not exist &lsquo;as is&rsquo; in the repository:
-<pre class="example">
-$masterdir/overlay/etc/motd._red -&gt; file
+<div class="example">
+$masterdir/overlay/etc/motd._red -&gt; file<br />
 $masterdir/overlay/etc/file._red
-</pre>
+</div>
 <h3 id="backup_copies">Backup copies</h3>
 For any file synctool updates, it keeps a backup copy around on the target
 node with the extension <span class="system">.saved</span>. If you don't
 like this, you can tell synctool to not make any backup copies with:
-<pre class="example">
+<div class="example">
 backup_copies no
-</pre>
+</div>
 It is however highly recommended that you run with
 <span class="system">backup_copies</span> enabled.
 You can manually specify that you want to remove all backup copies using
@@ -419,9 +424,9 @@ locally by including a second config file that is present on the node.
 
 <p>
 <span class="system">synctool.conf</span>:
-<pre class="example">
+<div class="example">
 include /etc/synctool_local.conf
-</pre>
+</div>
 The local config file may contain the same directives as the master config
 file, but apply only to the node on which the file resides. The local config
 file may be managed from the master repository, enabling you to have subtle
@@ -439,11 +444,11 @@ and not including any local configs at all.
 <p>
 The <span class="system">include</span> keyword can also be used to
 clean up your config a little, for example:
-<pre class="example">
-include /var/lib/synctool/nodes.conf
-include /var/lib/synctool/colors.conf
+<div class="example">
+include /var/lib/synctool/nodes.conf<br />
+include /var/lib/synctool/colors.conf<br />
 include /var/lib/synctool/on_update.conf
-</pre>
+</div>
 In this example all the nodes get the same config, because the masterdir
 <span class="path">/var/lib/synctool/</span> is synced to all nodes.
 </p>
