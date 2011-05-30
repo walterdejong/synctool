@@ -2,9 +2,9 @@
 <p>
 There are a number of people I wish to thank. First of all, a big thanks goes
 out to all synctool users. Special thanks go to those whom I've had e-mail
-conversations with. And last but not least, very special thanks go to those
-who contributed to synctool in one way or another. synctool would not be what
-it is today without their contributions.
+conversations with about synctool. And last but not least, very special thanks
+go to those who contributed to synctool in one way or another. synctool would
+not be what it is today without their contributions.
 </p>
 <p style="padding-left: 1em;">
 Huub Stoffers<br />
@@ -15,8 +15,8 @@ Chuck Lane<br />
 Brad Olson<br />
 Olof Schonbeck<br />
 NLUUG<br />
-Various teams at SARA for adoption and thereby functioning as primary beta
-testers<br />
+Various teams at SARA for adopting synctool and thereby functioning as primary
+beta testers<br />
 </p>
 <p>
 If you also want to contribute to synctool, drop me an e-mail. If you are a

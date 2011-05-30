@@ -87,8 +87,10 @@ to every node so that synctool can run there.
 <h3 id="running_synctool">Running synctool</h3>
 For example:
 <pre class="example">
-root@masternode:/# synctool -qf
+root@masternode:/# synctool
+node3: DRY RUN, not doing any updates
 node3: /etc/xinetd.d/identd updated (file size mismatch)
+node3: running command /etc/init.d/xinetd reload
 </pre>
 The file is being updated because there is a mismatch in the file size.
 Should the file size be the same, synctool will calculate an MD5 checksum to
@@ -176,8 +178,6 @@ The <span class="system">-q</span> option of synctool gives less output:
 <pre class="example">
 root@masternode:/# synctool -q
 node3: /etc/xinetd.d/identd updated (file size mismatch)
-node3: running command /bin/rm /etc/xinetd.d/*.saved ;
-/etc/init.d/xinetd reload
 </pre>
 If <span class="system">-q</span> still gives too much output, because you
 have many nodes in your cluster, it is possible to specify
@@ -207,7 +207,7 @@ leads to any problems.
 <p>
 To update only a single file rather than all files, use the option
 <span class="system">--single</span> or <span class="system">-1</span>
-(that's a number one, not the letter ell).
+(that's a number one, not the letter <em>ell</em>).
 </p>
 
 <p>
@@ -383,8 +383,8 @@ symlink_mode 0755
 <em>unix.com</em> says about this:
 <p>
 &ldquo;The permission settings on a symbolic link are a little special
-[as well]. They are completely ignored. Many versions of Unix have no way to
-change them.&rdquo;
+[as well]. They are completely ignored. Many versions of
+<span class="smallcaps">Unix</span> have no way to change them.&rdquo;
 </p>
 </div>
 As synctool requires all files in the repository to have an extension,

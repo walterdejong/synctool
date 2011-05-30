@@ -30,10 +30,26 @@
   <li><a href="chapter3.html#local_config">Node-specific local configuration
     adjustments</a></li>
   <li><a href="chapter3.html#checking_for_updates">Checking for updates</a></li>
-  </ol>
- </li>
+ </ol>
+</li>
 
 <li><a href="chapter4.html">All configuration parameters explained</a></li>
-<li><a href="chapter5.html">Best practices</a></li>
+<li><a href="chapter5.html">Best practices</a>
+ <ol class="subindex">
+  <li><a href="chapter5.html#use_logical_group_names">Use logical group
+    names</a></li>
+  <li><a href="chapter5.html#do_not_manage_the_master">Do not manage
+    the master node</a></li>
+  <li><a href="chapter5.html#use_ext_on_dirs_sparingly">Use group extensions
+    on directories sparingly</a></li>
+  <li><a href="chapter5.html#write_templates">Write templates for
+    &lsquo;dynamic&rsquo; config files</a></li>
+  <li><a href="chapter5.html#multiple_clusters">Managing multiple clusters with
+    one synctool</a></li>
+  <li><a href="chapter5.html#tiered_setup">Use a tiered setup for large
+    clusters</a></li>
+ </ol>
+</li>
+
 <li><a href="thank_you.html">Thank you</a></li>
 </ol>

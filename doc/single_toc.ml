@@ -34,6 +34,22 @@
  </li>
 
 <li><a href="#part_four">All configuration parameters explained</a></li>
-<li><a href="#part_five">Best practices</a></li>
+<li><a href="#part_five">Best practices</a>
+ <ol class="subindex">
+  <li><a href="#use_logical_group_names">Use logical group
+    names</a></li>
+  <li><a href="#do_not_manage_the_master">Do not manage
+    the master node</a></li>
+  <li><a href="#use_ext_on_dirs_sparingly">Use group extensions
+    on directories sparingly</a></li>
+  <li><a href="#write_templates">Write templates for
+    &lsquo;dynamic&rsquo; config files</a></li>
+  <li><a href="#multiple_clusters">Managing multiple clusters with
+    one synctool</a></li>
+  <li><a href="#tiered_setup">Use a tiered setup for large
+    clusters</a></li>
+ </ol>
+</li>
+
 <li><a href="#thank_you">Thank you</a></li>
 </ol>
