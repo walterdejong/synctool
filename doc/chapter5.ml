@@ -114,3 +114,58 @@ the new config file on the node.
 It may sound complicated, but once you have this in place it will be very easy
 to change the config file as you like by using the template.
 </p>
+
+<p>
+<h3 id="multiple_clusters">Managing multiple clusters with one synctool</h3>
+It is usually best to manage just one cluster with one synctool. This means
+that your repository will contain files that apply only to that cluster.
+In reality, you may have only one management host for managing multiple
+clusters. You can deal with this in synctool in multiple ways, just pick one
+you like best.
+<ol>
+<li style="padding-top: 0.5em;">Add all clusters to the synctool repository as
+ you would with adding more nodes. For convenience, create a group for each
+ cluster, so you can handle them independently whenever you wish to.
+</li>
+
+<li style="padding-top: 0.5em;">As above, create a group for each cluster.
+ Restructure the <span class="system">overlay</span> dir by using multiple
+ <span class="system">overlaydir</span> declarations in
+ <span class="path">synctool.conf</span>. Your repository will look something
+ like this:
+<pre class="example">
+$masterdir/overlay/common/
+$masterdir/overlay/cluster1/
+$masterdir/overlay/cluster2/
+$masterdir/overlay/cluster3/
+</pre>
+ Note that synctool internally treats multiple
+ <span class="system">overlay</span> directories as if they were one flat
+ directory, so you will still need to put the correct group extensions on the
+ files, but at least your tree will be neatly organized. Maintaining this
+ structure can be hard, but it can also be just what you needed if you feel
+ that the first solution was messy.
+</li>
+
+<li style="padding-top: 0.5em;">For each cluster, setup its own
+ <span class="system">masterdir</span>, with its own
+ <span class="path">synctool.conf</span> file and its own repository.
+ Wrap the synctool command with a script that points to the relevant synctool
+ tree:
+<pre class="example">
+/opt/synctool/sbin/synctool -c /var/lib/synctool/cluster1/synctool.conf
+</pre>
+ A big advantage of this approach is that it is clear where each file
+ should go. Another big advantage is that each cluster can have its own set of
+ groups. In the previous solutions, all groups are shared among the clusters.
+ A disadvantage is that files that should be the same over all clusters are
+ spread over multiple repositories.
+</li>
+
+</ol>
+</p>
+
+<p>
+<h3 id="tiered_setup">Use a tiered setup for large clusters</h3>
+
+</p>
