@@ -53,3 +53,24 @@ If you still want to manage the master with synctool, do as you must. Just be
 sure to call <span class="cmd">dsh -X master reboot</span> when you want to
 reboot your cluster.
 </p>
+
+<p>
+<h3 id="use_extension_on_dirs_sparingly">Use group extensions on directories
+sparingly</h3>
+The ability to add a group extension to a directory is a powerful feature.
+As you may know, with great power comes great responsibility. This feature will
+make a big mess of your repository when used incorrectly. If you catch yourself
+having to use <span class="cmd">find</span> all the time to pinpoint the
+location of a file in the repository, chances are that you making things
+harder on yourself than ought to be.<br />
+There are situations where adding a group extension to a directory makes
+perfect sense. For example, when having an <span class="path">/usr/local</span>
+tree that only exists on a small group of nodes. Personally, I like to move 
+such trees out of the main <span style="system">overlay</span> tree and park it
+under a different <span class="system">overlaydir</span> just to get it out
+of sight and clean up the repository a little.
+Note that <span class="system">overlaydir</span> works on all nodes so you will
+still have the group extension on the directory,
+but <span class="system">overlaydir</span> is just another way of organizing
+your repository.
+</p>
