@@ -17,6 +17,7 @@ import synctool_aggr
 import synctool_lib
 import synctool_unbuffered
 import synctool_nodeset
+import synctool_stat
 
 from synctool_lib import verbose,stdout,stderr,terse,unix_out
 
@@ -204,6 +205,12 @@ def upload(interface, upload_filename, upload_suffix=None):
 	if dry_run:
 		stdout('would be uploaded as %s' % synctool_lib.prettypath(repos_filename))
 	else:
+		# first check if the directory in the repository exists
+		repos_dir = os.path.dirname(repos_filename)
+		stat = synctool_stat.SyncStat(repos_dir)
+		if not stat.exists():
+			synctool_lib.mkdir_p(repos_dir)
+		
 		# make scp command array
 		scp_cmd_arr = shlex.split(synctool_param.SCP_CMD)
 		scp_cmd_arr.append('%s:%s' % (interface, upload_filename))

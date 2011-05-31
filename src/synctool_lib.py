@@ -17,6 +17,7 @@ import os
 import sys
 import string
 import time
+import errno
 
 try:
 	import hashlib
@@ -408,8 +409,50 @@ def search_path(cmd):
 	return cmd
 
 
+def mkdir_p(path):
+	'''like mkdir -p; make directory and subdirectories'''
+	
+	arr = string.split(path, '/')
+	if arr[0] == '':
+		# first element is empty; this happens when path starts with '/'
+		arr.pop(0)
+	
+	if not arr:
+		return
+	
+	# 'walk' the path
+	mkdir_path = ''
+	for elem in arr:
+		mkdir_path = mkdir_path + '/' + elem
+		
+		# see if the directory already exists
+		try:
+			os.stat(mkdir_path)
+		except OSError, err:
+			if err.errno == errno.ENOENT:
+				pass
+			else:
+				# odd ...
+				stderr('error: stat(%s): %s' % (mkdir_path, err))
+				# and what now??
+		else:
+			# no error from stat(), directory already exists
+			continue
+		
+		# make the directory
+		try:
+			os.mkdir(mkdir_path)		# uses the default umask
+		except OSError, err:
+			if err.errno == errno.EEXIST:
+				# "File exists" (it's a directory, but OK)
+				# this is unexpected, but still possible
+				continue
+			
+			stderr('error: mkdir(%s) failed: %s' % (mkdir_path, reason))
+
+
 #
-#	functions straigthening out paths that were given by the user
+# functions straigthening out paths that were given by the user
 #
 def strip_multiple_slashes(path):
 	if not path:
