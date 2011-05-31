@@ -8,6 +8,8 @@
 #   License.
 #
 
+from synctool_lib import stderr
+
 import os
 import stat
 import pwd
@@ -43,10 +45,11 @@ class SyncStat:
 			return
 		
 		try:
-			statbuf = os.stat(path)
-		except OSError:
+			statbuf = os.lstat(path)
+		except OSError, reason:
 			# could be something stupid like "Permission denied" ...
 			# although synctool should be run as root
+			stderr('error: stat(%s) failed: %s' % (path, reason))
 			self.entry_exists = False
 			self.mode = self.uid = self.gid = self.size = None
 		
