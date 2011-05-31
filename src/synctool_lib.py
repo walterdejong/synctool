@@ -31,6 +31,10 @@ try:
 except ImportError:
 	use_subprocess = False
 
+
+# blocksize for doing I/O while checksumming files
+BLOCKSIZE = 16 * 1024
+
 # options (mostly) set by command-line arguments
 DRY_RUN = False
 VERBOSE = False

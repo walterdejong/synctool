@@ -37,9 +37,6 @@ ACTION_DIFF = 1
 ACTION_RUN_TASKS = 3
 ACTION_REFERENCE = 4
 
-# blocksize for doing I/O while checksumming files
-BLOCKSIZE = 16 * 1024
-
 SINGLE_FILES = []
 
 # list of changed directories
