@@ -161,9 +161,6 @@ def upload(interface, upload_filename, upload_suffix=None):
 	# see if file is already in the repository
 	(obj, err) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, upload_filename)
 	
-	repos_filename = obj.src_path
-	dest = obj.dest_path
-	
 	if err == synctool_overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
@@ -194,20 +191,22 @@ def upload(interface, upload_filename, upload_suffix=None):
 				repos_filename = string.join(arr[:-1], '.')
 			
 			repos_filename = repos_filename + '._' + upload_suffix
+		else:
+			repos_filename = obj.src_path
 	
 	synctool_param.NODENAME = orig_NODENAME
 	synctool_param.MY_GROUPS = orig_MY_GROUPS
 	
 	verbose('%s:%s uploaded as %s' % (node, upload_filename, repos_filename))
 	terse(synctool_lib.TERSE_UPLOAD, repos_filename)
-	unix_out('%s %s:%s %s' % (synctool_param.SCP_CMD, interface, dest, repos_filename))
+	unix_out('%s %s:%s %s' % (synctool_param.SCP_CMD, interface, upload_filename, repos_filename))
 	
 	if dry_run:
 		stdout('would be uploaded as %s' % synctool_lib.prettypath(repos_filename))
 	else:
 		# make scp command array
 		scp_cmd_arr = shlex.split(synctool_param.SCP_CMD)
-		scp_cmd_arr.append('%s:%s' % (interface, dest))
+		scp_cmd_arr.append('%s:%s' % (interface, upload_filename))
 		scp_cmd_arr.append(repos_filename)
 		
 		synctool_lib.run_with_nodename(scp_cmd_arr, NODESET.get_nodename_from_interface(interface))
