@@ -285,7 +285,7 @@ def single_files(filename):
 	
 	verbose('checking against %s' % obj.print_src())
 	
-	changed = compare_files(obj)
+	changed = obj.compare_files()
 	if not changed:
 		stdout('%s is up to date' % filename)
 		terse(synctool_lib.TERSE_OK, filename)
@@ -358,20 +358,20 @@ def diff_files(filename):
 		return
 	
 	if synctool_lib.UNIX_CMD:
-		unix_out('%s %s %s' % (synctool_param.DIFF_CMD, dest, obj.src_path))
+		unix_out('%s %s %s' % (synctool_param.DIFF_CMD, obj.dest_path, obj.src_path))
 	else:
-		verbose('%s %s %s' % (synctool_param.DIFF_CMD, dest, obj.print_src()))
+		verbose('%s %s %s' % (synctool_param.DIFF_CMD, obj.dest_path, obj.print_src()))
 		
 		sys.stdout.flush()
 		sys.stderr.flush()
 		
 		if use_subprocess:
 			cmd_arr = shlex.split(synctool_param.DIFF_CMD)
-			cmd_arr.append(dest)
+			cmd_arr.append(obj.dest_path)
 			cmd_arr.append(obj.src_path)
 			subprocess.Popen(cmd_arr, shell=False)
 		else:
-			os.system('%s %s %s' % (synctool_param.DIFF_CMD, dest, obj.src_path))
+			os.system('%s %s %s' % (synctool_param.DIFF_CMD, obj.dest_path, obj.src_path))
 		
 		sys.stdout.flush()
 		sys.stderr.flush()
