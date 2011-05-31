@@ -161,6 +161,9 @@ def upload(interface, upload_filename, upload_suffix=None):
 	# see if file is already in the repository
 	(obj, err) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, upload_filename)
 	
+	repos_filename = obj.src_path
+	dest = obj.dest_path
+	
 	if err == synctool_overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
