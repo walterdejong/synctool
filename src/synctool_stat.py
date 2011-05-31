@@ -14,6 +14,7 @@ import os
 import stat
 import pwd
 import grp
+import errno
 
 
 class SyncStat:
@@ -46,10 +47,15 @@ class SyncStat:
 		
 		try:
 			statbuf = os.lstat(path)
-		except OSError, reason:
+		except OSError, err:
 			# could be something stupid like "Permission denied" ...
 			# although synctool should be run as root
-			stderr('error: stat(%s) failed: %s' % (path, reason))
+			
+			if err.errno != errno.ENOENT:
+				# "No such file or directory" is a valid error
+				# when the destination is missing
+				stderr('error: stat(%s) failed: %s' % (path, reason))
+			
 			self.entry_exists = False
 			self.mode = self.uid = self.gid = self.size = None
 		
