@@ -209,6 +209,8 @@ def upload(interface, upload_filename, upload_suffix=None):
 		repos_dir = os.path.dirname(repos_filename)
 		stat = synctool_stat.SyncStat(repos_dir)
 		if not stat.exists():
+			verbose('making directory %s' % synctool_lib.prettypath(repos_dir))
+			unix_out('mkdir -p %s' % repos_dir)
 			synctool_lib.mkdir_p(repos_dir)
 		
 		# make scp command array
