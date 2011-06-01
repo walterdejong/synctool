@@ -153,7 +153,7 @@ $masterdir/overlay/cluster3/
  Wrap the synctool command with a script that points to the relevant synctool
  tree:
 <div class="example">
-/opt/synctool/sbin/synctool -c /var/lib/synctool/cluster1/synctool.conf
+/opt/synctool/sbin/synctool -c /var/lib/synctool/cluster1/synctool.conf "$@"
 </div>
  A big advantage of this approach is that it is clear where each file
  should go. Another big advantage is that each cluster can have its own set of
