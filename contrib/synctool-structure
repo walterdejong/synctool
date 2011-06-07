@@ -26,11 +26,22 @@ for FILE in $TEMPDIR/synctool-structure-node-* ; do
   echo "$MERGED" > $TEMPDIR/synctool-structure-merged
 done
 
+# Find double groups: they may indicate inconsistancies.
+DOUBLE_GROUPS=`sort < $TEMPDIR/synctool-structure-merged | uniq --repeated`
+DOUBLE_GROUP_REGEX=''
+for GROUP in $DOUBLE_GROUPS ; do
+  if [ "$DOUBLE_GROUP_REGEX" == "" ] ; then
+    DOUBLE_GROUP_REGEX="$GROUP"
+  else
+    DOUBLE_GROUP_REGEX="$DOUBLE_GROUP_REGEX\|$GROUP"
+  fi
+done
+
 # For each node, compare group list to the merged list and format a nice line
 LONGEST_NODENAME=`synctool-config --list-nodes --filter-ignored | wc -L`
 # First we show a header
 COLUMN_ONE=`echo "                  " | cut -c1-${LONGEST_NODENAME}`
-echo "$COLUMN_ONE" `cat $TEMPDIR/synctool-structure-merged`
+echo "$COLUMN_ONE" `cat $TEMPDIR/synctool-structure-merged` | grep --color "\b\($DOUBLE_GROUP_REGEX\)[[:space:]]"
 echo
 # Now the nodes
 for FILE in $TEMPDIR/synctool-structure-node-* ; do
@@ -40,4 +51,5 @@ for FILE in $TEMPDIR/synctool-structure-node-* ; do
 done
 # Again the header
 echo
-echo "$COLUMN_ONE" `cat $TEMPDIR/synctool-structure-merged`
+echo "$COLUMN_ONE" `cat $TEMPDIR/synctool-structure-merged` | grep --color "\b\($DOUBLE_GROUP_REGEX\)[[:space:]]"
+
