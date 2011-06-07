@@ -479,7 +479,7 @@ class SyncObject:
 	
 	def symlink_file(self, oldpath):
 		# note that old_path is the readlink() of the self.src_path
-		new_path = self.dest_path
+		newpath = self.dest_path
 		
 		if self.dest_exists():
 			unix_out('mv %s %s.saved' % (newpath, newpath))
