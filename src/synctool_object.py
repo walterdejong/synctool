@@ -491,7 +491,7 @@ class SyncObject:
 		#
 		
 		# linux makes all symlinks mode 0777, but some other platforms do not
-		umask_mode = synctool_param.symlink_mode ^ 0777
+		umask_mode = synctool_param.SYMLINK_MODE ^ 0777
 		
 		unix_out('umask %03o' % umask_mode)
 		unix_out('ln -s %s %s' % (oldpath, newpath))
