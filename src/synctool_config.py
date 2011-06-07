@@ -44,6 +44,8 @@ ACTION_LIST_DIRS = 12
 OPT_FILTER_IGNORED = False
 # optional: list interface names for the selected nodes
 OPT_INTERFACE = False
+# optional: list hostnames for the selected nodes
+OPT_HOSTNAME = False
 
 
 def read_config():
@@ -197,6 +199,13 @@ def get_node_interface(node):
 	return node
 
 
+def get_node_hostname(node):
+	if synctool_param.HOSTNAMES_BY_NODE.has_key(node):
+		return synctool_param.HOSTNAMES_BY_NODE[node]
+	
+	return node
+
+
 def list_all_nodes():
 	nodes = get_all_nodes()
 	nodes.sort()
@@ -211,11 +220,17 @@ def list_all_nodes():
 			if OPT_INTERFACE:
 				host = get_node_interface(host)
 			
+			elif OPT_HOSTNAME:
+				host = get_node_hostname(host)
+			
 			if not OPT_FILTER_IGNORED:
 				print '%s (ignored)' % host
 		else:
 			if OPT_INTERFACE:
 				host = get_node_interface(host)
+			
+			elif OPT_HOSTNAME:
+				host = get_node_hostname(host)
 			
 			print host
 
@@ -273,6 +288,10 @@ def list_nodes(nodenames):
 		
 		if OPT_INTERFACE:
 			print get_node_interface(nodename)
+		
+		elif OPT_HOSTNAME:
+			print get_node_hostname(nodename)
+		
 		else:
 			for group in get_groups(nodename):
 				if not group in groups:
@@ -319,11 +338,17 @@ def list_nodegroups(nodegroups):
 			if OPT_INTERFACE:
 				node = get_node_interface(node)
 			
+			elif OPT_HOSTNAME:
+				node = get_node_hostname(node)
+			
 			if not OPT_FILTER_IGNORED:
 				print '%s (ignored)' % node
 		else:
 			if OPT_INTERFACE:
 				node = get_node_interface(node)
+			
+			elif OPT_HOSTNAME:
+				node = get_node_hostname(node)
 			
 			print node
 
@@ -372,7 +397,7 @@ def set_action(a, opt):
 	global ACTION, ACTION_OPTION
 	
 	if ACTION > 0:
-		stderr('the options %s and %s can not be combined' % (ACTION_OPTION, opt))
+		stderr('options %s and %s can not be combined' % (ACTION_OPTION, opt))
 		sys.exit(1)
 	
 	ACTION = a
@@ -391,6 +416,7 @@ def usage():
 	print '  -g, --group=grouplist    List all nodes in this group'
 	print '  -i, --ipaddress          List selected nodes by IP address'
 	print '  -i, --interface          Same thing; old form for --ipaddress'
+	print '  -H, --hostname           List selected nodes by hostname'
 	print '  -f, --filter-ignored     Do not list ignored nodes and groups'
 	print
 	print '  -C, --command=command    Display setting for command'
@@ -410,7 +436,7 @@ def usage():
 
 def get_options():
 	global CONF_FILE, ARG_NODENAMES, ARG_GROUPS, ARG_CMDS
-	global OPT_FILTER_IGNORED, OPT_INTERFACE
+	global OPT_FILTER_IGNORED, OPT_INTERFACE, OPT_HOSTNAME
 	
 	progname = os.path.basename(sys.argv[0])
 	
@@ -419,9 +445,9 @@ def get_options():
 		sys.exit(1)
 	
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:lLn:g:ifC:pmdv',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:lLn:g:iHfC:pmdv',
 			['help', 'conf=', 'list-nodes', 'list-groups', 'node=', 'group=',
-			'interface', 'ipaddress', 'filter-ignored',
+			'interface', 'ipaddress', 'hostname', 'filter-ignored',
 			'command', 'numproc', 'masterdir', 'list-dirs', 'prefix',
 			'logfile', 'nodename', 'version'])
 	
@@ -480,6 +506,10 @@ def get_options():
 			OPT_INTERFACE = True
 			continue
 		
+		if opt in ('-H', '--hostname'):
+			OPT_HOSTNAME = True
+			continue
+		
 		if opt in ('-f', '--filter-ignored'):
 			OPT_FILTER_IGNORED = True
 			continue
@@ -535,6 +565,10 @@ if __name__ == '__main__':
 	if ACTION == ACTION_VERSION:
 		print synctool_param.VERSION
 		sys.exit(0)
+	
+	if OPT_INTERFACE and OPT_HOSTNAME:
+		stderr('options --interface, --ipaddress and --hostname can not be combined')
+		sys.exit(1)
 	
 	read_config()
 	

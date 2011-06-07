@@ -530,6 +530,7 @@ def config_node(arr, configfile, lineno):
 					return 1
 				
 				synctool_param.HOSTNAMES[arg] = node
+				synctool_param.HOSTNAMES_BY_NODE[node] = arg
 			
 			else:
 				stderr('%s:%d: unknown node qualifier %s' % (configfile, lineno, qualifier))
