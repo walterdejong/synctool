@@ -70,15 +70,15 @@ what nodes have what roles, and how synctool can contact them.
 Think a bit about what role each machine has. There is no need to go into
 great depth right now; you can always adjust the configuration later.
 <div class="example">
-node n1 ipaddress:machine-n01
+node n1 ipaddress:machine-n01 hostname:machine-n01.domain.org
 </div>
 The nodename is the &lsquo;synctool name that the node has.&rsquo; It is in
 general the short hostname of the host, but in fact it can be anything you
 like. The nodename has nothing to do with hostnames or DNS entries.
-The <span class="system">ipaddress</span> specifier tells synctool how to
-contact the node; this can be an IP address or a DNS name of the host you wish
-to contact. In clusters, there is often a management network interface &mdash;
-configure its IP address here.
+The optional <span class="system">ipaddress</span> specifier tells synctool how
+to contact the node; this can be an IP address or a DNS name of the host you
+wish to contact. In clusters, there is often a management network interface
+&mdash; configure its IP address here.
 </p>
 <div class="note">
 In older versions of synctool, <span class="system">ipaddress</span> was
@@ -86,7 +86,26 @@ called <span class="system">interface</span>.
 The <span class="system">interface</span> keyword still works, but is
 discouraged because it really is an IP address and not a network interface.
 </div>
-
+The optional <span class="system">hostname</span> specifier tells synctool that
+a host that has this fully qualified hostname, must be this node. In general
+it is safe to omit this, but there are cases (particularly multi-homed systems)
+where synctool can not figure out what node it is running on.
+This may happen when the <span class="system">ipaddress</span> does not
+directly map to the nodename, or when the hostname is different from the
+nodename. synctool can not magically know what node it is running on when
+this is the case. The property that uniquely identifies a host is its hostname.
+You can instruct synctool that this node is the host with the corresponding
+hostname.<br />
+<div class="note">
+synctool uses the <span class="system">socket.getfqdn()</span> function to
+determine the fully qualified name of the host. If synctool is not finding the
+node for the specified hostname, add a line to
+<span class="path">/etc/hosts</span>:
+ <div class="system">
+ <br />
+127.0.1.1 &nbsp; myhost.mydomain.com &nbsp; myhost
+ </div>
+</div>
 <p>
 It is good practice to label your master node as &lsquo;master&rsquo; or
 &lsquo;install&rsquo;.

@@ -215,7 +215,8 @@ group g1 batch test wn
 </div>
 </dd>
 
-<dt>node &lt;nodename&gt; &lt;group&gt; [..] [ipaddress:&lt;IP address&gt;]</dt>
+<dt>node &lt;nodename&gt; &lt;group&gt; [..] [ipaddress:&lt;IP address&gt;]
+  [hostname:&lt;fully qualified hostname&gt;]</dt>
 <dd>The <span class="system">node</span> keyword defines what groups a node
 is in. Multiple groups may be given. The order of the groups is important;
 the left-most group is most important, and the right-most group is least
@@ -232,12 +233,33 @@ as DNS names. In older versions of synctool, the
 <span class="system">host</span>, and the
 <span class="system">ipaddress</span> specifier was named
 <span class="system">interface</span>.<br />
+The optional <span class="system">hostname</span> specifier tells synctool that
+a host that has this fully qualified hostname, must be this node. In general
+it is safe to omit this, but there are cases (particularly multi-homed systems)
+where synctool can not figure out what node it is running on.
+This may happen when the <span class="system">ipaddress</span> does not
+directly map to the nodename, or when the hostname is different from the
+nodename. synctool can not magically know what node it is running on when
+this is the case. The property that uniquely identifies a host is its hostname.
+You can instruct synctool that this node is the host with the corresponding
+hostname.<br />
+<div class="note">
+synctool uses the <span class="system">socket.getfqdn()</span> function to
+determine the fully qualified name of the host. If synctool is not finding the
+node for the specified hostname, add a line to
+<span class="path">/etc/hosts</span>:
+ <div class="system">
+ <br />
+127.0.1.1 &nbsp; myhost.mydomain.com &nbsp; myhost
+ </div>
+</div>
 Example:
 <div class="example">
 node node0 master<br />
 <br />
 node node1 fs sched rack1 ipaddress:node1-mgmt<br />
-node node2 login &nbsp; &nbsp;rack1 ipaddress:node2-mgmt<br />
+node node2 login &nbsp; &nbsp;rack1 ipaddress:node2-mgmt
+  hostname:login.mydomain.com<br />
 node node3 wn &nbsp; &nbsp; &nbsp; rack1 ipaddress:node3-mgmt<br />
 node node4 wn &nbsp; &nbsp; &nbsp; rack1 ipaddress:node4-mgmt<br />
 node node5 wn &nbsp; &nbsp; &nbsp; rack1 ipaddress:node5-mgmt<br />
