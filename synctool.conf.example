@@ -103,10 +103,15 @@ group g1 batch test wn
 # Instead of "ipaddress:", also the older "interface:" keyword
 # may be used to specify the IP address of a node
 #
+# The optional 'hostname:' keyword may be used to tell synctool
+# the hostname of the node. This is in particular needed for specific
+# cases of multi-homed setups in which synctool can not find out what
+# node it is running on.
+#
 node node0 master
 
-node node1 fs sched ipaddress:node1-mgmt
-node node2 login    ipaddress:node2-mgmt
+node node1 fs sched ipaddress:node1-mgmt  hostname:myhost1.mydomain.com
+node node2 login    ipaddress:node2-mgmt  hostname:myhost2.mydomain.com
 node node3 wn       ipaddress:node3-mgmt
 node node4 wn       ipaddress:node4-mgmt
 node node5 wn       ipaddress:node5-mgmt

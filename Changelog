@@ -28,6 +28,7 @@ May 2011:
 - possible bugfix for symlink mode on platforms where it matters
 - added documentation in html format
 - upload creates the repository (sub)directory if needed
+- added new 'hostname:' qualifier to synctool.conf
 
 17 April 2011:
 - use '-e' to erase .saved files: patch by Werner Maier

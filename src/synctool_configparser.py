@@ -489,15 +489,51 @@ def config_node(arr, configfile, lineno):
 		stderr('%s:%d: %s was previously defined as a group' % (configfile, lineno, node))
 		return 1
 	
-	if len(groups) >= 1 and (groups[-1][:10] == 'interface:' or groups[-1][:10] == 'ipaddress:'):
-		interface = groups[-1][10:]
-		groups = groups[:-1]
+	#
+	# node lines may end with special optional qualifiers like
+	# 'interface:', 'ipaddress:', 'hostname:'
+	#
+	# as a consequence, group names can no longer have a colon ':' in them
+	#
+	while len(groups) >= 1:
+		n = string.find(groups[-1], ':')
+		if n < 0:
+			break
 		
-		if synctool_param.INTERFACES.has_key(node):
-			stderr('%s:%d: redefinition of IP address for node %s' % (configfile, lineno, node))
+		if n == 0:
+			stderr("%s:%d: syntax error in node qualifier '%s'" % (configfile, lineno, groups[-1]))
 			return 1
 		
-		synctool_param.INTERFACES[node] = interface
+		if n > 0:
+			option = groups.pop()
+			qualifier = option[:n]
+			arg = option[n+1:]
+			
+			if qualifier == 'interface' or qualifier == 'ipaddress':
+				if synctool_param.INTERFACES.has_key(node):
+					stderr('%s:%d: redefinition of IP address for node %s' % (configfile, lineno, node))
+					return 1
+				
+				if not arg:
+					stderr("%s:%d: missing argument to node qualifier '%s'" % (configfile, lineno, qualifier))
+					return 1
+				
+				synctool_param.INTERFACES[node] = arg
+			
+			elif qualifier == 'hostname':
+				if synctool_param.HOSTNAMES.has_key(arg):
+					stderr('%s:%d: hostname %s already in use for node %s' % (configfile, lineno, arg, synctool_param.HOSTNAMES[arg]))
+					return 1
+				
+				if not arg:
+					stderr("%s:%d: missing argument to node qualifier 'hostname'" % (configfile, lineno))
+					return 1
+				
+				synctool_param.HOSTNAMES[arg] = node
+			
+			else:
+				stderr('%s:%d: unknown node qualifier %s' % (configfile, lineno, qualifier))
+				return 1
 	
 	try:
 		synctool_param.NODES[node] = expand_grouplist(groups)

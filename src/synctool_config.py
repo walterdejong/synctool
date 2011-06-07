@@ -115,20 +115,22 @@ def add_myhostname():
 	#
 	#	get my hostname
 	#
-	synctool_param.HOSTNAME = hostname = socket.gethostname()
+	synctool_param.HOSTNAME = hostname = socket.getfqdn()
 	
 	arr = string.split(hostname, '.')
 	short_hostname = arr[0]
 	
 	all_nodes = get_all_nodes()
 	
-	if hostname != short_hostname and hostname in all_nodes and short_hostname in all_nodes:
-		stderr("%s: conflict; node %s and %s are both defined" % (synctool_param.CONF_FILE, hostname, arr[0]))
-		sys.exit(-1)
-	
 	nodename = None
 	
-	if short_hostname in all_nodes:
+	if synctool_param.HOSTNAMES.has_key(hostname):
+		nodename = synctool_param.HOSTNAMES[hostname]
+	
+	elif synctool_param.HOSTNAMES.has_key(short_hostname):
+		nodename = synctool_param.HOSTNAMES[short_hostname]
+	
+	elif short_hostname in all_nodes:
 		nodename = short_hostname
 	
 	elif hostname in all_nodes:

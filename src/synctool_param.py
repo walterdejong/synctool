@@ -58,6 +58,7 @@ ALWAYS_RUN = []
 
 NODES = {}
 INTERFACES = {}
+HOSTNAMES = {}
 
 GROUP_DEFS = {}
 
