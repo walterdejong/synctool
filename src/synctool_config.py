@@ -400,8 +400,6 @@ def usage():
 	print '      --prefix             Display installation prefix'
 	print '      --logfile            Display configured logfile'
 	print '      --nodename           Display my nodename'
-	print '      --logfile            Display configured logfile'
-	print '      --nodename           Display my nodename'
 	print '  -v, --version            Display synctool version'
 	print
 	print 'A node/group list can be a single value, or a comma-separated list'
