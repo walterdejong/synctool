@@ -41,10 +41,6 @@ synctool.bash_completion
   to enable bash completion
   Contributed by Tim Dittler
 
-synctool-updatechk
-  cron.weekly/monthly script that checks for availability of newer version
-  Contributed by Walter
-
 nmap_config.sh
   nmaps your management LAN to create a synctool.conf file
   Contributed by Walter
@@ -74,31 +70,6 @@ sha1sum.py
   SHA-1 is slow ... but highly reliable when it comes to collisions
   Contributed by Walter
 
-bootstrap-synctool-client.sh
-  may be used for installing clients (obsoleted)
-  Contributed by Walter
+attic/
+  Contains old and obsoleted scripts
 
-overlay.py
-  proof-of-concept code for a tool that uses hardlinks
-  to construct a tree that is directly synced using rsync
-  This is an experimental code and not used in synctool
-  Mind that this code stems for the day when synctool was still
-  version 2, so there may be incompatibility issues with today's
-  synctool
-  Contributed by Walter
-
-overlay.conf.example
-  Example config file for overlay.py
-  Contributed by Walter
-
-rsynctool-single-suse.sh
-rsynctool-suse.sh
-synctool.sh
-  Wrapper scripts that work nicely with synctool 3.
-  (obsoleted by synctool 4)
-  Contributed by Huub Stoffers
-
-rsynctool-upload
-  copies files from nodes into the repository
-  (obsoleted by synctool -u)
-  Contributed by Huub Stoffers
