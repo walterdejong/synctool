@@ -13,31 +13,52 @@ merge() {
   diff --minimal --unified=200 "$FILE1" "$FILE2" | tail -n +3 | grep -v '^@@' | sed -e 's/^\(+\|-\| \)//'
 }
 
-
+#
 # Preparing files for each node containing the groups that that node is in (in correct order!)
+#
 for NODE in `synctool-config --list-nodes --filter-ignored` ; do 
   synctool-config --node=$NODE | tail -n +2 > $TEMPDIR/synctool-structure-node-$NODE ; 
 done
 
+#
 # Read all files and merge the group lists, keeping the order intact
+#
 > $TEMPDIR/synctool-structure-merged
 for FILE in $TEMPDIR/synctool-structure-node-* ; do
   MERGED=`merge $TEMPDIR/synctool-structure-merged $FILE`
   echo "$MERGED" > $TEMPDIR/synctool-structure-merged
 done
 
+#
+# Find double groups: they may indicate inconsistencies.
+#
+DOUBLE_GROUPS=`sort < $TEMPDIR/synctool-structure-merged | uniq --repeated`
+DOUBLE_GROUP_REGEX=''
+for GROUP in $DOUBLE_GROUPS ; do
+  if [ "$DOUBLE_GROUP_REGEX" == "" ] ; then
+    DOUBLE_GROUP_REGEX="$GROUP"
+  else
+    DOUBLE_GROUP_REGEX="$DOUBLE_GROUP_REGEX\|$GROUP"
+  fi
+done
+
+#
 # For each node, compare group list to the merged list and format a nice line
+#
 LONGEST_NODENAME=`synctool-config --list-nodes --filter-ignored | wc -L`
+
 # First we show a header
 COLUMN_ONE=`echo "                  " | cut -c1-${LONGEST_NODENAME}`
-echo "$COLUMN_ONE" `cat $TEMPDIR/synctool-structure-merged`
+echo "$COLUMN_ONE" `cat $TEMPDIR/synctool-structure-merged` | grep --color "\b\($DOUBLE_GROUP_REGEX\)[[:space:]]"
 echo
+
 # Now the nodes
 for FILE in $TEMPDIR/synctool-structure-node-* ; do
   GROUPLIST=`diff --unified=100 "$FILE" $TEMPDIR/synctool-structure-merged | tail -n +3 | grep -v '^@@' | sed -e '/^+/ s/[a-z0-9\-]/./g' -e 's/^+/ /'`
   NODE=`echo "$FILE            " | sed -e "s#$TEMPDIR/synctool-structure-node-##" | cut -c1-${LONGEST_NODENAME}`
   echo "$NODE" $GROUPLIST " $NODE"
 done
+
 # Again the header
 echo
-echo "$COLUMN_ONE" `cat $TEMPDIR/synctool-structure-merged`
+echo "$COLUMN_ONE" `cat $TEMPDIR/synctool-structure-merged` | grep --color "\b\($DOUBLE_GROUP_REGEX\)[[:space:]]"
