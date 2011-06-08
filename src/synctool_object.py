@@ -600,7 +600,9 @@ class SyncObject:
 	def erase_saved(self):
 		dest = self.dest_path
 		
-		if synctool_lib.ERASE_SAVED and path_exists('%s.saved' % dest) and not path_isdir('%s.saved' % dest):
+		stat_saved_path = synctool_stat.SyncStat('%s.saved' % dest)
+		
+		if synctool_lib.ERASE_SAVED and stat_saved_path.exists() and not stat_saved_path.isDir():
 			terse(synctool_lib.TERSE_DELETE, '%s.saved' % dest)
 			unix_out('rm %s.saved' % dest)
 			
