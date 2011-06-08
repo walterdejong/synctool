@@ -3,6 +3,7 @@
 # Prints a two dimensional table with the synctool nodes and their groups.
 # Tested with RHEL 4.
 # 2011-06-07 Created - Onno Zweers
+# 2011-06-08 Cleanup added - Onno
 
 TEMPDIR=/dev/shm
 
@@ -52,4 +53,7 @@ done
 # Again the header
 echo
 echo "$COLUMN_ONE" `cat $TEMPDIR/synctool-structure-merged` | grep --color "\b\($DOUBLE_GROUP_REGEX\)[[:space:]]"
+
+# Cleanup
+rm -f $TEMPDIR/synctool-structure-*
 
