@@ -549,7 +549,7 @@ class SyncObject:
 				os.chown(file, uid, gid)
 			except OSError, reason:
 				stderr('failed to chown %s.%s %s : %s' % (self.src_ascii_uid(),
-					self.src_ascii_gid(gid), file, reason))
+					self.src_ascii_gid(), file, reason))
 		else:
 			verbose(dryrun_msg('  os.chown(%s, %d, %d)' % (file, uid, gid)))
 	
