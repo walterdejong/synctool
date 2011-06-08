@@ -443,6 +443,8 @@ class SyncObject:
 	
 	
 	def copy_file(self):
+		self.mkdir_basepath()
+		
 		src = self.src_path
 		dest = self.dest_path
 		
@@ -478,6 +480,8 @@ class SyncObject:
 	
 	
 	def symlink_file(self, oldpath):
+		self.mkdir_basepath()
+		
 		# note that old_path is the readlink() of the self.src_path
 		newpath = self.dest_path
 		
@@ -614,6 +618,8 @@ class SyncObject:
 	
 	
 	def make_dir(self):
+		self.mkdir_basepath()
+		
 		path = self.dest_path
 		
 		unix_out('umask 077')
@@ -650,6 +656,21 @@ class SyncObject:
 		
 		else:
 			verbose(dryrun_msg('moving %s to %s.saved' % (path, path), 'move'))
-
+	
+	
+	def mkdir_basepath(self):
+		'''call mkdir -p if the destination directory does not exist yet'''
+		
+		if synctool_lib.DRY_RUN:
+			return
+		
+		# check if the directory exists
+		basedir = os.path.dirname(self.dest_path)
+		stat = synctool_stat.SyncStat(basedir)
+		if not stat.exists():
+			# create the directory
+			verbose('making directory %s' % synctool_lib.prettypath(basedir))
+			unix_out('mkdir -p %s' % basedir)
+			synctool_lib.mkdir_p(basedir)
 
 # EOB

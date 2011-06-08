@@ -1,5 +1,6 @@
 June 2011:
 - added new 'hostname:' qualifier to synctool.conf
+- for new files: create base directory if it did not yet exist
 
 May 2011:
 - added contributions by Onno Zweers:

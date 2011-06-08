@@ -412,6 +412,8 @@ def search_path(cmd):
 def mkdir_p(path):
 	'''like mkdir -p; make directory and subdirectories'''
 	
+	# note: this function does not change the umask
+	
 	arr = string.split(path, '/')
 	if arr[0] == '':
 		# first element is empty; this happens when path starts with '/'
