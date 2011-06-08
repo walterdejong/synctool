@@ -230,7 +230,6 @@ class SyncObject:
 					stdout('%s should point to %s, but points to %s' % (dest_path, src_link, dest_link))
 					terse(synctool_lib.TERSE_LINK, dest_path)
 					unix_out('# relink symbolic link %s' % dest_path)
-					self.delete_file()
 					need_update = True
 				
 				if (dest_stat.mode & 07777) != synctool_param.SYMLINK_MODE:
@@ -253,7 +252,6 @@ class SyncObject:
 				stdout('%s should be a symbolic link' % dest_path)
 				terse(synctool_lib.TERSE_LINK, dest_path)
 				unix_out('# target should be a symbolic link')
-				self.delete_file()
 				need_update = True
 			
 			#
