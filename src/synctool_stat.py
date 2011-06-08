@@ -118,7 +118,7 @@ class SyncStat:
 		except KeyError:
 			pass
 		
-		return '%d' % gid
+		return '%d' % self.gid
 
 
 # EOB
