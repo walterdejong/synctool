@@ -12,6 +12,13 @@ if [ -z "$TMPDIR" ] ; then
 fi
 PREFIX=`mktemp $TMPDIR/tmp.XXXXXXXXXX`
 
+# Option for uniq to display only double lines (groups).
+if [ "`uname`" == "Linux" ] ; then
+  UNIQ_OPTION='--repeated'
+else
+  UNIQ_OPTION='-d'
+fi
+
 merge() {
   # Merges all lines from two files, keeping the original order.
   FILE1="$1"
@@ -20,7 +27,7 @@ merge() {
 }
 
 
-# Preparing files for each node containing the groups that that node is in (in correct order!)
+# Preparing files for each node containing its groups (in correct order!)
 for NODE in `synctool-config --list-nodes --filter-ignored` ; do 
   synctool-config --node=$NODE | tail -n +2 > $PREFIX-synctool-structure-node-$NODE ; 
 done
@@ -33,7 +40,7 @@ for FILE in $PREFIX-synctool-structure-node-* ; do
 done
 
 # Find double groups: they may indicate inconsistancies.
-DOUBLE_GROUPS=`sort < $PREFIX-synctool-structure-merged | uniq --repeated`
+DOUBLE_GROUPS=`sort < $PREFIX-synctool-structure-merged | uniq $UNIQ_OPTION`
 DOUBLE_GROUP_REGEX=''
 for GROUP in $DOUBLE_GROUPS ; do
   if [ "$DOUBLE_GROUP_REGEX" == "" ] ; then
@@ -45,7 +52,7 @@ done
 
 # For each node, compare group list to the merged list and format a nice line
 LONGEST_NODENAME=`synctool-config --list-nodes --filter-ignored | wc -L`
-if [ $LONGEST_NODENAME != ${LONGEST_NODENAME//[^0-9]/} -o $LONGEST_NODENAME -lt 2 ] then LONGEST_NODENAME=12
+if [ $LONGEST_NODENAME != ${LONGEST_NODENAME//[^0-9]/} -o $LONGEST_NODENAME -lt 2 ] ; then LONGEST_NODENAME=12 ; fi
 # First we show a header
 COLUMN_ONE=`echo "                  " | cut -c1-${LONGEST_NODENAME}`
 echo "$COLUMN_ONE" `cat $PREFIX-synctool-structure-merged` | grep --color "\b\($DOUBLE_GROUP_REGEX\)[[:space:]]"
