@@ -329,7 +329,7 @@ def load_tasks_tree():
 	# do pass #1 for multiple overlay dirs: load them into filelist
 	# do not handle .post scripts
 	for tasks_dir in synctool_param.TASKS_DIRS:
-		overlay_pass1(tasks_dir, filelist, GROUP_ALL, False)
+		overlay_pass1(tasks_dir, filelist, '/', GROUP_ALL, False)
 	
 	# run pass #2 : 'squash' filelist into TASKS_DICT
 	overlay_pass2(filelist, TASKS_DICT)
