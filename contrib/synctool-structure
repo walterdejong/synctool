@@ -3,8 +3,21 @@
 # Prints a two dimensional table with the synctool nodes and their groups.
 # Tested with RHEL 4.
 # 2011-06-07 Created - Onno Zweers
+# 2011-06-08 Cleanup added - Onno
+# 2011-06-09 Made more portable as suggested by Walter - Onno
 
-TEMPDIR=/dev/shm
+
+if [ -z "$TMPDIR" ] ; then
+  TMPDIR="/tmp"
+fi
+PREFIX=`mktemp $TMPDIR/tmp.XXXXXXXXXX`
+
+# Option for uniq to display only double lines (groups).
+if [ "`uname`" == "Linux" ] ; then
+  UNIQ_OPTION='--repeated'
+else
+  UNIQ_OPTION='-d'
+fi
 
 merge() {
   # Merges all lines from two files, keeping the original order.
@@ -14,20 +27,20 @@ merge() {
 }
 
 
-# Preparing files for each node containing the groups that that node is in (in correct order!)
+# Preparing files for each node containing its groups (in correct order!)
 for NODE in `synctool-config --list-nodes --filter-ignored` ; do 
-  synctool-config --node=$NODE | tail -n +2 > $TEMPDIR/synctool-structure-node-$NODE ; 
+  synctool-config --node=$NODE | tail -n +2 > $PREFIX-synctool-structure-node-$NODE ; 
 done
 
 # Read all files and merge the group lists, keeping the order intact
-> $TEMPDIR/synctool-structure-merged
-for FILE in $TEMPDIR/synctool-structure-node-* ; do
-  MERGED=`merge $TEMPDIR/synctool-structure-merged $FILE`
-  echo "$MERGED" > $TEMPDIR/synctool-structure-merged
+> $PREFIX-synctool-structure-merged
+for FILE in $PREFIX-synctool-structure-node-* ; do
+  MERGED=`merge $PREFIX-synctool-structure-merged $FILE`
+  echo "$MERGED" > $PREFIX-synctool-structure-merged
 done
 
 # Find double groups: they may indicate inconsistancies.
-DOUBLE_GROUPS=`sort < $TEMPDIR/synctool-structure-merged | uniq --repeated`
+DOUBLE_GROUPS=`sort < $PREFIX-synctool-structure-merged | uniq $UNIQ_OPTION`
 DOUBLE_GROUP_REGEX=''
 for GROUP in $DOUBLE_GROUPS ; do
   if [ "$DOUBLE_GROUP_REGEX" == "" ] ; then
@@ -39,17 +52,21 @@ done
 
 # For each node, compare group list to the merged list and format a nice line
 LONGEST_NODENAME=`synctool-config --list-nodes --filter-ignored | wc -L`
+if [ $LONGEST_NODENAME != ${LONGEST_NODENAME//[^0-9]/} -o $LONGEST_NODENAME -lt 2 ] ; then LONGEST_NODENAME=12 ; fi
 # First we show a header
 COLUMN_ONE=`echo "                  " | cut -c1-${LONGEST_NODENAME}`
-echo "$COLUMN_ONE" `cat $TEMPDIR/synctool-structure-merged` | grep --color "\b\($DOUBLE_GROUP_REGEX\)[[:space:]]"
+echo "$COLUMN_ONE" `cat $PREFIX-synctool-structure-merged` | grep --color "\b\($DOUBLE_GROUP_REGEX\)[[:space:]]"
 echo
 # Now the nodes
-for FILE in $TEMPDIR/synctool-structure-node-* ; do
-  GROUPLIST=`diff --unified=100 "$FILE" $TEMPDIR/synctool-structure-merged | tail -n +3 | grep -v '^@@' | sed -e '/^+/ s/[a-z0-9\-]/./g' -e 's/^+/ /'`
-  NODE=`echo "$FILE            " | sed -e "s#$TEMPDIR/synctool-structure-node-##" | cut -c1-${LONGEST_NODENAME}`
+for FILE in $PREFIX-synctool-structure-node-* ; do
+  GROUPLIST=`diff --unified=100 "$FILE" $PREFIX-synctool-structure-merged | tail -n +3 | grep -v '^@@' | sed -e '/^+/ s/[a-z0-9\-]/./g' -e 's/^+/ /'`
+  NODE=`echo "$FILE            " | sed -e "s#$PREFIX-synctool-structure-node-##" | cut -c1-${LONGEST_NODENAME}`
   echo "$NODE" $GROUPLIST " $NODE"
 done
 # Again the header
 echo
-echo "$COLUMN_ONE" `cat $TEMPDIR/synctool-structure-merged` | grep --color "\b\($DOUBLE_GROUP_REGEX\)[[:space:]]"
+echo "$COLUMN_ONE" `cat $PREFIX-synctool-structure-merged` | grep --color "\b\($DOUBLE_GROUP_REGEX\)[[:space:]]"
+
+# Cleanup
+rm -f $PREFIX-synctool-structure-*
 

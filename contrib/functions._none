@@ -34,7 +34,7 @@ redhat_based_os() {
 package_installed() {
   if redhat_based_os ; then
     # Redhat-based OS
-    rpm -qa | grep --silent "$PACKAGE"
+    rpm -qa | egrep --silent "^$PACKAGE"-
   else
     # DEBIAN/UBUNTU
     # Notice the space before " installed"; the opposite is "non-installed"!

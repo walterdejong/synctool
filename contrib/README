@@ -9,9 +9,13 @@ for any damage done by these scripts.
 
 Files in this directory:
 
+synctool-structure
+  A script that neatly displays the node configuration in formatted columns.
+  Contributed by Onno Zweers
+
 functions._none
-  A collection of files to be used by tasks, for package management and service management.
-  See instructions inside.
+  A collection of files to be used by tasks, for package management and
+  service management. See instructions inside.
   Contributed by Onno Zweers
 
 whitelist.post
@@ -70,6 +74,41 @@ sha1sum.py
   SHA-1 is slow ... but highly reliable when it comes to collisions
   Contributed by Walter
 
-attic/
-  Contains old and obsoleted scripts
+
+ATTIC
+In the attic/ are old, obsoleted, deprecated scripts.
+
+synctool-updatechk
+  cron.weekly/monthly script that checks for availability of newer version
+  (obsoleted by synctool --check-update and synctool --download)
+  Contributed by Walter
+
+bootstrap-synctool-client.sh
+  may be used for installing clients (obsoleted)
+  Contributed by Walter
+
+overlay.py
+  proof-of-concept code for a tool that uses hardlinks
+  to construct a tree that is directly synced using rsync
+  This is an experimental code and not used in synctool
+  Mind that this code stems for the day when synctool was still
+  version 2, so there may be incompatibility issues with today's
+  synctool
+  Contributed by Walter
+
+overlay.conf.example
+  Example config file for overlay.py
+  Contributed by Walter
+
+rsynctool-single-suse.sh
+rsynctool-suse.sh
+synctool.sh
+  Wrapper scripts that work nicely with synctool 3.
+  (obsoleted by synctool 4)
+  Contributed by Huub Stoffers
+
+rsynctool-upload
+  copies files from nodes into the repository
+  (obsoleted by synctool -u)
+  Contributed by Huub Stoffers
 
