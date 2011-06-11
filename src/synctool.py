@@ -48,11 +48,6 @@ DIR_CHANGED = []
 def run_command(cmd):
 	'''run a shell command'''
 	
-	if synctool_lib.DRY_RUN:
-		not_str = 'not '
-	else:
-		not_str = ''
-	
 	if cmd[0] != '/':
 		# if relative path, use scriptdir
 		cmd = synctool_param.SCRIPT_DIR + '/' + cmd
@@ -71,34 +66,8 @@ def run_command(cmd):
 		stderr("warning: file '%s' is not executable" % synctool_lib.prettypath(cmdfile))
 		return
 	
-	if not synctool_lib.QUIET:
-		stdout('%srunning command %s' % (not_str, synctool_lib.prettypath(cmd)))
-	
-	terse(synctool_lib.TERSE_EXEC, cmdfile)
-	unix_out('# run command %s' % cmdfile)
-	unix_out(cmd)
-	
-	if not synctool_lib.DRY_RUN:
-		verbose('  os.system("%s")' % synctool_lib.prettypath(cmd))
-		
-		sys.stdout.flush()
-		sys.stderr.flush()
-		
-		if use_subprocess:
-			try:
-				subprocess.Popen(cmd, shell=True)
-			except:
-				stderr("failed to run shell command '%s' : %s" % (synctool_lib.prettypath(cmd), reason))
-		else:
-			try:
-				os.system(cmd)
-			except OSError, reason:
-				stderr("failed to run shell command '%s' : %s" % (synctool_lib.prettypath(cmd), reason))
-		
-		sys.stdout.flush()
-		sys.stderr.flush()
-	else:
-		verbose(dryrun_msg('  os.system("%s")' % synctool_lib.prettypath(cmd), 'action'))
+	# run the shell command
+	synctool_lib.shell_command(cmd)
 
 
 def run_command_in_dir(dest_dir, cmd):
