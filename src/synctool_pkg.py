@@ -338,6 +338,8 @@ def get_options():
 def main():
 	get_options()
 	
+	synctool_lib.QUIET = not synctool_lib.VERBOSE
+	
 	pkg = package_manager()
 	
 	if ACTION == ACTION_LIST:

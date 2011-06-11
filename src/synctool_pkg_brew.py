@@ -36,7 +36,6 @@ class SyncPkgBrew(SyncPkg):
 			cmd = cmd + ' ' + string.join(pkgs)
 		
 		synctool_lib.DRY_RUN = False
-		synctool_lib.QUIET = not synctool_lib.VERBOSE
 		
 		synctool_lib.shell_command(cmd)
 		
@@ -48,7 +47,6 @@ class SyncPkgBrew(SyncPkg):
 
 		cmd = 'brew install ' + string.join(pkgs)
 		
-		synctool_lib.QUIET = not synctool_lib.VERBOSE
 		synctool_lib.shell_command(cmd)
 	
 	
@@ -57,14 +55,12 @@ class SyncPkgBrew(SyncPkg):
 		
 		cmd = 'brew remove ' + string.join(pkgs)
 		
-		synctool_lib.QUIET = not synctool_lib.VERBOSE
 		synctool_lib.shell_command(cmd)
 	
 	
 	def upgrade(self):
 		SyncPkg.upgrade(self)
 		
-		synctool_lib.QUIET = not synctool_lib.VERBOSE
 		synctool_lib.shell_command('brew update')
 
 
