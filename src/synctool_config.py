@@ -559,7 +559,7 @@ def get_options():
 		sys.exit(1)
 
 
-if __name__ == '__main__':
+def main():
 	get_options()
 	
 	if ACTION == ACTION_VERSION:
@@ -633,6 +633,19 @@ if __name__ == '__main__':
 	
 	else:
 		raise RuntimeError, 'bug: unknown ACTION code %d' % ACTION
+
+
+if __name__ == '__main__':
+	try:
+		main()
+	except IOError, ioerr:
+		if ioerr.errno == 32:		# Broken pipe
+			pass
+		else:
+			print ioerr
+
+	except KeyboardInterrupt:		# user pressed Ctrl-C
+		pass
 
 
 # EOB
