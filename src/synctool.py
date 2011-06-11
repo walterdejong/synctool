@@ -17,13 +17,13 @@ import synctool_stat
 
 from synctool_lib import verbose,stdout,stderr,terse,unix_out,dryrun_msg
 
-import sys
 import os
-import os.path
+import sys
 import string
 import getopt
 import time
 import shlex
+import errno
 
 try:
 	import subprocess
@@ -609,7 +609,7 @@ def get_options():
 	return action
 
 
-if __name__ == '__main__':
+def main():
 	action = get_options()
 	
 	synctool_config.add_myhostname()
@@ -702,6 +702,19 @@ if __name__ == '__main__':
 	unix_out('# EOB')
 	
 	synctool_lib.closelog()
+
+
+if __name__ == '__main__':
+	try:
+		main()
+	except IOError, ioerr:
+		if ioerr.errno == errno.EPIPE:		# Broken pipe
+			pass
+		else:
+			print ioerr
+
+	except KeyboardInterrupt:		# user pressed Ctrl-C
+		pass
 
 
 # EOB

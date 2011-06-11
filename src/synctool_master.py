@@ -26,6 +26,7 @@ import sys
 import string
 import getopt
 import shlex
+import errno
 
 NODESET = synctool_nodeset.NodeSet()
 
@@ -515,7 +516,7 @@ if __name__ == '__main__':
 	try:
 		main()
 	except IOError, ioerr:
-		if ioerr.errno == 32:		# Broken pipe
+		if ioerr.errno == errno.EPIPE:		# Broken pipe
 			pass
 		else:
 			print ioerr

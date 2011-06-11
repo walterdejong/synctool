@@ -19,6 +19,7 @@ import sys
 import string
 import socket
 import getopt
+import errno
 
 ACTION = 0
 ACTION_OPTION = None
@@ -639,7 +640,7 @@ if __name__ == '__main__':
 	try:
 		main()
 	except IOError, ioerr:
-		if ioerr.errno == 32:		# Broken pipe
+		if ioerr.errno == errno.EPIPE:		# Broken pipe
 			pass
 		else:
 			print ioerr
