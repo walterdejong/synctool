@@ -17,6 +17,7 @@ import os
 import sys
 import string
 import time
+import shlex
 import errno
 
 try:
@@ -385,6 +386,48 @@ def run_with_nodename(cmd_arr, nodename):
 				print line
 	
 	f.close()
+
+
+def shell_command(cmd):
+	'''run a shell command'''
+	
+	if DRY_RUN:
+		not_str = 'not '
+	else:
+		not_str = ''
+	
+	# a command can have arguments
+	cmd_arr = shlex.split(cmd)
+	cmdfile = cmd_arr[0]
+	
+	if not QUIET:
+		stdout('%srunning command %s' % (not_str, prettypath(cmd)))
+	
+	terse(TERSE_EXEC, cmdfile)
+	unix_out('# run command %s' % cmdfile)
+	unix_out(cmd)
+	
+	if not DRY_RUN:
+		verbose('  os.system("%s")' % prettypath(cmd))
+		
+		sys.stdout.flush()
+		sys.stderr.flush()
+		
+		if use_subprocess:
+			try:
+				subprocess.call(cmd_arr, shell=False)
+			except:
+				stderr("failed to run shell command '%s' : %s" % (prettypath(cmd), reason))
+		else:
+			try:
+				os.system(cmd)
+			except OSError, reason:
+				stderr("failed to run shell command '%s' : %s" % (prettypath(cmd), reason))
+		
+		sys.stdout.flush()
+		sys.stderr.flush()
+	else:
+		verbose(dryrun_msg('  os.system("%s")' % prettypath(cmd), 'action'))
 
 
 def search_path(cmd):

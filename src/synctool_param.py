@@ -33,6 +33,9 @@ SSH_CMD = None
 SCP_CMD = None
 RSYNC_CMD = None
 SYNCTOOL_CMD = None
+
+PACKAGE_MANAGER = None
+
 LOGFILE = None
 NUM_PROC = 16				# use sensible default
 

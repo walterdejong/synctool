@@ -9,8 +9,9 @@
 #   License.
 #
 
-import synctool_param
 import synctool_config
+import synctool_param
+import synctool_stat
 import synctool_lib
 
 from synctool_lib import verbose,stdout,stderr,terse,unix_out,dryrun_msg
@@ -33,67 +34,125 @@ ACTION = 0
 # list of packages given on the command-line
 PKG_LIST = None
 
+# list of supported package managers
+KNOWN_PACKAGE_MANAGERS = (
+	'apt-get', 'yum', 'zypper', 'brew',
+#	'pacman', 'urpmi', 'portage', 'port', 'swaret'
+)
 
-class SyncPkg:
-	'''generic package installer class'''
-	
-	# You may create a new class that has this interface
-	# to make a plug-in for synctool-pkg
-	
-	def __init__(self):
-		self.dryrun = synctool_lib.DRY_RUN
-	
-	def list(self, pkgs = None):
-		if pkgs:
-			verbose('list packages: %s' % string.join(pkgs))
-		else:
-			verbose('list all packages')
-	
-	def install(self, pkgs):
-		verbose('install packages: %s' % string.join(pkgs))
-	
-	def remove(self, pkgs):
-		verbose('removing packages: %s' % string.join(pkgs))
-	
-	def upgrade(self):
-		verbose('upgrading packages')
+# list of Linux package managers: (Linux release file, package manager)
+LINUX_PACKAGE_MANAGERS = (
+	( '/etc/debian_version', 'apt-get' ),
+	( '/etc/SuSE-release', 'zypper' ),
+	( '/etc/redhat-release', 'yum' ),
+	( '/etc/arch-release', 'pacman' ),
+	( '/etc/gentoo-release', 'portage' ),
+	( '/etc/slackware-version', 'swaret' ),
+	( '/etc/fedora-release', 'yum' ),
+	( '/etc/yellowdog-release', 'yum' ),
+	( '/etc/mandrake-release', 'urpmi' ),
+)
 
 
-class SyncPkgOops(SyncPkg):
-	'''package installer class that only prints errors because
-	it doesn't have any good implementation: unknown platform'''
+def package_manager():
+	'''return instance of SyncPkg installer class'''
 	
-	def __init__(self):
-		SyncPkg.__init__(self)
+	detected = False
 	
-	def oops(self):
-		if not self.dryrun:
-			stderr("error: don't know how to do that on this platform")
-			sys.exit(127)
+	if not synctool_param.PACKAGE_MANAGER:
+		detect_installer()
+		
+		if not synctool_param.PACKAGE_MANAGER:
+			stderr('failed to detect package management system')
+			stderr('please configure it in synctool.conf')
+			sys.exit(1)
+		
+		detected = True
 	
-	def list(self, pkgs = None):
-		SyncPkg.list(self, pkgs)
-		self.dryrun = False
-		self.oops()
+	for mgr in KNOWN_PACKAGE_MANAGERS:
+		if synctool_param.PACKAGE_MANAGER == mgr:
+			short_mgr = string.replace(mgr, '-', '')
+			
+			# load the module
+			module = __import__('synctool_pkg_%s' % short_mgr)
+			
+			# find the package manager class
+			pkgclass = getattr(module, 'SyncPkg%s' % string.capitalize(short_mgr))
+			
+			# instantiate the class
+			return pkgclass()
 	
-	def install(self, pkgs):
-		SyncPkg.install(self, pkgs)
-		self.oops()
+	if detected:
+		stderr('package manager %s is not supported yet' % synctool_param.PACKAGE_MANAGER)
+	else:
+		stderr("unknown package manager defined: '%s'" % synctool_param.PACKAGE_MANAGER)
 	
-	def remove(self, pkgs):
-		SyncPkg.remove(self, pkgs)
-		self.oops()
-	
-	def upgrade(self):
-		SyncPkg.upgrade(self)
-		self.oops()
+	sys.exit(1)
 
 
 def detect_installer():
 	'''Attempt to detect the operating system and package system
 	Returns instance of a SyncPkg installer class'''
 	
-	return SyncPkgOops()
+	#
+	# attempt a best effort at detecting OSes for the purpose of
+	# choosing a package manager
+	# It's probably not 100% fool-proof, but as said, it's a best effort
+	#
+	# Problems:
+	# - there are too many platforms and too many Linux distros
+	# - there are too many different packaging systems
+	# - there are RedHat variants that all have /etc/redhat-release but
+	#   use different package managers
+	# - SuSE has three (!) package managers that are all in use
+	#   and it seems to be by design (!?)
+	# - I've seen apt-get work with dpkg, and I've seen apt-get work with rpm
+	# - MacOS X has no 'standard' software packaging (the App store??)
+	#   There are ports, fink, brew. I prefer 'brew'
+	# - I don't know much about the *BSDs
+	#
+	
+	platform = os.uname()[0]
+	
+	if platform == 'Linux':
+		verbose('detected platform Linux')
+		
+		stat = synctool_stat.SyncStat()
+		
+		# use release file to detect Linux distro,
+		# and choose package manager based on that
+		
+		for (release_file, pkgmgr) in LINUX_PACKAGE_MANAGERS:
+			stat.stat(release_file)
+			if stat.exists():
+				verbose('detected %s' % release_file)
+				verbose('choosing package manager %s' % pkgmgr)
+				synctool_param.PACKAGE_MANAGER = pkgmgr
+				return
+		
+		stderr('unknown Linux distribution')
+	
+	elif platform == 'Darwin':			# assume MacOS X
+		verbose('detected platform MacOS X')
+		# some people like port
+		# some like fink
+		# I like brew
+		verbose('choosing package manager brew')
+		synctool_param.PACKAGE_MANAGER = 'brew'
+	
+	# platforms that are not supported yet, but I would like to support
+	# or well, most of them
+	# Want to know more OSes? See the source of autoconf's config.guess
+	
+	elif platform in ('NetBSD', 'OpenBSD', 'FreeBSD', '4.4BSD', '4.3bsd',
+		'BSD/OS', 'SunOS', 'AIX', 'OSF1', 'HP-UX', 'HI-UX', 'IRIX', 'MiNT',
+		'UNICOS', 'UNICOS/mp', 'ConvexOS', 'Minix', 'Windows_95', 'Windows_NT',
+		'LynxOS', 'UNIX_System_V', 'BeOS', 'TOPS-10', 'TOPS-20'):
+		verbose('detected platform %s' % platform)
+		stderr('synctool package management under %s is not yet supported' % platform)
+	
+	else:
+		stderr("unknown platform '%s'" % platform)
 
 
 def rearrange_options(arglist):
@@ -279,7 +338,7 @@ def get_options():
 def main():
 	get_options()
 	
-	pkg = detect_installer()
+	pkg = package_manager()
 	
 	if ACTION == ACTION_LIST:
 		pkg.list(PKG_LIST)
