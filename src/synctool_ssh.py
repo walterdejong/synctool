@@ -221,7 +221,7 @@ def get_options():
 	return args
 
 
-if __name__ == '__main__':
+def main():
 	sys.stdout = synctool_unbuffered.Unbuffered(sys.stdout)
 	sys.stderr = synctool_unbuffered.Unbuffered(sys.stderr)
 	
@@ -234,6 +234,19 @@ if __name__ == '__main__':
 	synctool_config.add_myhostname()
 	
 	run_dsh(cmd_args)
+
+
+if __name__ == '__main__':
+	try:
+		main()
+	except IOError, ioerr:
+		if ioerr.errno == 32:		# Broken pipe
+			pass
+		else:
+			print ioerr
+
+	except KeyboardInterrupt:		# user pressed Ctrl-C
+		pass
 
 
 # EOB
