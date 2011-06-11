@@ -37,7 +37,7 @@ PKG_LIST = None
 # list of supported package managers
 KNOWN_PACKAGE_MANAGERS = (
 	'apt-get', 'yum', 'zypper', 'brew',
-#	'pacman', 'urpmi', 'portage', 'port', 'swaret'
+#	'pacman', 'urpmi', 'portage', 'port', 'swaret', 'pkg_add'
 )
 
 # list of Linux package managers: (Linux release file, package manager)
@@ -109,7 +109,8 @@ def detect_installer():
 	# - I've seen apt-get work with dpkg, and I've seen apt-get work with rpm
 	# - MacOS X has no 'standard' software packaging (the App store??)
 	#   There are ports, fink, brew. I prefer 'brew'
-	# - I don't know much about the *BSDs
+	# - The *BSDs have both pkg_add and ports, and I have heard about rpm-based
+	#   FreeBSD as well
 	#
 	
 	platform = os.uname()[0]
@@ -140,13 +141,22 @@ def detect_installer():
 		verbose('choosing package manager brew')
 		synctool_param.PACKAGE_MANAGER = 'brew'
 	
+	elif platform in ('NetBSD', 'OpenBSD', 'FreeBSD'):
+		verbose('detected platform %s' % platform)
+		
+		# choose pkg_add
+		# I know there are ports, but you can 'make' those easily in *BSD
+		
+		verbose('choosing package manager pkg_add')
+		synctool_param.PACKAGE_MANAGER = 'pkg_add'
+	
 	# platforms that are not supported yet, but I would like to support
 	# or well, most of them
 	# Want to know more OSes? See the source of autoconf's config.guess
 	
-	elif platform in ('NetBSD', 'OpenBSD', 'FreeBSD', '4.4BSD', '4.3bsd',
-		'BSD/OS', 'SunOS', 'AIX', 'OSF1', 'HP-UX', 'HI-UX', 'IRIX', 'MiNT',
-		'UNICOS', 'UNICOS/mp', 'ConvexOS', 'Minix', 'Windows_95', 'Windows_NT',
+	elif platform in ('4.4BSD', '4.3bsd', 'BSD/OS', 'SunOS', 'AIX', 'OSF1',
+		'HP-UX', 'HI-UX', 'IRIX', 'UNICOS', 'UNICOS/mp', 'ConvexOS', 'Minix',
+		'Windows_95', 'Windows_NT', 'CYGWIN', 'MinGW',
 		'LynxOS', 'UNIX_System_V', 'BeOS', 'TOPS-10', 'TOPS-20'):
 		verbose('detected platform %s' % platform)
 		stderr('synctool package management under %s is not yet supported' % platform)
