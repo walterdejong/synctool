@@ -8,11 +8,10 @@
 #   License.
 #
 
-import synctool
-import synctool_lib
-import synctool_param
 import synctool_object
+import synctool_param
 import synctool_stat
+import synctool_lib
 
 from synctool_lib import stderr, terse
 

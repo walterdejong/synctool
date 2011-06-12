@@ -9,10 +9,10 @@
 #   License.
 #
 
-import synctool_libpath
+import synctool_configparser
 import synctool_param
 import synctool_lib
-import synctool_configparser
+
 from synctool_configparser import stderr
 
 import os

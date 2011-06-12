@@ -11,7 +11,6 @@
 #	- aggregate: group together output that is the same
 #
 
-import synctool_libpath
 from synctool_lib import popen
 
 import os

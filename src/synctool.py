@@ -9,7 +9,6 @@
 #   License.
 #
 
-import synctool_libpath
 import synctool_overlay
 import synctool_config
 import synctool_param

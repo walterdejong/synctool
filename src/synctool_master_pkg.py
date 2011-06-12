@@ -11,7 +11,6 @@
 #	- call synctool_pkg on specified nodes
 #
 
-import synctool_libpath
 import synctool_unbuffered
 import synctool_nodeset
 import synctool_config
