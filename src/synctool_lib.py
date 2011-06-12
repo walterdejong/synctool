@@ -219,34 +219,34 @@ def dryrun_msg(str, action = 'update'):
 
 def openlog():
 	global LOGFD
-
+	
 	if synctool_param.LOGFILE == None or synctool_param.LOGFILE == '' or DRY_RUN:
 		return
-
+	
 	LOGFD = None
 	try:
 		LOGFD = open(synctool_param.LOGFILE, 'a')
 	except IOError, (err, reason):
 		print 'error: failed to open logfile %s : %s' % (synctool_param.LOGFILE, reason)
 		sys.exit(-1)
-
+	
 #	log('start run')
 
 
 def closelog():
 	global LOGFD
-
+	
 	if LOGFD != None:
 #		log('end run')
 		log('--')
-
+		
 		LOGFD.close()
 		LOGFD = None
 
 
 def masterlog(str):
 	'''log only locally (on the masternode)'''
-
+	
 	if not DRY_RUN and LOGFD != None:
 		t = time.localtime(time.time())
 		LOGFD.write('%s %02d %02d:%02d:%02d %s\n' % (MONTHS[t[1]-1], t[2], t[3], t[4], t[5], str))
@@ -254,11 +254,11 @@ def masterlog(str):
 
 def log(str):
 	'''log message locally, and print it so that synctool-master will pick it up'''
-
+	
 	if not DRY_RUN and LOGFD != None:
 		t = time.localtime(time.time())
 		LOGFD.write('%s %02d %02d:%02d:%02d %s\n' % (MONTHS[t[1]-1], t[2], t[3], t[4], t[5], str))
-
+		
 		if MASTERLOG:
 			print '%synctool-log%', str
 

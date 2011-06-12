@@ -238,7 +238,7 @@ def get_options():
 	try:
 		opts, args = getopt.getopt(arglist, 'hc:i:R:luUCfvq',
 			['help', 'conf=',
-			'install=', 'remove=', 'list', 'update', 'upgrade', 'clean',
+			'list', 'install=', 'remove=', 'update', 'upgrade', 'clean',
 			'cleanup',
 			'verbose', 'unix', 'fix', 'quiet'])
 	except getopt.error, (reason):
