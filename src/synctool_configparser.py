@@ -156,7 +156,17 @@ def _config_ignore_variant(param, arr, configfile, lineno):
 		stderr("%s:%d: '%s' requires at least 1 argument: the file or directory to ignore" % (configfile, lineno, param))
 		return 1
 	
-	synctool_param.IGNORE_FILES.extend(arr[1:])
+	for file in arr[1:]:
+		# if file has wildcards, put it in array IGNORE_FILES_WITH_WILDCARDS
+		if string.find(file, '*') >= 0 or string.find(file, '?') >= 0
+			or (string.find(file, '[') >= 0 and string.find(file, ']') >= 0):
+			if not file in synctool_param.IGNORE_FILES_WITH_WILDCARDS:
+				synctool_param.IGNORE_FILES_WITH_WILDCARDS.append(file)
+		else:
+			# no wildcards, do a regular ignore
+			if not file in synctool_param.IGNORE_FILES:
+				synctool_param.IGNORE_FILES.append(file)
+	
 	return 0
 
 

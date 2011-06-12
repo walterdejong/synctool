@@ -89,13 +89,30 @@ Default value is <span class="system">no</span>.
 <dt>ignore &lt;filename or directory name&gt;</dt>
 <dd>This parameter enables you to have synctool ignore specific files or
 directories in the repository.
-Multiple <span class="system">ignore</span> definitions are allowed.<br />
+Multiple <span class="system">ignore</span> definitions are allowed.
+You may put multiple filenames on a line, and you may use wildcards.<br />
 Example:
 <div class="example">
-ignore .gitignore<br />
-ignore .git<br />
-ignore .svn
+ignore .gitignore .git .svn<br />
+ignore *.swp<br />
+ignore tmp[0-9][0-9][0-9]??
 </div>
+</dd>
+
+<dt>ignore_file &lt;filename&gt;</dt>
+<dd>Same as the <span class="system">ignore</span> keyword.
+</dd>
+
+<dt>ignore_files &lt;filenames&gt;</dt>
+<dd>Same as the <span class="system">ignore</span> keyword.
+</dd>
+
+<dt>ignore_dir &lt;directory&gt;</dt>
+<dd>Same as the <span class="system">ignore</span> keyword.
+</dd>
+
+<dt>ignore_dirs &lt;directories&gt;</dt>
+<dd>Same as the <span class="system">ignore</span> keyword.
 </dd>
 
 <dt>logfile &lt;filename&gt;</dt>

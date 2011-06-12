@@ -18,6 +18,7 @@ from synctool_lib import stderr, terse
 import os
 import sys
 import string
+import fnmatch
 
 # enums for designating trees
 OV_OVERLAY = 0
@@ -159,6 +160,17 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 		
 		if synctool_param.IGNORE_DOTFILES and name[0] == '.':
 			continue
+		
+		# check any ignored files with wildcards
+		if synctool_param.IGNORE_FILES_WITH_WILDCARDS:
+			wildcard_match = False
+			for wildcard_entry in synctool_param.IGNORE_FILES_WITH_WILDCARDS:
+				if fnmatch.fnmatchcase(name, wildcard_entry):
+					wildcard_match = True
+					break
+			
+			if wildcard_match:
+				continue
 		
 		# inherit lower group level from parent directory
 		if groupnum > highest_groupnum:
