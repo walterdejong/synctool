@@ -209,11 +209,11 @@ def usage():
 	print '  -U, --upgrade                  Upgrade all outdated packages'
 	print '  -C, --clean                    Cleanup caches of downloaded packages'
 	print
-	print '  -f, --fix                      Perform updates (otherwise, do dry-run)'
+	print '  -f, --fix                      Perform upgrade (otherwise, do dry-run)'
 	print '  -v, --verbose                  Be verbose'
 	print '      --unix                     Output actions as unix shell commands'
 	print
-	print 'Note that synctool-pkg always does a dry run unless you specify --fix'
+	print 'Note that --upgrade does a dry run unless you specify --fix'
 	print
 	print 'synctool-pkg by Walter de Jong <walter@heiho.net> (c) 2011'
 
@@ -230,6 +230,8 @@ def get_options():
 	# getopt() assumes that all options given after the first non-option
 	# argument are all arguments (this is standard UNIX behavior, not GNU)
 	# but in this case, I like the GNU way better, so re-arrange the options
+	# This has odd consequences when someone gives a 'stale' --install or
+	# --remove option without any argument, but hey ...
 	
 	arglist = rearrange_options(sys.argv[1:])
 	
@@ -238,7 +240,7 @@ def get_options():
 			['help', 'conf=',
 			'install=', 'remove=', 'list', 'update', 'upgrade', 'clean',
 			'cleanup',
-			'verbose', 'unix', 'quiet'])
+			'verbose', 'unix', 'fix', 'quiet'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -262,7 +264,7 @@ def get_options():
 		if opt in ('-c', '--conf'):
 			synctool_param.CONF_FILE = arg
 			continue
-		
+	
 	synctool_config.read_config()
 	
 	# then process the other options
@@ -358,6 +360,16 @@ def get_options():
 	if args != None and len(args) > 0:
 		stderr('error: excessive arguments on command line')
 		sys.exit(1)
+	
+	#
+	# disable dry-run unless --upgrade was given
+	# a normal --upgrade will do a dry-run and show what upgrades are available
+	# --upgrade -f will do the upgrade
+	#
+	# The other actions will execute immediatly
+	#
+	if ACTION != ACTION_UPGRADE:
+		synctool_lib.DRY_RUN = False
 
 
 def main():
