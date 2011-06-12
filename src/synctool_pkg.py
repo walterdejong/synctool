@@ -35,12 +35,6 @@ ACTION = 0
 # list of packages given on the command-line
 PKG_LIST = None
 
-# list of supported package managers
-KNOWN_PACKAGE_MANAGERS = (
-	'apt-get', 'yum', 'zypper', 'brew',
-#	'pacman', 'urpmi', 'portage', 'port', 'swaret', 'pkg_add'
-)
-
 # list of Linux package managers: (Linux release file, package manager)
 LINUX_PACKAGE_MANAGERS = (
 	( '/etc/debian_version', 'apt-get' ),
@@ -70,7 +64,7 @@ def package_manager():
 		
 		detected = True
 	
-	for mgr in KNOWN_PACKAGE_MANAGERS:
+	for mgr in synctool_param.KNOWN_PACKAGE_MANAGERS:
 		if synctool_param.PACKAGE_MANAGER == mgr:
 			short_mgr = string.replace(mgr, '-', '')
 			

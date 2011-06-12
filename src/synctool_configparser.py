@@ -155,7 +155,7 @@ def _config_ignore_variant(param, arr, target_arr, configfile, lineno):
 	if len(arr) < 2:
 		stderr("%s:%d: '%s' requires at least 1 argument: the file or directory to ignore" % (configfile, lineno, param))
 		return 1
-
+	
 	target_arr.extend(arr[1:])
 	return 0
 
@@ -242,6 +242,24 @@ def config_scriptdir(arr, configfile, lineno):
 	(err, synctool_param.SCRIPT_DIR) = _config_dir('scriptdir',
 		arr[1], synctool_param.SCRIPT_DIR, configfile, lineno)
 	return err
+
+
+# keyword: package_manager
+def config_package_manager(arr, configfile, lineno):
+	if len(arr) < 2:
+		stderr("%s:%d: 'package_manager' requires an argument" % (configfile, lineno))
+		return 1
+	
+	if synctool_param.PACKAGE_MANAGER != None:
+		stderr('%s:%d: redefiniton of package_manager' % (configfile, lineno))
+		return 1
+	
+	if not arr[1] in synctool_param.KNOWN_PACKAGE_MANAGERS:
+		stderr("%s:%d: unknown or unsupported package manager '%s'" % (configfile, lineno))
+		return 1
+	
+	synctool_param.PACKAGE_MANAGER = arr[1]
+	return 0
 
 
 # keyword: symlink_mode

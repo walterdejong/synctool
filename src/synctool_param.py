@@ -100,4 +100,10 @@ TERSE_COLORS = {
 	'ok'     : 'default',
 }
 
+# list of supported package managers
+KNOWN_PACKAGE_MANAGERS = (
+	'apt-get', 'yum', 'zypper', 'brew',
+#	'pacman', 'urpmi', 'portage', 'port', 'swaret', 'pkg_add'
+)
+
 # EOB

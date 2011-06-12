@@ -416,7 +416,7 @@ def shell_command(cmd):
 		if use_subprocess:
 			try:
 				subprocess.call(cmd_arr, shell=False)
-			except:
+			except OSError, reason:
 				stderr("failed to run shell command '%s' : %s" % (prettypath(cmd), reason))
 		else:
 			try:

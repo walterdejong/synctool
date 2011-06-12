@@ -1,6 +1,7 @@
 June 2011:
 - added new 'hostname:' qualifier to synctool.conf
 - for new files: create base directory if it did not yet exist
+- added synctool-pkg / dsh-pkg for package management
 
 May 2011:
 - added contributions by Onno Zweers:
