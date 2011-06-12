@@ -709,6 +709,12 @@ def config_synctool_cmd(arr, configfile, lineno):
 	return err
 
 
+# keyword: pkg_cmd
+def config_pkg_cmd(arr, configfile, lineno):
+	(err, synctool_param.PKG_CMD) = _config_command('pkg_cmd', arr, 'synctool_pkg.py', configfile, lineno)
+	return err
+
+
 # keyword: logfile
 def config_logfile(arr, configfile, lineno):
 	if len(arr) < 2:

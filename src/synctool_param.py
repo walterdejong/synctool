@@ -33,6 +33,7 @@ SSH_CMD = None
 SCP_CMD = None
 RSYNC_CMD = None
 SYNCTOOL_CMD = None
+PKG_CMD = None
 
 PACKAGE_MANAGER = None
 
