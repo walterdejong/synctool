@@ -54,6 +54,12 @@ class SyncPkgZypper(SyncPkg):
 		synctool_lib.shell_command(cmd)
 	
 	
+	def update(self):
+		SyncPkg.update(self)
+		
+		synctool_lib.shell_command('zypper -y refresh')
+	
+	
 	def upgrade(self):
 		SyncPkg.upgrade(self)
 		

@@ -53,11 +53,16 @@ class SyncPkgPacman(SyncPkg):
 		synctool_lib.shell_command(cmd)
 	
 	
+	def update(self):
+		SyncPkg.update(self)
+		
+		synctool_lib.shell_command('pacman -Sy --noconfirm')
+	
+	
 	def upgrade(self):
 		SyncPkg.upgrade(self)
 		
 		synctool_lib.DRY_RUN = False
-		synctool_lib.shell_command('pacman -Sy --noconfirm')
 		
 		if self.dryrun:
 			cmd = 'pacman -Qu --noconfirm'		# query updates

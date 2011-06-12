@@ -57,19 +57,24 @@ class SyncPkgAptget(SyncPkg):
 		synctool_lib.shell_command(cmd)
 	
 	
+	def update(self):
+		SyncPkg.update(self)
+		
+		os.putenv('DEBIAN_FRONTEND', 'noninteractive')
+		synctool_lib.shell_command('apt-get update')
+	
+	
 	def upgrade(self):
 		SyncPkg.upgrade(self)
 		
 		os.putenv('DEBIAN_FRONTEND', 'noninteractive')
-		
-		synctool_lib.DRY_RUN = False
-		synctool_lib.shell_command('apt-get update')
 		
 		if self.dryrun:
 			cmd = 'apt-get -s upgrade'		# --simulate
 		else:
 			cmd = 'apt-get -y upgrade'
 		
+		synctool_lib.DRY_RUN = False
 		synctool_lib.shell_command(cmd)
 		synctool_lib.DRY_RUN = self.dryrun
 	

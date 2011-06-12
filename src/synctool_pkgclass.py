@@ -41,6 +41,10 @@ class SyncPkg:
 		verbose('removing packages: %s' % string.join(pkgs))
 	
 	
+	def update(self):
+		verbose('updating package database')
+	
+	
 	def upgrade(self):
 		verbose('upgrading packages')
 

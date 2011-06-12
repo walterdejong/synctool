@@ -26,8 +26,9 @@ import errno
 ACTION_INSTALL = 1
 ACTION_REMOVE = 2
 ACTION_LIST = 3
-ACTION_UPGRADE = 4
-ACTION_CLEAN = 5
+ACTION_UPDATE = 4
+ACTION_UPGRADE = 5
+ACTION_CLEAN = 6
 
 # action to perform
 ACTION = 0
@@ -185,10 +186,12 @@ def rearrange_options(arglist):
 
 def there_can_be_only_one():
 	print 'Specify only one of these options:'
+	print '  -l, --list   [PACKAGE ...]     List installed packages'
 	print '  -i, --install PACKAGE [..]     Install package'
 	print '  -R, --remove  PACKAGE [..]     Uninstall package'
-	print '  -l, --list   [PACKAGE ...]     List packages'
-	print '  -U, --upgrade                  Upgrade packages'
+	print '  -u, --update                   Update the database of available packages'
+	print '  -U, --upgrade                  Upgrade all outdated packages'
+	print '  -C, --clean                    Cleanup caches of downloaded packages'
 	print
 	sys.exit(1)
 
@@ -199,17 +202,18 @@ def usage():
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=dir/file            Use this config file'
 	print '                                 (default: %s)' % synctool_param.DEFAULT_CONF
+	print '  -l, --list   [PACKAGE ...]     List installed packages'
 	print '  -i, --install PACKAGE [..]     Install package'
 	print '  -R, --remove  PACKAGE [..]     Uninstall package'
-	print '  -l, --list   [PACKAGE ...]     List packages'
-	print '  -U, --upgrade                  Upgrade packages'
+	print '  -u, --update                   Update the database of available packages'
+	print '  -U, --upgrade                  Upgrade all outdated packages'
 	print '  -C, --clean                    Cleanup caches of downloaded packages'
 	print
 	print '  -f, --fix                      Perform updates (otherwise, do dry-run)'
 	print '  -v, --verbose                  Be verbose'
 	print '      --unix                     Output actions as unix shell commands'
 	print
-	print 'Note that synctool-pkg does a dry run unless you specify --fix'
+	print 'Note that synctool-pkg always does a dry run unless you specify --fix'
 	print
 	print 'synctool-pkg by Walter de Jong <walter@heiho.net> (c) 2011'
 
@@ -230,9 +234,9 @@ def get_options():
 	arglist = rearrange_options(sys.argv[1:])
 	
 	try:
-		opts, args = getopt.getopt(arglist, 'hc:i:R:loUCfvq',
+		opts, args = getopt.getopt(arglist, 'hc:i:R:luUCfvq',
 			['help', 'conf=',
-			'install=', 'remove=', 'list', 'outdated', 'upgrade', 'clean',
+			'install=', 'remove=', 'list', 'update', 'upgrade', 'clean',
 			'cleanup',
 			'verbose', 'unix', 'quiet'])
 	except getopt.error, (reason):
@@ -310,6 +314,13 @@ def get_options():
 			
 			continue
 		
+		if opt in ('-u', '--update'):
+			if ACTION > 0 and ACTION != ACTION_UPDATE:
+				there_can_be_only_one()
+			
+			ACTION = ACTION_UPDATE
+			continue
+		
 		if opt in ('-U', '--upgrade'):
 			if ACTION > 0 and ACTION != ACTION_UPGRADE:
 				there_can_be_only_one()
@@ -364,6 +375,9 @@ def main():
 	
 	elif ACTION == ACTION_REMOVE:
 		pkg.remove(PKG_LIST)
+	
+	elif ACTION == ACTION_UPDATE:
+		pkg.update()
 	
 	elif ACTION == ACTION_UPGRADE:
 		pkg.upgrade()
