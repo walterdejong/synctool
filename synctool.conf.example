@@ -29,6 +29,7 @@ masterdir /var/lib/synctool
 #package_manager apt-get
 #package_manager yum
 #package_manager zypper
+#package_manager pacman
 #package_manager brew
 
 # use mode 0777 on Linux

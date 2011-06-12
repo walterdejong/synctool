@@ -1,5 +1,5 @@
 #
-#	synctool_pkg_aptget.py		WJ111
+#	synctool_pkg_pacman.py		WJ111
 #
 #   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2011
 #
@@ -13,12 +13,12 @@ import synctool_lib
 from synctool_lib import verbose
 from synctool_pkgclass import SyncPkg
 
-import os
 import string
 
+# I no longer have an ArchLinux system to test this on, but here it goes ... :P
 
-class SyncPkgAptget(SyncPkg):
-	'''package installer class for apt-get + dpkg'''
+class SyncPkgPacman(SyncPkg):
+	'''package installer class for pacman'''
 	
 	def __init__(self):
 		SyncPkg.__init__(self)
@@ -27,10 +27,10 @@ class SyncPkgAptget(SyncPkg):
 	def list(self, pkgs = None):
 		SyncPkg.list(self, pkgs)
 		
-		cmd = 'dpkg -l'
+		cmd = 'pacman -Q'
 		
 		if pkgs:
-			cmd = cmd + ' ' + string.join(pkgs)
+			cmd = cmd + 's ' + string.join(pkgs)	# use pacman -Qs ...
 		
 		synctool_lib.DRY_RUN = False
 		synctool_lib.shell_command(cmd)
@@ -40,9 +40,7 @@ class SyncPkgAptget(SyncPkg):
 	def install(self, pkgs):
 		SyncPkg.install(self, pkgs)
 		
-		os.putenv('DEBIAN_FRONTEND', 'noninteractive')
-		
-		cmd = 'apt-get -y install ' + string.join(pkgs)
+		cmd = 'pacman -S --noconfirm ' + string.join(pkgs)
 		
 		synctool_lib.shell_command(cmd)
 	
@@ -50,9 +48,7 @@ class SyncPkgAptget(SyncPkg):
 	def remove(self, pkgs):
 		SyncPkg.remove(self, pkgs)
 		
-		os.putenv('DEBIAN_FRONTEND', 'noninteractive')
-		
-		cmd = 'apt-get -y remove ' + string.join(pkgs)
+		cmd = 'pacman -Rs --noconfirm ' + string.join(pkgs)
 		
 		synctool_lib.shell_command(cmd)
 	
@@ -60,15 +56,13 @@ class SyncPkgAptget(SyncPkg):
 	def upgrade(self):
 		SyncPkg.upgrade(self)
 		
-		os.putenv('DEBIAN_FRONTEND', 'noninteractive')
-		
 		synctool_lib.DRY_RUN = False
-		synctool_lib.shell_command('apt-get update')
+		synctool_lib.shell_command('pacman -Sy --noconfirm')
 		
 		if self.dryrun:
-			cmd = 'apt-get -s upgrade'		# --simulate
+			cmd = 'pacman -Qu --noconfirm'		# query updates
 		else:
-			cmd = 'apt-get -y upgrade'
+			cmd = 'pacman -Su --noconfirm'		# do upgrade
 		
 		synctool_lib.shell_command(cmd)
 		synctool_lib.DRY_RUN = self.dryrun
@@ -77,7 +71,7 @@ class SyncPkgAptget(SyncPkg):
 	def clean(self):
 		SyncPkg.clean(self)
 		
-		synctool_lib.shell_command('apt-get clean')
+		synctool_lib.shell_command('pacman -Scc --noconfirm')
 
 
 # EOB
