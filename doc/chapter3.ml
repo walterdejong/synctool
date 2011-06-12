@@ -463,3 +463,71 @@ To download the latest version, run <span class="cmd">synctool --download</span>
 on the master node. These functions connect to the main website at
 <a href="http://www.heiho.net/synctool/">http://www.heiho.net/synctool</a>.
 </p>
+
+<p>
+<h3 id="using_synctool_pkg">synctool-pkg, the synctool package manager</h3>
+synctool comes with a package manager named <span class="cmd">synctool-pkg</span>.
+Rather than being yet another package manager with its own format of packages,
+synctool-pkg is a wrapper around existing package management software.
+synctool-pkg unifies all the different package managers out there so you can
+operate any of them using just one command and the same set of command-line
+arguments. This is particularly useful in heterogeneous clusters or when
+you are working with multiple platforms or distributions.<br />
+synctool-pkg may also be invoked as <span class="cmd">dsh-pkg</span>
+and works a lot like regular <span class="cmd">dsh</span>.
+</p>
+
+<p>
+synctool-pkg supports a number of different package management systems.
+Unless explicitly defined in <span class="path">synctool.conf</span>,
+synctool-pkg will detect the system's operating system and its package manager.
+If detection fails, you may force the package manager in
+<span class="path">synctool.conf</span>:
+<div class="example">
+package_manager apt-get<br />
+#package_manager yum<br />
+#package_manager zypper<br />
+#package_manager pacman<br />
+#package_manager brew
+</div>
+synctool-pkg knows about more platforms and package managers, but currently
+only the ones listed above are implemented and supported.
+<div class="note">
+synctool-pkg is pluggable. Adding support for other package management systems
+is rather easy. If your platform and/or favorite package manager is not yet
+supported, feel free to develop your own plug-in for synctool-pkg or contact
+the author of synctool.
+</div>
+</p>
+
+<p>
+Following are examples of how to use synctool-pkg.
+<div class="example">
+synctool-pkg -n node1 --list<br />
+synctool-pkg -n node1 --list wget<br />
+synctool-pkg -g batch --install lynx wget curl<br />
+dsh-pkg -g batch -x node3 --remove somepackage
+</div>
+Sometimes you need to refresh the contents of the local package database.
+You can do this with the &lsquo;update&rsquo; command:
+<div class="example">
+dsh-pkg -qa --update
+</div>
+You may check for software upgrades for the node with
+<span class="system">--upgrade</span>. This will only show what upgrades are
+available. To really upgrade a node, specify <span class="system">--fix</span>.
+It is wise to always test an upgrade on a single node.
+<div class="example">
+dsh-pkg --upgrade<br />
+dsh-pkg -n testnode --upgrade -f<br />
+dsh-pkg --upgrade -f
+</div>
+Package managers download their packages into an on-disk cache. Sometimes the
+disk fills up and you may want to clean out the disk cache:
+<div class="example">
+dsh-pkg -qa --clean
+</div>
+If you want to further examine what synctool-pkg is doing, you may specify
+<span class="system">--verbose</span> or <span class="system">--unix</span>
+to display more information about what is going on under the hood.
+</p>

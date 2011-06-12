@@ -30,6 +30,8 @@
   <li><a href="chapter3.html#local_config">Node-specific local configuration
     adjustments</a></li>
   <li><a href="chapter3.html#checking_for_updates">Checking for updates</a></li>
+  <li><a href="chapter3.html#using_synctool_pkg">synctool-pkg, the synctool
+    package manager</a></li>
  </ol>
 </li>
 
