@@ -186,6 +186,30 @@ synctool_cmd $masterdir/sbin/synctool.py -c $masterdir/synctool.conf
 </div>
 </dd>
 
+<dt>pkg_cmd &lt;synctool_pkg UNIX command&gt;</dt>
+<dd>Give the full path and arguments to execute <span class="cmd">synctool_pkg.py</span>.
+&nbsp; This is needed because synctool-pkg executes <span class="cmd">synctool_pkg.py</span>
+on the target nodes.
+The exact location of the <span class="cmd">synctool_pkg.py</span> command is
+installation dependent.<br />
+There is no default, and you must configure this parameter correctly for
+synctool-pkg to work. synctool ships with the following sensible setting in the
+example configuration file:
+<div class="example">
+pkg_cmd $masterdir/sbin/synctool_pkg.py -c $masterdir/synctool.conf
+</div>
+</dd>
+
+<dt>package_manager &lt;package management system&gt;</dt>
+<dd>Specify the package management system that synctool-pkg must use.
+If left out, synctool-pkg will detect what package manager it should use, but
+using this parameter you can force it if detection fails.<br />
+Valid values for <span class="system">package_manager</span> are:
+<span class="system">apt-get</span>, <span class="system">yum</span>, 
+<span class="system">zypper</span>, <span class="system">pacman</span>, and
+<span class="system">brew</span>.
+</dd>
+
 <dt>num_proc &lt;number&gt;</dt>
 <dd>This specifies the maximum amount of parallel processes that synctool
 will use. For large clusters, you will want to increase this value, but mind
