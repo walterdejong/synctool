@@ -13,6 +13,7 @@ import synctool_lib
 from synctool_lib import verbose
 from synctool_pkgclass import SyncPkg
 
+import os
 import string
 
 
@@ -38,7 +39,9 @@ class SyncPkgAptget(SyncPkg):
 	
 	def install(self, pkgs):
 		SyncPkg.install(self, pkgs)
-
+		
+		os.putenv('DEBIAN_FRONTEND', 'noninteractive')
+		
 		cmd = 'apt-get -y install ' + string.join(pkgs)
 		
 		synctool_lib.shell_command(cmd)
@@ -47,6 +50,8 @@ class SyncPkgAptget(SyncPkg):
 	def remove(self, pkgs):
 		SyncPkg.remove(self, pkgs)
 		
+		os.putenv('DEBIAN_FRONTEND', 'noninteractive')
+		
 		cmd = 'apt-get -y remove ' + string.join(pkgs)
 		
 		synctool_lib.shell_command(cmd)
@@ -54,6 +59,8 @@ class SyncPkgAptget(SyncPkg):
 	
 	def upgrade(self):
 		SyncPkg.upgrade(self)
+		
+		os.putenv('DEBIAN_FRONTEND', 'noninteractive')
 		
 		synctool_lib.DRY_RUN = False
 		synctool_lib.shell_command('apt-get update')
