@@ -27,6 +27,7 @@ ACTION_INSTALL = 1
 ACTION_REMOVE = 2
 ACTION_LIST = 3
 ACTION_UPGRADE = 4
+ACTION_CLEAN = 5
 
 # action to perform
 ACTION = 0
@@ -208,6 +209,7 @@ def usage():
 	print '  -R, --remove  PACKAGE [..]     Uninstall package'
 	print '  -l, --list   [PACKAGE ...]     List packages'
 	print '  -U, --upgrade                  Upgrade packages'
+	print '  -C, --clean                    Cleanup caches of downloaded packages'
 	print
 	print '  -f, --fix                      Perform updates (otherwise, do dry-run)'
 	print '  -v, --verbose                  Be verbose'
@@ -234,9 +236,10 @@ def get_options():
 	arglist = rearrange_options(sys.argv[1:])
 	
 	try:
-		opts, args = getopt.getopt(arglist, 'hc:i:R:loUfvq',
+		opts, args = getopt.getopt(arglist, 'hc:i:R:loUCfvq',
 			['help', 'conf=',
-			'install=', 'remove=', 'list', 'outdated', 'upgrade',
+			'install=', 'remove=', 'list', 'outdated', 'upgrade', 'clean',
+			'cleanup',
 			'verbose', 'unix', 'quiet'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
@@ -320,6 +323,13 @@ def get_options():
 			ACTION = ACTION_UPGRADE
 			continue
 		
+		if opt in ('-C', '--clean', '--cleanup'):
+			if ACTION > 0 and ACTION != ACTION_CLEAN:
+				there_can_be_only_one()
+			
+			ACTION = ACTION_CLEAN
+			continue
+		
 		if opt in ('-f', '--fix'):
 			synctool_lib.DRY_RUN = False
 			continue
@@ -363,6 +373,9 @@ def main():
 	
 	elif ACTION == ACTION_UPGRADE:
 		pkg.upgrade()
+	
+	elif ACTION == ACTION_CLEAN:
+		pkg.clean()
 	
 	else:
 		raise RuntimeError, 'BUG: unknown ACTION code %d' % ACTION

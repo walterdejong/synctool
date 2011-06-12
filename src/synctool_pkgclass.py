@@ -45,4 +45,8 @@ class SyncPkg:
 		verbose('upgrading packages')
 
 
+	def clean(self):
+		verbose('cleaning up caches')
+
+
 # EOB

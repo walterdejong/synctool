@@ -60,4 +60,10 @@ class SyncPkgBrew(SyncPkg):
 		synctool_lib.shell_command('brew update')
 
 
+	def clean(self):
+		SyncPkg.clean(self)
+		
+		synctool_lib.shell_command('brew cleanup')
+
+
 # EOB

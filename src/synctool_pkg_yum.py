@@ -63,6 +63,12 @@ class SyncPkgYum(SyncPkg):
 		synctool_lib.DRY_RUN = False
 		synctool_lib.shell_command(cmd)
 		synctool_lib.DRY_RUN = self.dryrun
+	
+	
+	def clean(self):
+		SyncPkg.clean(self)
+		
+		synctool_lib.shell_command('yum clean packages')
 
 
 # EOB
