@@ -13,12 +13,15 @@ MASTERDIR=/var/lib/synctool
 MASTERBIN=$(MASTERDIR)/sbin
 
 SCRIPTS=synctool.py synctool_config.py  synctool_master.py synctool_aggr.py \
-	synctool_ping.py synctool_ssh.py synctool_scp.py
+	synctool_ping.py synctool_ssh.py synctool_scp.py synctool_master_pkg.py \
+	synctool_pkg.py
 
 LIBS=synctool_lib.py synctool_stat.py synctool_object.py \
 	synctool_update.py synctool_unbuffered.py \
 	synctool_overlay.py synctool_nodeset.py synctool_param.py \
-	synctool_configparser.py
+	synctool_configparser.py \
+	synctool_pkg_aptget.py synctool_pkg_yum.py synctool_pkg_zypper.py \
+	synctool_pkg_pacman.py synctool_pkg_brew.py
 
 all:
 	@echo "synctool Makefile"
@@ -38,17 +41,6 @@ install:
 	@install -m 755 $(SCRIPTS) $(MASTERBIN)
 	@install -m 644 $(LIBS) $(MASTERBIN)
 	@rm -f $(MASTERBIN)/synctool_core.py
-	@( cd $(MASTERBIN) && ln -sf synctool_master.py synctool )
-	@( cd $(MASTERBIN) && ln -sf synctool_master.py synctool-master )
-	@( cd $(MASTERBIN) && ln -sf synctool_config.py synctool-config )
-	@( cd $(MASTERBIN) && ln -sf synctool_ping.py synctool-ping )
-	@( cd $(MASTERBIN) && ln -sf synctool_ping.py dsh-ping )
-	@( cd $(MASTERBIN) && ln -sf synctool_ssh.py synctool-ssh )
-	@( cd $(MASTERBIN) && ln -sf synctool_ssh.py dsh )
-	@( cd $(MASTERBIN) && ln -sf synctool_scp.py synctool-scp )
-	@( cd $(MASTERBIN) && ln -sf synctool_scp.py dcp )
-	@( cd $(MASTERBIN) && ln -sf synctool_aggr.py synctool-aggr )
-	@( cd $(MASTERBIN) && ln -sf synctool_aggr.py aggr )
 	@echo linking synctool server commands to $(SBINDIR)/
 	@mkdir -m 755 -p $(SBINDIR)
 	@( cd $(SBINDIR) && ln -sf $(MASTERBIN)/synctool_master.py synctool )
@@ -62,5 +54,7 @@ install:
 	@( cd $(SBINDIR) && ln -sf $(MASTERBIN)/synctool_scp.py dcp )
 	@( cd $(SBINDIR) && ln -sf $(MASTERBIN)/synctool_aggr.py synctool-aggr )
 	@( cd $(SBINDIR) && ln -sf $(MASTERBIN)/synctool_aggr.py aggr )
+	@( cd $(SBINDIR) && ln -sf $(MASTERBIN)/synctool_master_pkg.py synctool-pkg )
+	@( cd $(SBINDIR) && ln -sf $(MASTERBIN)/synctool_master_pkg.py dsh-pkg )
 
 # EOB
