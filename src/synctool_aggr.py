@@ -11,12 +11,14 @@
 #	- aggregate: group together output that is the same
 #
 
+import synctool_libpath
+from synctool_lib import popen
+
 import os
 import sys
 import string
 import getopt
 
-from synctool_lib import popen
 
 # popen() calls stderr()
 def stderr(msg):

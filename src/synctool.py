@@ -9,11 +9,12 @@
 #   License.
 #
 
-import synctool_param
-import synctool_config
-import synctool_lib
+import synctool_libpath
 import synctool_overlay
+import synctool_config
+import synctool_param
 import synctool_stat
+import synctool_lib
 
 from synctool_lib import verbose,stdout,stderr,terse,unix_out,dryrun_msg
 
