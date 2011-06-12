@@ -40,6 +40,9 @@ MASTER_OPTS = None
 
 
 def run_remote_synctool(nodes):
+	if not nodes:
+		return
+	
 	if not synctool_param.RSYNC_CMD:
 		stderr('%s: error: rsync_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
@@ -353,11 +356,6 @@ def get_options():
 
 		if opt in ('-n', '--node'):
 			NODESET.add_node(arg)
-			continue
-
-		if opt in ('-e', '--erase-saved'):
-			synctool_param.ERASE_SAVED = True
-			PASS_ARGS.append(opt)
 			continue
 
 		if opt in ('-g', '--group'):
