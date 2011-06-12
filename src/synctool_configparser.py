@@ -151,12 +151,12 @@ def _config_multipath(param, value, multipaths, configfile, lineno):
 	return 0
 
 
-def _config_ignore_variant(param, arr, target_arr, configfile, lineno):
+def _config_ignore_variant(param, arr, configfile, lineno):
 	if len(arr) < 2:
 		stderr("%s:%d: '%s' requires at least 1 argument: the file or directory to ignore" % (configfile, lineno, param))
 		return 1
 	
-	target_arr.extend(arr[1:])
+	synctool_param.IGNORE_FILES.extend(arr[1:])
 	return 0
 
 
@@ -306,32 +306,27 @@ def config_ignore_dotdirs(arr, configfile, lineno):
 		
 # keyword: ignore
 def config_ignore(arr, configfile, lineno):
-	return _config_ignore_variant('ignore', arr, synctool_param.IGNORE_FILES,
-		configfile, lineno)
+	return _config_ignore_variant('ignore', arr, configfile, lineno)
 
 
 # keyword: ignore_file
 def config_ignore_file(arr, configfile, lineno):
-	return _config_ignore_variant('ignore_file', arr, synctool_param.IGNORE_FILES,
-		configfile, lineno)
+	return _config_ignore_variant('ignore_file', arr, configfile, lineno)
 
 
 # keyword: ignore_files
 def config_ignore_files(arr, configfile, lineno):
-	return _config_ignore_variant('ignore_files', arr, synctool_param.IGNORE_FILES,
-		configfile, lineno)
+	return _config_ignore_variant('ignore_files', arr, configfile, lineno)
 
 
 # keyword: ignore_dir
 def config_ignore_dir(arr, configfile, lineno):
-	return _config_ignore_variant('ignore_dir', arr, synctool_param.IGNORE_FILES,
-		configfile, lineno)
+	return _config_ignore_variant('ignore_dir', arr, configfile, lineno)
 
 
 # keyword: ignore_dirs
 def config_ignore_dirs(arr, configfile, lineno):
-	return _config_ignore_variant('ignore_dirs', arr, synctool_param.IGNORE_FILES,
-		configfile, lineno)
+	return _config_ignore_variant('ignore_dirs', arr, configfile, lineno)
 
 
 # keyword: terse
