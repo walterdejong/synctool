@@ -32,9 +32,7 @@ class SyncPkgBrew(SyncPkg):
 			cmd = cmd + ' ' + string.join(pkgs)
 		
 		synctool_lib.DRY_RUN = False
-		
 		synctool_lib.shell_command(cmd)
-		
 		synctool_lib.DRY_RUN = self.dryrun
 	
 	
@@ -57,7 +55,16 @@ class SyncPkgBrew(SyncPkg):
 	def upgrade(self):
 		SyncPkg.upgrade(self)
 		
+		synctool_lib.DRY_RUN = False
 		synctool_lib.shell_command('brew update')
+		
+		if self.dryrun:
+			cmd = 'brew outdated'
+		else:
+			cmd = 'brew upgrade'
+		
+		synctool_lib.shell_command(cmd)
+		synctool_lib.DRY_RUN = self.dryrun
 
 
 	def clean(self):
