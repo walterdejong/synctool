@@ -1,5 +1,5 @@
 #
-#	synctool_pkg_brew.py		WJ111
+#	synctool_pkg_aptget.py		WJ111
 #
 #   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2011
 #
@@ -16,8 +16,8 @@ from synctool_pkgclass import SyncPkg
 import string
 
 
-class SyncPkgBrew(SyncPkg):
-	'''package installer class for brew'''
+class SyncPkgAptget(SyncPkg):
+	'''package installer class for apt-get + dpkg'''
 	
 	def __init__(self):
 		SyncPkg.__init__(self)
@@ -26,22 +26,20 @@ class SyncPkgBrew(SyncPkg):
 	def list(self, pkgs = None):
 		SyncPkg.list(self, pkgs)
 		
-		cmd = 'brew list'
+		cmd = 'dpkg -l'
 		
 		if pkgs:
 			cmd = cmd + ' ' + string.join(pkgs)
 		
 		synctool_lib.DRY_RUN = False
-		
 		synctool_lib.shell_command(cmd)
-		
 		synctool_lib.DRY_RUN = self.dryrun
 	
 	
 	def install(self, pkgs):
 		SyncPkg.install(self, pkgs)
 
-		cmd = 'brew install ' + string.join(pkgs)
+		cmd = 'apt-get -y install ' + string.join(pkgs)
 		
 		synctool_lib.shell_command(cmd)
 	
@@ -49,7 +47,7 @@ class SyncPkgBrew(SyncPkg):
 	def remove(self, pkgs):
 		SyncPkg.remove(self, pkgs)
 		
-		cmd = 'brew remove ' + string.join(pkgs)
+		cmd = 'apt-get -y remove ' + string.join(pkgs)
 		
 		synctool_lib.shell_command(cmd)
 	
@@ -57,7 +55,17 @@ class SyncPkgBrew(SyncPkg):
 	def upgrade(self):
 		SyncPkg.upgrade(self)
 		
-		synctool_lib.shell_command('brew update')
+		synctool_lib.DRY_RUN = False
+		synctool_lib.shell_command('apt-get update')
+		
+		if self.dryrun:
+			cmd = 'apt-get -s upgrade'		# --simulate
+		else:
+			cmd = 'apt-get -y upgrade'
+		
+		synctool_lib.DRY_RUN = False
+		synctool_lib.shell_command(cmd)
+		synctool_lib.DRY_RUN = self.dryrun
 
 
 # EOB
