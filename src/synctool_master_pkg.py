@@ -153,6 +153,24 @@ def usage():
 	print '  -v, --verbose                  Be verbose'
 	print '      --unix                     Output actions as unix shell commands'
 	print '  -a, --aggregate                Condense output'
+	print '  -m, --manager PACKAGE_MANAGER  (Force) select this package manager'
+	print
+	print 'Supported package managers are:'
+	
+	# print list of supported package managers
+	# format it at 78 characters wide
+	print ' ',
+	n = 2
+	for pkg in synctool_param.KNOWN_PACKAGE_MANAGERS:
+		if n + len(pkg) + 1 <= 78:
+			n = n + len(pkg) + 1
+			print pkg,
+		else:
+			n = 2 + len(pkg) + 1
+			print
+			print ' ', pkg,
+	
+	print
 	print
 	print 'A nodelist or grouplist is a comma-separated list'
 	print 'Note that --upgrade does a dry run unless you specify --fix'
@@ -178,10 +196,10 @@ def get_options():
 	arglist = rearrange_options(sys.argv[1:])
 	
 	try:
-		opts, args = getopt.getopt(arglist, 'hc:n:g:x:X:vqaf',
+		opts, args = getopt.getopt(arglist, 'hc:n:g:x:X:i:R:luUCm:fvqa',
 			['help', 'conf=', 'node=', 'group=', 'exclude=', 'exclude-group=',
 			'list', 'install=', 'remove=', 'update', 'upgrade', 'clean',
-			'cleanup',
+			'cleanup', 'manager=',
 			'fix', 'verbose', 'quiet', 'unix', 'aggregate',
 			])
 	except getopt.error, (reason):
@@ -271,6 +289,13 @@ def get_options():
 		
 		if opt in ('-C', '--clean', '--cleanup'):
 			action = action + 1
+		
+		if opt in ('-m', '--manager'):
+			if not arg in synctool_param.KNOWN_PACKAGE_MANAGERS:
+				stderr("error: unknown or unsupported package manager '%s'" % arg)
+				sys.exit(1)
+			
+			synctool_param.PACKAGE_MANAGER = arg
 		
 		if opt in ('-f', '--fix'):
 			synctool_lib.DRY_RUN = False
