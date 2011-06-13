@@ -158,7 +158,7 @@ def _config_ignore_variant(param, arr, configfile, lineno):
 	
 	for file in arr[1:]:
 		# if file has wildcards, put it in array IGNORE_FILES_WITH_WILDCARDS
-		if string.find(file, '*') >= 0 or string.find(file, '?') >= 0
+		if string.find(file, '*') >= 0 or string.find(file, '?') >= 0 \
 			or (string.find(file, '[') >= 0 and string.find(file, ']') >= 0):
 			if not file in synctool_param.IGNORE_FILES_WITH_WILDCARDS:
 				synctool_param.IGNORE_FILES_WITH_WILDCARDS.append(file)
