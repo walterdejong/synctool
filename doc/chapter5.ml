@@ -104,7 +104,8 @@ sed "s/@IPADDR@/$IPADDR/" config_file_template &gt;fiction.conf<br />
 service fiction reload
 </div>
 This example uses <span class="cmd">ifconfig</span> to get the IP address of
-the node. You may also consult DNS or you might be able to use
+the node. You may also use the <span class="cmd">ip addr</span> command,
+consult DNS or you might be able to use
 <span class="cmd">synctool-config</span> to get what you need.<br />
 Now, when you want to change the configuration, edit the template file instead.
 synctool will see the change in the template, and update the template on the
