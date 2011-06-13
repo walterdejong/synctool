@@ -296,6 +296,9 @@ node3: skipping
 $masterdir/overlay/etc/hosts.allow.production._interactive,<br />
 it is not one of my groups
 </div>
+</p>
+
+<p>
 The <span class="system">--unix</span> option produces
 <span class="smallcaps">UNIX</span>-style output.
 This shows in standard shell syntax just what synctool is about to do.
@@ -319,6 +322,28 @@ operations are programmed in Python. The <span class="system">--unix</span>
 option is only a way of displaying what synctool does, and may be useful
 when debugging.
 </div>
+</p>
+
+<p>
+The <span class="system">-T</span> option produces terse output. In terse mode,
+long paths are abbreviated in an attempt to fit them on a single line of 80
+characters wide. Terse mode can be made to give colored output through
+<span class="path">synctool.conf</span>.
+<div class="example">
+root@masternode# synctool -n n1 -T<br />
+n1: DRYRUN not doing any updates<br />
+n1: mkdir /Users/walter/src/.../testroot/etc/cron.daily<br />
+n1: new /Users/walter/src/.../testroot/etc/cron.daily/testfile<br />
+n1: exec //overlay/Users/.../testroot/etc/cron.daily.post<br />
+</div>
+Note that these abbreviated paths can still be copy-and-pasted and used with
+other synctool commands like <span class="system">--single</span> and
+<span class="system">--diff</span>. synctool will recognize the abbreviated
+path and expand it on the fly. In the case of any name clashes synctool will
+report this and present a list of possibilities for you to consider.
+</p>
+
+<p>
 The <span class="system">--skip-rsync</span> option skips the
 <span class="cmd">rsync</span> run that copies the repository from the master
 server to the client node. You should only specify this
