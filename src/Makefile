@@ -21,7 +21,7 @@ LIBS=synctool_lib.py synctool_stat.py synctool_object.py \
 	synctool_overlay.py synctool_nodeset.py synctool_param.py \
 	synctool_configparser.py \
 	synctool_pkg_aptget.py synctool_pkg_yum.py synctool_pkg_zypper.py \
-	synctool_pkg_pacman.py synctool_pkg_brew.py
+	synctool_pkg_pacman.py synctool_pkg_brew.py synctool_pkg_bsdpkg.py
 
 all:
 	@echo "synctool Makefile"
