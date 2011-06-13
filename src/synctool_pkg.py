@@ -212,6 +212,24 @@ def usage():
 	print '  -f, --fix                      Perform upgrade (otherwise, do dry-run)'
 	print '  -v, --verbose                  Be verbose'
 	print '      --unix                     Output actions as unix shell commands'
+	print '  -m, --manager PACKAGE_MANAGER  (Force) select this package manager'
+	print
+	print 'Supported package managers are:'
+	
+	# print list of supported package managers
+	# format it at 78 characters wide
+	print ' ',
+	n = 2
+	for pkg in synctool_param.KNOWN_PACKAGE_MANAGERS:
+		if n + len(pkg) + 1 <= 78:
+			n = n + len(pkg) + 1
+			print pkg,
+		else:
+			n = 2 + len(pkg) + 1
+			print
+			print ' ', pkg,
+	
+	print
 	print
 	print 'Note that --upgrade does a dry run unless you specify --fix'
 	print
@@ -236,11 +254,11 @@ def get_options():
 	arglist = rearrange_options(sys.argv[1:])
 	
 	try:
-		opts, args = getopt.getopt(arglist, 'hc:i:R:luUCfvq',
+		opts, args = getopt.getopt(arglist, 'hc:i:R:luUCm:fvq',
 			['help', 'conf=',
 			'list', 'install=', 'remove=', 'update', 'upgrade', 'clean',
-			'cleanup',
-			'verbose', 'unix', 'fix', 'quiet'])
+			'cleanup', 'manager=',
+			'fix', 'verbose', 'unix', 'quiet'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -335,6 +353,14 @@ def get_options():
 				there_can_be_only_one()
 			
 			ACTION = ACTION_CLEAN
+			continue
+		
+		if opt in ('-m', '--manager'):
+			if not arg in synctool_param.KNOWN_PACKAGE_MANAGERS:
+				stderr("error: unknown or unsupported package manager '%s'" % arg)
+				sys.exit(1)
+			
+			synctool_param.PACKAGE_MANAGER = arg
 			continue
 		
 		if opt in ('-f', '--fix'):
