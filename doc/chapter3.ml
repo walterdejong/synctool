@@ -433,13 +433,16 @@ file, but apply only to the node on which the file resides. The local config
 file may be managed from the master repository, enabling you to have subtle
 differences in the synctool configuration for certain nodes. For example,
 this can be used to change the <span class="system">symlink_mode</span>
-in heterogeneous clusters.
-Beware that the local config file is read upon startup and may be synced
-afterwards, if the file was changed.<br />
+in heterogeneous clusters, or maybe the
+<span class="system">package_manager</span>.
+Beware that the local config file is read upon startup. If you manage the local
+config file using synctool, it will be synced after statrtup if the file was
+changed.<br />
 Mind that including node specific configs increases the complexity of your
 overall synctool configuration, so in general it is recommended that you
-stick to using the master <span class="path">synctool.conf</span> only,
-and not including any local configs at all.
+stick to using the master <span class="path">synctool.conf</span> only
+and not including any local configs at all, unless you really need this
+feature.
 </p>
 
 <p>
@@ -489,7 +492,8 @@ package_manager apt-get<br />
 #package_manager yum<br />
 #package_manager zypper<br />
 #package_manager pacman<br />
-#package_manager brew
+#package_manager brew<br />
+#package_manager bsdpkg
 </div>
 synctool-pkg knows about more platforms and package managers, but currently
 only the ones listed above are implemented and supported.
@@ -498,6 +502,11 @@ synctool-pkg is pluggable. Adding support for other package management systems
 is rather easy. If your platform and/or favorite package manager is not yet
 supported, feel free to develop your own plug-in for synctool-pkg or contact
 the author of synctool.
+</div>
+<div class="note">
+The <span class="system">bsdpkg</span> module uses
+<span class="cmd">freebsd-update</span> on FreeBSD and
+<span class="cmd">pkg_add -u</span> on other BSDs for upgrading packages.
 </div>
 </p>
 

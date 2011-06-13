@@ -105,8 +105,8 @@ def detect_installer():
 	# - I've seen apt-get work with dpkg, and I've seen apt-get work with rpm
 	# - MacOS X has no 'standard' software packaging (the App store??)
 	#   There are ports, fink, brew. I prefer 'brew'
-	# - The *BSDs have both pkg_add and ports, and I have heard about rpm-based
-	#   FreeBSD as well
+	# - The *BSDs have both pkg_add and ports
+	# - FreeBSD has freebsd-update to upgrade packages
 	#
 	
 	platform = os.uname()[0]
@@ -132,19 +132,20 @@ def detect_installer():
 	elif platform == 'Darwin':			# assume MacOS X
 		verbose('detected platform MacOS X')
 		# some people like port
-		# some like fink
-		# I like brew
+		# some people like fink
+		# I like homebrew
 		verbose('choosing package manager brew')
 		synctool_param.PACKAGE_MANAGER = 'brew'
 	
 	elif platform in ('NetBSD', 'OpenBSD', 'FreeBSD'):
 		verbose('detected platform %s' % platform)
 		
-		# choose pkg_add
+		# choose bsdpkg
 		# I know there are ports, but you can 'make' those easily in *BSD
+		# or maybe ports will be a seperate module in the future
 		
-		verbose('choosing package manager pkg_add')
-		synctool_param.PACKAGE_MANAGER = 'pkg_add'
+		verbose('choosing package manager bsdpkg')
+		synctool_param.PACKAGE_MANAGER = 'bsdpkg'
 	
 	# platforms that are not supported yet, but I would like to support
 	# or well, most of them

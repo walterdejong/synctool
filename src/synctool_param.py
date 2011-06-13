@@ -104,8 +104,8 @@ TERSE_COLORS = {
 
 # list of supported package managers
 KNOWN_PACKAGE_MANAGERS = (
-	'apt-get', 'yum', 'zypper', 'brew', 'pacman',
-#	'urpmi', 'portage', 'port', 'swaret', 'pkg_add'
+	'apt-get', 'yum', 'zypper', 'brew', 'pacman', 'bsdpkg',
+#	'urpmi', 'portage', 'port', 'swaret',
 )
 
 # EOB

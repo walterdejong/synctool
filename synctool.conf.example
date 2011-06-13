@@ -64,6 +64,7 @@ pkg_cmd $masterdir/sbin/synctool_pkg.py -c $masterdir/synctool.conf
 #package_manager zypper
 #package_manager pacman
 #package_manager brew
+#package_manager bsdpkg
 
 # max amount of parallel processes that synctool uses on the master node
 #num_proc 16

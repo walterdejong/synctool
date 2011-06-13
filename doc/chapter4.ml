@@ -220,11 +220,13 @@ pkg_cmd $masterdir/sbin/synctool_pkg.py -c $masterdir/synctool.conf
 <dt>package_manager &lt;package management system&gt;</dt>
 <dd>Specify the package management system that synctool-pkg must use.
 If left out, synctool-pkg will detect what package manager it should use, but
-using this parameter you can force it if detection fails.<br />
+using this parameter you can force it if detection fails. This setting can be
+overridden from the command-line when invoking
+<span class="cmd">synctool-pkg</span>.<br />
 Valid values for <span class="system">package_manager</span> are:
 <span class="system">apt-get</span>, <span class="system">yum</span>, 
-<span class="system">zypper</span>, <span class="system">pacman</span>, and
-<span class="system">brew</span>.
+<span class="system">zypper</span>, <span class="system">pacman</span>,
+<span class="system">brew</span>, and <span class="system">bsdpkg</span>.
 </dd>
 
 <dt>num_proc &lt;number&gt;</dt>
