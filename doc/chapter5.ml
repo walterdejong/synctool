@@ -10,7 +10,7 @@ synctool allows you to use nodenames as extension on files in the repository.
 This is nice because it allows you to easily differentiate for a single node.
 However, it is much better practice to put that node in a certain group, and
 let it be the only member of that group. Now label the file as belonging to
-that group, and your done.<br />
+that group, and you're done.<br />
 Bad:
 <div class="example">
 overlay/etc/hosts.allow._all<br />
