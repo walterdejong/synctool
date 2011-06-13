@@ -82,7 +82,7 @@ There are a number of rather standard configuration files that require the
 IP address of a node to be listed. These are not particularly &lsquo;synctool
 friendly.&rsquo; You are free to upload each and every unique instance of the
 config file in question into the repository, however, if your cluster is large
-this is does not make your repository look very nice, nor does it make them
+this does not make your repository look very nice, nor does it make them
 any easier to handle. Instead, make a template and couple it with a
 <span class="system">.post</span> script to generate the config file on the
 node. As an example, I will use a fictional snippet of config file, but this
