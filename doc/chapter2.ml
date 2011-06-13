@@ -11,20 +11,23 @@ each cluster node as root. Exactly how to do this is beyond the scope
 of this document (see the SSH documentation or just google around), but
 I'd like to say this about it:
 <ul>
-<li>use SSH keypairs</li>
+<li>use an SSH keypair</li>
 <li>or use hostbased authentication, also for root</li>
 <li>set <span class="path">sshd_config</span>
     <span class="system">PermitRootLogin without-password</span></li>
 <li>run <span class="cmd">sshd</span> only the internal network interface to
     secure your system</li>
 <li>in general, passwordless SSH from any cluster node to your master node
-    should <em>not</em> work or be allowed; or at least, synctool does not
-    need this</li>
+    should <em>not</em> work or be allowed &mdash; or at least, synctool does
+    not need this</li>
 </ul>
-For sites with extra tight security, it is possible to configure ssh to run
-only specific (synctool) commands, or maybe you want to change the
-ssh_cmd in the configuration so that it runs a different command, that
-suits your security needs.
+If you want extra security, use a passphrase on the keypair and employ
+<span class="cmd">ssh-agent</span>. Use <span class="cmd">ssh-add</span>
+with a timeout.<br />
+For sites with extra tight security, it is possible to configure
+<span class="cmd">ssh</span> to run only specific (synctool) commands, or maybe
+you want to change the <span class="system">ssh_cmd</span> in the configuration
+so that it runs a different command, one that suits your security needs.
 </p>
 <p>
 When passwordless SSH as root works, proceed to installing the software.
@@ -41,7 +44,7 @@ prefer <span class="path">/opt</span>. Pick whatever you think is best.
 
 <p>
 On your master node, run <span class="cmd">make install</span>. This copies
-the commands to the selected location and sets up symlinks for:
+the commands to the selected location and sets up symbolic links for:
 <div class="example">
 synctool &nbsp; &nbsp; &nbsp;&nbsp; -&gt; synctool_master.py<br />
 synctool-config -&gt; synctool_config.py<br />
@@ -52,6 +55,8 @@ dsh &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; -&gt; synctool_ssh.py<br />
 synctool-scp &nbsp;&nbsp; -&gt; synctool_scp.py<br />
 dcp &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; -&gt; synctool_scp.py<br />
 synctool-aggr &nbsp; -&gt; synctool_aggr.py<br />
+synctool-pkg &nbsp; &nbsp;-&gt; synctool_master_pkg.py<br />
+dsh-pkg &nbsp; &nbsp; &nbsp; &nbsp; -&gt; synctool_master_pkg.py<br />
 </div>
 It also creates the master repository under
 <span class="path">/var/lib/synctool/</span>.
@@ -93,9 +98,9 @@ where synctool can not figure out what node it is running on.
 This may happen when the <span class="system">ipaddress</span> does not
 directly map to the nodename, or when the hostname is different from the
 nodename. synctool can not magically know what node it is running on when
-this is the case. The property that uniquely identifies a host is its hostname.
-You can instruct synctool that this node is the host with the corresponding
-hostname.<br />
+this is the case. The property that uniquely identifies a host is its
+<em>hostname</em>. You can instruct synctool that this node is the host with
+the corresponding hostname.<br />
 <div class="note">
 synctool uses the <span class="system">socket.getfqdn()</span> function to
 determine the fully qualified name of the host. If synctool is not finding the
