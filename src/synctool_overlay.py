@@ -141,9 +141,25 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 			
 			isDir = True
 		else:
+			if synctool_param.IGNORE_DOTFILES and entry[0] == '.':
+				continue
+			
 			isDir = False
 		
+		# check any ignored files with wildcards
+		# before any group extension is examined
+		if synctool_param.IGNORE_FILES_WITH_WILDCARDS:
+			wildcard_match = False
+			for wildcard_entry in synctool_param.IGNORE_FILES_WITH_WILDCARDS:
+				if fnmatch.fnmatchcase(entry, wildcard_entry):
+					wildcard_match = True
+					break
+			
+			if wildcard_match:
+				continue
+		
 		(name, groupnum, isPost) = split_extension(entry, not isDir)
+		
 		if groupnum < 0:
 			# not a relevant group, so skip it
 			# Note that this also prunes trees if you have group-specific subdirs
@@ -157,20 +173,6 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 		
 		if name in synctool_param.IGNORE_FILES:
 			continue
-		
-		if synctool_param.IGNORE_DOTFILES and name[0] == '.':
-			continue
-		
-		# check any ignored files with wildcards
-		if synctool_param.IGNORE_FILES_WITH_WILDCARDS:
-			wildcard_match = False
-			for wildcard_entry in synctool_param.IGNORE_FILES_WITH_WILDCARDS:
-				if fnmatch.fnmatchcase(name, wildcard_entry):
-					wildcard_match = True
-					break
-			
-			if wildcard_match:
-				continue
 		
 		# inherit lower group level from parent directory
 		if groupnum > highest_groupnum:
