@@ -41,6 +41,7 @@ ACTION_PREFIX = 9
 ACTION_LOGFILE = 10
 ACTION_NODENAME = 11
 ACTION_LIST_DIRS = 12
+ACTION_PKGMGR = 13
 
 # optional: do not list hosts/groups that are ignored
 OPT_FILTER_IGNORED = False
@@ -371,6 +372,9 @@ def list_commands(cmds):
 		elif cmd == 'synctool':
 			print synctool_param.SYNCTOOL_CMD
 		
+		elif cmd == 'pkg':
+			print synctool_param.PKG_CMD
+		
 		else:
 			stderr("no such command '%s' available in synctool" % cmd)
 
@@ -422,6 +426,7 @@ def usage():
 	print '  -f, --filter-ignored     Do not list ignored nodes and groups'
 	print
 	print '  -C, --command=command    Display setting for command'
+	print '  -P, --package-manager    Display configured package manager'
 	print '  -p, --numproc            Display numproc setting'
 	print '  -m, --masterdir          Display the masterdir setting'
 	print '  -d, --list-dirs          Display directory settings'
@@ -431,7 +436,7 @@ def usage():
 	print '  -v, --version            Display synctool version'
 	print
 	print 'A node/group list can be a single value, or a comma-separated list'
-	print 'A command is a list of these: diff, ssh, rsync, synctool'
+	print 'A command is a list of these: diff,ssh,rsync,synctool,pkg'
 	print
 	print 'synctool-config by Walter de Jong <walter@heiho.net> (c) 2009-2011'
 
@@ -447,11 +452,11 @@ def get_options():
 		sys.exit(1)
 	
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:lLn:g:iHfC:pmdv',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:lLn:g:iHfC:Ppmdv',
 			['help', 'conf=', 'list-nodes', 'list-groups', 'node=', 'group=',
 			'interface', 'ipaddress', 'hostname', 'filter-ignored',
-			'command', 'numproc', 'masterdir', 'list-dirs', 'prefix',
-			'logfile', 'nodename', 'version'])
+			'command', 'package-manager', 'numproc', 'masterdir', 'list-dirs',
+			'prefix', 'logfile', 'nodename', 'version'])
 	
 	except getopt.error, (reason):
 		print
@@ -519,6 +524,10 @@ def get_options():
 		if opt in ('-C', '--command'):
 			set_action(ACTION_CMDS, '--command')
 			ARG_CMDS = string.split(arg, ',')
+			continue
+		
+		if opt in ('-P', '--package-manager'):
+			set_action(ACTION_PKGMGR, '--package-manager')
 			continue
 		
 		if opt in ('-p', '--numproc'):
@@ -606,9 +615,6 @@ def main():
 	elif ACTION == ACTION_PREFIX:
 		print os.path.abspath(os.path.dirname(sys.argv[0]))
 	
-	elif ACTION == ACTION_LIST_DIRS:
-		list_dirs()
-	
 	elif ACTION == ACTION_LOGFILE:
 		print synctool_param.LOGFILE
 	
@@ -632,6 +638,12 @@ def main():
 			print get_node_interface(synctool_param.NODENAME)
 		else:
 			print synctool_param.NODENAME
+	
+	elif ACTION == ACTION_LIST_DIRS:
+		list_dirs()
+	
+	elif ACTION == ACTION_PKGMGR:
+		print synctool_param.PACKAGE_MANAGER
 	
 	else:
 		raise RuntimeError, 'bug: unknown ACTION code %d' % ACTION
