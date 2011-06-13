@@ -528,6 +528,12 @@ disk fills up and you may want to clean out the disk cache:
 <div class="example">
 dsh-pkg -qa --clean
 </div>
+A specific package manager may be selected from the command-line. This is
+primarily meant as a future extension so BSD users can temporarily switch to
+the <span class="system">ports</span> system.
+<div class="example">
+dsh-pkg -m yum -i somepackage &nbsp; &nbsp; # force it to use yum
+</div>
 If you want to further examine what synctool-pkg is doing, you may specify
 <span class="system">--verbose</span> or <span class="system">--unix</span>
 to display more information about what is going on under the hood.
