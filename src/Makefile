@@ -19,7 +19,7 @@ SCRIPTS=synctool.py synctool_config.py  synctool_master.py synctool_aggr.py \
 LIBS=synctool_lib.py synctool_stat.py synctool_object.py \
 	synctool_update.py synctool_unbuffered.py \
 	synctool_overlay.py synctool_nodeset.py synctool_param.py \
-	synctool_configparser.py \
+	synctool_configparser.py synctool_pkgclass.py \
 	synctool_pkg_aptget.py synctool_pkg_yum.py synctool_pkg_zypper.py \
 	synctool_pkg_pacman.py synctool_pkg_brew.py synctool_pkg_bsdpkg.py
 
