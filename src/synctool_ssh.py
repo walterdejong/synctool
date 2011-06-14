@@ -84,7 +84,7 @@ def worker_ssh(rank, args):
 	else:
 		ssh_cmd_arr.append(node)
 	
-	ssh_cmd_arr.extend(cmd_args)
+	ssh_cmd_arr.extend(remote_cmd_arr)
 	
 	# execute ssh+remote command and show output with the nodename
 	synctool_lib.run_with_nodename(ssh_cmd_arr, nodename)
