@@ -41,7 +41,7 @@ class SyncPkgZypper(SyncPkg):
 	def install(self, pkgs):
 		SyncPkg.install(self, pkgs)
 
-		cmd = 'zypper -y install ' + string.join(pkgs)
+		cmd = 'zypper --non-interactive install ' + string.join(pkgs)
 		
 		synctool_lib.shell_command(cmd)
 	
@@ -49,7 +49,7 @@ class SyncPkgZypper(SyncPkg):
 	def remove(self, pkgs):
 		SyncPkg.remove(self, pkgs)
 		
-		cmd = 'zypper -y remove ' + string.join(pkgs)
+		cmd = 'zypper --non-interactive remove ' + string.join(pkgs)
 		
 		synctool_lib.shell_command(cmd)
 	
@@ -57,7 +57,7 @@ class SyncPkgZypper(SyncPkg):
 	def update(self):
 		SyncPkg.update(self)
 		
-		synctool_lib.shell_command('zypper -y refresh')
+		synctool_lib.shell_command('zypper --non-interactive refresh')
 	
 	
 	def upgrade(self):
@@ -66,7 +66,7 @@ class SyncPkgZypper(SyncPkg):
 		if self.dryrun:
 			cmd = 'zypper list-updates'
 		else:
-			cmd = 'zypper -y update'
+			cmd = 'zypper --non-interactive update'
 		
 		synctool_lib.DRY_RUN = False
 		synctool_lib.shell_command(cmd)
