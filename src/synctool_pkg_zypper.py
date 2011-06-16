@@ -76,19 +76,9 @@ class SyncPkgZypper(SyncPkg):
 	def clean(self):
 		SyncPkg.clean(self)
 		
-		# zypper has no 'clean' action; just delete the cache files
-		
-		cache_dir = '/var/lib/zypper/RPMS'
-		try:
-			files = os.listdir(cache_dir)
-		except OSError, msg:
-			stderr('error: %s' % msg)
-		else:
-			for file in files:
-				fullname = os.path.join(cache_dir, file)
-				
-				obj = synctool_object.SyncObject(None, fullname, 0)
-				obj.hard_delete_file()
+		synctool_lib.DRY_RUN = False
+		synctool_lib.shell_command('zypper clean')
+		synctool_lib.DRY_RUN = self.dryrun
 
 
 # EOB
