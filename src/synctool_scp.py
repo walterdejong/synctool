@@ -55,11 +55,11 @@ def run_remote_copy(nodes, files):
 	
 	files_str = string.join(files)		# this is used only for printing
 	
-	synctool_lib.run_parallel(master_scp, worker_scp, (scp_cmd_arr, files_str), len(nodes))
+	synctool_lib.run_parallel(master_scp, worker_scp, (nodes, scp_cmd_arr, files_str), len(nodes))
 
 
 def master_scp(rank, args):
-	(scp_cmd_arr, files_str) = args
+	(nodes, scp_cmd_arr, files_str) = args
 	
 	node = nodes[rank]
 	nodename = NODESET.get_nodename_from_interface(node)
@@ -89,7 +89,7 @@ def worker_scp(rank, args):
 	if synctool_lib.DRY_RUN:		# got here for nothing
 		return
 
-	(scp_cmd_arr, files_str) = args
+	(nodes, scp_cmd_arr, files_str) = args
 	
 	node = nodes[rank]
 	nodename = NODESET.get_nodename_from_interface(node)
