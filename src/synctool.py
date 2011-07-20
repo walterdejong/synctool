@@ -206,7 +206,7 @@ def delete_callback(obj):
 			not_str = ''
 		
 		stdout('%sdeleting %s : %s' % (not_str, obj.print_src(), obj.print_dest()))
-		hard_delete_file(obj)
+		synctool_object.hard_delete_file(obj)
 		run_post(obj.src_path, obj.dest_path)
 
 
