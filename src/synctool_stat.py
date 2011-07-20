@@ -102,7 +102,7 @@ class SyncStat:
 		except KeyError:
 			pass
 		
-		return '%d' % uid
+		return '%d' % self.uid
 	
 	
 	def ascii_gid(self):
