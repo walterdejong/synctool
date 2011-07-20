@@ -41,7 +41,7 @@ class SyncPkgZypper(SyncPkg):
 	def install(self, pkgs):
 		SyncPkg.install(self, pkgs)
 
-		cmd = 'zypper --non-interactive install ' + string.join(pkgs) + ' --auto-agree-with-licenses'
+		cmd = 'zypper --non-interactive install --auto-agree-with-licenses ' + string.join(pkgs)
 		
 		synctool_lib.shell_command(cmd)
 	
