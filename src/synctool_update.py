@@ -170,7 +170,7 @@ def checksum_file(filename):
 
 	try:
 		f = open(filename, 'r')
-	except IOError(err, reason):
+	except IOError, (err, reason):
 		stderr('error: failed to open %s : %s' % (filename, reason))
 		raise
 

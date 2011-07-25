@@ -270,13 +270,13 @@ def checksum_files(file1, file2):
 	reason = None
 	try:
 		f1 = open(file1, 'r')
-	except IOError(err, reason):
+	except IOError, (err, reason):
 		stderr('error: failed to open %s : %s' % (file1, reason))
 		raise
 	
 	try:
 		f2 = open(file2, 'r')
-	except IOError(err, reason):
+	except IOError, (err, reason):
 		stderr('error: failed to open %s : %s' % (file2, reason))
 		raise
 	
