@@ -8,6 +8,52 @@ See the README file for generic information on synctool.
 See the INSTALL file for information on how to deploy synctool.
 See the DOCUMENTATION file for information on how to use synctool.
 
+Online documentation in HTML pages is available at:
+http://www.heiho.net/synctool/
+
+
+What's new in synctool version 5.0 ?
+====================================
+
+There are many new things:
+ - HTML documentation has been added to the website.
+ - Use 'synctool -e' to erase the '.saved' files that synctool leaves behind.
+ - Use dsh-ping to see if your nodes are alive.
+ - Use dsh-pkg to do package management.
+ - Use 'dsh -o' to pass extra options to ssh.
+ - Use 'synctool -T' for terse output mode.
+ - Use 'synctool -F' to have synctool display full paths.
+ - options -1, --single, --diff, --ref can be given multiple times.
+ - .post scripts for directories are now run _in_ that directory rather than
+   in the parent directory.
+ - 'synctool-config --nodename' displays the current nodename.
+ - checksums are performed must faster now if there is no match.
+ - There are a bunch of new configuration parameters. See the provided
+   synctool.conf.example for a list.
+ - synctool.conf parameter 'ignore' supports wildcards.
+ - Multiple overlay directories can be defined. This enables you to restructure
+ - your overlay dir in a way that you think is logical.
+ - synctool.conf has a new 'hostname:' qualifier for nodes that are
+   multi-homed.
+
+Also included are updated contributions by Onno Zweers:
+ - updated synctool-diff command
+ - a shell-scripting library for writing synctool tasks
+
+UPGRADING INFO
+
+To upgrade from version 4.7.x to 5.0, run 'make install' on the master node and
+then run 'synctool'. If you have synctool installed in the default place
+(/opt/synctool/), then the upgrade should now be complete.
+
+
+The version number was bumped to 5.0 because of major rewrites in the code.
+The new code is more readable and therefore easier to maintain.
+synctool 5.0 has been tested more than enough, but should you encounter any
+issues, feel free to mail the author at walter@heiho.net
+
+Some info on older versions is listed below.
+
 
 What's new in synctool version 4.7.1 ? 
 ======================================

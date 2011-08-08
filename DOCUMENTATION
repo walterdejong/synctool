@@ -10,6 +10,9 @@ See the INSTALL file for information on how to deploy synctool.
 
 This DOCUMENTATION file tries to explain using synctool.
 
+Online documentation in HTML pages are available at:
+http://www.heiho.net/synctool/
+
 
 In 'synctool terminology', a node is a host, a computer in a group of
 computers. A group of computers is called a cluster.

@@ -7,6 +7,9 @@ License.
 See the INSTALL file for information on how to deploy synctool.
 See the DOCUMENTATION file for information on how to use synctool.
 
+Online documentation in HTML pages is available at:
+http://www.heiho.net/synctool/
+
 
 synctool is a tool that can help you administer your cluster of computers.
 It is meant for copying configuration files to groups (or classes) of
