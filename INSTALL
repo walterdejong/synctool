@@ -35,9 +35,13 @@ When passwordless SSH as root works, proceed to installing the software.
 
 
 Edit the provided Makefile and adjust PREFIX to point to your
-desired location where the software should reside. Some prefer
-/usr/local, others prefer /usr/local/synctool, while others
+desired location where the symlinks to the software should reside. 
+Some prefer /usr/local, others prefer /usr/local/synctool, while others
 prefer /opt. Pick whatever you think is best.
+The value of MASTERDIR defaults to /var/lib/synctool. This is where the 
+python sources are copied, and where you should put your synctool.conf,
+and your overlay directories. This directory will be synced to your nodes
+with every synctool run.
 
 On your master node, run 'make install'. This copies the commands
 to the selected location and sets up symlinks for:
@@ -154,7 +158,8 @@ What happened to 'make client_install'?
 It is no longer needed. The master node now automatically updates
 synctool on the client nodes. The binaries needed for this are
 located under /var/lib/synctool/sbin/, and this directory gets
-synced to the nodes.
+synced to the nodes, as long as it is the masterdir specified in 
+synctool.conf.
 
 
 See the DOCUMENTATION file for information on how to use synctool.
