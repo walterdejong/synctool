@@ -27,12 +27,12 @@ There are many new things:
  - .post scripts for directories are now run _in_ that directory rather than
    in the parent directory.
  - 'synctool-config --nodename' displays the current nodename.
- - checksums are performed must faster now if there is no match.
+ - checksums are performed much faster now if there is no match.
  - There are a bunch of new configuration parameters. See the provided
    synctool.conf.example for a list.
  - synctool.conf parameter 'ignore' supports wildcards.
  - Multiple overlay directories can be defined. This enables you to restructure
- - your overlay dir in a way that you think is logical.
+   your overlay dir in a way that you think is logical.
  - synctool.conf has a new 'hostname:' qualifier for nodes that are
    multi-homed.
 
@@ -72,7 +72,7 @@ This version includes a subtle yet major installation change that makes
 sysadmin-ing synctool itself a lot easier.
 Previously, you had to upgrade the nodes with 'make client_install'.
 This step is no longer needed. However, for synctool to install
-correctly, do the following:
+correctly, do the following (assuming masterdir=/var/lib/synctool/):
 
     1. run 'make install'
     2. edit /var/lib/synctool/synctool.conf
