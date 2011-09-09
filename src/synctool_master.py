@@ -247,6 +247,7 @@ def usage():
 	print '  -s, --suffix=group             Give group suffix for the uploaded file'
 	print '  -t, --tasks                    Run the scripts in the tasks/ directory'
 	print '  -f, --fix                      Perform updates (otherwise, do dry-run)'
+	print '      --no-post                  Do not run any on_update or .post scripts'
 	print '  -F, --fullpath                 Show full paths instead of shortened ones'
 	print '  -T, --terse                    Show terse, shortened paths'
 	print '      --color                    Use colored output (only for terse mode)'
@@ -270,39 +271,39 @@ def usage():
 def get_options():
 	global NODESET, PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE
 	global OPT_CHECK_UPDATE, OPT_DOWNLOAD, MASTER_OPTS
-
+	
 	# check for typo's on the command-line; things like "-diff" will trigger "-f" => "--fix"
 	synctool.be_careful_with_getopt()
-
+	
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:r:u:s:etfFTqa',
 			['help', 'conf=', 'verbose', 'node=', 'group=',
 			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=',
-			'upload=', 'suffix=', 'erase-saved', 'tasks', 'fix',
+			'upload=', 'suffix=', 'erase-saved', 'tasks', 'fix', 'no-post',
 			'fullpath', 'terse', 'color', 'no-color',
-			'quiet', 'aggregate', 'skip-rsync', 'unix',
+			'quiet', 'aggregate', 'unix', 'skip-rsync',
 			'version', 'check-update', 'download'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
 		sys.exit(1)
-
+	
 	except getopt.GetoptError, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
 		sys.exit(1)
-
+	
 	except:
 		usage()
 		sys.exit(1)
-
+	
 	if args != None and len(args) > 0:
 		stderr('error: excessive arguments on command line')
 		sys.exit(1)
-
+	
 	upload_filename = None
 	upload_suffix = None
-
+	
 	# these are only used for checking the validity of command-line option combinations
 	opt_diff = False
 	opt_single = False
@@ -311,7 +312,7 @@ def get_options():
 	opt_upload = False
 	opt_suffix = False
 	opt_fix = False
-
+	
 	PASS_ARGS = []
 	MASTER_OPTS = [ sys.argv[0] ]
 	
@@ -341,74 +342,72 @@ def get_options():
 	for opt, arg in opts:
 		if opt:
 			MASTER_OPTS.append(opt)
-
+		
 		if arg:
 			MASTER_OPTS.append(arg)
-
+		
 		if opt in ('-h', '--help', '-?', '-c', '--conf', '--version'):
 			# already done
 			continue
-
+		
 		if opt in ('-v', '--verbose'):
 			synctool_lib.VERBOSE = True
-			PASS_ARGS.append(opt)
-			continue
-
+		
 		if opt in ('-n', '--node'):
 			NODESET.add_node(arg)
 			continue
-
+		
 		if opt in ('-g', '--group'):
 			NODESET.add_group(arg)
 			continue
-
+		
 		if opt in ('-x', '--exclude'):
 			NODESET.exclude_node(arg)
 			continue
-
+		
 		if opt in ('-X', '--exclude-group'):
 			NODESET.exclude_group(arg)
 			continue
-
+		
 		if opt in ('-d', '--diff'):
 			opt_diff = True
-
+		
 		if opt in ('-1', '--single'):
 			opt_single = True
-
+		
 		if opt in ('-r', '--ref'):
 			opt_reference = True
-
+		
 		if opt in ('-u', '--upload'):
 			opt_upload = True
 			upload_filename = synctool_lib.strip_path(arg)
 			continue
-
+		
 		if opt in ('-s', '--suffix'):
 			opt_suffix = True
 			upload_suffix = arg
 			continue
-
+		
 		if opt in ('-t', '--tasks'):
 			opt_tasks = True
-
+		
 		if opt in ('-e', '--erase-saved'):
 			# This doesn't do anything in master, really
 			# because it doesn't use these settings, but hey
 			synctool_lib.ERASE_SAVED = True
 			synctool_param.BACKUP_COPIES = False
-
+		
 		if opt in ('-q', '--quiet'):
 			synctool_lib.QUIET = True
-
+		
 		if opt in ('-f', '--fix'):
 			opt_fix = True
 			synctool_lib.DRY_RUN = False
-
+		
 		if opt in ('-F', '--fullpath'):
 			synctool_param.FULL_PATH = True
 			synctool_param.TERSE = False
-
+		
 		if opt in ('-T', '--terse'):
 			synctool_param.TERSE = True
 			synctool_param.FULL_PATH = False
@@ -418,41 +417,44 @@ def get_options():
 		
 		if opt == '--no-color':
 			synctool_param.COLORIZE = False
-
+		
 		if opt in ('-a', '--aggregate'):
 			OPT_AGGREGATE = True
 			continue
-
+		
+		if opt == '--unix':
+			synctool_lib.UNIX_CMD = True
+		
 		if opt == '--skip-rsync':
 			OPT_SKIP_RSYNC = True
 			continue
-
-		if opt == '--unix':
-			synctool_lib.UNIX_CMD = True
-
+		
+		if opt == '--no-post':
+			synctool_lib.NO_POST = True
+		
 		if opt == '--check-update':
 			OPT_CHECK_UPDATE = True
 			continue
-
+		
 		if opt == '--download':
 			OPT_DOWNLOAD = True
 			continue
-
+		
 		if opt:
 			PASS_ARGS.append(opt)
-
+		
 		if arg:
 			PASS_ARGS.append(arg)
-
+	
 	# enable logging at the master node
 	PASS_ARGS.append('--masterlog')
-
+	
 	if args != None:
 		MASTER_OPTS.extend(args)
 		PASS_ARGS.extend(args)
-
+	
 	synctool.option_combinations(opt_diff, opt_single, opt_reference, opt_tasks, opt_upload, opt_suffix, opt_fix)
-
+	
 	return (upload_filename, upload_suffix)
 
 

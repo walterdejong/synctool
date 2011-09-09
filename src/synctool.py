@@ -109,6 +109,9 @@ def run_post(src, dest):
 	
 	global DIR_CHANGED
 	
+	if synctool_lib.NO_POST:
+		return
+	
 	stat = synctool_stat.SyncStat(dest)
 	
 	if stat.isDir():
@@ -137,6 +140,9 @@ def run_post(src, dest):
 def run_post_on_directory(src, dest):
 	'''run .post script for a changed directory'''
 	
+	if synctool_lib.NO_POST:
+		return
+	
 	# Note that the script is executed with the changed dir as current working dir
 	
 	if synctool_param.ON_UPDATE.has_key(dest):
@@ -162,6 +168,9 @@ def sort_directory_pair(a, b):
 
 def run_post_on_directories():
 	'''run pending .post scripts on directories that were changed'''
+	
+	if synctool_lib.NO_POST:
+		return
 	
 	global DIR_CHANGED
 	
@@ -401,6 +410,7 @@ def usage():
 	print '  -r, --ref=file        Show which source file synctool chooses'
 	print '  -t, --tasks           Run the scripts in the tasks/ directory'
 	print '  -f, --fix             Perform updates (otherwise, do dry-run)'
+	print '      --no-post         Do not run any on_update or .post scripts'
 	print '  -F, --fullpath        Show full paths instead of shortened ones'
 	print '  -T, --terse           Show terse, shortened paths'
 	print '      --color           Use colored output (only for terse mode)'
@@ -429,7 +439,7 @@ def get_options():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:etfFTvq',
 			['help', 'conf=', 'diff=', 'single=', 'ref=', 'erase-saved',
-			'tasks', 'fix', 'fullpath', 'terse', 'color', 'no-color',
+			'tasks', 'fix', 'no-post', 'fullpath', 'terse', 'color', 'no-color',
 			'verbose', 'quiet', 'unix', 'masterlog', 'version'])
 	except getopt.error, (reason):
 		print '%s: %s' % (progname, reason)
@@ -512,6 +522,10 @@ def get_options():
 		if opt in ('-f', '--fix'):
 			opt_fix = True
 			synctool_lib.DRY_RUN = False
+			continue
+		
+		if opt == '--no-post':
+			synctool_lib.NO_POST = True
 			continue
 		
 		if opt == '--color':
