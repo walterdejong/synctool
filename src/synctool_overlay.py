@@ -132,6 +132,9 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 	global POST_SCRIPTS
 	
 	for entry in os.listdir(overlay_dir):
+		if entry in synctool_param.IGNORE_FILES:
+			continue
+		
 		src_path = os.path.join(overlay_dir, entry)
 		src_statbuf = synctool_stat.SyncStat(src_path)
 		
