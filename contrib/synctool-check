@@ -1,0 +1,153 @@
+#!/bin/bash
+
+# Version 1.0, 2011 Werner Maier, werner@maiers.de
+# use at your own risk :)
+# free distributable under same license as synctool (http://www.heiho.net/synctool/)
+
+# setup configuration
+SYNCTOOLHOME=/var/lib/synctool
+RUNDIR=/var/run/synctool
+SYNCTOOLCONF=$SYNCTOOLHOME/synctool.conf
+
+# setup rundir
+test -d $RUNDIR || mkdir $RUNDIR
+
+ACTION=""
+DEBUG=0
+
+while [ "$1" != "" ]
+do
+    case $1 in
+        -h)
+            ACTION=help
+            ;;
+        -i)
+            DISPLAYIGNORED=1
+            ;;
+        -t)
+            CHECKTIMES=1
+            ;;
+        -s)
+            SETTIMES=1
+            ;;
+        -c)
+            CHECKTIMES=1
+            DISPLAYIGNORED=1
+            ;;
+        --settime)
+            ACTION=settimeonnode
+            shift
+            TIME=$1
+            ;;
+        -d)
+            DEBUG=1
+            ;;
+    esac
+    shift
+done
+
+if [ "$SETTIMES" == "1" ]
+then
+    if [ "$CHECKTIMES$DISPLAYIGNORED" != "" ]
+    then
+        echo 
+        echo "Error: -s cannot be used with -c|-t|-i"
+        echo 
+        ACTION=help
+        CHECKTIMES=
+        DISPLAYIGNORED=
+    else 
+        ACTION=settime
+    fi
+fi
+
+if [ "$CHECKTIMES$DISPLAYIGNORED" != "" ]
+then
+    ACTION=check
+fi
+
+if [ "$ACTION" == "" ] 
+then
+    ACTION=help
+fi
+
+if [ "$DEBUG" == "1" ]
+then
+    echo "RUNDIR: $RUNDIR"
+    echo "SYNCTOOLCONF: $SYNCTOOLCONF"
+    echo "ACTION: $ACTION"
+    echo "DEBUG: $DEBUG"
+fi
+
+case $ACTION in
+    help)
+        echo "usage: $0 [-h] | [-t][-i] | [-c] | [-s]"
+        echo "      -h      this help"
+        echo "      -t      check synctool-lastrun-time on synctool-nodes"
+        echo "      -i      show  ignored nodes/groups"
+        echo "      -c      comprehensive check: shortcut for -t -i"
+        echo "      -s      set   synctool-lastrun-time on synctool-nodes to now()"
+        ;;
+    settimeonnode)
+        test -d $RUNDIR || mkdir $RUNDIR
+        echo $TIME > $RUNDIR/task-last-run.time
+        echo synctool-runtime saved on node:
+        cat $RUNDIR/task-last-run.time
+        ;;
+    check)
+        if [ "$DISPLAYIGNORED" != "" ]
+        then
+            L=`grep ignore_dot $SYNCTOOLCONF | egrep -v -e "^#" | wc -l`
+            if [ $L -gt 0 ]
+            then
+                echo 
+                echo "Ignore Options in $SYNCTOOLCONF:"
+                echo 
+                grep ignore_dot $SYNCTOOLCONF | egrep -v -e "^#" |
+                while read line
+                do
+                    echo "        $line"
+                done
+            fi
+
+            L=`grep ignore_node $SYNCTOOLCONF | egrep -v -e "^#" | wc -l`
+            if [ $L -gt 0 ]
+            then
+                echo 
+                echo "Ignored Nodes in $SYNCTOOLCONF:"
+                echo 
+                grep ignore_node $SYNCTOOLCONF | egrep -v -e "^#" | sed -e "s/ignore_node //" |
+                while read line
+                do
+                    echo "        $line"
+                done
+            fi
+
+            L=`grep ignore_node $SYNCTOOLCONF | egrep -v -e "^#" | wc -l`
+            if [ $L -gt 0 ]
+            then
+                echo 
+                echo "Ignored Groups in $SYNCTOOLCONF:"
+                echo 
+                grep ignore_group $SYNCTOOLCONF | egrep -v -e "^#" | sed -e "s/ignore_group //" |
+                while read line
+                do
+                    echo "        $line"
+                done
+                echo 
+            fi
+        fi
+        if [ "$CHECKTIMES" != "" ]
+        then
+            echo
+            echo Checking synctool-check -s last runtime on included nodes:
+            echo
+            dsh -qa cat $RUNDIR/task-last-run.time
+        fi
+        ;;
+    settime)
+        DATE=`date +"%Y-%m-$D_%H:%M:%S"`
+        $SYNCTOOLHOME/sbin/dsh -qa $SYNCTOOLHOME/sbin/synctool-check --settime $DATE
+        ;;
+
+esac
