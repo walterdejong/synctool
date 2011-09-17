@@ -347,7 +347,7 @@ def diff_files(filename):
 			cmd_arr = shlex.split(synctool_param.DIFF_CMD)
 			cmd_arr.append(obj.dest_path)
 			cmd_arr.append(obj.src_path)
-			subprocess.Popen(cmd_arr, shell=False)
+			subprocess.call(cmd_arr, shell=False)
 		else:
 			os.system('%s %s %s' % (synctool_param.DIFF_CMD, obj.dest_path, obj.src_path))
 		
