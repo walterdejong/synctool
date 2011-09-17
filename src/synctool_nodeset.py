@@ -92,10 +92,16 @@ class NodeSet:
 			return []
 		
 		ifaces = []
+		ignored_nodes = ''
 		
 		for node in self.nodelist:
 			if node in synctool_param.IGNORE_GROUPS and not node in explicit_includes:
 				verbose('node %s is ignored' % node)
+				
+				if not ignored_nodes:
+					ignored_nodes = node
+				else:
+					ignored_nodes = ignored_nodes + ',' + node
 				continue
 			
 			groups = synctool_config.get_groups(node)
@@ -104,6 +110,12 @@ class NodeSet:
 			for group in groups:
 				if group in synctool_param.IGNORE_GROUPS:
 					verbose('group %s is ignored' % group)
+					
+					if not ignored_nodes:
+						ignored_nodes = node
+					else:
+						ignored_nodes = ignored_nodes + ',' + node
+					
 					do_continue = True
 					break
 			
@@ -115,6 +127,17 @@ class NodeSet:
 			
 			if not iface in ifaces:		# make sure we do not have duplicates
 				ifaces.append(iface)
+		
+		# print message about ignored nodes
+		if ignored_nodes and not synctool_lib.QUIET and not synctool_lib.UNIX_CMD:
+			if synctool_param.TERSE:
+				synctool_lib.terse(synctool_lib.TERSE_WARNING, 'ignored nodes')
+			else:
+				ignored_nodes = 'warning: ignored nodes: ' + ignored_nodes
+				if len(ignored_nodes < 80):
+					print ignored_nodes
+				else:
+					print 'warning: some nodes are ignored'
 		
 		return ifaces
 	
