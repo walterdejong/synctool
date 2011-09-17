@@ -319,7 +319,8 @@ def popen(cmd_arr):
 	
 	if 'subprocess' in sys.modules:
 		try:
-			f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096, stdout=subprocess.PIPE).stdout
+			f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
+				stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
 		except OSError:
 			f = None
 		
