@@ -2,6 +2,8 @@ September 2011:
 - small fixes (see git log)
 - Werner Maier contributed synctool-check
   It keeps timestamps so you can see when a node was last updated
+- bugfix: the comma-separated list of nodes or groups was not working
+  correctly; this problem was fixed
 
 August 8th 2011:
 - released as version 5.0
