@@ -15,6 +15,7 @@ from synctool_lib import verbose,stderr
 
 import synctool_config
 
+import string
 
 #
 # The nodeset helps making a set of nodes from command-line arguments
@@ -38,21 +39,29 @@ class NodeSet:
 		self.exclude_groups = []
 		self.namemap = {}
 	
-	def add_node(self, node):
-		if not node in self.nodelist:
-			self.nodelist.append(node)
+	def add_node(self, nodelist):
+		nodes = string.split(nodelist, ',')
+		for node in nodes:
+			if not node in self.nodelist:
+				self.nodelist.append(node)
 	
-	def add_group(self, group):
-		if not group in self.grouplist:
-			self.grouplist.append(group)
+	def add_group(self, grouplist):
+		groups = string.split(grouplist, ',')
+		for group in groups:
+			if not group in self.grouplist:
+				self.grouplist.append(group)
 	
-	def exclude_node(self, node):
-		if not node in self.exclude_nodes:
-			self.exclude_nodes.append(node)
+	def exclude_node(self, nodelist):
+		nodes = string.split(nodelist)
+		for node in nodes:
+			if not node in self.exclude_nodes:
+				self.exclude_nodes.append(node)
 	
-	def exclude_group(self, group):
-		if not group in self.exclude_groups:
-			self.exclude_groups.append(group)
+	def exclude_group(self, grouplist):
+		groups = string.split(grouplist)
+		for group in groups:
+			if not group in self.exclude_groups:
+				self.exclude_groups.append(group)
 	
 	def interfaces(self):
 		'''return list of interfaces of relevant nodes'''
