@@ -52,13 +52,13 @@ class NodeSet:
 				self.grouplist.append(group)
 	
 	def exclude_node(self, nodelist):
-		nodes = string.split(nodelist)
+		nodes = string.split(nodelist, ',')
 		for node in nodes:
 			if not node in self.exclude_nodes:
 				self.exclude_nodes.append(node)
 	
 	def exclude_group(self, grouplist):
-		groups = string.split(grouplist)
+		groups = string.split(grouplist, ',')
 		for group in groups:
 			if not group in self.exclude_groups:
 				self.exclude_groups.append(group)
@@ -143,7 +143,7 @@ class NodeSet:
 				synctool_lib.terse(synctool_lib.TERSE_WARNING, 'ignored nodes')
 			else:
 				ignored_nodes = 'warning: ignored nodes: ' + ignored_nodes
-				if len(ignored_nodes < 80):
+				if len(ignored_nodes) < 80:
 					print ignored_nodes
 				else:
 					print 'warning: some nodes are ignored'
