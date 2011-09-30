@@ -133,8 +133,8 @@ node node4 wn       ipaddress:node4-mgmt
 node node5 wn       ipaddress:node5-mgmt
 node node6 wn       ipaddress:node6-mgmt
 node node7 wn       ipaddress:node7-mgmt
-node node8 test     ipaddress:node8-mgmt
-node node9 batch    ipaddress:node9-mgmt
+node node8 test     ipaddress:node8-mgmt  hostid:/etc/hostname.bnx0
+node node9 batch    ipaddress:node9-mgmt  hostid:/etc/hostname.bnx0
 
 # ignore one or more nodes
 ignore_node node0 node9

@@ -129,7 +129,11 @@ def add_myhostname():
 	
 	nodename = None
 	
-	if synctool_param.HOSTNAMES.has_key(hostname):
+	if synctool_param.HOST_ID != None:
+		arr = string.split(synctool_param.HOST_ID, '.')
+		nodename = arr[0]
+	
+	elif synctool_param.HOSTNAMES.has_key(hostname):
 		nodename = synctool_param.HOSTNAMES[hostname]
 	
 	elif synctool_param.HOSTNAMES.has_key(short_hostname):

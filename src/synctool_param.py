@@ -26,6 +26,7 @@ TASKS_DIRS = []
 SCRIPT_DIR = None
 HOSTNAME = None
 NODENAME = None
+HOST_ID = None
 
 DIFF_CMD = None
 PING_CMD = None

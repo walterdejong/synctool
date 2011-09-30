@@ -555,6 +555,27 @@ def config_node(arr, configfile, lineno):
 				synctool_param.HOSTNAMES[arg] = node
 				synctool_param.HOSTNAMES_BY_NODE[node] = arg
 			
+			elif qualifier == 'hostid':
+				try:
+					f = open(arg, 'r')
+				except IOError:
+					# this is a real error ... but it doesn't matter on the master node
+					# so how to handle this?
+					continue
+				
+				hostid = f.readline()
+				
+				f.close()
+				
+				if not hostid:
+					continue
+				
+				hostid = string.strip(hostid)
+				if not hostid:
+					continue
+				
+				synctool_param.HOST_ID = hostid
+			
 			else:
 				stderr('%s:%d: unknown node qualifier %s' % (configfile, lineno, qualifier))
 				return 1
