@@ -268,7 +268,7 @@ def load_overlay_tree():
 	POST_SCRIPTS = {}
 	
 	# ensure that GROUP_ALL is set correctly
-	GROUP_ALL = synctool_param.MY_GROUPS.index('all')
+	GROUP_ALL = len(synctool_param.MY_GROUPS) - 1
 	
 	filelist = []
 	
@@ -300,7 +300,7 @@ def load_delete_tree():
 	DELETE_DICT = {}
 	
 	# ensure that GROUP_ALL is set correctly
-	GROUP_ALL = synctool_param.MY_GROUPS.index('all')
+	GROUP_ALL = len(synctool_param.MY_GROUPS) - 1
 	
 	filelist = []
 	
@@ -338,7 +338,7 @@ def load_tasks_tree():
 	TASKS_DICT = {}
 	
 	# ensure that GROUP_ALL is set correctly
-	GROUP_ALL = synctool_param.MY_GROUPS.index('all')
+	GROUP_ALL = len(synctool_param.MY_GROUPS) - 1
 	
 	filelist = []
 	
