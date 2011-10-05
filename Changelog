@@ -1,5 +1,6 @@
 October 2011:
 - added hostid:filename for uniquely identifying weird hosts
+- fix for bug regarding redefinition of group 'all'
 
 September 2011:
 - small fixes (see git log)

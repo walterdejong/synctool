@@ -70,7 +70,7 @@ class NodeSet:
 		
 		# by default, work on all nodes
 		if not self.nodelist and not self.grouplist:
-			self.nodelist = synctool_config.get_all_nodes()
+			self.nodelist = synctool_config.get_nodes_in_groups(["all"])
 		
 		# check if the nodes exist at all; the user could have given bogus names
 		all_nodes = synctool_config.get_all_nodes()
