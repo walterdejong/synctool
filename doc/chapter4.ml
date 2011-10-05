@@ -259,7 +259,7 @@ group g1 batch test wn
 </dd>
 
 <dt>node &lt;nodename&gt; &lt;group&gt; [..] [ipaddress:&lt;IP address&gt;]
-  [hostname:&lt;fully qualified hostname&gt;]</dt>
+  [hostname:&lt;fully qualified hostname&gt;] [hostid:&lt;filename&gt;]</dt>
 <dd>The <span class="system">node</span> keyword defines what groups a node
 is in. Multiple groups may be given. The order of the groups is important;
 the left-most group is most important, and the right-most group is least
@@ -286,6 +286,11 @@ nodename. synctool can not magically know what node it is running on when
 this is the case. The property that uniquely identifies a host is its hostname.
 You can instruct synctool that this node is the host with the corresponding
 hostname.<br />
+The optional <span class="system">hostid</span> specifier can be used in the
+unusual case where the hostname does not uniquely identify a host, so when
+you have multiple hosts that have the same hostname. The filename argument
+is a file on the target node that contains the &ldquo;synctool hostname&rdquo;
+that will be used to uniquely identify the host.<br />
 <div class="note">
 synctool uses the <span class="system">socket.getfqdn()</span> function to
 determine the fully qualified name of the host. If synctool is not finding the
