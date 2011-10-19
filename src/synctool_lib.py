@@ -317,10 +317,10 @@ def checksum_files(file1, file2):
 def popen(cmd_arr):
 	'''same as os.popen(), but use an array of command+arguments'''
 	
-	if 'subprocess' in sys.modules:
+	if use_subprocess:
 		try:
 			f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
-				stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+				stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
 		except OSError:
 			f = None
 		
