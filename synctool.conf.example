@@ -47,7 +47,7 @@ diff_cmd /usr/bin/diff -u
 ping_cmd /bin/ping -q -c 2 -t 4
 ssh_cmd /usr/bin/ssh -o ConnectTimeout=10 -q
 scp_cmd /usr/bin/scp -o ConnectTimeout=10 -p
-rsync_cmd /usr/bin/rsync -ar --delete -e 'ssh -o ConnectTimeout=10 -q'
+rsync_cmd /usr/bin/rsync -ar --exclude='*.pyc' --delete -e 'ssh -o ConnectTimeout=10 -q'
 synctool_cmd $masterdir/sbin/synctool.py -c $masterdir/synctool.conf
 pkg_cmd $masterdir/sbin/synctool_pkg.py -c $masterdir/synctool.conf
 
