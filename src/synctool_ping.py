@@ -88,6 +88,14 @@ def worker_ping(rank, nodes):
 				pass
 		
 			break
+		
+		# some ping implementations say "hostname is alive" or "hostname is unreachable"
+		elif len(arr) == 3 and arr[1] == 'is':
+			if arr[2] == 'alive':
+				packets_received = 100
+			
+			elif arr[2] == 'unreachable':
+				packets_received = -1
 	
 	f.close()
 	
