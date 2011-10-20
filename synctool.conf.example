@@ -44,7 +44,7 @@ logfile /var/log/synctool.log
 
 # configure external commands that synctool uses
 diff_cmd /usr/bin/diff -u
-ping_cmd /bin/ping -q -c 2 -t 4
+ping_cmd /bin/ping -q -c 1 -t 1
 #ping_cmd /usr/bin/fping -t 500
 ssh_cmd /usr/bin/ssh -o ConnectTimeout=10 -q
 scp_cmd /usr/bin/scp -o ConnectTimeout=10 -p
