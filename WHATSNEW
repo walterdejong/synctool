@@ -12,6 +12,16 @@ Online documentation in HTML pages is available at:
 http://www.heiho.net/synctool/
 
 
+What's new in synctool version 5.1 ?
+====================================
+This version mostly fixes bugs.
+There is a new feature named 'hostid' that you may use when there are
+nodes that (for whatever reason) have the same hostname. The hostid is
+a file on the node that holds the 'synctool' hostname that must be
+unique and uniquely identifies this node in the cluster. See also the
+documentation about hostid.
+
+
 What's new in synctool version 5.0 ?
 ====================================
 
