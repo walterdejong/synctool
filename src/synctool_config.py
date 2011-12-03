@@ -626,7 +626,7 @@ def main():
 		add_myhostname()
 		
 		if synctool_param.NODENAME == None:
-			stderr('unable to determine my nodename, please check %s' % synctool_param.CONF_FILE)
+			stderr('unable to determine my nodename (%s), please check %s' % (synctool_config.HOSTNAME, synctool_param.CONF_FILE))
 			sys.exit(1)
 		
 		if synctool_param.NODENAME in synctool_param.IGNORE_GROUPS:
