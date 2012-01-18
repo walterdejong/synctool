@@ -43,7 +43,7 @@ sub get_status {
 	push(@regexlist, '(?<host>[a-z0-9\-]+): DRY RUN, not doing any updates');
 	push(@regexlist, '(?<host>[a-z0-9\-]+): (?<file>[a-z0-9/_.\-]+) (?<status>mismatch|does not exist)( \([a-zA-Z ]+\))?');
 
-	my $command = '/opt/synctool/sbin/synctool';
+	my $command = 'sudo /opt/synctool/sbin/synctool';
 
 	open(INPUT, "$command|") || die "Unable to open $command: $!\n";
 
