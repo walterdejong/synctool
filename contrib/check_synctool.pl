@@ -30,7 +30,7 @@ sub main {
 	(my $result, my $message_ref, my $performancedata_ref) = process_status($status_ref);
 
 	$"=", ";
-	print "$result: @{$message_ref}|@{$performancedata_ref}\n";
+	print "$result: @{$message_ref} | @{$performancedata_ref}\n";
 
 	return($result);
 }
@@ -43,7 +43,7 @@ sub get_status {
 	push(@regexlist, '(?<host>[a-z0-9\-]+): DRY RUN, not doing any updates');
 	push(@regexlist, '(?<host>[a-z0-9\-]+): (?<file>[a-z0-9/_.\-]+) (?<status>mismatch|does not exist)( \([a-zA-Z ]+\))?');
 
-	my $command = 'sudo /opt/synctool/sbin/synctool';
+	my $command = '/usr/bin/sudo /opt/synctool/sbin/synctool';
 
 	open(INPUT, "$command|") || die "Unable to open $command: $!\n";
 
@@ -95,7 +95,7 @@ sub process_status {
 	# Check if there are hosts found which are not in sync
 	if( $#hosts > -1 ) {
 
-		push(@message, $#hosts+1 . " hosts not in sync");
+		push(@message, $#hosts+1 . ( $#hosts+1 == 1 ? " host" : " hosts" )." not in sync");
 	}
 	else {
 
