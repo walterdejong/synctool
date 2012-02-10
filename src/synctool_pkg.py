@@ -162,29 +162,6 @@ def detect_installer():
 		stderr("unknown platform '%s'" % platform)
 
 
-def rearrange_options(arglist):
-	'''rearrange command-line options so that getopt() behaves in a GNUish way'''
-	
-	if not arglist:
-		return arglist
-	
-	n = len(arglist)
-	
-	while n > 0:
-		n = n - 1
-		
-		if arglist[-1] == '--':
-			break
-		
-		if arglist[-1][0] != '-':
-			break
-		
-		arg = arglist.pop()			# get from the back
-		arglist.insert(0, arg)		# put last argument first
-	
-	return arglist
-	
-
 def there_can_be_only_one():
 	print 'Specify only one of these options:'
 	print '  -l, --list   [PACKAGE ...]     List installed packages'
@@ -198,7 +175,7 @@ def there_can_be_only_one():
 
 
 def usage():
-	print 'usage: %s [options]' % os.path.basename(sys.argv[0])
+	print 'usage: %s [options] [package list]' % os.path.basename(sys.argv[0])
 	print 'options:'
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=dir/file            Use this config file'
@@ -232,6 +209,7 @@ def usage():
 	
 	print
 	print
+	print 'The package list must be given last'
 	print 'Note that --upgrade does a dry run unless you specify --fix'
 	print
 	print 'synctool-pkg by Walter de Jong <walter@heiho.net> (c) 2011'
@@ -246,18 +224,10 @@ def get_options():
 
 	synctool_lib.DRY_RUN = True				# set default dry-run
 	
-	# getopt() assumes that all options given after the first non-option
-	# argument are all arguments (this is standard UNIX behavior, not GNU)
-	# but in this case, I like the GNU way better, so re-arrange the options
-	# This has odd consequences when someone gives a 'stale' --install or
-	# --remove option without any argument, but hey ...
-	
-	arglist = rearrange_options(sys.argv[1:])
-	
 	try:
-		opts, args = getopt.getopt(arglist, 'hc:i:R:luUCm:fvq',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:iRluUCm:fvq',
 			['help', 'conf=',
-			'list', 'install=', 'remove=', 'update', 'upgrade', 'clean',
+			'list', 'install', 'remove', 'update', 'upgrade', 'clean',
 			'cleanup', 'manager=',
 			'fix', 'verbose', 'unix', 'quiet'])
 	except getopt.error, (reason):
@@ -300,13 +270,6 @@ def get_options():
 				there_can_be_only_one()
 			
 			ACTION = ACTION_INSTALL
-			
-			PKG_LIST.append(arg)
-			
-			if args != None and len(args) > 0:
-				PKG_LIST.extend(args)
-				args = None
-			
 			continue
 		
 		if opt in ('-R', '--remove'):
@@ -314,13 +277,6 @@ def get_options():
 				there_can_be_only_one()
 			
 			ACTION = ACTION_REMOVE
-			
-			PKG_LIST.append(arg)
-			
-			if args != None and len(args) > 0:
-				PKG_LIST.extend(args)
-				args = None
-			
 			continue
 		
 		if opt in ('-l', '--list'):
@@ -328,11 +284,6 @@ def get_options():
 				there_can_be_only_one()
 			
 			ACTION = ACTION_LIST
-			
-			if args != None and len(args) > 0:
-				PKG_LIST.extend(args)
-				args = None
-			
 			continue
 		
 		if opt in ('-u', '--update'):
@@ -384,7 +335,14 @@ def get_options():
 		usage()
 		sys.exit(1)
 	
-	if args != None and len(args) > 0:
+	if ACTION in (ACTION_LIST, ACTION_INSTALL, ACTION_REMOVE):
+		PKG_LIST = args
+		
+		if ACTION in (ACTION_INSTALL, ACTION_REMOVE) and (args == None or not len(args)):
+			stderr('error: options --install and --remove require a package name')
+			sys.exit(1)
+	
+	elif args != None and len(args) > 0:
 		stderr('error: excessive arguments on command line')
 		sys.exit(1)
 	

@@ -96,28 +96,46 @@ def run_local_pkg():
 	synctool_lib.run_with_nodename(cmd_arr, synctool_param.NODENAME)
 
 
-def rearrange_options(arglist):
-	'''rearrange command-line options so that getopt() behaves in a GNUish way'''
+def rearrange_options():
+	'''rearrange command-line options so that getopt() behaves more logical for us'''
 	
-	if not arglist:
-		return arglist
+	# what this function does is move any arguments given after --list,
+	# --install, or --remove to the back so that getopt() will treat them
+	# as (loose) arguments
+	# This way, you/the user can pass a package list and still append
+	# a new option (like -f) at the end
 	
-	n = len(arglist)
+	arglist = sys.argv[1:]
 	
-	while n > 0:
-		n = n - 1
+	new_argv = []
+	pkg_list = []
+	
+	while len(arglist) > 0:
+		arg = arglist.pop(0)
 		
-		if arglist[-1] == '--':
-			break
+		new_argv.append(arg)
 		
-		if arglist[-1][0] != '-':
-			break
-		
-		arg = arglist.pop()			# get from the back
-		arglist.insert(0, arg)		# put last argument first
+		if arg[0] == '-':
+			opt = arg[1:]
+			
+			if opt in ('l', '-list', 'i', '-install', 'R', '-remove'):
+				if len(arglist) <= 0:
+					break
+				
+				optional_arg = arglist[0]
+				while optional_arg[0] != '-':		# package names may not start with '-'
+					pkg_list.append(optional_arg)
+					
+					arglist.pop(0)
+					
+					if not len(arglist):
+						break
+					
+					optional_arg = arglist[0]
 	
-	return arglist
-	
+	new_argv.extend(pkg_list)
+	return new_argv
+
 
 def there_can_be_only_one():
 	print 'Specify only one of these options:'
@@ -193,12 +211,12 @@ def get_options():
 	# This has odd consequences when someone gives a 'stale' --install or
 	# --remove option without any argument, but hey ...
 	
-	arglist = rearrange_options(sys.argv[1:])
+	arglist = rearrange_options()
 	
 	try:
-		opts, args = getopt.getopt(arglist, 'hc:n:g:x:X:i:R:luUCm:fvqa',
+		opts, args = getopt.getopt(arglist, 'hc:n:g:x:X:iRluUCm:fvqa',
 			['help', 'conf=', 'node=', 'group=', 'exclude=', 'exclude-group=',
-			'list', 'install=', 'remove=', 'update', 'upgrade', 'clean',
+			'list', 'install', 'remove', 'update', 'upgrade', 'clean',
 			'cleanup', 'manager=',
 			'fix', 'verbose', 'quiet', 'unix', 'aggregate',
 			])
@@ -214,10 +232,6 @@ def get_options():
 	
 	except:
 		usage()
-		sys.exit(1)
-	
-	if args != None and len(args) > 0:
-		stderr('error: excessive arguments on command line')
 		sys.exit(1)
 	
 	PASS_ARGS = []
@@ -244,6 +258,7 @@ def get_options():
 	#
 	
 	action = 0
+	needs_package_list = False
 	
 	for opt, arg in opts:
 		if opt:
@@ -274,9 +289,11 @@ def get_options():
 		
 		if opt in ('-i', '--install'):
 			action = action + 1
+			needs_package_list = True
 		
 		if opt in ('-R', '--remove'):
 			action = action + 1
+			needs_package_list = True
 		
 		if opt in ('-l', '--list'):
 			action = action + 1
@@ -326,6 +343,10 @@ def get_options():
 	if args != None:
 		MASTER_OPTS.extend(args)
 		PASS_ARGS.extend(args)
+	else:
+		if needs_package_list:
+			stderr('error: options --install and --remove require a package name')
+			sys.exit(1)
 	
 	if not action:
 		usage()
