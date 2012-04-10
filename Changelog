@@ -1,5 +1,6 @@
 April 2012:
 - fixed issue with dsh-pkg, multiple packages on command line
+- Jurriaan Saathof contributed nagios script check_synctool.pl
 - released as version 5.2
 
 October 2011:
