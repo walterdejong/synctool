@@ -1,3 +1,7 @@
+April 2012:
+- fixed issue with dsh-pkg, multiple packages on command line
+- released as version 5.2
+
 October 2011:
 - added hostid:filename for uniquely identifying weird hosts
 - fix for bug regarding redefinition of group 'all'

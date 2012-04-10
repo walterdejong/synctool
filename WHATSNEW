@@ -1,4 +1,4 @@
-synctool by Walter de Jong <walter@heiho.net> (c) 2003-2011
+synctool by Walter de Jong <walter@heiho.net> (c) 2003-2012
 
 synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 synctool is distributed under terms described in the GNU General Public
@@ -10,6 +10,11 @@ See the DOCUMENTATION file for information on how to use synctool.
 
 Online documentation in HTML pages is available at:
 http://www.heiho.net/synctool/
+
+
+What's new in synctool version 5.1 ?
+====================================
+Only minor bugfixes ...
 
 
 What's new in synctool version 5.1 ?

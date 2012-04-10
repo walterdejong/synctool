@@ -2,7 +2,7 @@
 #
 #	synctool-config	WJ109
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2011
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2012
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -442,7 +442,7 @@ def usage():
 	print 'A node/group list can be a single value, or a comma-separated list'
 	print 'A command is a list of these: diff,ssh,rsync,synctool,pkg'
 	print
-	print 'synctool-config by Walter de Jong <walter@heiho.net> (c) 2009-2011'
+	print 'synctool-config by Walter de Jong <walter@heiho.net> (c) 2009-2012'
 
 
 def get_options():
