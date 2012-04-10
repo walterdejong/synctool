@@ -8,7 +8,7 @@
 #   License.
 #
 
-VERSION = '5.2-beta'
+VERSION = '5.2'
 
 DEFAULT_CONF = '/var/lib/synctool/synctool.conf'
 CONF_FILE = DEFAULT_CONF
