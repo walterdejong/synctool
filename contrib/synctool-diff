@@ -11,6 +11,8 @@
 # 2011-03-21 - pointed to default location of synctool.conf - Onno
 # 2011-05-13 - scp can't copy files if root has no access, fixing with rsync - Onno
 # 2011-05-27 - improved regex - Onno
+# 2012-02-08 - improved uniqueness of temp file names - Onno
+# 2012-04-16 - improved grep regex to parse synctool.conf - Onno
 
 SYNCTOOL_CONF=/var/lib/synctool/synctool.conf
 
@@ -47,13 +49,15 @@ function process_parm() {
     FILE[I]="${PARM#*:}"
 
     INTERFACE[I]=`grep -e "^node[[:space:]]*${NODE[I]}[[:space:]]" $SYNCTOOL_CONF \
-                | grep -o 'interface:.*' \
+                | grep -o 'interface:[^[:space:]]*' \
                 | sed 's/interface://'`
     if [ -z "${INTERFACE[I]}" ] ; then
       # interface not found, assume interface is the same as node name
       INTERFACE[I]=${NODE[I]}
     fi
-    DIFF_FILE[I]=$PREFIX-${NODE[I]}-`basename "${FILE[I]}"`
+    # We include $I in the temp file name to improve uniqueness;
+    # fix for example case: fta1:/etc/gmond.conf - fta1:/etc/ganglia/gmond.conf
+    DIFF_FILE[I]=$PREFIX-${NODE[I]}-$I-`basename "${FILE[I]}"`
     # Use rsync to copy the file from the node; scp refuses when there are ownership issues.
     rsync -a ${INTERFACE[I]}:"${FILE[I]}" "${DIFF_FILE[I]}" \
       && cp -a "${DIFF_FILE[I]}" "${DIFF_FILE[I]}.copy-to-check-changes"
