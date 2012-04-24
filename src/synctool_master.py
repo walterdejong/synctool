@@ -31,6 +31,7 @@ import errno
 NODESET = synctool_nodeset.NodeSet()
 
 OPT_SKIP_RSYNC = False
+OPT_FILTER_RSYNC = False
 OPT_AGGREGATE = False
 OPT_CHECK_UPDATE = False
 OPT_DOWNLOAD = False
@@ -58,6 +59,14 @@ def run_remote_synctool(nodes):
 	# prepare rsync command
 	if not OPT_SKIP_RSYNC:
 		rsync_cmd_arr = shlex.split(synctool_param.RSYNC_CMD)
+		if OPT_FILTER_RSYNC and synctool_param.MASTERDIR + "/overlay" not in synctool_param.OVERLAY_DIRS:
+			# Include only the overlay directories declared in the conf file
+			for rsync_incl_dir in synctool_param.OVERLAY_DIRS:
+				if rsync_incl_dir.startswith(synctool_param.MASTERDIR):
+					rsync_incl_dir = rsync_incl_dir[len(synctool_param.MASTERDIR):]
+				rsync_cmd_arr.append('--include=%s' % (rsync_incl_dir) )
+			rsync_cmd_arr.append('--exclude=/overlay/*')
+			rsync_cmd_arr.append('--delete-excluded')
 		rsync_cmd_arr.append('%s/' % synctool_param.MASTERDIR)
 	else:
 		rsync_cmd_arr = None
@@ -253,6 +262,7 @@ def usage():
 	print '      --color                    Use colored output (only for terse mode)'
 	print '      --no-color                 Do not color output'
 	print '      --unix                     Output actions as unix shell commands'
+	print '  -o, --filter-rsync             Sync only the overlay directories declared in the config file'
 	print '      --skip-rsync               Do not sync the repository'
 	print '                                 (eg. when it is on a shared filesystem)'
 	print '      --version                  Show current version number'
@@ -269,19 +279,19 @@ def usage():
 
 
 def get_options():
-	global NODESET, PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE
+	global NODESET, PASS_ARGS, OPT_SKIP_RSYNC, OPT_FILTER_RSYNC, OPT_AGGREGATE
 	global OPT_CHECK_UPDATE, OPT_DOWNLOAD, MASTER_OPTS
 	
 	# check for typo's on the command-line; things like "-diff" will trigger "-f" => "--fix"
 	synctool.be_careful_with_getopt()
 	
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:r:u:s:etfFTqa',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:r:u:s:etfFToqa',
 			['help', 'conf=', 'verbose', 'node=', 'group=',
 			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=',
 			'upload=', 'suffix=', 'erase-saved', 'tasks', 'fix', 'no-post',
 			'fullpath', 'terse', 'color', 'no-color',
-			'quiet', 'aggregate', 'unix', 'skip-rsync',
+			'quiet', 'aggregate', 'unix', 'filter-rsync', 'skip-rsync',
 			'version', 'check-update', 'download'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
@@ -424,6 +434,10 @@ def get_options():
 		
 		if opt == '--unix':
 			synctool_lib.UNIX_CMD = True
+		
+		if opt in ('-o', '--filter-rsync'):
+			OPT_FILTER_RSYNC = True
+			continue
 		
 		if opt == '--skip-rsync':
 			OPT_SKIP_RSYNC = True
