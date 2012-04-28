@@ -684,7 +684,7 @@ def config_always_run(arr, configfile, lineno):
 	
 	# get the command file
 	arr = string.split(cmd)
-	cmdfile = arr[1]
+	cmdfile = arr[0]
 	
 	if not os.path.isfile(cmdfile):
 		stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmdfile))
