@@ -495,7 +495,7 @@ def mkdir_p(path):
 				# this is unexpected, but still possible
 				continue
 			
-			stderr('error: mkdir(%s) failed: %s' % (mkdir_path, reason))
+			stderr('error: mkdir(%s) failed: %s' % (mkdir_path, err))
 
 
 #
