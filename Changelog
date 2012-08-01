@@ -1,3 +1,6 @@
+Aug 2012
+- added dsh --numproc, patch by Werner Maier
+
 April 2012:
 - fixed issue with dsh-pkg, multiple packages on command line
 - Jurriaan Saathof contributed nagios script check_synctool.pl

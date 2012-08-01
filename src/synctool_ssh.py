@@ -102,6 +102,7 @@ def usage():
 	print '  -X, --exclude-group=grouplist  Exclude these groups from the selection'
 	print '  -a, --aggregate                Condense output'
 	print '  -o, --options=options          Set additional ssh options'
+	print '  -p, --numproc=num              Number of concurrent procs'
 	print
 	print '  -N, --no-nodename              Do not prepend nodename to output'
 	print '  -v, --verbose                  Be verbose'
@@ -122,10 +123,10 @@ def get_options():
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:ao:Nq',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:ao:Nqp:',
 			['help', 'conf=', 'verbose', 'node=', 'group=', 'exclude=',
 			'exclude-group=', 'aggregate', 'options=', 'no-nodename',
-			'unix', 'dry-run', 'quiet'])
+			'unix', 'dry-run', 'quiet', 'numproc='])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -186,6 +187,19 @@ def get_options():
 
 		if opt in ('-X', '--exclude-group'):
 			NODESET.exclude_group(arg)
+			continue
+
+		if opt in ('-p', '--numproc'):
+			try:
+				synctool_param.NUM_PROC = int(arg)
+			except ValueError:
+				print "%s: option '%s' requires a numeric value" % (os.path.basename(sys.argv[0]), opt)
+				sys.exit(1)
+
+			if synctool_param.NUM_PROC < 1:
+				print '%s: invalid value for numproc' % os.path.basename(sys.argv[0])
+				sys.exit(1)
+
 			continue
 
 		if opt in ('-a', '--aggregate'):
