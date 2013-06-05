@@ -114,8 +114,16 @@ def read_config():
 
 
 def add_myhostname():
-	'''add the hostname of the current host to the configuration, so that it can be used'''
-	'''also determine the nodename of the current host'''
+	'''add the hostname of the current host to the configuration,
+	so that it can be used
+	also determine the nodename of the current host'''
+
+	# In practice, the nodename is determined by the master in synctool.conf
+	# The master then tells the client what its nodename is
+	#
+	# The nodename detection really only runs for the master node itself;
+	# it's not important unless you manage the master with the same synctool
+	# (which is discouraged, but it is possible to do so)
 
 	#
 	#	get my hostname
@@ -127,9 +135,14 @@ def add_myhostname():
 
 	all_nodes = get_all_nodes()
 
-	nodename = None
+	nodename = synctool_param.NODENAME
 
-	if synctool_param.HOST_ID != None:
+	if nodename != None:
+		# nodename was already set
+		# the master can set it because it already knows the node's nodename
+		pass
+
+	elif synctool_param.HOST_ID != None:
 		arr = string.split(synctool_param.HOST_ID, '.')
 		nodename = arr[0]
 

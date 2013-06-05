@@ -440,7 +440,7 @@ def get_options():
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:etfFTvq',
 			['help', 'conf=', 'diff=', 'single=', 'ref=', 'erase-saved',
 			'tasks', 'fix', 'no-post', 'fullpath', 'terse', 'color', 'no-color',
-			'verbose', 'quiet', 'unix', 'masterlog', 'version'])
+			'verbose', 'quiet', 'unix', 'masterlog', 'nodename=', 'version'])
 	except getopt.error, (reason):
 		print '%s: %s' % (progname, reason)
 		usage()
@@ -504,7 +504,8 @@ def get_options():
 	opt_fix = False
 
 	for opt, arg in opts:
-		if opt in ('-h', '--help', '-?', '-c', '--conf', '-T', '--terse', '-F', '--fullpath', '--version'):
+		if opt in ('-h', '--help', '-?', '-c', '--conf',
+			'-T', '--terse', '-F', '--fullpath', '--version'):
 			# already done
 			continue
 
@@ -549,7 +550,13 @@ def get_options():
 			continue
 
 		if opt == '--masterlog':
+			# used by the master for message logging purposes
 			synctool_lib.MASTERLOG = True
+			continue
+
+		if opt == '--nodename':
+			# used by the master to set the client's nodename
+			synctool_param.NODENAME = arg
 			continue
 
 		if opt in ('-d', '--diff'):

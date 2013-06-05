@@ -103,6 +103,7 @@ def worker_synctool(rank, args):
 	# run 'ssh node synctool_cmd'
 	ssh_cmd_arr.append(node)
 	ssh_cmd_arr.extend(synctool_cmd_arr)
+	ssh_cmd_arr.append('--nodename=%s' % nodename)
 
 	synctool_lib.run_with_nodename(ssh_cmd_arr, nodename)
 
