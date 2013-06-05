@@ -398,6 +398,14 @@ def	option_combinations(opt_diff, opt_single, opt_reference, opt_tasks, opt_uplo
 		sys.exit(1)
 
 
+def check_cmd_config():
+	'''check whether the commands as given in synctool.conf actually exist'''
+
+	(ok, synctool_param.DIFF_CMD) = synctool_config.check_cmd_config('diff_cmd', synctool_param.DIFF_CMD)
+	if ! ok:
+		sys.exit(-1)
+
+
 def usage():
 	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
 	print 'options:'
@@ -474,6 +482,7 @@ def get_options():
 			sys.exit(0)
 
 	synctool_config.read_config()
+	check_cmd_config()
 
 	if not synctool_param.TERSE:
 		# giving --terse changes program behavior as early as

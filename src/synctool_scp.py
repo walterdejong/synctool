@@ -104,6 +104,14 @@ def worker_scp(rank, args):
 	synctool_lib.run_with_nodename(scp_cmd_arr, nodename)
 
 
+def check_cmd_config():
+	'''check whether the commands as given in synctool.conf actually exist'''
+
+	(ok, synctool_param.SCP_CMD) = synctool_config.check_cmd_config('scp_cmd', synctool_param.SCP_CMD)
+	if ! ok:
+		sys.exit(-1)
+
+
 def usage():
 	print 'usage: %s [options] <filename> [..]' % os.path.basename(sys.argv[0])
 	print 'options:'
@@ -173,6 +181,7 @@ def get_options():
 			sys.exit(0)
 
 	synctool_config.read_config()
+	check_cmd_config()
 
 	# then process the other options
 	MASTER_OPTS = [ sys.argv[0] ]

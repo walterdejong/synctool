@@ -186,18 +186,13 @@ def _config_command(param, arr, short_cmd, configfile, lineno):
 	'''helper for configuring rsync_cmd, ssh_cmd, synctool_cmd, etc.'''
 
 	if len(arr) < 2:
-		stderr("%s:%d: '%s' requires an argument: the full path to the '%s' command" % (configfile, lineno, param, short_cmd))
+		stderr("%s:%d: '%s' requires an argument: the '%s' command, and any appropriate switches" %
+			(configfile, lineno, param, short_cmd))
 		return (1, None)
 
-	cmd = synctool_lib.prepare_path(arr[1])
-
-	if not os.path.isfile(cmd):
-		if cmd[0] != '/':
-			stderr("%s:%d: '%s' requires the full path to the '%s' command" % (configfile, lineno, param, short_cmd))
-		else:
-			stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmd))
-
-		return (1, None)
+	# This function does not check the existence of the command
+	# That is deferred until later; the client only runs diff_cmd,
+	# while the master runs a bunch of commands
 
 	return (0, synctool_lib.prepare_path(string.join(arr[1:])))
 

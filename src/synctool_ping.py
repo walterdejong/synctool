@@ -105,6 +105,14 @@ def worker_ping(rank, nodes):
 		print '%s: not responding' % nodename
 
 
+def check_cmd_config():
+	'''check whether the commands as given in synctool.conf actually exist'''
+
+	(ok, synctool_param.PING_CMD) = synctool_config.check_cmd_config('ping_cmd', synctool_param.PING_CMD)
+	if ! ok:
+		sys.exit(-1)
+
+
 def usage():
 	print 'usage: %s [options]' % os.path.basename(sys.argv[0])
 	print 'options:'
@@ -161,6 +169,7 @@ def get_options():
 			sys.exit(0)
 
 	synctool_config.read_config()
+	check_cmd_config()
 
 	# then process the other options
 	MASTER_OPTS = [ sys.argv[0] ]

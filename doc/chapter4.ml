@@ -125,72 +125,78 @@ logfile /var/log/synctool.log
 </dd>
 
 <dt>diff_cmd &lt;diff UNIX command&gt;</dt>
-<dd>Give the full path and arguments to execute <span class="cmd">diff</span>.
+<dd>Give the command and arguments to execute <span class="cmd">diff</span>.
 &nbsp; synctool runs this command when you use the <span class="system">--diff</span>
 option.  The exact location and arguments of the <span class="cmd">diff</span>
-command are operating system specific.<br />
+command are operating system specific; the PATH environment variable will
+be searched for the command if you do not supply a full path.<br />
 There is no default, but synctool ships with the following in the
 example configuration file:
 <div class="example">
-diff_cmd /usr/bin/diff -u
+diff_cmd diff -u
 </div>
 </dd>
 
 <dt>ping_cmd &lt;ping UNIX command&gt;</dt>
-<dd>Give the full path and arguments to execute <span class="cmd">ping</span>.
+<dd>Give the command and arguments to execute <span class="cmd">ping</span>.
 &nbsp; <span class="cmd">dsh-ping</span> uses this command to check what nodes
 are responding. The exact location and arguments of the <span class="cmd">ping</span>
-command are operating system specific.<br />
+command are operating system specific; the PATH environment variable will
+be searched for the command if you do not supply a full path.<br />
 There is no default, but synctool ships with the following in the example
 configuration file:
 <div class="example">
-ping_cmd /bin/ping -q -c 2 -t 4
+ping_cmd ping -q -c 1 -t 1
 </div>
 </dd>
 
 <dt>ssh_cmd &lt;ssh UNIX command&gt;</dt>
-<dd>Give the full path and arguments to execute <span class="cmd">ssh</span>.
+<dd>Give the command and arguments to execute <span class="cmd">ssh</span>.
 &nbsp; synctool and <span class="cmd">dsh</span> use this command to execute
 remote commands on the target nodes.
 The exact location of the <span class="cmd">ssh</span> command is operating
-system specific.<br />
+system specific; the PATH environment variable will
+be searched for the command if you do not supply a full path.<br />
 There is no default, and you must configure this parameter correctly for
 synctool to work. synctool ships with the following sensible setting in the
 example configuration file:
 <div class="example">
-/usr/bin/ssh -o ConnectTimeout=10 -q
+ssh -o ConnectTimeout=10 -x -q
 </div>
 </dd>
 
 <dt>scp_cmd &lt;scp UNIX command&gt;</dt>
-<dd>Give the full path and arguments to execute <span class="cmd">scp</span>.
+<dd>Give the command and arguments to execute <span class="cmd">scp</span>.
 &nbsp; <span class="cmd">dcp</span> uses this command to do a remote copy
 of files to the target nodes.
 The exact location of the <span class="cmd">scp</span> command is operating
-system specific.<br />
+system specific; the PATH environment variable will
+be searched for the command if you do not supply a full path.<br />
 There is no default, but synctool ships with the following in the example
 configuration file:
 <div class="example">
-/usr/bin/scp -o ConnectTimeout=10 -p
+scp -o ConnectTimeout=10 -p
 </div>
 </dd>
 
 <dt>rsync_cmd &lt;rsync UNIX command&gt;</dt>
-<dd>Give the full path and arguments to execute <span class="cmd">rsync</span>.
+<dd>Give the command and arguments to execute <span class="cmd">rsync</span>.
 &nbsp; synctool uses this command to distribute the repository to the target
 nodes. The exact location of the <span class="cmd">rsync</span> command is
-operating system specific. Unless you keep the repository in a high performance
+operating system specific; the PATH environment variable will
+be searched for the command if you do not supply a full path.<br />
+Unless you keep the repository in a high performance
 shared filesystem, you must configure this parameter correctly for synctool
 to work.<br />
 There is no default, but synctool ships with the following in the example
 configuration file:
 <div class="example">
-/usr/bin/rsync -ar --delete -e 'ssh -o ConnectTimeout=10 -q'
+rsync -ar --delete -e 'ssh -o ConnectTimeout=10 -q'
 </div>
 </dd>
 
 <dt>synctool_cmd &lt;synctool UNIX command&gt;</dt>
-<dd>Give the full path and arguments to execute <span class="cmd">synctool.py</span>.
+<dd>Give the command and arguments to execute <span class="cmd">synctool.py</span>.
 &nbsp; This is needed because synctool executes <span class="cmd">synctool.py</span>
 on the target nodes.
 The exact location of the <span class="cmd">synctool.py</span> command is
@@ -204,7 +210,7 @@ synctool_cmd $masterdir/sbin/synctool.py -c $masterdir/synctool.conf
 </dd>
 
 <dt>pkg_cmd &lt;synctool_pkg UNIX command&gt;</dt>
-<dd>Give the full path and arguments to execute <span class="cmd">synctool_pkg.py</span>.
+<dd>Give the command and arguments to execute <span class="cmd">synctool_pkg.py</span>.
 &nbsp; This is needed because synctool-pkg executes <span class="cmd">synctool_pkg.py</span>
 on the target nodes.
 The exact location of the <span class="cmd">synctool_pkg.py</span> command is

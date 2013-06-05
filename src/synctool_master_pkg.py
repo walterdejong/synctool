@@ -137,6 +137,14 @@ def rearrange_options():
 	return new_argv
 
 
+def check_cmd_config():
+	'''check whether the commands as given in synctool.conf actually exist'''
+
+	(ok, synctool_param.PKG_CMD) = synctool_config.check_cmd_config('pkg_cmd', synctool_param.PKG_CMD)
+	if ! ok:
+		sys.exit(-1)
+
+
 def there_can_be_only_one():
 	print 'Specify only one of these options:'
 	print '  -l, --list   [PACKAGE ...]     List installed packages'
@@ -250,6 +258,7 @@ def get_options():
 			continue
 
 	synctool_config.read_config()
+	check_cmd_config()
 
 	# then process all the other options
 	#

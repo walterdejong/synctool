@@ -435,16 +435,14 @@ def shell_command(cmd):
 def search_path(cmd):
 	'''search the PATH for the location of cmd'''
 
-	# NB. I'm sure this will fail miserably on the Windows platform
-	# ah well
-
-	if string.find(cmd, '/') >= 0:
+	if string.find(cmd, os.sep) >= 0 or (os.altsep != None and
+		string.find(cmd, os.altsep) >= 0):
 		return cmd
 
 	path = os.getenv('PATH')
 
 	if not path:
-		path = '/bin:/usr/bin'
+		path = '/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin'
 
 	for d in string.split(path, os.pathsep):
 		full_path = os.path.join(d, cmd)

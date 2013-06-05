@@ -113,6 +113,29 @@ def read_config():
 		synctool_param.IGNORE_GROUPS.append('none')
 
 
+def check_cmd_config(param_name, cmd):
+	'''check whether the command given in the config exists
+	Returns (True, full pathed command) when OK,
+	and (False, None) on error'''
+
+	if not cmd:
+		stderr("%s: error: parameter '%s' is missing" %
+			(synctool_param.CONF_FILE, param_name))
+		return (False, None)
+
+	arr = string.split(cmd)
+	path = synctool_lib.search_path(arr[0])
+	if not path:
+		stderr("%s: error: %s '%s' not found in PATH" %
+			(synctool_param.CONF_FILE, param_name, arr[0]))
+		return (False, None)
+
+	# reassemble command with full path
+	arr[0] = path
+	cmd = string.join(arr)
+	return (True, cmd)
+
+
 def add_myhostname():
 	'''add the hostname of the current host to the configuration,
 	so that it can be used

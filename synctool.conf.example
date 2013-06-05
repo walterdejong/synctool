@@ -43,12 +43,12 @@ ignore .gitignore
 logfile /var/log/synctool.log
 
 # configure external commands that synctool uses
-diff_cmd /usr/bin/diff -u
-ping_cmd /bin/ping -q -c 1 -t 1
-#ping_cmd /usr/bin/fping -t 500
-ssh_cmd /usr/bin/ssh -o ConnectTimeout=10 -x -q
-scp_cmd /usr/bin/scp -o ConnectTimeout=10 -p
-rsync_cmd /usr/bin/rsync -ar --exclude='*.pyc' --delete -e 'ssh -o ConnectTimeout=10 -q'
+diff_cmd diff -u
+ping_cmd ping -q -c 1 -t 1
+#ping_cmd fping -t 500
+ssh_cmd ssh -o ConnectTimeout=10 -x -q
+scp_cmd scp -o ConnectTimeout=10 -p
+rsync_cmd rsync -ar --exclude='*.pyc' --delete -e 'ssh -o ConnectTimeout=10 -q'
 synctool_cmd $masterdir/sbin/synctool.py -c $masterdir/synctool.conf
 pkg_cmd $masterdir/sbin/synctool_pkg.py -c $masterdir/synctool.conf
 

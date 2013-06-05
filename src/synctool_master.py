@@ -229,6 +229,46 @@ def upload(interface, upload_filename, upload_suffix=None):
 			stdout('uploaded %s' % synctool_lib.prettypath(repos_filename))
 
 
+def check_cmd_config():
+	'''check whether the commands as given in synctool.conf actually exist'''
+
+	# pretty lame code
+	# Maybe the _CMD params should be a dict?
+
+	errors = 0
+
+#	(ok, synctool_param.DIFF_CMD) = synctool_config.check_cmd_config('diff_cmd', synctool_param.DIFF_CMD)
+#	if ! ok:
+#		errors += 1
+
+#	(ok, synctool_param.PING_CMD) = synctool_config.check_cmd_config('ping_cmd', synctool_param.PING_CMD)
+#	if ! ok:
+#		errors += 1
+
+	(ok, synctool_param.SSH_CMD) = synctool_config.check_cmd_config('ssh_cmd', synctool_param.SSH_CMD)
+	if ! ok:
+		errors += 1
+
+#	(ok, synctool_param.SCP_CMD) = synctool_config.check_cmd_config('scp_cmd', synctool_param.SCP_CMD)
+#	if ! ok:
+#		errors += 1
+
+	(ok, synctool_param.RSYNC_CMD) = synctool_config.check_cmd_config('rsync_cmd', synctool_param.RSYNC_CMD)
+	if ! ok:
+		errors += 1
+
+	(ok, synctool_param.SYNCTOOL_CMD) = synctool_config.check_cmd_config('synctool_cmd', synctool_param.SYNCTOOL_CMD)
+	if ! ok:
+		errors += 1
+
+#	(ok, synctool_param.PKG_CMD) = synctool_config.check_cmd_config('pkg_cmd', synctool_param.PKG_CMD)
+#	if ! ok:
+#		errors += 1
+
+	if errors > 0:
+		sys.exit(1)
+
+
 def usage():
 	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
 	print 'options:'
@@ -334,6 +374,7 @@ def get_options():
 			sys.exit(0)
 
 	synctool_config.read_config()
+	check_cmd_config()
 
 	# then process all the other options
 	#
