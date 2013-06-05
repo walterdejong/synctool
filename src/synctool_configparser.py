@@ -473,6 +473,10 @@ def config_group(arr, configfile, lineno):
 
 	group = arr[1]
 
+	if group in ('all', 'none'):
+		stderr("%s:%d: implicit group '%s' can not be redefined" % (configfile, lineno, group))
+		return 1
+
 	if synctool_param.GROUP_DEFS.has_key(group):
 		stderr('%s:%d: redefiniton of group %s' % (configfile, lineno, group))
 		return 1
