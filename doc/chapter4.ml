@@ -224,7 +224,7 @@ using this parameter you can force it if detection fails. This setting can be
 overridden from the command-line when invoking
 <span class="cmd">synctool-pkg</span>.<br />
 Valid values for <span class="system">package_manager</span> are:
-<span class="system">apt-get</span>, <span class="system">yum</span>, 
+<span class="system">apt-get</span>, <span class="system">yum</span>,
 <span class="system">zypper</span>, <span class="system">pacman</span>,
 <span class="system">brew</span>, and <span class="system">bsdpkg</span>.
 </dd>

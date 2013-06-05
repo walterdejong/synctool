@@ -83,7 +83,7 @@ def run(cmd_args):
 
 	if '--aggregate' in cmd_args:
 		cmd_args.remove('--aggregate')
-	
+
 	f = popen(cmd_args)
 	if not f:
 		stderr('failed to run %s' % cmd_args[0])

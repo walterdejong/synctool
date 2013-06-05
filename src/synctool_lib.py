@@ -114,7 +114,7 @@ def stderr(str):
 
 def terse(code, msg):
 	'''print short message + shortened filename'''
-	
+
 	if synctool_param.TERSE:
 		# convert any path to terse path
 		if string.find(msg, ' ') >= 0:
@@ -122,20 +122,20 @@ def terse(code, msg):
 			if arr[-1][0] == '/':
 				arr[-1] = terse_path(arr[-1])
 				msg = string.join(arr)
-		
+
 		else:
 			if msg[0] == '/':
 				msg = terse_path(msg)
-		
+
 		if synctool_param.COLORIZE:		# and sys.stdout.isatty():
 			txt = TERSE_TXT[code]
 			color = COLORMAP[synctool_param.TERSE_COLORS[string.lower(TERSE_TXT[code])]]
-			
+
 			if synctool_param.COLORIZE_BRIGHT:
 				bright = ';1'
 			else:
 				bright = ''
-			
+
 			if synctool_param.COLORIZE_FULL_LINE:
 				print '\x1b[%d%sm%s %s\x1b[0m' % (color, bright, txt, msg)
 			else:
@@ -153,101 +153,101 @@ def unix_out(str):
 
 def prettypath(path):
 	'''print long paths as "$masterdir/path"'''
-	
+
 	if synctool_param.FULL_PATH:
 		return path
-	
+
 	if synctool_param.TERSE:
 		return terse_path(path)
-	
+
 	if path[:synctool_param.MASTER_LEN] == synctool_param.MASTERDIR + '/':
 		return '$masterdir/' + path[synctool_param.MASTER_LEN:]
-	
+
 	return path
 
 
 def terse_path(path, maxlen = 55):
 	'''print long path as "//overlay/.../dir/file"'''
-	
+
 	if synctool_param.FULL_PATH:
 		return path
-	
+
 	# by the way, this function will misbehave a bit for a _destination_
 	# path named "/var/lib/synctool/" again
 	# because this function doesn't know whether it is working with
 	# a source or a destination path and it treats them both in the same way
-	
+
 	if path[:synctool_param.MASTER_LEN] == synctool_param.MASTERDIR + '/':
 		path = '//' + path[synctool_param.MASTER_LEN:]
-	
+
 	if len(path) > maxlen:
 		arr = string.split(path, '/')
-		
+
 		while len(arr) >= 3:
 			idx = len(arr) / 2
 			arr[idx] = '...'
 			new_path = string.join(arr, '/')
-			
+
 			if len(new_path) > maxlen:
 				arr.pop(idx)
 			else:
 				return new_path
-	
+
 	return path
 
 
 def dryrun_msg(str, action = 'update'):
 	'''print a "dry run" message filled to (almost) 80 chars
 	so that it looks nice on the terminal'''
-	
+
 	l1 = len(str) + 4
-	
+
 	msg = '# dry run, %s not performed' % action
 	l2 = len(msg)
-	
+
 	if l1 + l2 <= 79:
 		return str + (' ' * (79 - (l1 + l2))) + msg
-	
+
 	if l1 + 13 <= 79:
 		# message is long, but we can shorten and it will fit on a line
 		msg = '# dry run'
 		l2 = 9
 		return str + (' ' * (79 - (l1 + l2))) + msg
-	
+
 	# don't bother, return a long message
 	return str + '    ' + msg
 
 
 def openlog():
 	global LOGFD
-	
+
 	if synctool_param.LOGFILE == None or synctool_param.LOGFILE == '' or DRY_RUN:
 		return
-	
+
 	LOGFD = None
 	try:
 		LOGFD = open(synctool_param.LOGFILE, 'a')
 	except IOError, (err, reason):
 		print 'error: failed to open logfile %s : %s' % (synctool_param.LOGFILE, reason)
 		sys.exit(-1)
-	
+
 #	log('start run')
 
 
 def closelog():
 	global LOGFD
-	
+
 	if LOGFD != None:
 #		log('end run')
 		log('--')
-		
+
 		LOGFD.close()
 		LOGFD = None
 
 
 def masterlog(str):
 	'''log only locally (on the masternode)'''
-	
+
 	if not DRY_RUN and LOGFD != None:
 		t = time.localtime(time.time())
 		LOGFD.write('%s %02d %02d:%02d:%02d %s\n' % (MONTHS[t[1]-1], t[2], t[3], t[4], t[5], str))
@@ -255,18 +255,18 @@ def masterlog(str):
 
 def log(str):
 	'''log message locally, and print it so that synctool-master will pick it up'''
-	
+
 	if not DRY_RUN and LOGFD != None:
 		t = time.localtime(time.time())
 		LOGFD.write('%s %02d %02d:%02d:%02d %s\n' % (MONTHS[t[1]-1], t[2], t[3], t[4], t[5], str))
-		
+
 		if MASTERLOG:
 			print '%synctool-log%', str
 
 
 def checksum_files(file1, file2):
 	'''do a quick checksum of 2 files'''
-	
+
 	err = None
 	reason = None
 	try:
@@ -274,20 +274,20 @@ def checksum_files(file1, file2):
 	except IOError, (err, reason):
 		stderr('error: failed to open %s : %s' % (file1, reason))
 		raise
-	
+
 	try:
 		f2 = open(file2, 'r')
 	except IOError, (err, reason):
 		stderr('error: failed to open %s : %s' % (file2, reason))
 		raise
-	
+
 	if use_hashlib:
 		sum1 = hashlib.md5()
 		sum2 = hashlib.md5()
 	else:
 		sum1 = md5.new()
 		sum2 = md5.new()
-	
+
 	len1 = len2 = 0
 	ended = False
 	while len1 == len2 and sum1.digest() == sum2.digest() and not ended:
@@ -297,18 +297,18 @@ def checksum_files(file1, file2):
 		else:
 			len1 = len1 + len(data1)
 			sum1.update(data1)
-		
+
 		data2 = f2.read(BLOCKSIZE)
 		if not data2:
 			ended = True
 		else:
 			len2 = len2 + len(data2)
 			sum2.update(data2)
-		
+
 		if sum1.digest() != sum2.digest():
 			# checksum mismatch; early exit
 			break
-	
+
 	f1.close()
 	f2.close()
 	return sum1.digest(), sum2.digest()
@@ -316,20 +316,20 @@ def checksum_files(file1, file2):
 
 def popen(cmd_arr):
 	'''same as os.popen(), but use an array of command+arguments'''
-	
+
 	if use_subprocess:
 		try:
 			f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
 				stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
 		except OSError:
 			f = None
-		
+
 		return f
-	
+
 	# we do not have subprocess module (Python version < 2.4, very old)
-	
+
 	pipe = os.pipe()
-	
+
 	pid = os.fork()
 	if not pid:
 		# redirect child's output to write end of the pipe
@@ -337,42 +337,42 @@ def popen(cmd_arr):
 		os.close(1)
 		os.dup2(pipe[1], 1)
 		os.dup2(pipe[1], 2)
-		
+
 		os.close(pipe[0])
-		
+
 		cmd = cmd_arr.pop(0)
 		cmd = search_path(cmd)
 		cmd_arr.insert(0, cmd)
-		
+
 		try:
 			os.execv(cmd, cmd_arr)
 		except OSError, reason:
 			stderr("failed to run '%s': %s" % (cmd, reason))
 
 		sys.exit(1)
-	
+
 	if pid == -1:
 		return None
-	
+
 	os.close(pipe[1])
 	return os.fdopen(pipe[0], 'r')
 
 
 def run_with_nodename(cmd_arr, nodename):
 	'''run command and show output with nodename'''
-	
+
 	f = popen(cmd_arr)
 	if not f:
 		stderr('failed to run command %s' % cmd_arr[0])
 		return
-	
+
 	while True:
 		line = f.readline()
 		if not line:
 			break
-		
+
 		line = string.strip(line)
-		
+
 		# pass output on; simply use 'print' rather than 'stdout()'
 		if line[:15] == '%synctool-log% ':
 			if line[15:] == '--':
@@ -386,35 +386,35 @@ def run_with_nodename(cmd_arr, nodename):
 				# do not prepend the nodename of this node to the output
 				# if option --no-nodename was given
 				print line
-	
+
 	f.close()
 
 
 def shell_command(cmd):
 	'''run a shell command'''
-	
+
 	if DRY_RUN:
 		not_str = 'not '
 	else:
 		not_str = ''
-	
+
 	# a command can have arguments
 	cmd_arr = shlex.split(cmd)
 	cmdfile = cmd_arr[0]
-	
+
 	if not QUIET:
 		stdout('%srunning command %s' % (not_str, prettypath(cmd)))
-	
+
 	terse(TERSE_EXEC, cmdfile)
 	unix_out('# run command %s' % cmdfile)
 	unix_out(cmd)
-	
+
 	if not DRY_RUN:
 		verbose('  os.system("%s")' % prettypath(cmd))
-		
+
 		sys.stdout.flush()
 		sys.stderr.flush()
-		
+
 		if use_subprocess:
 			try:
 				subprocess.call(cmd, shell=True)
@@ -425,7 +425,7 @@ def shell_command(cmd):
 				os.system(cmd)
 			except OSError, reason:
 				stderr("failed to run shell command '%s' : %s" % (prettypath(cmd), reason))
-		
+
 		sys.stdout.flush()
 		sys.stderr.flush()
 	else:
@@ -434,10 +434,10 @@ def shell_command(cmd):
 
 def search_path(cmd):
 	'''search the PATH for the location of cmd'''
-	
+
 	# NB. I'm sure this will fail miserably on the Windows platform
 	# ah well
-	
+
 	if string.find(cmd, '/') >= 0:
 		return cmd
 
@@ -456,22 +456,22 @@ def search_path(cmd):
 
 def mkdir_p(path):
 	'''like mkdir -p; make directory and subdirectories'''
-	
+
 	# note: this function does not change the umask
-	
+
 	arr = string.split(path, '/')
 	if arr[0] == '':
 		# first element is empty; this happens when path starts with '/'
 		arr.pop(0)
-	
+
 	if not arr:
 		return
-	
+
 	# 'walk' the path
 	mkdir_path = ''
 	for elem in arr:
 		mkdir_path = mkdir_path + '/' + elem
-		
+
 		# see if the directory already exists
 		try:
 			os.stat(mkdir_path)
@@ -485,7 +485,7 @@ def mkdir_p(path):
 		else:
 			# no error from stat(), directory already exists
 			continue
-		
+
 		# make the directory
 		try:
 			os.mkdir(mkdir_path)		# uses the default umask
@@ -494,7 +494,7 @@ def mkdir_p(path):
 				# "File exists" (it's a directory, but OK)
 				# this is unexpected, but still possible
 				continue
-			
+
 			stderr('error: mkdir(%s) failed: %s' % (mkdir_path, err))
 
 
@@ -504,20 +504,20 @@ def mkdir_p(path):
 def strip_multiple_slashes(path):
 	if not path:
 		return path
-	
+
 	while path.find('//') != -1:
 		path = path.replace('//', '/')
-	
+
 	return path
 
 
 def strip_trailing_slash(path):
 	if not path:
 		return path
-	
+
 	while len(path) > 1 and path[-1] == '/':
 		path = path[:-1]
-	
+
 	return path
 
 
@@ -526,51 +526,51 @@ def subst_masterdir(path):
 		if not synctool_param.MASTERDIR:
 			stderr('error: $masterdir referenced before it was set')
 			sys.exit(-1)
-	
+
 	return path.replace('$masterdir/', synctool_param.MASTERDIR + '/')
 
 
 def strip_path(path):
 	if not path:
 		return path
-	
+
 	path = strip_multiple_slashes(path)
 	path = strip_trailing_slash(path)
-	
+
 	return path
 
 
 def strip_terse_path(path):
 	if not path:
 		return path
-	
+
 	if not synctool_param.TERSE:
 		return strip_path(path)
-	
+
 	# terse paths may start with two slashes
 	if len(path) >= 2 and path[:1] == '//':
 		isTerse = True
 	else:
 		isTerse = False
-	
+
 	path = strip_multiple_slashes(path)
 	path = strip_trailing_slash(path)
-	
+
 	# the first slash was accidentally stripped, so restore it
 	if isTerse:
 		path = '/' + path
-	
+
 	return path
 
 
 def prepare_path(path):
 	if not path:
 		return path
-	
+
 	path = strip_multiple_slashes(path)
 	path = strip_trailing_slash(path)
 	path = subst_masterdir(path)
-	
+
 	return path
 
 
@@ -582,11 +582,11 @@ def run_parallel(master_func, worker_func, args, worklen):
 	this parallel process has
 	worklen is the total amount of work items to be processed
 	This function will not fork more than NUM_PROC processes'''
-	
+
 	# Note: I guess using Python's multiprocessing module would be
 	# more elegant. However, it needs Python >= 2.6 and some systems
 	# still ship with the older Python 2.4 (at the time of writing this)
-	
+
 	parallel = 0
 	n = 0
 	while n < worklen:
@@ -596,10 +596,10 @@ def run_parallel(master_func, worker_func, args, worklen):
 			except OSError:
 				# odd condition?
 				pass
-			
+
 			else:
 				parallel = parallel - 1
-		
+
 		try:
 			pid = os.fork()
 			if not pid:
@@ -608,23 +608,23 @@ def run_parallel(master_func, worker_func, args, worklen):
 					worker_func(n, args)
 				except KeyboardInterrupt:
 					print
-				
+
 				sys.exit(0)
-			
+
 			if pid == -1:
 				stderr('error: fork() failed, breaking off forking loop')
 				break
-			
+
 			else:
 				master_func(n, args)
-				
+
 				parallel = parallel + 1
 				n = n + 1
-		
+
 		except KeyboardInterrupt:
 			print
 			break
-	
+
 	# wait for all children to terminate
 	while True:
 		try:
@@ -632,7 +632,7 @@ def run_parallel(master_func, worker_func, args, worklen):
 		except OSError:
 			# no more child processes
 			break
-		
+
 		except KeyboardInterrupt:
 			print
 			break

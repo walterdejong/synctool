@@ -30,7 +30,7 @@ This is very much in line with the traditional
 and with common sense. The powerful set of now common shell tools grew by
 adding commands that were designed to do only specific tasks very well and
 to be used easily in combination with other tools that specialize in other
-tasks.    
+tasks.
 </p>
 
 <p>
@@ -68,11 +68,11 @@ In addition, synctool simplifies things by working with the following concepts:
 <li>The &lsquo;overlay&rsquo; directory tree contains the files that are
     &lsquo;synced&rsquo; to the target hosts;
 </li>
-<li>When certain files are updated, you will want to execute a script 
+<li>When certain files are updated, you will want to execute a script
     (e.g, <span class="cmd">/etc/init.d/daemon restart</span>).
     synctool has a mechanism for this. You can make synctool more powerful
     by writing plugin scripts that run the commands you want whenever
-    a particular file has been updated.  
+    a particular file has been updated.
 </li>
 </ul>
 </p>

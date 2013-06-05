@@ -34,58 +34,58 @@ SSH_OPTIONS = None
 
 def run_dsh(remote_cmd_arr):
 	'''run remote command to a set of nodes using ssh (param ssh_cmd)'''
-	
+
 	nodes = NODESET.interfaces()
 	if nodes == None or len(nodes) <= 0:
 		print 'no valid nodes specified'
 		sys.exit(1)
-	
+
 	if not synctool_param.SSH_CMD:
 		stderr('%s: error: ssh_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
 
 	ssh_cmd_arr = shlex.split(synctool_param.SSH_CMD)
-	
+
 	if SSH_OPTIONS:
 		ssh_cmd_arr.extend(shlex.split(SSH_OPTIONS))
-	
+
 	synctool_lib.run_parallel(master_ssh, worker_ssh,
 		(nodes, ssh_cmd_arr, remote_cmd_arr), len(nodes))
 
 
 def master_ssh(rank, args):
 	(nodes, ssh_cmd_arr, remote_cmd_arr) = args
-	
+
 	node = nodes[rank]
 	cmd_str = string.join(remote_cmd_arr)
-	
+
 	if node == synctool_param.NODENAME:
 		verbose('running %s' % cmd_str)
 		unix_out(cmd_str)
 	else:
 		verbose('running %s to %s %s' % (os.path.basename(ssh_cmd_arr[0]),
 			NODESET.get_nodename_from_interface(node), cmd_str))
-		
+
 		unix_out('%s %s %s' % (string.join(ssh_cmd_arr), node, cmd_str))
 
 
 def worker_ssh(rank, args):
 	if synctool_lib.DRY_RUN:		# got here for nothing
 		return
-	
+
 	(nodes, ssh_cmd_arr, remote_cmd_arr) = args
-	
+
 	node = nodes[rank]
 	nodename = NODESET.get_nodename_from_interface(node)
-	
+
 	if nodename == synctool_param.NODENAME:
 		# is this node the local node? Then do not use ssh
 		ssh_cmd_arr = []
 	else:
 		ssh_cmd_arr.append(node)
-	
+
 	ssh_cmd_arr.extend(remote_cmd_arr)
-	
+
 	# execute ssh+remote command and show output with the nodename
 	synctool_lib.run_with_nodename(ssh_cmd_arr, nodename)
 
@@ -117,7 +117,7 @@ def usage():
 
 def get_options():
 	global NODESET, REMOTE_CMD, MASTER_OPTS, OPT_AGGREGATE, SSH_OPTIONS
-	
+
 	if len(sys.argv) <= 1:
 		usage()
 		sys.exit(1)
@@ -146,17 +146,17 @@ def get_options():
 		if opt in ('-h', '--help', '-?'):
 			usage()
 			sys.exit(1)
-		
+
 		if opt in ('-c', '--conf'):
 			synctool_param.CONF_FILE = arg
 			continue
-		
+
 		if opt == '--version':
 			print synctool_param.VERSION
 			sys.exit(0)
-	
+
 	synctool_config.read_config()
-	
+
 	# then process the other options
 	MASTER_OPTS = [ sys.argv[0] ]
 
@@ -239,15 +239,15 @@ def get_options():
 def main():
 	sys.stdout = synctool_unbuffered.Unbuffered(sys.stdout)
 	sys.stderr = synctool_unbuffered.Unbuffered(sys.stderr)
-	
+
 	cmd_args = get_options()
-	
+
 	if OPT_AGGREGATE:
 		synctool_aggr.run(MASTER_OPTS)
 		sys.exit(0)
-	
+
 	synctool_config.add_myhostname()
-	
+
 	run_dsh(cmd_args)
 
 
