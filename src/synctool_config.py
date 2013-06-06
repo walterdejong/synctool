@@ -401,6 +401,7 @@ def list_commands(cmds):
 
 	for cmd in cmds:
 		if cmd == 'diff':
+			# FIXME check if configured at all
 			print synctool_param.DIFF_CMD
 
 		elif cmd == 'ssh':

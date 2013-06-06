@@ -436,7 +436,6 @@ class SyncObject:
 #			if src_stat[stat.ST_CTIME] != dest_stat[stat.ST_CTIME]:
 #				stdout('%s should have ctime %d, but has %d' % (dest_path, src_stat[stat.ST_CTIME], dest_stat[stat.ST_CTIME]))
 
-		self.erase_saved()
 		return need_update
 
 
@@ -602,7 +601,7 @@ class SyncObject:
 
 		stat_saved_path = synctool_stat.SyncStat('%s.saved' % dest)
 
-		if synctool_lib.ERASE_SAVED and stat_saved_path.exists() and not stat_saved_path.isDir():
+		if stat_saved_path.exists() and not stat_saved_path.isDir():
 			terse(synctool_lib.TERSE_DELETE, '%s.saved' % dest)
 			unix_out('rm %s.saved' % dest)
 

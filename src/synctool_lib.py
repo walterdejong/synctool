@@ -42,7 +42,6 @@ DRY_RUN = False
 VERBOSE = False
 QUIET = False
 UNIX_CMD = False
-ERASE_SAVED = False
 NO_POST = False
 MASTERLOG = False
 LOGFD = None

@@ -281,11 +281,11 @@ def usage():
 	print '  -X, --exclude-group=grouplist  Exclude these groups from the selection'
 	print
 	print '  -d, --diff=file                Show diff for file'
-	print '  -e, --erase-saved              Erase *.saved backup files'
 	print '  -1, --single=file              Update a single file/run single task'
 	print '  -r, --ref=file                 Show which source file synctool chooses'
 	print '  -u, --upload=file              Pull a remote file into the overlay tree'
 	print '  -s, --suffix=group             Give group suffix for the uploaded file'
+	print '  -e, --erase-saved              Erase *.saved backup files'
 	print '  -t, --tasks                    Run the scripts in the tasks/ directory'
 	print '  -f, --fix                      Perform updates (otherwise, do dry-run)'
 	print '      --no-post                  Do not run any on_update or .post scripts'
@@ -349,6 +349,7 @@ def get_options():
 	opt_diff = False
 	opt_single = False
 	opt_reference = False
+	opt_erase_saved = False
 	opt_tasks = False
 	opt_upload = False
 	opt_suffix = False
@@ -430,14 +431,11 @@ def get_options():
 			upload_suffix = arg
 			continue
 
+		if opt in ('-e', '--erase-saved'):
+			opt_erase_saved = True
+
 		if opt in ('-t', '--tasks'):
 			opt_tasks = True
-
-		if opt in ('-e', '--erase-saved'):
-			# This doesn't do anything in master, really
-			# because it doesn't use these settings, but hey
-			synctool_lib.ERASE_SAVED = True
-			synctool_param.BACKUP_COPIES = False
 
 		if opt in ('-q', '--quiet'):
 			synctool_lib.QUIET = True
@@ -495,7 +493,8 @@ def get_options():
 		MASTER_OPTS.extend(args)
 		PASS_ARGS.extend(args)
 
-	synctool.option_combinations(opt_diff, opt_single, opt_reference, opt_tasks, opt_upload, opt_suffix, opt_fix)
+	synctool.option_combinations(opt_diff, opt_single, opt_reference,
+		opt_erased_saved, opt_tasks, opt_upload, opt_suffix, opt_fix)
 
 	return (upload_filename, upload_suffix)
 
