@@ -1,4 +1,4 @@
-synctool by Walter de Jong <walter@heiho.net> (c) 2003-2012
+synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
 
 synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 synctool is distributed under terms described in the GNU General Public
@@ -122,7 +122,7 @@ to gain here by doing block updates.
 
 10. Has this tool been tested properly?
 
-synctool has been in use for four years before it went out in the public,
+synctool had been in use for four years before it went out in the public,
 helping the system adminstrators of two Dutch national supercomputer
 clusters. During this time, synctool proved to be a very stable and useful
 tool.

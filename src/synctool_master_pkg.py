@@ -2,7 +2,7 @@
 #
 #	synctool_master_pkg.py	WJ111
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2012
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -201,7 +201,7 @@ def usage():
 	print 'A nodelist or grouplist is a comma-separated list'
 	print 'Note that --upgrade does a dry run unless you specify --fix'
 	print
-	print 'Written by Walter de Jong <walter@heiho.net> (c) 2012'
+	print 'Written by Walter de Jong <walter@heiho.net> (c) 2013'
 
 
 def get_options():

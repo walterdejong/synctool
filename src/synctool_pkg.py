@@ -2,7 +2,7 @@
 #
 #	synctool_pkg.py		WJ111
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2012
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -212,7 +212,7 @@ def usage():
 	print 'The package list must be given last'
 	print 'Note that --upgrade does a dry run unless you specify --fix'
 	print
-	print 'synctool-pkg by Walter de Jong <walter@heiho.net> (c) 2012'
+	print 'synctool-pkg by Walter de Jong <walter@heiho.net> (c) 2013'
 
 
 def get_options():

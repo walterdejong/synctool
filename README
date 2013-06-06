@@ -1,4 +1,4 @@
-synctool by Walter de Jong <walter@heiho.net> (c) 2003-2012
+synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
 
 synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 synctool is distributed under terms described in the GNU General Public
@@ -39,7 +39,7 @@ to check daemons, or perform other system administration tasks.
 Making clever use of synctool makes it a very powerful tool.
 
 synctool is successfully being used to administrate several clusters at the
-Dutch national supercomputer facility for nearly 7 years now. Hopefully,
+Dutch national supercomputer facility for over 8 years now. Hopefully,
 it will be of some value to you as well.
 
 
