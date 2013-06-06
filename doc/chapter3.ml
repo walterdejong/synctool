@@ -437,7 +437,7 @@ backup_copies no
 </div>
 It is however highly recommended that you run with
 <span class="system">backup_copies</span> enabled.
-You can manually specify that you want to remove all backup copies using
+You can manually specify that you want to remove backup copies using
 <span class="cmd">synctool -e</span> or
 <span class="cmd">synctool --erase-saved</span>.
 </p>
