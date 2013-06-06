@@ -401,20 +401,39 @@ def list_commands(cmds):
 
 	for cmd in cmds:
 		if cmd == 'diff':
-			# FIXME check if configured at all
-			print synctool_param.DIFF_CMD
+			(ok, a) = synctool_config.check_cmd_config('diff_cmd', synctool_param.DIFF_CMD)
+			if ok:
+				print synctool_param.DIFF_CMD
+
+		if cmd == 'ping':
+			(ok, a) = synctool_config.check_cmd_config('ping_cmd', synctool_param.PING_CMD)
+			if ok:
+				print synctool_param.PING_CMD
 
 		elif cmd == 'ssh':
-			print synctool_param.SSH_CMD
+			(ok, a) = synctool_config.check_cmd_config('ssh_cmd', synctool_param.SSH_CMD)
+			if ok:
+				print synctool_param.SSH_CMD
+
+		elif cmd == 'scp':
+			(ok, a) = synctool_config.check_cmd_config('scp_cmd', synctool_param.SCP_CMD)
+			if ok:
+				print synctool_param.SCP_CMD
 
 		elif cmd == 'rsync':
-			print synctool_param.RSYNC_CMD
+			(ok, a) = synctool_config.check_cmd_config('rsync_cmd', synctool_param.RSYNC_CMD)
+			if ok:
+				print synctool_param.RSYNC_CMD
 
 		elif cmd == 'synctool':
-			print synctool_param.SYNCTOOL_CMD
+			(ok, a) = synctool_config.check_cmd_config('synctool_cmd', synctool_param.SYNCTOOL_CMD)
+			if ok:
+				print synctool_param.SYNCTOOL_CMD
 
 		elif cmd == 'pkg':
-			print synctool_param.PKG_CMD
+			(ok, a) = synctool_config.check_cmd_config('pkg_cmd', synctool_param.PKG_CMD)
+			if ok:
+				print synctool_param.PKG_CMD
 
 		else:
 			stderr("no such command '%s' available in synctool" % cmd)
@@ -477,7 +496,7 @@ def usage():
 	print '  -v, --version            Display synctool version'
 	print
 	print 'A node/group list can be a single value, or a comma-separated list'
-	print 'A command is a list of these: diff,ssh,rsync,synctool,pkg'
+	print 'A command is a list of these: diff,ping,ssh,scp,rsync,synctool,pkg'
 	print
 	print 'synctool-config by Walter de Jong <walter@heiho.net> (c) 2009-2012'
 
