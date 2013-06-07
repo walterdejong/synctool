@@ -401,37 +401,37 @@ def list_commands(cmds):
 
 	for cmd in cmds:
 		if cmd == 'diff':
-			(ok, a) = synctool_config.check_cmd_config('diff_cmd', synctool_param.DIFF_CMD)
+			(ok, a) = check_cmd_config('diff_cmd', synctool_param.DIFF_CMD)
 			if ok:
 				print synctool_param.DIFF_CMD
 
 		if cmd == 'ping':
-			(ok, a) = synctool_config.check_cmd_config('ping_cmd', synctool_param.PING_CMD)
+			(ok, a) = check_cmd_config('ping_cmd', synctool_param.PING_CMD)
 			if ok:
 				print synctool_param.PING_CMD
 
 		elif cmd == 'ssh':
-			(ok, a) = synctool_config.check_cmd_config('ssh_cmd', synctool_param.SSH_CMD)
+			(ok, a) = check_cmd_config('ssh_cmd', synctool_param.SSH_CMD)
 			if ok:
 				print synctool_param.SSH_CMD
 
 		elif cmd == 'scp':
-			(ok, a) = synctool_config.check_cmd_config('scp_cmd', synctool_param.SCP_CMD)
+			(ok, a) = check_cmd_config('scp_cmd', synctool_param.SCP_CMD)
 			if ok:
 				print synctool_param.SCP_CMD
 
 		elif cmd == 'rsync':
-			(ok, a) = synctool_config.check_cmd_config('rsync_cmd', synctool_param.RSYNC_CMD)
+			(ok, a) = check_cmd_config('rsync_cmd', synctool_param.RSYNC_CMD)
 			if ok:
 				print synctool_param.RSYNC_CMD
 
 		elif cmd == 'synctool':
-			(ok, a) = synctool_config.check_cmd_config('synctool_cmd', synctool_param.SYNCTOOL_CMD)
+			(ok, a) = check_cmd_config('synctool_cmd', synctool_param.SYNCTOOL_CMD)
 			if ok:
 				print synctool_param.SYNCTOOL_CMD
 
 		elif cmd == 'pkg':
-			(ok, a) = synctool_config.check_cmd_config('pkg_cmd', synctool_param.PKG_CMD)
+			(ok, a) = check_cmd_config('pkg_cmd', synctool_param.PKG_CMD)
 			if ok:
 				print synctool_param.PKG_CMD
 
