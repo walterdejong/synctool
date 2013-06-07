@@ -97,6 +97,7 @@ def worker_synctool(rank, args):
 
 	if rsync_cmd_arr != None:
 		# rsync masterdir to the node
+		# TODO include only relevant dirs
 		rsync_cmd_arr.append('%s:%s/' % (node, synctool_param.MASTERDIR))
 		synctool_lib.run_with_nodename(rsync_cmd_arr, nodename)
 
