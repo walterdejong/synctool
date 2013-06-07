@@ -109,7 +109,7 @@ def check_cmd_config():
 	'''check whether the commands as given in synctool.conf actually exist'''
 
 	(ok, synctool_param.PING_CMD) = synctool_config.check_cmd_config('ping_cmd', synctool_param.PING_CMD)
-	if ! ok:
+	if not ok:
 		sys.exit(-1)
 
 

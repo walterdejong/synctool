@@ -238,31 +238,31 @@ def check_cmd_config():
 	errors = 0
 
 #	(ok, synctool_param.DIFF_CMD) = synctool_config.check_cmd_config('diff_cmd', synctool_param.DIFF_CMD)
-#	if ! ok:
+#	if not ok:
 #		errors += 1
 
 #	(ok, synctool_param.PING_CMD) = synctool_config.check_cmd_config('ping_cmd', synctool_param.PING_CMD)
-#	if ! ok:
+#	if not ok:
 #		errors += 1
 
 	(ok, synctool_param.SSH_CMD) = synctool_config.check_cmd_config('ssh_cmd', synctool_param.SSH_CMD)
-	if ! ok:
+	if not ok:
 		errors += 1
 
 #	(ok, synctool_param.SCP_CMD) = synctool_config.check_cmd_config('scp_cmd', synctool_param.SCP_CMD)
-#	if ! ok:
+#	if not ok:
 #		errors += 1
 
 	(ok, synctool_param.RSYNC_CMD) = synctool_config.check_cmd_config('rsync_cmd', synctool_param.RSYNC_CMD)
-	if ! ok:
+	if not ok:
 		errors += 1
 
 	(ok, synctool_param.SYNCTOOL_CMD) = synctool_config.check_cmd_config('synctool_cmd', synctool_param.SYNCTOOL_CMD)
-	if ! ok:
+	if not ok:
 		errors += 1
 
 #	(ok, synctool_param.PKG_CMD) = synctool_config.check_cmd_config('pkg_cmd', synctool_param.PKG_CMD)
-#	if ! ok:
+#	if not ok:
 #		errors += 1
 
 	if errors > 0:

@@ -141,7 +141,7 @@ def check_cmd_config():
 	'''check whether the commands as given in synctool.conf actually exist'''
 
 	(ok, synctool_param.PKG_CMD) = synctool_config.check_cmd_config('pkg_cmd', synctool_param.PKG_CMD)
-	if ! ok:
+	if not ok:
 		sys.exit(-1)
 
 

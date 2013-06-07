@@ -108,7 +108,7 @@ def check_cmd_config():
 	'''check whether the commands as given in synctool.conf actually exist'''
 
 	(ok, synctool_param.SCP_CMD) = synctool_config.check_cmd_config('scp_cmd', synctool_param.SCP_CMD)
-	if ! ok:
+	if not ok:
 		sys.exit(-1)
 
 
