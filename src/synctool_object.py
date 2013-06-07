@@ -24,8 +24,8 @@ class SyncObject:
 	The group number denotes the importance of the group.
 	The SyncObject caches any stat info'''
 
-	# groupnum is really the index of the file's group in MY_GROUPS[]
-	# a lower groupnum is more important; negative is invalid/irrelevant group
+	# importance is really the index of the file's group in MY_GROUPS[]
+	# a lower importance is more important; negative is invalid/irrelevant group
 
 	# stat info is cached so you don't have to call os.stat() all the time
 
@@ -33,14 +33,14 @@ class SyncObject:
 	# as the path of the .post script and dest_path as the destination directory
 	# where the script is to be run
 
-	def __init__(self, src, dest, groupnum, statbuf1 = None, statbuf2 = None):
+	def __init__(self, src, dest, importance, statbuf1 = None, statbuf2 = None):
 		self.src_path = src
 		self.src_statbuf = statbuf1
 
 		self.dest_path = dest
 		self.dest_statbuf = statbuf2
 
-		self.groupnum = groupnum
+		self.importance = importance
 
 
 	def __repr__(self):

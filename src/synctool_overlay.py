@@ -52,7 +52,7 @@ TASKS_LOADED = False
 
 def split_extension(entryname, requireExtension):
 	'''split a simple filename (without leading path) in a tuple: (name, group number, isPost)
-	The group number is the index to MY_GROUPS[] or negative if it is not a relevant group
+	The importance is the index to MY_GROUPS[] or negative if it is not a relevant group
 	The return parameter isPost is a boolean showing whether it is a .post script
 
 	Pre-req: GROUP_ALL must be set to MY_GROUPS.index('all')'''
@@ -85,7 +85,7 @@ def split_extension(entryname, requireExtension):
 		return (entryname, GROUP_ALL, False)
 
 	try:
-		groupnum = synctool_param.MY_GROUPS.index(ext)
+		importance = synctool_param.MY_GROUPS.index(ext)
 	except ValueError:
 		if not ext in synctool_param.ALL_GROUPS:
 			return (None, OV_UNKNOWN_GROUP, False)
@@ -95,9 +95,9 @@ def split_extension(entryname, requireExtension):
 	if len(arr) > 1 and arr[-1] == 'post':
 		# register group-specific .post script
 		arr.pop()
-		return (string.join(arr, '.'), groupnum, True)
+		return (string.join(arr, '.'), importance, True)
 
-	return (string.join(arr, '.'), groupnum, False)
+	return (string.join(arr, '.'), importance, False)
 
 
 def ov_perror(errorcode, src_path):
@@ -146,7 +146,7 @@ def relevant_overlay_dirs(overlay_dir):
 
 
 def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
-	highest_groupnum = sys.maxint, handle_postscripts = True):
+	highest_importance = sys.maxint, handle_postscripts = True):
 	'''do pass #1 of 2; create list of source and dest files
 	Each element in the list is an instance of SyncObject'''
 
@@ -182,16 +182,16 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 			if wildcard_match:
 				continue
 
-		(name, groupnum, isPost) = split_extension(entry, not isDir)
+		(name, importance, isPost) = split_extension(entry, not isDir)
 
-		if groupnum < 0:
+		if importance < 0:
 			# not a relevant group, so skip it
 			# Note that this also prunes trees if you have group-specific subdirs
 
-			if groupnum != OV_NOT_MY_GROUP:
+			if importance != OV_NOT_MY_GROUP:
 				# "not my group" is a rather normal error code, but if it is
 				# something else, it's a serious error that we should report
-				ov_perror(groupnum, os.path.join(overlay_dir, entry))
+				ov_perror(importance, os.path.join(overlay_dir, entry))
 
 			continue
 
@@ -199,8 +199,8 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 			continue
 
 		# inherit lower group level from parent directory
-		if groupnum > highest_groupnum:
-			groupnum = highest_groupnum
+		if importance > highest_importance:
+			importance = highest_importance
 
 		if isPost:
 			if handle_postscripts:
@@ -213,10 +213,10 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 				trigger = os.path.join(overlay_dir, name)
 
 				if POST_SCRIPTS.has_key(trigger):
-					if groupnum >= POST_SCRIPTS[trigger].groupnum:
+					if importance >= POST_SCRIPTS[trigger].importance:
 						continue
 
-				POST_SCRIPTS[trigger] = synctool_object.SyncObject(src_path, dest_dir, groupnum, src_statbuf)
+				POST_SCRIPTS[trigger] = synctool_object.SyncObject(src_path, dest_dir, importance, src_statbuf)
 			else:
 				# unfortunately, the name has been messed up already
 				# so therefore just ignore the file and issue a warning
@@ -229,11 +229,11 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 
 		dest_path = os.path.join(dest_dir, name)
 
-		filelist.append(synctool_object.SyncObject(src_path, dest_path, groupnum, src_statbuf))
+		filelist.append(synctool_object.SyncObject(src_path, dest_path, importance, src_statbuf))
 
 		if isDir:
 			# recurse into subdir
-			overlay_pass1(src_path, filelist, dest_path, groupnum, handle_postscripts)
+			overlay_pass1(src_path, filelist, dest_path, importance, handle_postscripts)
 
 
 def overlay_pass2(filelist, filedict):
@@ -244,15 +244,15 @@ def overlay_pass2(filelist, filedict):
 		if filedict.has_key(entry.dest_path):
 			entry2 = filedict[entry.dest_path]
 
-			if entry.groupnum < entry2.groupnum:
+			if entry.importance < entry2.importance:
 				# this group is more important, so override it
 				del filedict[entry.dest_path]
 				entry2 = None
 
 			# duplicate paths are a problem, unless they are directories
 			# They are easy to fix however, just assign the right extension
-			elif (not (entry.src_isDir() and entry2.src_isDir())) \
-				and entry.groupnum == entry2.groupnum:
+			elif (not (entry.src_isDir() and entry2.src_isDir())) and
+				entry.importance == entry2.importance:
 
 				if synctool_param.TERSE:
 					synctool_lib.terse(synctool_lib.TERSE_ERROR, 'duplicate source paths in repository for:')
@@ -524,8 +524,8 @@ if __name__ == '__main__':
 	synctool_param.ALL_GROUPS = synctool_config.make_all_groups()
 
 	def visit_callback(obj):
-		# normally you wouldn't use this ... it's just for debugging the group number
-		print 'grp', obj.groupnum
+		# normally you wouldn't use this ... it's just for debugging the importance code
+		print 'imp', obj.importance
 
 		print 'src ', obj.print_src()
 		print 'dest', obj.print_dest()
