@@ -494,7 +494,7 @@ def get_options():
 		PASS_ARGS.extend(args)
 
 	synctool.option_combinations(opt_diff, opt_single, opt_reference,
-		opt_erased_saved, opt_tasks, opt_upload, opt_suffix, opt_fix)
+		opt_erase_saved, opt_tasks, opt_upload, opt_suffix, opt_fix)
 
 	return (upload_filename, upload_suffix)
 
