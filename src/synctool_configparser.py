@@ -511,6 +511,11 @@ def config_node(arr, configfile, lineno):
 		stderr('%s:%d: %s was previously defined as a group' % (configfile, lineno, node))
 		return 1
 
+	for g in ('all', 'none'):
+		if g in groups:
+			stderr("%s:%d: illegal to use group '%s' in node definition" % (configfile, lineno, g))
+			return 1
+
 	#
 	# node lines may end with special optional qualifiers like
 	# 'interface:', 'ipaddress:', 'hostname:'
