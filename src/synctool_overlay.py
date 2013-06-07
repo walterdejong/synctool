@@ -124,6 +124,27 @@ def ov_perror(errorcode, src_path):
 			stderr('unknown group on %s, skipped' % synctool_lib.prettypath(src_path))
 
 
+def relevant_overlay_dirs(overlay_dir):
+	'''return list of subdirs that are relevant groups
+	Return value is an array of pairs: (fullpath to dir, importance)
+	'''
+
+	a = []
+
+	for entry in os.listdir(overlay_dir):
+		try:
+			importance = synctool_param.MY_GROUPS.index(entry)
+		except ValueError:
+			continue
+
+		d = os.path.join(overlay_dir, entry)
+		if os.path.isdir(d):
+			a.append(d, importance)
+			verbose('scanning relevant dir: %s' % d)
+
+	return a
+
+
 def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 	highest_groupnum = sys.maxint, handle_postscripts = True):
 	'''do pass #1 of 2; create list of source and dest files
@@ -228,7 +249,8 @@ def overlay_pass2(filelist, filedict):
 				del filedict[entry.dest_path]
 				entry2 = None
 
-			# duplicate paths are a problem, unless they are directories ...
+			# duplicate paths are a problem, unless they are directories
+			# They are easy to fix however, just assign the right extension
 			elif (not (entry.src_isDir() and entry2.src_isDir())) \
 				and entry.groupnum == entry2.groupnum:
 
@@ -273,10 +295,8 @@ def load_overlay_tree():
 	filelist = []
 
 	# do pass #1 for multiple overlay dirs: load them into filelist
-	# FIXME this should look at relevant groups instead
-#	for overlay_dir in synctool_param.OVERLAY_DIRS:
-#		overlay_pass1(overlay_dir, filelist)
-	overlay_pass1(synctool_param.OVERLAY_DIR, filelist)
+	for (d, importance) in relevant_overlay_dirs(synctool_param.OVERLAY_DIR):
+		overlay_pass1(d, filelist, '/', importance)
 
 	# run pass #2 : 'squash' filelist into OVERLAY_DICT
 	overlay_pass2(filelist, OVERLAY_DICT)
@@ -307,10 +327,8 @@ def load_delete_tree():
 	filelist = []
 
 	# do pass #1 for multiple delete dirs: load them into filelist
-	# FIXME this should look at relevant groups instead
-#	for delete_dir in synctool_param.DELETE_DIRS:
-#		overlay_pass1(delete_dir, filelist)
-	overlay_pass1(synctool_param.DELETE_DIR, filelist)
+	for (d, importance) in relevant_overlay_dirs(synctool_param.DELETE_DIR):
+		overlay_pass1(d, filelist, '/', importance)
 
 	# run pass #2 : 'squash' filelist into OVERLAY_DICT
 	overlay_pass2(filelist, DELETE_DICT)
@@ -330,7 +348,7 @@ def load_tasks_tree():
 
 	# tasks/ is usually a very 'flat' directory with no complex structure at all
 	# However, because it is treated in the same way as overlay/ and delete/,
-	# so complex structure is possible
+	# complex structure is possible
 	# Still, there is not really a 'destination' for a task script, other than
 	# that you can call it with its destination name
 
@@ -348,10 +366,8 @@ def load_tasks_tree():
 
 	# do pass #1 for multiple overlay dirs: load them into filelist
 	# do not handle .post scripts
-	# FIXME this should look at relevant groups instead
-#	for tasks_dir in synctool_param.TASKS_DIRS:
-#		overlay_pass1(tasks_dir, filelist, '/', GROUP_ALL, False)
-	overlay_pass1(synctool_param.TASKS_DIR, filelist, '/', GROUP_ALL, False)
+	for (d, importance) in relevant_overlay_dirs(synctool_param.TASKS_DIR):
+		overlay_pass1(d, filelist, '/', importance, False)
 
 	# run pass #2 : 'squash' filelist into TASKS_DICT
 	overlay_pass2(filelist, TASKS_DICT)
