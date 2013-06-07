@@ -182,9 +182,9 @@ def upload(interface, upload_filename, upload_suffix=None):
 			sys.exit(1)
 
 		# it wasn't a terse path, throw a source path together
-		# This picks the first overlay dir as default source, which may not be correct
+		# This picks the 'all' overlay dir as default source, which may not be correct
 		# but it is a good guess
-		repos_filename = os.path.join(synctool_param.OVERLAY_DIRS[0], trimmed_upload_fn)
+		repos_filename = os.path.join(synctool_param.OVERLAY_DIR, 'all', trimmed_upload_fn)
 		if upload_suffix:
 			repos_filename = repos_filename + '._' + upload_suffix
 		else:

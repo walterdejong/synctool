@@ -122,38 +122,26 @@ def _config_integer(param, value, configfile, lineno, radix = 10):
 	return (0, n)
 
 
-def _config_dir(param, value, current, configfile, lineno):
-	if current != None:
-		stderr('%s:%d: redefinition of %s' % (configfile, lineno, param))
-		return (1, current)
+def _config_dir(name, arr, configfile, lineno):
+	d = string.join(arr[1:])
+	d = synctool_lib.prepare_path(d)
 
-	the_dir = synctool_lib.prepare_path(value)
+	if not os.path.isdir(d):
+		stderr('%s:%d: no such directory for %s' % (configfile, lineno, name))
+		return None
 
-	if not os.path.isdir(the_dir):
-		stderr('%s:%d: no such directory for %s' % (configfile, lineno, param))
-		return (1, the_dir)
+	if d == synctool_param.MASTERDIR:
+		stderr("%s:%d: %s can not be set to '$masterdir', sorry" %
+			(name, configfile, lineno))
+		return None
 
-	return (0, the_dir)
-
-
-def _config_multipath(param, value, multipaths, configfile, lineno):
-	if value in multipaths:
-		stderr('%s:%d: already in %s' % (configfile, lineno, param))
-		return 1
-
-	the_dir = synctool_lib.prepare_path(value)
-
-	if not os.path.isdir(the_dir):
-		stderr('%s:%d: no such directory for %s' % (configfile, lineno, param))
-		return 1
-
-	multipaths.append(the_dir)
-	return 0
+	return d
 
 
 def _config_ignore_variant(param, arr, configfile, lineno):
 	if len(arr) < 2:
-		stderr("%s:%d: '%s' requires at least 1 argument: the file or directory to ignore" % (configfile, lineno, param))
+		stderr("%s:%d: '%s' requires at least 1 argument: the file or directory to ignore" %
+			(configfile, lineno, param))
 		return 1
 
 	for file in arr[1:]:
@@ -209,16 +197,18 @@ def config_masterdir(arr, configfile, lineno):
 		stderr("%s:%d: redefinition of masterdir" % (configfile, lineno))
 		return 1
 
-	if not os.path.isdir(arr[1]):
+	d = string.join(arr[1:])
+	if not os.path.isdir(d):
 		stderr('%s:%d: no such directory for masterdir' % (configfile, lineno))
 		return 1
 
-	synctool_param.MASTERDIR = synctool_lib.strip_multiple_slashes(arr[1])
-	synctool_param.MASTERDIR = synctool_lib.strip_trailing_slash(synctool_param.MASTERDIR)
+	d = synctool_lib.strip_multiple_slashes(d)
+	synctool_param.MASTERDIR = synctool_lib.strip_trailing_slash(d)
 	synctool_param.MASTER_LEN = len(synctool_param.MASTERDIR) + 1
 
 	if synctool_param.MASTERDIR == '$masterdir':
-		stderr("%s:%d: masterdir can not be set to '$masterdir', sorry" % (configfile, lineno))
+		stderr("%s:%d: masterdir can not be set to '$masterdir', sorry" %
+			(configfile, lineno))
 		sys.exit(1)
 
 	return 0
@@ -226,27 +216,62 @@ def config_masterdir(arr, configfile, lineno):
 
 # keyword: overlaydir
 def config_overlaydir(arr, configfile, lineno):
-	return _config_multipath('overlaydir', arr[1], synctool_param.OVERLAY_DIRS,
-		configfile, lineno)
+	if synctool_param.OVERLAY_DIR != None:
+		stderr("%s:%d: redefinition of overlaydir" % (configfile, lineno))
+		return 1
+
+	d = _config_dir('overlaydir', arr, configfile, lineno)
+
+	if d == None:
+		return 1
+
+	synctool_param.OVERLAY_DIR = d
+	return 0
 
 
 # keyword: deletedir
 def config_deletedir(arr, configfile, lineno):
-	return _config_multipath('deletedir', arr[1], synctool_param.DELETE_DIRS,
-		configfile, lineno)
+	if synctool_param.DELETE_DIR != None:
+		stderr("%s:%d: redefinition of deletedir" % (configfile, lineno))
+		return 1
+
+	d = _config_dir('deletedir', arr, configfile, lineno)
+
+	if d == None:
+		return 1
+
+	synctool_param.DELETE_DIR = d
+	return 0
 
 
 # keyword: tasksdir
 def config_tasksdir(arr, configfile, lineno):
-	return _config_multipath('tasksdir', arr[1], synctool_param.TASKS_DIRS,
-		configfile, lineno)
+	if synctool_param.TASKS_DIR != None:
+		stderr("%s:%d: redefinition of tasksdir" % (configfile, lineno))
+		return 1
+
+	d = _config_dir('tasksdir', arr, configfile, lineno)
+
+	if d == None:
+		return 1
+
+	synctool_param.TASKS_DIR = d
+	return 0
 
 
 # keyword: scriptdir
 def config_scriptdir(arr, configfile, lineno):
-	(err, synctool_param.SCRIPT_DIR) = _config_dir('scriptdir',
-		arr[1], synctool_param.SCRIPT_DIR, configfile, lineno)
-	return err
+	if synctool_param.SCRIPT_DIR != None:
+		stderr("%s:%d: redefinition of scriptdir" % (configfile, lineno))
+		return 1
+
+	d = _config_dir('scriptdir', arr, configfile, lineno)
+
+	if d == None:
+		return 1
+
+	synctool_param.SCRIPT_DIR = d
+	return 0
 
 
 # keyword: package_manager

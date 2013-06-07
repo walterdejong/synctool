@@ -273,8 +273,10 @@ def load_overlay_tree():
 	filelist = []
 
 	# do pass #1 for multiple overlay dirs: load them into filelist
-	for overlay_dir in synctool_param.OVERLAY_DIRS:
-		overlay_pass1(overlay_dir, filelist)
+	# FIXME this should look at relevant groups instead
+#	for overlay_dir in synctool_param.OVERLAY_DIRS:
+#		overlay_pass1(overlay_dir, filelist)
+	overlay_pass1(synctool_param.OVERLAY_DIR, filelist)
 
 	# run pass #2 : 'squash' filelist into OVERLAY_DICT
 	overlay_pass2(filelist, OVERLAY_DICT)
@@ -305,8 +307,10 @@ def load_delete_tree():
 	filelist = []
 
 	# do pass #1 for multiple delete dirs: load them into filelist
-	for delete_dir in synctool_param.DELETE_DIRS:
-		overlay_pass1(delete_dir, filelist)
+	# FIXME this should look at relevant groups instead
+#	for delete_dir in synctool_param.DELETE_DIRS:
+#		overlay_pass1(delete_dir, filelist)
+	overlay_pass1(synctool_param.DELETE_DIR, filelist)
 
 	# run pass #2 : 'squash' filelist into OVERLAY_DICT
 	overlay_pass2(filelist, DELETE_DICT)
@@ -344,8 +348,10 @@ def load_tasks_tree():
 
 	# do pass #1 for multiple overlay dirs: load them into filelist
 	# do not handle .post scripts
-	for tasks_dir in synctool_param.TASKS_DIRS:
-		overlay_pass1(tasks_dir, filelist, '/', GROUP_ALL, False)
+	# FIXME this should look at relevant groups instead
+#	for tasks_dir in synctool_param.TASKS_DIRS:
+#		overlay_pass1(tasks_dir, filelist, '/', GROUP_ALL, False)
+	overlay_pass1(synctool_param.TASKS_DIR, filelist, '/', GROUP_ALL, False)
 
 	# run pass #2 : 'squash' filelist into TASKS_DICT
 	overlay_pass2(filelist, TASKS_DICT)

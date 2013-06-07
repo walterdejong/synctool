@@ -20,9 +20,9 @@ BOOLEAN_VALUE_FALSE = ('0', 'off', 'no', 'false')
 #	config variables
 #
 MASTERDIR = None
-OVERLAY_DIRS = []
-DELETE_DIRS = []
-TASKS_DIRS = []
+OVERLAY_DIR = None
+DELETE_DIR = None
+TASKS_DIR = None
 SCRIPT_DIR = None
 HOSTNAME = None
 NODENAME = None

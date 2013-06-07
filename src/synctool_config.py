@@ -66,29 +66,44 @@ def read_config():
 	if synctool_param.MASTERDIR == None:
 		synctool_param.MASTERDIR = '.'			# hmmm ... nice for debugging, but shouldn't this be /var/lib/synctool ?
 
-	if not synctool_param.OVERLAY_DIRS:
-		synctool_param.OVERLAY_DIRS.append(os.path.join(synctool_param.MASTERDIR, 'overlay'))
-		if not os.path.isdir(synctool_param.OVERLAY_DIRS[0]):
-			stderr('error: no such directory: %s' % synctool_param.OVERLAY_DIRS[0])
-			errors = errors + 1
+	if not synctool_param.OVERLAY_DIR:
+		synctool_param.OVERLAY_DIR = os.path.join(synctool_param.MASTERDIR, 'overlay')
+		if not os.path.isdir(synctool_param.OVERLAY_DIR):
+			stderr('error: no such directory: %s' % synctool_param.OVERLAY_DIR)
+			errors += 1
 
-	if not synctool_param.DELETE_DIRS:
-		synctool_param.DELETE_DIRS.append(os.path.join(synctool_param.MASTERDIR, 'delete'))
-		if not os.path.isdir(synctool_param.DELETE_DIRS[0]):
-			stderr('error: no such directory: %s' % synctool_param.DELETE_DIRS[0])
-			errors = errors + 1
+	d = os.path.join(synctool_param.OVERLAY_DIR, 'all')
+	if not os.path.isdir(d):
+		stderr('error: no such directory: %s' % d)
+		errors += 1
 
-	if not synctool_param.TASKS_DIRS:
-		synctool_param.TASKS_DIRS.append(os.path.join(synctool_param.MASTERDIR, 'tasks'))
-		if not os.path.isdir(synctool_param.TASKS_DIRS[0]):
-			stderr('error: no such directory: %s' % synctool_param.TASKS_DIRS[0])
-			errors = errors + 1
+	if not synctool_param.DELETE_DIR:
+		synctool_param.DELETE_DIR = os.path.join(synctool_param.MASTERDIR, 'delete')
+		if not os.path.isdir(synctool_param.DELETE_DIR):
+			stderr('error: no such directory: %s' % synctool_param.DELETE_DIR)
+			errors += 1
+
+	d = os.path.join(synctool_param.DELETE_DIR, 'all')
+	if not os.path.isdir(d):
+		stderr('error: no such directory: %s' % d)
+		errors += 1
+
+	if not synctool_param.TASKS_DIR:
+		synctool_param.TASKS_DIR = os.path.join(synctool_param.MASTERDIR, 'tasks')
+		if not os.path.isdir(synctool_param.TASKS_DIR):
+			stderr('error: no such directory: %s' % synctool_param.TASKS_DIR)
+			errors += 1
+
+	d = os.path.join(synctool_param.TASKS_DIR, 'all')
+	if not os.path.isdir(d):
+		stderr('error: no such directory: %s' % d)
+		errors += 1
 
 	if not synctool_param.SCRIPT_DIR:
 		synctool_param.SCRIPT_DIR = os.path.join(synctool_param.MASTERDIR, 'scripts')
 		if not os.path.isdir(synctool_param.SCRIPT_DIR):
 			stderr('error: no such directory: %s' % synctool_param.SCRIPT_DIR)
-			errors = errors + 1
+			errors += 1
 
 	if errors > 0:
 		sys.exit(-1)
@@ -445,17 +460,11 @@ def list_dirs():
 	print 'masterdir', synctool_param.MASTERDIR
 
 	# Note: do not use prettypath() here, for shell scripters
-	# They will still have to awk, and multiple paths are possible ...
+	# They will still have to awk anyway ...
 
-	for path in synctool_param.OVERLAY_DIRS:
-		print 'overlaydir', path
-
-	for path in synctool_param.DELETE_DIRS:
-		print 'deletedir', path
-
-	for path in synctool_param.TASKS_DIRS:
-		print 'tasksdir', path
-
+	print 'overlaydir', synctool_param.OVERLAY_DIR
+	print 'deletedir', synctool_param.DELETE_DIR
+	print 'tasksdir', synctool_param.TASKS_DIR
 	print 'scriptdir', synctool_param.SCRIPT_DIR
 
 
