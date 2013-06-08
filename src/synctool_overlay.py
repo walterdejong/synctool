@@ -421,16 +421,14 @@ def find_terse(treedef, terse_path):
 
 	idx = string.find(terse_path, '...')
 	if idx == -1:
-		# this is not really a terse path, return a regular find()
-		if len(terse_path) >= 2 and terse_path[:1] == '//':
-			terse_path = synctool_param.MASTERDIR + terse_path[1:]
+		if terse_path[:2] == '//':
+			terse_path = os.path.join(synctool_param.MASTERDIR,
+				terse_path[2:])
 
+		# this is not really a terse path, return a regular find()
 		return find(treedef, terse_path)
 
-	if idx >= 0:
-		ending = terse_path[(idx+3):]
-	else:
-		ending = terse_path[1:]
+	ending = terse_path[(idx+3):]
 
 	matches = []
 	len_ending = len(ending)
