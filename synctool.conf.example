@@ -10,6 +10,8 @@ masterdir   /var/lib/synctool
 #tasksdir   $masterdir/tasks
 #scriptdir  $masterdir/scripts
 
+#tempdir	/tmp/synctool
+
 # use mode 0777 on Linux
 #symlink_mode 0777
 # use mode 0755 on most other Unix platforms

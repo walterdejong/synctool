@@ -48,6 +48,13 @@ Default value is <span class="path">$masterdir/scriptdir</span>. There may
 be only one <span class="system">scriptdir</span> defined.
 </dd>
 
+<dt>tempdir &lt;directory&gt;</dt>
+<dd>Directory where the synctool master will create temporary files.<br />
+Default value is <span class="path">/tmp/synctool</span>. There may
+be only one <span class="system">tempdir</span> defined and it must be an
+absolute path.
+</dd>
+
 <dt>symlink_mode &lt;octal number&gt;</dt>
 <dd>Specifies the <span class="smallcaps">UNIX</span> file mode for symbolic
 links. This value is an octal number.<br />

@@ -208,6 +208,16 @@ def upload(interface, upload_filename, upload_suffix=None):
 			stdout('uploaded %s' % synctool_lib.prettypath(repos_filename))
 
 
+def make_tempdir():
+	if not os.path.isdir(synctool_param.TEMP_DIR):
+		try:
+			os.mkdir(synctool_param.TEMP_DIR, 0750)
+		except OSError, reason:
+			stderr('failed to create tempdir %s: %s' %
+				(synctool_param.TEMP_DIR, reason))
+			sys.exit(-1)
+
+
 def check_cmd_config():
 	'''check whether the commands as given in synctool.conf actually exist'''
 
@@ -507,7 +517,8 @@ def main():
 		print 'no valid nodes specified'
 		sys.exit(1)
 
-	if upload_filename:			# upload a file
+	if upload_filename:
+		# upload a file
 		if len(nodes) != 1:
 			print "The option --upload can only be run on just one node"
 			print "Please use --node=nodename to specify the node to upload from"
@@ -515,7 +526,10 @@ def main():
 
 		upload(nodes[0], upload_filename, upload_suffix)
 
-	else:						# do regular synctool run
+	else:
+		# do regular synctool run
+		make_tempdir()
+
 		local_interface = synctool_config.get_node_interface(synctool_param.NODENAME)
 
 		for node in nodes:

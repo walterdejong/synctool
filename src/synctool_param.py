@@ -24,6 +24,7 @@ OVERLAY_DIR = None
 DELETE_DIR = None
 TASKS_DIR = None
 SCRIPT_DIR = None
+TEMP_DIR = None
 HOSTNAME = None
 NODENAME = None
 HOST_ID = None

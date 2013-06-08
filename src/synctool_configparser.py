@@ -274,6 +274,28 @@ def config_scriptdir(arr, configfile, lineno):
 	return 0
 
 
+# keyword: tempdir
+def config_tempdir(arr, configfile, lineno):
+	if synctool_param.TEMP_DIR != None:
+		stderr("%s:%d: redefinition of tempdir" % (configfile, lineno))
+		return 1
+
+	d = string.join(arr[1:])
+	d = synctool_lib.prepare_path(d)
+
+	if d == synctool_param.MASTERDIR:
+		stderr("%s:%d: tempdir can not be set to '$masterdir', sorry" %
+			(name, configfile, lineno))
+		return 1
+
+	if not os.path.isabs(d):
+		stderr("%s:%d: tempdir must be an absolute path" % (configfile, lineno))
+		return 1
+
+	synctool_param.TEMP_DIR = d
+	return 0
+
+
 # keyword: package_manager
 def config_package_manager(arr, configfile, lineno):
 	if len(arr) < 2:

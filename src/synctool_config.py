@@ -114,6 +114,9 @@ def read_config():
 		else:
 			synctool_param.SCRIPT_DIR = d
 
+	if not synctool_param.TEMP_DIR:
+		synctool_param.TEMP_DIR = '/tmp/synctool'
+
 	if errors > 0:
 		sys.exit(-1)
 
@@ -475,6 +478,7 @@ def list_dirs():
 	print 'deletedir', synctool_param.DELETE_DIR
 	print 'tasksdir', synctool_param.TASKS_DIR
 	print 'scriptdir', synctool_param.SCRIPT_DIR
+	print 'tempdir', synctool_param.TEMP_DIR
 
 
 def set_action(a, opt):
