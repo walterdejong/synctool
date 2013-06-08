@@ -120,17 +120,14 @@ def read_config():
 	if errors > 0:
 		sys.exit(-1)
 
-	# implicitly add 'nodename' as first group
-	for node in get_all_nodes():
-		insert_group(node, node)
-
 	# implicitly add group 'all'
 	if not synctool_param.GROUP_DEFS.has_key('all'):
 		synctool_param.GROUP_DEFS['all'] = None
 
+	# implicitly add 'nodename' as first group
 	for node in get_all_nodes():
-		if not 'all' in synctool_param.NODES[node]:
-			synctool_param.NODES[node].append('all')
+		insert_group(node, node)
+		synctool_param.NODES[node].append('all')
 
 	# implicitly add group 'none'
 	if not synctool_param.GROUP_DEFS.has_key('none'):
@@ -164,6 +161,8 @@ def check_cmd_config(param_name, cmd):
 
 
 def add_myhostname():
+	# FIXME do away with hostnames (!)
+
 	'''add the hostname of the current host to the configuration,
 	so that it can be used
 	also determine the nodename of the current host'''
@@ -251,7 +250,7 @@ def insert_group(node, group):
 
 	if synctool_param.NODES.has_key(node):
 		if group in synctool_param.NODES[node]:
-			synctool_param.NODES[node].remove(group)		# this is to make sure it comes first
+			synctool_param.NODES[node].remove(group)	# this is to make sure it comes first
 
 		synctool_param.NODES[node].insert(0, group)
 	else:
