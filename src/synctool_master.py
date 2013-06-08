@@ -69,43 +69,44 @@ def run_remote_synctool(nodes):
 
 	# run in parallel
 	synctool_lib.run_parallel(master_synctool, worker_synctool,
-		(nodes, rsync_cmd_arr, ssh_cmd_arr, synctool_cmd_arr), len(nodes))
+		nodes, len(nodes))
 
 
-def master_synctool(rank, args):
+def master_synctool(rank, nodes):
 	# the master node only displays what we're running
-	(nodes, rsync_cmd_arr, ssh_cmd_arr, synctool_cmd_arr) = args
 
 	node = nodes[rank]
 	nodename = NODESET.get_nodename_from_interface(node)
 
-	if rsync_cmd_arr != None:
+	if not OPT_SKIP_RSYNC:
 		verbose('running rsync $masterdir/ to node %s' % nodename)
-		unix_out('%s %s:%s/' % (string.join(rsync_cmd_arr), node, synctool_param.MASTERDIR))
+		unix_out('%s %s:%s/' % (synctool_param.RSYNC_CMD, node,
+			synctool_param.MASTERDIR))
 
 	verbose('running synctool on node %s' % nodename)
-	unix_out('%s %s %s' % (string.join(ssh_cmd_arr), node, string.join(synctool_cmd_arr)))
+	unix_out('%s %s %s' % (synctool_param.SSH_CMD, node,
+		synctool_param.SYNCTOOL_CMD))
 
 
-def worker_synctool(rank, args):
+def worker_synctool(rank, nodes):
 	'''runs rsync of $masterdir to the nodes and ssh+synctool in parallel'''
-
-	(nodes, rsync_cmd_arr, ssh_cmd_arr, synctool_cmd_arr) = args
 
 	node = nodes[rank]
 	nodename = NODESET.get_nodename_from_interface(node)
 
-	if rsync_cmd_arr != None:
+	if not OPT_SKIP_RSYNC:
 		# rsync masterdir to the node
-		rsync_cmd_arr.append('%s:%s/' % (node, synctool_param.MASTERDIR))
-		synctool_lib.run_with_nodename(rsync_cmd_arr, nodename)
+		cmd_arr = string.split(synctool_param.RSYNC_CMD)
+		cmd_arr.append('%s:%s/' % (node, synctool_param.MASTERDIR))
+		synctool_lib.run_with_nodename(cmd_arr, nodename)
 
 	# run 'ssh node synctool_cmd'
-	ssh_cmd_arr.append(node)
-	ssh_cmd_arr.extend(synctool_cmd_arr)
-	ssh_cmd_arr.append('--nodename=%s' % nodename)
+	cmd_arr = string.split(synctool_param.SSH_CMD)
+	cmd_arr.append(node)
+	cmd_arr.extend(string.split(synctool_param.SYNCTOOL_CMD))
+	cmd_arr.append('--nodename=%s' % nodename)
 
-	synctool_lib.run_with_nodename(ssh_cmd_arr, nodename)
+	synctool_lib.run_with_nodename(cmd_arr, nodename)
 
 
 def run_local_synctool():
