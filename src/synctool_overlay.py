@@ -51,7 +51,7 @@ TASKS_FILES = []
 TASKS_LOADED = False
 
 
-def split_extension(entryname, requireExtension):
+def split_extension(filename, require_extension):
 	'''split a simple filename (without leading path)
 	in a tuple: (name, group number, isPost)
 	The importance is the index to MY_GROUPS[]
@@ -61,32 +61,32 @@ def split_extension(entryname, requireExtension):
 
 	Prereq: GROUP_ALL must be set to MY_GROUPS.index('all')'''
 
-	requireExtension = requireExtension and synctool_param.REQUIRE_EXTENSION
+	require_extension = require_extension and synctool_param.REQUIRE_EXTENSION
 
-	arr = string.split(entryname, '.')
-	if len(arr) <= 1:
-		if requireExtension:
-			return (None, OV_NO_GROUP_EXT, False)
+	(name, ext) = os.path.splitext(filename)
 
-		return (entryname, GROUP_ALL, False)
-
-	ext = arr.pop()
-	if ext == 'post':
-		# register generic .post script
-		return (string.join(arr, '.'), GROUP_ALL, True)
-
-	if ext[0] != '_':
-		if requireExtension:
-			return (None, OV_NO_GROUP_EXT, False)
-
-		return (entryname, GROUP_ALL, False)
-
-	ext = ext[1:]
 	if not ext:
-		if requireExtension:
+		if require_extension:
 			return (None, OV_NO_GROUP_EXT, False)
 
-		return (entryname, GROUP_ALL, False)
+		return (filename, GROUP_ALL, False)
+
+	if ext == '.post':
+		# register generic .post script
+		return (name, GROUP_ALL, True)
+
+	if ext[:2] != '._':
+		if require_extension:
+			return (None, OV_NO_GROUP_EXT, False)
+
+		return (filename, GROUP_ALL, False)
+
+	ext = ext[2:]
+	if not ext:
+		if require_extension:
+			return (None, OV_NO_GROUP_EXT, False)
+
+		return (filename, GROUP_ALL, False)
 
 	try:
 		importance = synctool_param.MY_GROUPS.index(ext)
@@ -96,12 +96,13 @@ def split_extension(entryname, requireExtension):
 
 		return (None, OV_NOT_MY_GROUP, False)
 
-	if len(arr) > 1 and arr[-1] == 'post':
-		# register group-specific .post script
-		arr.pop()
-		return (string.join(arr, '.'), importance, True)
+	(name2, ext) = os.path.splitext(name)
 
-	return (string.join(arr, '.'), importance, False)
+	if ext == '.post':
+		# register group-specific .post script
+		return (name2, importance, True)
+
+	return (name, importance, False)
 
 
 def ov_perror(errorcode, src_path):
