@@ -66,7 +66,11 @@ def master_ssh(rank, args):
 		verbose('running %s to %s %s' % (os.path.basename(ssh_cmd_arr[0]),
 			NODESET.get_nodename_from_interface(node), cmd_str))
 
-		unix_out('%s %s %s' % (string.join(ssh_cmd_arr), node, cmd_str))
+		if SSH_OPTIONS:
+			unix_out('%s %s %s %s' % (string.join(ssh_cmd_arr), SSH_OPTIONS,
+				node, cmd_str))
+		else:
+			unix_out('%s %s %s' % (string.join(ssh_cmd_arr), node, cmd_str))
 
 
 def worker_ssh(rank, args):
