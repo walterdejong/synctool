@@ -43,6 +43,10 @@ def run_remote_synctool(nodes):
 	if not nodes:
 		return
 
+	# make the group definitions
+	synctool_config.remove_ignored_groups()
+	synctool_param.ALL_GROUPS = synctool_config.make_all_groups()
+
 	# run in parallel
 	synctool_lib.run_parallel(master_synctool, worker_synctool,
 		nodes, len(nodes))
@@ -72,10 +76,20 @@ def worker_synctool(rank, nodes):
 
 	if not OPT_SKIP_RSYNC:
 		# rsync masterdir to the node
-		# TODO include only relevant dirs
+
+		tmp_filename = rsync_include_filter(nodename)
+
 		cmd_arr = shlex.split(synctool_param.RSYNC_CMD)
+		cmd_arr.append("--filter=. %s" % tmp_filename)
 		cmd_arr.append('%s:%s/' % (node, synctool_param.MASTERDIR))
 		synctool_lib.run_with_nodename(cmd_arr, nodename)
+
+		# delete temp file
+		try:
+			os.unlink(tmp_filename)
+		except OSError:
+			# silently ignore unlink error
+			pass
 
 	# run 'ssh node synctool_cmd'
 	cmd_arr = shlex.split(synctool_param.SSH_CMD)
@@ -96,6 +110,56 @@ def run_local_synctool():
 	cmd_arr = shlex.split(synctool_param.SYNCTOOL_CMD) + PASS_ARGS
 
 	synctool_lib.run_with_nodename(cmd_arr, synctool_param.NODENAME)
+
+
+def rsync_include_filter(nodename):
+	'''create temp file with rsync filter rules
+	Include only those dirs that apply for this node
+	Returns filename of the filter file'''
+
+	try:
+		f = tempfile.mkstemp(prefix='synctool', dir=synctool_param.TEMP_DIR)
+	except OSError, reason:
+		stderr('failed to create temp file: %s' % reason)
+		sys.exit(-1)
+
+	# include masterdir
+	# but exclude the top overlay/, delete/, tasks/ dir
+
+	f.write('+ %s\n' % synctool.MASTERDIR)
+	f.write('- %s/\n' % synctool.OVERLAY_DIR)
+	f.write('- %s/\n' % synctool.DELETE_DIR)
+	f.write('- %s/\n' % synctool.TASKS_DIR)
+	f.write('+ %s\n' % synctool.SCRIPT_DIR)
+
+	# set mygroups for this nodename
+	synctool_param.NODENAME = nodename
+	synctool_param.MY_GROUPS = synctool_config.get_my_groups()
+
+	# now add only the group dirs that apply to the rsync filter file
+
+	for g in synctool_param.MY_GROUPS:
+		d = os.path.join(synctool.OVERLAY_DIR, g)
+		if os.path.isdir(d):
+			f.write('+ %s\n' % d)
+
+		d = os.path.join(synctool.DELETE_DIR, g)
+		if os.path.isdir(d):
+			f.write('+ %s\n' % d)
+
+		d = os.path.join(synctool.TASKS_DIR, g)
+		if os.path.isdir(d):
+			f.write('+ %s\n' % d)
+
+	filename = f.name
+
+	# close() should make the file available to other processes
+	# in a portable way
+	f.close()
+
+	# Note: remind to delete the file later
+
+	return filename
 
 
 def upload(interface, upload_filename, upload_suffix=None):
