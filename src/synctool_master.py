@@ -43,18 +43,6 @@ def run_remote_synctool(nodes):
 	if not nodes:
 		return
 
-	if not synctool_param.RSYNC_CMD:
-		stderr('%s: error: rsync_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
-		sys.exit(-1)
-
-	if not synctool_param.SSH_CMD:
-		stderr('%s: error: ssh_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
-		sys.exit(-1)
-
-	if not synctool_param.SYNCTOOL_CMD:
-		stderr('%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
-		sys.exit(-1)
-
 	# prepare rsync command
 	if not OPT_SKIP_RSYNC:
 		rsync_cmd_arr = shlex.split(synctool_param.RSYNC_CMD)
