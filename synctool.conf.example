@@ -119,7 +119,9 @@ group g1 batch test wn
 # cases of multi-homed setups in which synctool can not find out what
 # node it is running on.
 #
-node node0 master
+
+# managing the masternode also with synctool is generally not a great idea
+#node node0 master
 
 node node1 fs sched ipaddress:node1-mgmt  hostname:myhost1.mydomain.com
 node node2 login    ipaddress:node2-mgmt  hostname:myhost2.mydomain.com
