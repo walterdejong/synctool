@@ -41,48 +41,33 @@ def run_remote_pkg(nodes):
 	if not nodes:
 		return
 
-	if not synctool_param.SSH_CMD:
-		stderr('%s: error: ssh_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
-		sys.exit(-1)
-
-	if not synctool_param.PKG_CMD:
-		stderr('%s: error: pkg_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
-		sys.exit(-1)
-
-	# prepare remote synctool_pkg command
-	ssh_cmd_arr = shlex.split(synctool_param.SSH_CMD)
-	pkg_cmd_arr = shlex.split(synctool_param.PKG_CMD)
-	pkg_cmd_arr.extend(PASS_ARGS)
-
-	# run in parallel
-	synctool_lib.run_parallel(master_pkg, worker_pkg,
-		(nodes, ssh_cmd_arr, pkg_cmd_arr), len(nodes))
+	synctool_lib.run_parallel(master_pkg, worker_pkg, nodes, len(nodes))
 
 
-def master_pkg(rank, args):
+def master_pkg(rank, nodes):
 	# the master node only displays what we're running
-	(nodes, ssh_cmd_arr, pkg_cmd_arr) = args
 
 	node = nodes[rank]
 	nodename = NODESET.get_nodename_from_interface(node)
 
 	verbose('running synctool-pkg on node %s' % nodename)
-	unix_out('%s %s %s' % (string.join(ssh_cmd_arr), node, string.join(pkg_cmd_arr)))
+	unix_out('%s %s %s %s' % (synctool_param.SSH_CMD, node,
+		synctool_param.PKG_CMD, string.join(PASS_ARGS)))
 
 
-def worker_pkg(rank, args):
+def worker_pkg(rank, nodes):
 	'''runs ssh + synctool-pkg to the nodes in parallel'''
-
-	(nodes, ssh_cmd_arr, pkg_cmd_arr) = args
 
 	node = nodes[rank]
 	nodename = NODESET.get_nodename_from_interface(node)
 
 	# run 'ssh node pkg_cmd'
-	ssh_cmd_arr.append(node)
-	ssh_cmd_arr.extend(pkg_cmd_arr)
+	cmd_arr = shlex.split(synctool_param.SSH_CMD)
+	cmd_arr.append(node)
+	cmd_arr.extend(shlex.split(synctool_param.PKG_CMD))
+	cmd_arr.extend(PASS_ARGS)
 
-	synctool_lib.run_with_nodename(ssh_cmd_arr, nodename)
+	synctool_lib.run_with_nodename(cmd_arr, nodename)
 
 
 def run_local_pkg():
