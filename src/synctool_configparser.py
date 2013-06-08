@@ -21,6 +21,11 @@ import synctool_lib
 import os
 import sys
 import string
+import re
+
+# this allows alphanumeric, underscore, minus, plus
+# and no other characters
+SPELLCHECK = re.compile(r'[\w\-\+]+')
 
 
 def stderr(str):
@@ -183,6 +188,22 @@ def _config_command(param, arr, short_cmd, configfile, lineno):
 	# while the master runs a bunch of commands
 
 	return (0, synctool_lib.prepare_path(string.join(arr[1:])))
+
+
+def spellcheck(name):
+	'''Check for valid spelling of name
+	Returns True if OK, False if not OK'''
+
+	global SPELLCHECK
+
+	m = SPELLCHECK.match(name)
+	if not m:
+		return False
+
+	if m.groups(0) != name:
+		return False
+
+	return True
 
 
 # keyword: include
@@ -515,6 +536,11 @@ def config_group(arr, configfile, lineno):
 
 	group = arr[1]
 
+	if not spellcheck(group):
+		stderr("%s:%d: invalid characters in group name '%s'" %
+			(configfile, lineno, group))
+		return 1
+
 	if group in ('all', 'none'):
 		stderr("%s:%d: implicit group '%s' can not be redefined" % (configfile, lineno, group))
 		return 1
@@ -548,6 +574,12 @@ def config_node(arr, configfile, lineno):
 		return 1
 
 	node = arr[1]
+
+	if not spellcheck(node):
+		stderr("%s:%d: invalid characters in node name '%s'" %
+			(configfile, lineno, node))
+		return 1
+
 	groups = arr[2:]
 
 	if synctool_param.NODES.has_key(node):
@@ -558,7 +590,7 @@ def config_node(arr, configfile, lineno):
 		stderr('%s:%d: %s was previously defined as a group' % (configfile, lineno, node))
 		return 1
 
-	for g in ('all', 'none'):
+	for g in ('all', 'none', node):
 		if g in groups:
 			stderr("%s:%d: illegal to use group '%s' in node definition" % (configfile, lineno, g))
 			return 1
@@ -651,10 +683,19 @@ def config_ignore_node(arr, configfile, lineno):
 		stderr("%s:%d: '%s' requires 1 argument: the nodename to ignore" % (configfile, lineno, arr[0]))
 		return 1
 
+	errors = 0
+
 	for node in arr[1:]:
+		if not spellcheck(node):
+			stderr("%s:%d: invalid characters in node name '%s'" %
+				(configfile, lineno, node))
+			errors += 1
+			continue
+
 		if not node in synctool_param.IGNORE_GROUPS:
 			synctool_param.IGNORE_GROUPS.append(node)
-	return 0
+
+	return errors
 
 
 # keyword: ignore_group
@@ -663,7 +704,15 @@ def config_ignore_group(arr, configfile, lineno):
 		stderr("%s:%d: '%s' requires 1 argument: the groupname to ignore" % (configfile, lineno, arr[0]))
 		return 1
 
+	errors = 0
+
 	for group in arr[1:]:
+		if not spellcheck(node):
+			stderr("%s:%d: invalid characters in group name '%s'" %
+				(configfile, lineno, group))
+			errors += 1
+			continue
+
 		if not group in synctool_param.IGNORE_GROUPS:
 			synctool_param.IGNORE_GROUPS.append(group)
 
@@ -671,7 +720,7 @@ def config_ignore_group(arr, configfile, lineno):
 		if not synctool_param.GROUP_DEFS.has_key(group):
 			synctool_param.GROUP_DEFS[group] = None
 
-	return 0
+	return errors
 
 
 # keyword: on_update
