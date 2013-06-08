@@ -36,10 +36,6 @@ SCP_OPTIONS = None
 def run_remote_copy(nodes, files):
 	'''copy files[] to nodes[]'''
 
-	if not synctool_param.SCP_CMD:
-		stderr('%s: error: scp_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
-		sys.exit(-1)
-
 	scp_cmd_arr = shlex.split(synctool_param.SCP_CMD)
 
 	if SCP_OPTIONS:
