@@ -64,7 +64,11 @@ def read_config():
 
 	# if missing, set default directories
 	if synctool_param.MASTERDIR == None:
-		synctool_param.MASTERDIR = '.'			# hmmm ... nice for debugging, but shouldn't this be /var/lib/synctool ?
+		synctool_param.MASTERDIR = '/var/lib/synctool'
+
+		if not os.path.isdir(synctool_param.MASTERDIR):
+			stderr('error: no such directory: %s' % d)
+			errors += 1
 
 	if not synctool_param.OVERLAY_DIR:
 		d = os.path.join(synctool_param.MASTERDIR, 'overlay')
