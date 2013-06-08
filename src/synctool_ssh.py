@@ -40,10 +40,6 @@ def run_dsh(remote_cmd_arr):
 		print 'no valid nodes specified'
 		sys.exit(1)
 
-	if not synctool_param.SSH_CMD:
-		stderr('%s: error: ssh_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
-		sys.exit(-1)
-
 	ssh_cmd_arr = shlex.split(synctool_param.SSH_CMD)
 
 	if SSH_OPTIONS:
