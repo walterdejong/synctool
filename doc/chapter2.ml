@@ -104,31 +104,27 @@ the corresponding hostname.<br />
 <div class="note">
 synctool uses the <span class="system">socket.getfqdn()</span> function to
 determine the fully qualified name of the host. If synctool is not finding the
-node for the specified hostname, add a line to
-<span class="path">/etc/hosts</span>:
- <div class="system">
- <br />
-127.0.1.1 &nbsp; myhost.mydomain.com &nbsp; myhost
- </div>
+node for the specified hostname, you should really fix your DNS or
+<span class="path">/etc/hosts</span> file.
 </div>
 <p>
 It is good practice to label your master node as &lsquo;master&rsquo; or
 &lsquo;install&rsquo;.
 <div class="example">
-node n1 master ipaddress:machine-n01
+node n1 master hostname:machine-n01
 </div>
-Now <span class="system">n1</span> responds to the groups
+Now node <span class="system">n1</span> responds to the groups
 <span class="system">n1</span> and <span class="system">master</span>.
 </p>
 
 <p>
-Some people don't like managing the master node itself with synctool.
-While it <em>is</em> possible and perfectly alright to do this, some like to
-exclude the master node by default:
+Some people like managing the master node itself with synctool.
+While it <em>is</em> possible and perfectly alright to do this, it's often
+better to exclude the master node:
 <div class="example">
 ignore_node n1
 </div>
-You have to list each and every host.
+You have to add a node definition for each and every node in your cluster.
 In the <span class="path">contrib/</span> directory, there is a script that
 uses <span class="cmd">nmap ping</span> with which you can scan your management
 network and quickly turn it into a synctool configuration. This makes life
@@ -137,7 +133,7 @@ a bit easier.
 
 <p>
 Nodes can be in as many different groups as you like. You can split
-long lines of node definitions by ending them with a backslash:
+long lines by ending them with a backslash:
 <div class="example">
 node n101 workernode debian plasma mathworks solar \ <br />
 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; fsmounted backup ipaddress:if0-n101

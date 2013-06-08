@@ -307,12 +307,8 @@ that will be used to uniquely identify the host.<br />
 <div class="note">
 synctool uses the <span class="system">socket.getfqdn()</span> function to
 determine the fully qualified name of the host. If synctool is not finding the
-node for the specified hostname, add a line to
-<span class="path">/etc/hosts</span>:
- <div class="system">
- <br />
-127.0.1.1 &nbsp; myhost.mydomain.com &nbsp; myhost
- </div>
+node for the specified hostname, you should really fix your DNS or
+<span class="path">/etc/hosts</span> file.
 </div>
 Example:
 <div class="example">
