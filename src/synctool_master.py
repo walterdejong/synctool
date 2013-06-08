@@ -43,18 +43,6 @@ def run_remote_synctool(nodes):
 	if not nodes:
 		return
 
-	# prepare rsync command
-	if not OPT_SKIP_RSYNC:
-		rsync_cmd_arr = shlex.split(synctool_param.RSYNC_CMD)
-		rsync_cmd_arr.append('%s/' % synctool_param.MASTERDIR)
-	else:
-		rsync_cmd_arr = None
-
-	# prepare remote synctool command
-	ssh_cmd_arr = shlex.split(synctool_param.SSH_CMD)
-	synctool_cmd_arr = shlex.split(synctool_param.SYNCTOOL_CMD)
-	synctool_cmd_arr.extend(PASS_ARGS)
-
 	# run in parallel
 	synctool_lib.run_parallel(master_synctool, worker_synctool,
 		nodes, len(nodes))
@@ -72,8 +60,8 @@ def master_synctool(rank, nodes):
 			synctool_param.MASTERDIR))
 
 	verbose('running synctool on node %s' % nodename)
-	unix_out('%s %s %s' % (synctool_param.SSH_CMD, node,
-		synctool_param.SYNCTOOL_CMD))
+	unix_out('%s %s %s --nodename=%s %s' % (synctool_param.SSH_CMD, node,
+		synctool_param.SYNCTOOL_CMD, nodename, string.join(PASS_ARGS)))
 
 
 def worker_synctool(rank, nodes):
@@ -85,15 +73,16 @@ def worker_synctool(rank, nodes):
 	if not OPT_SKIP_RSYNC:
 		# rsync masterdir to the node
 		# TODO include only relevant dirs
-		cmd_arr = string.split(synctool_param.RSYNC_CMD)
+		cmd_arr = shlex.split(synctool_param.RSYNC_CMD)
 		cmd_arr.append('%s:%s/' % (node, synctool_param.MASTERDIR))
 		synctool_lib.run_with_nodename(cmd_arr, nodename)
 
 	# run 'ssh node synctool_cmd'
-	cmd_arr = string.split(synctool_param.SSH_CMD)
+	cmd_arr = shlex.split(synctool_param.SSH_CMD)
 	cmd_arr.append(node)
-	cmd_arr.extend(string.split(synctool_param.SYNCTOOL_CMD))
+	cmd_arr.extend(shlex.split(synctool_param.SYNCTOOL_CMD))
 	cmd_arr.append('--nodename=%s' % nodename)
+	cmd_arr.extend(PASS_ARGS)
 
 	synctool_lib.run_with_nodename(cmd_arr, nodename)
 
