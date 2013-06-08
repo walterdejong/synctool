@@ -34,10 +34,6 @@ def ping_nodes(nodes):
 	'''ping nodes in parallel'''
 	'''nodes is a list of interfaces, really'''
 
-	if not synctool_param.PING_CMD:
-		stderr('%s: error: ping_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
-		sys.exit(-1)
-
 	synctool_lib.run_parallel(master_ping, worker_ping, nodes, len(nodes))
 
 
