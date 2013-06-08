@@ -622,8 +622,8 @@ def run_parallel(master_func, worker_func, args, worklen):
 			else:
 				master_func(n, args)
 
-				parallel = parallel + 1
-				n = n + 1
+				parallel += 1
+				n += 1
 
 		except KeyboardInterrupt:
 			print

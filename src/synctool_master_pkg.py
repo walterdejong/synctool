@@ -295,24 +295,24 @@ def get_options():
 			continue
 
 		if opt in ('-i', '--install'):
-			action = action + 1
+			action += 1
 			needs_package_list = True
 
 		if opt in ('-R', '--remove'):
-			action = action + 1
+			action += 1
 			needs_package_list = True
 
 		if opt in ('-l', '--list'):
-			action = action + 1
+			action += 1
 
 		if opt in ('-u', '--update'):
-			action = action + 1
+			action += 1
 
 		if opt in ('-U', '--upgrade'):
-			action = action + 1
+			action += 1
 
 		if opt in ('-C', '--clean', '--cleanup'):
-			action = action + 1
+			action += 1
 
 		if opt in ('-m', '--manager'):
 			if not arg in synctool_param.KNOWN_PACKAGE_MANAGERS:

@@ -106,7 +106,7 @@ def make_local_filename_for_version(version):
 		if not os.path.isfile(filename):
 			return filename
 
-		n = n + 1
+		n += 1
 
 
 def download_progress(seqnumber, blocksize, totalsize):

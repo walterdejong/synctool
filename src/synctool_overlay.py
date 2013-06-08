@@ -513,7 +513,7 @@ def find_terse(treedef, terse_path):
 		n = 0
 		for overlay_entry in matches:
 			stderr('%2d. %s' % (n, overlay_entry.dest_path))
-			n = n + 1
+			n += 1
 
 		return (None, OV_FOUND_MULTIPLE)
 

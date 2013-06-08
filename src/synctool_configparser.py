@@ -58,7 +58,7 @@ def read_config_file(configfile):
 		if not tmp_line:
 			break
 
-		lineno = lineno + 1
+		lineno += 1
 
 		n = string.find(tmp_line, '#')
 		if n >= 0:
@@ -83,7 +83,7 @@ def read_config_file(configfile):
 		if len(arr) <= 1:
 			stderr('%s:%d: syntax error ; expected key/value pair' %
 				(configfile, lineno))
-			errors = errors + 1
+			errors += 1
 			continue
 
 		keyword = string.lower(arr[0])
@@ -94,7 +94,7 @@ def read_config_file(configfile):
 		except AttributeError:
 			stderr("%s:%d: unknown keyword '%s'" %
 				(configfile, lineno, keyword))
-			errors = errors + 1
+			errors += 1
 			continue
 
 		errors = errors + func(arr, configfile, lineno)

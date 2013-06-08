@@ -648,7 +648,7 @@ def get_options():
 			continue
 
 		stderr("unknown command line option '%s'" % opt)
-		errors = errors + 1
+		errors += 1
 
 	if errors:
 		usage()
