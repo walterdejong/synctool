@@ -235,7 +235,7 @@ def main():
 		synctool_aggr.run(MASTER_OPTS)
 		sys.exit(0)
 
-	synctool_config.add_myhostname()
+	synctool_config.init_mynodename()
 
 	nodes = NODESET.interfaces()
 	if nodes == None or len(nodes) <= 0:

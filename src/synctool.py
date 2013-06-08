@@ -527,7 +527,6 @@ def get_options():
 		stderr('error: excessive arguments on command line')
 		sys.exit(1)
 
-	# first read the config file
 	for opt, arg in opts:
 		if opt in ('-h', '--help', '-?'):
 			usage()
@@ -541,6 +540,7 @@ def get_options():
 			print synctool_param.VERSION
 			sys.exit(0)
 
+	# first read the config file
 	synctool_config.read_config()
 	check_cmd_config()
 
@@ -673,7 +673,7 @@ def get_options():
 def main():
 	action = get_options()
 
-	synctool_config.add_myhostname()
+	synctool_config.init_mynodename()
 
 	if synctool_param.NODENAME == None:
 		stderr('unable to determine my nodename (%s), please check %s' %

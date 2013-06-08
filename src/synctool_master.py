@@ -590,7 +590,7 @@ def main():
 		synctool_aggr.run(MASTER_OPTS)
 		sys.exit(0)
 
-	synctool_config.add_myhostname()
+	synctool_config.init_mynodename()
 
 	# ooh ... testing for DRY_RUN doesn't work here
 	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:

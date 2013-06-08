@@ -164,23 +164,19 @@ def check_cmd_config(param_name, cmd):
 	return (True, cmd)
 
 
-def add_myhostname():
-	# FIXME do away with hostnames (!)
-
-	'''add the hostname of the current host to the configuration,
-	so that it can be used
-	also determine the nodename of the current host'''
+def init_mynodename():
+	'''determine the nodename of the current host'''
 
 	# In practice, the nodename is determined by the master in synctool.conf
 	# The master then tells the client what its nodename is
+	# In two special cases, we still need to detect the nodename:
+	# 1. user runs synctool.py in stand-alone mode on a node
+	# 2. master node itself is being managed by synctool
 	#
-	# The nodename detection really only runs for the master node itself;
-	# it's not important unless you manage the master with the same synctool
-	# (which is discouraged, but it is possible to do so)
+	# In older versions, the hostname was implicitly treated as a group
+	# This is no longer the case
 
-	#
-	#	get my hostname
-	#
+	# get my hostname
 	synctool_param.HOSTNAME = hostname = socket.getfqdn()
 
 	arr = string.split(hostname, '.')
@@ -189,10 +185,9 @@ def add_myhostname():
 	all_nodes = get_all_nodes()
 
 	nodename = synctool_param.NODENAME
-
 	if nodename != None:
 		# nodename was already set
-		# the master can set it because it already knows the node's nodename
+		# the master set it because it already knows the node's nodename
 		pass
 
 	elif synctool_param.HOST_ID != None:
@@ -212,8 +207,8 @@ def add_myhostname():
 		nodename = hostname
 
 	else:
-		# try to find a node that has the (short) hostname listed as interface
-		# or as a group
+		# try to find a node that has the (short) hostname
+		# listed as interface or as a group
 		for node in all_nodes:
 			iface = get_node_interface(node)
 			if iface == short_hostname or iface == hostname:
@@ -225,13 +220,10 @@ def add_myhostname():
 				nodename = node
 				break
 
-	synctool_param.NODENAME = nodename
+	# At this point, nodename can still be None
+	# It only really matters for synctool.py, which checks this condition
 
-	if nodename != None:
-		# implicitly add hostname as first group
-		insert_group(nodename, hostname)
-		insert_group(nodename, short_hostname)
-		insert_group(nodename, nodename)
+	synctool_param.NODENAME = nodename
 
 
 def remove_ignored_groups():
@@ -710,7 +702,7 @@ def main():
 		print synctool_param.LOGFILE
 
 	elif ACTION == ACTION_NODENAME:
-		add_myhostname()
+		init_mynodename()
 
 		if synctool_param.NODENAME == None:
 			stderr('unable to determine my nodename (%s), please check %s' %
@@ -753,6 +745,5 @@ if __name__ == '__main__':
 
 	except KeyboardInterrupt:		# user pressed Ctrl-C
 		pass
-
 
 # EOB
