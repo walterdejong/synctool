@@ -41,14 +41,6 @@ def run_remote_pkg(nodes):
 	if not nodes:
 		return
 
-	if not synctool_param.SSH_CMD:
-		stderr('%s: error: ssh_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
-		sys.exit(-1)
-
-	if not synctool_param.PKG_CMD:
-		stderr('%s: error: pkg_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
-		sys.exit(-1)
-
 	# prepare remote synctool_pkg command
 	ssh_cmd_arr = shlex.split(synctool_param.SSH_CMD)
 	pkg_cmd_arr = shlex.split(synctool_param.PKG_CMD)
@@ -140,8 +132,17 @@ def rearrange_options():
 def check_cmd_config():
 	'''check whether the commands as given in synctool.conf actually exist'''
 
+	errors = 0
+
+	(ok, synctool_param.SSH_CMD) = synctool_config.check_cmd_config('ssh_cmd', synctool_param.SSH_CMD)
+	if not ok:
+		errors += 1
+
 	(ok, synctool_param.PKG_CMD) = synctool_config.check_cmd_config('pkg_cmd', synctool_param.PKG_CMD)
 	if not ok:
+		errors += 1
+
+	if errors > 0:
 		sys.exit(-1)
 
 
