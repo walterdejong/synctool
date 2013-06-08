@@ -114,11 +114,11 @@ def read_config():
 		else:
 			synctool_param.SCRIPT_DIR = d
 
-	if not synctool_param.TEMP_DIR:
-		synctool_param.TEMP_DIR = '/tmp/synctool'
-
 	if errors > 0:
 		sys.exit(-1)
+
+	if not synctool_param.TEMP_DIR:
+		synctool_param.TEMP_DIR = '/tmp/synctool'
 
 	# implicitly add group 'all'
 	if not synctool_param.GROUP_DEFS.has_key('all'):
