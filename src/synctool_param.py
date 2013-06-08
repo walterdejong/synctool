@@ -42,13 +42,12 @@ PACKAGE_MANAGER = None
 LOGFILE = None
 NUM_PROC = 16				# use sensible default
 
+# default symlink mode
+# Linux makes them 0777 no matter what umask you have ...
+# but how do you like them on a different platform?
 #
-#	default symlink mode
-#	Linux makes them 0777 no matter what umask you have ...
-#	but how do you like them on a different platform?
-#
-#	The symlink mode can be set in the config file with keyword symlink_mode
-#
+# The symlink mode can be set in the config file
+# with keyword symlink_mode
 SYMLINK_MODE = 0755
 
 REQUIRE_EXTENSION = True
@@ -76,7 +75,8 @@ MY_GROUPS = None
 ALL_GROUPS = None
 
 # string length of the 'MASTERDIR' variable
-# although silly to keep this in a var, it makes it easier to print messages
+# although silly to keep this in a var,
+# it makes it easier to print messages
 MASTER_LEN = 0
 
 # colorize output
@@ -91,7 +91,8 @@ TERSE_COLORS = {
 	'fail'   : 'red',
 	'sync'   : 'default',
 	'link'   : 'cyan',
-	'mkdir'  : 'blue',		# I'd use yellow on a black background, blue on white
+	'mkdir'  : 'blue',		# I'd use yellow on a black background,
+							# blue on white
 	'rm'     : 'yellow',
 	'chown'  : 'cyan',
 	'chmod'  : 'cyan',

@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python -tt
 #
 #	synctool	WJ103
 #
@@ -60,11 +60,13 @@ def run_command(cmd):
 	stat = synctool_stat.SyncStat(cmdfile)
 
 	if not stat.exists():
-		stderr('error: command %s not found' % synctool_lib.prettypath(cmdfile))
+		stderr('error: command %s not found' %
+			synctool_lib.prettypath(cmdfile))
 		return
 
 	if not stat.isExec():
-		stderr("warning: file '%s' is not executable" % synctool_lib.prettypath(cmdfile))
+		stderr("warning: file '%s' is not executable" %
+			synctool_lib.prettypath(cmdfile))
 		return
 
 	# run the shell command
@@ -79,7 +81,8 @@ def run_command_in_dir(dest_dir, cmd):
 
 	cwd = os.getcwd()
 
-	# if dry run, the target directory may not exist yet (mkdir has not been called for real, for a dry run)
+	# if dry run, the target directory may not exist yet
+	# (mkdir has not been called for real, for a dry run)
 	if synctool_lib.DRY_RUN:
 		run_command(cmd)
 
@@ -144,7 +147,7 @@ def run_post_on_directory(src, dest):
 	if synctool_lib.NO_POST:
 		return
 
-	# Note that the script is executed with the changed dir as current working dir
+	# the script is executed with the changed dir as current working dir
 
 	if synctool_param.ON_UPDATE.has_key(dest):
 		run_command_in_dir(dest, synctool_param.ON_UPDATE[dest])
@@ -215,7 +218,8 @@ def delete_callback(obj):
 		else:
 			not_str = ''
 
-		stdout('%sdeleting %s : %s' % (not_str, obj.print_src(), obj.print_dest()))
+		stdout('%sdeleting %s : %s' % (not_str, obj.print_src(),
+										obj.print_dest()))
 		obj.hard_delete_file()
 		run_post(obj.src_path, obj.dest_path)
 
@@ -266,7 +270,8 @@ def single_files(filename):
 		stderr('missing filename')
 		return (False, None)
 
-	(obj, err) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, filename)
+	(obj, err) = synctool_overlay.find_terse(
+					synctool_overlay.OV_OVERLAY, filename)
 	if err == synctool_overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
@@ -294,7 +299,8 @@ def single_erase_saved(filename):
 		stderr('missing filename')
 		return (False, None)
 
-	(obj, err) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, filename)
+	(obj, err) = synctool_overlay.find_terse(
+					synctool_overlay.OV_OVERLAY, filename)
 	if err == synctool_overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
@@ -315,10 +321,13 @@ def single_task(filename):
 		return
 
 	task_script = filename
-	if task_script[0] != '/':				# trick to make find() work for tasks, too
+
+	# trick to make find() work for tasks, too
+	if task_script[0] != '/':
 		task_script = '/' + task_script
 
-	(obj, err) = synctool_overlay.find_terse(synctool_overlay.OV_TASKS, task_script)
+	(obj, err) = synctool_overlay.find_terse(
+		synctool_overlay.OV_TASKS, task_script)
 	if err == synctool_overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
@@ -339,7 +348,8 @@ def reference(filename):
 		stderr('missing filename')
 		return
 
-	(obj, err) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, filename)
+	(obj, err) = synctool_overlay.find_terse(
+		synctool_overlay.OV_OVERLAY, filename)
 	if err == synctool_overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
@@ -356,12 +366,15 @@ def diff_files(filename):
 	'''display a diff of the file'''
 
 	if not synctool_param.DIFF_CMD:
-		stderr('error: diff_cmd is undefined in %s' % synctool_param.CONF_FILE)
+		stderr('error: diff_cmd is undefined in %s' %
+			synctool_param.CONF_FILE)
 		return
 
-	synctool_lib.DRY_RUN = True						# be sure that it doesn't do any updates
+	# be sure that it doesn't do any updates
+	synctool_lib.DRY_RUN = True
 
-	(obj, err) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, filename)
+	(obj, err) = synctool_overlay.find_terse(
+		synctool_overlay.OV_OVERLAY, filename)
 	if err == synctool_overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
@@ -371,10 +384,11 @@ def diff_files(filename):
 		return
 
 	if synctool_lib.UNIX_CMD:
-		unix_out('%s %s %s' % (synctool_param.DIFF_CMD, obj.dest_path, obj.src_path))
+		unix_out('%s %s %s' % (synctool_param.DIFF_CMD,
+								obj.dest_path, obj.src_path))
 	else:
-		verbose('%s %s %s' % (synctool_param.DIFF_CMD, obj.dest_path, obj.print_src()))
-
+		verbose('%s %s %s' % (synctool_param.DIFF_CMD,
+								obj.dest_path, obj.print_src()))
 		sys.stdout.flush()
 		sys.stderr.flush()
 
@@ -384,8 +398,8 @@ def diff_files(filename):
 			cmd_arr.append(obj.src_path)
 			subprocess.call(cmd_arr, shell=False)
 		else:
-			os.system('%s %s %s' % (synctool_param.DIFF_CMD, obj.dest_path, obj.src_path))
-
+			os.system('%s %s %s' % (synctool_param.DIFF_CMD,
+									obj.dest_path, obj.src_path))
 		sys.stdout.flush()
 		sys.stderr.flush()
 
@@ -398,8 +412,8 @@ def be_careful_with_getopt():
 
 	for arg in sys.argv:
 
-		# This is probably going to give stupid-looking output in some cases,
-		# but it's better to be safe than sorry
+		# This is probably going to give stupid-looking output
+		# in some cases, but it's better to be safe than sorry
 
 		if arg[:2] == '-d' and string.find(arg, 'f') > -1:
 			print "Did you mean '--diff'?"
@@ -444,7 +458,8 @@ def	option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
 def check_cmd_config():
 	'''check whether the commands as given in synctool.conf actually exist'''
 
-	(ok, synctool_param.DIFF_CMD) = synctool_config.check_cmd_config('diff_cmd', synctool_param.DIFF_CMD)
+	(ok, synctool_param.DIFF_CMD) = synctool_config.check_cmd_config(
+									'diff_cmd', synctool_param.DIFF_CMD)
 	if not ok:
 		sys.exit(-1)
 
@@ -454,27 +469,28 @@ def usage():
 	print 'options:'
 	print '  -h, --help            Display this information'
 	print '  -c, --conf=dir/file   Use this config file'
-	print '                        (default: %s)' % synctool_param.DEFAULT_CONF
-	print '  -d, --diff=file       Show diff for file'
-	print '  -1, --single=file     Update a single file/run single task'
-	print '  -r, --ref=file        Show which source file synctool chooses'
-	print '  -e, --erase-saved     Erase *.saved backup files'
-	print '  -t, --tasks           Run the scripts in the tasks/ directory'
-	print '  -f, --fix             Perform updates (otherwise, do dry-run)'
-	print '      --no-post         Do not run any on_update or .post scripts'
-	print '  -F, --fullpath        Show full paths instead of shortened ones'
-	print '  -T, --terse           Show terse, shortened paths'
-	print '      --color           Use colored output (only for terse mode)'
-	print '      --no-color        Do not color output'
-	print '      --unix            Output actions as unix shell commands'
-	print '  -v, --verbose         Be verbose'
-	print '  -q, --quiet           Suppress informational startup messages'
-	print '      --version         Print current version number'
-	print
-	print 'synctool can help you administer your cluster of machines'
-	print 'Note that synctool does a dry run unless you specify --fix'
-	print
-	print 'Written by Walter de Jong <walter@heiho.net> (c) 2003-2013'
+	print ('                        (default: %s)' %
+		synctool_param.DEFAULT_CONF)
+	print '''  -d, --diff=file       Show diff for file
+  -1, --single=file     Update a single file/run single task
+  -r, --ref=file        Show which source file synctool chooses
+  -e, --erase-saved     Erase *.saved backup files
+  -t, --tasks           Run the scripts in the tasks/ directory
+  -f, --fix             Perform updates (otherwise, do dry-run)
+      --no-post         Do not run any on_update or .post scripts
+  -F, --fullpath        Show full paths instead of shortened ones
+  -T, --terse           Show terse, shortened paths
+      --color           Use colored output (only for terse mode)
+      --no-color        Do not color output
+      --unix            Output actions as unix shell commands
+  -v, --verbose         Be verbose
+  -q, --quiet           Suppress informational startup messages
+      --version         Print current version number
+
+synctool can help you administer your cluster of machines
+Note that synctool does a dry run unless you specify --fix
+
+Written by Walter de Jong <walter@heiho.net> (c) 2003-2013'''
 
 
 def get_options():
@@ -482,15 +498,16 @@ def get_options():
 
 	progname = os.path.basename(sys.argv[0])
 
-	synctool_lib.DRY_RUN = True				# set default dry-run
+	synctool_lib.DRY_RUN = True		# set default dry-run
 
 	# check for dangerous common typo's on the command-line
 	be_careful_with_getopt()
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:etfFTvq',
-			['help', 'conf=', 'diff=', 'single=', 'ref=', 'erase-saved',
-			'tasks', 'fix', 'no-post', 'fullpath', 'terse', 'color', 'no-color',
+			['help', 'conf=', 'diff=', 'single=', 'ref=',
+			'erase-saved', 'tasks', 'fix', 'no-post', 'fullpath',
+			'terse', 'color', 'no-color',
 			'verbose', 'quiet', 'unix', 'masterlog', 'nodename=', 'version'])
 	except getopt.error, (reason):
 		print '%s: %s' % (progname, reason)
@@ -546,7 +563,7 @@ def get_options():
 	action = ACTION_DEFAULT
 	SINGLE_FILES = []
 
-	# these are only used for checking the validity of command-line option combinations
+	# these are only used for checking the validity of option combinations
 	opt_diff = False
 	opt_single = False
 	opt_reference = False
@@ -659,11 +676,13 @@ def main():
 	synctool_config.add_myhostname()
 
 	if synctool_param.NODENAME == None:
-		stderr('unable to determine my nodename (%s), please check %s' % (synctool_param.HOSTNAME, synctool_param.CONF_FILE))
+		stderr('unable to determine my nodename (%s), please check %s' %
+			(synctool_param.HOSTNAME, synctool_param.CONF_FILE))
 		sys.exit(1)
 
 	if synctool_param.NODENAME in synctool_param.IGNORE_GROUPS:
-		stderr('%s: node %s is disabled in the config file' % (synctool_param.CONF_FILE, synctool_param.NODENAME))
+		stderr('%s: node %s is disabled in the config file' %
+			(synctool_param.CONF_FILE, synctool_param.NODENAME))
 		sys.exit(1)
 
 	synctool_config.remove_ignored_groups()
@@ -675,7 +694,9 @@ def main():
 		t = time.localtime(time.time())
 
 		unix_out('#')
-		unix_out('# script generated by synctool on %04d/%02d/%02d %02d:%02d:%02d' % (t[0], t[1], t[2], t[3], t[4], t[5]))
+		unix_out('# script generated by synctool on '
+			'%04d/%02d/%02d %02d:%02d:%02d' %
+			(t[0], t[1], t[2], t[3], t[4], t[5]))
 		unix_out('#')
 		unix_out('# NODENAME=%s' % synctool_param.NODENAME)
 		unix_out('# HOSTNAME=%s' % synctool_param.HOSTNAME)
@@ -766,6 +787,5 @@ if __name__ == '__main__':
 
 	except KeyboardInterrupt:		# user pressed Ctrl-C
 		pass
-
 
 # EOB

@@ -84,5 +84,4 @@ class SyncPkgAptget(SyncPkg):
 
 		synctool_lib.shell_command('apt-get clean')
 
-
 # EOB

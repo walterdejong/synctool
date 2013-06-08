@@ -72,7 +72,7 @@ class NodeSet:
 		if not self.nodelist and not self.grouplist:
 			self.nodelist = synctool_config.get_nodes_in_groups(["all"])
 
-		# check if the nodes exist at all; the user could have given bogus names
+		# check if the nodes exist at all; the user may have given bogus names
 		all_nodes = synctool_config.get_all_nodes()
 		for node in self.nodelist:
 			if not node in all_nodes:
@@ -87,10 +87,12 @@ class NodeSet:
 					stderr("no such group '%s'" % group)
 					return None
 
-			self.nodelist.extend(synctool_config.get_nodes_in_groups(self.grouplist))
+			self.nodelist.extend(synctool_config.get_nodes_in_groups(
+									self.grouplist))
 
 		if self.exclude_groups:
-			self.exclude_nodes.extend(synctool_config.get_nodes_in_groups(self.exclude_groups))
+			self.exclude_nodes.extend(synctool_config.get_nodes_in_groups(
+										self.exclude_groups))
 
 		for node in self.exclude_nodes:
 			# remove excluded nodes, if not explicitly included
@@ -104,7 +106,8 @@ class NodeSet:
 		ignored_nodes = ''
 
 		for node in self.nodelist:
-			if node in synctool_param.IGNORE_GROUPS and not node in explicit_includes:
+			if (node in synctool_param.IGNORE_GROUPS and
+				not node in explicit_includes):
 				verbose('node %s is ignored' % node)
 
 				if not ignored_nodes:
@@ -138,9 +141,11 @@ class NodeSet:
 				ifaces.append(iface)
 
 		# print message about ignored nodes
-		if ignored_nodes and not synctool_lib.QUIET and not synctool_lib.UNIX_CMD:
+		if (ignored_nodes and not synctool_lib.QUIET and
+			not synctool_lib.UNIX_CMD):
 			if synctool_param.TERSE:
-				synctool_lib.terse(synctool_lib.TERSE_WARNING, 'ignored nodes')
+				synctool_lib.terse(synctool_lib.TERSE_WARNING,
+									'ignored nodes')
 			else:
 				ignored_nodes = 'warning: ignored nodes: ' + ignored_nodes
 				if len(ignored_nodes) < 80:

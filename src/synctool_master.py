@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python -tt
 #
 #	synctool_master.py	WJ109
 #
@@ -103,8 +103,8 @@ def worker_synctool(rank, nodes):
 
 def run_local_synctool():
 	if not synctool_param.SYNCTOOL_CMD:
-		stderr('%s: error: synctool_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]),
-			synctool_param.CONF_FILE))
+		stderr('%s: error: synctool_cmd has not been defined in %s' %
+			(os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
 
 	cmd_arr = shlex.split(synctool_param.SYNCTOOL_CMD) + PASS_ARGS
@@ -166,15 +166,15 @@ def upload(interface, upload_filename, upload_suffix=None):
 	'''copy a file from a node into the overlay/ tree'''
 
 	if not synctool_param.SCP_CMD:
-		stderr('%s: error: scp_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]),
-			synctool_param.CONF_FILE))
+		stderr('%s: error: scp_cmd has not been defined in %s' %
+			(os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
 
 	if upload_filename[0] != '/':
 		stderr('error: the filename to upload must be an absolute path')
 		sys.exit(-1)
 
-	trimmed_upload_fn = upload_filename[1:]			# remove leading slash
+	trimmed_upload_fn = upload_filename[1:]		# remove leading slash
 
 	import synctool_overlay
 
@@ -199,7 +199,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 	node = NODESET.get_nodename_from_interface(interface)
 
 	# pretend that the current node is now the given node;
-	# this is needed for find() to find the most optimal reference for the file
+	# this is needed for find() to find the best reference for the file
 	orig_NODENAME = synctool_param.NODENAME
 	synctool_param.NODENAME = node
 	synctool_config.insert_group(node, node)
@@ -208,7 +208,8 @@ def upload(interface, upload_filename, upload_suffix=None):
 	synctool_param.MY_GROUPS = synctool_config.get_my_groups()
 
 	# see if file is already in the repository
-	(obj, err) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY, upload_filename)
+	(obj, err) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY,
+					upload_filename)
 
 	if err == synctool_overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
@@ -218,23 +219,28 @@ def upload(interface, upload_filename, upload_suffix=None):
 	if err == synctool_overlay.OV_NOT_FOUND:
 		# no source path found
 		if string.find(upload_filename, '...') >= 0:
-			stderr("%s is not in the repository, don't know what to map this path to\n"
-				"Please give the full path instead of a terse path, or touch the source file\n"
-				"in the repository first and try again"
-				% os.path.basename(upload_filename))
+			stderr("%s is not in the repository, don't know what to map "
+				"this path to\n"
+				"Please give the full path instead of a terse path, "
+				"or touch the source file\n"
+				"in the repository first and try again" %
+				os.path.basename(upload_filename))
 			sys.exit(1)
 
 		# it wasn't a terse path, throw a source path together
-		# This picks the 'all' overlay dir as default source, which may not be correct
-		# but it is a good guess
-		repos_filename = os.path.join(synctool_param.OVERLAY_DIR, 'all', trimmed_upload_fn)
+		# This picks the 'all' overlay dir as default source,
+		# which may not be correct -- but it is a good guess
+		repos_filename = os.path.join(synctool_param.OVERLAY_DIR, 'all',
+							trimmed_upload_fn)
 		if upload_suffix:
 			repos_filename = repos_filename + '._' + upload_suffix
 		else:
-			repos_filename = repos_filename + '._' + node		# use _nodename as default suffix
+			# use _nodename as default suffix
+			repos_filename = repos_filename + '._' + node
 	else:
 		if upload_suffix:
-			# remove the current group suffix an add the specified suffix to the filename
+			# remove the current group suffix
+			# and add the specified suffix to the filename
 			arr = string.split(obj.src_path, '.')
 			if len(arr) > 1 and arr[-1][0] == '_':
 				repos_filename = string.join(arr[:-1], '.')
@@ -248,16 +254,19 @@ def upload(interface, upload_filename, upload_suffix=None):
 
 	verbose('%s:%s uploaded as %s' % (node, upload_filename, repos_filename))
 	terse(synctool_lib.TERSE_UPLOAD, repos_filename)
-	unix_out('%s %s:%s %s' % (synctool_param.SCP_CMD, interface, upload_filename, repos_filename))
+	unix_out('%s %s:%s %s' % (synctool_param.SCP_CMD, interface,
+								upload_filename, repos_filename))
 
 	if dry_run:
-		stdout('would be uploaded as %s' % synctool_lib.prettypath(repos_filename))
+		stdout('would be uploaded as %s' %
+			synctool_lib.prettypath(repos_filename))
 	else:
 		# first check if the directory in the repository exists
 		repos_dir = os.path.dirname(repos_filename)
 		stat = synctool_stat.SyncStat(repos_dir)
 		if not stat.exists():
-			verbose('making directory %s' % synctool_lib.prettypath(repos_dir))
+			verbose('making directory %s' %
+				synctool_lib.prettypath(repos_dir))
 			unix_out('mkdir -p %s' % repos_dir)
 			synctool_lib.mkdir_p(repos_dir)
 
@@ -266,7 +275,8 @@ def upload(interface, upload_filename, upload_suffix=None):
 		scp_cmd_arr.append('%s:%s' % (interface, upload_filename))
 		scp_cmd_arr.append(repos_filename)
 
-		synctool_lib.run_with_nodename(scp_cmd_arr, NODESET.get_nodename_from_interface(interface))
+		synctool_lib.run_with_nodename(scp_cmd_arr,
+			NODESET.get_nodename_from_interface(interface))
 
 		if os.path.isfile(repos_filename):
 			stdout('uploaded %s' % synctool_lib.prettypath(repos_filename))
@@ -290,31 +300,38 @@ def check_cmd_config():
 
 	errors = 0
 
-#	(ok, synctool_param.DIFF_CMD) = synctool_config.check_cmd_config('diff_cmd', synctool_param.DIFF_CMD)
+#	(ok, synctool_param.DIFF_CMD) = synctool_config.check_cmd_config(
+#									'diff_cmd', synctool_param.DIFF_CMD)
 #	if not ok:
 #		errors += 1
 
-#	(ok, synctool_param.PING_CMD) = synctool_config.check_cmd_config('ping_cmd', synctool_param.PING_CMD)
+#	(ok, synctool_param.PING_CMD) = synctool_config.check_cmd_config(
+#									'ping_cmd', synctool_param.PING_CMD)
 #	if not ok:
 #		errors += 1
 
-	(ok, synctool_param.SSH_CMD) = synctool_config.check_cmd_config('ssh_cmd', synctool_param.SSH_CMD)
+	(ok, synctool_param.SSH_CMD) = synctool_config.check_cmd_config(
+									'ssh_cmd', synctool_param.SSH_CMD)
 	if not ok:
 		errors += 1
 
-#	(ok, synctool_param.SCP_CMD) = synctool_config.check_cmd_config('scp_cmd', synctool_param.SCP_CMD)
+#	(ok, synctool_param.SCP_CMD) = synctool_config.check_cmd_config(
+#									'scp_cmd', synctool_param.SCP_CMD)
 #	if not ok:
 #		errors += 1
 
-	(ok, synctool_param.RSYNC_CMD) = synctool_config.check_cmd_config('rsync_cmd', synctool_param.RSYNC_CMD)
+	(ok, synctool_param.RSYNC_CMD) = synctool_config.check_cmd_config(
+									'rsync_cmd', synctool_param.RSYNC_CMD)
 	if not ok:
 		errors += 1
 
-	(ok, synctool_param.SYNCTOOL_CMD) = synctool_config.check_cmd_config('synctool_cmd', synctool_param.SYNCTOOL_CMD)
+	(ok, synctool_param.SYNCTOOL_CMD) = synctool_config.check_cmd_config(
+								'synctool_cmd', synctool_param.SYNCTOOL_CMD)
 	if not ok:
 		errors += 1
 
-#	(ok, synctool_param.PKG_CMD) = synctool_config.check_cmd_config('pkg_cmd', synctool_param.PKG_CMD)
+#	(ok, synctool_param.PKG_CMD) = synctool_config.check_cmd_config(
+#									'pkg_cmd', synctool_param.PKG_CMD)
 #	if not ok:
 #		errors += 1
 
@@ -327,50 +344,53 @@ def usage():
 	print 'options:'
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=dir/file            Use this config file'
-	print '                                 (default: %s)' % synctool_param.DEFAULT_CONF
-	print '  -n, --node=nodelist            Execute only on these nodes'
-	print '  -g, --group=grouplist          Execute only on these groups of nodes'
-	print '  -x, --exclude=nodelist         Exclude these nodes from the selected group'
-	print '  -X, --exclude-group=grouplist  Exclude these groups from the selection'
-	print
-	print '  -d, --diff=file                Show diff for file'
-	print '  -1, --single=file              Update a single file/run single task'
-	print '  -r, --ref=file                 Show which source file synctool chooses'
-	print '  -u, --upload=file              Pull a remote file into the overlay tree'
-	print '  -s, --suffix=group             Give group suffix for the uploaded file'
-	print '  -e, --erase-saved              Erase *.saved backup files'
-	print '  -t, --tasks                    Run the scripts in the tasks/ directory'
-	print '  -f, --fix                      Perform updates (otherwise, do dry-run)'
-	print '      --no-post                  Do not run any on_update or .post scripts'
-	print '  -F, --fullpath                 Show full paths instead of shortened ones'
-	print '  -T, --terse                    Show terse, shortened paths'
-	print '      --color                    Use colored output (only for terse mode)'
-	print '      --no-color                 Do not color output'
-	print '      --unix                     Output actions as unix shell commands'
-	print '      --skip-rsync               Do not sync the repository'
-	print '                                 (eg. when it is on a shared filesystem)'
-	print '      --version                  Show current version number'
-	print '      --check-update             Check for availibility of newer version'
-	print '      --download                 Download latest version'
-	print '  -v, --verbose                  Be verbose'
-	print '  -q, --quiet                    Suppress informational startup messages'
-	print '  -a, --aggregate                Condense output; list nodes per change'
-	print
-	print 'A nodelist or grouplist is a comma-separated list'
-	print 'Note that synctool does a dry run unless you specify --fix'
-	print
-	print 'Written by Walter de Jong <walter@heiho.net> (c) 2003-2013'
+	print ('                                 (default: %s)' %
+		synctool_param.DEFAULT_CONF)
+	print '''  -n, --node=nodelist            Execute only on these nodes
+  -g, --group=grouplist          Execute only on these groups of nodes
+  -x, --exclude=nodelist         Exclude these nodes from the selected group
+  -X, --exclude-group=grouplist  Exclude these groups from the selection
+
+  -d, --diff=file                Show diff for file
+  -1, --single=file              Update a single file/run single task
+  -r, --ref=file                 Show which source file synctool chooses
+  -u, --upload=file              Pull a remote file into the overlay tree
+  -s, --suffix=group             Give group suffix for the uploaded file
+  -e, --erase-saved              Erase *.saved backup files
+  -t, --tasks                    Run the scripts in the tasks/ directory
+  -f, --fix                      Perform updates (otherwise, do dry-run)
+      --no-post                  Do not run any on_update or .post scripts
+  -F, --fullpath                 Show full paths instead of shortened ones
+  -T, --terse                    Show terse, shortened paths
+      --color                    Use colored output (only for terse mode)
+      --no-color                 Do not color output
+      --unix                     Output actions as unix shell commands
+      --skip-rsync               Do not sync the repository
+                                 (eg. when it is on a shared filesystem)
+      --version                  Show current version number
+      --check-update             Check for availibility of newer version
+      --download                 Download latest version
+  -v, --verbose                  Be verbose
+  -q, --quiet                    Suppress informational startup messages
+  -a, --aggregate                Condense output; list nodes per change
+
+A nodelist or grouplist is a comma-separated list
+Note that synctool does a dry run unless you specify --fix
+
+Written by Walter de Jong <walter@heiho.net> (c) 2003-2013'''
 
 
 def get_options():
 	global NODESET, PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE
 	global OPT_CHECK_UPDATE, OPT_DOWNLOAD, MASTER_OPTS
 
-	# check for typo's on the command-line; things like "-diff" will trigger "-f" => "--fix"
+	# check for typo's on the command-line;
+	# things like "-diff" will trigger "-f" => "--fix"
 	synctool.be_careful_with_getopt()
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:d:1:r:u:s:etfFTqa',
+		opts, args = getopt.getopt(sys.argv[1:],
+			'hc:vn:g:x:X:d:1:r:u:s:etfFTqa',
 			['help', 'conf=', 'verbose', 'node=', 'group=',
 			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=',
 			'upload=', 'suffix=', 'erase-saved', 'tasks', 'fix', 'no-post',
@@ -398,7 +418,7 @@ def get_options():
 	upload_filename = None
 	upload_suffix = None
 
-	# these are only used for checking the validity of command-line option combinations
+	# these are only used for checking the validity of option combinations
 	opt_diff = False
 	opt_single = False
 	opt_reference = False
@@ -584,8 +604,9 @@ def main():
 	if upload_filename:
 		# upload a file
 		if len(nodes) != 1:
-			print "The option --upload can only be run on just one node"
-			print "Please use --node=nodename to specify the node to upload from"
+			print 'The option --upload can only be run on just one node'
+			print ('Please use --node=nodename to specify the node '
+				'to upload from')
 			sys.exit(1)
 
 		upload(nodes[0], upload_filename, upload_suffix)
@@ -594,7 +615,8 @@ def main():
 		# do regular synctool run
 		make_tempdir()
 
-		local_interface = synctool_config.get_node_interface(synctool_param.NODENAME)
+		local_interface = synctool_config.get_node_interface(
+							synctool_param.NODENAME)
 
 		for node in nodes:
 			#

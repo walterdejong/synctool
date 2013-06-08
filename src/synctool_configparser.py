@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python -tt
 #
 #	synctool_configparser.py	WJ111
 #
@@ -48,8 +48,9 @@ def read_config_file(configfile):
 	errors = 0
 
 	#
-	#	read lines from the config file
-	#	variable tmp_line is used to be able to do multi-line reads (backslash terminated)
+	# read lines from the config file
+	# variable tmp_line is used to be able to do multi-line reads
+	# (backslash terminated)
 	#
 	line = ''
 	while True:
@@ -80,7 +81,8 @@ def read_config_file(configfile):
 		line = ''	# <-- line is being reset here; use arr[] from here on
 
 		if len(arr) <= 1:
-			stderr('%s:%d: syntax error ; expected key/value pair' % (configfile, lineno))
+			stderr('%s:%d: syntax error ; expected key/value pair' %
+				(configfile, lineno))
 			errors = errors + 1
 			continue
 
@@ -90,7 +92,8 @@ def read_config_file(configfile):
 		try:
 			func = getattr(this_module, 'config_%s' % keyword)
 		except AttributeError:
-			stderr("%s:%d: unknown keyword '%s'" % (configfile, lineno, keyword))
+			stderr("%s:%d: unknown keyword '%s'" %
+				(configfile, lineno, keyword))
 			errors = errors + 1
 			continue
 
@@ -145,8 +148,8 @@ def _config_dir(name, arr, configfile, lineno):
 
 def _config_ignore_variant(param, arr, configfile, lineno):
 	if len(arr) < 2:
-		stderr("%s:%d: '%s' requires at least 1 argument: the file or directory to ignore" %
-			(configfile, lineno, param))
+		stderr("%s:%d: '%s' requires at least 1 argument: "
+			"the file or directory to ignore" %	(configfile, lineno, param))
 		return 1
 
 	for file in arr[1:]:
@@ -179,7 +182,8 @@ def _config_command(param, arr, short_cmd, configfile, lineno):
 	'''helper for configuring rsync_cmd, ssh_cmd, synctool_cmd, etc.'''
 
 	if len(arr) < 2:
-		stderr("%s:%d: '%s' requires an argument: the '%s' command, and any appropriate switches" %
+		stderr("%s:%d: '%s' requires an argument: "
+			"the '%s' command, and any appropriate switches" %
 			(configfile, lineno, param, short_cmd))
 		return (1, None)
 
@@ -220,7 +224,8 @@ def config_masterdir(arr, configfile, lineno):
 
 	d = string.join(arr[1:])
 	if not os.path.isdir(d):
-		stderr('%s:%d: no such directory for masterdir' % (configfile, lineno))
+		stderr('%s:%d: no such directory for masterdir' %
+			(configfile, lineno))
 		return 1
 
 	d = synctool_lib.strip_multiple_slashes(d)
@@ -310,7 +315,8 @@ def config_tempdir(arr, configfile, lineno):
 		return 1
 
 	if not os.path.isabs(d):
-		stderr("%s:%d: tempdir must be an absolute path" % (configfile, lineno))
+		stderr("%s:%d: tempdir must be an absolute path" %
+			(configfile, lineno))
 		return 1
 
 	synctool_param.TEMP_DIR = d
@@ -320,7 +326,8 @@ def config_tempdir(arr, configfile, lineno):
 # keyword: package_manager
 def config_package_manager(arr, configfile, lineno):
 	if len(arr) < 2:
-		stderr("%s:%d: 'package_manager' requires an argument" % (configfile, lineno))
+		stderr("%s:%d: 'package_manager' requires an argument" %
+			(configfile, lineno))
 		return 1
 
 	if synctool_param.PACKAGE_MANAGER != None:
@@ -328,7 +335,8 @@ def config_package_manager(arr, configfile, lineno):
 		return 1
 
 	if not arr[1] in synctool_param.KNOWN_PACKAGE_MANAGERS:
-		stderr("%s:%d: unknown or unsupported package manager '%s'" % (configfile, lineno))
+		stderr("%s:%d: unknown or unsupported package manager '%s'" %
+			(configfile, lineno))
 		return 1
 
 	synctool_param.PACKAGE_MANAGER = arr[1]
@@ -344,8 +352,8 @@ def config_symlink_mode(arr, configfile, lineno):
 
 # keyword: require_extension
 def config_require_extension(arr, configfile, lineno):
-	(err, synctool_param.REQUIRE_EXTENSION) = _config_boolean('require_extension',
-		arr[1], configfile, lineno)
+	(err, synctool_param.REQUIRE_EXTENSION) = _config_boolean(
+		'require_extension', arr[1], configfile, lineno)
 	return err
 
 
@@ -404,35 +412,37 @@ def config_ignore_dirs(arr, configfile, lineno):
 
 # keyword: terse
 def config_terse(arr, configfile, lineno):
-	(err, synctool_param.TERSE) = _config_boolean('terse', arr[1], configfile, lineno)
+	(err, synctool_param.TERSE) = _config_boolean('terse', arr[1],
+		configfile, lineno)
 	return err
 
 
 # keyword: colorize
 def config_colorize(arr, configfile, lineno):
-	(err, synctool_param.COLORIZE) = _config_boolean('colorize', arr[1], configfile, lineno)
+	(err, synctool_param.COLORIZE) = _config_boolean('colorize', arr[1],
+		configfile, lineno)
 	return err
 
 
 # keyword: colorize_full_line
 def config_colorize_full_line(arr, configfile, lineno):
-	(err, synctool_param.COLORIZE_FULL_LINE) = _config_boolean('colorize_full_line',
-		arr[1], configfile, lineno)
+	(err, synctool_param.COLORIZE_FULL_LINE) = _config_boolean(
+		'colorize_full_line', arr[1], configfile, lineno)
 	return err
 
 
 # keyword: colorize_full_lines
 # nice for typo's
 def config_colorize_full_lines(arr, configfile, lineno):
-	(err, synctool_param.COLORIZE_FULL_LINE) = _config_boolean('colorize_full_line',
-		arr[1], configfile, lineno)
+	(err, synctool_param.COLORIZE_FULL_LINE) = _config_boolean(
+		'colorize_full_line', arr[1], configfile, lineno)
 	return err
 
 
 # keyword: colorize_bright
 def config_colorize_bright(arr, configfile, lineno):
-	(err, synctool_param.COLORIZE_BRIGHT) = _config_boolean('colorize_bright',
-		arr[1], configfile, lineno)
+	(err, synctool_param.COLORIZE_BRIGHT) = _config_boolean(
+		'colorize_bright', arr[1], configfile, lineno)
 	return err
 
 
@@ -531,7 +541,9 @@ def config_color_ok(arr, configfile, lineno):
 # keyword: group
 def config_group(arr, configfile, lineno):
 	if len(arr) < 3:
-		stderr("%s:%d: 'group' requires at least 2 arguments: the compound group name and at least 1 member group" % (configfile, lineno))
+		stderr("%s:%d: 'group' requires at least 2 arguments: "
+			"the compound group name and at least 1 member group" %
+			(configfile, lineno))
 		return 1
 
 	group = arr[1]
@@ -542,7 +554,8 @@ def config_group(arr, configfile, lineno):
 		return 1
 
 	if group in ('all', 'none'):
-		stderr("%s:%d: implicit group '%s' can not be redefined" % (configfile, lineno, group))
+		stderr("%s:%d: implicit group '%s' can not be redefined" %
+			(configfile, lineno, group))
 		return 1
 
 	if synctool_param.GROUP_DEFS.has_key(group):
@@ -550,13 +563,15 @@ def config_group(arr, configfile, lineno):
 		return 1
 
 	if synctool_param.NODES.has_key(group):
-		stderr('%s:%d: %s was previously defined as a node' % (configfile, lineno, group))
+		stderr('%s:%d: %s was previously defined as a node' %
+			(configfile, lineno, group))
 		return 1
 
 	try:
 		synctool_param.GROUP_DEFS[group] = expand_grouplist(arr[2:])
 	except RuntimeError, e:
-		stderr('%s:%d: compound groups can not contain node names' % (configfile, lineno))
+		stderr('%s:%d: compound groups can not contain node names' %
+			(configfile, lineno))
 		return 1
 
 	return 0
@@ -570,7 +585,8 @@ def config_host(arr, configfile, lineno):
 # keyword: node
 def config_node(arr, configfile, lineno):
 	if len(arr) < 2:
-		stderr("%s:%d: '%s' requires at least 1 argument: the nodename" % (configfile, lineno, arr[0]))
+		stderr("%s:%d: '%s' requires at least 1 argument: the nodename" %
+			(configfile, lineno, arr[0]))
 		return 1
 
 	node = arr[1]
@@ -587,12 +603,14 @@ def config_node(arr, configfile, lineno):
 		return 1
 
 	if synctool_param.GROUP_DEFS.has_key(node):
-		stderr('%s:%d: %s was previously defined as a group' % (configfile, lineno, node))
+		stderr('%s:%d: %s was previously defined as a group' %
+			(configfile, lineno, node))
 		return 1
 
 	for g in ('all', 'none'):
 		if g in groups:
-			stderr("%s:%d: illegal to use group '%s' in node definition" % (configfile, lineno, g))
+			stderr("%s:%d: illegal to use group '%s' in node definition" %
+				(configfile, lineno, g))
 			return 1
 
 	if node in groups:
@@ -612,7 +630,8 @@ def config_node(arr, configfile, lineno):
 			break
 
 		if n == 0:
-			stderr("%s:%d: syntax error in node qualifier '%s'" % (configfile, lineno, groups[-1]))
+			stderr("%s:%d: syntax error in node qualifier '%s'" %
+				(configfile, lineno, groups[-1]))
 			return 1
 
 		if n > 0:
@@ -622,22 +641,27 @@ def config_node(arr, configfile, lineno):
 
 			if qualifier == 'interface' or qualifier == 'ipaddress':
 				if synctool_param.INTERFACES.has_key(node):
-					stderr('%s:%d: redefinition of IP address for node %s' % (configfile, lineno, node))
+					stderr('%s:%d: redefinition of IP address for node %s' %
+						(configfile, lineno, node))
 					return 1
 
 				if not arg:
-					stderr("%s:%d: missing argument to node qualifier '%s'" % (configfile, lineno, qualifier))
+					stderr("%s:%d: missing argument to node qualifier '%s'" %
+						(configfile, lineno, qualifier))
 					return 1
 
 				synctool_param.INTERFACES[node] = arg
 
 			elif qualifier == 'hostname':
 				if synctool_param.HOSTNAMES.has_key(arg):
-					stderr('%s:%d: hostname %s already in use for node %s' % (configfile, lineno, arg, synctool_param.HOSTNAMES[arg]))
+					stderr('%s:%d: hostname %s already in use for node %s' %
+						(configfile, lineno, arg,
+						synctool_param.HOSTNAMES[arg]))
 					return 1
 
 				if not arg:
-					stderr("%s:%d: missing argument to node qualifier 'hostname'" % (configfile, lineno))
+					stderr("%s:%d: missing argument to node qualifier "
+						"'hostname'" % (configfile, lineno))
 					return 1
 
 				synctool_param.HOSTNAMES[arg] = node
@@ -647,8 +671,9 @@ def config_node(arr, configfile, lineno):
 				try:
 					f = open(arg, 'r')
 				except IOError:
-					# this is a real error ... but it doesn't matter on the master node
-					# so how to handle this?
+					# this is a real error ... but it doesn't matter on
+					# the master node
+					# So how to handle this?
 					continue
 
 				hostid = f.readline()
@@ -665,13 +690,15 @@ def config_node(arr, configfile, lineno):
 				synctool_param.HOST_ID = hostid
 
 			else:
-				stderr('%s:%d: unknown node qualifier %s' % (configfile, lineno, qualifier))
+				stderr('%s:%d: unknown node qualifier %s' %
+					(configfile, lineno, qualifier))
 				return 1
 
 	try:
 		synctool_param.NODES[node] = expand_grouplist(groups)
 	except RuntimeError, e:
-		stderr('%s:%d: a group list can not contain node names' % (configfile, lineno))
+		stderr('%s:%d: a group list can not contain node names' %
+			(configfile, lineno))
 		return 1
 
 	return 0
@@ -685,7 +712,8 @@ def config_ignore_host(arr, configfile, lineno):
 # keyword: ignore_node
 def config_ignore_node(arr, configfile, lineno):
 	if len(arr) < 2:
-		stderr("%s:%d: '%s' requires 1 argument: the nodename to ignore" % (configfile, lineno, arr[0]))
+		stderr("%s:%d: '%s' requires 1 argument: the nodename to ignore" %
+			(configfile, lineno, arr[0]))
 		return 1
 
 	errors = 0
@@ -706,7 +734,8 @@ def config_ignore_node(arr, configfile, lineno):
 # keyword: ignore_group
 def config_ignore_group(arr, configfile, lineno):
 	if len(arr) < 2:
-		stderr("%s:%d: '%s' requires 1 argument: the groupname to ignore" % (configfile, lineno, arr[0]))
+		stderr("%s:%d: '%s' requires 1 argument: the groupname to ignore" %
+			(configfile, lineno, arr[0]))
 		return 1
 
 	errors = 0
@@ -731,7 +760,8 @@ def config_ignore_group(arr, configfile, lineno):
 # keyword: on_update
 def config_on_update(arr, configfile, lineno):
 	if len(arr) < 3:
-		stderr("%s:%d: 'on_update' requires at least 2 arguments: filename and shell command to run" % (configfile, lineno))
+		stderr("%s:%d: 'on_update' requires at least 2 arguments: "
+			"filename and shell command to run" % (configfile, lineno))
 		return 1
 
 	file = synctool_lib.prepare_path(arr[1])
@@ -745,7 +775,8 @@ def config_on_update(arr, configfile, lineno):
 		# if relative path, use scriptdir
 		# but what to do if scriptdir hasn't been set yet? Use default ...
 		if not synctool_param.SCRIPT_DIR:
-			synctool_param.SCRIPT_DIR = os.path.join(synctool_param.MASTERDIR, 'scripts')
+			synctool_param.SCRIPT_DIR = os.path.join(
+				synctool_param.MASTERDIR, 'scripts')
 
 		# do not use os.path.join() on dir+cmd+arguments
 		cmd = synctool_param.SCRIPT_DIR + '/' + cmd
@@ -765,14 +796,16 @@ def config_on_update(arr, configfile, lineno):
 # keyword: always_run
 def config_always_run(arr, configfile, lineno):
 	if len(arr) < 2:
-		stderr("%s:%d: 'always_run' requires an argument: the shell command to run" % (configfile, lineno))
+		stderr("%s:%d: 'always_run' requires an argument: "
+			"the shell command to run" % (configfile, lineno))
 		return 1
 
 	cmd = string.join(arr[1:])
 	cmd = synctool_lib.prepare_path(cmd)
 
 	if cmd in synctool_param.ALWAYS_RUN:
-		stderr("%s:%d: same command defined again: %s" % (configfile, lineno, cmd))
+		stderr("%s:%d: same command defined again: %s" %
+			(configfile, lineno, cmd))
 		return 1
 
 	#
@@ -782,7 +815,8 @@ def config_always_run(arr, configfile, lineno):
 		# if relative path, use scriptdir
 		# but what to do if scriptdir hasn't been set yet? Use default ...
 		if not synctool_param.SCRIPT_DIR:
-			synctool_param.SCRIPT_DIR = os.path.join(synctool_param.MASTERDIR, 'scripts')
+			synctool_param.SCRIPT_DIR = os.path.join(
+				synctool_param.MASTERDIR, 'scripts')
 
 		# do not use os.path.join() on dir+cmd+arguments
 		cmd = synctool_param.SCRIPT_DIR + '/' + cmd
@@ -801,25 +835,29 @@ def config_always_run(arr, configfile, lineno):
 
 # keyword: diff_cmd
 def config_diff_cmd(arr, configfile, lineno):
-	(err, synctool_param.DIFF_CMD) = _config_command('diff_cmd', arr, 'diff', configfile, lineno)
+	(err, synctool_param.DIFF_CMD) = _config_command('diff_cmd', arr,
+		'diff', configfile, lineno)
 	return err
 
 
 # keyword: ping_cmd
 def config_ping_cmd(arr, configfile, lineno):
-	(err, synctool_param.PING_CMD) = _config_command('ping_cmd', arr, 'ping', configfile, lineno)
+	(err, synctool_param.PING_CMD) = _config_command('ping_cmd', arr,
+		'ping', configfile, lineno)
 	return err
 
 
 # keyword: ssh_cmd
 def config_ssh_cmd(arr, configfile, lineno):
-	(err, synctool_param.SSH_CMD) = _config_command('ssh_cmd', arr, 'ssh', configfile, lineno)
+	(err, synctool_param.SSH_CMD) = _config_command('ssh_cmd', arr,
+		'ssh', configfile, lineno)
 	return err
 
 
 # keyword: scp_cmd
 def config_scp_cmd(arr, configfile, lineno):
-	(err, synctool_param.SCP_CMD) = _config_command('scp_cmd', arr, 'scp', configfile, lineno)
+	(err, synctool_param.SCP_CMD) = _config_command('scp_cmd', arr,
+		'scp', configfile, lineno)
 	return err
 
 
@@ -830,26 +868,31 @@ def config_rsync_cmd(arr, configfile, lineno):
 	# and strip_trailing_slashes() may break rsync paths
 	# but these are usually not used in rsync_cmd
 
-	(err, synctool_param.RSYNC_CMD) = _config_command('rsync_cmd', arr, 'rsync', configfile, lineno)
+	(err, synctool_param.RSYNC_CMD) = _config_command('rsync_cmd', arr,
+		'rsync', configfile, lineno)
 	return err
 
 
 # keyword: synctool_cmd
 def config_synctool_cmd(arr, configfile, lineno):
-	(err, synctool_param.SYNCTOOL_CMD) = _config_command('synctool_cmd', arr, 'synctool.py', configfile, lineno)
+	(err, synctool_param.SYNCTOOL_CMD) = _config_command('synctool_cmd', arr,
+		'synctool.py', configfile, lineno)
 	return err
 
 
 # keyword: pkg_cmd
 def config_pkg_cmd(arr, configfile, lineno):
-	(err, synctool_param.PKG_CMD) = _config_command('pkg_cmd', arr, 'synctool_pkg.py', configfile, lineno)
+	(err, synctool_param.PKG_CMD) = _config_command('pkg_cmd', arr,
+		'synctool_pkg.py', configfile, lineno)
 	return err
 
 
 # keyword: logfile
 def config_logfile(arr, configfile, lineno):
 	if len(arr) < 2:
-		stderr("%s:%d: 'logfile' requires an argument: the full path to the file to write log messages to" % (configfile, lineno))
+		stderr("%s:%d: 'logfile' requires an argument: "
+			"the full path to the file to write log messages to" %
+			(configfile, lineno))
 		return 1
 
 	synctool_param.LOGFILE = synctool_lib.prepare_path(string.join(arr[1:]))
@@ -858,7 +901,8 @@ def config_logfile(arr, configfile, lineno):
 
 # keyword: num_proc
 def config_num_proc(arr, configfile, lineno):
-	(err, synctool_param.NUM_PROC) = _config_integer('num_proc', arr[1], configfile, lineno)
+	(err, synctool_param.NUM_PROC) = _config_integer('num_proc', arr[1],
+		configfile, lineno)
 
 	if not err and synctool_param.NUM_PROC < 1:
 		stderr("%s:%d: invalid argument for num_proc" % (configfile, lineno))
@@ -884,11 +928,12 @@ def expand_grouplist(grouplist):
 			if compound_groups != None:
 				groups.extend(compound_groups)
 		else:
-			# node names are often treated in the code as groups too ...
-			# but they are special groups, and can not be in a compound group just
-			# to prevent odd things from happening
+			# node names are treated as groups too ...
+			# but they are special groups, and can not be in a compound group
+			# just to prevent odd things from happening
 			if synctool_param.NODES.has_key(elem):
-				raise RuntimeError, 'node %s can not be part of compound group list' % elem
+				raise RuntimeError, ('node %s can not be part of '
+									'compound group list' % elem)
 
 			synctool_param.GROUP_DEFS[elem] = None
 

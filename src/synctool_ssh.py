@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python -tt
 #
 #	synctool-ssh	WJ109
 #
@@ -93,34 +93,37 @@ def worker_ssh(rank, args):
 def check_cmd_config():
 	'''check whether the commands as given in synctool.conf actually exist'''
 
-	(ok, synctool_param.SSH_CMD) = synctool_config.check_cmd_config('ssh_cmd', synctool_param.SSH_CMD)
+	(ok, synctool_param.SSH_CMD) = synctool_config.check_cmd_config(
+									'ssh_cmd', synctool_param.SSH_CMD)
 	if not ok:
 		sys.exit(-1)
 
 
 def usage():
-	print 'usage: %s [options] <remote command>' % os.path.basename(sys.argv[0])
+	print ('usage: %s [options] <remote command>' %
+		os.path.basename(sys.argv[0]))
 	print 'options:'
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=dir/file            Use this config file'
-	print '                                 (default: %s)' % synctool_param.DEFAULT_CONF
-	print '  -n, --node=nodelist            Execute only on these nodes'
-	print '  -g, --group=grouplist          Execute only on these groups of nodes'
-	print '  -x, --exclude=nodelist         Exclude these nodes from the selected group'
-	print '  -X, --exclude-group=grouplist  Exclude these groups from the selection'
-	print '  -a, --aggregate                Condense output'
-	print '  -o, --options=options          Set additional ssh options'
-	print '  -p, --numproc=num              Number of concurrent procs'
-	print
-	print '  -N, --no-nodename              Do not prepend nodename to output'
-	print '  -v, --verbose                  Be verbose'
-	print '      --unix                     Output actions as unix shell commands'
-	print '      --dry-run                  Do not run the remote command'
-	print '      --version                  Print current version number'
-	print
-	print 'A nodelist or grouplist is a comma-separated list'
-	print
-	print 'synctool-ssh by Walter de Jong <walter@heiho.net> (c) 2009-2013'
+	print ('                                 (default: %s)' %
+		synctool_param.DEFAULT_CONF)
+	print '''  -n, --node=nodelist            Execute only on these nodes
+  -g, --group=grouplist          Execute only on these groups of nodes
+  -x, --exclude=nodelist         Exclude these nodes from the selected group
+  -X, --exclude-group=grouplist  Exclude these groups from the selection
+  -a, --aggregate                Condense output
+  -o, --options=options          Set additional ssh options
+  -p, --numproc=num              Number of concurrent procs
+
+  -N, --no-nodename              Do not prepend nodename to output
+  -v, --verbose                  Be verbose
+      --unix                     Output actions as unix shell commands
+      --dry-run                  Do not run the remote command
+      --version                  Print current version number
+
+A nodelist or grouplist is a comma-separated list
+
+synctool-ssh by Walter de Jong <walter@heiho.net> (c) 2009-2013'''
 
 
 def get_options():
@@ -202,11 +205,13 @@ def get_options():
 			try:
 				synctool_param.NUM_PROC = int(arg)
 			except ValueError:
-				print "%s: option '%s' requires a numeric value" % (os.path.basename(sys.argv[0]), opt)
+				print ("%s: option '%s' requires a numeric value" %
+					(os.path.basename(sys.argv[0]), opt))
 				sys.exit(1)
 
 			if synctool_param.NUM_PROC < 1:
-				print '%s: invalid value for numproc' % os.path.basename(sys.argv[0])
+				print ('%s: invalid value for numproc' %
+					os.path.basename(sys.argv[0]))
 				sys.exit(1)
 
 			continue
@@ -271,6 +276,5 @@ if __name__ == '__main__':
 
 	except KeyboardInterrupt:		# user pressed Ctrl-C
 		pass
-
 
 # EOB

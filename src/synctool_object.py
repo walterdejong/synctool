@@ -25,15 +25,17 @@ class SyncObject:
 	The SyncObject caches any stat info'''
 
 	# importance is really the index of the file's group in MY_GROUPS[]
-	# a lower importance is more important; negative is invalid/irrelevant group
+	# a lower importance is more important;
+	# negative is invalid/irrelevant group
 
 	# stat info is cached so you don't have to call os.stat() all the time
 
 	# POST_SCRIPTS uses the same SyncObject class, but interprets src_path
-	# as the path of the .post script and dest_path as the destination directory
-	# where the script is to be run
+	# as the path of the .post script and dest_path as the destination
+	# directory where the script is to be run
 
-	def __init__(self, src, dest, importance, statbuf1 = None, statbuf2 = None):
+	def __init__(self, src, dest, importance, statbuf1 = None,
+					statbuf2 = None):
 		self.src_path = src
 		self.src_statbuf = statbuf1
 
@@ -148,12 +150,13 @@ class SyncObject:
 
 		need_update is a local boolean saying if a path needs to be updated
 
-		Return value is False when file is not changed, True when file is updated
+		Return False when file is not changed, True when file is updated
 
 		--
 		The structure of this long function is as follows;
 
-			stat(src)		this stat is 'sacred' and dest should be set accordingly
+			stat(src)		this stat is 'sacred' and
+								dest should be set accordingly
 			stat(dest)
 
 			if src is symlink:
@@ -222,20 +225,26 @@ class SyncObject:
 				try:
 					dest_link = os.readlink(dest_path)
 				except OSError, reason:
-					stderr('failed to readlink %s : %s (but ignoring this error)' % (src_path, reason))
+					stderr('failed to readlink %s : %s '
+						'(but ignoring this error)' % (src_path, reason))
 					terse(synctool_lib.TERSE_FAIL, 'readlink %s' % src_path)
 					dest_link = None
 
 				if src_link != dest_link:
-					stdout('%s should point to %s, but points to %s' % (dest_path, src_link, dest_link))
+					stdout('%s should point to %s, but points to %s' %
+						(dest_path, src_link, dest_link))
 					terse(synctool_lib.TERSE_LINK, dest_path)
 					unix_out('# relink symbolic link %s' % dest_path)
 					need_update = True
 
 				if (dest_stat.mode & 07777) != synctool_param.SYMLINK_MODE:
-					stdout('%s should have mode %04o (symlink), but has %04o' % (dest_path, synctool_param.SYMLINK_MODE, dest_stat.mode & 07777))
-					terse(synctool_lib.TERSE_MODE, '%04o %s' % (synctool_param.SYMLINK_MODE, dest_path))
-					unix_out('# fix permissions of symbolic link %s' % dest_path)
+					stdout('%s should have mode %04o (symlink), '
+						'but has %04o' % (dest_path,
+						synctool_param.SYMLINK_MODE, dest_stat.mode & 07777))
+					terse(synctool_lib.TERSE_MODE, '%04o %s' %
+						(synctool_param.SYMLINK_MODE, dest_path))
+					unix_out('# fix permissions of symbolic link %s' %
+						dest_path)
 					need_update = True
 
 			elif dest_stat.isDir():
@@ -273,9 +282,11 @@ class SyncObject:
 				need_update = True
 
 			elif dest_stat.isLink():
-				stdout('%s is a symbolic link, but should be a directory' % dest_path)
+				stdout('%s is a symbolic link, but should be a directory' %
+					dest_path)
 				terse(synctool_lib.TERSE_MKDIR, dest_path)
-				unix_out('# target should be a directory instead of a symbolic link')
+				unix_out('# target should be a directory instead of '
+					'a symbolic link')
 				self.delete_file()
 				need_update = True
 
@@ -312,7 +323,8 @@ class SyncObject:
 			elif dest_stat.isLink():
 				stdout('%s is a symbolic link, but should not be' % dest_path)
 				terse(synctool_lib.TERSE_TYPE, dest_path)
-				unix_out('# target should be a file instead of a symbolic link')
+				unix_out('# target should be a file instead of '
+					'a symbolic link')
 				self.delete_file()
 				need_update = True
 
@@ -340,7 +352,8 @@ class SyncObject:
 					# check file contents (SHA1 or MD5 checksum)
 					#
 					try:
-						src_sum, dest_sum = synctool_lib.checksum_files(src_path, dest_path)
+						src_sum, dest_sum = synctool_lib.checksum_files(
+											src_path, dest_path)
 					except IOError, (err, reason):
 # error was already printed
 #						stderr('error: %s' % reason)
@@ -372,9 +385,8 @@ class SyncObject:
 				return True
 
 		else:
-			#
-			# source is not a symbolic link, not a directory, and not a regular file
-			#
+			# source is not a symbolic link, not a directory,
+			# and not a regular file
 			stderr("be advised: don't know how to handle %s" % src_path)
 			terse(synctool_lib.TERSE_WARNING, 'unknown type %s' % src_path)
 
@@ -387,33 +399,38 @@ class SyncObject:
 			else:
 				if dest_stat.isDir():
 					stdout('%s should not be a directory' % dest_path)
-					terse(synctool_lib.TERSE_WARNING, 'wrong type %s' % dest_path)
+					terse(synctool_lib.TERSE_WARNING, 'wrong type %s' %
+														dest_path)
 				else:
 					if dest_stat.isFile():
 						stdout('%s should not be a regular file' % dest_path)
-						terse(synctool_lib.TERSE_WARNING, 'wrong type %s' % dest_path)
+						terse(synctool_lib.TERSE_WARNING, 'wrong type %s' %
+															dest_path)
 					else:
 						stderr("don't know how to handle %s" % dest_path)
-						terse(synctool_lib.TERSE_WARNING, 'unknown type %s' % dest_path)
+						terse(synctool_lib.TERSE_WARNING, 'unknown type %s' %
+															dest_path)
 
 		#
 		# check mode and owner/group of files and/or directories
 		#
-		# os.chmod() and os.chown() don't work well with symbolic links as they work
-		# on the destination rather than the symlink itself
-		# python lacks an os.lchmod() and os.lchown() as they are not portable
+		# os.chmod() and os.chown() don't work well with symbolic links
+		# as they work on the destination rather than the symlink itself
+		# python lacks an os.lchmod() and os.lchown(), they are not portable
 		# anyway, symbolic links have been dealt with already ...
 		#
 		if dest_stat.exists() and not dest_stat.isLink():
 			if src_stat.uid != dest_stat.uid or src_stat.gid != dest_stat.gid:
 				owner = src_stat.ascii_uid()
 				group = src_stat.ascii_gid()
-				stdout('%s should have owner %s.%s (%d.%d), but has %s.%s (%d.%d)' % (dest_path, owner, group,
+				stdout('%s should have owner %s.%s (%d.%d), '
+					'but has %s.%s (%d.%d)' % (dest_path, owner, group,
 					src_stat.uid, src_stat.gid,
 					dest_stat.ascii_uid(), dest_stat.ascii_gid(),
 					dest_stat.uid, dest_stat.gid))
 
-				terse(synctool_lib.TERSE_OWNER, '%s.%s %s' % (owner, group, dest_path))
+				terse(synctool_lib.TERSE_OWNER, '%s.%s %s' %
+												(owner, group, dest_path))
 				unix_out('# changing ownership on %s' % dest_path)
 
 				self.set_owner()
@@ -422,8 +439,13 @@ class SyncObject:
 				need_update = True
 
 			if (src_stat.mode & 07777) != (dest_stat.mode & 07777):
-				stdout('%s should have mode %04o, but has %04o' % (dest_path, src_stat.mode & 07777, dest_stat.mode & 07777))
-				terse(synctool_lib.TERSE_MODE, '%04o %s' % (src_stat.mode & 07777, dest_path))
+				stdout('%s should have mode %04o, but has %04o' %
+						(dest_path,
+						src_stat.mode & 07777,
+						dest_stat.mode & 07777))
+				terse(synctool_lib.TERSE_MODE, '%04o %s' %
+												(src_stat.mode & 07777,
+												dest_path))
 				unix_out('# changing permissions on %s' % dest_path)
 
 				self.set_permissions()
@@ -432,9 +454,13 @@ class SyncObject:
 				need_update = True
 
 #			if src_stat[stat.ST_MTIME] != dest_stat[stat.ST_MTIME]:
-#				stdout('%s should have mtime %d, but has %d' % (dest_path, src_stat[stat.ST_MTIME], dest_stat[stat.ST_MTIME]))
+#				stdout('%s should have mtime %d, but has %d' %
+#						(dest_path, src_stat[stat.ST_MTIME],
+#						dest_stat[stat.ST_MTIME]))
 #			if src_stat[stat.ST_CTIME] != dest_stat[stat.ST_CTIME]:
-#				stdout('%s should have ctime %d, but has %d' % (dest_path, src_stat[stat.ST_CTIME], dest_stat[stat.ST_CTIME]))
+#				stdout('%s should have ctime %d, but has %d' %
+#						(dest_path, src_stat[stat.ST_CTIME],
+#						dest_stat[stat.ST_CTIME]))
 
 		return need_update
 
@@ -503,7 +529,8 @@ class SyncObject:
 				try:
 					os.rename(newpath, '%s.saved' % newpath)
 				except OSError, reason:
-					stderr('failed to save %s as %s.saved : %s' % (newpath, newpath, reason))
+					stderr('failed to save %s as %s.saved : %s' %
+							(newpath, newpath, reason))
 					terse(synctool_lib.TERSE_FAIL, 'save %s.saved' % newpath)
 
 			old_umask = os.umask(umask_mode)
@@ -512,7 +539,8 @@ class SyncObject:
 			try:
 				os.symlink(oldpath, newpath)
 			except OSError, reason:
-				stderr('failed to create symlink %s -> %s : %s' % (newpath, oldpath, reason))
+				stderr('failed to create symlink %s -> %s : %s' %
+						(newpath, oldpath, reason))
 				terse(synctool_lib.TERSE_FAIL, 'link %s' % newpath)
 
 			os.umask(old_umask)
@@ -532,7 +560,8 @@ class SyncObject:
 			try:
 				os.chmod(file, mode & 07777)
 			except OSError, reason:
-				stderr('failed to chmod %04o %s : %s' % (mode & 07777, file, reason))
+				stderr('failed to chmod %04o %s : %s' %
+						(mode & 07777, file, reason))
 		else:
 			verbose(dryrun_msg('  os.chmod(%s, %04o)' % (file, mode & 07777)))
 
@@ -542,15 +571,17 @@ class SyncObject:
 		uid = self.src_statbuf.uid
 		gid = self.src_statbuf.gid
 
-		unix_out('chown %s.%s %s' % (self.src_ascii_uid(), self.src_ascii_gid(), file))
+		unix_out('chown %s.%s %s' % (self.src_ascii_uid(),
+									self.src_ascii_gid(), file))
 
 		if not synctool_lib.DRY_RUN:
 			verbose('  os.chown(%s, %d, %d)' % (file, uid, gid))
 			try:
 				os.chown(file, uid, gid)
 			except OSError, reason:
-				stderr('failed to chown %s.%s %s : %s' % (self.src_ascii_uid(),
-					self.src_ascii_gid(), file, reason))
+				stderr('failed to chown %s.%s %s : %s' %
+						(self.src_ascii_uid(), self.src_ascii_gid(),
+						file, reason))
 		else:
 			verbose(dryrun_msg('  os.chown(%s, %d, %d)' % (file, uid, gid)))
 
@@ -566,14 +597,16 @@ class SyncObject:
 				try:
 					os.rename(file, '%s.saved' % file)
 				except OSError, reason:
-					stderr('failed to move file to %s.saved : %s' % (file, reason))
+					stderr('failed to move file to %s.saved : %s' %
+							(file, reason))
 			else:
 				unix_out('rm %s' % file)
 				verbose('  os.unlink(%s)' % file)
 				try:
 					os.unlink(file)
 				except OSError, reason:
-					stderr('failed to delete %s : %s' % (file, reason))
+					stderr('failed to delete %s : %s' %
+							(file, reason))
 		else:
 			if synctool_param.BACKUP_COPIES:
 				verbose(dryrun_msg('moving %s to %s.saved' % (file, file)))
@@ -651,10 +684,12 @@ class SyncObject:
 			try:
 				os.rename(path, '%s.saved' % path)
 			except OSError, reason:
-				stderr('failed to move directory to %s.saved : %s' % (path, reason))
+				stderr('failed to move directory to %s.saved : %s' %
+						(path, reason))
 
 		else:
-			verbose(dryrun_msg('moving %s to %s.saved' % (path, path), 'move'))
+			verbose(dryrun_msg('moving %s to %s.saved' % (path, path),
+								'move'))
 
 
 	def mkdir_basepath(self):

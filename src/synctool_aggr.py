@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python -tt
 #
 #	synctool_aggr.py	WJ109
 #

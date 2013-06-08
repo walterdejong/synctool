@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python -tt
 #
 #	synctool-scp	WJ109
 #
@@ -51,7 +51,8 @@ def run_remote_copy(nodes, files):
 
 	files_str = string.join(files)		# this is used only for printing
 
-	synctool_lib.run_parallel(master_scp, worker_scp, (nodes, scp_cmd_arr, files_str), len(nodes))
+	synctool_lib.run_parallel(master_scp, worker_scp,
+		(nodes, scp_cmd_arr, files_str), len(nodes))
 
 
 def master_scp(rank, args):
@@ -66,15 +67,18 @@ def master_scp(rank, args):
 		verbose('copying %s to %s:%s' % (files_str, nodename, DESTDIR))
 
 		if SCP_OPTIONS:
-			unix_out('%s %s %s %s:%s' % (synctool_param.SCP_CMD, SCP_OPTIONS, files_str, node, DESTDIR))
+			unix_out('%s %s %s %s:%s' % (synctool_param.SCP_CMD, SCP_OPTIONS,
+										files_str, node, DESTDIR))
 		else:
-			unix_out('%s %s %s:%s' % (synctool_param.SCP_CMD, files_str, node, DESTDIR))
+			unix_out('%s %s %s:%s' % (synctool_param.SCP_CMD, files_str,
+										node, DESTDIR))
 
 	else:
 		verbose('copying %s to %s' % (files_str, nodename))
 
 		if SCP_OPTIONS:
-			unix_out('%s %s %s %s:' % (synctool_param.SCP_CMD, SCP_OPTIONS, files_str, node))
+			unix_out('%s %s %s %s:' % (synctool_param.SCP_CMD, SCP_OPTIONS,
+										files_str, node))
 		else:
 			unix_out('%s %s %s:' % (synctool_param.SCP_CMD, files_str, node))
 
@@ -82,7 +86,7 @@ def master_scp(rank, args):
 def worker_scp(rank, args):
 	'''runs scp (remote copy) to node'''
 
-	if synctool_lib.DRY_RUN:		# got here for nothing
+	if synctool_lib.DRY_RUN:	# got here for nothing
 		return
 
 	(nodes, scp_cmd_arr, files_str) = args
@@ -103,34 +107,37 @@ def worker_scp(rank, args):
 def check_cmd_config():
 	'''check whether the commands as given in synctool.conf actually exist'''
 
-	(ok, synctool_param.SCP_CMD) = synctool_config.check_cmd_config('scp_cmd', synctool_param.SCP_CMD)
+	(ok, synctool_param.SCP_CMD) = synctool_config.check_cmd_config(
+									'scp_cmd', synctool_param.SCP_CMD)
 	if not ok:
 		sys.exit(-1)
 
 
 def usage():
-	print 'usage: %s [options] <filename> [..]' % os.path.basename(sys.argv[0])
+	print ('usage: %s [options] <filename> [..]' %
+		os.path.basename(sys.argv[0]))
 	print 'options:'
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=dir/file            Use this config file'
-	print '                                 (default: %s)' % synctool_param.DEFAULT_CONF
-	print '  -n, --node=nodelist            Execute only on these nodes'
-	print '  -g, --group=grouplist          Execute only on these groups of nodes'
-	print '  -x, --exclude=nodelist         Exclude these nodes from the selected group'
-	print '  -X, --exclude-group=grouplist  Exclude these groups from the selection'
-	print '  -a, --aggregate                Condense output'
-	print '  -o, --options=options          Set additional scp options'
-	print '  -d, --dest=dir/file            Set destination name to copy to'
-	print
-	print '  -N, --no-nodename              Do not prepend nodename to output'
-	print '  -v, --verbose                  Be verbose'
-	print '      --unix                     Output actions as unix shell commands'
-	print '      --dry-run                  Do not run the remote copy command'
-	print '      --version                  Print current version number'
-	print
-	print 'A nodelist or grouplist is a comma-separated list'
-	print
-	print 'synctool-scp by Walter de Jong <walter@heiho.net> (c) 2009-2013'
+	print ('                                 (default: %s)' %
+		synctool_param.DEFAULT_CONF)
+	print '''  -n, --node=nodelist            Execute only on these nodes
+  -g, --group=grouplist          Execute only on these groups of nodes
+  -x, --exclude=nodelist         Exclude these nodes from the selected group
+  -X, --exclude-group=grouplist  Exclude these groups from the selection
+  -a, --aggregate                Condense output
+  -o, --options=options          Set additional scp options
+  -d, --dest=dir/file            Set destination name to copy to
+
+  -N, --no-nodename              Do not prepend nodename to output
+  -v, --verbose                  Be verbose
+      --unix                     Output actions as unix shell commands
+      --dry-run                  Do not run the remote copy command
+      --version                  Print current version number
+
+A nodelist or grouplist is a comma-separated list
+
+synctool-scp by Walter de Jong <walter@heiho.net> (c) 2009-2013'''
 
 
 def get_options():
@@ -280,6 +287,5 @@ if __name__ == '__main__':
 
 	except KeyboardInterrupt:		# user pressed Ctrl-C
 		pass
-
 
 # EOB

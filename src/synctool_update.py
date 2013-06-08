@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python -tt
 #
 #	synctool_update.py	WJ110
 #
@@ -45,7 +45,8 @@ def get_latest_version():
 
 
 def get_latest_version_and_checksum():
-	'''get latest version and checksum by downloading the LATEST.txt versioning file'''
+	'''get latest version and checksum by downloading
+	the LATEST.txt versioning file'''
 
 	verbose('accessing URL %s' % VERSION_CHECKING_URL)
 
@@ -83,7 +84,8 @@ def check():
 		stdout('You are running the latest version of synctool')
 		return 0
 	else:
-		stdout('A newer version of synctool is available: version %s' % latest_version)
+		stdout('A newer version of synctool is available: '
+			'version %s' % latest_version)
 
 	return 1
 
@@ -152,11 +154,10 @@ def download():
 	else:
 		print
 
-	#
-	#	compute and compare MD5 checksums
-	#	sadly, there is no easy way to do this 'live' while downloading,
-	#	because the download callback does not see the downloaded data blocks
-	#
+	# compute and compare MD5 checksums
+	# sadly, there is no easy way to do this 'live' while downloading,
+	# because the download callback does not see the downloaded data blocks
+
 	downloaded_sum = checksum_file(DOWNLOAD_FILENAME)
 	if downloaded_sum != checksum:
 		stderr('ERROR: checksum failed for %s' % DOWNLOAD_FILENAME)
@@ -195,6 +196,5 @@ def checksum_file(filename):
 if __name__ == '__main__':
 	check()
 #	download()
-
 
 # EOB

@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python -tt
 #
 #	synctool_lib.py		WJ109
 #
@@ -50,7 +50,8 @@ LOGFD = None
 # This option is pretty useless except in synctool-ssh it may be useful
 OPT_NODENAME = True
 
-MONTHS = ( 'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec' )
+MONTHS = ( 'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct',
+		'Nov','Dec' )
 
 # enums for terse output
 TERSE_INFO = 0
@@ -128,7 +129,8 @@ def terse(code, msg):
 
 		if synctool_param.COLORIZE:		# and sys.stdout.isatty():
 			txt = TERSE_TXT[code]
-			color = COLORMAP[synctool_param.TERSE_COLORS[string.lower(TERSE_TXT[code])]]
+			color = COLORMAP[synctool_param.TERSE_COLORS[
+							string.lower(TERSE_TXT[code])]]
 
 			if synctool_param.COLORIZE_BRIGHT:
 				bright = ';1'
@@ -220,14 +222,15 @@ def dryrun_msg(str, action = 'update'):
 def openlog():
 	global LOGFD
 
-	if synctool_param.LOGFILE == None or synctool_param.LOGFILE == '' or DRY_RUN:
+	if DRY_RUN or not synctool_param.LOGFILE:
 		return
 
 	LOGFD = None
 	try:
 		LOGFD = open(synctool_param.LOGFILE, 'a')
 	except IOError, (err, reason):
-		print 'error: failed to open logfile %s : %s' % (synctool_param.LOGFILE, reason)
+		print ('error: failed to open logfile %s : %s' %
+			(synctool_param.LOGFILE, reason))
 		sys.exit(-1)
 
 #	log('start run')
@@ -249,7 +252,8 @@ def masterlog(str):
 
 	if not DRY_RUN and LOGFD != None:
 		t = time.localtime(time.time())
-		LOGFD.write('%s %02d %02d:%02d:%02d %s\n' % (MONTHS[t[1]-1], t[2], t[3], t[4], t[5], str))
+		LOGFD.write('%s %02d %02d:%02d:%02d %s\n' %
+			(MONTHS[t[1]-1], t[2], t[3], t[4], t[5], str))
 
 
 def log(str):
@@ -257,7 +261,8 @@ def log(str):
 
 	if not DRY_RUN and LOGFD != None:
 		t = time.localtime(time.time())
-		LOGFD.write('%s %02d %02d:%02d:%02d %s\n' % (MONTHS[t[1]-1], t[2], t[3], t[4], t[5], str))
+		LOGFD.write('%s %02d %02d:%02d:%02d %s\n' %
+			(MONTHS[t[1]-1], t[2], t[3], t[4], t[5], str))
 
 		if MASTERLOG:
 			print '%synctool-log%', str
@@ -418,12 +423,14 @@ def shell_command(cmd):
 			try:
 				subprocess.call(cmd, shell=True)
 			except OSError, reason:
-				stderr("failed to run shell command '%s' : %s" % (prettypath(cmd), reason))
+				stderr("failed to run shell command '%s' : %s" %
+					(prettypath(cmd), reason))
 		else:
 			try:
 				os.system(cmd)
 			except OSError, reason:
-				stderr("failed to run shell command '%s' : %s" % (prettypath(cmd), reason))
+				stderr("failed to run shell command '%s' : %s" %
+					(prettypath(cmd), reason))
 
 		sys.stdout.flush()
 		sys.stderr.flush()

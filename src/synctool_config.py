@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python -tt
 #
 #	synctool-config	WJ109
 #
@@ -254,7 +254,8 @@ def insert_group(node, group):
 
 	if synctool_param.NODES.has_key(node):
 		if group in synctool_param.NODES[node]:
-			synctool_param.NODES[node].remove(group)	# this is to make sure it comes first
+			# remove the group and reinsert it to make sure it comes first
+			synctool_param.NODES[node].remove(group)
 
 		synctool_param.NODES[node].insert(0, group)
 	else:
@@ -456,7 +457,8 @@ def list_commands(cmds):
 				print synctool_param.RSYNC_CMD
 
 		elif cmd == 'synctool':
-			(ok, a) = check_cmd_config('synctool_cmd', synctool_param.SYNCTOOL_CMD)
+			(ok, a) = check_cmd_config('synctool_cmd',
+										synctool_param.SYNCTOOL_CMD)
 			if ok:
 				print synctool_param.SYNCTOOL_CMD
 
@@ -500,7 +502,9 @@ def usage():
 	print 'options:'
 	print '  -h, --help               Display this information'
 	print '  -c, --conf=dir/file      Use this config file'
-	print '                           (default: %s)' % synctool_param.DEFAULT_CONF
+	print ('                           (default: %s)' %
+		synctool_param.DEFAULT_CONF)
+
 	print '  -l, --list-nodes         List all configured nodes'
 	print '  -L, --list-groups        List all configured groups'
 	print '  -n, --node=nodelist      List all groups this node is in'
@@ -663,7 +667,8 @@ def main():
 		sys.exit(0)
 
 	if OPT_INTERFACE and OPT_HOSTNAME:
-		stderr('options --interface, --ipaddress and --hostname can not be combined')
+		stderr('options --interface, --ipaddress and --hostname can not '
+			'be combined')
 		sys.exit(1)
 
 	read_config()
@@ -683,7 +688,8 @@ def main():
 
 	elif ACTION == ACTION_GROUPS:
 		if not ARG_GROUPS:
-			stderr("option '--node-group' requires an argument; the node group name")
+			stderr("option '--node-group' requires an argument; "
+				"the node group name")
 			sys.exit(1)
 
 		list_nodegroups(ARG_GROUPS)
@@ -707,13 +713,15 @@ def main():
 		add_myhostname()
 
 		if synctool_param.NODENAME == None:
-			stderr('unable to determine my nodename (%s), please check %s' % (synctool_config.HOSTNAME, synctool_param.CONF_FILE))
+			stderr('unable to determine my nodename (%s), please check %s' %
+				(synctool_config.HOSTNAME, synctool_param.CONF_FILE))
 			sys.exit(1)
 
 		if synctool_param.NODENAME in synctool_param.IGNORE_GROUPS:
 			if not synctool_param.OPT_FILTER_IGNORED:
 				if OPT_INTERFACE:
-					print 'none (%s ignored)' % get_node_interface(synctool_param.NODENAME)
+					print ('none (%s ignored)' %
+						get_node_interface(synctool_param.NODENAME))
 				else:
 					print 'none (%s ignored)' % synctool_param.NODENAME
 

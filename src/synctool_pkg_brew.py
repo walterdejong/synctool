@@ -76,5 +76,4 @@ class SyncPkgBrew(SyncPkg):
 
 		synctool_lib.shell_command('brew cleanup')
 
-
 # EOB

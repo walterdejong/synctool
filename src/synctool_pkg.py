@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python -tt
 #
 #	synctool_pkg.py		WJ111
 #
@@ -73,15 +73,18 @@ def package_manager():
 			module = __import__('synctool_pkg_%s' % short_mgr)
 
 			# find the package manager class
-			pkgclass = getattr(module, 'SyncPkg%s' % string.capitalize(short_mgr))
+			pkgclass = getattr(module, 'SyncPkg%s' %
+										string.capitalize(short_mgr))
 
 			# instantiate the class
 			return pkgclass()
 
 	if detected:
-		stderr('package manager %s is not supported yet' % synctool_param.PACKAGE_MANAGER)
+		stderr('package manager %s is not supported yet' %
+			synctool_param.PACKAGE_MANAGER)
 	else:
-		stderr("unknown package manager defined: '%s'" % synctool_param.PACKAGE_MANAGER)
+		stderr("unknown package manager defined: '%s'" %
+			synctool_param.PACKAGE_MANAGER)
 
 	sys.exit(1)
 
@@ -90,7 +93,6 @@ def detect_installer():
 	'''Attempt to detect the operating system and package system
 	Returns instance of a SyncPkg installer class'''
 
-	#
 	# attempt a best effort at detecting OSes for the purpose of
 	# choosing a package manager
 	# It's probably not 100% fool-proof, but as said, it's a best effort
@@ -102,12 +104,11 @@ def detect_installer():
 	#   use different package managers
 	# - SuSE has three (!) package managers that are all in use
 	#   and it seems to be by design (!?)
-	# - I've seen apt-get work with dpkg, and I've seen apt-get work with rpm
+	# - I've seen apt-get work with dpkg, and/or with rpm
 	# - MacOS X has no 'standard' software packaging (the App store??)
 	#   There are ports, fink, brew. I prefer 'brew'
 	# - The *BSDs have both pkg_add and ports
 	# - FreeBSD has freebsd-update to upgrade packages
-	#
 
 	platform = os.uname()[0]
 
@@ -156,21 +157,22 @@ def detect_installer():
 		'Windows_95', 'Windows_NT', 'CYGWIN', 'MinGW',
 		'LynxOS', 'UNIX_System_V', 'BeOS', 'TOPS-10', 'TOPS-20'):
 		verbose('detected platform %s' % platform)
-		stderr('synctool package management under %s is not yet supported' % platform)
+		stderr('synctool package management under %s is not yet supported' %
+			platform)
 
 	else:
 		stderr("unknown platform '%s'" % platform)
 
 
 def there_can_be_only_one():
-	print 'Specify only one of these options:'
-	print '  -l, --list   [PACKAGE ...]     List installed packages'
-	print '  -i, --install PACKAGE [..]     Install package'
-	print '  -R, --remove  PACKAGE [..]     Uninstall package'
-	print '  -u, --update                   Update the database of available packages'
-	print '  -U, --upgrade                  Upgrade all outdated packages'
-	print '  -C, --clean                    Cleanup caches of downloaded packages'
-	print
+	print '''Specify only one of these options:
+  -l, --list   [PACKAGE ...]     List installed packages
+  -i, --install PACKAGE [..]     Install package
+  -R, --remove  PACKAGE [..]     Uninstall package
+  -u, --update                   Update the database of available packages
+  -U, --upgrade                  Upgrade all outdated packages
+  -C, --clean                    Cleanup caches of downloaded packages
+'''
 	sys.exit(1)
 
 
@@ -179,20 +181,21 @@ def usage():
 	print 'options:'
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=dir/file            Use this config file'
-	print '                                 (default: %s)' % synctool_param.DEFAULT_CONF
-	print '  -l, --list   [PACKAGE ...]     List installed packages'
-	print '  -i, --install PACKAGE [..]     Install package'
-	print '  -R, --remove  PACKAGE [..]     Uninstall package'
-	print '  -u, --update                   Update the database of available packages'
-	print '  -U, --upgrade                  Upgrade all outdated packages'
-	print '  -C, --clean                    Cleanup caches of downloaded packages'
-	print
-	print '  -f, --fix                      Perform upgrade (otherwise, do dry-run)'
-	print '  -v, --verbose                  Be verbose'
-	print '      --unix                     Output actions as unix shell commands'
-	print '  -m, --manager PACKAGE_MANAGER  (Force) select this package manager'
-	print
-	print 'Supported package managers are:'
+	print ('                                 (default: %s)' %
+		synctool_param.DEFAULT_CONF)
+	print '''  -l, --list   [PACKAGE ...]     List installed packages
+  -i, --install PACKAGE [..]     Install package
+  -R, --remove  PACKAGE [..]     Uninstall package
+  -u, --update                   Update the database of available packages
+  -U, --upgrade                  Upgrade all outdated packages
+  -C, --clean                    Cleanup caches of downloaded packages
+
+  -f, --fix                      Perform upgrade (otherwise, do dry-run)
+  -v, --verbose                  Be verbose
+      --unix                     Output actions as unix shell commands
+  -m, --manager PACKAGE_MANAGER  (Force) select this package manager
+
+Supported package managers are:'''
 
 	# print list of supported package managers
 	# format it at 78 characters wide
@@ -207,12 +210,12 @@ def usage():
 			print
 			print ' ', pkg,
 
-	print
-	print
-	print 'The package list must be given last'
-	print 'Note that --upgrade does a dry run unless you specify --fix'
-	print
-	print 'synctool-pkg by Walter de Jong <walter@heiho.net> (c) 2013'
+	print '''
+
+The package list must be given last
+Note that --upgrade does a dry run unless you specify --fix
+
+synctool-pkg by Walter de Jong <walter@heiho.net> (c) 2013'''
 
 
 def get_options():
@@ -222,7 +225,7 @@ def get_options():
 		usage()
 		sys.exit(1)
 
-	synctool_lib.DRY_RUN = True				# set default dry-run
+	synctool_lib.DRY_RUN = True		# set default dry-run
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:iRluUCm:fvq',
@@ -309,7 +312,8 @@ def get_options():
 
 		if opt in ('-m', '--manager'):
 			if not arg in synctool_param.KNOWN_PACKAGE_MANAGERS:
-				stderr("error: unknown or unsupported package manager '%s'" % arg)
+				stderr("error: unknown or unsupported package manager "
+					"'%s'" % arg)
 				sys.exit(1)
 
 			synctool_param.PACKAGE_MANAGER = arg
@@ -338,21 +342,23 @@ def get_options():
 	if ACTION in (ACTION_LIST, ACTION_INSTALL, ACTION_REMOVE):
 		PKG_LIST = args
 
-		if ACTION in (ACTION_INSTALL, ACTION_REMOVE) and (args == None or not len(args)):
-			stderr('error: options --install and --remove require a package name')
+		if (ACTION in (ACTION_INSTALL, ACTION_REMOVE) and
+			(args == None or not len(args))):
+			stderr('error: options --install and --remove require '
+				'a package name')
 			sys.exit(1)
 
 	elif args != None and len(args) > 0:
 		stderr('error: excessive arguments on command line')
 		sys.exit(1)
 
-	#
 	# disable dry-run unless --upgrade was given
-	# a normal --upgrade will do a dry-run and show what upgrades are available
+	# a normal --upgrade will do a dry-run and
+	# show what upgrades are available
 	# --upgrade -f will do the upgrade
 	#
 	# The other actions will execute immediatly
-	#
+
 	if ACTION != ACTION_UPGRADE:
 		synctool_lib.DRY_RUN = False
 
@@ -397,6 +403,5 @@ if __name__ == '__main__':
 
 	except KeyboardInterrupt:		# user pressed Ctrl-C
 		pass
-
 
 # EOB

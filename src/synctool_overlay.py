@@ -39,7 +39,8 @@ GROUP_ALL = 0
 OVERLAY_DICT = {}
 OVERLAY_FILES = []		# sorted list, index to OVERLAY_DICT{}
 OVERLAY_LOADED = False
-POST_SCRIPTS = {}		# dict indexed by trigger: full source path without final extension
+POST_SCRIPTS = {}		# dict indexed by trigger: full source path
+						# without final extension
 
 DELETE_DICT = {}
 DELETE_FILES = []
@@ -51,11 +52,14 @@ TASKS_LOADED = False
 
 
 def split_extension(entryname, requireExtension):
-	'''split a simple filename (without leading path) in a tuple: (name, group number, isPost)
-	The importance is the index to MY_GROUPS[] or negative if it is not a relevant group
-	The return parameter isPost is a boolean showing whether it is a .post script
+	'''split a simple filename (without leading path)
+	in a tuple: (name, group number, isPost)
+	The importance is the index to MY_GROUPS[]
+	or negative if it is not a relevant group
+	The return parameter isPost is a boolean
+	showing whether it is a .post script
 
-	Pre-req: GROUP_ALL must be set to MY_GROUPS.index('all')'''
+	Prereq: GROUP_ALL must be set to MY_GROUPS.index('all')'''
 
 	requireExtension = requireExtension and synctool_param.REQUIRE_EXTENSION
 
@@ -115,13 +119,15 @@ def ov_perror(errorcode, src_path):
 		if synctool_param.TERSE:
 			terse(synctool_lib.TERSE_ERROR, 'no group on %s' % src_path)
 		else:
-			stderr('no underscored group extension on %s, skipped' % synctool_lib.prettypath(src_path))
+			stderr('no underscored group extension on %s, skipped' %
+				synctool_lib.prettypath(src_path))
 
 	elif errorcode == OV_UNKNOWN_GROUP:
 		if synctool_param.TERSE:
 			terse(synctool_lib.TERSE_ERROR, 'invalid group on %s' % src_path)
 		else:
-			stderr('unknown group on %s, skipped' % synctool_lib.prettypath(src_path))
+			stderr('unknown group on %s, skipped' %
+				synctool_lib.prettypath(src_path))
 
 
 def relevant_overlay_dirs(overlay_dir):
@@ -186,7 +192,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 
 		if importance < 0:
 			# not a relevant group, so skip it
-			# Note that this also prunes trees if you have group-specific subdirs
+			# This also prunes trees if you have group-specific subdirs
 
 			if importance != OV_NOT_MY_GROUP:
 				# "not my group" is a rather normal error code, but if it is
@@ -205,35 +211,42 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 		if isPost:
 			if handle_postscripts:
 				if not src_statbuf.isExec():
-					stderr('warning: .post script %s is not executable, ignored' % synctool_lib.prettypath(src_path))
+					stderr('warning: .post script %s is not executable, '
+						'ignored' % synctool_lib.prettypath(src_path))
 					continue
 
 				# register .post script
-				# trigger is the source file that would trigger the .post script to run
+				# trigger is the source file that would trigger
+				# the .post script to run
 				trigger = os.path.join(overlay_dir, name)
 
 				if POST_SCRIPTS.has_key(trigger):
 					if importance >= POST_SCRIPTS[trigger].importance:
 						continue
 
-				POST_SCRIPTS[trigger] = synctool_object.SyncObject(src_path, dest_dir, importance, src_statbuf)
+				POST_SCRIPTS[trigger] = synctool_object.SyncObject(src_path,
+										dest_dir, importance, src_statbuf)
 			else:
 				# unfortunately, the name has been messed up already
 				# so therefore just ignore the file and issue a warning
 				if synctool_param.TERSE:
-					terse(synctool_lib.TERSE_WARNING, 'ignoring %s' % src_path)
+					terse(synctool_lib.TERSE_WARNING, 'ignoring %s' %
+														src_path)
 				else:
-					stderr('warning: ignoring .post script %s' % synctool_lib.prettypath(src_path))
+					stderr('warning: ignoring .post script %s' %
+						synctool_lib.prettypath(src_path))
 
 			continue
 
 		dest_path = os.path.join(dest_dir, name)
 
-		filelist.append(synctool_object.SyncObject(src_path, dest_path, importance, src_statbuf))
+		filelist.append(synctool_object.SyncObject(src_path, dest_path,
+						importance, src_statbuf))
 
 		if isDir:
 			# recurse into subdir
-			overlay_pass1(src_path, filelist, dest_path, importance, handle_postscripts)
+			overlay_pass1(src_path, filelist, dest_path, importance,
+				handle_postscripts)
 
 
 def overlay_pass2(filelist, filedict):
@@ -251,19 +264,23 @@ def overlay_pass2(filelist, filedict):
 
 			# duplicate paths are a problem, unless they are directories
 			# They are easy to fix however, just assign the right extension
-			elif (not (entry.src_isDir() and entry2.src_isDir())) and
-				entry.importance == entry2.importance:
+			elif ((not (entry.src_isDir() and entry2.src_isDir())) and
+				entry.importance == entry2.importance):
 
 				if synctool_param.TERSE:
-					synctool_lib.terse(synctool_lib.TERSE_ERROR, 'duplicate source paths in repository for:')
-					synctool_lib.terse(synctool_lib.TERSE_ERROR, entry.src_path)
-					synctool_lib.terse(synctool_lib.TERSE_ERROR, entry2.src_path)
+					synctool_lib.terse(synctool_lib.TERSE_ERROR,
+						'duplicate source paths in repository for:')
+					synctool_lib.terse(synctool_lib.TERSE_ERROR,
+						entry.src_path)
+					synctool_lib.terse(synctool_lib.TERSE_ERROR,
+						entry2.src_path)
 				else:
-					stderr('error: duplicate source paths in repository for:\n'
-						'error: %s\n'
-						'error: %s\n' % (synctool_lib.prettypath(entry.src_path),
-							synctool_lib.prettypath(entry2.src_path))
-					)
+					stderr('error: duplicate source paths in repository '
+							'for:\n'
+							'error: %s\n'
+							'error: %s\n' %
+							(synctool_lib.prettypath(entry.src_path),
+							synctool_lib.prettypath(entry2.src_path)))
 
 				continue
 
@@ -281,7 +298,8 @@ def load_overlay_tree():
 	in OVERLAY_DICT is an instance of OverlayEntry
 	This also prepares POST_SCRIPTS'''
 
-	global OVERLAY_DICT, OVERLAY_FILES, OVERLAY_LOADED, POST_SCRIPTS, GROUP_ALL
+	global OVERLAY_DICT, OVERLAY_FILES, OVERLAY_LOADED, POST_SCRIPTS
+	global GROUP_ALL
 
 	if OVERLAY_LOADED:
 		return
@@ -346,11 +364,12 @@ def load_tasks_tree():
 	in TASKS_DICT is an instance of OverlayEntry
 	.post scripts are not handled for the tasks/ tree'''
 
-	# tasks/ is usually a very 'flat' directory with no complex structure at all
-	# However, because it is treated in the same way as overlay/ and delete/,
-	# complex structure is possible
-	# Still, there is not really a 'destination' for a task script, other than
-	# that you can call it with its destination name
+	# tasks/ is usually a very 'flat' directory with
+	# no complex structure at all
+	# However, because it is treated in the same way as
+	# overlay/ and delete/, complex structure is possible
+	# Still, there is not really a 'destination' for a task script,
+	# other than that you can call it with its destination name
 
 	global TASKS_DICT, TASKS_FILES, TASKS_LOADED, GROUP_ALL
 
@@ -385,13 +404,14 @@ def postscript_for_path(src, dest):
 	if not OVERLAY_LOADED:
 		load_overlay_tree()
 
-	# the trigger for .post scripts is the source path of the script with the
-	# .post and group extensions stripped off -- which is the same as taking
-	# the source dir and appending the dest basename
-	# This ensures that the .post script that is chosen, is always the one
-	# that is next to the source file in the overlay tree
-	# This is important because otherwise having multiple overlay trees could
-	# lead to ambiguity regarding what .post script to run
+	# the trigger for .post scripts is the source path of
+	# the script with the .post and group extensions stripped off
+	# -- which is the same as taking the source dir and appending
+	# the dest basename
+	# This ensures that the .post script that is chosen, is always
+	# the one that is next to the source file in the overlay tree
+	# This is important; otherwise having multiple overlay trees
+	# could lead to ambiguity regarding what .post script to run
 
 	trigger = os.path.join(os.path.dirname(src), os.path.basename(dest))
 
@@ -402,14 +422,15 @@ def postscript_for_path(src, dest):
 
 
 def select_tree(treedef):
-	'''returns tuple (dict, filelist) for the corresponding treedef number'''
+	'''Returns (dict, filelist) for the corresponding treedef number'''
 
 	if treedef == OV_OVERLAY:
 		load_overlay_tree()
 		return (OVERLAY_DICT, OVERLAY_FILES)
 
 	elif treedef == OV_DELETE:
-		load_overlay_tree()			# is needed for .post scripts on directories that change
+		# overlay_tree is needed for .post scripts on dirs that change
+		load_overlay_tree()
 		load_delete_tree()
 		return (DELETE_DICT, DELETE_FILES)
 
@@ -437,7 +458,8 @@ def find_terse(treedef, terse_path):
 	'''find the full source and dest paths for a terse destination path
 	Return value is a tuple (SyncObject, OV_FOUND)
 	Return value is (None, OV_NOT_FOUND) if source does not exist
-	Return value is (None, OV_FOUND_MULTIPLE) if multiple sources are possible'''
+	Return value is (None, OV_FOUND_MULTIPLE) if multiple sources
+	are possible'''
 
 	(dict, filelist) = select_tree(treedef)
 
@@ -457,8 +479,8 @@ def find_terse(treedef, terse_path):
 	matches = []
 	len_ending = len(ending)
 
-	# do a stupid linear search and find all matches,
-	# which means keep on scanning even though you've already found a match ...
+	# do a stupid linear search and find all matches, which means
+	# keep on scanning even though you've already found a match ...
 	# but it must be done because we want to be sure that we have found
 	# the one perfect match
 	#
@@ -484,7 +506,8 @@ def find_terse(treedef, terse_path):
 		return (None, OV_NOT_FOUND)
 
 	if len(matches) > 1:
-		stderr('There are multiple possible sources for this terse path. Pick one:')
+		stderr('There are multiple possible sources for this terse path. '
+				'Pick one:')
 
 		n = 0
 		for overlay_entry in matches:
@@ -524,7 +547,8 @@ if __name__ == '__main__':
 	synctool_param.ALL_GROUPS = synctool_config.make_all_groups()
 
 	def visit_callback(obj):
-		# normally you wouldn't use this ... it's just for debugging the importance code
+		# normally you wouldn't use this ...
+		# it's just for debugging the importance code
 		print 'imp', obj.importance
 
 		print 'src ', obj.print_src()
@@ -538,8 +562,9 @@ if __name__ == '__main__':
 	visit(OV_OVERLAY, visit_callback)
 
 	print
-	print 'find() test:', find(OV_OVERLAY, '/Users/walter/src/python/synctool-test/testroot/etc/hosts.allow')
-	print 'find_terse() test:', find_terse(OV_OVERLAY, '/Users/walter/.../etc/hosts.allow')
-
+	print 'find() test:', find(OV_OVERLAY,
+		'/Users/walter/src/python/synctool-test/testroot/etc/hosts.allow')
+	print 'find_terse() test:', find_terse(OV_OVERLAY,
+		'/Users/walter/.../etc/hosts.allow')
 
 # EOB

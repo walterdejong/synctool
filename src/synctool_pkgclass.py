@@ -52,5 +52,4 @@ class SyncPkg:
 	def clean(self):
 		verbose('cleaning up caches')
 
-
 # EOB

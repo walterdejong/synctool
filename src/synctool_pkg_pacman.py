@@ -15,7 +15,8 @@ from synctool_pkgclass import SyncPkg
 
 import string
 
-# I no longer have an ArchLinux system to test this on, but here it goes ... :P
+# I no longer have an ArchLinux system to test this on,
+# but here it goes ... :P
 
 class SyncPkgPacman(SyncPkg):
 	'''package installer class for pacman'''
@@ -77,6 +78,5 @@ class SyncPkgPacman(SyncPkg):
 		SyncPkg.clean(self)
 
 		synctool_lib.shell_command('pacman -Scc --noconfirm')
-
 
 # EOB

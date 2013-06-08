@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python -tt
 #
 #	synctool_master_pkg.py	WJ111
 #
@@ -72,8 +72,8 @@ def worker_pkg(rank, nodes):
 
 def run_local_pkg():
 	if not synctool_param.PKG_CMD:
-		stderr('%s: error: pkg_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]),
-			synctool_param.CONF_FILE))
+		stderr('%s: error: pkg_cmd has not been defined in %s' %
+			(os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
 
 	cmd_arr = shlex.split(synctool_param.PKG_CMD) + PASS_ARGS
@@ -82,7 +82,8 @@ def run_local_pkg():
 
 
 def rearrange_options():
-	'''rearrange command-line options so that getopt() behaves more logical for us'''
+	'''rearrange command-line options so that getopt() behaves
+	more logical for us'''
 
 	# what this function does is move any arguments given after --list,
 	# --install, or --remove to the back so that getopt() will treat them
@@ -108,7 +109,7 @@ def rearrange_options():
 					break
 
 				optional_arg = arglist[0]
-				while optional_arg[0] != '-':		# package names may not start with '-'
+				while optional_arg[0] != '-':
 					pkg_list.append(optional_arg)
 
 					arglist.pop(0)
@@ -127,11 +128,13 @@ def check_cmd_config():
 
 	errors = 0
 
-	(ok, synctool_param.SSH_CMD) = synctool_config.check_cmd_config('ssh_cmd', synctool_param.SSH_CMD)
+	(ok, synctool_param.SSH_CMD) = synctool_config.check_cmd_config('ssh_cmd',
+									synctool_param.SSH_CMD)
 	if not ok:
 		errors += 1
 
-	(ok, synctool_param.PKG_CMD) = synctool_config.check_cmd_config('pkg_cmd', synctool_param.PKG_CMD)
+	(ok, synctool_param.PKG_CMD) = synctool_config.check_cmd_config('pkg_cmd',
+									synctool_param.PKG_CMD)
 	if not ok:
 		errors += 1
 
@@ -140,14 +143,13 @@ def check_cmd_config():
 
 
 def there_can_be_only_one():
-	print 'Specify only one of these options:'
-	print '  -l, --list   [PACKAGE ...]     List installed packages'
-	print '  -i, --install PACKAGE [..]     Install package'
-	print '  -R, --remove  PACKAGE [..]     Uninstall package'
-	print '  -u, --update                   Update the database of available packages'
-	print '  -U, --upgrade                  Upgrade all outdated packages'
-	print '  -C, --clean                    Cleanup caches of downloaded packages'
-	print
+	print '''Specify only one of these options:
+  -l, --list   [PACKAGE ...]     List installed packages
+  -i, --install PACKAGE [..]     Install package
+  -R, --remove  PACKAGE [..]     Uninstall package
+  -u, --update                   Update the database of available packages
+  -U, --upgrade                  Upgrade all outdated packages
+  -C, --clean                    Cleanup caches of downloaded packages'''
 	sys.exit(1)
 
 
@@ -156,26 +158,28 @@ def usage():
 	print 'options:'
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=dir/file            Use this config file'
-	print '                                 (default: %s)' % synctool_param.DEFAULT_CONF
-	print '  -n, --node=nodelist            Execute only on these nodes'
-	print '  -g, --group=grouplist          Execute only on these groups of nodes'
-	print '  -x, --exclude=nodelist         Exclude these nodes from the selected group'
-	print '  -X, --exclude-group=grouplist  Exclude these groups from the selection'
-	print
-	print '  -l, --list   [PACKAGE ...]     List installed packages'
-	print '  -i, --install PACKAGE [..]     Install package'
-	print '  -R, --remove  PACKAGE [..]     Uninstall package'
-	print '  -u, --update                   Update the database of available packages'
-	print '  -U, --upgrade                  Upgrade all outdated packages'
-	print '  -C, --clean                    Cleanup caches of downloaded packages'
-	print
-	print '  -f, --fix                      Perform upgrade (otherwise, do dry-run)'
-	print '  -v, --verbose                  Be verbose'
-	print '      --unix                     Output actions as unix shell commands'
-	print '  -a, --aggregate                Condense output'
-	print '  -m, --manager PACKAGE_MANAGER  (Force) select this package manager'
-	print
-	print 'Supported package managers are:'
+	print ('                                 (default: %s)' %
+		synctool_param.DEFAULT_CONF)
+
+	print '''  -n, --node=nodelist            Execute only on these nodes
+  -g, --group=grouplist          Execute only on these groups of nodes
+  -x, --exclude=nodelist         Exclude these nodes from the selected group
+  -X, --exclude-group=grouplist  Exclude these groups from the selection
+
+  -l, --list   [PACKAGE ...]     List installed packages
+  -i, --install PACKAGE [..]     Install package
+  -R, --remove  PACKAGE [..]     Uninstall package
+  -u, --update                   Update the database of available packages
+  -U, --upgrade                  Upgrade all outdated packages
+  -C, --clean                    Cleanup caches of downloaded packages
+
+  -f, --fix                      Perform upgrade (otherwise, do dry-run)
+  -v, --verbose                  Be verbose
+      --unix                     Output actions as unix shell commands
+  -a, --aggregate                Condense output
+  -m, --manager PACKAGE_MANAGER  (Force) select this package manager
+
+Supported package managers are:'''
 
 	# print list of supported package managers
 	# format it at 78 characters wide
@@ -190,12 +194,12 @@ def usage():
 			print
 			print ' ', pkg,
 
-	print
-	print
-	print 'A nodelist or grouplist is a comma-separated list'
-	print 'Note that --upgrade does a dry run unless you specify --fix'
-	print
-	print 'Written by Walter de Jong <walter@heiho.net> (c) 2013'
+	print '''
+
+A nodelist or grouplist is a comma-separated list
+Note that --upgrade does a dry run unless you specify --fix
+
+Written by Walter de Jong <walter@heiho.net> (c) 2013'''
 
 
 def get_options():
@@ -312,7 +316,8 @@ def get_options():
 
 		if opt in ('-m', '--manager'):
 			if not arg in synctool_param.KNOWN_PACKAGE_MANAGERS:
-				stderr("error: unknown or unsupported package manager '%s'" % arg)
+				stderr("error: unknown or unsupported package manager '%s'" %
+					arg)
 				sys.exit(1)
 
 			synctool_param.PACKAGE_MANAGER = arg
@@ -348,7 +353,8 @@ def get_options():
 		PASS_ARGS.extend(args)
 	else:
 		if needs_package_list:
-			stderr('error: options --install and --remove require a package name')
+			stderr('error: options --install and --remove require '
+				'a package name')
 			sys.exit(1)
 
 	if not action:
@@ -380,7 +386,8 @@ def main():
 		print 'no valid nodes specified'
 		sys.exit(1)
 
-	local_interface = synctool_config.get_node_interface(synctool_param.NODENAME)
+	local_interface = synctool_config.get_node_interface(
+						synctool_param.NODENAME)
 
 	for node in nodes:
 		#

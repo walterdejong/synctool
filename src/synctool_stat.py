@@ -1,5 +1,5 @@
 #
-#	synctool_unbuffered.py	WJ110
+#	synctool_stat.py	WJ110
 #
 #   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
 #
@@ -32,7 +32,8 @@ class SyncStat:
 
 	def __repr__(self):
 		if self.entry_exists:
-			return '[<SyncStat>: %04o %d.%d %d]' % (self.mode, self.uid, self.gid, self.size)
+			return '[<SyncStat>: %04o %d.%d %d]' % (self.mode, self.uid,
+													self.gid, self.size)
 
 		return '[<SyncStat>: None]'
 
@@ -119,6 +120,5 @@ class SyncStat:
 			pass
 
 		return '%d' % self.gid
-
 
 # EOB

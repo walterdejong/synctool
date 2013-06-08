@@ -96,5 +96,4 @@ class SyncPkgBsdpkg(SyncPkg):
 		# there is a PKG_TMPDIR but I won't touch it
 		# because the man page says it defaults to /var/tmp
 
-
 # EOB

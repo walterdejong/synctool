@@ -80,5 +80,4 @@ class SyncPkgYum(SyncPkg):
 
 		synctool_lib.shell_command('yum clean packages')
 
-
 # EOB
