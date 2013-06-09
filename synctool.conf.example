@@ -74,7 +74,8 @@ pkg_cmd $masterdir/sbin/synctool_pkg.py -c $masterdir/synctool.conf
 #full_path no
 
 # show terse output with shortened paths?
-#terse yes
+# shortened paths look like '//overlay/all/.../sshd_config._all'
+#terse no
 
 # colorize output? Note that colors only work for 'terse' output!
 #colorize yes
@@ -105,6 +106,7 @@ pkg_cmd $masterdir/sbin/synctool_pkg.py -c $masterdir/synctool.conf
 #color_type   magenta
 #color_dryrun default
 #color_fixing default
+#color_ok     default
 
 # specify groups and nodes
 
