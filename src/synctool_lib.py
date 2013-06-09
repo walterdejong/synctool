@@ -119,12 +119,12 @@ def terse(code, msg):
 		# convert any path to terse path
 		if string.find(msg, ' ') >= 0:
 			arr = string.split(msg)
-			if arr[-1][0] == '/':
+			if arr[-1][0] == os.path.sep:
 				arr[-1] = terse_path(arr[-1])
 				msg = string.join(arr)
 
 		else:
-			if msg[0] == '/':
+			if msg[0] == os.path.sep:
 				msg = terse_path(msg)
 
 		if synctool_param.COLORIZE:		# and sys.stdout.isatty():
@@ -161,8 +161,9 @@ def prettypath(path):
 	if synctool_param.TERSE:
 		return terse_path(path)
 
-	if path[:synctool_param.MASTER_LEN] == synctool_param.MASTERDIR + '/':
-		return '$masterdir/' + path[synctool_param.MASTER_LEN:]
+	if path[:synctool_param.MASTER_LEN] == (synctool_param.MASTERDIR +
+											os.path.sep):
+		return os.path.join('$masterdir', path[synctool_param.MASTER_LEN:])
 
 	return path
 
@@ -178,16 +179,17 @@ def terse_path(path, maxlen = 55):
 	# because this function doesn't know whether it is working with
 	# a source or a destination path and it treats them both in the same way
 
-	if path[:synctool_param.MASTER_LEN] == synctool_param.MASTERDIR + '/':
-		path = '//' + path[synctool_param.MASTER_LEN:]
+	if path[:synctool_param.MASTER_LEN] == (synctool_param.MASTERDIR +
+											os.path.sep):
+		path = os.path.sep + os.path.sep + path[synctool_param.MASTER_LEN:]
 
 	if len(path) > maxlen:
-		arr = string.split(path, '/')
+		arr = string.split(path, os.path.sep)
 
 		while len(arr) >= 3:
 			idx = len(arr) / 2
 			arr[idx] = '...'
-			new_path = string.join(arr, '/')
+			new_path = string.join(arr, os.path.sep)
 
 			if len(new_path) > maxlen:
 				arr.pop(idx)
@@ -463,7 +465,7 @@ def mkdir_p(path):
 
 	# note: this function does not change the umask
 
-	arr = string.split(path, '/')
+	arr = string.split(path, os.path.sep)
 	if arr[0] == '':
 		# first element is empty; this happens when path starts with '/'
 		arr.pop(0)
@@ -474,7 +476,7 @@ def mkdir_p(path):
 	# 'walk' the path
 	mkdir_path = ''
 	for elem in arr:
-		mkdir_path = mkdir_path + '/' + elem
+		mkdir_path = os.path.join(mkdir_path, elem)
 
 		# see if the directory already exists
 		try:
@@ -509,8 +511,14 @@ def strip_multiple_slashes(path):
 	if not path:
 		return path
 
-	while path.find('//') != -1:
-		path = path.replace('//', '/')
+	double = os.path.sep + os.path.sep
+	while path.find(double) != -1:
+		path = path.replace(double, os.path.sep)
+
+	if os.path.altsep:
+		double = os.path.altsep + os.path.altsep
+		while path.find(double) != -1:
+			path = path.replace(double, os.path.sep)
 
 	return path
 
@@ -519,19 +527,20 @@ def strip_trailing_slash(path):
 	if not path:
 		return path
 
-	while len(path) > 1 and path[-1] == '/':
+	while len(path) > 1 and path[-1] == os.path.sep:
 		path = path[:-1]
 
 	return path
 
 
 def subst_masterdir(path):
-	if path.find('$masterdir/') >= 0:
+	master = '$masterdir' + os.path.sep
+	if path.find(master) >= 0:
 		if not synctool_param.MASTERDIR:
 			stderr('error: $masterdir referenced before it was set')
 			sys.exit(-1)
 
-	return path.replace('$masterdir/', synctool_param.MASTERDIR + '/')
+	return path.replace(master, synctool_param.MASTERDIR + os.path.sep)
 
 
 def strip_path(path):
@@ -562,7 +571,7 @@ def strip_terse_path(path):
 
 	# the first slash was accidentally stripped, so restore it
 	if isTerse:
-		path = '/' + path
+		path = os.path.sep + path
 
 	return path
 

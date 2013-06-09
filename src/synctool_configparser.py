@@ -212,7 +212,7 @@ def config_masterdir(arr, configfile, lineno):
 	synctool_param.MASTERDIR = synctool_lib.strip_trailing_slash(d)
 	synctool_param.MASTER_LEN = len(synctool_param.MASTERDIR) + 1
 
-	if synctool_param.MASTERDIR in ('', '/', '$masterdir'):
+	if synctool_param.MASTERDIR in ('', '/', os.path.sep, '$masterdir'):
 		stderr("%s:%d: masterdir can not be set to '%s', sorry" %
 			(configfile, lineno, synctool_param.MASTERDIR))
 		return 1

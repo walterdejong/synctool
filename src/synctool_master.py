@@ -87,7 +87,8 @@ def worker_synctool(rank, nodes):
 
 		# double check the rsync destination
 		# our filters are like playing with fire
-		if not synctool_param.MASTERDIR or synctool_param.MASTERDIR == '/':
+		if not synctool_param.MASTERDIR or (
+			synctool_param.MASTERDIR == os.path.sep):
 			stderr('cowardly refusing to rsync with masterdir == %s' %
 					synctool_param.MASTERDIR)
 			sys.exit(-1)
@@ -190,7 +191,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 			(os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
 
-	if upload_filename[0] != '/':
+	if upload_filename[0] != os.path.sep:
 		stderr('error: the filename to upload must be an absolute path')
 		sys.exit(-1)
 
