@@ -180,15 +180,14 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 
 		# check any ignored files with wildcards
 		# before any group extension is examined
-		if synctool_param.IGNORE_FILES_WITH_WILDCARDS:
-			wildcard_match = False
-			for wildcard_entry in synctool_param.IGNORE_FILES_WITH_WILDCARDS:
-				if fnmatch.fnmatchcase(entry, wildcard_entry):
-					wildcard_match = True
-					break
+		wildcard_match = False
+		for wildcard_entry in synctool_param.IGNORE_FILES_WITH_WILDCARDS:
+			if fnmatch.fnmatchcase(entry, wildcard_entry):
+				wildcard_match = True
+				break
 
-			if wildcard_match:
-				continue
+		if wildcard_match:
+			continue
 
 		(name, importance, isPost) = split_extension(entry, not isDir)
 

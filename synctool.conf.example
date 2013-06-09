@@ -26,6 +26,7 @@ symlink_mode 0755
 # ignore specific files/directories
 ignore .svn
 ignore .gitignore
+ignore .*.swp
 
 # log to file
 logfile /var/log/synctool.log
