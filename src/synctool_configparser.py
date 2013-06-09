@@ -235,7 +235,12 @@ def config_masterdir(arr, configfile, lineno):
 	if synctool_param.MASTERDIR == '$masterdir':
 		stderr("%s:%d: masterdir can not be set to '$masterdir', sorry" %
 			(configfile, lineno))
-		sys.exit(1)
+		return 1
+
+	if not synctool_param.MASTERDIR or synctool_param.MASTERDIR == '/':
+		stderr("%s:%d: masterdir can not be set to '%s', sorry" %
+			(configfile, lineno, synctool_param.MASTERDIR))
+		return 1
 
 	return 0
 
