@@ -152,7 +152,7 @@ def relevant_overlay_dirs(overlay_dir):
 		d = os.path.join(overlay_dir, entry)
 		if os.path.isdir(d):
 			a.append((d, importance))
-			verbose('scanning relevant dir: %s/' % d)
+			verbose('scanning %s/' % synctool_lib.prettypath(d))
 
 	return a
 
