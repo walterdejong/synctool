@@ -14,7 +14,28 @@ http://www.heiho.net/synctool/
 
 What's new in synctool version 5.3 ?
 ====================================
-Only bugfixes ...
+Only bugfixes.
+
+Deprecation warning: Be prepared for the future: In version 6.0,
+the following shocking events will take place:
+
+- tasks/ will disappear
+- scripts/ will disappear
+- on_update will disappear
+- always_run will disappear
+=> instead, use .post scripts and dsh, dsh-pkg
+- node and group names must be of charset [a-zA-Z0-9_+-]
+- overlay/ will be structured like:
+  overlay/all/
+  overlay/group1/
+  overlay/group2/
+- delete/ will be structured likewise
+=> group overlay/ and delete/ as subclusters and/or group by OS
+   or Linux distribution
+=> only relevant overlay/group/ dirs will be synced to target node
+
+Be prepared: if you adapt today, the upgrade to 6.0 will be easy.
+
 
 
 What's new in synctool version 5.2 ?
