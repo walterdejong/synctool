@@ -262,11 +262,8 @@ def upload(interface, upload_filename, upload_suffix=None):
 		if upload_suffix:
 			# remove the current group suffix
 			# and add the specified suffix to the filename
-			arr = string.split(obj.src_path, '.')
-			if len(arr) > 1 and arr[-1][0] == '_':
-				repos_filename = string.join(arr[:-1], '.')
-
-			repos_filename = repos_filename + '._' + upload_suffix
+			(repos_filename, ext) = os.path.splitext(obj.src_path)
+			repos_filename += '._' + upload_suffix
 		else:
 			repos_filename = obj.src_path
 
