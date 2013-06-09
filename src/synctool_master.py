@@ -119,9 +119,16 @@ def rsync_include_filter(nodename):
 	Returns filename of the filter file'''
 
 	try:
-		f = tempfile.mkstemp(prefix='synctool', dir=synctool_param.TEMP_DIR)
+		(fd, filename) = tempfile.mkstemp(prefix='synctool',
+											dir=synctool_param.TEMP_DIR)
 	except OSError, reason:
 		stderr('failed to create temp file: %s' % reason)
+		sys.exit(-1)
+
+	try:
+		f = os.fdopen(fd, 'w')
+	except OSError, reason:
+		stderr('failed to open temp file: %s' % reason)
 		sys.exit(-1)
 
 	# include masterdir
@@ -151,8 +158,6 @@ def rsync_include_filter(nodename):
 		d = os.path.join(synctool.TASKS_DIR, g)
 		if os.path.isdir(d):
 			f.write('+ %s\n' % d)
-
-	filename = f.name
 
 	# close() should make the file available to other processes
 	# in a portable way
