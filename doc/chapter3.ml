@@ -340,7 +340,7 @@ ignore_dotfiles no<br />
 ignore_dotdirs yes<br />
 ignore .svn<br />
 ignore .gitignore .git<br />
-ignore *.swp<br />
+ignore .*.swp<br />
 ignore_node node1 node2<br />
 ignore_group oldgroup<br />
 ignore_group test

@@ -146,26 +146,6 @@ def _config_dir(name, arr, configfile, lineno):
 	return d
 
 
-def _config_ignore_variant(param, arr, configfile, lineno):
-	if len(arr) < 2:
-		stderr("%s:%d: '%s' requires at least 1 argument: "
-			"the file or directory to ignore" %	(configfile, lineno, param))
-		return 1
-
-	for file in arr[1:]:
-		# if file has wildcards, put it in array IGNORE_FILES_WITH_WILDCARDS
-		if string.find(file, '*') >= 0 or string.find(file, '?') >= 0 \
-			or (string.find(file, '[') >= 0 and string.find(file, ']') >= 0):
-			if not file in synctool_param.IGNORE_FILES_WITH_WILDCARDS:
-				synctool_param.IGNORE_FILES_WITH_WILDCARDS.append(file)
-		else:
-			# no wildcards, do a regular ignore
-			if not file in synctool_param.IGNORE_FILES:
-				synctool_param.IGNORE_FILES.append(file)
-
-	return 0
-
-
 def _config_color_variant(param, value, configfile, lineno):
 	'''set a color by name'''
 
@@ -327,27 +307,23 @@ def config_ignore_dotdirs(arr, configfile, lineno):
 
 # keyword: ignore
 def config_ignore(arr, configfile, lineno):
-	return _config_ignore_variant('ignore', arr, configfile, lineno)
+	if len(arr) < 2:
+		stderr("%s:%d: 'ignore' requires at least 1 argument: "
+			"the file or directory to ignore" %	(configfile, lineno))
+		return 1
 
+	for file in arr[1:]:
+		# if file has wildcards, put it in array IGNORE_FILES_WITH_WILDCARDS
+		if string.find(file, '*') >= 0 or string.find(file, '?') >= 0 \
+			or (string.find(file, '[') >= 0 and string.find(file, ']') >= 0):
+			if not file in synctool_param.IGNORE_FILES_WITH_WILDCARDS:
+				synctool_param.IGNORE_FILES_WITH_WILDCARDS.append(file)
+		else:
+			# no wildcards, do a regular ignore
+			if not file in synctool_param.IGNORE_FILES:
+				synctool_param.IGNORE_FILES.append(file)
 
-# keyword: ignore_file
-def config_ignore_file(arr, configfile, lineno):
-	return _config_ignore_variant('ignore_file', arr, configfile, lineno)
-
-
-# keyword: ignore_files
-def config_ignore_files(arr, configfile, lineno):
-	return _config_ignore_variant('ignore_files', arr, configfile, lineno)
-
-
-# keyword: ignore_dir
-def config_ignore_dir(arr, configfile, lineno):
-	return _config_ignore_variant('ignore_dir', arr, configfile, lineno)
-
-
-# keyword: ignore_dirs
-def config_ignore_dirs(arr, configfile, lineno):
-	return _config_ignore_variant('ignore_dirs', arr, configfile, lineno)
+	return 0
 
 
 # keyword: terse

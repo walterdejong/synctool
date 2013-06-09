@@ -19,6 +19,10 @@ June 2013
 - interface: qualifier is obsolete; use ipaddress:
 - ignore_host is obsolete; use ignore_node
 - host is obsolete; use node
+- ignore_file is obsolete; use ignore
+- ignore_files is obsolete; use ignore
+- ignore_dir is obsolete; use ignore
+- ignore_dirs is obsolete; use ignore
 
 Aug 2012
 - added dsh --numproc, patch by Werner Maier
