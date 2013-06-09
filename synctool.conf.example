@@ -118,31 +118,27 @@ group wn workernode batch
 group test wn
 group g1 batch test wn
 
-#
 # list all nodes and their groups
 # the nodename is a logical name known only to synctool
 # "ipaddress:" specifies the IP address where synctool connects to
-# Instead of "ipaddress:", also the older "interface:" keyword
-# may be used to specify the IP address of a node
 #
 # The optional 'hostname:' keyword may be used to tell synctool
-# the hostname of the node. This is in particular needed for specific
-# cases of multi-homed setups in which synctool can not find out what
-# node it is running on.
-#
+# the hostname of the node. This is generally not needed, unless
+# you ever decide to run synctool.py manually on the target node,
+# in stand-alone mode.
 
 # managing the masternode also with synctool is generally not a great idea
 #node node0 master
 
-node node1 fs sched ipaddress:node1-mgmt  hostname:myhost1.mydomain.com
-node node2 login    ipaddress:node2-mgmt  hostname:myhost2.mydomain.com
-node node3 wn       ipaddress:node3-mgmt
-node node4 wn       ipaddress:node4-mgmt
-node node5 wn       ipaddress:node5-mgmt
-node node6 wn       ipaddress:node6-mgmt
-node node7 wn       ipaddress:node7-mgmt
-node node8 test     ipaddress:node8-mgmt  hostid:/etc/hostname.bnx0
-node node9 batch    ipaddress:node9-mgmt  hostid:/etc/hostname.bnx0
+node node1 fs sched aix    ipaddress:node1-mgmt hostname:myhost1.mydomain.com
+node node2 login    debian ipaddress:node2-mgmt hostname:myhost2.mydomain.com
+node node3 wn       debian ipaddress:node3-mgmt
+node node4 wn       debian ipaddress:node4-mgmt
+node node5 wn       centos ipaddress:node5-mgmt
+node node6 wn       centos ipaddress:node6-mgmt
+node node7 wn       centos ipaddress:node7-mgmt
+node node8 test     sunos  ipaddress:node8-mgmt hostid:/etc/hostname.bnx0
+node node9 batch    sunos  ipaddress:node9-mgmt hostid:/etc/hostname.bnx0
 
 # ignore one or more nodes
 ignore_node node0 node9
