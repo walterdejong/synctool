@@ -41,8 +41,8 @@ class SyncPkgZypper(SyncPkg):
 	def install(self, pkgs):
 		SyncPkg.install(self, pkgs)
 
-		cmd = 'zypper --non-interactive install '
-			'--auto-agree-with-licenses ' + string.join(pkgs)
+		cmd = ('zypper --non-interactive install '
+			'--auto-agree-with-licenses ' + string.join(pkgs))
 
 		synctool_lib.shell_command(cmd)
 
@@ -67,7 +67,8 @@ class SyncPkgZypper(SyncPkg):
 		if self.dryrun:
 			cmd = 'zypper list-updates'
 		else:
-			cmd = 'zypper --non-interactive update --auto-agree-with-licenses'
+			cmd = ('zypper --non-interactive update '
+				'--auto-agree-with-licenses')
 
 		synctool_lib.DRY_RUN = False
 		synctool_lib.shell_command(cmd)
