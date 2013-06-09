@@ -247,7 +247,7 @@ def get_options():
 			# silently ignore this option
 			continue
 
-	if args == None or len(args) <= 0:
+	if not args:
 		print '%s: missing file to copy' % os.path.basename(sys.argv[0])
 		sys.exit(1)
 

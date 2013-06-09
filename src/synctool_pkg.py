@@ -342,8 +342,7 @@ def get_options():
 	if ACTION in (ACTION_LIST, ACTION_INSTALL, ACTION_REMOVE):
 		PKG_LIST = args
 
-		if (ACTION in (ACTION_INSTALL, ACTION_REMOVE) and
-			(args == None or not len(args))):
+		if ACTION in (ACTION_INSTALL, ACTION_REMOVE) and not args:
 			stderr('error: options --install and --remove require '
 				'a package name')
 			sys.exit(1)

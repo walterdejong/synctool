@@ -607,7 +607,7 @@ def main():
 
 	synctool_config.init_mynodename()
 
-	if synctool_param.NODENAME == None:
+	if not synctool_param.NODENAME:
 		stderr('unable to determine my nodename (%s), please check %s' %
 			(synctool_param.HOSTNAME, synctool_param.CONF_FILE))
 		sys.exit(1)
