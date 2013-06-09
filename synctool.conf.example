@@ -36,7 +36,7 @@ ping_cmd ping -q -c 1 -t 1
 #ping_cmd fping -t 500
 ssh_cmd ssh -o ConnectTimeout=10 -x -q
 scp_cmd scp -o ConnectTimeout=10 -p
-rsync_cmd rsync -ar --delete --delete-excluded -e 'ssh -o ConnectTimeout=10 -q' -q
+rsync_cmd rsync -ar --numeric-ids --delete --delete-excluded -e 'ssh -o ConnectTimeout=10 -q' -q
 synctool_cmd $masterdir/sbin/synctool.py -c $masterdir/synctool.conf
 pkg_cmd $masterdir/sbin/synctool_pkg.py -c $masterdir/synctool.conf
 
