@@ -134,11 +134,11 @@ def rsync_include_filter(nodename):
 	# include masterdir
 	# but exclude the top overlay/, delete/, tasks/ dir
 
-	f.write('+ %s\n' % synctool_param.MASTERDIR)
+	f.write('+ %s/\n' % synctool_param.MASTERDIR)
 	f.write('- %s/\n' % synctool_param.OVERLAY_DIR)
 	f.write('- %s/\n' % synctool_param.DELETE_DIR)
 	f.write('- %s/\n' % synctool_param.TASKS_DIR)
-	f.write('+ %s\n' % synctool_param.SCRIPT_DIR)
+	f.write('+ %s/\n' % synctool_param.SCRIPT_DIR)
 
 	# set mygroups for this nodename
 	synctool_param.NODENAME = nodename
@@ -149,15 +149,15 @@ def rsync_include_filter(nodename):
 	for g in synctool_param.MY_GROUPS:
 		d = os.path.join(synctool_param.OVERLAY_DIR, g)
 		if os.path.isdir(d):
-			f.write('+ %s\n' % d)
+			f.write('+ %s/\n' % d)
 
 		d = os.path.join(synctool_param.DELETE_DIR, g)
 		if os.path.isdir(d):
-			f.write('+ %s\n' % d)
+			f.write('+ %s/\n' % d)
 
 		d = os.path.join(synctool_param.TASKS_DIR, g)
 		if os.path.isdir(d):
-			f.write('+ %s\n' % d)
+			f.write('+ %s/\n' % d)
 
 	# close() should make the file available to other processes
 	# in a portable way
