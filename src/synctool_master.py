@@ -26,6 +26,7 @@ import sys
 import string
 import getopt
 import shlex
+import tempfile
 import errno
 
 NODESET = synctool_nodeset.NodeSet()
