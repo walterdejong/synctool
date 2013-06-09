@@ -70,7 +70,7 @@ def read_config():
 			stderr('error: no such directory: %s' % d)
 			errors += 1
 
-	# overlay/, delete/, tasks/, scripts/ must be under $masterdir
+	# overlay/ and delete/ must be under $masterdir
 	d = os.path.join(synctool_param.MASTERDIR, 'overlay')
 	if not os.path.isdir(d):
 		stderr('error: no such directory: %s' % d)
@@ -92,18 +92,6 @@ def read_config():
 		synctool_param.DELETE_DIR = d
 
 	d = os.path.join(synctool_param.DELETE_DIR, 'all')
-	if not os.path.isdir(d):
-		stderr('error: no such directory: %s' % d)
-		errors += 1
-
-	d = os.path.join(synctool_param.MASTERDIR, 'tasks')
-	if not os.path.isdir(d):
-		stderr('error: no such directory: %s' % d)
-		errors += 1
-	else:
-		synctool_param.TASKS_DIR = d
-
-	d = os.path.join(synctool_param.TASKS_DIR, 'all')
 	if not os.path.isdir(d):
 		stderr('error: no such directory: %s' % d)
 		errors += 1

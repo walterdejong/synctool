@@ -141,15 +141,13 @@ def rsync_include_filter(nodename):
 		sys.exit(-1)
 
 	# include masterdir
-	# but exclude the top overlay/, delete/, tasks/ dir
+	# but exclude the top overlay/ and delete/ dir
 
 	f.write('''# synctool rsync filter
 + /overlay/
 + /overlay/all/
 + /delete/
 + /delete/all/
-+ /tasks/
-+ /tasks/all/
 ''')
 	f.write('+ /%s\n' % synctool_param.CONF_FILE)
 
@@ -168,16 +166,11 @@ def rsync_include_filter(nodename):
 		if os.path.isdir(d):
 			f.write('+ delete/%s/\n' % g)
 
-		d = os.path.join(synctool_param.TASKS_DIR, g)
-		if os.path.isdir(d):
-			f.write('+ /tasks/%s/\n' % g)
-
 	# Note: sbin/*.pyc is excluded to keep major differences in Python
 	# versions (on master vs. client node) from clashing
 	f.write('''- /sbin/*.pyc
 - /overlay/*
 - /delete/*
-- /tasks/*
 ''')
 
 	# close() should make the file available to other processes
@@ -379,12 +372,11 @@ def usage():
   -X, --exclude-group=grouplist  Exclude these groups from the selection
 
   -d, --diff=file                Show diff for file
-  -1, --single=file              Update a single file/run single task
+  -1, --single=file              Update a single file
   -r, --ref=file                 Show which source file synctool chooses
   -u, --upload=file              Pull a remote file into the overlay tree
   -s, --suffix=group             Give group suffix for the uploaded file
   -e, --erase-saved              Erase *.saved backup files
-  -t, --tasks                    Run the scripts in the tasks/ directory
   -f, --fix                      Perform updates (otherwise, do dry-run)
       --no-post                  Do not run any on_update or .post scripts
   -F, --fullpath                 Show full paths instead of shortened ones
@@ -417,10 +409,10 @@ def get_options():
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-			'hc:vn:g:x:X:d:1:r:u:s:etfFTqa',
+			'hc:vn:g:x:X:d:1:r:u:s:efFTqa',
 			['help', 'conf=', 'verbose', 'node=', 'group=',
 			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=',
-			'upload=', 'suffix=', 'erase-saved', 'tasks', 'fix', 'no-post',
+			'upload=', 'suffix=', 'erase-saved', 'fix', 'no-post',
 			'fullpath', 'terse', 'color', 'no-color',
 			'quiet', 'aggregate', 'unix', 'skip-rsync',
 			'version', 'check-update', 'download'])
@@ -450,7 +442,6 @@ def get_options():
 	opt_single = False
 	opt_reference = False
 	opt_erase_saved = False
-	opt_tasks = False
 	opt_upload = False
 	opt_suffix = False
 	opt_fix = False
@@ -534,9 +525,6 @@ def get_options():
 		if opt in ('-e', '--erase-saved'):
 			opt_erase_saved = True
 
-		if opt in ('-t', '--tasks'):
-			opt_tasks = True
-
 		if opt in ('-q', '--quiet'):
 			synctool_lib.QUIET = True
 
@@ -594,7 +582,7 @@ def get_options():
 		PASS_ARGS.extend(args)
 
 	synctool.option_combinations(opt_diff, opt_single, opt_reference,
-		opt_erase_saved, opt_tasks, opt_upload, opt_suffix, opt_fix)
+		opt_erase_saved, opt_upload, opt_suffix, opt_fix)
 
 	return (upload_filename, upload_suffix)
 

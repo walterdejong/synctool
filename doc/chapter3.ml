@@ -37,13 +37,11 @@ since it all works with <em>server push</em> and not client pull.
 </p>
 
 <p>
-In the synctool masterdir there are by default five subdirectories, each having
-its own function:
+In the synctool masterdir there are by default three subdirectories,
+each having its own function:
 <div class="example">
 * overlay/ <br />
 * delete/ <br />
-* scripts/ <br />
-* tasks/ <br />
 * sbin/
 </div>
 The <span class="path">overlay/</span> tree contains files that have to be
@@ -56,24 +54,6 @@ file in the overlay tree, the file will be copied from the
 The <span class="path">delete/</span> tree contains files that always have to
 be deleted from the system. Only the filename matters, so it is alright if the
 files in this tree are only <span class="system">0</span> bytes in size.
-</p>
-
-<p>
-The executables in the <span class="path">scripts/</span> directory are
-executables that synctool can run when needed. By means of the
-<span class="system">on_update</span> directive in the
-<span class="path">synctool.conf</span> file, a designated script may be
-executed when a certain file is changed.
-For example: when <span class="path">/etc/inetd.conf</span> is updated,
-the script <span class="cmd">hupdaemon.sh inetd</span> must be run.
-</p>
-
-<p>
-The executables in de <span class="path">tasks/</span> directory are run when
-synctool is invoked with the <span class="system">-t</span> or
-<span class="system">--tasks</span> argument.
-This makes it possible to run scripts on hosts, which is very convenient for
-doing change management.
 </p>
 
 <p>
@@ -258,26 +238,6 @@ yet. You may also do this on a group of nodes:
 <div class="example">
 # dsh-ping -g rack4
 </div>
-The <span class="system">-t</span> or <span class="system">--tasks</span>
-option runs the de executables that are in <span class="path">tasks/</span>
-(if you also supply <span class="system">-f</span>..!)
-These executables can also have group names as filename extension.
-They can be shell scripts or any other kind of executables.
-This option is particularly useful for making system changes
-that cannot be done easily by replacing a configuration file, like for
-example installing new software packages. Mind to always include a check to
-see whether the system change has already been made, or else it will always
-keep installing the same software when it was already there. Doing system
-changes through the tasks mechanism is recommended for two reasons:
-<ul>
-<li>It is easy to see what changes are being done; all tasks are in
-    <span class="system">tasks/</span></li>
-<li>Whenever a node is down, it can do the updates later to get back in sync
-    </li>
-</ul>
-By default, <span class="system">--tasks</span> is not being run.
-You have to explicitly specify this argument to run tasks.
-</p>
 
 <p>
 The <span class="system">-v</span> option gives verbose output.

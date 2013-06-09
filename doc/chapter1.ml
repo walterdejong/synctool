@@ -79,12 +79,8 @@ In addition, synctool simplifies things by working with the following concepts:
 
 <p>
 synctool manages configuration files, not processes, and not full system
-installations. However, synctool can be made to do more than just this.
-synctool is extensible in the sense that it can run scripts on hosts
-(via the &lsquo;tasks&rsquo; mechanism). This is primarily meant to do
-synchronized updates of software packages on all systems in the cluster,
-but can also be used to check daemons, or perform other system administration
-tasks.
+installations. However, synctool comes with handy tools to run commands
+across the cluster and do synchronized updates of software packages.
 </p>
 
 <p>

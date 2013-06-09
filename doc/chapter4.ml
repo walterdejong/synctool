@@ -23,18 +23,14 @@ This directory is hardcoded as <span class="system">$masterdir/delete/</span>.
 
 <dt>tasksdir &lt;directory&gt;</dt>
 <dd><b>deprecated</b><br />
-This directory is hardcoded as <span class="system">$masterdir/tasks/</span>.
-It contains executables (scripts) that are to be run on the target nodes
-when <span class="cmd">synctool --tasks</span> is run.
+synctool can no longer run tasks. If you still want this functionality,
+please use <span class="cmd">dsh</span> instead.
 </dd>
 
 <dt>scriptdir &lt;directory&gt;</dt>
 <dd><b>deprecated</b><br />
-This directory is hardcoded as <span class="system">$masterdir/scripts/</span>.
-Directory containing scripts that synctool may run through
-<span class="system">on_update</span> statements. If you do not use an
-absolute path there, synctool will look in
-the <span class="path">scriptdir</span>.
+synctool no longer supports <span class="system">scriptdir</span>.
+Please use <span class="system">.post</span> scripts instead.
 </dd>
 
 <dt>tempdir &lt;directory&gt;</dt>

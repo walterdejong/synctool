@@ -23,7 +23,6 @@ import fnmatch
 # enums for designating trees
 OV_OVERLAY = 0
 OV_DELETE = 1
-OV_TASKS = 2
 
 # error codes for split_extension()
 OV_NOT_MY_GROUP = -1
@@ -41,14 +40,9 @@ OVERLAY_FILES = []		# sorted list, index to OVERLAY_DICT{}
 OVERLAY_LOADED = False
 POST_SCRIPTS = {}		# dict indexed by trigger: full source path
 						# without final extension
-
 DELETE_DICT = {}
 DELETE_FILES = []
 DELETE_LOADED = False
-
-TASKS_DICT = {}
-TASKS_FILES = []
-TASKS_LOADED = False
 
 
 def split_extension(filename, require_extension):
@@ -368,46 +362,6 @@ def load_delete_tree():
 	DELETE_LOADED = True
 
 
-def load_tasks_tree():
-	'''scans all tasks dirs in and loads them into TASKS_DICT
-	which is a dict indexed by destination path, and every element
-	in TASKS_DICT is an instance of OverlayEntry
-	.post scripts are not handled for the tasks/ tree'''
-
-	# tasks/ is usually a very 'flat' directory with
-	# no complex structure at all
-	# However, because it is treated in the same way as
-	# overlay/ and delete/, complex structure is possible
-	# Still, there is not really a 'destination' for a task script,
-	# other than that you can call it with its destination name
-
-	global TASKS_DICT, TASKS_FILES, TASKS_LOADED, GROUP_ALL
-
-	if TASKS_LOADED:
-		return
-
-	TASKS_DICT = {}
-
-	# ensure that GROUP_ALL is set correctly
-	GROUP_ALL = len(synctool_param.MY_GROUPS) - 1
-
-	filelist = []
-
-	# do pass #1 for multiple overlay dirs: load them into filelist
-	# do not handle .post scripts
-	for (d, importance) in relevant_overlay_dirs(synctool_param.TASKS_DIR):
-		overlay_pass1(d, filelist, '/', importance, False)
-
-	# run pass #2 : 'squash' filelist into TASKS_DICT
-	overlay_pass2(filelist, TASKS_DICT)
-
-	# sort the filelist
-	TASKS_FILES = TASKS_DICT.keys()
-	TASKS_FILES.sort()
-
-	TASKS_LOADED = True
-
-
 def postscript_for_path(src, dest):
 	'''return the .post script for a given source and destination path'''
 
@@ -443,10 +397,6 @@ def select_tree(treedef):
 		load_overlay_tree()
 		load_delete_tree()
 		return (DELETE_DICT, DELETE_FILES)
-
-	elif treedef == OV_TASKS:
-		load_tasks_tree()
-		return (TASKS_DICT, TASKS_FILES)
 
 	raise RuntimeError, 'unknown treedef %d' % treedef
 

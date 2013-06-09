@@ -22,7 +22,6 @@ BOOLEAN_VALUE_FALSE = ('0', 'off', 'no', 'false')
 MASTERDIR = None
 OVERLAY_DIR = None
 DELETE_DIR = None
-TASKS_DIR = None
 TEMP_DIR = None
 HOSTNAME = None
 NODENAME = None

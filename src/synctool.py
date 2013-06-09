@@ -35,8 +35,7 @@ except ImportError:
 ACTION_DEFAULT = 0
 ACTION_DIFF = 1
 ACTION_ERASE_SAVED = 2
-ACTION_RUN_TASKS = 3
-ACTION_REFERENCE = 4
+ACTION_REFERENCE = 3
 
 SINGLE_FILES = []
 
@@ -217,18 +216,6 @@ def delete_files():
 	synctool_overlay.visit(synctool_overlay.OV_DELETE, delete_callback)
 
 
-def tasks_callback(obj):
-	'''run tasks'''
-
-	if not obj.src_isDir():
-		run_command(obj.src_path)
-		unix_out('')
-
-
-def run_tasks():
-	synctool_overlay.visit(synctool_overlay.OV_TASKS, tasks_callback)
-
-
 def erase_saved_callback(obj):
 	'''erase *.saved backup files'''
 
@@ -292,34 +279,6 @@ def single_erase_saved(filename):
 		return (False, None)
 
 	obj.erase_saved()
-
-
-def single_task(filename):
-	'''run a single task'''
-
-	if not filename:
-		stderr('missing task filename')
-		return
-
-	task_script = filename
-
-	# trick to make find() work for tasks, too
-	if task_script[0] != '/':
-		task_script = '/' + task_script
-
-	(obj, err) = synctool_overlay.find_terse(
-		synctool_overlay.OV_TASKS, task_script)
-	if err == synctool_overlay.OV_FOUND_MULTIPLE:
-		# multiple source possible
-		# possibilities have already been printed
-		sys.exit(1)
-
-	if err == synctool_overlay.OV_NOT_FOUND:
-		stderr("no such task '%s'" % filename)
-		return
-
-	run_command(obj.src_path)
-	unix_out('')
 
 
 def reference(filename):
@@ -409,17 +368,16 @@ def be_careful_with_getopt():
 
 
 def	option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
-	opt_tasks, opt_upload, opt_suffix, opt_fix):
+	opt_upload, opt_suffix, opt_fix):
 
 	'''some combinations of command-line options don't make sense;
 	alert the user and abort'''
 
-	if opt_erase_saved and (opt_diff or opt_reference or opt_tasks or
-		opt_upload):
+	if opt_erase_saved and (opt_diff or opt_reference or opt_upload):
 		stderr("option --erase-saved can not be combined with other actions")
 		sys.exit(1)
 
-	if opt_upload and (opt_diff or opt_single or opt_reference or opt_tasks):
+	if opt_upload and (opt_diff or opt_single or opt_reference):
 		stderr("option --upload can not be combined with other actions")
 		sys.exit(1)
 
@@ -427,11 +385,11 @@ def	option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
 		stderr("option --suffix can only be used together with --upload")
 		sys.exit(1)
 
-	if opt_diff and (opt_single or opt_reference or opt_tasks or opt_fix):
+	if opt_diff and (opt_single or opt_reference or opt_fix):
 		stderr("option --diff can not be combined with other actions")
 		sys.exit(1)
 
-	if opt_reference and (opt_single or opt_tasks or opt_fix):
+	if opt_reference and (opt_single or opt_fix):
 		stderr("option --reference can not be combined with other actions")
 		sys.exit(1)
 
@@ -453,12 +411,11 @@ def usage():
 	print ('                        (default: %s)' %
 		synctool_param.DEFAULT_CONF)
 	print '''  -d, --diff=file       Show diff for file
-  -1, --single=file     Update a single file/run single task
+  -1, --single=file     Update a single file
   -r, --ref=file        Show which source file synctool chooses
   -e, --erase-saved     Erase *.saved backup files
-  -t, --tasks           Run the scripts in the tasks/ directory
   -f, --fix             Perform updates (otherwise, do dry-run)
-      --no-post         Do not run any on_update or .post scripts
+      --no-post         Do not run any .post scripts
   -F, --fullpath        Show full paths instead of shortened ones
   -T, --terse           Show terse, shortened paths
       --color           Use colored output (only for terse mode)
@@ -485,9 +442,9 @@ def get_options():
 	be_careful_with_getopt()
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:etfFTvq',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:efFTvq',
 			['help', 'conf=', 'diff=', 'single=', 'ref=',
-			'erase-saved', 'tasks', 'fix', 'no-post', 'fullpath',
+			'erase-saved', 'fix', 'no-post', 'fullpath',
 			'terse', 'color', 'no-color',
 			'verbose', 'quiet', 'unix', 'masterlog', 'nodename=', 'version'])
 	except getopt.error, (reason):
@@ -549,7 +506,6 @@ def get_options():
 	opt_single = False
 	opt_reference = False
 	opt_erase_saved = False
-	opt_tasks = False
 	opt_upload = False
 	opt_suffix = False
 	opt_fix = False
@@ -633,11 +589,6 @@ def get_options():
 			action = ACTION_ERASE_SAVED
 			continue
 
-		if opt in ('-t', '--task', '--tasks'):
-			opt_tasks = True
-			action = ACTION_RUN_TASKS
-			continue
-
 		stderr("unknown command line option '%s'" % opt)
 		errors += 1
 
@@ -646,7 +597,7 @@ def get_options():
 		sys.exit(1)
 
 	option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
-		opt_tasks, opt_upload, opt_suffix, opt_fix)
+		opt_upload, opt_suffix, opt_fix)
 
 	return action
 
@@ -719,13 +670,6 @@ def main():
 	if action == ACTION_DIFF:
 		for file in SINGLE_FILES:
 			diff_files(file)
-
-	elif action == ACTION_RUN_TASKS:
-		if SINGLE_FILES:
-			for single_file in SINGLE_FILES:
-				single_task(single_file)
-		else:
-			run_tasks()
 
 	elif action == ACTION_REFERENCE:
 		for file in SINGLE_FILES:
