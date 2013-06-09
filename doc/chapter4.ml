@@ -12,40 +12,29 @@ the config file, you must define <span class="system">masterdir</span> first.
 </dd>
 
 <dt>overlaydir &lt;directory&gt;</dt>
-<dd>Directory containing files and directories that are to be synced to
-the nodes.<br />
-Default value is <span class="system">$masterdir/overlay/</span>.
-Multiple <span class="system">overlaydir</span> declarations are allowed,
-and all overlays will be &lsquo;merged&rsquo; together on the target
-nodes.<br />
-Example:
-<div class="example">
-overlaydir $masterdir/overlay/common<br />
-overlaydir $masterdir/overlay/software<br />
-overlaydir $masterdir/overlay/patches
-</div>
-Note that this is just an example of how multiple overlays can be used.
-Overall, it is probably easier to start with just one single overlay directory.
+<dd><b>deprecated</b><br />
+This directory is hardcoded as <span class="system">$masterdir/overlay/</span>.
 </dd>
 
 <dt>deletedir &lt;directory&gt;</dt>
-<dd>Directory containing files that are to be deleted from the target
-nodes.<br />
-Default value is <span class="system">$masterdir/delete/</span>.
-Multiple <span class="system">deletedir</span> declarations are allowed.</dd>
+<dd><b>deprecated</b><br />
+This directory is hardcoded as <span class="system">$masterdir/delete/</span>.
+</dd>
 
 <dt>tasksdir &lt;directory&gt;</dt>
-<dd>Directory containing executables (scripts) that are to be run on
-the target nodes when <span class="cmd">synctool --tasks</span> is run.<br />
-Default value is <span class="system">$masterdir/tasks/</span>.
-Multiple <span class="system">tasksdir</span> declarations are allowed.</dd>
+<dd><b>deprecated</b><br />
+This directory is hardcoded as <span class="system">$masterdir/tasks/</span>.
+It contains executables (scripts) that are to be run on the target nodes
+when <span class="cmd">synctool --tasks</span> is run.
+</dd>
 
 <dt>scriptdir &lt;directory&gt;</dt>
-<dd>Directory containing scripts that synctool may run through
-<span class="system">on_update</span> statements. If you do not use a full
-path there, synctool will look in the <span class="path">scriptdir</span>.<br />
-Default value is <span class="path">$masterdir/scriptdir</span>. There may
-be only one <span class="system">scriptdir</span> defined.
+<dd><b>deprecated</b><br />
+This directory is hardcoded as <span class="system">$masterdir/scripts/</span>.
+Directory containing scripts that synctool may run through
+<span class="system">on_update</span> statements. If you do not use an
+absolute path there, synctool will look in
+the <span class="path">scriptdir</span>.
 </dd>
 
 <dt>tempdir &lt;directory&gt;</dt>
