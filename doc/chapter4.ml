@@ -519,5 +519,10 @@ option.<br />
 Default value is <span class="system">default</span>.
 </dd>
 
-</dl>
+<dt>color_ok &lt;color&gt;</dt>
+<dd>Specify the color for the &lsquo;OK&rsquo; message in terse mode.
+It occurs when files are up to date.<br />
+Default value is <span class="system">default</span>.
+</dd>
 
+</dl>
