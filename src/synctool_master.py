@@ -150,7 +150,6 @@ def rsync_include_filter(nodename):
 + /delete/all/
 + /tasks/
 + /tasks/all/
-+ /scripts/
 ''')
 	f.write('+ /%s\n' % synctool_param.CONF_FILE)
 

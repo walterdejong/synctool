@@ -49,10 +49,6 @@ DIR_CHANGED = []
 def run_command(cmd):
 	'''run a shell command'''
 
-	if cmd[0] != '/':
-		# if relative path, use scriptdir
-		cmd = synctool_param.SCRIPT_DIR + '/' + cmd
-
 	# a command can have arguments
 	arr = shlex.split(cmd)
 	cmdfile = arr[0]

@@ -108,13 +108,6 @@ def read_config():
 		stderr('error: no such directory: %s' % d)
 		errors += 1
 
-	d = os.path.join(synctool_param.MASTERDIR, 'scripts')
-	if not os.path.isdir(d):
-		stderr('error: no such directory: %s' % d)
-		errors += 1
-	else:
-		synctool_param.SCRIPT_DIR = d
-
 	if errors > 0:
 		sys.exit(-1)
 
@@ -465,14 +458,6 @@ def list_dirs():
 	'''display directory settings'''
 
 	print 'masterdir', synctool_param.MASTERDIR
-
-	# Note: do not use prettypath() here, for shell scripters
-	# They will still have to awk anyway ...
-
-	print 'overlaydir', synctool_param.OVERLAY_DIR
-	print 'deletedir', synctool_param.DELETE_DIR
-	print 'tasksdir', synctool_param.TASKS_DIR
-	print 'scriptdir', synctool_param.SCRIPT_DIR
 	print 'tempdir', synctool_param.TEMP_DIR
 
 
