@@ -61,8 +61,8 @@ def master_synctool(rank, nodes):
 
 	if not OPT_SKIP_RSYNC:
 		verbose('running rsync $masterdir/ to node %s' % nodename)
-		unix_out('%s %s:%s/' % (synctool_param.RSYNC_CMD, node,
-			synctool_param.MASTERDIR))
+		unix_out('%s %s %s:%s/' % (synctool_param.RSYNC_CMD,
+			synctool_param.MASTERDIR, node, synctool_param.MASTERDIR))
 
 	verbose('running synctool on node %s' % nodename)
 	unix_out('%s %s %s --nodename=%s %s' % (synctool_param.SSH_CMD, node,
