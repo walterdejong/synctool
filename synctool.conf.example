@@ -135,25 +135,6 @@ ignore_node node0 node9
 # ignore a number of groups
 ignore_group test test2
 
-#
-# run command when file or directory is updated
-# This is an alternative method to using .post scripts
-# Note that the command on the right hand side must be a full path, or
-# else the command will be looked for under scriptdir ($masterdir/scripts)
-#
-# The exact commands to reload system daemons are operating system dependant
-# so adapt these to fit your situation
-#
-on_update	/etc/aliases					/usr/bin/newaliases
-on_update	/etc/ssh/sshd_config			/etc/init.d/ssh reload
-on_update	/etc/syslog-ng/syslog-ng.conf	/etc/init.d/syslog-ng reload
-on_update	/etc/ntp.conf					/sbin/service ntp reload
-
-on_update	/etc/logrotate.d				/bin/rm -f /etc/logrotate.d/*.saved
-on_update	/etc/cron.d						/bin/rm -f /etc/cron.d/*.saved
-on_update	/etc/cron.daily					/bin/rm -f /etc/cron.daily/*.saved
-on_update	/etc/init.d						/bin/rm -f /etc/init.d/*.saved
-
 # always run this command
 #always_run /bin/date
 

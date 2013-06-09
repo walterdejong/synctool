@@ -331,25 +331,10 @@ software upgrades.
 </dd>
 
 <dt>on_update &lt;filename&gt; &lt;shell command&gt;</dt>
-<dd>This tells synctool that whenever <em>filename</em> is changed, it should
-execute the <em>shell command</em>. This is an old-fashioned form of
-<span class="system">.post</span> scripts, that is still very useful for
-some common cases. The filename may be a directory as well as the name of a
-regular file. The shell command must start with an absolute path;
-if it does not, synctool will look for the command in
-<span class="system">scriptdir</span>.<br />
-Example:
-<div class="example">
-on_update &nbsp; /etc/aliases&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; /usr/bin/newaliases<br />
-on_update &nbsp; /etc/ssh/sshd_config &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;/etc/init.d/ssh reload<br />
-on_update &nbsp; /etc/syslog-ng/syslog-ng.conf &nbsp; /etc/init.d/syslog-ng reload<br />
-on_update &nbsp; /etc/ntp.conf&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;/sbin/service ntp reload<br />
-<br />
-on_update &nbsp; /etc/logrotate.d&nbsp; &nbsp; &nbsp; /bin/rm -f /etc/logrotate.d/*.saved<br />
-on_update &nbsp; /etc/cron.d&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;/bin/rm -f /etc/cron.d/*.saved<br />
-on_update &nbsp; /etc/cron.daily&nbsp; &nbsp; &nbsp; &nbsp;/bin/rm -f /etc/cron.daily/*.saved<br />
-on_update &nbsp; /etc/init.d&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;/bin/rm -f /etc/init.d/*.saved<br />
-</div>
+<dd><b>deprecated<b><br />
+This mechanism is no longer available, because it doesn't play nice with
+multi-platform setups. Please use (the more flexible and more powerful)
+<span class="system">.post</span> scripts instead.
 </dd>
 
 <dt>always_run &lt;shell command&gt;</dt>

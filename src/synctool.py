@@ -126,10 +126,6 @@ def run_post(src, dest):
 
 	dest_dir = os.path.dirname(dest)
 
-	# file has changed, run on_update command
-	if synctool_param.ON_UPDATE.has_key(dest):
-		run_command_in_dir(dest_dir, synctool_param.ON_UPDATE[dest])
-
 	# file has changed, run appropriate .post script
 	postscript = synctool_overlay.postscript_for_path(src, dest)
 	if postscript:
@@ -148,9 +144,6 @@ def run_post_on_directory(src, dest):
 		return
 
 	# the script is executed with the changed dir as current working dir
-
-	if synctool_param.ON_UPDATE.has_key(dest):
-		run_command_in_dir(dest, synctool_param.ON_UPDATE[dest])
 
 	# run appropriate .post script
 	postscript = synctool_overlay.postscript_for_path(src, dest)
