@@ -35,12 +35,12 @@ all:
 install:
 	@echo masterdir is $(MASTERDIR)
 	@mkdir -m 700 -p $(MASTERDIR)
-	@mkdir -m 755 -p $(MASTERDIR)/overlay $(MASTERDIR)/delete $(MASTERDIR)/scripts $(MASTERDIR)/tasks
+	@mkdir -m 755 -p $(MASTERDIR)/overlay $(MASTERDIR)/delete
 	@echo installing synctool server commands to $(MASTERBIN)
 	@mkdir -m 755 -p $(MASTERBIN)
 	@install -m 755 $(SCRIPTS) $(MASTERBIN)
 	@install -m 644 $(LIBS) $(MASTERBIN)
-	@rm -f $(MASTERBIN)/synctool_core.py
+	@rm -f $(MASTERBIN)/synctool_core.py $(MASTERBIN)/synctool_core.pyc
 	@echo linking synctool server commands to $(SBINDIR)/
 	@mkdir -m 755 -p $(SBINDIR)
 	@( cd $(SBINDIR) && ln -sf $(MASTERBIN)/synctool_master.py synctool )
