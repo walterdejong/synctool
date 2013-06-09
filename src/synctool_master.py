@@ -82,7 +82,16 @@ def worker_synctool(rank, nodes):
 
 		cmd_arr = shlex.split(synctool_param.RSYNC_CMD)
 		cmd_arr.append("--filter=. %s" % tmp_filename)
+		cmd_arr.append('%s/' % synctool_param.MASTERDIR)
 		cmd_arr.append('%s:%s/' % (node, synctool_param.MASTERDIR))
+
+		# double check the rsync destination
+		# our filters are like playing with fire
+		if not synctool_param.MASTERDIR or synctool_param.MASTERDIR == '/':
+			stderr('cowardly refusing to rsync with masterdir == %s' %
+					synctool_param.MASTERDIR)
+			sys.exit(-1)
+
 		synctool_lib.run_with_nodename(cmd_arr, nodename)
 
 		# delete temp file
@@ -134,11 +143,18 @@ def rsync_include_filter(nodename):
 	# include masterdir
 	# but exclude the top overlay/, delete/, tasks/ dir
 
-	f.write('+ %s/\n' % synctool_param.MASTERDIR)
-	f.write('- %s/\n' % synctool_param.OVERLAY_DIR)
-	f.write('- %s/\n' % synctool_param.DELETE_DIR)
-	f.write('- %s/\n' % synctool_param.TASKS_DIR)
-	f.write('+ %s/\n' % synctool_param.SCRIPT_DIR)
+	f.write('''# synctool rsync filter
++ /sbin/
++ /synctool.conf
++ /overlay/
++ /overlay/all/
++ /delete/
++ /delete/all/
++ /tasks/
++ /tasks/all/
++ /scripts/
+''')
+	f.write('+ /%s\n' % synctool_param.CONF_FILE)
 
 	# set mygroups for this nodename
 	synctool_param.NODENAME = nodename
@@ -149,15 +165,24 @@ def rsync_include_filter(nodename):
 	for g in synctool_param.MY_GROUPS:
 		d = os.path.join(synctool_param.OVERLAY_DIR, g)
 		if os.path.isdir(d):
-			f.write('+ %s/\n' % d)
+			f.write('+ /overlay/%s/\n' % g)
 
 		d = os.path.join(synctool_param.DELETE_DIR, g)
 		if os.path.isdir(d):
-			f.write('+ %s/\n' % d)
+			f.write('+ delete/%s/\n' % g)
 
 		d = os.path.join(synctool_param.TASKS_DIR, g)
 		if os.path.isdir(d):
-			f.write('+ %s/\n' % d)
+			f.write('+ /tasks/%s/\n' % g)
+
+	# Note: sbin/*.pyc is excluded to keep major differences in Python
+	# versions (on master vs. client node) from clashing
+	f.write('''- /sbin/*.pyc
+- /overlay/*
+- /delete/*
+- /tasks/*
+- /*
+''')
 
 	# close() should make the file available to other processes
 	# in a portable way
