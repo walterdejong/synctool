@@ -697,46 +697,6 @@ def config_ignore_group(arr, configfile, lineno):
 	return errors
 
 
-# keyword: always_run
-def config_always_run(arr, configfile, lineno):
-	if len(arr) < 2:
-		stderr("%s:%d: 'always_run' requires an argument: "
-			"the shell command to run" % (configfile, lineno))
-		return 1
-
-	cmd = string.join(arr[1:])
-	cmd = synctool_lib.prepare_path(cmd)
-
-	if cmd in synctool_param.ALWAYS_RUN:
-		stderr("%s:%d: same command defined again: %s" %
-			(configfile, lineno, cmd))
-		return 1
-
-	#
-	#	check if the script exists
-	#
-	if cmd[0] != '/':
-		# if relative path, use scriptdir
-		# but what to do if scriptdir hasn't been set yet? Use default ...
-		if not synctool_param.SCRIPT_DIR:
-			synctool_param.SCRIPT_DIR = os.path.join(
-				synctool_param.MASTERDIR, 'scripts')
-
-		# do not use os.path.join() on dir+cmd+arguments
-		cmd = synctool_param.SCRIPT_DIR + '/' + cmd
-
-	# get the command file
-	arr = string.split(cmd)
-	cmdfile = arr[0]
-
-	if not os.path.isfile(cmdfile):
-		stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmdfile))
-		return 1
-
-	synctool_param.ALWAYS_RUN.append(cmd)
-	return 0
-
-
 # keyword: diff_cmd
 def config_diff_cmd(arr, configfile, lineno):
 	(err, synctool_param.DIFF_CMD) = _config_command('diff_cmd', arr,

@@ -135,9 +135,6 @@ ignore_node node0 node9
 # ignore a number of groups
 ignore_group test test2
 
-# always run this command
-#always_run /bin/date
-
 # include a local synctool config file on the target node
 #include /etc/synctool_local.conf
 

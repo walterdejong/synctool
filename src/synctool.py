@@ -247,14 +247,6 @@ def erase_saved():
 	synctool_overlay.visit(synctool_overlay.OV_OVERLAY, erase_saved_callback)
 
 
-def always_run():
-	'''always run these commands'''
-
-	for cmd in synctool_param.ALWAYS_RUN:
-		run_command(cmd)
-		unix_out('')
-
-
 def single_files(filename):
 	'''check/update a single file'''
 	'''returns (True, path_in_synctree) if file is different'''
@@ -762,7 +754,6 @@ def main():
 		overlay_files()
 		delete_files()
 		run_post_on_directories()
-		always_run()
 
 	unix_out('# EOB')
 

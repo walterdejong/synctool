@@ -338,11 +338,9 @@ multi-platform setups. Please use (the more flexible and more powerful)
 </dd>
 
 <dt>always_run &lt;shell command&gt;</dt>
-<dd>Tells synctool to execute the <em>shell command</em> on the target node
-after every synctool run. This can be useful if you want a certain task to be
-run after synctool completes. The shell command must start with an absolute
-path; if it does not, synctool will look for the command in
-<span class="system">scriptdir</span>.
+<dd><b>deprecated<b><br />
+This mechanism is no longer available. If you still want this functionality,
+wrap the <span class="system">synctool_cmd</span> command with a shell script.
 </dd>
 
 <dt>include &lt;local synctool config file&gt;</dt>
