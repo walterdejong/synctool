@@ -57,7 +57,7 @@ def master_synctool(rank, nodes):
 	# the master node only displays what we're running
 
 	node = nodes[rank]
-	nodename = NODESET.get_nodename_from_interface(node)
+	nodename = NODESET.get_nodename_from_address(node)
 
 	if not OPT_SKIP_RSYNC:
 		verbose('running rsync $masterdir/ to node %s' % nodename)
@@ -73,7 +73,7 @@ def worker_synctool(rank, nodes):
 	'''runs rsync of $masterdir to the nodes and ssh+synctool in parallel'''
 
 	node = nodes[rank]
-	nodename = NODESET.get_nodename_from_interface(node)
+	nodename = NODESET.get_nodename_from_address(node)
 
 	if not OPT_SKIP_RSYNC:
 		# rsync masterdir to the node
@@ -216,7 +216,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 			stdout('DRY RUN, not uploading any files')
 			terse(synctool_lib.TERSE_DRYRUN, 'not uploading any files')
 
-	node = NODESET.get_nodename_from_interface(interface)
+	node = NODESET.get_nodename_from_address(interface)
 
 	# pretend that the current node is now the given node;
 	# this is needed for find() to find the best reference for the file
@@ -296,7 +296,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 		scp_cmd_arr.append(repos_filename)
 
 		synctool_lib.run_with_nodename(scp_cmd_arr,
-			NODESET.get_nodename_from_interface(interface))
+			NODESET.get_nodename_from_address(interface))
 
 		if os.path.isfile(repos_filename):
 			stdout('uploaded %s' % synctool_lib.prettypath(repos_filename))
@@ -611,8 +611,8 @@ def main():
 	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
 		synctool_lib.openlog()
 
-	nodes = NODESET.interfaces()
-	if nodes == None or len(nodes) <= 0:
+	nodes = NODESET.addresses()
+	if not nodes:
 		print 'no valid nodes specified'
 		sys.exit(1)
 
@@ -630,14 +630,14 @@ def main():
 		# do regular synctool run
 		make_tempdir()
 
-		local_interface = synctool_config.get_node_interface(
+		local_address = synctool_config.get_node_ipaddress(
 							synctool_param.NODENAME)
 
 		for node in nodes:
 			#
 			#	is this node the localhost? then run locally
 			#
-			if node == local_interface:
+			if node == local_address:
 				run_local_synctool()
 				nodes.remove(node)
 				break

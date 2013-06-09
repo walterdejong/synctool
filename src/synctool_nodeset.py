@@ -24,9 +24,9 @@ import string
 # usage: first make an instance of NodeSet
 #        then add nodes, groups, excluded nodes/groups
 #        call synctool_config.read_config()
-#        call nodeset.interfaces(), which will return a list of interfaces
-#        use the interface list to contact the nodes
-#        use nodeset.get_nodename_from_interface() to get a nodename
+#        call nodeset.addresses(), which will return a list of addresses
+#        use the address list to contact the nodes
+#        use nodeset.get_nodename_from_address() to get a nodename
 #
 
 class NodeSet:
@@ -63,8 +63,8 @@ class NodeSet:
 			if not group in self.exclude_groups:
 				self.exclude_groups.append(group)
 
-	def interfaces(self):
-		'''return list of interfaces of relevant nodes'''
+	def addresses(self):
+		'''return list of addresses of relevant nodes'''
 
 		explicit_includes = self.nodelist[:]
 
@@ -102,7 +102,7 @@ class NodeSet:
 		if len(self.nodelist) <= 0:
 			return []
 
-		ifaces = []
+		addrs = []
 		ignored_nodes = ''
 
 		for node in self.nodelist:
@@ -134,11 +134,11 @@ class NodeSet:
 			if do_continue:
 				continue
 
-			iface = synctool_config.get_node_interface(node)
-			self.namemap[iface] = node
+			addr = synctool_config.get_node_ipaddress(node)
+			self.namemap[addr] = node
 
-			if not iface in ifaces:		# make sure we do not have duplicates
-				ifaces.append(iface)
+			if not addr in addrs:	# make sure we do not have duplicates
+				addrs.append(addr)
 
 		# print message about ignored nodes
 		if (ignored_nodes and not synctool_lib.QUIET and
@@ -153,14 +153,14 @@ class NodeSet:
 				else:
 					print 'warning: some nodes are ignored'
 
-		return ifaces
+		return addrs
 
-	def get_nodename_from_interface(self, iface):
-		'''map the interface back to a nodename'''
+	def get_nodename_from_address(self, addr):
+		'''map the address back to a nodename'''
 
-		if self.namemap.has_key(iface):
-			return self.namemap[iface]
+		if self.namemap.has_key(addr):
+			return self.namemap[addr]
 
-		return iface
+		return addr
 
 # EOB

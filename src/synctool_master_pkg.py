@@ -48,7 +48,7 @@ def master_pkg(rank, nodes):
 	# the master node only displays what we're running
 
 	node = nodes[rank]
-	nodename = NODESET.get_nodename_from_interface(node)
+	nodename = NODESET.get_nodename_from_address(node)
 
 	verbose('running synctool-pkg on node %s' % nodename)
 	unix_out('%s %s %s %s' % (synctool_param.SSH_CMD, node,
@@ -59,7 +59,7 @@ def worker_pkg(rank, nodes):
 	'''runs ssh + synctool-pkg to the nodes in parallel'''
 
 	node = nodes[rank]
-	nodename = NODESET.get_nodename_from_interface(node)
+	nodename = NODESET.get_nodename_from_address(node)
 
 	# run 'ssh node pkg_cmd'
 	cmd_arr = shlex.split(synctool_param.SSH_CMD)
@@ -381,17 +381,17 @@ def main():
 #	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
 #		synctool_lib.openlog()
 
-	nodes = NODESET.interfaces()
-	if nodes == None or len(nodes) <= 0:
+	nodes = NODESET.addresses()
+	if not nodes:
 		print 'no valid nodes specified'
 		sys.exit(1)
 
-	local_interface = synctool_config.get_node_interface(
+	local_address = synctool_config.get_node_ipaddress(
 						synctool_param.NODENAME)
 
 	for node in nodes:
 		# is this node the localhost? then run locally
-		if node == local_interface:
+		if node == local_address:
 			run_local_pkg()
 			nodes.remove(node)
 			break

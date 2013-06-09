@@ -32,13 +32,13 @@ OPT_AGGREGATE = False
 
 def ping_nodes(nodes):
 	'''ping nodes in parallel'''
-	'''nodes is a list of interfaces, really'''
+	'''nodes is a list of addresses, really'''
 
 	synctool_lib.run_parallel(master_ping, worker_ping, nodes, len(nodes))
 
 
 def master_ping(rank, nodes):
-	nodename = NODESET.get_nodename_from_interface(nodes[rank])
+	nodename = NODESET.get_nodename_from_address(nodes[rank])
 	if nodename == synctool_param.NODENAME:
 		print '%s: up' % nodename
 		return
@@ -51,7 +51,7 @@ def worker_ping(rank, nodes):
 	'''ping a single node'''
 
 	node = nodes[rank]
-	nodename = NODESET.get_nodename_from_interface(node)
+	nodename = NODESET.get_nodename_from_address(node)
 
 	packets_received = 0
 
@@ -237,8 +237,8 @@ def main():
 
 	synctool_config.init_mynodename()
 
-	nodes = NODESET.interfaces()
-	if nodes == None or len(nodes) <= 0:
+	nodes = NODESET.addresses()
+	if not nodes:
 		print 'no valid nodes specified'
 		sys.exit(1)
 

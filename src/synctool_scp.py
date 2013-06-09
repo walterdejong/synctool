@@ -59,7 +59,7 @@ def master_scp(rank, args):
 	(nodes, scp_cmd_arr, files_str) = args
 
 	node = nodes[rank]
-	nodename = NODESET.get_nodename_from_interface(node)
+	nodename = NODESET.get_nodename_from_address(node)
 
 	# master thread only displays what we're running
 
@@ -92,7 +92,7 @@ def worker_scp(rank, args):
 	(nodes, scp_cmd_arr, files_str) = args
 
 	node = nodes[rank]
-	nodename = NODESET.get_nodename_from_interface(node)
+	nodename = NODESET.get_nodename_from_address(node)
 
 	# note that the fileset already had been added to scp_cmd_arr
 
@@ -268,8 +268,8 @@ def main():
 
 	synctool_config.init_mynodename()
 
-	nodes = NODESET.interfaces()
-	if nodes == None or len(nodes) <= 0:
+	nodes = NODESET.addresses()
+	if not nodes:
 		print 'no valid nodes specified'
 		sys.exit(1)
 

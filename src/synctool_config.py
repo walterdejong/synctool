@@ -45,9 +45,9 @@ ACTION_PKGMGR = 13
 
 # optional: do not list hosts/groups that are ignored
 OPT_FILTER_IGNORED = False
-# optional: list interface names for the selected nodes
-OPT_INTERFACE = False
-# optional: list hostnames for the selected nodes
+# optional: list ipaddresses of the selected nodes
+OPT_IPADDRESS = False
+# optional: list hostnames of the selected nodes
 OPT_HOSTNAME = False
 
 
@@ -189,8 +189,8 @@ def init_mynodename():
 		# try to find a node that has the (short) hostname
 		# listed as interface or as a group
 		for node in all_nodes:
-			iface = get_node_interface(node)
-			if iface == short_hostname or iface == hostname:
+			addr = get_node_ipaddress(node)
+			if addr == short_hostname or addr == hostname:
 				nodename = node
 				break
 
@@ -237,7 +237,7 @@ def get_all_nodes():
 	return synctool_param.NODES.keys()
 
 
-def get_node_interface(node):
+def get_node_ipaddress(node):
 	if synctool_param.INTERFACES.has_key(node):
 		return synctool_param.INTERFACES[node]
 
@@ -262,8 +262,8 @@ def list_all_nodes():
 
 	for host in nodes:
 		if host in ignore_nodes:
-			if OPT_INTERFACE:
-				host = get_node_interface(host)
+			if OPT_IPADDRESS:
+				host = get_node_ipaddress(host)
 
 			elif OPT_HOSTNAME:
 				host = get_node_hostname(host)
@@ -271,8 +271,8 @@ def list_all_nodes():
 			if not OPT_FILTER_IGNORED:
 				print '%s (ignored)' % host
 		else:
-			if OPT_INTERFACE:
-				host = get_node_interface(host)
+			if OPT_IPADDRESS:
+				host = get_node_ipaddress(host)
 
 			elif OPT_HOSTNAME:
 				host = get_node_hostname(host)
@@ -331,8 +331,8 @@ def list_nodes(nodenames):
 			stderr("no such node '%s' defined" % nodename)
 			sys.exit(1)
 
-		if OPT_INTERFACE:
-			print get_node_interface(nodename)
+		if OPT_IPADDRESS:
+			print get_node_ipaddress(nodename)
 
 		elif OPT_HOSTNAME:
 			print get_node_hostname(nodename)
@@ -380,8 +380,8 @@ def list_nodegroups(nodegroups):
 
 	for node in arr:
 		if node in synctool_param.IGNORE_GROUPS:
-			if OPT_INTERFACE:
-				node = get_node_interface(node)
+			if OPT_IPADDRESS:
+				node = get_node_ipaddress(node)
 
 			elif OPT_HOSTNAME:
 				node = get_node_hostname(node)
@@ -389,8 +389,8 @@ def list_nodegroups(nodegroups):
 			if not OPT_FILTER_IGNORED:
 				print '%s (ignored)' % node
 		else:
-			if OPT_INTERFACE:
-				node = get_node_interface(node)
+			if OPT_IPADDRESS:
+				node = get_node_ipaddress(node)
 
 			elif OPT_HOSTNAME:
 				node = get_node_hostname(node)
@@ -468,34 +468,33 @@ def usage():
 	print ('                           (default: %s)' %
 		synctool_param.DEFAULT_CONF)
 
-	print '  -l, --list-nodes         List all configured nodes'
-	print '  -L, --list-groups        List all configured groups'
-	print '  -n, --node=nodelist      List all groups this node is in'
-	print '  -g, --group=grouplist    List all nodes in this group'
-	print '  -i, --ipaddress          List selected nodes by IP address'
-	print '  -i, --interface          Same thing; old form for --ipaddress'
-	print '  -H, --hostname           List selected nodes by hostname'
-	print '  -f, --filter-ignored     Do not list ignored nodes and groups'
-	print
-	print '  -C, --command=command    Display setting for command'
-	print '  -P, --package-manager    Display configured package manager'
-	print '  -p, --numproc            Display numproc setting'
-	print '  -m, --masterdir          Display the masterdir setting'
-	print '  -d, --list-dirs          Display directory settings'
-	print '      --prefix             Display installation prefix'
-	print '      --logfile            Display configured logfile'
-	print '      --nodename           Display my nodename'
-	print '  -v, --version            Display synctool version'
-	print
-	print 'A node/group list can be a single value, or a comma-separated list'
-	print 'A command is a list of these: diff,ping,ssh,scp,rsync,synctool,pkg'
-	print
-	print 'synctool-config by Walter de Jong <walter@heiho.net> (c) 2009-2013'
+	print '''  -l, --list-nodes         List all configured nodes
+  -L, --list-groups        List all configured groups
+  -n, --node=nodelist      List all groups this node is in
+  -g, --group=grouplist    List all nodes in this group
+  -i, --ipaddress          List selected nodes by IP address
+  -H, --hostname           List selected nodes by hostname
+  -f, --filter-ignored     Do not list ignored nodes and groups
+
+  -C, --command=command    Display setting for command
+  -P, --package-manager    Display configured package manager
+  -p, --numproc            Display numproc setting
+  -m, --masterdir          Display the masterdir setting
+  -d, --list-dirs          Display directory settings
+      --prefix             Display installation prefix
+      --logfile            Display configured logfile
+      --nodename           Display my nodename
+  -v, --version            Display synctool version
+
+A node/group list can be a single value, or a comma-separated list
+A command is a list of these: diff,ping,ssh,scp,rsync,synctool,pkg
+
+synctool-config by Walter de Jong <walter@heiho.net> (c) 2009-2013'''
 
 
 def get_options():
 	global CONF_FILE, ARG_NODENAMES, ARG_GROUPS, ARG_CMDS
-	global OPT_FILTER_IGNORED, OPT_INTERFACE, OPT_HOSTNAME
+	global OPT_FILTER_IGNORED, OPT_IPADDRESS, OPT_HOSTNAME
 
 	progname = os.path.basename(sys.argv[0])
 
@@ -506,7 +505,7 @@ def get_options():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:lLn:g:iHfC:Ppmdv',
 			['help', 'conf=', 'list-nodes', 'list-groups', 'node=', 'group=',
-			'interface', 'ipaddress', 'hostname', 'filter-ignored',
+			'ipaddress', 'hostname', 'filter-ignored',
 			'command', 'package-manager', 'numproc', 'masterdir', 'list-dirs',
 			'prefix', 'logfile', 'nodename', 'version'])
 
@@ -561,8 +560,8 @@ def get_options():
 			ARG_GROUPS = string.split(arg, ',')
 			continue
 
-		if opt in ('-i', '--interface', 'ipaddress'):
-			OPT_INTERFACE = True
+		if opt in ('-i', 'ipaddress'):
+			OPT_IPADDRESS = True
 			continue
 
 		if opt in ('-H', '--hostname'):
@@ -629,9 +628,8 @@ def main():
 		print synctool_param.VERSION
 		sys.exit(0)
 
-	if OPT_INTERFACE and OPT_HOSTNAME:
-		stderr('options --interface, --ipaddress and --hostname can not '
-			'be combined')
+	if OPT_IPADDRESS and OPT_HOSTNAME:
+		stderr('options --ipaddress and --hostname can not be combined')
 		sys.exit(1)
 
 	read_config()
@@ -682,16 +680,16 @@ def main():
 
 		if synctool_param.NODENAME in synctool_param.IGNORE_GROUPS:
 			if not synctool_param.OPT_FILTER_IGNORED:
-				if OPT_INTERFACE:
+				if OPT_IPADDRESS:
 					print ('none (%s ignored)' %
-						get_node_interface(synctool_param.NODENAME))
+						get_node_ipaddress(synctool_param.NODENAME))
 				else:
 					print 'none (%s ignored)' % synctool_param.NODENAME
 
 			sys.exit(0)
 
-		if OPT_INTERFACE:
-			print get_node_interface(synctool_param.NODENAME)
+		if OPT_IPADDRESS:
+			print get_node_ipaddress(synctool_param.NODENAME)
 		else:
 			print synctool_param.NODENAME
 

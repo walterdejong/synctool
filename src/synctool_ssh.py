@@ -35,8 +35,8 @@ SSH_OPTIONS = None
 def run_dsh(remote_cmd_arr):
 	'''run remote command to a set of nodes using ssh (param ssh_cmd)'''
 
-	nodes = NODESET.interfaces()
-	if nodes == None or len(nodes) <= 0:
+	nodes = NODESET.addresses()
+	if not nodes:
 		print 'no valid nodes specified'
 		sys.exit(1)
 
@@ -60,7 +60,7 @@ def master_ssh(rank, args):
 		unix_out(cmd_str)
 	else:
 		verbose('running %s to %s %s' % (os.path.basename(ssh_cmd_arr[0]),
-			NODESET.get_nodename_from_interface(node), cmd_str))
+			NODESET.get_nodename_from_address(node), cmd_str))
 
 		if SSH_OPTIONS:
 			unix_out('%s %s %s %s' % (string.join(ssh_cmd_arr), SSH_OPTIONS,
@@ -76,7 +76,7 @@ def worker_ssh(rank, args):
 	(nodes, ssh_cmd_arr, remote_cmd_arr) = args
 
 	node = nodes[rank]
-	nodename = NODESET.get_nodename_from_interface(node)
+	nodename = NODESET.get_nodename_from_address(node)
 
 	if nodename == synctool_param.NODENAME:
 		# is this node the local node? Then do not use ssh
