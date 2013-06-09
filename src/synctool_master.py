@@ -144,8 +144,6 @@ def rsync_include_filter(nodename):
 	# but exclude the top overlay/, delete/, tasks/ dir
 
 	f.write('''# synctool rsync filter
-+ /sbin/
-+ /synctool.conf
 + /overlay/
 + /overlay/all/
 + /delete/
@@ -181,7 +179,6 @@ def rsync_include_filter(nodename):
 - /overlay/*
 - /delete/*
 - /tasks/*
-- /*
 ''')
 
 	# close() should make the file available to other processes
