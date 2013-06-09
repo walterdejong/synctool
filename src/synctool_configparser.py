@@ -245,66 +245,6 @@ def config_masterdir(arr, configfile, lineno):
 	return 0
 
 
-# keyword: overlaydir
-def config_overlaydir(arr, configfile, lineno):
-	if synctool_param.OVERLAY_DIR != None:
-		stderr("%s:%d: redefinition of overlaydir" % (configfile, lineno))
-		return 1
-
-	d = _config_dir('overlaydir', arr, configfile, lineno)
-
-	if d == None:
-		return 1
-
-	synctool_param.OVERLAY_DIR = d
-	return 0
-
-
-# keyword: deletedir
-def config_deletedir(arr, configfile, lineno):
-	if synctool_param.DELETE_DIR != None:
-		stderr("%s:%d: redefinition of deletedir" % (configfile, lineno))
-		return 1
-
-	d = _config_dir('deletedir', arr, configfile, lineno)
-
-	if d == None:
-		return 1
-
-	synctool_param.DELETE_DIR = d
-	return 0
-
-
-# keyword: tasksdir
-def config_tasksdir(arr, configfile, lineno):
-	if synctool_param.TASKS_DIR != None:
-		stderr("%s:%d: redefinition of tasksdir" % (configfile, lineno))
-		return 1
-
-	d = _config_dir('tasksdir', arr, configfile, lineno)
-
-	if d == None:
-		return 1
-
-	synctool_param.TASKS_DIR = d
-	return 0
-
-
-# keyword: scriptdir
-def config_scriptdir(arr, configfile, lineno):
-	if synctool_param.SCRIPT_DIR != None:
-		stderr("%s:%d: redefinition of scriptdir" % (configfile, lineno))
-		return 1
-
-	d = _config_dir('scriptdir', arr, configfile, lineno)
-
-	if d == None:
-		return 1
-
-	synctool_param.SCRIPT_DIR = d
-	return 0
-
-
 # keyword: tempdir
 def config_tempdir(arr, configfile, lineno):
 	if synctool_param.TEMP_DIR != None:

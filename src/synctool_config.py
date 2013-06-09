@@ -63,20 +63,20 @@ def read_config():
 	errors = synctool_configparser.read_config_file(synctool_param.CONF_FILE)
 
 	# if missing, set default directories
-	if synctool_param.MASTERDIR == None:
+	if not synctool_param.MASTERDIR:
 		synctool_param.MASTERDIR = '/var/lib/synctool'
 
 		if not os.path.isdir(synctool_param.MASTERDIR):
 			stderr('error: no such directory: %s' % d)
 			errors += 1
 
-	if not synctool_param.OVERLAY_DIR:
-		d = os.path.join(synctool_param.MASTERDIR, 'overlay')
-		if not os.path.isdir(d):
-			stderr('error: no such directory: %s' % d)
-			errors += 1
-		else:
-			synctool_param.OVERLAY_DIR = d
+	# overlay/, delete/, tasks/, scripts/ must be under $masterdir
+	d = os.path.join(synctool_param.MASTERDIR, 'overlay')
+	if not os.path.isdir(d):
+		stderr('error: no such directory: %s' % d)
+		errors += 1
+	else:
+		synctool_param.OVERLAY_DIR = d
 
 	# treat a missing 'overlay/all/' dir as an error
 	d = os.path.join(synctool_param.OVERLAY_DIR, 'all')
@@ -84,45 +84,43 @@ def read_config():
 		stderr('error: no such directory: %s' % d)
 		errors += 1
 
-	if not synctool_param.DELETE_DIR:
-		d = os.path.join(synctool_param.MASTERDIR, 'delete')
-		if not os.path.isdir(d):
-			stderr('error: no such directory: %s' % d)
-			errors += 1
-		else:
-			synctool_param.DELETE_DIR = d
+	d = os.path.join(synctool_param.MASTERDIR, 'delete')
+	if not os.path.isdir(d):
+		stderr('error: no such directory: %s' % d)
+		errors += 1
+	else:
+		synctool_param.DELETE_DIR = d
 
 	d = os.path.join(synctool_param.DELETE_DIR, 'all')
 	if not os.path.isdir(d):
 		stderr('error: no such directory: %s' % d)
 		errors += 1
 
-	if not synctool_param.TASKS_DIR:
-		d = os.path.join(synctool_param.MASTERDIR, 'tasks')
-		if not os.path.isdir(d):
-			stderr('error: no such directory: %s' % d)
-			errors += 1
-		else:
-			synctool_param.TASKS_DIR = d
+	d = os.path.join(synctool_param.MASTERDIR, 'tasks')
+	if not os.path.isdir(d):
+		stderr('error: no such directory: %s' % d)
+		errors += 1
+	else:
+		synctool_param.TASKS_DIR = d
 
 	d = os.path.join(synctool_param.TASKS_DIR, 'all')
 	if not os.path.isdir(d):
 		stderr('error: no such directory: %s' % d)
 		errors += 1
 
-	if not synctool_param.SCRIPT_DIR:
-		d = os.path.join(synctool_param.MASTERDIR, 'scripts')
-		if not os.path.isdir(d):
-			stderr('error: no such directory: %s' % d)
-			errors += 1
-		else:
-			synctool_param.SCRIPT_DIR = d
+	d = os.path.join(synctool_param.MASTERDIR, 'scripts')
+	if not os.path.isdir(d):
+		stderr('error: no such directory: %s' % d)
+		errors += 1
+	else:
+		synctool_param.SCRIPT_DIR = d
 
 	if errors > 0:
 		sys.exit(-1)
 
 	if not synctool_param.TEMP_DIR:
 		synctool_param.TEMP_DIR = '/tmp/synctool'
+		# do not make temp dir here; it is only used on the master node
 
 	# implicitly add group 'all'
 	if not synctool_param.GROUP_DEFS.has_key('all'):
