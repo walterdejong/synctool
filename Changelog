@@ -11,11 +11,14 @@ June 2013
 - option --tasks is obsolete; use dsh and dsh-pkg
 - on_update is obsolete; use .post scripts
 - always_run is obsolete; use dsh or a wrapper script if you really need it
-- overlaydir is obsolete: hardcoded as $masterdir/overlay
-- deletedir is obsolete: hardcoded as $masterdir/delete
-- tasksdir is obsolete: tasks are obsolete
-- scriptdir is obsolete: use .post scripts instead
+- overlaydir is obsolete; hardcoded as $masterdir/overlay
+- deletedir is obsolete; hardcoded as $masterdir/delete
+- tasksdir is obsolete; tasks are obsolete
+- scriptdir is obsolete; use .post scripts instead
 - use new tempdir setting as location for temp files
+- interface: qualifier is obsolete; use ipaddress:
+- ignore_host is obsolete; use ignore_node
+- host is obsolete; use node
 
 Aug 2012
 - added dsh --numproc, patch by Werner Maier

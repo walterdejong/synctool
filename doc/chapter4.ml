@@ -269,11 +269,7 @@ to exist before it can be used in a node definition.<br />
 The <span class="system">ipaddress</span> specifier tells synctool how to
 contact the node. This is optional; when omitted, synctool assumes the
 nodename can be found in DNS. Note that synctool nodenames need not be same
-as DNS names. In older versions of synctool, the
-<span class="system">node</span> keyword was named
-<span class="system">host</span>, and the
-<span class="system">ipaddress</span> specifier was named
-<span class="system">interface</span>.<br />
+as DNS names.<br />
 The optional <span class="system">hostname</span> specifier tells synctool that
 a host that has this fully qualified hostname, must be this node. In general
 it is safe to omit this, but there are cases (particularly multi-homed systems)

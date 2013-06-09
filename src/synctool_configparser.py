@@ -517,16 +517,11 @@ def config_group(arr, configfile, lineno):
 	return 0
 
 
-# keyword: host
-def config_host(arr, configfile, lineno):
-	return config_node(arr, configfile, lineno)
-
-
 # keyword: node
 def config_node(arr, configfile, lineno):
 	if len(arr) < 2:
-		stderr("%s:%d: '%s' requires at least 1 argument: the nodename" %
-			(configfile, lineno, arr[0]))
+		stderr("%s:%d: 'node' requires at least 1 argument: the nodename" %
+			(configfile, lineno))
 		return 1
 
 	node = arr[1]
@@ -558,12 +553,9 @@ def config_node(arr, configfile, lineno):
 			(configfile, lineno, node, node))
 		return 1
 
-	#
 	# node lines may end with special optional qualifiers like
-	# 'interface:', 'ipaddress:', 'hostname:'
-	#
-	# as a consequence, group names can no longer have a colon ':' in them
-	#
+	# 'ipaddress:', 'hostname:', 'hostid:'
+
 	while len(groups) >= 1:
 		n = string.find(groups[-1], ':')
 		if n < 0:
@@ -579,7 +571,7 @@ def config_node(arr, configfile, lineno):
 			qualifier = option[:n]
 			arg = option[n+1:]
 
-			if qualifier == 'interface' or qualifier == 'ipaddress':
+			if qualifier == 'ipaddress':
 				if synctool_param.INTERFACES.has_key(node):
 					stderr('%s:%d: redefinition of IP address for node %s' %
 						(configfile, lineno, node))
@@ -644,16 +636,11 @@ def config_node(arr, configfile, lineno):
 	return 0
 
 
-# keyword: ignore_host
-def config_ignore_host(arr, configfile, lineno):
-	return config_ignore_node(arr, configfile, lineno)
-
-
 # keyword: ignore_node
 def config_ignore_node(arr, configfile, lineno):
 	if len(arr) < 2:
-		stderr("%s:%d: '%s' requires 1 argument: the nodename to ignore" %
-			(configfile, lineno, arr[0]))
+		stderr("%s:%d: 'ignore_node' requires 1 argument: "
+			"the nodename to ignore" % (configfile, lineno))
 		return 1
 
 	errors = 0

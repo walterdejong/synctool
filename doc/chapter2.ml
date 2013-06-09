@@ -39,7 +39,9 @@ Edit the provided <span class="cmd">Makefile</span> and adjust
 <span class="cmd">PREFIX</span> to point to your desired location where the
 software should reside. Some prefer <span class="path">/usr/local</span>,
 others prefer <span class="path">/usr/local/synctool</span>, while others
-prefer <span class="path">/opt</span>. Pick whatever you think is best.
+prefer <span class="path">/opt</span>.
+The default is <span class="path">/opt/synctool</span>, and it will put
+the synctool commands in <span class="path">/opt/synctool/sbin</span>.
 </p>
 
 <p>
@@ -75,22 +77,16 @@ what nodes have what roles, and how synctool can contact them.
 Think a bit about what role each machine has. There is no need to go into
 great depth right now; you can always adjust the configuration later.
 <div class="example">
-node n1 ipaddress:machine-n01 hostname:machine-n01.domain.org
+node n1 ipaddress:machine-n01
 </div>
 The nodename is the &lsquo;synctool name that the node has.&rsquo; It is in
 general the short hostname of the host, but in fact it can be anything you
 like. The nodename has nothing to do with hostnames or DNS entries.
-The optional <span class="system">ipaddress</span> specifier tells synctool how
+The <span class="system">ipaddress</span> specifier tells synctool how
 to contact the node; this can be an IP address or a DNS name of the host you
 wish to contact. In clusters, there is often a management network interface
 &mdash; configure its IP address here.
 </p>
-<div class="note">
-In older versions of synctool, <span class="system">ipaddress</span> was
-called <span class="system">interface</span>.
-The <span class="system">interface</span> keyword still works, but is
-discouraged because it really is an IP address and not a network interface.
-</div>
 The optional <span class="system">hostname</span> specifier tells synctool that
 a host that has this fully qualified hostname, must be this node. In general
 it is safe to omit this, but there are cases (particularly multi-homed systems)
