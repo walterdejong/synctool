@@ -21,7 +21,7 @@ symlink_mode 0755
 #ignore_dotfiles no
 
 # ignore all directories beginning with a dot (like .git, .svn, ...)
-ignore_dotdirs yes
+#ignore_dotdirs no
 
 # ignore specific files/directories
 ignore .svn
