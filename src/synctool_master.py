@@ -119,7 +119,7 @@ def rsync_include_filter(nodename):
 	Returns filename of the filter file'''
 
 	try:
-		(fd, filename) = tempfile.mkstemp(prefix='synctool',
+		(fd, filename) = tempfile.mkstemp(prefix='synctool-',
 											dir=synctool_param.TEMP_DIR)
 	except OSError, reason:
 		stderr('failed to create temp file: %s' % reason)
