@@ -204,7 +204,7 @@ def spellcheck(name):
 	if not m:
 		return False
 
-	if m.groups(0) != name:
+	if m.group(0) != name:
 		return False
 
 	return True
