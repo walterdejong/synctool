@@ -183,12 +183,10 @@ def upload(interface, upload_filename, upload_suffix=None):
 			repos_filename = repos_filename + '._' + node		# use _nodename as default suffix
 	else:
 		if upload_suffix:
-			# remove the current group suffix an add the specified suffix to the filename
-			arr = string.split(obj.src_path, '.')
-			if len(arr) > 1 and arr[-1][0] == '_':
-				repos_filename = string.join(arr[:-1], '.')
-
-			repos_filename = repos_filename + '._' + upload_suffix
+			# remove the current group suffix
+			# and add the specified suffix to the filename
+			(repos_filename, ext) = os.path.splitext(obj.src_path)
+			repos_filename += '._' + upload_suffix
 		else:
 			repos_filename = obj.src_path
 
