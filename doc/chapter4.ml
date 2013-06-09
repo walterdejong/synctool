@@ -12,23 +12,23 @@ the config file, you must define <span class="system">masterdir</span> first.
 </dd>
 
 <dt>overlaydir &lt;directory&gt;</dt>
-<dd><b>deprecated</b><br />
+<dd><b>obsolete</b><br />
 This directory is hardcoded as <span class="system">$masterdir/overlay/</span>.
 </dd>
 
 <dt>deletedir &lt;directory&gt;</dt>
-<dd><b>deprecated</b><br />
+<dd><b>obsolete</b><br />
 This directory is hardcoded as <span class="system">$masterdir/delete/</span>.
 </dd>
 
 <dt>tasksdir &lt;directory&gt;</dt>
-<dd><b>deprecated</b><br />
+<dd><b>obsolete</b><br />
 synctool can no longer run tasks. If you still want this functionality,
 please use <span class="cmd">dsh</span> instead.
 </dd>
 
 <dt>scriptdir &lt;directory&gt;</dt>
-<dd><b>deprecated</b><br />
+<dd><b>obsolete</b><br />
 synctool no longer supports <span class="system">scriptdir</span>.
 Please use <span class="system">.post</span> scripts instead.
 </dd>
@@ -327,14 +327,14 @@ software upgrades.
 </dd>
 
 <dt>on_update &lt;filename&gt; &lt;shell command&gt;</dt>
-<dd><b>deprecated<b><br />
+<dd><b>obsolete<b><br />
 This mechanism is no longer available, because it doesn't play nice with
-multi-platform setups. Please use (the more flexible and more powerful)
+multi-platform setups. Please use (the more flexible and powerful)
 <span class="system">.post</span> scripts instead.
 </dd>
 
 <dt>always_run &lt;shell command&gt;</dt>
-<dd><b>deprecated<b><br />
+<dd><b>obsolete<b><br />
 This mechanism is no longer available. If you still want this functionality,
 wrap the <span class="system">synctool_cmd</span> command with a shell script.
 </dd>

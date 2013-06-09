@@ -8,6 +8,14 @@ June 2013
   like ping_cmd, ssh_cmd, etc.
 - fix issue; --erase-saved -f would also apply changes
 - fix; groups "all" and "none" can not be redefined
+- option --tasks is obsolete; use dsh and dsh-pkg
+- on_update is obsolete; use .post scripts
+- always_run is obsolete; use dsh or a wrapper script if you really need it
+- overlaydir is obsolete: hardcoded as $masterdir/overlay
+- deletedir is obsolete: hardcoded as $masterdir/delete
+- tasksdir is obsolete: tasks are obsolete
+- scriptdir is obsolete: use .post scripts instead
+- use new tempdir setting as location for temp files
 
 Aug 2012
 - added dsh --numproc, patch by Werner Maier
