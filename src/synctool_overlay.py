@@ -13,7 +13,7 @@ import synctool_param
 import synctool_stat
 import synctool_lib
 
-from synctool_lib import stderr, terse
+from synctool_lib import verbose, stderr, terse
 
 import os
 import sys
@@ -144,10 +144,15 @@ def relevant_overlay_dirs(overlay_dir):
 		except ValueError:
 			continue
 
+		if importance == -1:
+			verbose('dir %s/ is not one of my groups, skipping' %
+					entry)
+			continue
+
 		d = os.path.join(overlay_dir, entry)
 		if os.path.isdir(d):
 			a.append(d, importance)
-			verbose('scanning relevant dir: %s' % d)
+			verbose('scanning relevant dir: %s/' % d)
 
 	return a
 
@@ -158,6 +163,8 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 	Each element in the list is an instance of SyncObject'''
 
 	global POST_SCRIPTS
+
+	verbose('overlay pass 1 %s/' % overlay_dir)
 
 	for entry in os.listdir(overlay_dir):
 		if entry in synctool_param.IGNORE_FILES:
@@ -253,6 +260,8 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = '/',
 def overlay_pass2(filelist, filedict):
 	'''do pass #2 of 2; create dictionary of destination paths from list
 	Each element in the dictionary is an instance of OverlayEntry'''
+
+	verbose('overlay pass 2')
 
 	for entry in filelist:
 		if filedict.has_key(entry.dest_path):
