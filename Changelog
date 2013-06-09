@@ -1,7 +1,7 @@
 June 2013
 - overlay dirs are grouped; default overlay dir is overlay/all/
 - rsync only relevant directories to the nodes
-- node and group names are checked against a character set
+- node and group names are checked against a character set;
   'strange' symbols are no longer allowed
 - master passes nodename to the client; "hostid:" no longer needed
 - fix issue with multi-OS; do not check all paths of configured commands
