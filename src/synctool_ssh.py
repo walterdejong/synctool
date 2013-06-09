@@ -1,4 +1,4 @@
-#! /usr/bin/env python -tt
+#! /usr/bin/env python
 #
 #	synctool-ssh	WJ109
 #
