@@ -114,6 +114,7 @@ Example:
 <div class="example">
 logfile /var/log/synctool.log
 </div>
+Mind that synctool does not rotate the logfile by itself.
 </dd>
 
 <dt>diff_cmd &lt;diff UNIX command&gt;</dt>
@@ -230,13 +231,14 @@ Valid values for <span class="system">package_manager</span> are:
 <dt>num_proc &lt;number&gt;</dt>
 <dd>This specifies the maximum amount of parallel processes that synctool
 will use. For large clusters, you will want to increase this value, but mind
-that this will increase the load on your master node. Setting this value higher
-than the amount of nodes you have, has no effect.<br />
+that this will increase the load on your master node. Setting this value
+higher than the amount of nodes you have, has no effect.<br />
 The default hardcoded value is <span class="system">16</span>.
 </dd>
 
 <dt>full_path &lt;yes/no&gt;</dt>
-<dd>synctool likes to abbreviate paths to <span class="path">$masterdir/overlay/some/dir/file</span>.
+<dd>synctool likes to abbreviate paths to
+<span class="path">$masterdir/overlay/some/dir/file</span>.
 When you set this option to &ldquo;no, &rdquo; synctool will display the true
 full path instead of the abbreviated one.<br />
 Default value is <span class="system">no</span>.
@@ -312,8 +314,6 @@ node node9 batch &nbsp; &nbsp;rack1 ipaddress:node9-mgmt
 <dd>This tells synctool to ignore one or more nodes. You can use this if you
 want to skip this node for a while for some reason, for example because it
 is broken.<br />
-In older versions of synctool, <span class="system">ignore_node</span>
-was named <span class="system">ignore_host</span>.
 </dd>
 
 <dt>ignore_group &lt;group&gt; [..]</dt>
