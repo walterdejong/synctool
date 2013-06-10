@@ -8,17 +8,25 @@
 #   License.
 #
 
+import os
+import sys
+
 VERSION = '6.0-beta'
 
-DEFAULT_CONF = '/var/lib/synctool/synctool.conf'
-CONF_FILE = DEFAULT_CONF
+# The config file is initialized by detect_root()
+# and may be overridden on the command-line
+DEFAULT_CONF = None
+CONF_FILE = None
 
 BOOLEAN_VALUE_TRUE = ('1', 'on', 'yes', 'true')
 BOOLEAN_VALUE_FALSE = ('0', 'off', 'no', 'false')
 
 #
-#	config variables
+# config variables
+# The root, masterdir, overlaydir and deletedir are initialized
+# by detect_root(), and may be overridden in the config file
 #
+SYNCTOOL_ROOT = None
 MASTERDIR = None
 OVERLAY_DIR = None
 DELETE_DIR = None
@@ -46,6 +54,9 @@ NUM_PROC = 16				# use sensible default
 #
 # The symlink mode can be set in the config file
 # with keyword symlink_mode
+#
+# Changing this value here has no effect ...
+# By default, detect_root() will set it to 0777 on Linux and 0755 otherwise
 SYMLINK_MODE = 0755
 
 REQUIRE_EXTENSION = True
@@ -109,5 +120,36 @@ KNOWN_PACKAGE_MANAGERS = (
 	'apt-get', 'yum', 'zypper', 'brew', 'pacman', 'bsdpkg',
 #	'urpmi', 'portage', 'port', 'swaret',
 )
+
+
+def init():
+	'''detect my prefix and set initial directories'''
+
+	global SYNCTOOL_ROOT, DEFAULT_CONF, CONF_FILE
+#	global MASTERDIR, MASTER_LEN, OVERLAY_DIR, DELETE_DIR
+
+	base = os.path.abspath(os.path.dirname(sys.argv[0]))
+	if not base:
+		raise RuntimeError, 'unable to determine base dir'
+
+	(SYNCTOOL_ROOT, bindir) = os.path.split(base)
+
+	DEFAULT_CONF = os.path.join(SYNCTOOL_ROOT, 'etc/synctool.conf')
+	CONF_FILE = DEFAULT_CONF
+
+	# FIXME conflicts with the current configparser
+	# "redefinition of ..."
+
+#	MASTERDIR = os.path.join(SYNCTOOL_ROOT, 'var')
+#	MASTER_LEN = len(MASTERDIR) + 1
+#	OVERLAY_DIR = os.path.join(MASTERDIR, 'overlay')
+#	DELETE_DIR = os.path.join(MASTERDIR, 'delete')
+
+	# detect symlink mode
+	if sys.platform[:5] == 'linux':
+		SYMLINK_MODE = 0777
+	else:
+		SYMLINK_MODE = 0755
+
 
 # EOB

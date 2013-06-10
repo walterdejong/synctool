@@ -380,6 +380,8 @@ def get_options():
 
 
 def main():
+	synctool.param.init()
+
 	get_options()
 
 	if ACTION == ACTION_VERSION:

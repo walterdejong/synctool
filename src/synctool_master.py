@@ -624,6 +624,8 @@ def get_options():
 
 
 def main():
+	synctool.param.init()
+
 	sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)
 	sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)
 

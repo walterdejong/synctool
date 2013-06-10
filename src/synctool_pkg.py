@@ -366,6 +366,8 @@ def get_options():
 
 
 def main():
+	synctool.param.init()
+
 	get_options()
 
 	synctool.lib.QUIET = not synctool.lib.VERBOSE

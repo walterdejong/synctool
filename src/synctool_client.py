@@ -602,6 +602,8 @@ def get_options():
 
 
 def main():
+	synctool.param.init()
+
 	action = get_options()
 
 	synctool.config.init_mynodename()
