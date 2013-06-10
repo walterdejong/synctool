@@ -68,6 +68,8 @@ pkg_cmd $masterdir/sbin/synctool_pkg.py
 # cluster. If you run a multi-platform setup and need to force
 # the package_manager, solve it with a local include, like:
 #  include /etc/synctool_local.conf
+# You can still override this setting from the command-line when invoking
+# synctool-pkg.
 #
 #package_manager apt-get
 #package_manager yum

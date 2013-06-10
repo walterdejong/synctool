@@ -180,15 +180,14 @@ scp -o ConnectTimeout=10 -p
 <dd>Give the command and arguments to execute <span class="cmd">rsync</span>.
 &nbsp; synctool uses this command to distribute the repository to the target
 nodes. The exact location of the <span class="cmd">rsync</span> command is
-operating system specific; the PATH environment variable will
-be searched for the command if you do not supply a full path.<br />
-Unless you keep the repository in a high performance
-shared filesystem, you must configure this parameter correctly for synctool
-to work.<br />
+operating system specific; the PATH environment variable will be searched for
+the command if you do not supply a full path.<br />
+Unless you keep the repository in a high performance shared filesystem,
+you must configure this parameter correctly for synctool to work.<br />
 There is no default, but synctool ships with the following in the example
 configuration file:
 <div class="example">
-rsync -ar --delete -e 'ssh -o ConnectTimeout=10 -q'
+rsync -ar --numeric-ids --delete --delete-excluded -e 'ssh -o ConnectTimeout=10 -x -q' -q
 </div>
 </dd>
 
@@ -202,7 +201,7 @@ There is no default, and you must configure this parameter correctly for
 synctool to work. synctool ships with the following sensible setting in the
 example configuration file:
 <div class="example">
-synctool_cmd $masterdir/sbin/synctool.py -c $masterdir/synctool.conf
+synctool_cmd $masterdir/sbin/synctool.py
 </div>
 </dd>
 

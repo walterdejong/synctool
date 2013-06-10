@@ -150,7 +150,7 @@ compound group must be defined before defining the nodes:
 group wn workernode debian plasma mathworks solar \ <br />
 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;fsmounted backup<br />
 <br />
-node 101 wn ipaddress:if0-n101
+node n101 wn ipaddress:if0-n101
 </div>
 <h3 id="testing_with_dsh">Testing with dsh</h3>
 After filling in a couple of nodes in <span class="path">synctool.conf</span>,
