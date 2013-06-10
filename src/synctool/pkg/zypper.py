@@ -8,14 +8,14 @@
 #   License.
 #
 
-import synctool_object
 import synctool_lib
-
 from synctool_lib import stderr
-from synctool.pkgclass import SyncPkg
 
 import os
 import string
+
+import synctool.object
+from synctool.pkgclass import SyncPkg
 
 
 class SyncPkgZypper(SyncPkg):
