@@ -675,7 +675,7 @@ def config_ignore_group(arr, configfile, lineno):
 	errors = 0
 
 	for group in arr[1:]:
-		if not spellcheck(node):
+		if not spellcheck(group):
 			stderr("%s:%d: invalid group name '%s'" %
 				(configfile, lineno, group))
 			errors += 1
