@@ -224,7 +224,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.path.sep,
 					if importance >= POST_SCRIPTS[trigger].importance:
 						continue
 
-				POST_SCRIPTS[trigger] = synctool_object.SyncObject(src_path,
+				POST_SCRIPTS[trigger] = synctool.object.SyncObject(src_path,
 										dest_dir, importance, src_statbuf)
 			else:
 				# unfortunately, the name has been messed up already
@@ -240,7 +240,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.path.sep,
 
 		dest_path = os.path.join(dest_dir, name)
 
-		filelist.append(synctool_object.SyncObject(src_path, dest_path,
+		filelist.append(synctool.object.SyncObject(src_path, dest_path,
 						importance, src_statbuf))
 
 		if isDir:
