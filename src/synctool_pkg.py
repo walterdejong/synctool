@@ -70,7 +70,7 @@ def package_manager():
 			short_mgr = string.replace(mgr, '-', '')
 
 			# load the module
-			module = __import__('synctool_pkg_%s' % short_mgr)
+			module = __import__('synctool/pkg/%s' % short_mgr)
 
 			# find the package manager class
 			pkgclass = getattr(module, 'SyncPkg%s' %
