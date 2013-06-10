@@ -108,6 +108,7 @@ def worker_synctool(rank, nodes):
 
 
 def run_local_synctool():
+	# FIXME all these redundant checks can go out
 	if not synctool.param.SYNCTOOL_CMD:
 		stderr('%s: error: synctool_cmd has not been defined in %s' %
 			(os.path.basename(sys.argv[0]), synctool.param.CONF_FILE))
@@ -138,6 +139,8 @@ def rsync_include_filter(nodename):
 
 	# include masterdir
 	# but exclude the top overlay/ and delete/ dir
+
+	## FIXME these paths need to be updated
 
 	f.write('''# synctool rsync filter
 + /overlay/
