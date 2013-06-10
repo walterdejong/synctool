@@ -617,11 +617,6 @@ def main():
 			(synctool_param.CONF_FILE, synctool_param.NODENAME))
 		sys.exit(1)
 
-	synctool_config.remove_ignored_groups()
-
-	synctool_param.MY_GROUPS = synctool_config.get_my_groups()
-	synctool_param.ALL_GROUPS = synctool_config.make_all_groups()
-
 	if synctool_lib.UNIX_CMD:
 		t = time.localtime(time.time())
 

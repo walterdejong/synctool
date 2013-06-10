@@ -44,10 +44,6 @@ def run_remote_synctool(nodes):
 	if not nodes:
 		return
 
-	# make the group definitions
-	synctool_config.remove_ignored_groups()
-	synctool_param.ALL_GROUPS = synctool_config.make_all_groups()
-
 	# run in parallel
 	synctool_lib.run_parallel(master_synctool, worker_synctool,
 		nodes, len(nodes))
@@ -198,11 +194,6 @@ def upload(interface, upload_filename, upload_suffix=None):
 	trimmed_upload_fn = upload_filename[1:]		# remove leading slash
 
 	import synctool_overlay
-
-	# make the known groups lists
-	synctool_config.remove_ignored_groups()
-	synctool_param.MY_GROUPS = synctool_config.get_my_groups()
-	synctool_param.ALL_GROUPS = synctool_config.make_all_groups()
 
 	if upload_suffix and not upload_suffix in synctool_param.ALL_GROUPS:
 		stderr("no such group '%s'" % upload_suffix)

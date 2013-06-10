@@ -84,9 +84,8 @@ class NodeSet:
 
 			if self.grouplist:
 				# check if the groups exist at all
-				all_groups = synctool_config.make_all_groups()
 				for group in self.grouplist:
-					if not group in all_groups:
+					if not group in synctool_param.ALL_GROUPS:
 						stderr("no such group '%s'" % group)
 						return None
 

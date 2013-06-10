@@ -500,8 +500,6 @@ if __name__ == '__main__':
 
 	synctool_param.CONF_FILE = '/Users/walter/synctool-test/synctool.conf'
 	synctool_config.read_config()
-	synctool_param.MY_GROUPS = ['node1', 'group1', 'group2', 'all']
-	synctool_param.ALL_GROUPS = synctool_config.make_all_groups()
 
 	def visit_callback(obj):
 		# normally you wouldn't use this ...

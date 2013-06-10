@@ -117,7 +117,13 @@ def read_config():
 	# initialize ALL_GROUPS
 	synctool_param.ALL_GROUPS = make_all_groups()
 
+	# make the default nodeset
+	# note that it may still contain ignored nodes
+	# the NodeSet will print warnings about ignored nodes
 	errors += make_default_nodeset()
+
+	# remove ignored groups from node definitions
+	remove_ignored_groups()
 
 	if errors > 0:
 		sys.exit(-1)
@@ -176,7 +182,8 @@ def check_cmd_config(param_name, cmd):
 
 
 def init_mynodename():
-	'''determine the nodename of the current host'''
+	'''determine the nodename of the current host
+	and initialize MY_GROUPS'''
 
 	# In practice, the nodename is determined by the master in synctool.conf
 	# The master then tells the client what its nodename is
@@ -235,6 +242,7 @@ def init_mynodename():
 	# It only really matters for synctool.py, which checks this condition
 
 	synctool_param.NODENAME = nodename
+	synctool_param.MY_GROUPS = get_my_groups()
 
 
 def remove_ignored_groups():
@@ -399,15 +407,13 @@ def get_nodes_in_groups(groups):
 	return arr
 
 
-def list_nodegroups(nodegroups):
-	all_groups = make_all_groups()
-
-	for nodegroup in nodegroups:
-		if not nodegroup in all_groups:
-			stderr("no such nodegroup '%s' defined" % nodegroup)
+def list_nodegroups(groups):
+	for group in groups:
+		if not group in synctool_param.ALL_GROUPS:
+			stderr("no such group '%s' defined" % group)
 			sys.exit(1)
 
-	arr = get_nodes_in_groups(nodegroups)
+	arr = get_nodes_in_groups(groups)
 	arr.sort()
 
 	for node in arr:
