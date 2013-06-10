@@ -9,7 +9,6 @@
 #   License.
 #
 
-import synctool_nodeset
 import synctool_config
 import synctool_param
 import synctool_ssh
@@ -24,9 +23,10 @@ import getopt
 import shlex
 import errno
 
+import synctool.nodeset
 import synctool.unbuffered
 
-NODESET = synctool_nodeset.NodeSet()
+NODESET = synctool.nodeset.NodeSet()
 
 DESTDIR = None
 OPT_AGGREGATE = False

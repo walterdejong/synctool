@@ -11,7 +11,6 @@
 #	- call synctool_pkg on specified nodes
 #
 
-import synctool_nodeset
 import synctool_config
 import synctool_param
 import synctool_aggr
@@ -28,9 +27,10 @@ import getopt
 import shlex
 import errno
 
+import synctool.nodeset
 import synctool.unbuffered
 
-NODESET = synctool_nodeset.NodeSet()
+NODESET = synctool.nodeset.NodeSet()
 
 OPT_AGGREGATE = False
 
