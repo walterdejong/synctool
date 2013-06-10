@@ -8,13 +8,13 @@
 #   License.
 #
 
-import synctool_lib
-
-from synctool_lib import verbose
-from synctool.pkgclass import SyncPkg
-
 import os
 import string
+
+import synctool.lib
+from synctool.lib import verbose
+from synctool.pkgclass import SyncPkg
+
 
 # I have no access to *BSD machines so here goes nothing ...
 
@@ -38,9 +38,9 @@ class SyncPkgBsdpkg(SyncPkg):
 		else:
 			cmd = cmd + ' -a'		# list all installed packages
 
-		synctool_lib.DRY_RUN = False
-		synctool_lib.shell_command(cmd)
-		synctool_lib.DRY_RUN = self.dryrun
+		synctool.lib.DRY_RUN = False
+		synctool.lib.shell_command(cmd)
+		synctool.lib.DRY_RUN = self.dryrun
 
 
 	def install(self, pkgs):
@@ -48,7 +48,7 @@ class SyncPkgBsdpkg(SyncPkg):
 
 		cmd = 'pkg_add -v ' + string.join(pkgs)
 
-		synctool_lib.shell_command(cmd)
+		synctool.lib.shell_command(cmd)
 
 
 	def remove(self, pkgs):
@@ -56,7 +56,7 @@ class SyncPkgBsdpkg(SyncPkg):
 
 		cmd = 'pkg_delete -v ' + string.join(pkgs)
 
-		synctool_lib.shell_command(cmd)
+		synctool.lib.shell_command(cmd)
 
 
 	def update(self):
@@ -85,9 +85,9 @@ class SyncPkgBsdpkg(SyncPkg):
 			else:
 				cmd = 'pkg_add -uv'
 
-		synctool_lib.DRY_RUN = False
-		synctool_lib.shell_command(cmd)
-		synctool_lib.DRY_RUN = self.dryrun
+		synctool.lib.DRY_RUN = False
+		synctool.lib.shell_command(cmd)
+		synctool.lib.DRY_RUN = self.dryrun
 
 
 	def clean(self):

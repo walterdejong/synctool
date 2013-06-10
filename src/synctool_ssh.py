@@ -9,10 +9,6 @@
 #   License.
 #
 
-import synctool_lib
-
-from synctool_lib import verbose,stderr,unix_out
-
 import os
 import sys
 import string
@@ -22,6 +18,8 @@ import errno
 
 import synctool.aggr
 import synctool.config
+import synctool.lib
+from synctool.lib import verbose,stderr,unix_out
 import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
@@ -46,7 +44,7 @@ def run_dsh(remote_cmd_arr):
 	if SSH_OPTIONS:
 		ssh_cmd_arr.extend(shlex.split(SSH_OPTIONS))
 
-	synctool_lib.run_parallel(master_ssh, worker_ssh,
+	synctool.lib.run_parallel(master_ssh, worker_ssh,
 		(nodes, ssh_cmd_arr, remote_cmd_arr), len(nodes))
 
 
@@ -71,7 +69,7 @@ def master_ssh(rank, args):
 
 
 def worker_ssh(rank, args):
-	if synctool_lib.DRY_RUN:		# got here for nothing
+	if synctool.lib.DRY_RUN:		# got here for nothing
 		return
 
 	(nodes, ssh_cmd_arr, remote_cmd_arr) = args
@@ -88,7 +86,7 @@ def worker_ssh(rank, args):
 	ssh_cmd_arr.extend(remote_cmd_arr)
 
 	# execute ssh+remote command and show output with the nodename
-	synctool_lib.run_with_nodename(ssh_cmd_arr, nodename)
+	synctool.lib.run_with_nodename(ssh_cmd_arr, nodename)
 
 
 def check_cmd_config():
@@ -183,7 +181,7 @@ def get_options():
 			continue
 
 		if opt in ('-v', '--verbose'):
-			synctool_lib.VERBOSE = True
+			synctool.lib.VERBOSE = True
 			continue
 
 		if opt in ('-n', '--node'):
@@ -226,15 +224,15 @@ def get_options():
 			continue
 
 		if opt in ('-N', '--no-nodename'):
-			synctool_lib.OPT_NODENAME = False
+			synctool.lib.OPT_NODENAME = False
 			continue
 
 		if opt == '--unix':
-			synctool_lib.UNIX_CMD = True
+			synctool.lib.UNIX_CMD = True
 			continue
 
 		if opt == '--dry-run':
-			synctool_lib.DRY_RUN = True
+			synctool.lib.DRY_RUN = True
 			continue
 
 		if opt in ('-q', '--quiet'):

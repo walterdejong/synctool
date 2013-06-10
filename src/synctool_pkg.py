@@ -9,10 +9,6 @@
 #   License.
 #
 
-import synctool_lib
-
-from synctool_lib import verbose,stdout,stderr,terse,unix_out,dryrun_msg
-
 import os
 import sys
 import string
@@ -20,6 +16,8 @@ import getopt
 import errno
 
 import synctool.config
+import synctool.lib
+from synctool.lib import verbose,stdout,stderr,terse,unix_out,dryrun_msg
 import synctool.param
 import synctool.stat
 
@@ -230,7 +228,7 @@ def get_options():
 		usage()
 		sys.exit(1)
 
-	synctool_lib.DRY_RUN = True		# set default dry-run
+	synctool.lib.DRY_RUN = True		# set default dry-run
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:iRluUCm:fvq',
@@ -325,15 +323,15 @@ def get_options():
 			continue
 
 		if opt in ('-f', '--fix'):
-			synctool_lib.DRY_RUN = False
+			synctool.lib.DRY_RUN = False
 			continue
 
 		if opt in ('-v', '--verbose'):
-			synctool_lib.VERBOSE = True
+			synctool.lib.VERBOSE = True
 			continue
 
 		if opt == '--unix':
-			synctool_lib.UNIX_CMD = True
+			synctool.lib.UNIX_CMD = True
 			continue
 
 		if opt in ('-q', '--quiet'):
@@ -364,13 +362,13 @@ def get_options():
 	# The other actions will execute immediatly
 
 	if ACTION != ACTION_UPGRADE:
-		synctool_lib.DRY_RUN = False
+		synctool.lib.DRY_RUN = False
 
 
 def main():
 	get_options()
 
-	synctool_lib.QUIET = not synctool_lib.VERBOSE
+	synctool.lib.QUIET = not synctool.lib.VERBOSE
 
 	pkg = package_manager()
 

@@ -9,10 +9,7 @@
 #   License.
 #
 
-import synctool_lib
 import synctool_ssh
-
-from synctool_lib import verbose,stderr,unix_out
 
 import os
 import sys
@@ -22,6 +19,8 @@ import shlex
 import errno
 
 import synctool.config
+import synctool.lib
+from synctool.lib import verbose,stderr,unix_out
 import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
@@ -52,7 +51,7 @@ def run_remote_copy(nodes, files):
 
 	files_str = string.join(files)		# this is used only for printing
 
-	synctool_lib.run_parallel(master_scp, worker_scp,
+	synctool.lib.run_parallel(master_scp, worker_scp,
 		(nodes, scp_cmd_arr, files_str), len(nodes))
 
 
@@ -87,7 +86,7 @@ def master_scp(rank, args):
 def worker_scp(rank, args):
 	'''runs scp (remote copy) to node'''
 
-	if synctool_lib.DRY_RUN:	# got here for nothing
+	if synctool.lib.DRY_RUN:	# got here for nothing
 		return
 
 	(nodes, scp_cmd_arr, files_str) = args
@@ -102,7 +101,7 @@ def worker_scp(rank, args):
 	else:
 		scp_cmd_arr.append('%s:' % node)
 
-	synctool_lib.run_with_nodename(scp_cmd_arr, nodename)
+	synctool.lib.run_with_nodename(scp_cmd_arr, nodename)
 
 
 def check_cmd_config():
@@ -201,7 +200,7 @@ def get_options():
 			continue
 
 		if opt in ('-v', '--verbose'):
-			synctool_lib.VERBOSE = True
+			synctool.lib.VERBOSE = True
 			continue
 
 		if opt in ('-n', '--node'):
@@ -233,15 +232,15 @@ def get_options():
 			continue
 
 		if opt in ('-N', '--no-nodename'):
-			synctool_lib.OPT_NODENAME = False
+			synctool.lib.OPT_NODENAME = False
 			continue
 
 		if opt == '--unix':
-			synctool_lib.UNIX_CMD = True
+			synctool.lib.UNIX_CMD = True
 			continue
 
 		if opt == '--dry-run':
-			synctool_lib.DRY_RUN = True
+			synctool.lib.DRY_RUN = True
 			continue
 
 		if opt in ('-q', '--quiet'):

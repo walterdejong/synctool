@@ -8,13 +8,11 @@
 #   License.
 #
 
-import synctool_lib
-
-from synctool_lib import verbose,stdout,stderr,terse,unix_out,dryrun_msg
-
 import os
 import shutil
 
+import synctool.lib
+from synctool.lib import verbose,stdout,stderr,terse,unix_out,dryrun_msg
 import synctool.param
 import synctool.stat
 
@@ -51,11 +49,11 @@ class SyncObject:
 
 
 	def print_src(self):
-		return synctool_lib.prettypath(self.src_path)
+		return synctool.lib.prettypath(self.src_path)
 
 
 	def print_dest(self):
-		return synctool_lib.prettypath(self.dest_path)
+		return synctool.lib.prettypath(self.dest_path)
 
 
 	def src_stat(self):
@@ -213,12 +211,12 @@ class SyncObject:
 				src_link = os.readlink(src_path)
 			except OSError, reason:
 				stderr('failed to readlink %s : %s' % (src_path, reason))
-				terse(synctool_lib.TERSE_FAIL, 'readlink %s' % src_path)
+				terse(synctool.lib.TERSE_FAIL, 'readlink %s' % src_path)
 				return False
 
 			if not dest_stat.exists():
 				stdout('symbolic link %s does not exist' % dest_path)
-				terse(synctool_lib.TERSE_LINK, dest_path)
+				terse(synctool.lib.TERSE_LINK, dest_path)
 				unix_out('# create symbolic link %s' % dest_path)
 				need_update = True
 
@@ -228,13 +226,13 @@ class SyncObject:
 				except OSError, reason:
 					stderr('failed to readlink %s : %s '
 						'(but ignoring this error)' % (src_path, reason))
-					terse(synctool_lib.TERSE_FAIL, 'readlink %s' % src_path)
+					terse(synctool.lib.TERSE_FAIL, 'readlink %s' % src_path)
 					dest_link = None
 
 				if src_link != dest_link:
 					stdout('%s should point to %s, but points to %s' %
 						(dest_path, src_link, dest_link))
-					terse(synctool_lib.TERSE_LINK, dest_path)
+					terse(synctool.lib.TERSE_LINK, dest_path)
 					unix_out('# relink symbolic link %s' % dest_path)
 					need_update = True
 
@@ -242,7 +240,7 @@ class SyncObject:
 					stdout('%s should have mode %04o (symlink), '
 						'but has %04o' % (dest_path,
 						synctool.param.SYMLINK_MODE, dest_stat.mode & 07777))
-					terse(synctool_lib.TERSE_MODE, '%04o %s' %
+					terse(synctool.lib.TERSE_MODE, '%04o %s' %
 						(synctool.param.SYMLINK_MODE, dest_path))
 					unix_out('# fix permissions of symbolic link %s' %
 						dest_path)
@@ -250,7 +248,7 @@ class SyncObject:
 
 			elif dest_stat.isDir():
 				stdout('%s should be a symbolic link' % dest_path)
-				terse(synctool_lib.TERSE_LINK, dest_path)
+				terse(synctool.lib.TERSE_LINK, dest_path)
 				unix_out('# target should be a symbolic link')
 				self.save_dir()
 				need_update = True
@@ -260,7 +258,7 @@ class SyncObject:
 			#
 			else:
 				stdout('%s should be a symbolic link' % dest_path)
-				terse(synctool_lib.TERSE_LINK, dest_path)
+				terse(synctool.lib.TERSE_LINK, dest_path)
 				unix_out('# target should be a symbolic link')
 				need_update = True
 
@@ -278,14 +276,14 @@ class SyncObject:
 		elif src_stat.isDir():
 			if not dest_stat.exists():
 				stdout('%s/ does not exist' % dest_path)
-				terse(synctool_lib.TERSE_MKDIR, dest_path)
+				terse(synctool.lib.TERSE_MKDIR, dest_path)
 				unix_out('# make directory %s' % dest_path)
 				need_update = True
 
 			elif dest_stat.isLink():
 				stdout('%s is a symbolic link, but should be a directory' %
 					dest_path)
-				terse(synctool_lib.TERSE_MKDIR, dest_path)
+				terse(synctool.lib.TERSE_MKDIR, dest_path)
 				unix_out('# target should be a directory instead of '
 					'a symbolic link')
 				self.delete_file()
@@ -296,7 +294,7 @@ class SyncObject:
 			#
 			elif not dest_stat.isDir():
 				stdout('%s should be a directory' % dest_path)
-				terse(synctool_lib.TERSE_MKDIR, dest_path)
+				terse(synctool.lib.TERSE_MKDIR, dest_path)
 				unix_out('# target should be a directory')
 				self.delete_file()
 				need_update = True
@@ -317,13 +315,13 @@ class SyncObject:
 		elif src_stat.isFile():
 			if not dest_stat.exists():
 				stdout('%s does not exist' % dest_path)
-				terse(synctool_lib.TERSE_NEW, dest_path)
+				terse(synctool.lib.TERSE_NEW, dest_path)
 				unix_out('# copy file %s' % dest_path)
 				need_update = True
 
 			elif dest_stat.isLink():
 				stdout('%s is a symbolic link, but should not be' % dest_path)
-				terse(synctool_lib.TERSE_TYPE, dest_path)
+				terse(synctool.lib.TERSE_TYPE, dest_path)
 				unix_out('# target should be a file instead of '
 					'a symbolic link')
 				self.delete_file()
@@ -331,7 +329,7 @@ class SyncObject:
 
 			elif dest_stat.isDir():
 				stdout('%s is a directory, but should not be' % dest_path)
-				terse(synctool_lib.TERSE_TYPE, dest_path)
+				terse(synctool.lib.TERSE_TYPE, dest_path)
 				unix_out('# target should be a file instead of a directory')
 				self.save_dir()
 				need_update = True
@@ -341,11 +339,11 @@ class SyncObject:
 			#
 			elif dest_stat.isFile():
 				if src_stat.size != dest_stat.size:
-					if synctool_lib.DRY_RUN:
+					if synctool.lib.DRY_RUN:
 						stdout('%s mismatch (file size)' % dest_path)
 					else:
 						stdout('%s updated (file size mismatch)' % dest_path)
-					terse(synctool_lib.TERSE_SYNC, dest_path)
+					terse(synctool.lib.TERSE_SYNC, dest_path)
 					unix_out('# updating file %s' % dest_path)
 					need_update = True
 				else:
@@ -353,7 +351,7 @@ class SyncObject:
 					# check file contents (SHA1 or MD5 checksum)
 					#
 					try:
-						src_sum, dest_sum = synctool_lib.checksum_files(
+						src_sum, dest_sum = synctool.lib.checksum_files(
 											src_path, dest_path)
 					except IOError, (err, reason):
 # error was already printed
@@ -361,20 +359,20 @@ class SyncObject:
 						return False
 
 					if src_sum != dest_sum:
-						if synctool_lib.DRY_RUN:
+						if synctool.lib.DRY_RUN:
 #							stdout('%s mismatch (SHA1 checksum)' % dest_path)
 							stdout('%s mismatch (MD5 checksum)' % dest_path)
 						else:
 #							stdout('%s updated (SHA1 mismatch)' % dest_path)
 							stdout('%s updated (MD5 mismatch)' % dest_path)
 
-						terse(synctool_lib.TERSE_SYNC, dest_path)
+						terse(synctool.lib.TERSE_SYNC, dest_path)
 						unix_out('# updating file %s' % dest_path)
 						need_update = True
 
 			else:
 				stdout('%s should be a regular file' % dest_path)
-				terse(synctool_lib.TERSE_TYPE, dest_path)
+				terse(synctool.lib.TERSE_TYPE, dest_path)
 				unix_out('# target should be a regular file')
 				need_update = True
 
@@ -389,27 +387,27 @@ class SyncObject:
 			# source is not a symbolic link, not a directory,
 			# and not a regular file
 			stderr("be advised: don't know how to handle %s" % src_path)
-			terse(synctool_lib.TERSE_WARNING, 'unknown type %s' % src_path)
+			terse(synctool.lib.TERSE_WARNING, 'unknown type %s' % src_path)
 
 			if not dest_stat.exists():
 				return False
 
 			if dest_stat.isLink():
 				stdout('%s should not be a symbolic link' % dest_path)
-				terse(synctool_lib.TERSE_WARNING, 'wrong type %s' % dest_path)
+				terse(synctool.lib.TERSE_WARNING, 'wrong type %s' % dest_path)
 			else:
 				if dest_stat.isDir():
 					stdout('%s should not be a directory' % dest_path)
-					terse(synctool_lib.TERSE_WARNING, 'wrong type %s' %
+					terse(synctool.lib.TERSE_WARNING, 'wrong type %s' %
 														dest_path)
 				else:
 					if dest_stat.isFile():
 						stdout('%s should not be a regular file' % dest_path)
-						terse(synctool_lib.TERSE_WARNING, 'wrong type %s' %
+						terse(synctool.lib.TERSE_WARNING, 'wrong type %s' %
 															dest_path)
 					else:
 						stderr("don't know how to handle %s" % dest_path)
-						terse(synctool_lib.TERSE_WARNING, 'unknown type %s' %
+						terse(synctool.lib.TERSE_WARNING, 'unknown type %s' %
 															dest_path)
 
 		#
@@ -430,7 +428,7 @@ class SyncObject:
 					dest_stat.ascii_uid(), dest_stat.ascii_gid(),
 					dest_stat.uid, dest_stat.gid))
 
-				terse(synctool_lib.TERSE_OWNER, '%s.%s %s' %
+				terse(synctool.lib.TERSE_OWNER, '%s.%s %s' %
 												(owner, group, dest_path))
 				unix_out('# changing ownership on %s' % dest_path)
 
@@ -444,7 +442,7 @@ class SyncObject:
 						(dest_path,
 						src_stat.mode & 07777,
 						dest_stat.mode & 07777))
-				terse(synctool_lib.TERSE_MODE, '%04o %s' %
+				terse(synctool.lib.TERSE_MODE, '%04o %s' %
 												(src_stat.mode & 07777,
 												dest_path))
 				unix_out('# changing permissions on %s' % dest_path)
@@ -478,7 +476,7 @@ class SyncObject:
 		unix_out('umask 077')
 		unix_out('cp %s %s' % (src, dest))
 
-		if not synctool_lib.DRY_RUN:
+		if not synctool.lib.DRY_RUN:
 			old_umask = os.umask(077)
 
 			if synctool.param.BACKUP_COPIES:
@@ -524,7 +522,7 @@ class SyncObject:
 		unix_out('umask %03o' % umask_mode)
 		unix_out('ln -s %s %s' % (oldpath, newpath))
 
-		if not synctool_lib.DRY_RUN:
+		if not synctool.lib.DRY_RUN:
 			if self.dest_exists():
 				verbose('saving %s as %s.saved' % (newpath, newpath))
 				try:
@@ -532,7 +530,7 @@ class SyncObject:
 				except OSError, reason:
 					stderr('failed to save %s as %s.saved : %s' %
 							(newpath, newpath, reason))
-					terse(synctool_lib.TERSE_FAIL, 'save %s.saved' % newpath)
+					terse(synctool.lib.TERSE_FAIL, 'save %s.saved' % newpath)
 
 			old_umask = os.umask(umask_mode)
 
@@ -542,7 +540,7 @@ class SyncObject:
 			except OSError, reason:
 				stderr('failed to create symlink %s -> %s : %s' %
 						(newpath, oldpath, reason))
-				terse(synctool_lib.TERSE_FAIL, 'link %s' % newpath)
+				terse(synctool.lib.TERSE_FAIL, 'link %s' % newpath)
 
 			os.umask(old_umask)
 
@@ -556,7 +554,7 @@ class SyncObject:
 
 		unix_out('chmod 0%o %s' % (mode & 07777, file))
 
-		if not synctool_lib.DRY_RUN:
+		if not synctool.lib.DRY_RUN:
 			verbose('  os.chmod(%s, %04o)' % (file, mode & 07777))
 			try:
 				os.chmod(file, mode & 07777)
@@ -575,7 +573,7 @@ class SyncObject:
 		unix_out('chown %s.%s %s' % (self.src_ascii_uid(),
 									self.src_ascii_gid(), file))
 
-		if not synctool_lib.DRY_RUN:
+		if not synctool.lib.DRY_RUN:
 			verbose('  os.chown(%s, %d, %d)' % (file, uid, gid))
 			try:
 				os.chown(file, uid, gid)
@@ -590,7 +588,7 @@ class SyncObject:
 	def delete_file(self):
 		file = self.dest_path
 
-		if not synctool_lib.DRY_RUN:
+		if not synctool.lib.DRY_RUN:
 			if synctool.param.BACKUP_COPIES:
 				unix_out('mv %s %s.saved' % (file, file))
 
@@ -620,7 +618,7 @@ class SyncObject:
 
 		unix_out('rm -f %s' % file)
 
-		if not synctool_lib.DRY_RUN:
+		if not synctool.lib.DRY_RUN:
 			verbose('  os.unlink(%s)' % file)
 			try:
 				os.unlink(file)
@@ -636,10 +634,10 @@ class SyncObject:
 		stat_saved_path = synctool.stat.SyncStat('%s.saved' % dest)
 
 		if stat_saved_path.exists() and not stat_saved_path.isDir():
-			terse(synctool_lib.TERSE_DELETE, '%s.saved' % dest)
+			terse(synctool.lib.TERSE_DELETE, '%s.saved' % dest)
 			unix_out('rm %s.saved' % dest)
 
-			if synctool_lib.DRY_RUN:
+			if synctool.lib.DRY_RUN:
 				stdout(dryrun_msg('erase %s.saved' % dest, 'erase'))
 			else:
 				stdout('erase %s.saved' % dest)
@@ -658,7 +656,7 @@ class SyncObject:
 		unix_out('umask 077')
 		unix_out('mkdir %s' % path)
 
-		if not synctool_lib.DRY_RUN:
+		if not synctool.lib.DRY_RUN:
 			old_umask = os.umask(077)
 
 			verbose('  os.mkdir(%s)' % path)
@@ -680,7 +678,7 @@ class SyncObject:
 
 		unix_out('mv %s %s.saved' % (path, path))
 
-		if not synctool_lib.DRY_RUN:
+		if not synctool.lib.DRY_RUN:
 			verbose('moving %s to %s.saved' % (path, path))
 			try:
 				os.rename(path, '%s.saved' % path)
@@ -696,7 +694,7 @@ class SyncObject:
 	def mkdir_basepath(self):
 		'''call mkdir -p if the destination directory does not exist yet'''
 
-		if synctool_lib.DRY_RUN:
+		if synctool.lib.DRY_RUN:
 			return
 
 		# check if the directory exists
@@ -704,8 +702,8 @@ class SyncObject:
 		stat = synctool.stat.SyncStat(basedir)
 		if not stat.exists():
 			# create the directory
-			verbose('making directory %s' % synctool_lib.prettypath(basedir))
+			verbose('making directory %s' % synctool.lib.prettypath(basedir))
 			unix_out('mkdir -p %s' % basedir)
-			synctool_lib.mkdir_p(basedir)
+			synctool.lib.mkdir_p(basedir)
 
 # EOB

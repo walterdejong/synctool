@@ -1,5 +1,5 @@
 #
-#	synctool_lib.py		WJ109
+#	synctool.lib.py		WJ109
 #
 #   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
 #

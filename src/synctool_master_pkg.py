@@ -12,10 +12,6 @@
 #
 
 import synctool_ssh
-import synctool_lib
-import synctool
-
-from synctool_lib import verbose,stderr,unix_out
 
 import os
 import sys
@@ -26,6 +22,8 @@ import errno
 
 import synctool.aggr
 import synctool.config
+import synctool.lib
+from synctool.lib import verbose,stderr,unix_out
 import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
@@ -42,7 +40,7 @@ def run_remote_pkg(nodes):
 	if not nodes:
 		return
 
-	synctool_lib.run_parallel(master_pkg, worker_pkg, nodes, len(nodes))
+	synctool.lib.run_parallel(master_pkg, worker_pkg, nodes, len(nodes))
 
 
 def master_pkg(rank, nodes):
@@ -68,7 +66,7 @@ def worker_pkg(rank, nodes):
 	cmd_arr.extend(shlex.split(synctool.param.PKG_CMD))
 	cmd_arr.extend(PASS_ARGS)
 
-	synctool_lib.run_with_nodename(cmd_arr, nodename)
+	synctool.lib.run_with_nodename(cmd_arr, nodename)
 
 
 def run_local_pkg():
@@ -79,7 +77,7 @@ def run_local_pkg():
 
 	cmd_arr = shlex.split(synctool.param.PKG_CMD) + PASS_ARGS
 
-	synctool_lib.run_with_nodename(cmd_arr, synctool.param.NODENAME)
+	synctool.lib.run_with_nodename(cmd_arr, synctool.param.NODENAME)
 
 
 def rearrange_options():
@@ -210,7 +208,7 @@ def get_options():
 		usage()
 		sys.exit(1)
 
-	synctool_lib.DRY_RUN = True				# set default dry-run
+	synctool.lib.DRY_RUN = True				# set default dry-run
 
 	# getopt() assumes that all options given after the first non-option
 	# argument are all arguments (this is standard UNIX behavior, not GNU)
@@ -324,16 +322,16 @@ def get_options():
 			synctool.param.PACKAGE_MANAGER = arg
 
 		if opt in ('-f', '--fix'):
-			synctool_lib.DRY_RUN = False
+			synctool.lib.DRY_RUN = False
 
 		if opt in ('-q', '--quiet'):
-			synctool_lib.QUIET = True
+			synctool.lib.QUIET = True
 
 		if opt in ('-v', '--verbose'):
-			synctool_lib.VERBOSE = True
+			synctool.lib.VERBOSE = True
 
 		if opt == '--unix':
-			synctool_lib.UNIX_CMD = True
+			synctool.lib.UNIX_CMD = True
 
 		if opt in ('-a', '--aggregate'):
 			OPT_AGGREGATE = True
@@ -380,7 +378,7 @@ def main():
 
 	# ooh ... testing for DRY_RUN doesn't work here
 #	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
-#		synctool_lib.openlog()
+#		synctool.lib.openlog()
 
 	nodes = NODESET.addresses()
 	if not nodes:
@@ -399,7 +397,7 @@ def main():
 
 	run_remote_pkg(nodes)
 
-#	synctool_lib.closelog()
+#	synctool.lib.closelog()
 
 
 if __name__ == '__main__':

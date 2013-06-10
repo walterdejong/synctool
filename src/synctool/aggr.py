@@ -10,12 +10,12 @@
 #	- aggregate: group together output that is the same
 #
 
-from synctool_lib import popen
-
 import os
 import sys
 import string
 import getopt
+
+import synctool.lib
 
 
 # popen() calls stderr()
@@ -82,7 +82,7 @@ def run(cmd_args):
 	if '--aggregate' in cmd_args:
 		cmd_args.remove('--aggregate')
 
-	f = popen(cmd_args)
+	f = synctool.lib.popen(cmd_args)
 	if not f:
 		stderr('failed to run %s' % cmd_args[0])
 

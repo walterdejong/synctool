@@ -8,8 +8,6 @@
 #   License.
 #
 
-import synctool_lib
-
 import os
 import sys
 import string
@@ -19,6 +17,7 @@ import errno
 
 import synctool.configparser
 from synctool.configparser import stderr
+import synctool.lib
 import synctool.param
 
 
@@ -141,7 +140,7 @@ def check_cmd_config(param_name, cmd):
 		return (False, None)
 
 	arr = string.split(cmd)
-	path = synctool_lib.search_path(arr[0])
+	path = synctool.lib.search_path(arr[0])
 	if not path:
 		stderr("%s: error: %s '%s' not found in PATH" %
 			(synctool.param.CONF_FILE, param_name, arr[0]))

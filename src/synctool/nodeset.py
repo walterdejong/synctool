@@ -8,14 +8,11 @@
 #   License.
 #
 
-import synctool.param
-import synctool_lib
-
-from synctool_lib import verbose,stderr
-
 import string
 
 import synctool.config
+import synctool.lib
+from synctool.lib import verbose,stderr
 import synctool.param
 
 
@@ -144,10 +141,10 @@ class NodeSet:
 				addrs.append(addr)
 
 		# print message about ignored nodes
-		if (ignored_nodes and not synctool_lib.QUIET and
-			not synctool_lib.UNIX_CMD):
+		if (ignored_nodes and not synctool.lib.QUIET and
+			not synctool.lib.UNIX_CMD):
 			if synctool.param.TERSE:
-				synctool_lib.terse(synctool_lib.TERSE_WARNING,
+				synctool.lib.terse(synctool.lib.TERSE_WARNING,
 									'ignored nodes')
 			else:
 				ignored_nodes = 'warning: ignored nodes: ' + ignored_nodes

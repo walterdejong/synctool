@@ -9,8 +9,6 @@
 #   License.
 #
 
-import synctool_lib
-
 import os
 import sys
 import string

@@ -8,13 +8,12 @@
 #   License.
 #
 
-import synctool_lib
-
-from synctool_lib import verbose
-from synctool.pkgclass import SyncPkg
-
 import os
 import string
+
+import synctool.lib
+from synctool.lib import verbose
+from synctool.pkgclass import SyncPkg
 
 
 class SyncPkgAptget(SyncPkg):
@@ -32,9 +31,9 @@ class SyncPkgAptget(SyncPkg):
 		if pkgs:
 			cmd = cmd + ' ' + string.join(pkgs)
 
-		synctool_lib.DRY_RUN = False
-		synctool_lib.shell_command(cmd)
-		synctool_lib.DRY_RUN = self.dryrun
+		synctool.lib.DRY_RUN = False
+		synctool.lib.shell_command(cmd)
+		synctool.lib.DRY_RUN = self.dryrun
 
 
 	def install(self, pkgs):
@@ -44,7 +43,7 @@ class SyncPkgAptget(SyncPkg):
 
 		cmd = 'apt-get -y install ' + string.join(pkgs)
 
-		synctool_lib.shell_command(cmd)
+		synctool.lib.shell_command(cmd)
 
 
 	def remove(self, pkgs):
@@ -54,14 +53,14 @@ class SyncPkgAptget(SyncPkg):
 
 		cmd = 'apt-get -y remove ' + string.join(pkgs)
 
-		synctool_lib.shell_command(cmd)
+		synctool.lib.shell_command(cmd)
 
 
 	def update(self):
 		SyncPkg.update(self)
 
 		os.putenv('DEBIAN_FRONTEND', 'noninteractive')
-		synctool_lib.shell_command('apt-get update')
+		synctool.lib.shell_command('apt-get update')
 
 
 	def upgrade(self):
@@ -74,14 +73,14 @@ class SyncPkgAptget(SyncPkg):
 		else:
 			cmd = 'apt-get -y upgrade'
 
-		synctool_lib.DRY_RUN = False
-		synctool_lib.shell_command(cmd)
-		synctool_lib.DRY_RUN = self.dryrun
+		synctool.lib.DRY_RUN = False
+		synctool.lib.shell_command(cmd)
+		synctool.lib.DRY_RUN = self.dryrun
 
 
 	def clean(self):
 		SyncPkg.clean(self)
 
-		synctool_lib.shell_command('apt-get clean')
+		synctool.lib.shell_command('apt-get clean')
 
 # EOB

@@ -8,8 +8,6 @@
 #   License.
 #
 
-from synctool_lib import verbose,stdout,stderr
-
 import os
 import sys
 import string

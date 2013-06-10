@@ -8,11 +8,10 @@
 #   License.
 #
 
-import synctool_lib
-
-from synctool_lib import verbose
-
 import string
+
+import synctool.lib
+from synctool.lib import verbose
 
 
 class SyncPkg:
@@ -23,7 +22,7 @@ class SyncPkg:
 	# And/or you may use this class as a superclass
 
 	def __init__(self):
-		self.dryrun = synctool_lib.DRY_RUN
+		self.dryrun = synctool.lib.DRY_RUN
 
 
 	def list(self, pkgs = None):
