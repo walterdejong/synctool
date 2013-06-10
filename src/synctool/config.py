@@ -30,6 +30,9 @@ def read_config():
 
 	errors = synctool.configparser.read_config_file(synctool.param.CONF_FILE)
 
+	# FIXME some of this is now handled by param.reset_synctool_root()
+	# FIXME masterdir has to go out the window -> synctool_root
+
 	# if missing, set default directories
 	if not synctool.param.MASTERDIR:
 		synctool.param.MASTERDIR = '/var/lib/synctool'

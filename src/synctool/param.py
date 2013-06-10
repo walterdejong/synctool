@@ -30,16 +30,17 @@ SYNCTOOL_ROOT = None
 MASTERDIR = None
 OVERLAY_DIR = None
 DELETE_DIR = None
-TEMP_DIR = None
+TEMP_DIR = '/tmp/synctool'
 HOSTNAME = None
 NODENAME = None
 HOST_ID = None
 
-DIFF_CMD = None
-PING_CMD = None
-SSH_CMD = None
-SCP_CMD = None
-RSYNC_CMD = None
+DIFF_CMD = 'diff -u'
+PING_CMD = 'ping -q -c 1 -t 1'
+SSH_CMD = 'ssh -o ConnectTimeout=10 -x -q'
+SCP_CMD = 'scp -o ConnectTimeout=10 -p'
+RSYNC_CMD = ("rsync -ar --numeric-ids --delete --delete-excluded "
+			"-e 'ssh -o ConnectTimeout=10 -x -q' -q")
 SYNCTOOL_CMD = None
 PKG_CMD = None
 
@@ -125,31 +126,42 @@ KNOWN_PACKAGE_MANAGERS = (
 def init():
 	'''detect my prefix and set initial directories'''
 
-	global SYNCTOOL_ROOT, DEFAULT_CONF, CONF_FILE
-#	global MASTERDIR, MASTER_LEN, OVERLAY_DIR, DELETE_DIR
+	global DEFAULT_CONF, CONF_FILE
 
 	base = os.path.abspath(os.path.dirname(sys.argv[0]))
 	if not base:
 		raise RuntimeError, 'unable to determine base dir'
 
-	(SYNCTOOL_ROOT, bindir) = os.path.split(base)
+	(prefix, bindir) = os.path.split(base)
 
-	DEFAULT_CONF = os.path.join(SYNCTOOL_ROOT, 'etc/synctool.conf')
+	DEFAULT_CONF = os.path.join(prefix, 'etc/synctool.conf')
 	CONF_FILE = DEFAULT_CONF
 
-	# FIXME conflicts with the current configparser
-	# "redefinition of ..."
-
-#	MASTERDIR = os.path.join(SYNCTOOL_ROOT, 'var')
-#	MASTER_LEN = len(MASTERDIR) + 1
-#	OVERLAY_DIR = os.path.join(MASTERDIR, 'overlay')
-#	DELETE_DIR = os.path.join(MASTERDIR, 'delete')
+	reset_synctool_root(prefix)
 
 	# detect symlink mode
 	if sys.platform[:5] == 'linux':
 		SYMLINK_MODE = 0777
 	else:
 		SYMLINK_MODE = 0755
+
+
+def reset_synctool_root(newroot):
+	'''reset dirs that are relative to the synctool_root'''
+
+	global SYNCTOOL_ROOT
+	global MASTERDIR, MASTER_LEN, OVERLAY_DIR, DELETE_DIR
+	global SYNCTOOL_CMD, PKG_CMD
+
+	SYNCTOOL_ROOT = newroot
+
+	MASTERDIR = os.path.join(SYNCTOOL_ROOT, 'var')
+	MASTER_LEN = len(MASTERDIR) + 1
+	OVERLAY_DIR = os.path.join(MASTERDIR, 'overlay')
+	DELETE_DIR = os.path.join(MASTERDIR, 'delete')
+
+	SYNCTOOL_CMD = os.path.join(SYNCTOOL_ROOT, 'bin/synctool-client')
+	PKG_CMD = os.path.join(SYNCTOOL_ROOT, 'bin/synctool-pkg')
 
 
 # EOB
