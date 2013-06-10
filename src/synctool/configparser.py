@@ -31,6 +31,10 @@ import synctool.param
 SPELLCHECK = re.compile(
 	r'[a-zA-Z0-9]+(\_[a-zA-Z0-9]+|\-[a-zA-Z0-9]+|\+[a-zA-Z0-9]+)*')
 
+# dict with {keyword: lineno}
+# to see if a parameter is being redefined
+DEFINED = {}
+
 
 def stderr(str):
 	sys.stderr.write(str + '\n')
@@ -101,10 +105,26 @@ def read_config_file(configfile):
 			errors += 1
 			continue
 
-		errors = errors + func(arr, configfile, lineno)
+		errors += func(arr, configfile, lineno)
 
 	f.close()
 	return errors
+
+
+def check_definition(keyword, configfile, lineno):
+	'''check whether a param was not defined earlier
+	Returns False on error, True if OK'''
+
+	global DEFINED
+
+	if DEFINED.has_key(keyword):
+		stderr("%s:%d: redefinition of '%s'" % (configfile, lineno, keyword))
+		stderr("%s:%d: previous definition was at line %d" %
+				(configfile, lineno, DEFINED[keyword]))
+		return False
+
+	DEFINED[keyword] = lineno
+	return True
 
 
 #
@@ -113,6 +133,9 @@ def read_config_file(configfile):
 #
 
 def _config_boolean(param, value, configfile, lineno):
+	if not check_definition(param, configfile, lineno):
+		return (1, False)
+
 	value = string.lower(value)
 	if value in synctool.param.BOOLEAN_VALUE_TRUE:
 		return (0, True)
@@ -125,6 +148,9 @@ def _config_boolean(param, value, configfile, lineno):
 
 
 def _config_integer(param, value, configfile, lineno, radix = 10):
+	if not check_definition(param, configfile, lineno):
+		return (1, 0)
+
 	try:
 		n = int(value, radix)
 	except ValueError:
@@ -135,6 +161,9 @@ def _config_integer(param, value, configfile, lineno, radix = 10):
 
 
 def _config_dir(name, arr, configfile, lineno):
+	if not check_definition(name, configfile, lineno):
+		return 1
+
 	d = string.join(arr[1:])
 	d = synctool.lib.prepare_path(d)
 
@@ -153,6 +182,9 @@ def _config_dir(name, arr, configfile, lineno):
 def _config_color_variant(param, value, configfile, lineno):
 	'''set a color by name'''
 
+	if not check_definition(param, configfile, lineno):
+		return 1
+
 	value = string.lower(value)
 	if value in synctool.lib.COLORMAP.keys():
 		synctool.param.TERSE_COLORS[param[6:]] = value
@@ -164,6 +196,9 @@ def _config_color_variant(param, value, configfile, lineno):
 
 def _config_command(param, arr, short_cmd, configfile, lineno):
 	'''helper for configuring rsync_cmd, ssh_cmd, synctool_cmd, etc.'''
+
+	if not check_definition(param, configfile, lineno):
+		return (1, None)
 
 	if len(arr) < 2:
 		stderr("%s:%d: '%s' requires an argument: "
@@ -202,8 +237,7 @@ def config_include(arr, configfile, lineno):
 
 # keyword: masterdir
 def config_masterdir(arr, configfile, lineno):
-	if synctool.param.MASTERDIR != None:
-		stderr("%s:%d: redefinition of masterdir" % (configfile, lineno))
+	if not check_definition(arr[0], configfile, lineno):
 		return 1
 
 	d = string.join(arr[1:])
@@ -225,8 +259,7 @@ def config_masterdir(arr, configfile, lineno):
 
 # keyword: tempdir
 def config_tempdir(arr, configfile, lineno):
-	if synctool.param.TEMP_DIR != None:
-		stderr("%s:%d: redefinition of tempdir" % (configfile, lineno))
+	if not check_definition(arr[0], configfile, lineno):
 		return 1
 
 	d = string.join(arr[1:])
@@ -253,8 +286,7 @@ def config_package_manager(arr, configfile, lineno):
 			(configfile, lineno))
 		return 1
 
-	if synctool.param.PACKAGE_MANAGER != None:
-		stderr('%s:%d: redefiniton of package_manager' % (configfile, lineno))
+	if not check_definition(arr[0], configfile, lineno):
 		return 1
 
 	if not arr[1] in synctool.param.KNOWN_PACKAGE_MANAGERS:
@@ -459,6 +491,9 @@ def config_color_ok(arr, configfile, lineno):
 
 # keyword: default_nodeset
 def config_default_nodeset(arr, configfile, lineno):
+	if not check_definition(arr[0], configfile, lineno):
+		return 1
+
 	if len(arr) < 2:
 		stderr("%s:%d: 'default_nodeset' requires an argument" %
 			(configfile, lineno))
@@ -755,6 +790,9 @@ def config_pkg_cmd(arr, configfile, lineno):
 
 # keyword: logfile
 def config_logfile(arr, configfile, lineno):
+	if not check_definition(arr[0], configfile, lineno):
+		return 1
+
 	if len(arr) < 2:
 		stderr("%s:%d: 'logfile' requires an argument: "
 			"the full path to the file to write log messages to" %
