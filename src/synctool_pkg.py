@@ -9,7 +9,6 @@
 #   License.
 #
 
-import synctool_param
 import synctool_lib
 
 from synctool_lib import verbose,stdout,stderr,terse,unix_out,dryrun_msg
@@ -21,6 +20,7 @@ import getopt
 import errno
 
 import synctool.config
+import synctool.param
 import synctool.stat
 
 # enums for command-line options
@@ -56,18 +56,18 @@ def package_manager():
 
 	detected = False
 
-	if not synctool_param.PACKAGE_MANAGER:
+	if not synctool.param.PACKAGE_MANAGER:
 		detect_installer()
 
-		if not synctool_param.PACKAGE_MANAGER:
+		if not synctool.param.PACKAGE_MANAGER:
 			stderr('failed to detect package management system')
 			stderr('please configure it in synctool.conf')
 			sys.exit(1)
 
 		detected = True
 
-	for mgr in synctool_param.KNOWN_PACKAGE_MANAGERS:
-		if synctool_param.PACKAGE_MANAGER == mgr:
+	for mgr in synctool.param.KNOWN_PACKAGE_MANAGERS:
+		if synctool.param.PACKAGE_MANAGER == mgr:
 			short_mgr = string.replace(mgr, '-', '')
 
 			# load the module
@@ -86,10 +86,10 @@ def package_manager():
 
 	if detected:
 		stderr('package manager %s is not supported yet' %
-			synctool_param.PACKAGE_MANAGER)
+			synctool.param.PACKAGE_MANAGER)
 	else:
 		stderr("unknown package manager defined: '%s'" %
-			synctool_param.PACKAGE_MANAGER)
+			synctool.param.PACKAGE_MANAGER)
 
 	sys.exit(1)
 
@@ -130,7 +130,7 @@ def detect_installer():
 			if stat.exists():
 				verbose('detected %s' % release_file)
 				verbose('choosing package manager %s' % pkgmgr)
-				synctool_param.PACKAGE_MANAGER = pkgmgr
+				synctool.param.PACKAGE_MANAGER = pkgmgr
 				return
 
 		stderr('unknown Linux distribution')
@@ -141,7 +141,7 @@ def detect_installer():
 		# some people like fink
 		# I like homebrew
 		verbose('choosing package manager brew')
-		synctool_param.PACKAGE_MANAGER = 'brew'
+		synctool.param.PACKAGE_MANAGER = 'brew'
 
 	elif platform in ('NetBSD', 'OpenBSD', 'FreeBSD'):
 		verbose('detected platform %s' % platform)
@@ -151,7 +151,7 @@ def detect_installer():
 		# or maybe ports will be a seperate module in the future
 
 		verbose('choosing package manager bsdpkg')
-		synctool_param.PACKAGE_MANAGER = 'bsdpkg'
+		synctool.param.PACKAGE_MANAGER = 'bsdpkg'
 
 	# platforms that are not supported yet, but I would like to support
 	# or well, most of them
@@ -187,7 +187,7 @@ def usage():
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=dir/file            Use this config file'
 	print ('                                 (default: %s)' %
-		synctool_param.DEFAULT_CONF)
+		synctool.param.DEFAULT_CONF)
 	print '''  -l, --list   [PACKAGE ...]     List installed packages
   -i, --install PACKAGE [..]     Install package
   -R, --remove  PACKAGE [..]     Uninstall package
@@ -206,7 +206,7 @@ Supported package managers are:'''
 	# format it at 78 characters wide
 	print ' ',
 	n = 2
-	for pkg in synctool_param.KNOWN_PACKAGE_MANAGERS:
+	for pkg in synctool.param.KNOWN_PACKAGE_MANAGERS:
 		if n + len(pkg) + 1 <= 78:
 			n = n + len(pkg) + 1
 			print pkg,
@@ -259,7 +259,7 @@ def get_options():
 			sys.exit(1)
 
 		if opt in ('-c', '--conf'):
-			synctool_param.CONF_FILE = arg
+			synctool.param.CONF_FILE = arg
 			continue
 
 	synctool.config.read_config()
@@ -316,12 +316,12 @@ def get_options():
 			continue
 
 		if opt in ('-m', '--manager'):
-			if not arg in synctool_param.KNOWN_PACKAGE_MANAGERS:
+			if not arg in synctool.param.KNOWN_PACKAGE_MANAGERS:
 				stderr("error: unknown or unsupported package manager "
 					"'%s'" % arg)
 				sys.exit(1)
 
-			synctool_param.PACKAGE_MANAGER = arg
+			synctool.param.PACKAGE_MANAGER = arg
 			continue
 
 		if opt in ('-f', '--fix'):

@@ -9,7 +9,6 @@
 #   License.
 #
 
-import synctool_param
 import synctool_lib
 
 from synctool_lib import verbose,stderr,unix_out
@@ -24,6 +23,7 @@ import errno
 import synctool.aggr
 import synctool.config
 import synctool.nodeset
+import synctool.param
 import synctool.unbuffered
 
 NODESET = synctool.nodeset.NodeSet()
@@ -40,12 +40,12 @@ def ping_nodes(nodes):
 
 def master_ping(rank, nodes):
 	nodename = NODESET.get_nodename_from_address(nodes[rank])
-	if nodename == synctool_param.NODENAME:
+	if nodename == synctool.param.NODENAME:
 		print '%s: up' % nodename
 		return
 
 	verbose('pinging %s' % nodename)
-	unix_out('%s %s' % (synctool_param.PING_CMD, nodes[rank]))
+	unix_out('%s %s' % (synctool.param.PING_CMD, nodes[rank]))
 
 
 def worker_ping(rank, nodes):
@@ -57,7 +57,7 @@ def worker_ping(rank, nodes):
 	packets_received = 0
 
 	# execute ping command and show output with the nodename
-	cmd = '%s %s' % (synctool_param.PING_CMD, node)
+	cmd = '%s %s' % (synctool.param.PING_CMD, node)
 	cmd_arr = shlex.split(cmd)
 	f = synctool_lib.popen(cmd_arr)
 	if not f:
@@ -108,8 +108,8 @@ def worker_ping(rank, nodes):
 def check_cmd_config():
 	'''check whether the commands as given in synctool.conf actually exist'''
 
-	(ok, synctool_param.PING_CMD) = synctool.config.check_cmd_config(
-									'ping_cmd', synctool_param.PING_CMD)
+	(ok, synctool.param.PING_CMD) = synctool.config.check_cmd_config(
+									'ping_cmd', synctool.param.PING_CMD)
 	if not ok:
 		sys.exit(-1)
 
@@ -120,7 +120,7 @@ def usage():
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=dir/file            Use this config file'
 	print ('                                 (default: %s)' %
-		synctool_param.DEFAULT_CONF)
+		synctool.param.DEFAULT_CONF)
 
 	print '''  -n, --node=nodelist            Execute only on these nodes
   -g, --group=grouplist          Execute only on these groups of nodes
@@ -165,11 +165,11 @@ def get_options():
 			sys.exit(1)
 
 		if opt in ('-c', '--conf'):
-			synctool_param.CONF_FILE = arg
+			synctool.param.CONF_FILE = arg
 			continue
 
 		if opt == '--version':
-			print synctool_param.VERSION
+			print synctool.param.VERSION
 			sys.exit(0)
 
 	synctool.config.read_config()

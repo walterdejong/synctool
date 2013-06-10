@@ -33,12 +33,5 @@ class Unbuffered:
 		return getattr(self.stream, attr)
 
 
-if __name__ == '__main__':
-	import sys
-
-	sys.stdout = Unbuffered(sys.stdout)
-
-	print 'hello, unbuffered world'
-
 # EOB
 

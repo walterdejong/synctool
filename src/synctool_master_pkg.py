@@ -11,7 +11,6 @@
 #	- call synctool_pkg on specified nodes
 #
 
-import synctool_param
 import synctool_ssh
 import synctool_lib
 import synctool
@@ -28,6 +27,7 @@ import errno
 import synctool.aggr
 import synctool.config
 import synctool.nodeset
+import synctool.param
 import synctool.unbuffered
 
 NODESET = synctool.nodeset.NodeSet()
@@ -52,8 +52,8 @@ def master_pkg(rank, nodes):
 	nodename = NODESET.get_nodename_from_address(node)
 
 	verbose('running synctool-pkg on node %s' % nodename)
-	unix_out('%s %s %s %s' % (synctool_param.SSH_CMD, node,
-		synctool_param.PKG_CMD, string.join(PASS_ARGS)))
+	unix_out('%s %s %s %s' % (synctool.param.SSH_CMD, node,
+		synctool.param.PKG_CMD, string.join(PASS_ARGS)))
 
 
 def worker_pkg(rank, nodes):
@@ -63,23 +63,23 @@ def worker_pkg(rank, nodes):
 	nodename = NODESET.get_nodename_from_address(node)
 
 	# run 'ssh node pkg_cmd'
-	cmd_arr = shlex.split(synctool_param.SSH_CMD)
+	cmd_arr = shlex.split(synctool.param.SSH_CMD)
 	cmd_arr.append(node)
-	cmd_arr.extend(shlex.split(synctool_param.PKG_CMD))
+	cmd_arr.extend(shlex.split(synctool.param.PKG_CMD))
 	cmd_arr.extend(PASS_ARGS)
 
 	synctool_lib.run_with_nodename(cmd_arr, nodename)
 
 
 def run_local_pkg():
-	if not synctool_param.PKG_CMD:
+	if not synctool.param.PKG_CMD:
 		stderr('%s: error: pkg_cmd has not been defined in %s' %
-			(os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
+			(os.path.basename(sys.argv[0]), synctool.param.CONF_FILE))
 		sys.exit(-1)
 
-	cmd_arr = shlex.split(synctool_param.PKG_CMD) + PASS_ARGS
+	cmd_arr = shlex.split(synctool.param.PKG_CMD) + PASS_ARGS
 
-	synctool_lib.run_with_nodename(cmd_arr, synctool_param.NODENAME)
+	synctool_lib.run_with_nodename(cmd_arr, synctool.param.NODENAME)
 
 
 def rearrange_options():
@@ -129,13 +129,13 @@ def check_cmd_config():
 
 	errors = 0
 
-	(ok, synctool_param.SSH_CMD) = synctool.config.check_cmd_config('ssh_cmd',
-									synctool_param.SSH_CMD)
+	(ok, synctool.param.SSH_CMD) = synctool.config.check_cmd_config('ssh_cmd',
+									synctool.param.SSH_CMD)
 	if not ok:
 		errors += 1
 
-	(ok, synctool_param.PKG_CMD) = synctool.config.check_cmd_config('pkg_cmd',
-									synctool_param.PKG_CMD)
+	(ok, synctool.param.PKG_CMD) = synctool.config.check_cmd_config('pkg_cmd',
+									synctool.param.PKG_CMD)
 	if not ok:
 		errors += 1
 
@@ -160,7 +160,7 @@ def usage():
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=dir/file            Use this config file'
 	print ('                                 (default: %s)' %
-		synctool_param.DEFAULT_CONF)
+		synctool.param.DEFAULT_CONF)
 
 	print '''  -n, --node=nodelist            Execute only on these nodes
   -g, --group=grouplist          Execute only on these groups of nodes
@@ -186,7 +186,7 @@ Supported package managers are:'''
 	# format it at 78 characters wide
 	print ' ',
 	n = 2
-	for pkg in synctool_param.KNOWN_PACKAGE_MANAGERS:
+	for pkg in synctool.param.KNOWN_PACKAGE_MANAGERS:
 		if n + len(pkg) + 1 <= 78:
 			n = n + len(pkg) + 1
 			print pkg,
@@ -251,7 +251,7 @@ def get_options():
 			sys.exit(1)
 
 		if opt in ('-c', '--conf'):
-			synctool_param.CONF_FILE = arg
+			synctool.param.CONF_FILE = arg
 			PASS_ARGS.append(opt)
 			PASS_ARGS.append(arg)
 			continue
@@ -316,12 +316,12 @@ def get_options():
 			action += 1
 
 		if opt in ('-m', '--manager'):
-			if not arg in synctool_param.KNOWN_PACKAGE_MANAGERS:
+			if not arg in synctool.param.KNOWN_PACKAGE_MANAGERS:
 				stderr("error: unknown or unsupported package manager '%s'" %
 					arg)
 				sys.exit(1)
 
-			synctool_param.PACKAGE_MANAGER = arg
+			synctool.param.PACKAGE_MANAGER = arg
 
 		if opt in ('-f', '--fix'):
 			synctool_lib.DRY_RUN = False
@@ -388,7 +388,7 @@ def main():
 		sys.exit(1)
 
 	local_address = synctool.config.get_node_ipaddress(
-						synctool_param.NODENAME)
+						synctool.param.NODENAME)
 
 	for node in nodes:
 		# is this node the localhost? then run locally

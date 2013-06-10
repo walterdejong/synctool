@@ -9,7 +9,6 @@
 #   License.
 #
 
-import synctool_param
 import synctool_ssh
 import synctool_lib
 
@@ -27,6 +26,7 @@ import synctool.aggr
 import synctool.config
 import synctool.nodeset
 import synctool.overlay
+import synctool.param
 import synctool.stat
 import synctool.unbuffered
 import synctool.update
@@ -59,12 +59,12 @@ def master_synctool(rank, nodes):
 
 	if not OPT_SKIP_RSYNC:
 		verbose('running rsync $masterdir/ to node %s' % nodename)
-		unix_out('%s %s %s:%s/' % (synctool_param.RSYNC_CMD,
-			synctool_param.MASTERDIR, node, synctool_param.MASTERDIR))
+		unix_out('%s %s %s:%s/' % (synctool.param.RSYNC_CMD,
+			synctool.param.MASTERDIR, node, synctool.param.MASTERDIR))
 
 	verbose('running synctool on node %s' % nodename)
-	unix_out('%s %s %s --nodename=%s %s' % (synctool_param.SSH_CMD, node,
-		synctool_param.SYNCTOOL_CMD, nodename, string.join(PASS_ARGS)))
+	unix_out('%s %s %s --nodename=%s %s' % (synctool.param.SSH_CMD, node,
+		synctool.param.SYNCTOOL_CMD, nodename, string.join(PASS_ARGS)))
 
 
 def worker_synctool(rank, nodes):
@@ -78,17 +78,17 @@ def worker_synctool(rank, nodes):
 
 		tmp_filename = rsync_include_filter(nodename)
 
-		cmd_arr = shlex.split(synctool_param.RSYNC_CMD)
+		cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
 		cmd_arr.append("--filter=. %s" % tmp_filename)
-		cmd_arr.append('%s/' % synctool_param.MASTERDIR)
-		cmd_arr.append('%s:%s/' % (node, synctool_param.MASTERDIR))
+		cmd_arr.append('%s/' % synctool.param.MASTERDIR)
+		cmd_arr.append('%s:%s/' % (node, synctool.param.MASTERDIR))
 
 		# double check the rsync destination
 		# our filters are like playing with fire
-		if not synctool_param.MASTERDIR or (
-			synctool_param.MASTERDIR == os.path.sep):
+		if not synctool.param.MASTERDIR or (
+			synctool.param.MASTERDIR == os.path.sep):
 			stderr('cowardly refusing to rsync with masterdir == %s' %
-					synctool_param.MASTERDIR)
+					synctool.param.MASTERDIR)
 			sys.exit(-1)
 
 		synctool_lib.run_with_nodename(cmd_arr, nodename)
@@ -101,9 +101,9 @@ def worker_synctool(rank, nodes):
 			pass
 
 	# run 'ssh node synctool_cmd'
-	cmd_arr = shlex.split(synctool_param.SSH_CMD)
+	cmd_arr = shlex.split(synctool.param.SSH_CMD)
 	cmd_arr.append(node)
-	cmd_arr.extend(shlex.split(synctool_param.SYNCTOOL_CMD))
+	cmd_arr.extend(shlex.split(synctool.param.SYNCTOOL_CMD))
 	cmd_arr.append('--nodename=%s' % nodename)
 	cmd_arr.extend(PASS_ARGS)
 
@@ -111,14 +111,14 @@ def worker_synctool(rank, nodes):
 
 
 def run_local_synctool():
-	if not synctool_param.SYNCTOOL_CMD:
+	if not synctool.param.SYNCTOOL_CMD:
 		stderr('%s: error: synctool_cmd has not been defined in %s' %
-			(os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
+			(os.path.basename(sys.argv[0]), synctool.param.CONF_FILE))
 		sys.exit(-1)
 
-	cmd_arr = shlex.split(synctool_param.SYNCTOOL_CMD) + PASS_ARGS
+	cmd_arr = shlex.split(synctool.param.SYNCTOOL_CMD) + PASS_ARGS
 
-	synctool_lib.run_with_nodename(cmd_arr, synctool_param.NODENAME)
+	synctool_lib.run_with_nodename(cmd_arr, synctool.param.NODENAME)
 
 
 def rsync_include_filter(nodename):
@@ -128,7 +128,7 @@ def rsync_include_filter(nodename):
 
 	try:
 		(fd, filename) = tempfile.mkstemp(prefix='synctool-',
-											dir=synctool_param.TEMP_DIR)
+											dir=synctool.param.TEMP_DIR)
 	except OSError, reason:
 		stderr('failed to create temp file: %s' % reason)
 		sys.exit(-1)
@@ -148,20 +148,20 @@ def rsync_include_filter(nodename):
 + /delete/
 + /delete/all/
 ''')
-	f.write('+ /%s\n' % synctool_param.CONF_FILE)
+	f.write('+ /%s\n' % synctool.param.CONF_FILE)
 
 	# set mygroups for this nodename
-	synctool_param.NODENAME = nodename
-	synctool_param.MY_GROUPS = synctool.config.get_my_groups()
+	synctool.param.NODENAME = nodename
+	synctool.param.MY_GROUPS = synctool.config.get_my_groups()
 
 	# now add only the group dirs that apply to the rsync filter file
 
-	for g in synctool_param.MY_GROUPS:
-		d = os.path.join(synctool_param.OVERLAY_DIR, g)
+	for g in synctool.param.MY_GROUPS:
+		d = os.path.join(synctool.param.OVERLAY_DIR, g)
 		if os.path.isdir(d):
 			f.write('+ /overlay/%s/\n' % g)
 
-		d = os.path.join(synctool_param.DELETE_DIR, g)
+		d = os.path.join(synctool.param.DELETE_DIR, g)
 		if os.path.isdir(d):
 			f.write('+ delete/%s/\n' % g)
 
@@ -184,9 +184,9 @@ def rsync_include_filter(nodename):
 def upload(interface, upload_filename, upload_suffix=None):
 	'''copy a file from a node into the overlay/ tree'''
 
-	if not synctool_param.SCP_CMD:
+	if not synctool.param.SCP_CMD:
 		stderr('%s: error: scp_cmd has not been defined in %s' %
-			(os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
+			(os.path.basename(sys.argv[0]), synctool.param.CONF_FILE))
 		sys.exit(-1)
 
 	if upload_filename[0] != os.path.sep:
@@ -195,7 +195,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 
 	trimmed_upload_fn = upload_filename[1:]		# remove leading slash
 
-	if upload_suffix and not upload_suffix in synctool_param.ALL_GROUPS:
+	if upload_suffix and not upload_suffix in synctool.param.ALL_GROUPS:
 		stderr("no such group '%s'" % upload_suffix)
 		sys.exit(-1)
 
@@ -212,12 +212,12 @@ def upload(interface, upload_filename, upload_suffix=None):
 
 	# pretend that the current node is now the given node;
 	# this is needed for find() to find the best reference for the file
-	orig_NODENAME = synctool_param.NODENAME
-	synctool_param.NODENAME = node
+	orig_NODENAME = synctool.param.NODENAME
+	synctool.param.NODENAME = node
 	synctool.config.insert_group(node, node)
 
-	orig_MY_GROUPS = synctool_param.MY_GROUPS[:]
-	synctool_param.MY_GROUPS = synctool.config.get_my_groups()
+	orig_MY_GROUPS = synctool.param.MY_GROUPS[:]
+	synctool.param.MY_GROUPS = synctool.config.get_my_groups()
 
 	# see if file is already in the repository
 	(obj, err) = synctool.overlay.find_terse(synctool.overlay.OV_OVERLAY,
@@ -242,7 +242,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 		# it wasn't a terse path, throw a source path together
 		# This picks the 'all' overlay dir as default source,
 		# which may not be correct -- but it is a good guess
-		repos_filename = os.path.join(synctool_param.OVERLAY_DIR, 'all',
+		repos_filename = os.path.join(synctool.param.OVERLAY_DIR, 'all',
 							trimmed_upload_fn)
 		if upload_suffix:
 			repos_filename = repos_filename + '._' + upload_suffix
@@ -258,12 +258,12 @@ def upload(interface, upload_filename, upload_suffix=None):
 		else:
 			repos_filename = obj.src_path
 
-	synctool_param.NODENAME = orig_NODENAME
-	synctool_param.MY_GROUPS = orig_MY_GROUPS
+	synctool.param.NODENAME = orig_NODENAME
+	synctool.param.MY_GROUPS = orig_MY_GROUPS
 
 	verbose('%s:%s uploaded as %s' % (node, upload_filename, repos_filename))
 	terse(synctool_lib.TERSE_UPLOAD, repos_filename)
-	unix_out('%s %s:%s %s' % (synctool_param.SCP_CMD, interface,
+	unix_out('%s %s:%s %s' % (synctool.param.SCP_CMD, interface,
 								upload_filename, repos_filename))
 
 	if dry_run:
@@ -280,7 +280,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 			synctool_lib.mkdir_p(repos_dir)
 
 		# make scp command array
-		scp_cmd_arr = shlex.split(synctool_param.SCP_CMD)
+		scp_cmd_arr = shlex.split(synctool.param.SCP_CMD)
 		scp_cmd_arr.append('%s:%s' % (interface, upload_filename))
 		scp_cmd_arr.append(repos_filename)
 
@@ -292,12 +292,12 @@ def upload(interface, upload_filename, upload_suffix=None):
 
 
 def make_tempdir():
-	if not os.path.isdir(synctool_param.TEMP_DIR):
+	if not os.path.isdir(synctool.param.TEMP_DIR):
 		try:
-			os.mkdir(synctool_param.TEMP_DIR, 0750)
+			os.mkdir(synctool.param.TEMP_DIR, 0750)
 		except OSError, reason:
 			stderr('failed to create tempdir %s: %s' %
-				(synctool_param.TEMP_DIR, reason))
+				(synctool.param.TEMP_DIR, reason))
 			sys.exit(-1)
 
 
@@ -309,38 +309,38 @@ def check_cmd_config():
 
 	errors = 0
 
-#	(ok, synctool_param.DIFF_CMD) = synctool.config.check_cmd_config(
-#									'diff_cmd', synctool_param.DIFF_CMD)
+#	(ok, synctool.param.DIFF_CMD) = synctool.config.check_cmd_config(
+#									'diff_cmd', synctool.param.DIFF_CMD)
 #	if not ok:
 #		errors += 1
 
-#	(ok, synctool_param.PING_CMD) = synctool.config.check_cmd_config(
-#									'ping_cmd', synctool_param.PING_CMD)
+#	(ok, synctool.param.PING_CMD) = synctool.config.check_cmd_config(
+#									'ping_cmd', synctool.param.PING_CMD)
 #	if not ok:
 #		errors += 1
 
-	(ok, synctool_param.SSH_CMD) = synctool.config.check_cmd_config(
-									'ssh_cmd', synctool_param.SSH_CMD)
+	(ok, synctool.param.SSH_CMD) = synctool.config.check_cmd_config(
+									'ssh_cmd', synctool.param.SSH_CMD)
 	if not ok:
 		errors += 1
 
-#	(ok, synctool_param.SCP_CMD) = synctool.config.check_cmd_config(
-#									'scp_cmd', synctool_param.SCP_CMD)
+#	(ok, synctool.param.SCP_CMD) = synctool.config.check_cmd_config(
+#									'scp_cmd', synctool.param.SCP_CMD)
 #	if not ok:
 #		errors += 1
 
-	(ok, synctool_param.RSYNC_CMD) = synctool.config.check_cmd_config(
-									'rsync_cmd', synctool_param.RSYNC_CMD)
+	(ok, synctool.param.RSYNC_CMD) = synctool.config.check_cmd_config(
+									'rsync_cmd', synctool.param.RSYNC_CMD)
 	if not ok:
 		errors += 1
 
-	(ok, synctool_param.SYNCTOOL_CMD) = synctool.config.check_cmd_config(
-								'synctool_cmd', synctool_param.SYNCTOOL_CMD)
+	(ok, synctool.param.SYNCTOOL_CMD) = synctool.config.check_cmd_config(
+								'synctool_cmd', synctool.param.SYNCTOOL_CMD)
 	if not ok:
 		errors += 1
 
-#	(ok, synctool_param.PKG_CMD) = synctool.config.check_cmd_config(
-#									'pkg_cmd', synctool_param.PKG_CMD)
+#	(ok, synctool.param.PKG_CMD) = synctool.config.check_cmd_config(
+#									'pkg_cmd', synctool.param.PKG_CMD)
 #	if not ok:
 #		errors += 1
 
@@ -404,7 +404,7 @@ def usage():
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=dir/file            Use this config file'
 	print ('                                 (default: %s)' %
-		synctool_param.DEFAULT_CONF)
+		synctool.param.DEFAULT_CONF)
 	print '''  -n, --node=nodelist            Execute only on these nodes
   -g, --group=grouplist          Execute only on these groups of nodes
   -x, --exclude=nodelist         Exclude these nodes from the selected group
@@ -495,13 +495,13 @@ def get_options():
 			sys.exit(1)
 
 		if opt in ('-c', '--conf'):
-			synctool_param.CONF_FILE = arg
+			synctool.param.CONF_FILE = arg
 			PASS_ARGS.append(opt)
 			PASS_ARGS.append(arg)
 			continue
 
 		if opt == '--version':
-			print synctool_param.VERSION
+			print synctool.param.VERSION
 			sys.exit(0)
 
 	synctool.config.read_config()
@@ -572,18 +572,18 @@ def get_options():
 			synctool_lib.DRY_RUN = False
 
 		if opt in ('-F', '--fullpath'):
-			synctool_param.FULL_PATH = True
-			synctool_param.TERSE = False
+			synctool.param.FULL_PATH = True
+			synctool.param.TERSE = False
 
 		if opt in ('-T', '--terse'):
-			synctool_param.TERSE = True
-			synctool_param.FULL_PATH = False
+			synctool.param.TERSE = True
+			synctool.param.FULL_PATH = False
 
 		if opt == '--color':
-			synctool_param.COLORIZE = True
+			synctool.param.COLORIZE = True
 
 		if opt == '--no-color':
-			synctool_param.COLORIZE = False
+			synctool.param.COLORIZE = False
 
 		if opt in ('-a', '--aggregate'):
 			OPT_AGGREGATE = True
@@ -668,7 +668,7 @@ def main():
 		make_tempdir()
 
 		local_address = synctool.config.get_node_ipaddress(
-							synctool_param.NODENAME)
+							synctool.param.NODENAME)
 
 		for node in nodes:
 			#

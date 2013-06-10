@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 #
 #	synctool_lib.py		WJ109
 #
@@ -10,8 +9,6 @@
 #
 #	- common functions/variables for synctool suite programs
 #
-
-import synctool_param
 
 import os
 import sys
@@ -32,6 +29,8 @@ try:
 	use_subprocess = True
 except ImportError:
 	use_subprocess = False
+
+import synctool.param
 
 
 # blocksize for doing I/O while checksumming files
@@ -101,7 +100,7 @@ def verbose(str):
 
 
 def stdout(str):
-	if not (UNIX_CMD or synctool_param.TERSE):
+	if not (UNIX_CMD or synctool.param.TERSE):
 		print str
 
 	log(str)
@@ -115,7 +114,7 @@ def stderr(str):
 def terse(code, msg):
 	'''print short message + shortened filename'''
 
-	if synctool_param.TERSE:
+	if synctool.param.TERSE:
 		# convert any path to terse path
 		if string.find(msg, ' ') >= 0:
 			arr = string.split(msg)
@@ -127,17 +126,17 @@ def terse(code, msg):
 			if msg[0] == os.path.sep:
 				msg = terse_path(msg)
 
-		if synctool_param.COLORIZE:		# and sys.stdout.isatty():
+		if synctool.param.COLORIZE:		# and sys.stdout.isatty():
 			txt = TERSE_TXT[code]
-			color = COLORMAP[synctool_param.TERSE_COLORS[
+			color = COLORMAP[synctool.param.TERSE_COLORS[
 							string.lower(TERSE_TXT[code])]]
 
-			if synctool_param.COLORIZE_BRIGHT:
+			if synctool.param.COLORIZE_BRIGHT:
 				bright = ';1'
 			else:
 				bright = ''
 
-			if synctool_param.COLORIZE_FULL_LINE:
+			if synctool.param.COLORIZE_FULL_LINE:
 				print '\x1b[%d%sm%s %s\x1b[0m' % (color, bright, txt, msg)
 			else:
 				print '\x1b[%d%sm%s\x1b[0m %s' % (color, bright, txt, msg)
@@ -155,15 +154,15 @@ def unix_out(str):
 def prettypath(path):
 	'''print long paths as "$masterdir/path"'''
 
-	if synctool_param.FULL_PATH:
+	if synctool.param.FULL_PATH:
 		return path
 
-	if synctool_param.TERSE:
+	if synctool.param.TERSE:
 		return terse_path(path)
 
-	if path[:synctool_param.MASTER_LEN] == (synctool_param.MASTERDIR +
+	if path[:synctool.param.MASTER_LEN] == (synctool.param.MASTERDIR +
 											os.path.sep):
-		return os.path.join('$masterdir', path[synctool_param.MASTER_LEN:])
+		return os.path.join('$masterdir', path[synctool.param.MASTER_LEN:])
 
 	return path
 
@@ -171,7 +170,7 @@ def prettypath(path):
 def terse_path(path, maxlen = 55):
 	'''print long path as "//overlay/.../dir/file"'''
 
-	if synctool_param.FULL_PATH:
+	if synctool.param.FULL_PATH:
 		return path
 
 	# by the way, this function will misbehave a bit for a _destination_
@@ -179,9 +178,9 @@ def terse_path(path, maxlen = 55):
 	# because this function doesn't know whether it is working with
 	# a source or a destination path and it treats them both in the same way
 
-	if path[:synctool_param.MASTER_LEN] == (synctool_param.MASTERDIR +
+	if path[:synctool.param.MASTER_LEN] == (synctool.param.MASTERDIR +
 											os.path.sep):
-		path = os.path.sep + os.path.sep + path[synctool_param.MASTER_LEN:]
+		path = os.path.sep + os.path.sep + path[synctool.param.MASTER_LEN:]
 
 	if len(path) > maxlen:
 		arr = string.split(path, os.path.sep)
@@ -224,15 +223,15 @@ def dryrun_msg(str, action = 'update'):
 def openlog():
 	global LOGFD
 
-	if DRY_RUN or not synctool_param.LOGFILE:
+	if DRY_RUN or not synctool.param.LOGFILE:
 		return
 
 	LOGFD = None
 	try:
-		LOGFD = open(synctool_param.LOGFILE, 'a')
+		LOGFD = open(synctool.param.LOGFILE, 'a')
 	except IOError, (err, reason):
 		print ('error: failed to open logfile %s : %s' %
-			(synctool_param.LOGFILE, reason))
+			(synctool.param.LOGFILE, reason))
 		sys.exit(-1)
 
 #	log('start run')
@@ -536,11 +535,11 @@ def strip_trailing_slash(path):
 def subst_masterdir(path):
 	master = '$masterdir' + os.path.sep
 	if path.find(master) >= 0:
-		if not synctool_param.MASTERDIR:
+		if not synctool.param.MASTERDIR:
 			stderr('error: $masterdir referenced before it was set')
 			sys.exit(-1)
 
-	return path.replace(master, synctool_param.MASTERDIR + os.path.sep)
+	return path.replace(master, synctool.param.MASTERDIR + os.path.sep)
 
 
 def strip_path(path):
@@ -557,7 +556,7 @@ def strip_terse_path(path):
 	if not path:
 		return path
 
-	if not synctool_param.TERSE:
+	if not synctool.param.TERSE:
 		return strip_path(path)
 
 	# terse paths may start with two slashes
@@ -603,7 +602,7 @@ def run_parallel(master_func, worker_func, args, worklen):
 	parallel = 0
 	n = 0
 	while n < worklen:
-		if parallel > synctool_param.NUM_PROC:
+		if parallel > synctool.param.NUM_PROC:
 			try:
 				(pid, status) = os.wait()
 			except OSError:
@@ -649,10 +648,6 @@ def run_parallel(master_func, worker_func, args, worklen):
 		except KeyboardInterrupt:
 			print
 			break
-
-
-if __name__ == '__main__':
-	print "synctool_lib doesn't do anything by itself, really"
 
 
 # EOB

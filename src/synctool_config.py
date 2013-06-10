@@ -9,7 +9,6 @@
 #   License.
 #
 
-import synctool_param
 import synctool_lib
 
 import os
@@ -22,6 +21,7 @@ import errno
 import synctool.config
 import synctool.configparser
 from synctool.configparser import stderr
+import synctool.param
 
 ACTION = 0
 ACTION_OPTION = None
@@ -56,9 +56,9 @@ def list_all_nodes():
 	nodes = synctool.config.get_all_nodes()
 	nodes.sort()
 
-	if synctool_param.IGNORE_GROUPS != None:
+	if synctool.param.IGNORE_GROUPS != None:
 		ignore_nodes = synctool.config.get_nodes_in_groups(
-						synctool_param.IGNORE_GROUPS)
+						synctool.param.IGNORE_GROUPS)
 	else:
 		ignore_nodes = []
 
@@ -83,11 +83,11 @@ def list_all_nodes():
 
 
 def list_all_groups():
-	groups = synctool_param.GROUP_DEFS.keys()
+	groups = synctool.param.GROUP_DEFS.keys()
 	groups.sort()
 
 	for group in groups:
-		if group in synctool_param.IGNORE_GROUPS:
+		if group in synctool.param.IGNORE_GROUPS:
 			if not OPT_FILTER_IGNORED:
 				print '%s (ignored)' % group
 		else:
@@ -98,7 +98,7 @@ def list_nodes(nodenames):
 	groups = []
 
 	for nodename in nodenames:
-		if not synctool_param.NODES.has_key(nodename):
+		if not synctool.param.NODES.has_key(nodename):
 			stderr("no such node '%s' defined" % nodename)
 			sys.exit(1)
 
@@ -116,7 +116,7 @@ def list_nodes(nodenames):
 #	groups.sort()							# group order is important
 
 	for group in groups:
-		if group in synctool_param.IGNORE_GROUPS:
+		if group in synctool.param.IGNORE_GROUPS:
 			if not OPT_FILTER_IGNORED:
 				print '%s (ignored)' % group
 		else:
@@ -125,7 +125,7 @@ def list_nodes(nodenames):
 
 def list_nodegroups(groups):
 	for group in groups:
-		if not group in synctool_param.ALL_GROUPS:
+		if not group in synctool.param.ALL_GROUPS:
 			stderr("no such group '%s' defined" % group)
 			sys.exit(1)
 
@@ -133,7 +133,7 @@ def list_nodegroups(groups):
 	arr.sort()
 
 	for node in arr:
-		if node in synctool_param.IGNORE_GROUPS:
+		if node in synctool.param.IGNORE_GROUPS:
 			if OPT_IPADDRESS:
 				node = synctool.config.get_node_ipaddress(node)
 
@@ -158,45 +158,45 @@ def list_commands(cmds):
 	for cmd in cmds:
 		if cmd == 'diff':
 			(ok, a) = synctool.config.check_cmd_config('diff_cmd',
-						synctool_param.DIFF_CMD)
+						synctool.param.DIFF_CMD)
 			if ok:
-				print synctool_param.DIFF_CMD
+				print synctool.param.DIFF_CMD
 
 		if cmd == 'ping':
 			(ok, a) = synctool.config.check_cmd_config('ping_cmd',
-						synctool_param.PING_CMD)
+						synctool.param.PING_CMD)
 			if ok:
-				print synctool_param.PING_CMD
+				print synctool.param.PING_CMD
 
 		elif cmd == 'ssh':
 			(ok, a) = synctool.config.check_cmd_config('ssh_cmd',
-						synctool_param.SSH_CMD)
+						synctool.param.SSH_CMD)
 			if ok:
-				print synctool_param.SSH_CMD
+				print synctool.param.SSH_CMD
 
 		elif cmd == 'scp':
 			(ok, a) = synctool.config.check_cmd_config('scp_cmd',
-						synctool_param.SCP_CMD)
+						synctool.param.SCP_CMD)
 			if ok:
-				print synctool_param.SCP_CMD
+				print synctool.param.SCP_CMD
 
 		elif cmd == 'rsync':
 			(ok, a) = synctool.config.check_cmd_config('rsync_cmd',
-						synctool_param.RSYNC_CMD)
+						synctool.param.RSYNC_CMD)
 			if ok:
-				print synctool_param.RSYNC_CMD
+				print synctool.param.RSYNC_CMD
 
 		elif cmd == 'synctool':
 			(ok, a) = synctool.config.check_cmd_config('synctool_cmd',
-						synctool_param.SYNCTOOL_CMD)
+						synctool.param.SYNCTOOL_CMD)
 			if ok:
-				print synctool_param.SYNCTOOL_CMD
+				print synctool.param.SYNCTOOL_CMD
 
 		elif cmd == 'pkg':
 			(ok, a) = synctool.config.check_cmd_config('pkg_cmd',
-						synctool_param.PKG_CMD)
+						synctool.param.PKG_CMD)
 			if ok:
-				print synctool_param.PKG_CMD
+				print synctool.param.PKG_CMD
 
 		else:
 			stderr("no such command '%s' available in synctool" % cmd)
@@ -205,8 +205,8 @@ def list_commands(cmds):
 def list_dirs():
 	'''display directory settings'''
 
-	print 'masterdir', synctool_param.MASTERDIR
-	print 'tempdir', synctool_param.TEMP_DIR
+	print 'masterdir', synctool.param.MASTERDIR
+	print 'tempdir', synctool.param.TEMP_DIR
 
 
 def set_action(a, opt):
@@ -226,7 +226,7 @@ def usage():
 	print '  -h, --help               Display this information'
 	print '  -c, --conf=dir/file      Use this config file'
 	print ('                           (default: %s)' %
-		synctool_param.DEFAULT_CONF)
+		synctool.param.DEFAULT_CONF)
 
 	print '''  -l, --list-nodes         List all configured nodes
   -L, --list-groups        List all configured groups
@@ -299,7 +299,7 @@ def get_options():
 			sys.exit(1)
 
 		if opt in ('-c', '--conf'):
-			synctool_param.CONF_FILE=arg
+			synctool.param.CONF_FILE=arg
 			continue
 
 		if opt in ('-l', '--list-nodes'):
@@ -385,7 +385,7 @@ def main():
 	get_options()
 
 	if ACTION == ACTION_VERSION:
-		print synctool_param.VERSION
+		print synctool.param.VERSION
 		sys.exit(0)
 
 	if OPT_IPADDRESS and OPT_HOSTNAME:
@@ -416,49 +416,49 @@ def main():
 		list_nodegroups(ARG_GROUPS)
 
 	elif ACTION == ACTION_MASTERDIR:
-		print synctool_param.MASTERDIR
+		print synctool.param.MASTERDIR
 
 	elif ACTION == ACTION_CMDS:
 		list_commands(ARG_CMDS)
 
 	elif ACTION == ACTION_NUMPROC:
-		print synctool_param.NUM_PROC
+		print synctool.param.NUM_PROC
 
 	elif ACTION == ACTION_PREFIX:
 		print os.path.abspath(os.path.dirname(sys.argv[0]))
 
 	elif ACTION == ACTION_LOGFILE:
-		print synctool_param.LOGFILE
+		print synctool.param.LOGFILE
 
 	elif ACTION == ACTION_NODENAME:
 		synctool.config.init_mynodename()
 
-		if not synctool_param.NODENAME:
+		if not synctool.param.NODENAME:
 			stderr('unable to determine my nodename (%s), please check %s' %
-				(synctool_config.HOSTNAME, synctool_param.CONF_FILE))
+				(synctool_config.HOSTNAME, synctool.param.CONF_FILE))
 			sys.exit(1)
 
-		if synctool_param.NODENAME in synctool_param.IGNORE_GROUPS:
-			if not synctool_param.OPT_FILTER_IGNORED:
+		if synctool.param.NODENAME in synctool.param.IGNORE_GROUPS:
+			if not synctool.param.OPT_FILTER_IGNORED:
 				if OPT_IPADDRESS:
 					print ('none (%s ignored)' %
 							synctool.config.get_node_ipaddress(
-							synctool_param.NODENAME))
+							synctool.param.NODENAME))
 				else:
-					print 'none (%s ignored)' % synctool_param.NODENAME
+					print 'none (%s ignored)' % synctool.param.NODENAME
 
 			sys.exit(0)
 
 		if OPT_IPADDRESS:
-			print synctool.config.get_node_ipaddress(synctool_param.NODENAME)
+			print synctool.config.get_node_ipaddress(synctool.param.NODENAME)
 		else:
-			print synctool_param.NODENAME
+			print synctool.param.NODENAME
 
 	elif ACTION == ACTION_LIST_DIRS:
 		list_dirs()
 
 	elif ACTION == ACTION_PKGMGR:
-		print synctool_param.PACKAGE_MANAGER
+		print synctool.param.PACKAGE_MANAGER
 
 	else:
 		raise RuntimeError, 'bug: unknown ACTION code %d' % ACTION

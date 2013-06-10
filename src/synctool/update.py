@@ -1,6 +1,5 @@
-#! /usr/bin/env python
 #
-#	synctool_update.py	WJ110
+#	synctool.update.py	WJ110
 #
 #   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
 #
@@ -8,8 +7,6 @@
 #   synctool is distributed under terms described in the GNU General Public
 #   License.
 #
-
-import synctool_param
 
 from synctool_lib import verbose,stdout,stderr
 
@@ -24,6 +21,8 @@ try:
 except ImportError:
 	import md5
 	use_hashlib = False
+
+import synctool.param
 
 
 VERSION_CHECKING_URL = 'http://www.heiho.net/synctool/LATEST.txt'
@@ -80,7 +79,7 @@ def check():
 
 	latest_version = get_latest_version()
 
-	if latest_version == synctool_param.VERSION:
+	if latest_version == synctool.param.VERSION:
 		stdout('You are running the latest version of synctool')
 		return 0
 	else:
@@ -192,9 +191,5 @@ def checksum_file(filename):
 	f.close()
 	return sum1.hexdigest()
 
-
-if __name__ == '__main__':
-	check()
-#	download()
 
 # EOB

@@ -8,7 +8,6 @@
 #   License.
 #
 
-import synctool_param
 import synctool_lib
 
 import os
@@ -20,74 +19,75 @@ import errno
 
 import synctool.configparser
 from synctool.configparser import stderr
+import synctool.param
 
 
 def read_config():
 	'''read the config file and set a bunch of globals'''
 
-	if not os.path.isfile(synctool_param.CONF_FILE):
-		stderr("no such config file '%s'" % synctool_param.CONF_FILE)
+	if not os.path.isfile(synctool.param.CONF_FILE):
+		stderr("no such config file '%s'" % synctool.param.CONF_FILE)
 		sys.exit(-1)
 
-	errors = synctool.configparser.read_config_file(synctool_param.CONF_FILE)
+	errors = synctool.configparser.read_config_file(synctool.param.CONF_FILE)
 
 	# if missing, set default directories
-	if not synctool_param.MASTERDIR:
-		synctool_param.MASTERDIR = '/var/lib/synctool'
+	if not synctool.param.MASTERDIR:
+		synctool.param.MASTERDIR = '/var/lib/synctool'
 
-		if not os.path.isdir(synctool_param.MASTERDIR):
+		if not os.path.isdir(synctool.param.MASTERDIR):
 			stderr('error: no such directory: %s' % d)
 			errors += 1
 
 	# overlay/ and delete/ must be under $masterdir
-	d = os.path.join(synctool_param.MASTERDIR, 'overlay')
+	d = os.path.join(synctool.param.MASTERDIR, 'overlay')
 	if not os.path.isdir(d):
 		stderr('error: no such directory: %s' % d)
 		errors += 1
 
 	# set it, even if it does not exists
-	synctool_param.OVERLAY_DIR = d
+	synctool.param.OVERLAY_DIR = d
 
 	# treat a missing 'overlay/all/' dir as an error
-	d = os.path.join(synctool_param.OVERLAY_DIR, 'all')
+	d = os.path.join(synctool.param.OVERLAY_DIR, 'all')
 	if not os.path.isdir(d):
 		stderr('error: no such directory: %s' % d)
 		errors += 1
 
-	d = os.path.join(synctool_param.MASTERDIR, 'delete')
+	d = os.path.join(synctool.param.MASTERDIR, 'delete')
 	if not os.path.isdir(d):
 		stderr('error: no such directory: %s' % d)
 		errors += 1
 
-	synctool_param.DELETE_DIR = d
+	synctool.param.DELETE_DIR = d
 
-	d = os.path.join(synctool_param.DELETE_DIR, 'all')
+	d = os.path.join(synctool.param.DELETE_DIR, 'all')
 	if not os.path.isdir(d):
 		stderr('error: no such directory: %s' % d)
 		errors += 1
 
-	if not synctool_param.TEMP_DIR:
-		synctool_param.TEMP_DIR = '/tmp/synctool'
+	if not synctool.param.TEMP_DIR:
+		synctool.param.TEMP_DIR = '/tmp/synctool'
 		# do not make temp dir here; it is only used on the master node
 
 	# implicitly add group 'all'
-	if not synctool_param.GROUP_DEFS.has_key('all'):
-		synctool_param.GROUP_DEFS['all'] = None
+	if not synctool.param.GROUP_DEFS.has_key('all'):
+		synctool.param.GROUP_DEFS['all'] = None
 
 	# implicitly add 'nodename' as first group
 	for node in get_all_nodes():
 		insert_group(node, node)
-		synctool_param.NODES[node].append('all')
+		synctool.param.NODES[node].append('all')
 
 	# implicitly add group 'none'
-	if not synctool_param.GROUP_DEFS.has_key('none'):
-		synctool_param.GROUP_DEFS['none'] = None
+	if not synctool.param.GROUP_DEFS.has_key('none'):
+		synctool.param.GROUP_DEFS['none'] = None
 
-	if not 'none' in synctool_param.IGNORE_GROUPS:
-		synctool_param.IGNORE_GROUPS.append('none')
+	if not 'none' in synctool.param.IGNORE_GROUPS:
+		synctool.param.IGNORE_GROUPS.append('none')
 
 	# initialize ALL_GROUPS
-	synctool_param.ALL_GROUPS = make_all_groups()
+	synctool.param.ALL_GROUPS = make_all_groups()
 
 	# make the default nodeset
 	# note that it may still contain ignored nodes
@@ -106,12 +106,12 @@ def make_default_nodeset():
 
 	# check that the listed nodes / groups exist at all
 	groups = []
-	for g in synctool_param.DEFAULT_NODESET:
+	for g in synctool.param.DEFAULT_NODESET:
 		if g == 'none':
 			groups = []
 			continue
 
-		if not g in synctool_param.ALL_GROUPS:
+		if not g in synctool.param.ALL_GROUPS:
 			stderr("config error: unknown node or group '%s' "
 				"in default_nodeset" % g)
 			errors += 1
@@ -123,9 +123,9 @@ def make_default_nodeset():
 	if not errors:
 		if not groups:
 			# if there was 'none', the nodeset will be empty
-			synctool_param.DEFAULT_NODESET = []
+			synctool.param.DEFAULT_NODESET = []
 		else:
-			synctool_param.DEFAULT_NODESET = get_nodes_in_groups(groups)
+			synctool.param.DEFAULT_NODESET = get_nodes_in_groups(groups)
 
 	return errors
 
@@ -137,14 +137,14 @@ def check_cmd_config(param_name, cmd):
 
 	if not cmd:
 		stderr("%s: error: parameter '%s' is missing" %
-			(synctool_param.CONF_FILE, param_name))
+			(synctool.param.CONF_FILE, param_name))
 		return (False, None)
 
 	arr = string.split(cmd)
 	path = synctool_lib.search_path(arr[0])
 	if not path:
 		stderr("%s: error: %s '%s' not found in PATH" %
-			(synctool_param.CONF_FILE, param_name, arr[0]))
+			(synctool.param.CONF_FILE, param_name, arr[0]))
 		return (False, None)
 
 	# reassemble command with full path
@@ -167,28 +167,28 @@ def init_mynodename():
 	# This is no longer the case
 
 	# get my hostname
-	synctool_param.HOSTNAME = hostname = socket.getfqdn()
+	synctool.param.HOSTNAME = hostname = socket.getfqdn()
 
 	arr = string.split(hostname, '.')
 	short_hostname = arr[0]
 
 	all_nodes = get_all_nodes()
 
-	nodename = synctool_param.NODENAME
+	nodename = synctool.param.NODENAME
 	if nodename != None:
 		# nodename was already set
 		# the master set it because it already knows the node's nodename
 		pass
 
-	elif synctool_param.HOST_ID != None:
-		arr = string.split(synctool_param.HOST_ID, '.')
+	elif synctool.param.HOST_ID != None:
+		arr = string.split(synctool.param.HOST_ID, '.')
 		nodename = arr[0]
 
-	elif synctool_param.HOSTNAMES.has_key(hostname):
-		nodename = synctool_param.HOSTNAMES[hostname]
+	elif synctool.param.HOSTNAMES.has_key(hostname):
+		nodename = synctool.param.HOSTNAMES[hostname]
 
-	elif synctool_param.HOSTNAMES.has_key(short_hostname):
-		nodename = synctool_param.HOSTNAMES[short_hostname]
+	elif synctool.param.HOSTNAMES.has_key(short_hostname):
+		nodename = synctool.param.HOSTNAMES[short_hostname]
 
 	elif short_hostname in all_nodes:
 		nodename = short_hostname
@@ -213,52 +213,52 @@ def init_mynodename():
 	# At this point, nodename can still be None
 	# It only really matters for synctool.py, which checks this condition
 
-	synctool_param.NODENAME = nodename
-	synctool_param.MY_GROUPS = get_my_groups()
+	synctool.param.NODENAME = nodename
+	synctool.param.MY_GROUPS = get_my_groups()
 
 
 def remove_ignored_groups():
 	'''remove ignored groups from all node definitions'''
 
-	for host in synctool_param.NODES.keys():
+	for host in synctool.param.NODES.keys():
 		changed = False
-		groups = synctool_param.NODES[host]
-		for ignore in synctool_param.IGNORE_GROUPS:
+		groups = synctool.param.NODES[host]
+		for ignore in synctool.param.IGNORE_GROUPS:
 			if ignore in groups:
 				groups.remove(ignore)
 				changed = True
 
 		if changed:
-			synctool_param.NODES[host] = groups
+			synctool.param.NODES[host] = groups
 
 
 def insert_group(node, group):
 	'''add group to node definition'''
 
-	if synctool_param.NODES.has_key(node):
-		if group in synctool_param.NODES[node]:
+	if synctool.param.NODES.has_key(node):
+		if group in synctool.param.NODES[node]:
 			# remove the group and reinsert it to make sure it comes first
-			synctool_param.NODES[node].remove(group)
+			synctool.param.NODES[node].remove(group)
 
-		synctool_param.NODES[node].insert(0, group)
+		synctool.param.NODES[node].insert(0, group)
 	else:
-		synctool_param.NODES[node] = [group]
+		synctool.param.NODES[node] = [group]
 
 
 def get_all_nodes():
-	return synctool_param.NODES.keys()
+	return synctool.param.NODES.keys()
 
 
 def get_node_ipaddress(node):
-	if synctool_param.IPADDRESSES.has_key(node):
-		return synctool_param.IPADDRESSES[node]
+	if synctool.param.IPADDRESSES.has_key(node):
+		return synctool.param.IPADDRESSES[node]
 
 	return node
 
 
 def get_node_hostname(node):
-	if synctool_param.HOSTNAMES_BY_NODE.has_key(node):
-		return synctool_param.HOSTNAMES_BY_NODE[node]
+	if synctool.param.HOSTNAMES_BY_NODE.has_key(node):
+		return synctool.param.HOSTNAMES_BY_NODE[node]
 
 	return node
 
@@ -267,8 +267,8 @@ def make_all_groups():
 	'''make a list of all possible groups
 	This is a set of all group names plus all node names'''
 
-	arr = synctool_param.GROUP_DEFS.keys()
-	arr.extend(synctool_param.NODES.keys())
+	arr = synctool.param.GROUP_DEFS.keys()
+	arr.extend(synctool.param.NODES.keys())
 
 # older versions of python do not support sets BUT that doesn't matter ...
 # all groups + nodes should have no duplicates anyway
@@ -279,8 +279,8 @@ def make_all_groups():
 def get_groups(nodename):
 	'''returns the groups for the node'''
 
-	if synctool_param.NODES.has_key(nodename):
-		return synctool_param.NODES[nodename]
+	if synctool.param.NODES.has_key(nodename):
+		return synctool.param.NODES[nodename]
 
 	return []
 
@@ -288,8 +288,8 @@ def get_groups(nodename):
 def get_my_groups():
 	'''returns the groups for this node'''
 
-	if synctool_param.NODES.has_key(synctool_param.NODENAME):
-		return synctool_param.NODES[synctool_param.NODENAME]
+	if synctool.param.NODES.has_key(synctool.param.NODENAME):
+		return synctool.param.NODES[synctool.param.NODENAME]
 
 	return []
 
@@ -299,11 +299,11 @@ def get_nodes_in_groups(groups):
 
 	arr = []
 
-	nodes = synctool_param.NODES.keys()
+	nodes = synctool.param.NODES.keys()
 
 	for g in groups:
 		for node in nodes:
-			if g in synctool_param.NODES[node] and not node in arr:
+			if g in synctool.param.NODES[node] and not node in arr:
 				arr.append(node)
 
 	return arr
