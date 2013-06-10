@@ -207,11 +207,6 @@ def config_masterdir(arr, configfile, lineno):
 		return 1
 
 	d = string.join(arr[1:])
-	if not os.path.isdir(d):
-		stderr('%s:%d: no such directory for masterdir' %
-			(configfile, lineno))
-		return 1
-
 	d = synctool_lib.strip_multiple_slashes(d)
 	synctool_param.MASTERDIR = synctool_lib.strip_trailing_slash(d)
 	synctool_param.MASTER_LEN = len(synctool_param.MASTERDIR) + 1
@@ -219,6 +214,10 @@ def config_masterdir(arr, configfile, lineno):
 	if synctool_param.MASTERDIR in ('', '/', os.path.sep, '$masterdir'):
 		stderr("%s:%d: masterdir can not be set to '%s', sorry" %
 			(configfile, lineno, synctool_param.MASTERDIR))
+		return 1
+
+	if not os.path.isdir(synctool_param.MASTERDIR):
+		stderr('%s:%d: no such directory for masterdir' % (configfile, lineno))
 		return 1
 
 	return 0
