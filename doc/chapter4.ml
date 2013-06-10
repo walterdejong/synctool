@@ -259,6 +259,11 @@ group wn workernode batch<br />
 group test wn<br />
 group g1 batch test wn
 </div>
+Group names are alphanumeric, but can have an underscore, minus, or plus
+symbol in between. The following are valid group names:
+<div class="example">
+group group1 group-1 group_1 group+1 192_168_1 10 node1+node2
+</div>
 </dd>
 
 <dt>node &lt;nodename&gt; &lt;group&gt; [..] [ipaddress:&lt;IP address&gt;]
@@ -310,6 +315,11 @@ node node6 wn &nbsp; &nbsp; &nbsp; rack1 ipaddress:node6-mgmt<br />
 node node7 wn &nbsp; &nbsp; &nbsp; rack1 ipaddress:node7-mgmt<br />
 node node8 test &nbsp; &nbsp; rack1 ipaddress:node8-mgmt<br />
 node node9 batch &nbsp; &nbsp;rack1 ipaddress:node9-mgmt
+</div>
+Node names are alphanumeric, but can have an underscore, minus, or plus
+symbol in between. The following are valid node names:
+<div class="example">
+node node1 node-1 node_1 node+1 10_0_0_2 10 node1+node2
 </div>
 </dd>
 
