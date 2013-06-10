@@ -11,7 +11,6 @@
 
 import synctool_config
 import synctool_param
-import synctool_aggr
 import synctool_ssh
 import synctool_lib
 
@@ -25,6 +24,7 @@ import shlex
 import tempfile
 import errno
 
+import synctool.aggr
 import synctool.nodeset
 import synctool.overlay
 import synctool.stat
@@ -639,7 +639,7 @@ def main():
 		sys.exit(synctool.update.download())
 
 	if OPT_AGGREGATE:
-		synctool_aggr.run(MASTER_OPTS)
+		synctool.aggr.run(MASTER_OPTS)
 		sys.exit(0)
 
 	synctool_config.init_mynodename()
