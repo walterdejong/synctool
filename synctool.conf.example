@@ -51,18 +51,23 @@ scp_cmd scp -o ConnectTimeout=10 -p
 rsync_cmd rsync -ar --numeric-ids --delete --delete-excluded -e 'ssh -o ConnectTimeout=10 -x -q' -q
 
 # this is also possible:
-# synctool_cmd $masterdir/sbin/synctool.py -c $masterdir/alternative-config.conf
+# synctool_cmd $masterdir/sbin/synctool.py -c $masterdir/alt-config.conf
 synctool_cmd $masterdir/sbin/synctool.py
 
 pkg_cmd $masterdir/sbin/synctool_pkg.py
 
-#
-# configure a package manager for synctool-pkg / dsh-pkg to use
-# If you don't configure one, synctool-pkg will try to detect one
+# Force the package manager for synctool-pkg / dsh-pkg to use
+# If you don't configure one, synctool-pkg will detect one
 # (this is usually OK)
 #
 # If you do not want to detect it, choose one of the supported
-# package managers:
+# package managers.
+#
+# Note: Multi-platform setups
+# It makes no sense to force a single package manager onto a heterogeneous
+# cluster. If you run a multi-platform setup and need to force
+# the package_manager, solve it with a local include, like:
+#  include /etc/synctool_local.conf
 #
 #package_manager apt-get
 #package_manager yum
