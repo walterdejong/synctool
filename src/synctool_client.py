@@ -9,7 +9,6 @@
 #   License.
 #
 
-import synctool_overlay
 import synctool_config
 import synctool_param
 import synctool_lib
@@ -30,6 +29,7 @@ try:
 except ImportError:
 	use_subprocess = False
 
+import synctool.overlay
 import synctool.stat
 
 # get_options() returns these action codes
@@ -123,7 +123,7 @@ def run_post(src, dest):
 	dest_dir = os.path.dirname(dest)
 
 	# file has changed, run appropriate .post script
-	postscript = synctool_overlay.postscript_for_path(src, dest)
+	postscript = synctool.overlay.postscript_for_path(src, dest)
 	if postscript:
 		run_command_in_dir(dest_dir, postscript)
 
@@ -142,7 +142,7 @@ def run_post_on_directory(src, dest):
 	# the script is executed with the changed dir as current working dir
 
 	# run appropriate .post script
-	postscript = synctool_overlay.postscript_for_path(src, dest)
+	postscript = synctool.overlay.postscript_for_path(src, dest)
 	if postscript:
 		run_command_in_dir(dest, postscript)
 
@@ -192,7 +192,7 @@ def overlay_callback(obj):
 def overlay_files():
 	'''run the overlay function'''
 
-	synctool_overlay.visit(synctool_overlay.OV_OVERLAY, overlay_callback)
+	synctool.overlay.visit(synctool.overlay.OV_OVERLAY, overlay_callback)
 
 
 def delete_callback(obj):
@@ -214,7 +214,7 @@ def delete_callback(obj):
 
 
 def delete_files():
-	synctool_overlay.visit(synctool_overlay.OV_DELETE, delete_callback)
+	synctool.overlay.visit(synctool.overlay.OV_DELETE, delete_callback)
 
 
 def erase_saved_callback(obj):
@@ -228,7 +228,7 @@ def erase_saved_callback(obj):
 def erase_saved():
 	'''List and delete *.saved backup files'''
 
-	synctool_overlay.visit(synctool_overlay.OV_OVERLAY, erase_saved_callback)
+	synctool.overlay.visit(synctool.overlay.OV_OVERLAY, erase_saved_callback)
 
 
 def single_files(filename):
@@ -239,14 +239,14 @@ def single_files(filename):
 		stderr('missing filename')
 		return (False, None)
 
-	(obj, err) = synctool_overlay.find_terse(
-					synctool_overlay.OV_OVERLAY, filename)
-	if err == synctool_overlay.OV_FOUND_MULTIPLE:
+	(obj, err) = synctool.overlay.find_terse(
+					synctool.overlay.OV_OVERLAY, filename)
+	if err == synctool.overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
 		sys.exit(1)
 
-	if err == synctool_overlay.OV_NOT_FOUND:
+	if err == synctool.overlay.OV_NOT_FOUND:
 		stderr('%s is not in the overlay tree' % filename)
 		return (False, None)
 
@@ -268,14 +268,14 @@ def single_erase_saved(filename):
 		stderr('missing filename')
 		return (False, None)
 
-	(obj, err) = synctool_overlay.find_terse(
-					synctool_overlay.OV_OVERLAY, filename)
-	if err == synctool_overlay.OV_FOUND_MULTIPLE:
+	(obj, err) = synctool.overlay.find_terse(
+					synctool.overlay.OV_OVERLAY, filename)
+	if err == synctool.overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
 		sys.exit(1)
 
-	if err == synctool_overlay.OV_NOT_FOUND:
+	if err == synctool.overlay.OV_NOT_FOUND:
 		stderr('%s is not in the overlay tree' % filename)
 		return (False, None)
 
@@ -289,14 +289,14 @@ def reference(filename):
 		stderr('missing filename')
 		return
 
-	(obj, err) = synctool_overlay.find_terse(
-		synctool_overlay.OV_OVERLAY, filename)
-	if err == synctool_overlay.OV_FOUND_MULTIPLE:
+	(obj, err) = synctool.overlay.find_terse(
+		synctool.overlay.OV_OVERLAY, filename)
+	if err == synctool.overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
 		sys.exit(1)
 
-	if err == synctool_overlay.OV_NOT_FOUND:
+	if err == synctool.overlay.OV_NOT_FOUND:
 		stderr('%s is not in the overlay tree' % filename)
 		return
 
@@ -314,14 +314,14 @@ def diff_files(filename):
 	# be sure that it doesn't do any updates
 	synctool_lib.DRY_RUN = True
 
-	(obj, err) = synctool_overlay.find_terse(
-		synctool_overlay.OV_OVERLAY, filename)
-	if err == synctool_overlay.OV_FOUND_MULTIPLE:
+	(obj, err) = synctool.overlay.find_terse(
+		synctool.overlay.OV_OVERLAY, filename)
+	if err == synctool.overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
 		sys.exit(1)
 
-	if err == synctool_overlay.OV_NOT_FOUND:
+	if err == synctool.overlay.OV_NOT_FOUND:
 		return
 
 	if synctool_lib.UNIX_CMD:

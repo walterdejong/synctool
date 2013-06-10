@@ -26,6 +26,7 @@ import tempfile
 import errno
 
 import synctool.nodeset
+import synctool.overlay
 import synctool.stat
 import synctool.unbuffered
 import synctool.update
@@ -194,8 +195,6 @@ def upload(interface, upload_filename, upload_suffix=None):
 
 	trimmed_upload_fn = upload_filename[1:]		# remove leading slash
 
-	import synctool_overlay
-
 	if upload_suffix and not upload_suffix in synctool_param.ALL_GROUPS:
 		stderr("no such group '%s'" % upload_suffix)
 		sys.exit(-1)
@@ -221,15 +220,15 @@ def upload(interface, upload_filename, upload_suffix=None):
 	synctool_param.MY_GROUPS = synctool_config.get_my_groups()
 
 	# see if file is already in the repository
-	(obj, err) = synctool_overlay.find_terse(synctool_overlay.OV_OVERLAY,
+	(obj, err) = synctool.overlay.find_terse(synctool.overlay.OV_OVERLAY,
 					upload_filename)
 
-	if err == synctool_overlay.OV_FOUND_MULTIPLE:
+	if err == synctool.overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
 		sys.exit(1)
 
-	if err == synctool_overlay.OV_NOT_FOUND:
+	if err == synctool.overlay.OV_NOT_FOUND:
 		# no source path found
 		if string.find(upload_filename, '...') >= 0:
 			stderr("%s is not in the repository, don't know what to map "
