@@ -9,8 +9,6 @@
 #   License.
 #
 
-import synctool_ssh
-
 import os
 import sys
 import string

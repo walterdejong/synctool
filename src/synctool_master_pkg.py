@@ -11,8 +11,6 @@
 #	- call synctool_pkg on specified nodes
 #
 
-import synctool_ssh
-
 import os
 import sys
 import string
