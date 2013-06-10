@@ -9,13 +9,14 @@
 #
 
 import synctool_param
-import synctool_stat
 import synctool_lib
 
 from synctool_lib import verbose,stdout,stderr,terse,unix_out,dryrun_msg
 
 import os
 import shutil
+
+import synctool.stat
 
 
 class SyncObject:
@@ -61,7 +62,7 @@ class SyncObject:
 		'''call os.stat() if needed. Keep the statbuf cached'''
 
 		if not self.src_statbuf:
-			self.src_statbuf = synctool_stat.SyncStat(self.src_path)
+			self.src_statbuf = synctool.stat.SyncStat(self.src_path)
 
 
 	def src_isDir(self):
@@ -103,7 +104,7 @@ class SyncObject:
 		'''call os.stat() if needed. Keep the statbuf cached'''
 
 		if not self.dest_statbuf:
-			self.dest_statbuf = synctool_stat.SyncStat(self.dest_path)
+			self.dest_statbuf = synctool.stat.SyncStat(self.dest_path)
 
 
 	def dest_isDir(self):
@@ -632,7 +633,7 @@ class SyncObject:
 	def erase_saved(self):
 		dest = self.dest_path
 
-		stat_saved_path = synctool_stat.SyncStat('%s.saved' % dest)
+		stat_saved_path = synctool.stat.SyncStat('%s.saved' % dest)
 
 		if stat_saved_path.exists() and not stat_saved_path.isDir():
 			terse(synctool_lib.TERSE_DELETE, '%s.saved' % dest)
@@ -700,7 +701,7 @@ class SyncObject:
 
 		# check if the directory exists
 		basedir = os.path.dirname(self.dest_path)
-		stat = synctool_stat.SyncStat(basedir)
+		stat = synctool.stat.SyncStat(basedir)
 		if not stat.exists():
 			# create the directory
 			verbose('making directory %s' % synctool_lib.prettypath(basedir))
