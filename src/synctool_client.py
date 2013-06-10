@@ -9,7 +9,6 @@
 #   License.
 #
 
-import synctool_config
 import synctool_param
 import synctool_lib
 
@@ -29,6 +28,7 @@ try:
 except ImportError:
 	use_subprocess = False
 
+import synctool.config
 import synctool.overlay
 import synctool.stat
 
@@ -398,7 +398,7 @@ def	option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
 def check_cmd_config():
 	'''check whether the commands as given in synctool.conf actually exist'''
 
-	(ok, synctool_param.DIFF_CMD) = synctool_config.check_cmd_config(
+	(ok, synctool_param.DIFF_CMD) = synctool.config.check_cmd_config(
 									'diff_cmd', synctool_param.DIFF_CMD)
 	if not ok:
 		sys.exit(-1)
@@ -480,7 +480,7 @@ def get_options():
 			sys.exit(0)
 
 	# first read the config file
-	synctool_config.read_config()
+	synctool.config.read_config()
 	check_cmd_config()
 
 	if not synctool_param.TERSE:
@@ -606,7 +606,7 @@ def get_options():
 def main():
 	action = get_options()
 
-	synctool_config.init_mynodename()
+	synctool.config.init_mynodename()
 
 	if not synctool_param.NODENAME:
 		stderr('unable to determine my nodename (%s), please check %s' %

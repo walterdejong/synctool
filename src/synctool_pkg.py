@@ -9,7 +9,6 @@
 #   License.
 #
 
-import synctool_config
 import synctool_param
 import synctool_lib
 
@@ -21,6 +20,7 @@ import string
 import getopt
 import errno
 
+import synctool.config
 import synctool.stat
 
 # enums for command-line options
@@ -262,7 +262,7 @@ def get_options():
 			synctool_param.CONF_FILE = arg
 			continue
 
-	synctool_config.read_config()
+	synctool.config.read_config()
 
 	# then process the other options
 	ACTION = 0

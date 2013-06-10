@@ -9,7 +9,6 @@
 #   License.
 #
 
-import synctool_config
 import synctool_param
 import synctool_lib
 
@@ -23,6 +22,7 @@ import shlex
 import errno
 
 import synctool.aggr
+import synctool.config
 import synctool.nodeset
 import synctool.unbuffered
 
@@ -108,7 +108,7 @@ def worker_ping(rank, nodes):
 def check_cmd_config():
 	'''check whether the commands as given in synctool.conf actually exist'''
 
-	(ok, synctool_param.PING_CMD) = synctool_config.check_cmd_config(
+	(ok, synctool_param.PING_CMD) = synctool.config.check_cmd_config(
 									'ping_cmd', synctool_param.PING_CMD)
 	if not ok:
 		sys.exit(-1)
@@ -172,7 +172,7 @@ def get_options():
 			print synctool_param.VERSION
 			sys.exit(0)
 
-	synctool_config.read_config()
+	synctool.config.read_config()
 	check_cmd_config()
 
 	# then process the other options
@@ -236,7 +236,7 @@ def main():
 		synctool.aggr.run(MASTER_OPTS)
 		sys.exit(0)
 
-	synctool_config.init_mynodename()
+	synctool.config.init_mynodename()
 
 	nodes = NODESET.addresses()
 	if not nodes:

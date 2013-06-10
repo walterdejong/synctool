@@ -19,6 +19,7 @@ import socket
 import getopt
 import errno
 
+import synctool.config
 import synctool.configparser
 from synctool.configparser import stderr
 
@@ -51,287 +52,34 @@ OPT_IPADDRESS = False
 OPT_HOSTNAME = False
 
 
-def read_config():
-	'''read the config file and set a bunch of globals'''
-
-	if not os.path.isfile(synctool_param.CONF_FILE):
-		stderr("no such config file '%s'" % synctool_param.CONF_FILE)
-		sys.exit(-1)
-
-	errors = synctool.configparser.read_config_file(synctool_param.CONF_FILE)
-
-	# if missing, set default directories
-	if not synctool_param.MASTERDIR:
-		synctool_param.MASTERDIR = '/var/lib/synctool'
-
-		if not os.path.isdir(synctool_param.MASTERDIR):
-			stderr('error: no such directory: %s' % d)
-			errors += 1
-
-	# overlay/ and delete/ must be under $masterdir
-	d = os.path.join(synctool_param.MASTERDIR, 'overlay')
-	if not os.path.isdir(d):
-		stderr('error: no such directory: %s' % d)
-		errors += 1
-
-	# set it, even if it does not exists
-	synctool_param.OVERLAY_DIR = d
-
-	# treat a missing 'overlay/all/' dir as an error
-	d = os.path.join(synctool_param.OVERLAY_DIR, 'all')
-	if not os.path.isdir(d):
-		stderr('error: no such directory: %s' % d)
-		errors += 1
-
-	d = os.path.join(synctool_param.MASTERDIR, 'delete')
-	if not os.path.isdir(d):
-		stderr('error: no such directory: %s' % d)
-		errors += 1
-
-	synctool_param.DELETE_DIR = d
-
-	d = os.path.join(synctool_param.DELETE_DIR, 'all')
-	if not os.path.isdir(d):
-		stderr('error: no such directory: %s' % d)
-		errors += 1
-
-	if not synctool_param.TEMP_DIR:
-		synctool_param.TEMP_DIR = '/tmp/synctool'
-		# do not make temp dir here; it is only used on the master node
-
-	# implicitly add group 'all'
-	if not synctool_param.GROUP_DEFS.has_key('all'):
-		synctool_param.GROUP_DEFS['all'] = None
-
-	# implicitly add 'nodename' as first group
-	for node in get_all_nodes():
-		insert_group(node, node)
-		synctool_param.NODES[node].append('all')
-
-	# implicitly add group 'none'
-	if not synctool_param.GROUP_DEFS.has_key('none'):
-		synctool_param.GROUP_DEFS['none'] = None
-
-	if not 'none' in synctool_param.IGNORE_GROUPS:
-		synctool_param.IGNORE_GROUPS.append('none')
-
-	# initialize ALL_GROUPS
-	synctool_param.ALL_GROUPS = make_all_groups()
-
-	# make the default nodeset
-	# note that it may still contain ignored nodes
-	# the NodeSet will print warnings about ignored nodes
-	errors += make_default_nodeset()
-
-	# remove ignored groups from node definitions
-	remove_ignored_groups()
-
-	if errors > 0:
-		sys.exit(-1)
-
-
-def make_default_nodeset():
-	errors = 0
-
-	# check that the listed nodes / groups exist at all
-	groups = []
-	for g in synctool_param.DEFAULT_NODESET:
-		if g == 'none':
-			groups = []
-			continue
-
-		if not g in synctool_param.ALL_GROUPS:
-			stderr("config error: unknown node or group '%s' "
-				"in default_nodeset" % g)
-			errors += 1
-			continue
-
-		if not g in groups:
-			groups.append(g)
-
-	if not errors:
-		if not groups:
-			# if there was 'none', the nodeset will be empty
-			synctool_param.DEFAULT_NODESET = []
-		else:
-			synctool_param.DEFAULT_NODESET = get_nodes_in_groups(groups)
-
-	return errors
-
-
-def check_cmd_config(param_name, cmd):
-	'''check whether the command given in the config exists
-	Returns (True, full pathed command) when OK,
-	and (False, None) on error'''
-
-	if not cmd:
-		stderr("%s: error: parameter '%s' is missing" %
-			(synctool_param.CONF_FILE, param_name))
-		return (False, None)
-
-	arr = string.split(cmd)
-	path = synctool_lib.search_path(arr[0])
-	if not path:
-		stderr("%s: error: %s '%s' not found in PATH" %
-			(synctool_param.CONF_FILE, param_name, arr[0]))
-		return (False, None)
-
-	# reassemble command with full path
-	arr[0] = path
-	cmd = string.join(arr)
-	return (True, cmd)
-
-
-def init_mynodename():
-	'''determine the nodename of the current host
-	and initialize MY_GROUPS'''
-
-	# In practice, the nodename is determined by the master in synctool.conf
-	# The master then tells the client what its nodename is
-	# In two special cases, we still need to detect the nodename:
-	# 1. user runs synctool.py in stand-alone mode on a node
-	# 2. master node itself is being managed by synctool
-	#
-	# In older versions, the hostname was implicitly treated as a group
-	# This is no longer the case
-
-	# get my hostname
-	synctool_param.HOSTNAME = hostname = socket.getfqdn()
-
-	arr = string.split(hostname, '.')
-	short_hostname = arr[0]
-
-	all_nodes = get_all_nodes()
-
-	nodename = synctool_param.NODENAME
-	if nodename != None:
-		# nodename was already set
-		# the master set it because it already knows the node's nodename
-		pass
-
-	elif synctool_param.HOST_ID != None:
-		arr = string.split(synctool_param.HOST_ID, '.')
-		nodename = arr[0]
-
-	elif synctool_param.HOSTNAMES.has_key(hostname):
-		nodename = synctool_param.HOSTNAMES[hostname]
-
-	elif synctool_param.HOSTNAMES.has_key(short_hostname):
-		nodename = synctool_param.HOSTNAMES[short_hostname]
-
-	elif short_hostname in all_nodes:
-		nodename = short_hostname
-
-	elif hostname in all_nodes:
-		nodename = hostname
-
-	else:
-		# try to find a node that has the (short) hostname
-		# listed as interface or as a group
-		for node in all_nodes:
-			addr = get_node_ipaddress(node)
-			if addr == short_hostname or addr == hostname:
-				nodename = node
-				break
-
-			groups = get_groups(node)
-			if short_hostname in groups or hostname in groups:
-				nodename = node
-				break
-
-	# At this point, nodename can still be None
-	# It only really matters for synctool.py, which checks this condition
-
-	synctool_param.NODENAME = nodename
-	synctool_param.MY_GROUPS = get_my_groups()
-
-
-def remove_ignored_groups():
-	'''remove ignored groups from all node definitions'''
-
-	for host in synctool_param.NODES.keys():
-		changed = False
-		groups = synctool_param.NODES[host]
-		for ignore in synctool_param.IGNORE_GROUPS:
-			if ignore in groups:
-				groups.remove(ignore)
-				changed = True
-
-		if changed:
-			synctool_param.NODES[host] = groups
-
-
-def insert_group(node, group):
-	'''add group to node definition'''
-
-	if synctool_param.NODES.has_key(node):
-		if group in synctool_param.NODES[node]:
-			# remove the group and reinsert it to make sure it comes first
-			synctool_param.NODES[node].remove(group)
-
-		synctool_param.NODES[node].insert(0, group)
-	else:
-		synctool_param.NODES[node] = [group]
-
-
-def get_all_nodes():
-	return synctool_param.NODES.keys()
-
-
-def get_node_ipaddress(node):
-	if synctool_param.IPADDRESSES.has_key(node):
-		return synctool_param.IPADDRESSES[node]
-
-	return node
-
-
-def get_node_hostname(node):
-	if synctool_param.HOSTNAMES_BY_NODE.has_key(node):
-		return synctool_param.HOSTNAMES_BY_NODE[node]
-
-	return node
-
-
 def list_all_nodes():
-	nodes = get_all_nodes()
+	nodes = synctool.config.get_all_nodes()
 	nodes.sort()
 
 	if synctool_param.IGNORE_GROUPS != None:
-		ignore_nodes = get_nodes_in_groups(synctool_param.IGNORE_GROUPS)
+		ignore_nodes = synctool.config.get_nodes_in_groups(
+						synctool_param.IGNORE_GROUPS)
 	else:
 		ignore_nodes = []
 
 	for host in nodes:
 		if host in ignore_nodes:
 			if OPT_IPADDRESS:
-				host = get_node_ipaddress(host)
+				host = synctool.config.get_node_ipaddress(host)
 
 			elif OPT_HOSTNAME:
-				host = get_node_hostname(host)
+				host = synctool.config.get_node_hostname(host)
 
 			if not OPT_FILTER_IGNORED:
 				print '%s (ignored)' % host
 		else:
 			if OPT_IPADDRESS:
-				host = get_node_ipaddress(host)
+				host = synctool.config.get_node_ipaddress(host)
 
 			elif OPT_HOSTNAME:
-				host = get_node_hostname(host)
+				host = synctool.config.get_node_hostname(host)
 
 			print host
-
-
-def make_all_groups():
-	'''make a list of all possible groups
-	This is a set of all group names plus all node names'''
-
-	arr = synctool_param.GROUP_DEFS.keys()
-	arr.extend(synctool_param.NODES.keys())
-
-# older versions of python do not support sets BUT that doesn't matter ...
-# all groups + nodes should have no duplicates anyway
-#	return list(set(arr))
-	return arr
 
 
 def list_all_groups():
@@ -346,24 +94,6 @@ def list_all_groups():
 			print group
 
 
-def get_groups(nodename):
-	'''returns the groups for the node'''
-
-	if synctool_param.NODES.has_key(nodename):
-		return synctool_param.NODES[nodename]
-
-	return []
-
-
-def get_my_groups():
-	'''returns the groups for this node'''
-
-	if synctool_param.NODES.has_key(synctool_param.NODENAME):
-		return synctool_param.NODES[synctool_param.NODENAME]
-
-	return []
-
-
 def list_nodes(nodenames):
 	groups = []
 
@@ -373,13 +103,13 @@ def list_nodes(nodenames):
 			sys.exit(1)
 
 		if OPT_IPADDRESS:
-			print get_node_ipaddress(nodename)
+			print synctool.config.get_node_ipaddress(nodename)
 
 		elif OPT_HOSTNAME:
-			print get_node_hostname(nodename)
+			print synctool.config.get_node_hostname(nodename)
 
 		else:
-			for group in get_groups(nodename):
+			for group in synctool.config.get_groups(nodename):
 				if not group in groups:
 					groups.append(group)
 
@@ -393,46 +123,31 @@ def list_nodes(nodenames):
 			print group
 
 
-def get_nodes_in_groups(groups):
-	'''returns the nodes that are in [groups]'''
-
-	arr = []
-
-	nodes = synctool_param.NODES.keys()
-
-	for g in groups:
-		for node in nodes:
-			if g in synctool_param.NODES[node] and not node in arr:
-				arr.append(node)
-
-	return arr
-
-
 def list_nodegroups(groups):
 	for group in groups:
 		if not group in synctool_param.ALL_GROUPS:
 			stderr("no such group '%s' defined" % group)
 			sys.exit(1)
 
-	arr = get_nodes_in_groups(groups)
+	arr = synctool.config.get_nodes_in_groups(groups)
 	arr.sort()
 
 	for node in arr:
 		if node in synctool_param.IGNORE_GROUPS:
 			if OPT_IPADDRESS:
-				node = get_node_ipaddress(node)
+				node = synctool.config.get_node_ipaddress(node)
 
 			elif OPT_HOSTNAME:
-				node = get_node_hostname(node)
+				node = synctool.config.get_node_hostname(node)
 
 			if not OPT_FILTER_IGNORED:
 				print '%s (ignored)' % node
 		else:
 			if OPT_IPADDRESS:
-				node = get_node_ipaddress(node)
+				node = synctool.config.get_node_ipaddress(node)
 
 			elif OPT_HOSTNAME:
-				node = get_node_hostname(node)
+				node = synctool.config.get_node_hostname(node)
 
 			print node
 
@@ -442,38 +157,44 @@ def list_commands(cmds):
 
 	for cmd in cmds:
 		if cmd == 'diff':
-			(ok, a) = check_cmd_config('diff_cmd', synctool_param.DIFF_CMD)
+			(ok, a) = synctool.config.check_cmd_config('diff_cmd',
+						synctool_param.DIFF_CMD)
 			if ok:
 				print synctool_param.DIFF_CMD
 
 		if cmd == 'ping':
-			(ok, a) = check_cmd_config('ping_cmd', synctool_param.PING_CMD)
+			(ok, a) = synctool.config.check_cmd_config('ping_cmd',
+						synctool_param.PING_CMD)
 			if ok:
 				print synctool_param.PING_CMD
 
 		elif cmd == 'ssh':
-			(ok, a) = check_cmd_config('ssh_cmd', synctool_param.SSH_CMD)
+			(ok, a) = synctool.config.check_cmd_config('ssh_cmd',
+						synctool_param.SSH_CMD)
 			if ok:
 				print synctool_param.SSH_CMD
 
 		elif cmd == 'scp':
-			(ok, a) = check_cmd_config('scp_cmd', synctool_param.SCP_CMD)
+			(ok, a) = synctool.config.check_cmd_config('scp_cmd',
+						synctool_param.SCP_CMD)
 			if ok:
 				print synctool_param.SCP_CMD
 
 		elif cmd == 'rsync':
-			(ok, a) = check_cmd_config('rsync_cmd', synctool_param.RSYNC_CMD)
+			(ok, a) = synctool.config.check_cmd_config('rsync_cmd',
+						synctool_param.RSYNC_CMD)
 			if ok:
 				print synctool_param.RSYNC_CMD
 
 		elif cmd == 'synctool':
-			(ok, a) = check_cmd_config('synctool_cmd',
-										synctool_param.SYNCTOOL_CMD)
+			(ok, a) = synctool.config.check_cmd_config('synctool_cmd',
+						synctool_param.SYNCTOOL_CMD)
 			if ok:
 				print synctool_param.SYNCTOOL_CMD
 
 		elif cmd == 'pkg':
-			(ok, a) = check_cmd_config('pkg_cmd', synctool_param.PKG_CMD)
+			(ok, a) = synctool.config.check_cmd_config('pkg_cmd',
+						synctool_param.PKG_CMD)
 			if ok:
 				print synctool_param.PKG_CMD
 
@@ -671,7 +392,7 @@ def main():
 		stderr('options --ipaddress and --hostname can not be combined')
 		sys.exit(1)
 
-	read_config()
+	synctool.config.read_config()
 
 	if ACTION == ACTION_LIST_NODES:
 		list_all_nodes()
@@ -710,7 +431,7 @@ def main():
 		print synctool_param.LOGFILE
 
 	elif ACTION == ACTION_NODENAME:
-		init_mynodename()
+		synctool.config.init_mynodename()
 
 		if not synctool_param.NODENAME:
 			stderr('unable to determine my nodename (%s), please check %s' %
@@ -721,14 +442,15 @@ def main():
 			if not synctool_param.OPT_FILTER_IGNORED:
 				if OPT_IPADDRESS:
 					print ('none (%s ignored)' %
-						get_node_ipaddress(synctool_param.NODENAME))
+							synctool.config.get_node_ipaddress(
+							synctool_param.NODENAME))
 				else:
 					print 'none (%s ignored)' % synctool_param.NODENAME
 
 			sys.exit(0)
 
 		if OPT_IPADDRESS:
-			print get_node_ipaddress(synctool_param.NODENAME)
+			print synctool.config.get_node_ipaddress(synctool_param.NODENAME)
 		else:
 			print synctool_param.NODENAME
 
