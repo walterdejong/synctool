@@ -9,7 +9,6 @@
 #   License.
 #
 
-import synctool_nodeset
 import synctool_config
 import synctool_param
 import synctool_aggr
@@ -26,11 +25,12 @@ import shlex
 import tempfile
 import errno
 
+import synctool.nodeset
 import synctool.stat
 import synctool.unbuffered
 import synctool.update
 
-NODESET = synctool_nodeset.NodeSet()
+NODESET = synctool.nodeset.NodeSet()
 
 OPT_SKIP_RSYNC = False
 OPT_AGGREGATE = False
