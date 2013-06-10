@@ -16,7 +16,6 @@ import synctool_stat
 import synctool_aggr
 import synctool_ssh
 import synctool_lib
-import synctool
 
 from synctool_lib import verbose,stdout,stderr,terse,unix_out
 
@@ -29,6 +28,7 @@ import tempfile
 import errno
 
 import synctool.unbuffered
+import synctool.update
 
 NODESET = synctool_nodeset.NodeSet()
 
@@ -349,6 +349,56 @@ def check_cmd_config():
 		sys.exit(1)
 
 
+def be_careful_with_getopt():
+	'''check sys.argv for dangerous common typo's on the command-line'''
+
+	# be extra careful with possible typo's on the command-line
+	# because '-f' might run --fix because of the way that getopt() works
+
+	for arg in sys.argv:
+
+		# This is probably going to give stupid-looking output
+		# in some cases, but it's better to be safe than sorry
+
+		if arg[:2] == '-d' and string.find(arg, 'f') > -1:
+			print "Did you mean '--diff'?"
+			sys.exit(1)
+
+		if arg[:2] == '-r' and string.find(arg, 'f') > -1:
+			if string.count(arg, 'e') >= 2:
+				print "Did you mean '--reference'?"
+			else:
+				print "Did you mean '--ref'?"
+			sys.exit(1)
+
+
+def	option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
+	opt_upload, opt_suffix, opt_fix):
+
+	'''some combinations of command-line options don't make sense;
+	alert the user and abort'''
+
+	if opt_erase_saved and (opt_diff or opt_reference or opt_upload):
+		stderr("option --erase-saved can not be combined with other actions")
+		sys.exit(1)
+
+	if opt_upload and (opt_diff or opt_single or opt_reference):
+		stderr("option --upload can not be combined with other actions")
+		sys.exit(1)
+
+	if opt_suffix and not opt_upload:
+		stderr("option --suffix can only be used together with --upload")
+		sys.exit(1)
+
+	if opt_diff and (opt_single or opt_reference or opt_fix):
+		stderr("option --diff can not be combined with other actions")
+		sys.exit(1)
+
+	if opt_reference and (opt_single or opt_fix):
+		stderr("option --reference can not be combined with other actions")
+		sys.exit(1)
+
+
 def usage():
 	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
 	print 'options:'
@@ -368,7 +418,7 @@ def usage():
   -s, --suffix=group             Give group suffix for the uploaded file
   -e, --erase-saved              Erase *.saved backup files
   -f, --fix                      Perform updates (otherwise, do dry-run)
-      --no-post                  Do not run any on_update or .post scripts
+      --no-post                  Do not run any .post scripts
   -F, --fullpath                 Show full paths instead of shortened ones
   -T, --terse                    Show terse, shortened paths
       --color                    Use colored output (only for terse mode)
@@ -395,7 +445,7 @@ def get_options():
 
 	# check for typo's on the command-line;
 	# things like "-diff" will trigger "-f" => "--fix"
-	synctool.be_careful_with_getopt()
+	be_careful_with_getopt()
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
@@ -571,8 +621,8 @@ def get_options():
 		MASTER_OPTS.extend(args)
 		PASS_ARGS.extend(args)
 
-	synctool.option_combinations(opt_diff, opt_single, opt_reference,
-		opt_erase_saved, opt_upload, opt_suffix, opt_fix)
+	option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
+		opt_upload, opt_suffix, opt_fix)
 
 	return (upload_filename, upload_suffix)
 
@@ -584,12 +634,10 @@ def main():
 	(upload_filename, upload_suffix) = get_options()
 
 	if OPT_CHECK_UPDATE:
-		import synctool_update
-		sys.exit(synctool_update.check())
+		sys.exit(synctool.update.check())
 
 	if OPT_DOWNLOAD:
-		import synctool_update
-		sys.exit(synctool_update.download())
+		sys.exit(synctool.update.download())
 
 	if OPT_AGGREGATE:
 		synctool_aggr.run(MASTER_OPTS)
