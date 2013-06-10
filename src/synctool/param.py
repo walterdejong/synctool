@@ -1,5 +1,5 @@
 #
-#	synctool_param.py	WJ111
+#	synctool.param.py	WJ111
 #
 #   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
 #

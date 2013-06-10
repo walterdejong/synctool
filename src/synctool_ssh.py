@@ -9,7 +9,6 @@
 #   License.
 #
 
-import synctool_param
 import synctool_lib
 
 from synctool_lib import verbose,stderr,unix_out
@@ -24,6 +23,7 @@ import errno
 import synctool.aggr
 import synctool.config
 import synctool.nodeset
+import synctool.param
 import synctool.unbuffered
 
 NODESET = synctool.nodeset.NodeSet()
@@ -41,7 +41,7 @@ def run_dsh(remote_cmd_arr):
 		print 'no valid nodes specified'
 		sys.exit(1)
 
-	ssh_cmd_arr = shlex.split(synctool_param.SSH_CMD)
+	ssh_cmd_arr = shlex.split(synctool.param.SSH_CMD)
 
 	if SSH_OPTIONS:
 		ssh_cmd_arr.extend(shlex.split(SSH_OPTIONS))
@@ -56,7 +56,7 @@ def master_ssh(rank, args):
 	node = nodes[rank]
 	cmd_str = string.join(remote_cmd_arr)
 
-	if node == synctool_param.NODENAME:
+	if node == synctool.param.NODENAME:
 		verbose('running %s' % cmd_str)
 		unix_out(cmd_str)
 	else:
@@ -79,7 +79,7 @@ def worker_ssh(rank, args):
 	node = nodes[rank]
 	nodename = NODESET.get_nodename_from_address(node)
 
-	if nodename == synctool_param.NODENAME:
+	if nodename == synctool.param.NODENAME:
 		# is this node the local node? Then do not use ssh
 		ssh_cmd_arr = []
 	else:
@@ -94,8 +94,8 @@ def worker_ssh(rank, args):
 def check_cmd_config():
 	'''check whether the commands as given in synctool.conf actually exist'''
 
-	(ok, synctool_param.SSH_CMD) = synctool.config.check_cmd_config(
-									'ssh_cmd', synctool_param.SSH_CMD)
+	(ok, synctool.param.SSH_CMD) = synctool.config.check_cmd_config(
+									'ssh_cmd', synctool.param.SSH_CMD)
 	if not ok:
 		sys.exit(-1)
 
@@ -107,7 +107,7 @@ def usage():
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=dir/file            Use this config file'
 	print ('                                 (default: %s)' %
-		synctool_param.DEFAULT_CONF)
+		synctool.param.DEFAULT_CONF)
 	print '''  -n, --node=nodelist            Execute only on these nodes
   -g, --group=grouplist          Execute only on these groups of nodes
   -x, --exclude=nodelist         Exclude these nodes from the selected group
@@ -160,11 +160,11 @@ def get_options():
 			sys.exit(1)
 
 		if opt in ('-c', '--conf'):
-			synctool_param.CONF_FILE = arg
+			synctool.param.CONF_FILE = arg
 			continue
 
 		if opt == '--version':
-			print synctool_param.VERSION
+			print synctool.param.VERSION
 			sys.exit(0)
 
 	synctool.config.read_config()
@@ -204,13 +204,13 @@ def get_options():
 
 		if opt in ('-p', '--numproc'):
 			try:
-				synctool_param.NUM_PROC = int(arg)
+				synctool.param.NUM_PROC = int(arg)
 			except ValueError:
 				print ("%s: option '%s' requires a numeric value" %
 					(os.path.basename(sys.argv[0]), opt))
 				sys.exit(1)
 
-			if synctool_param.NUM_PROC < 1:
+			if synctool.param.NUM_PROC < 1:
 				print ('%s: invalid value for numproc' %
 					os.path.basename(sys.argv[0]))
 				sys.exit(1)

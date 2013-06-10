@@ -8,7 +8,6 @@
 #   License.
 #
 
-import synctool_param
 import synctool_lib
 
 from synctool_lib import verbose, stderr, terse
@@ -19,6 +18,7 @@ import string
 import fnmatch
 
 import synctool.object
+import synctool.param
 import synctool.stat
 
 # enums for designating trees
@@ -56,7 +56,7 @@ def split_extension(filename, require_extension):
 
 	Prereq: GROUP_ALL must be set to MY_GROUPS.index('all')'''
 
-	require_extension = require_extension and synctool_param.REQUIRE_EXTENSION
+	require_extension = require_extension and synctool.param.REQUIRE_EXTENSION
 
 	(name, ext) = os.path.splitext(filename)
 
@@ -84,9 +84,9 @@ def split_extension(filename, require_extension):
 		return (filename, GROUP_ALL, False)
 
 	try:
-		importance = synctool_param.MY_GROUPS.index(ext)
+		importance = synctool.param.MY_GROUPS.index(ext)
 	except ValueError:
-		if not ext in synctool_param.ALL_GROUPS:
+		if not ext in synctool.param.ALL_GROUPS:
 			return (None, OV_UNKNOWN_GROUP, False)
 
 		return (None, OV_NOT_MY_GROUP, False)
@@ -112,14 +112,14 @@ def ov_perror(errorcode, src_path):
 		return
 
 	if errorcode == OV_NO_GROUP_EXT:
-		if synctool_param.TERSE:
+		if synctool.param.TERSE:
 			terse(synctool_lib.TERSE_ERROR, 'no group on %s' % src_path)
 		else:
 			stderr('no underscored group extension on %s, skipped' %
 				synctool_lib.prettypath(src_path))
 
 	elif errorcode == OV_UNKNOWN_GROUP:
-		if synctool_param.TERSE:
+		if synctool.param.TERSE:
 			terse(synctool_lib.TERSE_ERROR, 'invalid group on %s' % src_path)
 		else:
 			stderr('unknown group on %s, skipped' %
@@ -135,7 +135,7 @@ def relevant_overlay_dirs(overlay_dir):
 
 	for entry in os.listdir(overlay_dir):
 		try:
-			importance = synctool_param.MY_GROUPS.index(entry)
+			importance = synctool.param.MY_GROUPS.index(entry)
 		except ValueError:
 			continue
 
@@ -162,19 +162,19 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.path.sep,
 #	verbose('overlay pass 1 %s/' % overlay_dir)
 
 	for entry in os.listdir(overlay_dir):
-		if entry in synctool_param.IGNORE_FILES:
+		if entry in synctool.param.IGNORE_FILES:
 			continue
 
 		src_path = os.path.join(overlay_dir, entry)
 		src_statbuf = synctool.stat.SyncStat(src_path)
 
 		if src_statbuf.isDir():
-			if synctool_param.IGNORE_DOTDIRS and entry[0] == '.':
+			if synctool.param.IGNORE_DOTDIRS and entry[0] == '.':
 				continue
 
 			isDir = True
 		else:
-			if synctool_param.IGNORE_DOTFILES and entry[0] == '.':
+			if synctool.param.IGNORE_DOTFILES and entry[0] == '.':
 				continue
 
 			isDir = False
@@ -182,7 +182,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.path.sep,
 		# check any ignored files with wildcards
 		# before any group extension is examined
 		wildcard_match = False
-		for wildcard_entry in synctool_param.IGNORE_FILES_WITH_WILDCARDS:
+		for wildcard_entry in synctool.param.IGNORE_FILES_WITH_WILDCARDS:
 			if fnmatch.fnmatchcase(entry, wildcard_entry):
 				wildcard_match = True
 				break
@@ -203,7 +203,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.path.sep,
 
 			continue
 
-		if name in synctool_param.IGNORE_FILES:
+		if name in synctool.param.IGNORE_FILES:
 			continue
 
 		# inherit lower group level from parent directory
@@ -231,7 +231,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.path.sep,
 			else:
 				# unfortunately, the name has been messed up already
 				# so therefore just ignore the file and issue a warning
-				if synctool_param.TERSE:
+				if synctool.param.TERSE:
 					terse(synctool_lib.TERSE_WARNING, 'ignoring %s' %
 														src_path)
 				else:
@@ -271,7 +271,7 @@ def overlay_pass2(filelist, filedict):
 			elif ((not (entry.src_isDir() and entry2.src_isDir())) and
 				entry.importance == entry2.importance):
 
-				if synctool_param.TERSE:
+				if synctool.param.TERSE:
 					synctool_lib.terse(synctool_lib.TERSE_ERROR,
 						'duplicate source paths in repository for:')
 					synctool_lib.terse(synctool_lib.TERSE_ERROR,
@@ -312,12 +312,12 @@ def load_overlay_tree():
 	POST_SCRIPTS = {}
 
 	# ensure that GROUP_ALL is set correctly
-	GROUP_ALL = len(synctool_param.MY_GROUPS) - 1
+	GROUP_ALL = len(synctool.param.MY_GROUPS) - 1
 
 	filelist = []
 
 	# do pass #1 for multiple overlay dirs: load them into filelist
-	for (d, importance) in relevant_overlay_dirs(synctool_param.OVERLAY_DIR):
+	for (d, importance) in relevant_overlay_dirs(synctool.param.OVERLAY_DIR):
 		overlay_pass1(d, filelist, os.path.sep, importance)
 
 	# run pass #2 : 'squash' filelist into OVERLAY_DICT
@@ -344,12 +344,12 @@ def load_delete_tree():
 	DELETE_DICT = {}
 
 	# ensure that GROUP_ALL is set correctly
-	GROUP_ALL = len(synctool_param.MY_GROUPS) - 1
+	GROUP_ALL = len(synctool.param.MY_GROUPS) - 1
 
 	filelist = []
 
 	# do pass #1 for multiple delete dirs: load them into filelist
-	for (d, importance) in relevant_overlay_dirs(synctool_param.DELETE_DIR):
+	for (d, importance) in relevant_overlay_dirs(synctool.param.DELETE_DIR):
 		overlay_pass1(d, filelist, os.path.sep, importance)
 
 	# run pass #2 : 'squash' filelist into OVERLAY_DICT
@@ -426,7 +426,7 @@ def find_terse(treedef, terse_path):
 	idx = string.find(terse_path, '...')
 	if idx == -1:
 		if terse_path[:2] == '//':
-			terse_path = os.path.join(synctool_param.MASTERDIR,
+			terse_path = os.path.join(synctool.param.MASTERDIR,
 				terse_path[2:])
 
 		# this is not really a terse path, return a regular find()

@@ -9,7 +9,6 @@
 #   License.
 #
 
-import synctool_param
 import synctool_lib
 
 from synctool_lib import verbose,stdout,stderr,terse,unix_out,dryrun_msg
@@ -30,6 +29,7 @@ except ImportError:
 
 import synctool.config
 import synctool.overlay
+import synctool.param
 import synctool.stat
 
 # get_options() returns these action codes
@@ -306,9 +306,9 @@ def reference(filename):
 def diff_files(filename):
 	'''display a diff of the file'''
 
-	if not synctool_param.DIFF_CMD:
+	if not synctool.param.DIFF_CMD:
 		stderr('error: diff_cmd is undefined in %s' %
-			synctool_param.CONF_FILE)
+			synctool.param.CONF_FILE)
 		return
 
 	# be sure that it doesn't do any updates
@@ -325,21 +325,21 @@ def diff_files(filename):
 		return
 
 	if synctool_lib.UNIX_CMD:
-		unix_out('%s %s %s' % (synctool_param.DIFF_CMD,
+		unix_out('%s %s %s' % (synctool.param.DIFF_CMD,
 								obj.dest_path, obj.src_path))
 	else:
-		verbose('%s %s %s' % (synctool_param.DIFF_CMD,
+		verbose('%s %s %s' % (synctool.param.DIFF_CMD,
 								obj.dest_path, obj.print_src()))
 		sys.stdout.flush()
 		sys.stderr.flush()
 
 		if use_subprocess:
-			cmd_arr = shlex.split(synctool_param.DIFF_CMD)
+			cmd_arr = shlex.split(synctool.param.DIFF_CMD)
 			cmd_arr.append(obj.dest_path)
 			cmd_arr.append(obj.src_path)
 			subprocess.call(cmd_arr, shell=False)
 		else:
-			os.system('%s %s %s' % (synctool_param.DIFF_CMD,
+			os.system('%s %s %s' % (synctool.param.DIFF_CMD,
 									obj.dest_path, obj.src_path))
 		sys.stdout.flush()
 		sys.stderr.flush()
@@ -398,8 +398,8 @@ def	option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
 def check_cmd_config():
 	'''check whether the commands as given in synctool.conf actually exist'''
 
-	(ok, synctool_param.DIFF_CMD) = synctool.config.check_cmd_config(
-									'diff_cmd', synctool_param.DIFF_CMD)
+	(ok, synctool.param.DIFF_CMD) = synctool.config.check_cmd_config(
+									'diff_cmd', synctool.param.DIFF_CMD)
 	if not ok:
 		sys.exit(-1)
 
@@ -410,7 +410,7 @@ def usage():
 	print '  -h, --help            Display this information'
 	print '  -c, --conf=dir/file   Use this config file'
 	print ('                        (default: %s)' %
-		synctool_param.DEFAULT_CONF)
+		synctool.param.DEFAULT_CONF)
 	print '''  -d, --diff=file       Show diff for file
   -1, --single=file     Update a single file
   -r, --ref=file        Show which source file synctool chooses
@@ -472,28 +472,28 @@ def get_options():
 			sys.exit(1)
 
 		if opt in ('-c', '--conf'):
-			synctool_param.CONF_FILE = arg
+			synctool.param.CONF_FILE = arg
 			continue
 
 		if opt == '--version':
-			print synctool_param.VERSION
+			print synctool.param.VERSION
 			sys.exit(0)
 
 	# first read the config file
 	synctool.config.read_config()
 	check_cmd_config()
 
-	if not synctool_param.TERSE:
+	if not synctool.param.TERSE:
 		# giving --terse changes program behavior as early as
 		# in the get_options() loop itself, so set it here already
 		for opt, args in opts:
 			if opt in ('-T', '--terse'):
-				synctool_param.TERSE = True
-				synctool_param.FULL_PATH = False
+				synctool.param.TERSE = True
+				synctool.param.FULL_PATH = False
 				continue
 
 			if opt in ('-F', '--fullpath'):
-				synctool_param.FULL_PATH = True
+				synctool.param.FULL_PATH = True
 				continue
 
 	# then go process all the other options
@@ -533,11 +533,11 @@ def get_options():
 			continue
 
 		if opt == '--color':
-			synctool_param.COLORIZE = True
+			synctool.param.COLORIZE = True
 			continue
 
 		if opt == '--no-color':
-			synctool_param.COLORIZE = False
+			synctool.param.COLORIZE = False
 			continue
 
 		if opt in ('-v', '--verbose'):
@@ -559,7 +559,7 @@ def get_options():
 
 		if opt == '--nodename':
 			# used by the master to set the client's nodename
-			synctool_param.NODENAME = arg
+			synctool.param.NODENAME = arg
 			continue
 
 		if opt in ('-d', '--diff'):
@@ -608,14 +608,14 @@ def main():
 
 	synctool.config.init_mynodename()
 
-	if not synctool_param.NODENAME:
+	if not synctool.param.NODENAME:
 		stderr('unable to determine my nodename (%s), please check %s' %
-			(synctool_param.HOSTNAME, synctool_param.CONF_FILE))
+			(synctool.param.HOSTNAME, synctool.param.CONF_FILE))
 		sys.exit(1)
 
-	if synctool_param.NODENAME in synctool_param.IGNORE_GROUPS:
+	if synctool.param.NODENAME in synctool.param.IGNORE_GROUPS:
 		stderr('%s: node %s is disabled in the config file' %
-			(synctool_param.CONF_FILE, synctool_param.NODENAME))
+			(synctool.param.CONF_FILE, synctool.param.NODENAME))
 		sys.exit(1)
 
 	if synctool_lib.UNIX_CMD:
@@ -626,10 +626,10 @@ def main():
 			'%04d/%02d/%02d %02d:%02d:%02d' %
 			(t[0], t[1], t[2], t[3], t[4], t[5]))
 		unix_out('#')
-		unix_out('# NODENAME=%s' % synctool_param.NODENAME)
-		unix_out('# HOSTNAME=%s' % synctool_param.HOSTNAME)
-		unix_out('# MASTERDIR=%s' % synctool_param.MASTERDIR)
-		unix_out('# SYMLINK_MODE=0%o' % synctool_param.SYMLINK_MODE)
+		unix_out('# NODENAME=%s' % synctool.param.NODENAME)
+		unix_out('# HOSTNAME=%s' % synctool.param.HOSTNAME)
+		unix_out('# MASTERDIR=%s' % synctool.param.MASTERDIR)
+		unix_out('# SYMLINK_MODE=0%o' % synctool.param.SYMLINK_MODE)
 		unix_out('#')
 
 		if not synctool_lib.DRY_RUN:
@@ -639,13 +639,13 @@ def main():
 		unix_out('')
 	else:
 		if not synctool_lib.QUIET:
-			verbose('my nodename: %s' % synctool_param.NODENAME)
-			verbose('my hostname: %s' % synctool_param.HOSTNAME)
-			verbose('masterdir: %s' % synctool_param.MASTERDIR)
-			verbose('symlink_mode: 0%o' % synctool_param.SYMLINK_MODE)
+			verbose('my nodename: %s' % synctool.param.NODENAME)
+			verbose('my hostname: %s' % synctool.param.HOSTNAME)
+			verbose('masterdir: %s' % synctool.param.MASTERDIR)
+			verbose('symlink_mode: 0%o' % synctool.param.SYMLINK_MODE)
 
-			if synctool_param.LOGFILE != None and not synctool_lib.DRY_RUN:
-				verbose('logfile: %s' % synctool_param.LOGFILE)
+			if synctool.param.LOGFILE != None and not synctool_lib.DRY_RUN:
+				verbose('logfile: %s' % synctool.param.LOGFILE)
 
 			verbose('')
 
@@ -660,8 +660,8 @@ def main():
 
 	synctool_lib.openlog()
 
-	os.putenv('SYNCTOOL_NODENAME', synctool_param.NODENAME)
-	os.putenv('SYNCTOOL_MASTERDIR', synctool_param.MASTERDIR)
+	os.putenv('SYNCTOOL_NODENAME', synctool.param.NODENAME)
+	os.putenv('SYNCTOOL_MASTERDIR', synctool.param.MASTERDIR)
 
 	if action == ACTION_DIFF:
 		for file in SINGLE_FILES:

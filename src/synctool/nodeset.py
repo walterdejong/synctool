@@ -8,16 +8,16 @@
 #   License.
 #
 
-import synctool_param
+import synctool.param
 import synctool_lib
 
 from synctool_lib import verbose,stderr
 
-import synctool_param
-
 import string
 
 import synctool.config
+import synctool.param
+
 
 # The nodeset helps making a set of nodes from command-line arguments
 # It is used by synctool-master, dsh, dcp, dsh-ping
@@ -70,10 +70,10 @@ class NodeSet:
 
 		# by default, work on default_nodeset
 		if not self.nodelist and not self.grouplist:
-			if not synctool_param.DEFAULT_NODESET:
+			if not synctool.param.DEFAULT_NODESET:
 				return []
 
-			self.nodelist = synctool_param.DEFAULT_NODESET
+			self.nodelist = synctool.param.DEFAULT_NODESET
 		else:
 			# check if the nodes exist at all
 			# the user may have given bogus names
@@ -86,7 +86,7 @@ class NodeSet:
 			if self.grouplist:
 				# check if the groups exist at all
 				for group in self.grouplist:
-					if not group in synctool_param.ALL_GROUPS:
+					if not group in synctool.param.ALL_GROUPS:
 						stderr("no such group '%s'" % group)
 						return None
 
@@ -109,7 +109,7 @@ class NodeSet:
 		ignored_nodes = ''
 
 		for node in self.nodelist:
-			if (node in synctool_param.IGNORE_GROUPS and
+			if (node in synctool.param.IGNORE_GROUPS and
 				not node in explicit_includes):
 				verbose('node %s is ignored' % node)
 
@@ -123,7 +123,7 @@ class NodeSet:
 			do_continue = False
 
 			for group in groups:
-				if group in synctool_param.IGNORE_GROUPS:
+				if group in synctool.param.IGNORE_GROUPS:
 					verbose('group %s is ignored' % group)
 
 					if not ignored_nodes:
@@ -146,7 +146,7 @@ class NodeSet:
 		# print message about ignored nodes
 		if (ignored_nodes and not synctool_lib.QUIET and
 			not synctool_lib.UNIX_CMD):
-			if synctool_param.TERSE:
+			if synctool.param.TERSE:
 				synctool_lib.terse(synctool_lib.TERSE_WARNING,
 									'ignored nodes')
 			else:

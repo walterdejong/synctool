@@ -8,7 +8,6 @@
 #   License.
 #
 
-import synctool_param
 import synctool_lib
 
 from synctool_lib import verbose,stdout,stderr,terse,unix_out,dryrun_msg
@@ -16,6 +15,7 @@ from synctool_lib import verbose,stdout,stderr,terse,unix_out,dryrun_msg
 import os
 import shutil
 
+import synctool.param
 import synctool.stat
 
 
@@ -238,12 +238,12 @@ class SyncObject:
 					unix_out('# relink symbolic link %s' % dest_path)
 					need_update = True
 
-				if (dest_stat.mode & 07777) != synctool_param.SYMLINK_MODE:
+				if (dest_stat.mode & 07777) != synctool.param.SYMLINK_MODE:
 					stdout('%s should have mode %04o (symlink), '
 						'but has %04o' % (dest_path,
-						synctool_param.SYMLINK_MODE, dest_stat.mode & 07777))
+						synctool.param.SYMLINK_MODE, dest_stat.mode & 07777))
 					terse(synctool_lib.TERSE_MODE, '%04o %s' %
-						(synctool_param.SYMLINK_MODE, dest_path))
+						(synctool.param.SYMLINK_MODE, dest_path))
 					unix_out('# fix permissions of symbolic link %s' %
 						dest_path)
 					need_update = True
@@ -481,7 +481,7 @@ class SyncObject:
 		if not synctool_lib.DRY_RUN:
 			old_umask = os.umask(077)
 
-			if synctool_param.BACKUP_COPIES:
+			if synctool.param.BACKUP_COPIES:
 				if self.dest_isFile():
 					verbose('  saving %s as %s.saved' % (dest, dest))
 					try:
@@ -497,7 +497,7 @@ class SyncObject:
 
 			os.umask(old_umask)
 		else:
-			if self.dest_isFile() and synctool_param.BACKUP_COPIES:
+			if self.dest_isFile() and synctool.param.BACKUP_COPIES:
 				verbose('  saving %s as %s.saved' % (dest, dest))
 
 			verbose(dryrun_msg('  cp %s %s' % (src, dest)))
@@ -519,7 +519,7 @@ class SyncObject:
 		#
 
 		# linux makes all symlinks mode 0777, but some other platforms do not
-		umask_mode = synctool_param.SYMLINK_MODE ^ 0777
+		umask_mode = synctool.param.SYMLINK_MODE ^ 0777
 
 		unix_out('umask %03o' % umask_mode)
 		unix_out('ln -s %s %s' % (oldpath, newpath))
@@ -591,7 +591,7 @@ class SyncObject:
 		file = self.dest_path
 
 		if not synctool_lib.DRY_RUN:
-			if synctool_param.BACKUP_COPIES:
+			if synctool.param.BACKUP_COPIES:
 				unix_out('mv %s %s.saved' % (file, file))
 
 				verbose('moving %s to %s.saved' % (file, file))
@@ -609,7 +609,7 @@ class SyncObject:
 					stderr('failed to delete %s : %s' %
 							(file, reason))
 		else:
-			if synctool_param.BACKUP_COPIES:
+			if synctool.param.BACKUP_COPIES:
 				verbose(dryrun_msg('moving %s to %s.saved' % (file, file)))
 			else:
 				verbose(dryrun_msg('deleting %s' % file, 'delete'))
@@ -673,7 +673,7 @@ class SyncObject:
 
 
 	def save_dir(self):
-		if not synctool_param.BACKUP_COPIES:
+		if not synctool.param.BACKUP_COPIES:
 			return
 
 		path = self.dest_path
