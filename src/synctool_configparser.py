@@ -605,10 +605,21 @@ def config_ignore_node(arr, configfile, lineno):
 		stderr("%s:%d: '%s' requires 1 argument: the nodename to ignore" % (configfile, lineno, arr[0]))
 		return 1
 
+	errors = 0
+
 	for node in arr[1:]:
+		if node == 'none':
+			continue
+
+		if node == 'all':
+			stderr("%s:%d: illegal to ignore 'all'" % (configfile, lineno))
+			errors += 1
+			continue
+
 		if not node in synctool_param.IGNORE_GROUPS:
 			synctool_param.IGNORE_GROUPS.append(node)
-	return 0
+
+	return errors
 
 
 # keyword: ignore_group
@@ -617,7 +628,17 @@ def config_ignore_group(arr, configfile, lineno):
 		stderr("%s:%d: '%s' requires 1 argument: the groupname to ignore" % (configfile, lineno, arr[0]))
 		return 1
 
+	errors = 0
+
 	for group in arr[1:]:
+		if group == 'none':
+			continue
+
+		if group == 'all':
+			stderr("%s:%d: illegal to ignore 'all'" % (configfile, lineno))
+			errors += 1
+			continue
+
 		if not group in synctool_param.IGNORE_GROUPS:
 			synctool_param.IGNORE_GROUPS.append(group)
 
@@ -625,7 +646,7 @@ def config_ignore_group(arr, configfile, lineno):
 		if not synctool_param.GROUP_DEFS.has_key(group):
 			synctool_param.GROUP_DEFS[group] = None
 
-	return 0
+	return errors
 
 
 # keyword: on_update
