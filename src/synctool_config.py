@@ -54,8 +54,6 @@ OPT_HOSTNAME = False
 def read_config():
 	'''read the config file and set a bunch of globals'''
 
-	global CONFIGPARSER_MODULE
-
 	if not os.path.isfile(synctool_param.CONF_FILE):
 		stderr("no such config file '%s'" % synctool_param.CONF_FILE)
 		sys.exit(-1)
@@ -96,9 +94,6 @@ def read_config():
 		stderr('error: no such directory: %s' % d)
 		errors += 1
 
-	if errors > 0:
-		sys.exit(-1)
-
 	if not synctool_param.TEMP_DIR:
 		synctool_param.TEMP_DIR = '/tmp/synctool'
 		# do not make temp dir here; it is only used on the master node
@@ -118,6 +113,43 @@ def read_config():
 
 	if not 'none' in synctool_param.IGNORE_GROUPS:
 		synctool_param.IGNORE_GROUPS.append('none')
+
+	# initialize ALL_GROUPS
+	synctool_param.ALL_GROUPS = make_all_groups()
+
+	errors += make_default_nodeset()
+
+	if errors > 0:
+		sys.exit(-1)
+
+
+def make_default_nodeset():
+	errors = 0
+
+	# check that the listed nodes / groups exist at all
+	groups = []
+	for g in synctool_param.DEFAULT_NODESET:
+		if g == 'none':
+			groups = []
+			continue
+
+		if not g in synctool_param.ALL_GROUPS:
+			stderr("config error: unknown node or group '%s' "
+				"in default_nodeset" % g)
+			errors += 1
+			continue
+
+		if not g in groups:
+			groups.append(g)
+
+	if not errors:
+		if not groups:
+			# if there was 'none', the nodeset will be empty
+			synctool_param.DEFAULT_NODESET = []
+		else:
+			synctool_param.DEFAULT_NODESET = get_nodes_in_groups(groups)
+
+	return errors
 
 
 def check_cmd_config(param_name, cmd):
@@ -352,16 +384,16 @@ def list_nodes(nodenames):
 			print group
 
 
-def get_nodes_in_groups(nodegroups):
+def get_nodes_in_groups(groups):
 	'''returns the nodes that are in [groups]'''
 
 	arr = []
 
 	nodes = synctool_param.NODES.keys()
 
-	for nodegroup in nodegroups:
+	for g in groups:
 		for node in nodes:
-			if nodegroup in synctool_param.NODES[node] and not node in arr:
+			if g in synctool_param.NODES[node] and not node in arr:
 				arr.append(node)
 
 	return arr

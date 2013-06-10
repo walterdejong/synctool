@@ -458,6 +458,26 @@ def config_color_ok(arr, configfile, lineno):
 	return _config_color_variant('color_ok', arr[1], configfile, lineno)
 
 
+# keyword: default_nodeset
+def config_default_nodeset(arr, configfile, lineno):
+	if len(arr) < 2:
+		stderr("%s:%d: 'default_nodeset' requires an argument" %
+			(configfile, lineno))
+		return 1
+
+	# groups, but maybe also nodes
+	groups = arr[1:]
+
+	for g in groups:
+		if not spellcheck(s):
+			stderr("%s:%d: invalid name '%s'" % (configfile, lineno, g))
+			return 1
+
+	# for now, accept this as the default nodeset
+	# synctool_config.read_config() will expand this to a list of nodes
+	synctool_param.DEFAULT_NODESET = groups
+
+
 # keyword: group
 def config_group(arr, configfile, lineno):
 	if len(arr) < 3:
@@ -469,7 +489,7 @@ def config_group(arr, configfile, lineno):
 	group = arr[1]
 
 	if not spellcheck(group):
-		stderr("%s:%d: invalid characters in group name '%s'" %
+		stderr("%s:%d: invalid group name '%s'" %
 			(configfile, lineno, group))
 		return 1
 
@@ -507,7 +527,7 @@ def config_node(arr, configfile, lineno):
 	node = arr[1]
 
 	if not spellcheck(node):
-		stderr("%s:%d: invalid characters in node name '%s'" %
+		stderr("%s:%d: invalid node name '%s'" %
 			(configfile, lineno, node))
 		return 1
 

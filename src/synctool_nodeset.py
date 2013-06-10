@@ -14,10 +14,10 @@ import synctool_lib
 from synctool_lib import verbose,stderr
 
 import synctool_config
+import synctool_param
 
 import string
 
-#
 # The nodeset helps making a set of nodes from command-line arguments
 # It is used by synctool-master, dsh, dcp, dsh-ping
 #
@@ -27,7 +27,6 @@ import string
 #        call nodeset.addresses(), which will return a list of addresses
 #        use the address list to contact the nodes
 #        use nodeset.get_nodename_from_address() to get a nodename
-#
 
 class NodeSet:
 	'''class representing a set of nodes'''
@@ -68,27 +67,31 @@ class NodeSet:
 
 		explicit_includes = self.nodelist[:]
 
-		# by default, work on all nodes
+		# by default, work on default_nodeset
 		if not self.nodelist and not self.grouplist:
-			self.nodelist = synctool_config.get_nodes_in_groups(["all"])
+			if not synctool_param.DEFAULT_NODESET:
+				return []
 
-		# check if the nodes exist at all; the user may have given bogus names
-		all_nodes = synctool_config.get_all_nodes()
-		for node in self.nodelist:
-			if not node in all_nodes:
-				stderr("no such node '%s'" % node)
-				return None
-
-		if self.grouplist:
-			# check if the groups exist at all
-			all_groups = synctool_config.make_all_groups()
-			for group in self.grouplist:
-				if not group in all_groups:
-					stderr("no such group '%s'" % group)
+			self.nodelist = synctool_param.DEFAULT_NODESET
+		else:
+			# check if the nodes exist at all
+			# the user may have given bogus names
+			all_nodes = synctool_config.get_all_nodes()
+			for node in self.nodelist:
+				if not node in all_nodes:
+					stderr("no such node '%s'" % node)
 					return None
 
-			self.nodelist.extend(synctool_config.get_nodes_in_groups(
-									self.grouplist))
+			if self.grouplist:
+				# check if the groups exist at all
+				all_groups = synctool_config.make_all_groups()
+				for group in self.grouplist:
+					if not group in all_groups:
+						stderr("no such group '%s'" % group)
+						return None
+
+				self.nodelist.extend(synctool_config.get_nodes_in_groups(
+										self.grouplist))
 
 		if self.exclude_groups:
 			self.exclude_nodes.extend(synctool_config.get_nodes_in_groups(

@@ -56,7 +56,8 @@ IGNORE_DOTFILES = False
 IGNORE_DOTDIRS = False
 IGNORE_FILES = []
 IGNORE_FILES_WITH_WILDCARDS = []
-IGNORE_GROUPS = []
+
+DEFAULT_NODESET = ['all']
 
 NODES = {}
 INTERFACES = {}
@@ -64,6 +65,8 @@ HOSTNAMES = {}
 HOSTNAMES_BY_NODE = {}
 
 GROUP_DEFS = {}
+
+IGNORE_GROUPS = []
 
 # to be initialized externally ... (see synctool.py)
 # these are lists of group names

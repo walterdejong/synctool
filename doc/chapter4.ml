@@ -247,6 +247,21 @@ full path instead of the abbreviated one.<br />
 Default value is <span class="system">no</span>.
 </dd>
 
+<dt>default_nodeset &lt;group-or-node&gt; [..]</dt>
+<dd>
+By default, synctool will run on these nodes or groups. You can use this to
+make synctool by default work on only a subcluster rather than your whole
+installation.<br />
+The default value is <span class="system">all</span>. You may set it to
+<span class="system">none</span> to make synctool not run on a default set of
+nodes at all.
+<br />
+Example:
+<div class="example">
+default_nodeset test1 test2
+</div>
+</dd>
+
 <dt>group &lt;groupname&gt; &lt;subgroup&gt; [..]</dt>
 <dd>
 The <span class="system">group</span> keyword defines <em>compound</em>
