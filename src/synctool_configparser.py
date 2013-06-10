@@ -23,9 +23,13 @@ import sys
 import string
 import re
 
-# this allows alphanumeric, underscore, minus, plus
+# this allows alphanumeric concatenated by underscore, minus, or plus symbol
 # and no other characters
-SPELLCHECK = re.compile(r'[\w\-\+]+')
+#
+# So valid names are: node1 node1-10 node_10_0_0_2 node1+node2
+#
+SPELLCHECK = re.compile(
+	r'[a-zA-Z0-9]+(\_[a-zA-Z0-9]+|\-[a-zA-Z0-9]+|\+[a-zA-Z0-9]+)*')
 
 
 def stderr(str):
