@@ -1,5 +1,5 @@
 #
-#	synctool_pkg_zypper.py		WJ111
+#	synctool.pkg.zypper.py		WJ111
 #
 #   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
 #
@@ -12,7 +12,7 @@ import synctool_object
 import synctool_lib
 
 from synctool_lib import stderr
-from synctool_pkgclass import SyncPkg
+from synctool.pkgclass import SyncPkg
 
 import os
 import string

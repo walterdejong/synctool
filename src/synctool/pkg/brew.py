@@ -1,5 +1,5 @@
 #
-#	synctool_pkg_brew.py		WJ111
+#	synctool.pkg.brew.py		WJ111
 #
 #   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
 #
@@ -11,7 +11,7 @@
 import synctool_lib
 
 from synctool_lib import verbose
-from synctool_pkgclass import SyncPkg
+from synctool.pkgclass import SyncPkg
 
 import string
 
