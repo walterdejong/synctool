@@ -11,7 +11,6 @@
 
 import synctool_config
 import synctool_param
-import synctool_aggr
 import synctool_lib
 
 from synctool_lib import verbose,stderr,unix_out
@@ -23,6 +22,7 @@ import getopt
 import shlex
 import errno
 
+import synctool.aggr
 import synctool.nodeset
 import synctool.unbuffered
 
@@ -258,7 +258,7 @@ def main():
 	cmd_args = get_options()
 
 	if OPT_AGGREGATE:
-		synctool_aggr.run(MASTER_OPTS)
+		synctool.aggr.run(MASTER_OPTS)
 		sys.exit(0)
 
 	synctool_config.init_mynodename()

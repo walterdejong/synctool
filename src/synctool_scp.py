@@ -264,7 +264,7 @@ def main():
 	files = get_options()
 
 	if OPT_AGGREGATE:
-		synctool_aggr.run(MASTER_OPTS)
+		synctool.aggr.run(MASTER_OPTS)
 		sys.exit(0)
 
 	synctool_config.init_mynodename()
