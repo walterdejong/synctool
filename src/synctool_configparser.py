@@ -647,8 +647,16 @@ def config_ignore_node(arr, configfile, lineno):
 
 	for node in arr[1:]:
 		if not spellcheck(node):
-			stderr("%s:%d: invalid characters in node name '%s'" %
-				(configfile, lineno, node))
+			stderr("%s:%d: invalid node name '%s'" % (configfile, lineno,
+														node))
+			errors += 1
+			continue
+
+		if node == 'none':
+			continue
+
+		if node == 'all':
+			stderr("%s:%d: illegal to ignore 'all'" % (configfile, lineno))
 			errors += 1
 			continue
 
@@ -669,8 +677,16 @@ def config_ignore_group(arr, configfile, lineno):
 
 	for group in arr[1:]:
 		if not spellcheck(node):
-			stderr("%s:%d: invalid characters in group name '%s'" %
+			stderr("%s:%d: invalid group name '%s'" %
 				(configfile, lineno, group))
+			errors += 1
+			continue
+
+		if group == 'none':
+			continue
+
+		if group == 'all':
+			stderr("%s:%d: illegal to ignore 'all'" % (configfile, lineno))
 			errors += 1
 			continue
 
