@@ -9,11 +9,8 @@
 #   License.
 #
 
-import synctool_configparser
 import synctool_param
 import synctool_lib
-
-from synctool_configparser import stderr
 
 import os
 import sys
@@ -21,6 +18,9 @@ import string
 import socket
 import getopt
 import errno
+
+import synctool.configparser
+from synctool.configparser import stderr
 
 ACTION = 0
 ACTION_OPTION = None
@@ -58,7 +58,7 @@ def read_config():
 		stderr("no such config file '%s'" % synctool_param.CONF_FILE)
 		sys.exit(-1)
 
-	errors = synctool_configparser.read_config_file(synctool_param.CONF_FILE)
+	errors = synctool.configparser.read_config_file(synctool_param.CONF_FILE)
 
 	# if missing, set default directories
 	if not synctool_param.MASTERDIR:

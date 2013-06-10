@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#	synctool_configparser.py	WJ111
+#	synctool.configparser.py	WJ111
 #
 #   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
 #
@@ -46,7 +46,7 @@ def read_config_file(configfile):
 		stderr("failed to read config file '%s' : %s" % (configfile, reason))
 		return 1
 
-	this_module = sys.modules['synctool_configparser']
+	this_module = sys.modules['synctool.configparser']
 
 	lineno = 0
 	errors = 0
