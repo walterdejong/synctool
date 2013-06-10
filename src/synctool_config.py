@@ -278,8 +278,8 @@ def get_all_nodes():
 
 
 def get_node_ipaddress(node):
-	if synctool_param.INTERFACES.has_key(node):
-		return synctool_param.INTERFACES[node]
+	if synctool_param.IPADDRESSES.has_key(node):
+		return synctool_param.IPADDRESSES[node]
 
 	return node
 

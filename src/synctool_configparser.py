@@ -572,7 +572,7 @@ def config_node(arr, configfile, lineno):
 			arg = option[n+1:]
 
 			if qualifier == 'ipaddress':
-				if synctool_param.INTERFACES.has_key(node):
+				if synctool_param.IPADDRESSES.has_key(node):
 					stderr('%s:%d: redefinition of IP address for node %s' %
 						(configfile, lineno, node))
 					return 1
@@ -582,7 +582,7 @@ def config_node(arr, configfile, lineno):
 						(configfile, lineno, qualifier))
 					return 1
 
-				synctool_param.INTERFACES[node] = arg
+				synctool_param.IPADDRESSES[node] = arg
 
 			elif qualifier == 'hostname':
 				if synctool_param.HOSTNAMES.has_key(arg):
