@@ -9,7 +9,6 @@
 #   License.
 #
 
-import synctool_unbuffered
 import synctool_nodeset
 import synctool_config
 import synctool_param
@@ -28,6 +27,8 @@ import getopt
 import shlex
 import tempfile
 import errno
+
+import synctool.unbuffered
 
 NODESET = synctool_nodeset.NodeSet()
 
@@ -577,8 +578,8 @@ def get_options():
 
 
 def main():
-	sys.stdout = synctool_unbuffered.Unbuffered(sys.stdout)
-	sys.stderr = synctool_unbuffered.Unbuffered(sys.stderr)
+	sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)
+	sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)
 
 	(upload_filename, upload_suffix) = get_options()
 

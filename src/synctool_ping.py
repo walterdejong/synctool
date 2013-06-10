@@ -9,7 +9,6 @@
 #   License.
 #
 
-import synctool_unbuffered
 import synctool_nodeset
 import synctool_config
 import synctool_param
@@ -24,6 +23,8 @@ import string
 import getopt
 import shlex
 import errno
+
+import synctool.unbuffered
 
 NODESET = synctool_nodeset.NodeSet()
 
@@ -226,8 +227,8 @@ def get_options():
 
 
 def main():
-	sys.stdout = synctool_unbuffered.Unbuffered(sys.stdout)
-	sys.stderr = synctool_unbuffered.Unbuffered(sys.stderr)
+	sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)
+	sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)
 
 	cmd_args = get_options()
 
