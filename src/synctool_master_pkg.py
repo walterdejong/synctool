@@ -11,7 +11,6 @@
 #	- call synctool_pkg on specified nodes
 #
 
-import synctool_config
 import synctool_param
 import synctool_ssh
 import synctool_lib
@@ -27,6 +26,7 @@ import shlex
 import errno
 
 import synctool.aggr
+import synctool.config
 import synctool.nodeset
 import synctool.unbuffered
 
@@ -129,12 +129,12 @@ def check_cmd_config():
 
 	errors = 0
 
-	(ok, synctool_param.SSH_CMD) = synctool_config.check_cmd_config('ssh_cmd',
+	(ok, synctool_param.SSH_CMD) = synctool.config.check_cmd_config('ssh_cmd',
 									synctool_param.SSH_CMD)
 	if not ok:
 		errors += 1
 
-	(ok, synctool_param.PKG_CMD) = synctool_config.check_cmd_config('pkg_cmd',
+	(ok, synctool_param.PKG_CMD) = synctool.config.check_cmd_config('pkg_cmd',
 									synctool_param.PKG_CMD)
 	if not ok:
 		errors += 1
@@ -256,7 +256,7 @@ def get_options():
 			PASS_ARGS.append(arg)
 			continue
 
-	synctool_config.read_config()
+	synctool.config.read_config()
 	check_cmd_config()
 
 	# then process all the other options
@@ -376,7 +376,7 @@ def main():
 		synctool.aggr.run(MASTER_OPTS)
 		sys.exit(0)
 
-	synctool_config.init_mynodename()
+	synctool.config.init_mynodename()
 
 	# ooh ... testing for DRY_RUN doesn't work here
 #	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
@@ -387,7 +387,7 @@ def main():
 		print 'no valid nodes specified'
 		sys.exit(1)
 
-	local_address = synctool_config.get_node_ipaddress(
+	local_address = synctool.config.get_node_ipaddress(
 						synctool_param.NODENAME)
 
 	for node in nodes:

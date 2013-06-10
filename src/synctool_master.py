@@ -9,7 +9,6 @@
 #   License.
 #
 
-import synctool_config
 import synctool_param
 import synctool_ssh
 import synctool_lib
@@ -25,6 +24,7 @@ import tempfile
 import errno
 
 import synctool.aggr
+import synctool.config
 import synctool.nodeset
 import synctool.overlay
 import synctool.stat
@@ -152,7 +152,7 @@ def rsync_include_filter(nodename):
 
 	# set mygroups for this nodename
 	synctool_param.NODENAME = nodename
-	synctool_param.MY_GROUPS = synctool_config.get_my_groups()
+	synctool_param.MY_GROUPS = synctool.config.get_my_groups()
 
 	# now add only the group dirs that apply to the rsync filter file
 
@@ -214,10 +214,10 @@ def upload(interface, upload_filename, upload_suffix=None):
 	# this is needed for find() to find the best reference for the file
 	orig_NODENAME = synctool_param.NODENAME
 	synctool_param.NODENAME = node
-	synctool_config.insert_group(node, node)
+	synctool.config.insert_group(node, node)
 
 	orig_MY_GROUPS = synctool_param.MY_GROUPS[:]
-	synctool_param.MY_GROUPS = synctool_config.get_my_groups()
+	synctool_param.MY_GROUPS = synctool.config.get_my_groups()
 
 	# see if file is already in the repository
 	(obj, err) = synctool.overlay.find_terse(synctool.overlay.OV_OVERLAY,
@@ -309,37 +309,37 @@ def check_cmd_config():
 
 	errors = 0
 
-#	(ok, synctool_param.DIFF_CMD) = synctool_config.check_cmd_config(
+#	(ok, synctool_param.DIFF_CMD) = synctool.config.check_cmd_config(
 #									'diff_cmd', synctool_param.DIFF_CMD)
 #	if not ok:
 #		errors += 1
 
-#	(ok, synctool_param.PING_CMD) = synctool_config.check_cmd_config(
+#	(ok, synctool_param.PING_CMD) = synctool.config.check_cmd_config(
 #									'ping_cmd', synctool_param.PING_CMD)
 #	if not ok:
 #		errors += 1
 
-	(ok, synctool_param.SSH_CMD) = synctool_config.check_cmd_config(
+	(ok, synctool_param.SSH_CMD) = synctool.config.check_cmd_config(
 									'ssh_cmd', synctool_param.SSH_CMD)
 	if not ok:
 		errors += 1
 
-#	(ok, synctool_param.SCP_CMD) = synctool_config.check_cmd_config(
+#	(ok, synctool_param.SCP_CMD) = synctool.config.check_cmd_config(
 #									'scp_cmd', synctool_param.SCP_CMD)
 #	if not ok:
 #		errors += 1
 
-	(ok, synctool_param.RSYNC_CMD) = synctool_config.check_cmd_config(
+	(ok, synctool_param.RSYNC_CMD) = synctool.config.check_cmd_config(
 									'rsync_cmd', synctool_param.RSYNC_CMD)
 	if not ok:
 		errors += 1
 
-	(ok, synctool_param.SYNCTOOL_CMD) = synctool_config.check_cmd_config(
+	(ok, synctool_param.SYNCTOOL_CMD) = synctool.config.check_cmd_config(
 								'synctool_cmd', synctool_param.SYNCTOOL_CMD)
 	if not ok:
 		errors += 1
 
-#	(ok, synctool_param.PKG_CMD) = synctool_config.check_cmd_config(
+#	(ok, synctool_param.PKG_CMD) = synctool.config.check_cmd_config(
 #									'pkg_cmd', synctool_param.PKG_CMD)
 #	if not ok:
 #		errors += 1
@@ -504,7 +504,7 @@ def get_options():
 			print synctool_param.VERSION
 			sys.exit(0)
 
-	synctool_config.read_config()
+	synctool.config.read_config()
 	check_cmd_config()
 
 	# then process all the other options
@@ -642,7 +642,7 @@ def main():
 		synctool.aggr.run(MASTER_OPTS)
 		sys.exit(0)
 
-	synctool_config.init_mynodename()
+	synctool.config.init_mynodename()
 
 	# ooh ... testing for DRY_RUN doesn't work here
 	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
@@ -667,7 +667,7 @@ def main():
 		# do regular synctool run
 		make_tempdir()
 
-		local_address = synctool_config.get_node_ipaddress(
+		local_address = synctool.config.get_node_ipaddress(
 							synctool_param.NODENAME)
 
 		for node in nodes:

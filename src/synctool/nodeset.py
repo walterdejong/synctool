@@ -13,17 +13,18 @@ import synctool_lib
 
 from synctool_lib import verbose,stderr
 
-import synctool_config
 import synctool_param
 
 import string
+
+import synctool.config
 
 # The nodeset helps making a set of nodes from command-line arguments
 # It is used by synctool-master, dsh, dcp, dsh-ping
 #
 # usage: first make an instance of NodeSet
 #        then add nodes, groups, excluded nodes/groups
-#        call synctool_config.read_config()
+#        call synctool.config.read_config()
 #        call nodeset.addresses(), which will return a list of addresses
 #        use the address list to contact the nodes
 #        use nodeset.get_nodename_from_address() to get a nodename
@@ -76,7 +77,7 @@ class NodeSet:
 		else:
 			# check if the nodes exist at all
 			# the user may have given bogus names
-			all_nodes = synctool_config.get_all_nodes()
+			all_nodes = synctool.config.get_all_nodes()
 			for node in self.nodelist:
 				if not node in all_nodes:
 					stderr("no such node '%s'" % node)
@@ -89,11 +90,11 @@ class NodeSet:
 						stderr("no such group '%s'" % group)
 						return None
 
-				self.nodelist.extend(synctool_config.get_nodes_in_groups(
+				self.nodelist.extend(synctool.config.get_nodes_in_groups(
 										self.grouplist))
 
 		if self.exclude_groups:
-			self.exclude_nodes.extend(synctool_config.get_nodes_in_groups(
+			self.exclude_nodes.extend(synctool.config.get_nodes_in_groups(
 										self.exclude_groups))
 
 		for node in self.exclude_nodes:
@@ -118,7 +119,7 @@ class NodeSet:
 					ignored_nodes = ignored_nodes + ',' + node
 				continue
 
-			groups = synctool_config.get_groups(node)
+			groups = synctool.config.get_groups(node)
 			do_continue = False
 
 			for group in groups:
@@ -136,7 +137,7 @@ class NodeSet:
 			if do_continue:
 				continue
 
-			addr = synctool_config.get_node_ipaddress(node)
+			addr = synctool.config.get_node_ipaddress(node)
 			self.namemap[addr] = node
 
 			if not addr in addrs:	# make sure we do not have duplicates

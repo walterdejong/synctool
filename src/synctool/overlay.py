@@ -494,33 +494,4 @@ def visit(treedef, callback):
 		callback(dict[dest_path])
 
 
-if __name__ == '__main__':
-	## unit test program ##
-
-	import synctool_config
-
-	synctool_param.CONF_FILE = '/Users/walter/synctool-test/synctool.conf'
-	synctool_config.read_config()
-
-	def visit_callback(obj):
-		# normally you wouldn't use this ...
-		# it's just for debugging the importance code
-		print 'imp', obj.importance
-
-		print 'src ', obj.print_src()
-		print 'dest', obj.print_dest()
-
-		# check for .post script
-		postscript = postscript_for_path(obj.src_path, obj.dest_path)
-		if postscript:
-			print 'post %s' % postscript
-
-	visit(OV_OVERLAY, visit_callback)
-
-	print
-	print 'find() test:', find(OV_OVERLAY,
-		'/Users/walter/src/python/synctool-test/testroot/etc/hosts.allow')
-	print 'find_terse() test:', find_terse(OV_OVERLAY,
-		'/Users/walter/.../etc/hosts.allow')
-
 # EOB
