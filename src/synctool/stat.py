@@ -8,8 +8,6 @@
 #   License.
 #
 
-from synctool_lib import stderr
-
 import os
 import stat
 import pwd

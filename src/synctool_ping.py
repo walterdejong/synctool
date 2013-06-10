@@ -9,10 +9,6 @@
 #   License.
 #
 
-import synctool_lib
-
-from synctool_lib import verbose,stderr,unix_out
-
 import os
 import sys
 import string
@@ -22,6 +18,8 @@ import errno
 
 import synctool.aggr
 import synctool.config
+import synctool.lib
+from synctool.lib import verbose,stderr,unix_out
 import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
@@ -35,7 +33,7 @@ def ping_nodes(nodes):
 	'''ping nodes in parallel'''
 	'''nodes is a list of addresses, really'''
 
-	synctool_lib.run_parallel(master_ping, worker_ping, nodes, len(nodes))
+	synctool.lib.run_parallel(master_ping, worker_ping, nodes, len(nodes))
 
 
 def master_ping(rank, nodes):
@@ -59,7 +57,7 @@ def worker_ping(rank, nodes):
 	# execute ping command and show output with the nodename
 	cmd = '%s %s' % (synctool.param.PING_CMD, node)
 	cmd_arr = shlex.split(cmd)
-	f = synctool_lib.popen(cmd_arr)
+	f = synctool.lib.popen(cmd_arr)
 	if not f:
 		stderr('failed to run command %s' % cmd_arr[0])
 		return
@@ -189,7 +187,7 @@ def get_options():
 			continue
 
 		if opt in ('-v', '--verbose'):
-			synctool_lib.VERBOSE = True
+			synctool.lib.VERBOSE = True
 			continue
 
 		if opt in ('-n', '--node'):
@@ -213,7 +211,7 @@ def get_options():
 			continue
 
 		if opt == '--unix':
-			synctool_lib.UNIX_CMD = True
+			synctool.lib.UNIX_CMD = True
 			continue
 
 		if opt in ('-q', '--quiet'):

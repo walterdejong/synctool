@@ -10,9 +10,6 @@
 #
 
 import synctool_ssh
-import synctool_lib
-
-from synctool_lib import verbose,stdout,stderr,terse,unix_out
 
 import os
 import sys
@@ -24,6 +21,8 @@ import errno
 
 import synctool.aggr
 import synctool.config
+import synctool.lib
+from synctool.lib import verbose,stdout,stderr,terse,unix_out
 import synctool.nodeset
 import synctool.overlay
 import synctool.param
@@ -47,7 +46,7 @@ def run_remote_synctool(nodes):
 		return
 
 	# run in parallel
-	synctool_lib.run_parallel(master_synctool, worker_synctool,
+	synctool.lib.run_parallel(master_synctool, worker_synctool,
 		nodes, len(nodes))
 
 
@@ -91,7 +90,7 @@ def worker_synctool(rank, nodes):
 					synctool.param.MASTERDIR)
 			sys.exit(-1)
 
-		synctool_lib.run_with_nodename(cmd_arr, nodename)
+		synctool.lib.run_with_nodename(cmd_arr, nodename)
 
 		# delete temp file
 		try:
@@ -107,7 +106,7 @@ def worker_synctool(rank, nodes):
 	cmd_arr.append('--nodename=%s' % nodename)
 	cmd_arr.extend(PASS_ARGS)
 
-	synctool_lib.run_with_nodename(cmd_arr, nodename)
+	synctool.lib.run_with_nodename(cmd_arr, nodename)
 
 
 def run_local_synctool():
@@ -118,7 +117,7 @@ def run_local_synctool():
 
 	cmd_arr = shlex.split(synctool.param.SYNCTOOL_CMD) + PASS_ARGS
 
-	synctool_lib.run_with_nodename(cmd_arr, synctool.param.NODENAME)
+	synctool.lib.run_with_nodename(cmd_arr, synctool.param.NODENAME)
 
 
 def rsync_include_filter(nodename):
@@ -204,9 +203,9 @@ def upload(interface, upload_filename, upload_suffix=None):
 		dry_run = False
 	else:
 		dry_run = True
-		if not synctool_lib.QUIET:
+		if not synctool.lib.QUIET:
 			stdout('DRY RUN, not uploading any files')
-			terse(synctool_lib.TERSE_DRYRUN, 'not uploading any files')
+			terse(synctool.lib.TERSE_DRYRUN, 'not uploading any files')
 
 	node = NODESET.get_nodename_from_address(interface)
 
@@ -262,33 +261,33 @@ def upload(interface, upload_filename, upload_suffix=None):
 	synctool.param.MY_GROUPS = orig_MY_GROUPS
 
 	verbose('%s:%s uploaded as %s' % (node, upload_filename, repos_filename))
-	terse(synctool_lib.TERSE_UPLOAD, repos_filename)
+	terse(synctool.lib.TERSE_UPLOAD, repos_filename)
 	unix_out('%s %s:%s %s' % (synctool.param.SCP_CMD, interface,
 								upload_filename, repos_filename))
 
 	if dry_run:
 		stdout('would be uploaded as %s' %
-			synctool_lib.prettypath(repos_filename))
+			synctool.lib.prettypath(repos_filename))
 	else:
 		# first check if the directory in the repository exists
 		repos_dir = os.path.dirname(repos_filename)
 		stat = synctool.stat.SyncStat(repos_dir)
 		if not stat.exists():
 			verbose('making directory %s' %
-				synctool_lib.prettypath(repos_dir))
+				synctool.lib.prettypath(repos_dir))
 			unix_out('mkdir -p %s' % repos_dir)
-			synctool_lib.mkdir_p(repos_dir)
+			synctool.lib.mkdir_p(repos_dir)
 
 		# make scp command array
 		scp_cmd_arr = shlex.split(synctool.param.SCP_CMD)
 		scp_cmd_arr.append('%s:%s' % (interface, upload_filename))
 		scp_cmd_arr.append(repos_filename)
 
-		synctool_lib.run_with_nodename(scp_cmd_arr,
+		synctool.lib.run_with_nodename(scp_cmd_arr,
 			NODESET.get_nodename_from_address(interface))
 
 		if os.path.isfile(repos_filename):
-			stdout('uploaded %s' % synctool_lib.prettypath(repos_filename))
+			stdout('uploaded %s' % synctool.lib.prettypath(repos_filename))
 
 
 def make_tempdir():
@@ -524,7 +523,7 @@ def get_options():
 			continue
 
 		if opt in ('-v', '--verbose'):
-			synctool_lib.VERBOSE = True
+			synctool.lib.VERBOSE = True
 
 		if opt in ('-n', '--node'):
 			NODESET.add_node(arg)
@@ -553,7 +552,7 @@ def get_options():
 
 		if opt in ('-u', '--upload'):
 			opt_upload = True
-			upload_filename = synctool_lib.strip_path(arg)
+			upload_filename = synctool.lib.strip_path(arg)
 			continue
 
 		if opt in ('-s', '--suffix'):
@@ -565,11 +564,11 @@ def get_options():
 			opt_erase_saved = True
 
 		if opt in ('-q', '--quiet'):
-			synctool_lib.QUIET = True
+			synctool.lib.QUIET = True
 
 		if opt in ('-f', '--fix'):
 			opt_fix = True
-			synctool_lib.DRY_RUN = False
+			synctool.lib.DRY_RUN = False
 
 		if opt in ('-F', '--fullpath'):
 			synctool.param.FULL_PATH = True
@@ -590,14 +589,14 @@ def get_options():
 			continue
 
 		if opt == '--unix':
-			synctool_lib.UNIX_CMD = True
+			synctool.lib.UNIX_CMD = True
 
 		if opt == '--skip-rsync':
 			OPT_SKIP_RSYNC = True
 			continue
 
 		if opt == '--no-post':
-			synctool_lib.NO_POST = True
+			synctool.lib.NO_POST = True
 
 		if opt == '--check-update':
 			OPT_CHECK_UPDATE = True
@@ -646,7 +645,7 @@ def main():
 
 	# ooh ... testing for DRY_RUN doesn't work here
 	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
-		synctool_lib.openlog()
+		synctool.lib.openlog()
 
 	nodes = NODESET.addresses()
 	if not nodes:
@@ -681,7 +680,7 @@ def main():
 
 		run_remote_synctool(nodes)
 
-	synctool_lib.closelog()
+	synctool.lib.closelog()
 
 
 if __name__ == '__main__':

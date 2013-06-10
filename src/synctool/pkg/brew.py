@@ -8,12 +8,11 @@
 #   License.
 #
 
-import synctool_lib
-
-from synctool_lib import verbose
-from synctool.pkgclass import SyncPkg
-
 import string
+
+import synctool.lib
+from synctool.lib import verbose
+from synctool.pkgclass import SyncPkg
 
 
 class SyncPkgBrew(SyncPkg):
@@ -31,9 +30,9 @@ class SyncPkgBrew(SyncPkg):
 		if pkgs:
 			cmd = cmd + ' ' + string.join(pkgs)
 
-		synctool_lib.DRY_RUN = False
-		synctool_lib.shell_command(cmd)
-		synctool_lib.DRY_RUN = self.dryrun
+		synctool.lib.DRY_RUN = False
+		synctool.lib.shell_command(cmd)
+		synctool.lib.DRY_RUN = self.dryrun
 
 
 	def install(self, pkgs):
@@ -41,7 +40,7 @@ class SyncPkgBrew(SyncPkg):
 
 		cmd = 'brew install ' + string.join(pkgs)
 
-		synctool_lib.shell_command(cmd)
+		synctool.lib.shell_command(cmd)
 
 
 	def remove(self, pkgs):
@@ -49,13 +48,13 @@ class SyncPkgBrew(SyncPkg):
 
 		cmd = 'brew remove ' + string.join(pkgs)
 
-		synctool_lib.shell_command(cmd)
+		synctool.lib.shell_command(cmd)
 
 
 	def update(self):
 		SyncPkg.update(self)
 
-		synctool_lib.shell_command('brew update')
+		synctool.lib.shell_command('brew update')
 
 
 	def upgrade(self):
@@ -66,14 +65,14 @@ class SyncPkgBrew(SyncPkg):
 		else:
 			cmd = 'brew upgrade'
 
-		synctool_lib.DRY_RUN = False
-		synctool_lib.shell_command(cmd)
-		synctool_lib.DRY_RUN = self.dryrun
+		synctool.lib.DRY_RUN = False
+		synctool.lib.shell_command(cmd)
+		synctool.lib.DRY_RUN = self.dryrun
 
 
 	def clean(self):
 		SyncPkg.clean(self)
 
-		synctool_lib.shell_command('brew cleanup')
+		synctool.lib.shell_command('brew cleanup')
 
 # EOB

@@ -11,8 +11,6 @@
 #	- aggregate: group together output that is the same
 #
 
-from synctool_lib import popen
-
 import os
 import sys
 import string

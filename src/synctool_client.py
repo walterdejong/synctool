@@ -9,10 +9,6 @@
 #   License.
 #
 
-import synctool_lib
-
-from synctool_lib import verbose,stdout,stderr,terse,unix_out,dryrun_msg
-
 import os
 import sys
 import string
@@ -28,6 +24,8 @@ except ImportError:
 	use_subprocess = False
 
 import synctool.config
+import synctool.lib
+from synctool.lib import verbose,stdout,stderr,terse,unix_out,dryrun_msg
 import synctool.overlay
 import synctool.param
 import synctool.stat
@@ -57,16 +55,16 @@ def run_command(cmd):
 
 	if not stat.exists():
 		stderr('error: command %s not found' %
-			synctool_lib.prettypath(cmdfile))
+			synctool.lib.prettypath(cmdfile))
 		return
 
 	if not stat.isExec():
 		stderr("warning: file '%s' is not executable" %
-			synctool_lib.prettypath(cmdfile))
+			synctool.lib.prettypath(cmdfile))
 		return
 
 	# run the shell command
-	synctool_lib.shell_command(cmd)
+	synctool.lib.shell_command(cmd)
 
 
 def run_command_in_dir(dest_dir, cmd):
@@ -79,7 +77,7 @@ def run_command_in_dir(dest_dir, cmd):
 
 	# if dry run, the target directory may not exist yet
 	# (mkdir has not been called for real, for a dry run)
-	if synctool_lib.DRY_RUN:
+	if synctool.lib.DRY_RUN:
 		run_command(cmd)
 
 		verbose('  os.chdir(%s)' % cwd)
@@ -109,7 +107,7 @@ def run_post(src, dest):
 
 	global DIR_CHANGED
 
-	if synctool_lib.NO_POST:
+	if synctool.lib.NO_POST:
 		return
 
 	stat = synctool.stat.SyncStat(dest)
@@ -136,7 +134,7 @@ def run_post(src, dest):
 def run_post_on_directory(src, dest):
 	'''run .post script for a changed directory'''
 
-	if synctool_lib.NO_POST:
+	if synctool.lib.NO_POST:
 		return
 
 	# the script is executed with the changed dir as current working dir
@@ -162,7 +160,7 @@ def sort_directory_pair(a, b):
 def run_post_on_directories():
 	'''run pending .post scripts on directories that were changed'''
 
-	if synctool_lib.NO_POST:
+	if synctool.lib.NO_POST:
 		return
 
 	global DIR_CHANGED
@@ -202,7 +200,7 @@ def delete_callback(obj):
 		return
 
 	if obj.dest_exists():
-		if synctool_lib.DRY_RUN:
+		if synctool.lib.DRY_RUN:
 			not_str = 'not '
 		else:
 			not_str = ''
@@ -255,7 +253,7 @@ def single_files(filename):
 	changed = obj.compare_files()
 	if not changed:
 		stdout('%s is up to date' % filename)
-		terse(synctool_lib.TERSE_OK, filename)
+		terse(synctool.lib.TERSE_OK, filename)
 		unix_out('# %s is up to date\n' % obj.print_dest())
 
 	return (changed, obj.src_path)
@@ -312,7 +310,7 @@ def diff_files(filename):
 		return
 
 	# be sure that it doesn't do any updates
-	synctool_lib.DRY_RUN = True
+	synctool.lib.DRY_RUN = True
 
 	(obj, err) = synctool.overlay.find_terse(
 		synctool.overlay.OV_OVERLAY, filename)
@@ -324,7 +322,7 @@ def diff_files(filename):
 	if err == synctool.overlay.OV_NOT_FOUND:
 		return
 
-	if synctool_lib.UNIX_CMD:
+	if synctool.lib.UNIX_CMD:
 		unix_out('%s %s %s' % (synctool.param.DIFF_CMD,
 								obj.dest_path, obj.src_path))
 	else:
@@ -437,7 +435,7 @@ def get_options():
 
 	progname = os.path.basename(sys.argv[0])
 
-	synctool_lib.DRY_RUN = True		# set default dry-run
+	synctool.lib.DRY_RUN = True		# set default dry-run
 
 	# check for dangerous common typo's on the command-line
 	be_careful_with_getopt()
@@ -520,16 +518,16 @@ def get_options():
 # dry run already is default
 #
 #		if opt in ('-n', '--dry-run'):
-#			synctool_lib.DRY_RUN = True
+#			synctool.lib.DRY_RUN = True
 #			continue
 
 		if opt in ('-f', '--fix'):
 			opt_fix = True
-			synctool_lib.DRY_RUN = False
+			synctool.lib.DRY_RUN = False
 			continue
 
 		if opt == '--no-post':
-			synctool_lib.NO_POST = True
+			synctool.lib.NO_POST = True
 			continue
 
 		if opt == '--color':
@@ -541,20 +539,20 @@ def get_options():
 			continue
 
 		if opt in ('-v', '--verbose'):
-			synctool_lib.VERBOSE = True
+			synctool.lib.VERBOSE = True
 			continue
 
 		if opt in ('-q', '--quiet'):
-			synctool_lib.QUIET = True
+			synctool.lib.QUIET = True
 			continue
 
 		if opt == '--unix':
-			synctool_lib.UNIX_CMD = True
+			synctool.lib.UNIX_CMD = True
 			continue
 
 		if opt == '--masterlog':
 			# used by the master for message logging purposes
-			synctool_lib.MASTERLOG = True
+			synctool.lib.MASTERLOG = True
 			continue
 
 		if opt == '--nodename':
@@ -565,14 +563,14 @@ def get_options():
 		if opt in ('-d', '--diff'):
 			opt_diff = True
 			action = ACTION_DIFF
-			file = synctool_lib.strip_path(arg)
+			file = synctool.lib.strip_path(arg)
 			if not file in SINGLE_FILES:
 				SINGLE_FILES.append(file)
 			continue
 
 		if opt in ('-1', '--single'):
 			opt_single = True
-			file = synctool_lib.strip_path(arg)
+			file = synctool.lib.strip_path(arg)
 			if not file in SINGLE_FILES:
 				SINGLE_FILES.append(file)
 			continue
@@ -580,7 +578,7 @@ def get_options():
 		if opt in ('-r', '--ref', '--reference'):
 			opt_reference = True
 			action = ACTION_REFERENCE
-			file = synctool_lib.strip_path(arg)
+			file = synctool.lib.strip_path(arg)
 			if not file in SINGLE_FILES:
 				SINGLE_FILES.append(file)
 			continue
@@ -618,7 +616,7 @@ def main():
 			(synctool.param.CONF_FILE, synctool.param.NODENAME))
 		sys.exit(1)
 
-	if synctool_lib.UNIX_CMD:
+	if synctool.lib.UNIX_CMD:
 		t = time.localtime(time.time())
 
 		unix_out('#')
@@ -632,33 +630,33 @@ def main():
 		unix_out('# SYMLINK_MODE=0%o' % synctool.param.SYMLINK_MODE)
 		unix_out('#')
 
-		if not synctool_lib.DRY_RUN:
+		if not synctool.lib.DRY_RUN:
 			unix_out('# NOTE: --fix specified, applying updates')
 			unix_out('#')
 
 		unix_out('')
 	else:
-		if not synctool_lib.QUIET:
+		if not synctool.lib.QUIET:
 			verbose('my nodename: %s' % synctool.param.NODENAME)
 			verbose('my hostname: %s' % synctool.param.HOSTNAME)
 			verbose('masterdir: %s' % synctool.param.MASTERDIR)
 			verbose('symlink_mode: 0%o' % synctool.param.SYMLINK_MODE)
 
-			if synctool.param.LOGFILE != None and not synctool_lib.DRY_RUN:
+			if synctool.param.LOGFILE != None and not synctool.lib.DRY_RUN:
 				verbose('logfile: %s' % synctool.param.LOGFILE)
 
 			verbose('')
 
-			if synctool_lib.DRY_RUN:
+			if synctool.lib.DRY_RUN:
 				stdout('DRY RUN, not doing any updates')
-				terse(synctool_lib.TERSE_DRYRUN, 'not doing any updates')
+				terse(synctool.lib.TERSE_DRYRUN, 'not doing any updates')
 			else:
 				stdout('--fix specified, applying changes')
-				terse(synctool_lib.TERSE_FIXING, ' applying changes')
+				terse(synctool.lib.TERSE_FIXING, ' applying changes')
 
 			verbose('')
 
-	synctool_lib.openlog()
+	synctool.lib.openlog()
 
 	os.putenv('SYNCTOOL_NODENAME', synctool.param.NODENAME)
 	os.putenv('SYNCTOOL_MASTERDIR', synctool.param.MASTERDIR)
@@ -693,7 +691,7 @@ def main():
 
 	unix_out('# EOB')
 
-	synctool_lib.closelog()
+	synctool.lib.closelog()
 
 
 if __name__ == '__main__':

@@ -14,13 +14,12 @@
 #	and it will just work (magic trick with getattr(module, functionname))
 #
 
-import synctool_lib
-
 import os
 import sys
 import string
 import re
 
+import synctool.lib
 import synctool.param
 
 
@@ -137,7 +136,7 @@ def _config_integer(param, value, configfile, lineno, radix = 10):
 
 def _config_dir(name, arr, configfile, lineno):
 	d = string.join(arr[1:])
-	d = synctool_lib.prepare_path(d)
+	d = synctool.lib.prepare_path(d)
 
 	if not os.path.isdir(d):
 		stderr('%s:%d: no such directory for %s' % (configfile, lineno, name))
@@ -155,7 +154,7 @@ def _config_color_variant(param, value, configfile, lineno):
 	'''set a color by name'''
 
 	value = string.lower(value)
-	if value in synctool_lib.COLORMAP.keys():
+	if value in synctool.lib.COLORMAP.keys():
 		synctool.param.TERSE_COLORS[param[6:]] = value
 		return 0
 
@@ -176,7 +175,7 @@ def _config_command(param, arr, short_cmd, configfile, lineno):
 	# That is deferred until later; the client only runs diff_cmd,
 	# while the master runs a bunch of commands
 
-	return (0, synctool_lib.prepare_path(string.join(arr[1:])))
+	return (0, synctool.lib.prepare_path(string.join(arr[1:])))
 
 
 def spellcheck(name):
@@ -198,7 +197,7 @@ def spellcheck(name):
 # keyword: include
 def config_include(arr, configfile, lineno):
 	# recursively read the given config file
-	return read_config_file(synctool_lib.prepare_path(arr[1]))
+	return read_config_file(synctool.lib.prepare_path(arr[1]))
 
 
 # keyword: masterdir
@@ -208,8 +207,8 @@ def config_masterdir(arr, configfile, lineno):
 		return 1
 
 	d = string.join(arr[1:])
-	d = synctool_lib.strip_multiple_slashes(d)
-	synctool.param.MASTERDIR = synctool_lib.strip_trailing_slash(d)
+	d = synctool.lib.strip_multiple_slashes(d)
+	synctool.param.MASTERDIR = synctool.lib.strip_trailing_slash(d)
 	synctool.param.MASTER_LEN = len(synctool.param.MASTERDIR) + 1
 
 	if synctool.param.MASTERDIR in ('', '/', os.path.sep, '$masterdir'):
@@ -231,7 +230,7 @@ def config_tempdir(arr, configfile, lineno):
 		return 1
 
 	d = string.join(arr[1:])
-	d = synctool_lib.prepare_path(d)
+	d = synctool.lib.prepare_path(d)
 
 	if d == synctool.param.MASTERDIR:
 		stderr("%s:%d: tempdir can not be set to '$masterdir', sorry" %
@@ -762,7 +761,7 @@ def config_logfile(arr, configfile, lineno):
 			(configfile, lineno))
 		return 1
 
-	synctool.param.LOGFILE = synctool_lib.prepare_path(string.join(arr[1:]))
+	synctool.param.LOGFILE = synctool.lib.prepare_path(string.join(arr[1:]))
 	return 0
 
 

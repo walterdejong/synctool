@@ -8,14 +8,13 @@
 #   License.
 #
 
-import synctool_object
-import synctool_lib
-
-from synctool_lib import stderr
-from synctool.pkgclass import SyncPkg
-
 import os
 import string
+
+import synctool.lib
+from synctool.lib import stderr
+import synctool.object
+from synctool.pkgclass import SyncPkg
 
 
 class SyncPkgZypper(SyncPkg):
@@ -33,9 +32,9 @@ class SyncPkgZypper(SyncPkg):
 		if pkgs:
 			cmd = cmd + ' ' + string.join(pkgs)
 
-		synctool_lib.DRY_RUN = False
-		synctool_lib.shell_command(cmd)
-		synctool_lib.DRY_RUN = self.dryrun
+		synctool.lib.DRY_RUN = False
+		synctool.lib.shell_command(cmd)
+		synctool.lib.DRY_RUN = self.dryrun
 
 
 	def install(self, pkgs):
@@ -44,7 +43,7 @@ class SyncPkgZypper(SyncPkg):
 		cmd = ('zypper --non-interactive install '
 			'--auto-agree-with-licenses ' + string.join(pkgs))
 
-		synctool_lib.shell_command(cmd)
+		synctool.lib.shell_command(cmd)
 
 
 	def remove(self, pkgs):
@@ -52,13 +51,13 @@ class SyncPkgZypper(SyncPkg):
 
 		cmd = 'zypper --non-interactive remove ' + string.join(pkgs)
 
-		synctool_lib.shell_command(cmd)
+		synctool.lib.shell_command(cmd)
 
 
 	def update(self):
 		SyncPkg.update(self)
 
-		synctool_lib.shell_command('zypper --non-interactive refresh')
+		synctool.lib.shell_command('zypper --non-interactive refresh')
 
 
 	def upgrade(self):
@@ -70,16 +69,16 @@ class SyncPkgZypper(SyncPkg):
 			cmd = ('zypper --non-interactive update '
 				'--auto-agree-with-licenses')
 
-		synctool_lib.DRY_RUN = False
-		synctool_lib.shell_command(cmd)
-		synctool_lib.DRY_RUN = self.dryrun
+		synctool.lib.DRY_RUN = False
+		synctool.lib.shell_command(cmd)
+		synctool.lib.DRY_RUN = self.dryrun
 
 
 	def clean(self):
 		SyncPkg.clean(self)
 
-		synctool_lib.DRY_RUN = False
-		synctool_lib.shell_command('zypper clean')
-		synctool_lib.DRY_RUN = self.dryrun
+		synctool.lib.DRY_RUN = False
+		synctool.lib.shell_command('zypper clean')
+		synctool.lib.DRY_RUN = self.dryrun
 
 # EOB

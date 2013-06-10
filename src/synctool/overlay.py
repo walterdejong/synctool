@@ -13,6 +13,8 @@ import sys
 import string
 import fnmatch
 
+import synctool.lib
+from synctool.lib import verbose, stderr, terse
 import synctool.object
 import synctool.param
 import synctool.stat
@@ -109,17 +111,17 @@ def ov_perror(errorcode, src_path):
 
 	if errorcode == OV_NO_GROUP_EXT:
 		if synctool.param.TERSE:
-			terse(synctool_lib.TERSE_ERROR, 'no group on %s' % src_path)
+			terse(synctool.lib.TERSE_ERROR, 'no group on %s' % src_path)
 		else:
 			stderr('no underscored group extension on %s, skipped' %
-				synctool_lib.prettypath(src_path))
+				synctool.lib.prettypath(src_path))
 
 	elif errorcode == OV_UNKNOWN_GROUP:
 		if synctool.param.TERSE:
-			terse(synctool_lib.TERSE_ERROR, 'invalid group on %s' % src_path)
+			terse(synctool.lib.TERSE_ERROR, 'invalid group on %s' % src_path)
 		else:
 			stderr('unknown group on %s, skipped' %
-				synctool_lib.prettypath(src_path))
+				synctool.lib.prettypath(src_path))
 
 
 def relevant_overlay_dirs(overlay_dir):
@@ -143,7 +145,7 @@ def relevant_overlay_dirs(overlay_dir):
 		d = os.path.join(overlay_dir, entry)
 		if os.path.isdir(d):
 			a.append((d, importance))
-			verbose('scanning %s/' % synctool_lib.prettypath(d))
+			verbose('scanning %s/' % synctool.lib.prettypath(d))
 
 	return a
 
@@ -210,7 +212,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.path.sep,
 			if handle_postscripts:
 				if not src_statbuf.isExec():
 					stderr('warning: .post script %s is not executable, '
-						'ignored' % synctool_lib.prettypath(src_path))
+						'ignored' % synctool.lib.prettypath(src_path))
 					continue
 
 				# register .post script
@@ -228,11 +230,11 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.path.sep,
 				# unfortunately, the name has been messed up already
 				# so therefore just ignore the file and issue a warning
 				if synctool.param.TERSE:
-					terse(synctool_lib.TERSE_WARNING, 'ignoring %s' %
+					terse(synctool.lib.TERSE_WARNING, 'ignoring %s' %
 														src_path)
 				else:
 					stderr('warning: ignoring .post script %s' %
-						synctool_lib.prettypath(src_path))
+						synctool.lib.prettypath(src_path))
 
 			continue
 
@@ -268,19 +270,19 @@ def overlay_pass2(filelist, filedict):
 				entry.importance == entry2.importance):
 
 				if synctool.param.TERSE:
-					synctool_lib.terse(synctool_lib.TERSE_ERROR,
+					synctool.lib.terse(synctool.lib.TERSE_ERROR,
 						'duplicate source paths in repository for:')
-					synctool_lib.terse(synctool_lib.TERSE_ERROR,
+					synctool.lib.terse(synctool.lib.TERSE_ERROR,
 						entry.src_path)
-					synctool_lib.terse(synctool_lib.TERSE_ERROR,
+					synctool.lib.terse(synctool.lib.TERSE_ERROR,
 						entry2.src_path)
 				else:
 					stderr('error: duplicate source paths in repository '
 							'for:\n'
 							'error: %s\n'
 							'error: %s\n' %
-							(synctool_lib.prettypath(entry.src_path),
-							synctool_lib.prettypath(entry2.src_path)))
+							(synctool.lib.prettypath(entry.src_path),
+							synctool.lib.prettypath(entry2.src_path)))
 
 				continue
 
