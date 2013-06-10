@@ -73,8 +73,9 @@ def read_config():
 	if not os.path.isdir(d):
 		stderr('error: no such directory: %s' % d)
 		errors += 1
-	else:
-		synctool_param.OVERLAY_DIR = d
+
+	# set it, even if it does not exists
+	synctool_param.OVERLAY_DIR = d
 
 	# treat a missing 'overlay/all/' dir as an error
 	d = os.path.join(synctool_param.OVERLAY_DIR, 'all')
@@ -86,8 +87,8 @@ def read_config():
 	if not os.path.isdir(d):
 		stderr('error: no such directory: %s' % d)
 		errors += 1
-	else:
-		synctool_param.DELETE_DIR = d
+
+	synctool_param.DELETE_DIR = d
 
 	d = os.path.join(synctool_param.DELETE_DIR, 'all')
 	if not os.path.isdir(d):
