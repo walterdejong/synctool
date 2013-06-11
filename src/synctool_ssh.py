@@ -258,7 +258,9 @@ def main():
 	cmd_args = get_options()
 
 	if OPT_AGGREGATE:
-		synctool.aggr.run(MASTER_OPTS)
+		if not synctool.aggr.run(MASTER_OPTS):
+			sys.exit(-1)
+
 		sys.exit(0)
 
 	synctool.config.init_mynodename()

@@ -72,7 +72,8 @@ def aggregate(f):
 
 
 def run(cmd_args):
-	'''pipe the output through the aggregator'''
+	'''pipe the output through the aggregator
+	Returns False on error, else True'''
 
 	# simply re-run this command, but with a pipe
 
@@ -82,12 +83,14 @@ def run(cmd_args):
 	if '--aggregate' in cmd_args:
 		cmd_args.remove('--aggregate')
 
-	f = synctool.lib.popen(cmd_args)
-	if not f:
-		stderr('failed to run %s' % cmd_args[0])
+	with synctool.lib.popen(cmd_args) as f:
+		if not f:
+			stderr('failed to run %s' % cmd_args[0])
+			return False
 
-	aggregate(f)
-	f.close()
+		aggregate(f)
+
+	return True
 
 
 # EOB
