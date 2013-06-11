@@ -126,18 +126,13 @@ KNOWN_PACKAGE_MANAGERS = (
 
 
 def init():
-	'''detect my prefix and set initial directories'''
-
-	global DEFAULT_CONF, CONF_FILE
+	'''detect my prefix and set default symlink mode'''
 
 	base = os.path.abspath(os.path.dirname(sys.argv[0]))
 	if not base:
 		raise RuntimeError, 'unable to determine base dir'
 
 	(prefix, bindir) = os.path.split(base)
-
-	DEFAULT_CONF = os.path.join(prefix, 'etc/synctool.conf')
-	CONF_FILE = DEFAULT_CONF
 
 	reset_prefix(prefix)
 

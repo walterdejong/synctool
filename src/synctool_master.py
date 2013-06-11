@@ -108,12 +108,6 @@ def worker_synctool(rank, nodes):
 
 
 def run_local_synctool():
-	# FIXME all these redundant checks can go out
-	if not synctool.param.SYNCTOOL_CMD:
-		stderr('%s: error: synctool_cmd has not been defined in %s' %
-			(os.path.basename(sys.argv[0]), synctool.param.CONF_FILE))
-		sys.exit(-1)
-
 	cmd_arr = shlex.split(synctool.param.SYNCTOOL_CMD) + PASS_ARGS
 
 	synctool.lib.run_with_nodename(cmd_arr, synctool.param.NODENAME)
@@ -140,8 +134,6 @@ def rsync_include_filter(nodename):
 	# include masterdir
 	# but exclude the top overlay/ and delete/ dir
 
-	## FIXME these paths need to be updated
-
 	f.write('''# synctool rsync filter
 + /overlay/
 + /overlay/all/
@@ -165,6 +157,7 @@ def rsync_include_filter(nodename):
 		if os.path.isdir(d):
 			f.write('+ delete/%s/\n' % g)
 
+	# FIXME when we have synctool-deploy, /sbin/ has to go out
 	# Note: sbin/*.pyc is excluded to keep major differences in Python
 	# versions (on master vs. client node) from clashing
 	f.write('''- /sbin/*.pyc
@@ -183,11 +176,6 @@ def rsync_include_filter(nodename):
 
 def upload(interface, upload_filename, upload_suffix=None):
 	'''copy a file from a node into the overlay/ tree'''
-
-	if not synctool.param.SCP_CMD:
-		stderr('%s: error: scp_cmd has not been defined in %s' %
-			(os.path.basename(sys.argv[0]), synctool.param.CONF_FILE))
-		sys.exit(-1)
 
 	if upload_filename[0] != os.path.sep:
 		stderr('error: the filename to upload must be an absolute path')
@@ -681,6 +669,7 @@ def main():
 				nodes.remove(node)
 				break
 
+		# TODO FIXME copy CONF_FILE to MASTERDIR, if needed
 		run_remote_synctool(nodes)
 
 	synctool.lib.closelog()
