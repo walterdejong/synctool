@@ -12,16 +12,11 @@
 import os
 import sys
 import string
-import getopt
 import time
 import shlex
+import getopt
 import errno
-
-try:
-	import subprocess
-	use_subprocess = True
-except ImportError:
-	use_subprocess = False
+import subprocess
 
 import synctool.config
 import synctool.lib
@@ -331,14 +326,11 @@ def diff_files(filename):
 		sys.stdout.flush()
 		sys.stderr.flush()
 
-		if use_subprocess:
-			cmd_arr = shlex.split(synctool.param.DIFF_CMD)
-			cmd_arr.append(obj.dest_path)
-			cmd_arr.append(obj.src_path)
-			subprocess.call(cmd_arr, shell=False)
-		else:
-			os.system('%s %s %s' % (synctool.param.DIFF_CMD,
-									obj.dest_path, obj.src_path))
+		cmd_arr = shlex.split(synctool.param.DIFF_CMD)
+		cmd_arr.append(obj.dest_path)
+		cmd_arr.append(obj.src_path)
+		subprocess.call(cmd_arr, shell=False)
+
 		sys.stdout.flush()
 		sys.stderr.flush()
 
