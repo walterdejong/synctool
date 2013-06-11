@@ -49,65 +49,66 @@ def read_config_file(configfile):
 	except IOError, reason:
 		stderr("failed to read config file '%s' : %s" % (configfile, reason))
 		return 1
+	else:
+		this_module = sys.modules['synctool.configparser']
 
-	this_module = sys.modules['synctool.configparser']
+		lineno = 0
+		errors = 0
 
-	lineno = 0
-	errors = 0
+		#
+		# read lines from the config file
+		# variable tmp_line is used to be able to do multi-line reads
+		# (backslash terminated)
+		#
+		line = ''
+		with f:
+			while True:
+				tmp_line = f.readline()
+				if not tmp_line:
+					break
 
-	#
-	# read lines from the config file
-	# variable tmp_line is used to be able to do multi-line reads
-	# (backslash terminated)
-	#
-	line = ''
-	while True:
-		tmp_line = f.readline()
-		if not tmp_line:
-			break
+				lineno += 1
 
-		lineno += 1
+				n = string.find(tmp_line, '#')
+				if n >= 0:
+					tmp_line = tmp_line[:n]		# strip comment
 
-		n = string.find(tmp_line, '#')
-		if n >= 0:
-			tmp_line = tmp_line[:n]		# strip comment
+				tmp_line = string.strip(tmp_line)
+				if not tmp_line:
+					continue
 
-		tmp_line = string.strip(tmp_line)
-		if not tmp_line:
-			continue
+				if tmp_line[-1] == '\\':
+					tmp_line = string.strip(tmp_line[:-1])
+					line = line + ' ' + tmp_line
+					continue
 
-		if tmp_line[-1] == '\\':
-			tmp_line = string.strip(tmp_line[:-1])
-			line = line + ' ' + tmp_line
-			continue
+				line = line + ' ' + tmp_line
+				tmp_line = ''
 
-		line = line + ' ' + tmp_line
-		tmp_line = ''
+				arr = string.split(line)
 
-		arr = string.split(line)
+				line = ''	# <-- line is being reset here;
+							# use arr[] from here on
 
-		line = ''	# <-- line is being reset here; use arr[] from here on
+				if len(arr) <= 1:
+					stderr('%s:%d: syntax error ; expected key/value pair' %
+						(configfile, lineno))
+					errors += 1
+					continue
 
-		if len(arr) <= 1:
-			stderr('%s:%d: syntax error ; expected key/value pair' %
-				(configfile, lineno))
-			errors += 1
-			continue
+				keyword = string.lower(arr[0])
 
-		keyword = string.lower(arr[0])
+				# get the parser function
+				try:
+					func = getattr(this_module, 'config_%s' % keyword)
+				except AttributeError:
+					stderr("%s:%d: unknown keyword '%s'" %
+						(configfile, lineno, keyword))
+					errors += 1
+					continue
 
-		# get the parser function
-		try:
-			func = getattr(this_module, 'config_%s' % keyword)
-		except AttributeError:
-			stderr("%s:%d: unknown keyword '%s'" %
-				(configfile, lineno, keyword))
-			errors += 1
-			continue
+				errors += func(arr, configfile, lineno)
 
-		errors += func(arr, configfile, lineno)
-
-	f.close()
 	return errors
 
 
