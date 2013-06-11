@@ -329,7 +329,10 @@ def diff_files(filename):
 		cmd_arr = shlex.split(synctool.param.DIFF_CMD)
 		cmd_arr.append(obj.dest_path)
 		cmd_arr.append(obj.src_path)
-		subprocess.call(cmd_arr, shell=False)
+		try:
+			subprocess.call(cmd_arr, shell=False)
+		except OSError, reason:
+			stderr('failed to run diff_cmd: %s' % reason)
 
 		sys.stdout.flush()
 		sys.stderr.flush()
