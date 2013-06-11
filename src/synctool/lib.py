@@ -363,18 +363,11 @@ def shell_command(cmd):
 		sys.stdout.flush()
 		sys.stderr.flush()
 
-		if use_subprocess:
-			try:
-				subprocess.call(cmd, shell=True)
-			except OSError, reason:
-				stderr("failed to run shell command '%s' : %s" %
-					(prettypath(cmd), reason))
-		else:
-			try:
-				os.system(cmd)
-			except OSError, reason:
-				stderr("failed to run shell command '%s' : %s" %
-					(prettypath(cmd), reason))
+		try:
+			subprocess.call(cmd, shell=True)
+		except OSError, reason:
+			stderr("failed to run shell command '%s' : %s" %
+				(prettypath(cmd), reason))
 
 		sys.stdout.flush()
 		sys.stderr.flush()
