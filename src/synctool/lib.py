@@ -13,22 +13,11 @@
 import os
 import sys
 import string
-import time
+import subprocess
 import shlex
+import time
 import errno
-
-try:
-	import hashlib
-	use_hashlib = True
-except ImportError:
-	import md5
-	use_hashlib = False
-
-try:
-	import subprocess
-	use_subprocess = True
-except ImportError:
-	use_subprocess = False
+import hashlib
 
 import synctool.param
 
@@ -286,12 +275,8 @@ def checksum_files(file1, file2):
 		stderr('error: failed to open %s : %s' % (file2, reason))
 		raise
 
-	if use_hashlib:
-		sum1 = hashlib.md5()
-		sum2 = hashlib.md5()
-	else:
-		sum1 = md5.new()
-		sum2 = md5.new()
+	sum1 = hashlib.md5()
+	sum2 = hashlib.md5()
 
 	len1 = len2 = 0
 	ended = False
@@ -319,80 +304,37 @@ def checksum_files(file1, file2):
 	return sum1.digest(), sum2.digest()
 
 
-def popen(cmd_arr):
-	'''same as os.popen(), but use an array of command+arguments'''
-
-	if use_subprocess:
-		try:
-			f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
-				stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
-		except OSError:
-			f = None
-
-		return f
-
-	# we do not have subprocess module (Python version < 2.4, very old)
-
-	pipe = os.pipe()
-
-	pid = os.fork()
-	if not pid:
-		# redirect child's output to write end of the pipe
-		os.close(2)
-		os.close(1)
-		os.dup2(pipe[1], 1)
-		os.dup2(pipe[1], 2)
-
-		os.close(pipe[0])
-
-		cmd = cmd_arr.pop(0)
-		cmd = search_path(cmd)
-		cmd_arr.insert(0, cmd)
-
-		try:
-			os.execv(cmd, cmd_arr)
-		except OSError, reason:
-			stderr("failed to run '%s': %s" % (cmd, reason))
-
-		sys.exit(1)
-
-	if pid == -1:
-		return None
-
-	os.close(pipe[1])
-	return os.fdopen(pipe[0], 'r')
-
-
 def run_with_nodename(cmd_arr, nodename):
 	'''run command and show output with nodename'''
 
-	f = popen(cmd_arr)
-	if not f:
-		stderr('failed to run command %s' % cmd_arr[0])
+	try:
+		f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
+				stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
+	except OSError, reason:
+		stderr('failed to run command %s: %s' % (cmd_arr[0], reason))
 		return
 
-	while True:
-		line = f.readline()
-		if not line:
-			break
+	with f:
+		while True:
+			line = f.readline()
+			if not line:
+				break
 
-		line = string.strip(line)
+			line = string.strip(line)
 
-		# pass output on; simply use 'print' rather than 'stdout()'
-		if line[:15] == '%synctool-log% ':
-			if line[15:] == '--':
-				pass
+			# pass output on; simply use 'print' rather than 'stdout()'
+			if line[:15] == '%synctool-log% ':
+				if line[15:] == '--':
+					pass
+				else:
+					masterlog('%s: %s' % (nodename, line[15:]))
 			else:
-				masterlog('%s: %s' % (nodename, line[15:]))
-		else:
-			if OPT_NODENAME:
-				print '%s: %s' % (nodename, line)
-			else:
-				# do not prepend the nodename of this node to the output
-				# if option --no-nodename was given
-				print line
-
-	f.close()
+				if OPT_NODENAME:
+					print '%s: %s' % (nodename, line)
+				else:
+					# do not prepend the nodename of this node to the output
+					# if option --no-nodename was given
+					print line
 
 
 def shell_command(cmd):

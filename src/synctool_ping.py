@@ -12,6 +12,7 @@
 import os
 import sys
 import string
+import subprocess
 import getopt
 import shlex
 import errno
@@ -57,11 +58,15 @@ def worker_ping(rank, nodes):
 	# execute ping command and show output with the nodename
 	cmd = '%s %s' % (synctool.param.PING_CMD, node)
 	cmd_arr = shlex.split(cmd)
-	with synctool.lib.popen(cmd_arr) as f:
-		if not f:
-			stderr('failed to run command %s' % cmd_arr[0])
-			return
 
+	try:
+		f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
+				stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
+	except OSError, reason:
+		stderr('failed to run command %s: %s' % (cmd_arr[0], reason))
+		return False
+
+	with f:
 		while True:
 			line = f.readline()
 			if not line:

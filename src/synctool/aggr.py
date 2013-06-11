@@ -13,14 +13,10 @@
 import os
 import sys
 import string
+import subprocess
 import getopt
 
-import synctool.lib
-
-
-# popen() calls stderr()
-def stderr(msg):
-	print msg
+from synctool.lib import stderr
 
 
 def aggregate(f):
@@ -83,11 +79,14 @@ def run(cmd_args):
 	if '--aggregate' in cmd_args:
 		cmd_args.remove('--aggregate')
 
-	with synctool.lib.popen(cmd_args) as f:
-		if not f:
-			stderr('failed to run %s' % cmd_args[0])
-			return False
+	try:
+		f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
+				stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
+	except OSError, reason:
+		stderr('failed to run command %s: %s' % (cmd_arr[0], reason))
+		return False
 
+	with f:
 		aggregate(f)
 
 	return True
