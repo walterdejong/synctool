@@ -712,10 +712,18 @@ def main():
 	(upload_filename, upload_suffix) = get_options()
 
 	if OPT_CHECK_UPDATE:
-		sys.exit(synctool.update.check())
+		if not synctool.update.check():
+			# no newer version available
+			sys.exit(0)
+
+		sys.exit(1)
 
 	if OPT_DOWNLOAD:
-		sys.exit(synctool.update.download())
+		if not synctool.update.download():
+			# download error
+			sys.exit(-1)
+
+		sys.exit(0)
 
 	if OPT_AGGREGATE:
 		if not synctool.aggr.run(MASTER_OPTS):

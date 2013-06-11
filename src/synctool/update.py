@@ -11,24 +11,15 @@
 import os
 import sys
 import string
-import urllib
+import urllib2
+import hashlib
 
-try:
-	import hashlib
-	use_hashlib = True
-except ImportError:
-	import md5
-	use_hashlib = False
-
+from synctool.lib import verbose,stderr,stdout
 import synctool.param
 
 
 VERSION_CHECKING_URL = 'http://www.heiho.net/synctool/LATEST.txt'
 DOWNLOAD_URL = 'http://www.heiho.net/synctool/'
-
-# globals for callback function when downloading a release
-DOWNLOAD_FILENAME = None
-DOWNLOAD_BYTES = 0
 
 
 def get_latest_version():
@@ -48,15 +39,26 @@ def get_latest_version_and_checksum():
 	verbose('accessing URL %s' % VERSION_CHECKING_URL)
 
 	try:
-		opener = urllib.FancyURLopener({})
-		f = opener.open(VERSION_CHECKING_URL)
-		data = f.read()
-		f.close()
-	except:
-		stderr('error accessing the file at %s' % VERSION_CHECKING_URL)
+		# can not use 'with' statement with urlopen()..?
+		f = urllib2.urlopen(VERSION_CHECKING_URL)
+	except urllib2.URLError, reason:
+		stderr('error accessing URL %s: %s' % (VERSION_CHECKING_URL, reason))
 		return None
 
-	if data[0] == '<':
+	except urllib2.HTTPError, reason:
+		stderr('error from webserver at %s: %s' % (VERSION_CHECKING_URL,
+													reason))
+		return None
+
+	except IOError, reason:
+		stderr('error accessing the file at %s: %s' % (VERSION_CHECKING_URL,
+														reason))
+		return None
+
+	data = f.read(1024)
+	f.close()
+
+	if not data or len(data) < 10:
 		stderr('error accessing the file at %s' % VERSION_CHECKING_URL)
 		return None
 
@@ -64,8 +66,9 @@ def get_latest_version_and_checksum():
 
 	# format of the data in LATEST.txt is:
 	# <version> <MD5 checksum>
+	# FIXME why not include release date?
 	arr = string.split(data)
-	if len(arr) != 2:
+	if len(arr) < 2:
 		return None
 
 	return (arr[0], arr[1])
@@ -73,18 +76,20 @@ def get_latest_version_and_checksum():
 
 def check():
 	'''check for newer version on the website'''
-	'''it does this by downloading the LATEST.txt versioning file'''
+	'''it does this by downloading the LATEST.txt versioning file
+	Returns True if newer available, else False'''
 
 	latest_version = get_latest_version()
 
+	# FIXME why not check a release date?
 	if latest_version == synctool.param.VERSION:
 		stdout('You are running the latest version of synctool')
-		return 0
+		return False
 	else:
 		stdout('A newer version of synctool is available: '
 			'version %s' % latest_version)
 
-	return 1
+	return True
 
 
 def make_local_filename_for_version(version):
@@ -106,88 +111,96 @@ def make_local_filename_for_version(version):
 		n += 1
 
 
-def download_progress(seqnumber, blocksize, totalsize):
+def print_progress(filename, totalsize, current_size):
 	'''print the download progress'''
 
-	global DOWNLOAD_BYTES
-
-	percent = 100 * DOWNLOAD_BYTES / totalsize
+	percent = 100 * current_size / totalsize
 	if percent > 100:
 		percent = 100
 
-	print '\rdownloading %s ... %d%% ' % (DOWNLOAD_FILENAME, percent),
+	print '\rdownloading %s ... %d%% ' % (filename, percent),
 	sys.stdout.flush()
-
-	DOWNLOAD_BYTES = DOWNLOAD_BYTES + blocksize
 
 
 def download():
-	'''download latest version'''
-
-	# ugly globals because of callback function
-	global DOWNLOAD_FILENAME, DOWNLOAD_BYTES
+	'''download latest version
+	Returns True on success, False on error'''
 
 	tup = get_latest_version_and_checksum()
 	if not tup:
-		return 1
+		return False
 
 	(version, checksum) = tup
 
 	filename = 'synctool-%s.tar.gz' % version
 	download_url = DOWNLOAD_URL + filename
 
-	DOWNLOAD_FILENAME = make_local_filename_for_version(version)
-	DOWNLOAD_BYTES = 0
+	download_filename = make_local_filename_for_version(version)
+	download_bytes = 0
 
 	try:
-		opener = urllib.FancyURLopener({})
-		opener.retrieve(download_url, DOWNLOAD_FILENAME, download_progress)
-	except:
-		if DOWNLOAD_BYTES:
-			print
+		web = urllib2.urlopen(download_url)
+	except urllib2.URLError, reason:
+		stderr('error accessing URL %s: %s' % (download_url, reason))
+		return False
 
-		stderr('failed to download file %s' % download_url)
-		return 1
-	else:
-		print
+	except urllib2.HTTPError, reason:
+		stderr('error from webserver at %s: %s' % (download_url, reason))
+		return False
 
-	# compute and compare MD5 checksums
-	# sadly, there is no easy way to do this 'live' while downloading,
-	# because the download callback does not see the downloaded data blocks
+	except IOError, reason:
+		stderr('error accessing the file at %s: %s' % (download_url, reason))
+		return False
 
-	downloaded_sum = checksum_file(DOWNLOAD_FILENAME)
-	if downloaded_sum != checksum:
-		stderr('ERROR: checksum failed for %s' % DOWNLOAD_FILENAME)
-		return 1
-
-	return 0
-
-
-def checksum_file(filename):
-	'''compute MD5 checksum of a file'''
-
+	# get file size: Content-Length
 	try:
-		f = open(filename, 'r')
-	except IOError, (err, reason):
-		stderr('error: failed to open %s : %s' % (filename, reason))
-		raise
+		totalsize = int(web.info().getheaders("Content-Length")[0])
+	except (ValueError, KeyError):
+		stderr('invalid response from webserver at %s' % download_url)
+		web.close()
+		return False
 
-	if use_hashlib:
-		sum1 = hashlib.md5()
-	else:
-		sum1 = md5.new()
+	# create download_filename
+	try:
+		f = open(download_filename, 'w+b')
+	except IOError, reason:
+		stderr('failed to create file %s: %s' % (download_filename, reason))
+		web.close()
+		return False
 
-	BLOCKSIZE = 16 * 1024
+	print_progress(download_filename, totalsize, 0)
+	download_bytes = 0
+
+	# compute checksum of downloaded file data
+	sum = hashlib.md5()
 
 	while True:
-		data = f.read(BLOCKSIZE)
+		data = web.read(4096)
 		if not data:
 			break
 
-		sum1.update(data)
+		download_bytes += len(data)
+		print_progress(download_filename, totalsize, download_bytes)
+
+		f.write(data)
+		sum.update(data)
 
 	f.close()
-	return sum1.hexdigest()
+	web.close()
+
+	if download_bytes < totalsize:
+		print
+		stderr('failed to download file %s' % download_url)
+		return False
+
+	download_bytes += 100	# force 100% in the progress counter
+	print_progress(download_filename, totalsize, download_bytes)
+
+	if sum.hexdigest() != checksum:
+		stderr('ERROR: checksum failed for %s' % download_filename)
+		return False
+
+	return True
 
 
 # EOB
