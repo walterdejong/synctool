@@ -434,8 +434,9 @@ def main():
 		synctool.config.init_mynodename()
 
 		if not synctool.param.NODENAME:
-			stderr('unable to determine my nodename (%s), please check %s' %
-				(synctool_config.HOSTNAME, synctool.param.CONF_FILE))
+			stderr('unable to determine my nodename (%s)' %
+					synctool_config.HOSTNAME)
+			stderr('please check %s' % synctool.param.CONF_FILE)
 			sys.exit(1)
 
 		if synctool.param.NODENAME in synctool.param.IGNORE_GROUPS:
