@@ -40,7 +40,7 @@ def get_latest_version_and_checksum():
 
 	try:
 		# can not use 'with' statement with urlopen()..?
-		f = urllib2.urlopen(VERSION_CHECKING_URL)
+		web = urllib2.urlopen(VERSION_CHECKING_URL)
 	except urllib2.URLError, reason:
 		stderr('error accessing URL %s: %s' % (VERSION_CHECKING_URL, reason))
 		return None
@@ -55,8 +55,8 @@ def get_latest_version_and_checksum():
 														reason))
 		return None
 
-	data = f.read(1024)
-	f.close()
+	data = web.read(1024)
+	web.close()
 
 	if not data or len(data) < 10:
 		stderr('error accessing the file at %s' % VERSION_CHECKING_URL)
@@ -168,24 +168,24 @@ def download():
 		web.close()
 		return False
 
-	print_progress(download_filename, totalsize, 0)
-	download_bytes = 0
+	with f:
+		print_progress(download_filename, totalsize, 0)
+		download_bytes = 0
 
-	# compute checksum of downloaded file data
-	sum = hashlib.md5()
+		# compute checksum of downloaded file data
+		sum = hashlib.md5()
 
-	while True:
-		data = web.read(4096)
-		if not data:
-			break
+		while True:
+			data = web.read(4096)
+			if not data:
+				break
 
-		download_bytes += len(data)
-		print_progress(download_filename, totalsize, download_bytes)
+			download_bytes += len(data)
+			print_progress(download_filename, totalsize, download_bytes)
 
-		f.write(data)
-		sum.update(data)
+			f.write(data)
+			sum.update(data)
 
-	f.close()
 	web.close()
 
 	if download_bytes < totalsize:
