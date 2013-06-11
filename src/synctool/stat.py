@@ -1,5 +1,5 @@
 #
-#	synctool_stat.py	WJ110
+#	synctool.stat.py	WJ110
 #
 #   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
 #
@@ -61,11 +61,10 @@ class SyncStat:
 		else:
 			self.entry_exists = True
 
-			# use older stat.ST_xxx notation for older Python versions ...
-			self.mode = statbuf[stat.ST_MODE]
-			self.uid = statbuf[stat.ST_UID]
-			self.gid = statbuf[stat.ST_GID]
-			self.size = statbuf[stat.ST_SIZE]
+			self.mode = statbuf.st_mode
+			self.uid = statbuf.st_uid
+			self.gid = statbuf.st_gid
+			self.size = statbuf.st_size
 
 
 	def isDir(self):

@@ -452,14 +452,12 @@ class SyncObject:
 				unix_out('')
 				need_update = True
 
-#			if src_stat[stat.ST_MTIME] != dest_stat[stat.ST_MTIME]:
+#			if src_stat.st_mtime != dest_stat.st_mtime:
 #				stdout('%s should have mtime %d, but has %d' %
-#						(dest_path, src_stat[stat.ST_MTIME],
-#						dest_stat[stat.ST_MTIME]))
-#			if src_stat[stat.ST_CTIME] != dest_stat[stat.ST_CTIME]:
+#						(dest_path, src_stat.st_mtime, dest_stat.st_mtime))
+#			if src_stat[stat.st_ctime != dest_stat.st_ctime:
 #				stdout('%s should have ctime %d, but has %d' %
-#						(dest_path, src_stat[stat.ST_CTIME],
-#						dest_stat[stat.ST_CTIME]))
+#						(dest_path, src_stat.st_ctime, dest_stat.st_ctime))
 
 		return need_update
 
