@@ -30,25 +30,18 @@ def read_config():
 
 	errors = synctool.configparser.read_config_file(synctool.param.CONF_FILE)
 
-	# FIXME some of this is now handled by param.reset_synctool_root()
-	# FIXME masterdir has to go out the window -> synctool_root
-
 	# if missing, set default directories
 	if not synctool.param.MASTERDIR:
-		synctool.param.MASTERDIR = '/var/lib/synctool'
+		synctool.param.reset_masterdir('/var/lib/synctool')
 
 		if not os.path.isdir(synctool.param.MASTERDIR):
 			stderr('error: no such directory: %s' % d)
 			errors += 1
 
 	# overlay/ and delete/ must be under $masterdir
-	d = os.path.join(synctool.param.MASTERDIR, 'overlay')
-	if not os.path.isdir(d):
-		stderr('error: no such directory: %s' % d)
+	if not os.path.isdir(synctool.param.OVERLAY_DIR):
+		stderr('error: no such directory: %s' % synctool.param.OVERLAY_DIR)
 		errors += 1
-
-	# set it, even if it does not exists
-	synctool.param.OVERLAY_DIR = d
 
 	# treat a missing 'overlay/all/' dir as an error
 	d = os.path.join(synctool.param.OVERLAY_DIR, 'all')
@@ -56,12 +49,9 @@ def read_config():
 		stderr('error: no such directory: %s' % d)
 		errors += 1
 
-	d = os.path.join(synctool.param.MASTERDIR, 'delete')
-	if not os.path.isdir(d):
-		stderr('error: no such directory: %s' % d)
+	if not os.path.isdir(synctool.param.DELETE_DIR):
+		stderr('error: no such directory: %s' % synctool.param.DELETE_DIR)
 		errors += 1
-
-	synctool.param.DELETE_DIR = d
 
 	d = os.path.join(synctool.param.DELETE_DIR, 'all')
 	if not os.path.isdir(d):

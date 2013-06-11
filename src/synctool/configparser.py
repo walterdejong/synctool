@@ -242,18 +242,19 @@ def config_masterdir(arr, configfile, lineno):
 
 	d = string.join(arr[1:])
 	d = synctool.lib.strip_multiple_slashes(d)
-	synctool.param.MASTERDIR = synctool.lib.strip_trailing_slash(d)
-	synctool.param.MASTER_LEN = len(synctool.param.MASTERDIR) + 1
+	d = synctool.lib.strip_trailing_slash(d)
 
-	if synctool.param.MASTERDIR in ('', '/', os.path.sep, '$masterdir'):
+	if d in ('', '/', os.path.sep, '$masterdir'):
 		stderr("%s:%d: masterdir can not be set to '%s', sorry" %
 			(configfile, lineno, synctool.param.MASTERDIR))
 		return 1
 
-	if not os.path.isdir(synctool.param.MASTERDIR):
+	if not os.path.isdir(d):
 		stderr('%s:%d: no such directory for masterdir' % (configfile, lineno))
 		return 1
 
+	# this initializes MASTERDIR, MASTER_LEN, OVERLAY_DIR, DELETE_DIR
+	synctool.param.reset_masterdir(d)
 	return 0
 
 
