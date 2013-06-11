@@ -602,6 +602,12 @@ def get_options():
 
 
 def main():
+	# set default config file for clients
+	# We don't actually know for sure what the masterdir is
+	# but it is a sane guess
+	synctool.param.DEFAULT_CONF = '/var/lib/synctool/client.conf'
+	synctool.param.CONF_FILE = synctool.param.DEFAULT_CONF
+
 	synctool.param.init()
 
 	action = get_options()
@@ -609,8 +615,9 @@ def main():
 	synctool.config.init_mynodename()
 
 	if not synctool.param.NODENAME:
-		stderr('unable to determine my nodename (%s), please check %s' %
-			(synctool.param.HOSTNAME, synctool.param.CONF_FILE))
+		stderr('unable to determine my nodename (%s)' %
+				synctool.param.HOSTNAME)
+		stderr('please check %s' % synctool.param.CONF_FILE)
 		sys.exit(1)
 
 	if synctool.param.NODENAME in synctool.param.IGNORE_GROUPS:
