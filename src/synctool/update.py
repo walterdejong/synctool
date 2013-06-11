@@ -173,7 +173,7 @@ def download():
 		download_bytes = 0
 
 		# compute checksum of downloaded file data
-		sum = hashlib.md5()
+		sum1 = hashlib.md5()
 
 		while True:
 			data = web.read(4096)
@@ -184,7 +184,7 @@ def download():
 			print_progress(download_filename, totalsize, download_bytes)
 
 			f.write(data)
-			sum.update(data)
+			sum1.update(data)
 
 	web.close()
 
@@ -196,7 +196,7 @@ def download():
 	download_bytes += 100	# force 100% in the progress counter
 	print_progress(download_filename, totalsize, download_bytes)
 
-	if sum.hexdigest() != checksum:
+	if sum1.hexdigest() != checksum:
 		stderr('ERROR: checksum failed for %s' % download_filename)
 		return False
 
