@@ -45,16 +45,11 @@ scp_cmd scp -o ConnectTimeout=10 -p
 #
 # synctool-master automatically appends another option:
 #  --filter=/tmp/synctool/synctool-tempfile
-# So if you every change from rsync, the command will have to support
-# the --filter option correctly.
 #
 rsync_cmd rsync -ar --numeric-ids --delete --delete-excluded -e 'ssh -o ConnectTimeout=10 -x -q' -q
 
-# this is also possible:
-# synctool_cmd $masterdir/sbin/synctool.py -c $masterdir/alt-config.conf
-synctool_cmd $masterdir/sbin/synctool.py
-
-pkg_cmd $masterdir/sbin/synctool_pkg.py
+synctool_cmd $masterdir/sbin/synctool.py -c $masterdir/client.conf
+pkg_cmd $masterdir/sbin/synctool_pkg.py -c $masterdir/client.conf
 
 # Force the package manager for synctool-pkg / dsh-pkg to use
 # If you don't configure one, synctool-pkg will detect one
