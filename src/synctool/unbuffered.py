@@ -32,6 +32,12 @@ class Unbuffered:
 	def __getattr__(self, attr):
 		return getattr(self.stream, attr)
 
+	def __enter__(self):
+		return self.stream
+
+	def __exit__(self, type, value, traceback):
+		self.stream.close()
+
 
 # EOB
 
