@@ -13,20 +13,22 @@ import sys
 
 VERSION = '6.0-beta'
 
-# The config file is initialized by detect_root()
-# and may be overridden on the command-line
-DEFAULT_CONF = None
-CONF_FILE = None
+# location of default config file on the master node
+# synctool-client generally runs with -c $masterdir/synctool-client.conf
+DEFAULT_CONF = '/etc/synctool.conf'
+CONF_FILE = DEFAULT_CONF
 
 BOOLEAN_VALUE_TRUE = ('1', 'on', 'yes', 'true')
 BOOLEAN_VALUE_FALSE = ('0', 'off', 'no', 'false')
 
 #
 # config variables
-# The root, masterdir, overlaydir and deletedir are initialized
-# by detect_root(), and may be overridden in the config file
 #
-SYNCTOOL_ROOT = None
+# The prefix is initialized by init(),
+# and may be overridden in the config file
+# Also note that setting a default for masterdir is probably a bad idea
+#
+PREFIX = None
 MASTERDIR = None
 OVERLAY_DIR = None
 DELETE_DIR = None
@@ -137,7 +139,7 @@ def init():
 	DEFAULT_CONF = os.path.join(prefix, 'etc/synctool.conf')
 	CONF_FILE = DEFAULT_CONF
 
-	reset_synctool_root(prefix)
+	reset_prefix(prefix)
 
 	# detect symlink mode
 	if sys.platform[:5] == 'linux':
@@ -146,22 +148,25 @@ def init():
 		SYMLINK_MODE = 0755
 
 
-def reset_synctool_root(newroot):
-	'''reset dirs that are relative to the synctool_root'''
+def reset_prefix(prefix):
+	'''reset dirs that are relative to the prefix'''
 
-	global SYNCTOOL_ROOT
+	global PREFIX, SYNCTOOL_CMD, PKG_CMD
+
+	PREFIX = prefix
+
+	# FIXME what if synctool_cmd was already set in the cfg file?
+	SYNCTOOL_CMD = os.path.join(prefix, 'bin/synctool-client')
+	PKG_CMD = os.path.join(prefix, 'bin/synctool-pkg')
+
+
+def reset_masterdir(masterdir):
 	global MASTERDIR, MASTER_LEN, OVERLAY_DIR, DELETE_DIR
-	global SYNCTOOL_CMD, PKG_CMD
 
-	SYNCTOOL_ROOT = newroot
-
-	MASTERDIR = os.path.join(SYNCTOOL_ROOT, 'var')
+	MASTERDIR = masterdir
 	MASTER_LEN = len(MASTERDIR) + 1
 	OVERLAY_DIR = os.path.join(MASTERDIR, 'overlay')
 	DELETE_DIR = os.path.join(MASTERDIR, 'delete')
-
-	SYNCTOOL_CMD = os.path.join(SYNCTOOL_ROOT, 'bin/synctool-client')
-	PKG_CMD = os.path.join(SYNCTOOL_ROOT, 'bin/synctool-pkg')
 
 
 # EOB
