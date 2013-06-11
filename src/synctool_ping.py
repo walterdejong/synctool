@@ -57,45 +57,43 @@ def worker_ping(rank, nodes):
 	# execute ping command and show output with the nodename
 	cmd = '%s %s' % (synctool.param.PING_CMD, node)
 	cmd_arr = shlex.split(cmd)
-	f = synctool.lib.popen(cmd_arr)
-	if not f:
-		stderr('failed to run command %s' % cmd_arr[0])
-		return
+	with synctool.lib.popen(cmd_arr) as f:
+		if not f:
+			stderr('failed to run command %s' % cmd_arr[0])
+			return
 
-	while True:
-		line = f.readline()
-		if not line:
-			break
+		while True:
+			line = f.readline()
+			if not line:
+				break
 
-		line = string.strip(line)
+			line = string.strip(line)
 
-		# argh, we have to parse output here
-		#
-		# on BSD, ping says something like:
-		# "2 packets transmitted, 0 packets received, 100.0% packet loss"
-		#
-		# on Linux, ping says something like:
-		# "2 packets transmitted, 0 received, 100.0% packet loss, time 1001ms"
+			# argh, we have to parse output here
+			#
+			# on BSD, ping says something like:
+			# "2 packets transmitted, 0 packets received, 100.0% packet loss"
+			#
+			# on Linux, ping says something like:
+			# "2 packets transmitted, 0 received, 100.0% packet loss, time 1001ms"
 
-		arr = string.split(line)
-		if len(arr) > 3 and arr[1] == 'packets' and arr[2] == 'transmitted,':
-			try:
-				packets_received = int(arr[3])
-			except ValueError:
-				pass
+			arr = string.split(line)
+			if len(arr) > 3 and arr[1] == 'packets' and arr[2] == 'transmitted,':
+				try:
+					packets_received = int(arr[3])
+				except ValueError:
+					pass
 
-			break
+				break
 
-		# some ping implementations say "hostname is alive"
-		# or "hostname is unreachable"
-		elif len(arr) == 3 and arr[1] == 'is':
-			if arr[2] == 'alive':
-				packets_received = 100
+			# some ping implementations say "hostname is alive"
+			# or "hostname is unreachable"
+			elif len(arr) == 3 and arr[1] == 'is':
+				if arr[2] == 'alive':
+					packets_received = 100
 
-			elif arr[2] == 'unreachable':
-				packets_received = -1
-
-	f.close()
+				elif arr[2] == 'unreachable':
+					packets_received = -1
 
 	if packets_received > 0:
 		print '%s: up' % nodename
