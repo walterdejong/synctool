@@ -68,11 +68,6 @@ def worker_pkg(rank, nodes):
 
 
 def run_local_pkg():
-	if not synctool.param.PKG_CMD:
-		stderr('%s: error: pkg_cmd has not been defined in %s' %
-			(os.path.basename(sys.argv[0]), synctool.param.CONF_FILE))
-		sys.exit(-1)
-
 	cmd_arr = shlex.split(synctool.param.PKG_CMD) + PASS_ARGS
 
 	synctool.lib.run_with_nodename(cmd_arr, synctool.param.NODENAME)
