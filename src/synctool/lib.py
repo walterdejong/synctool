@@ -269,38 +269,39 @@ def checksum_files(file1, file2):
 		stderr('error: failed to open %s : %s' % (file1, reason))
 		raise
 
-	try:
-		f2 = open(file2, 'r')
-	except IOError, (err, reason):
-		stderr('error: failed to open %s : %s' % (file2, reason))
-		raise
+	with f1:
+		try:
+			f2 = open(file2, 'r')
+		except IOError, (err, reason):
+			stderr('error: failed to open %s : %s' % (file2, reason))
+			raise
 
-	sum1 = hashlib.md5()
-	sum2 = hashlib.md5()
+		with f2:
+			sum1 = hashlib.md5()
+			sum2 = hashlib.md5()
 
-	len1 = len2 = 0
-	ended = False
-	while len1 == len2 and sum1.digest() == sum2.digest() and not ended:
-		data1 = f1.read(BLOCKSIZE)
-		if not data1:
-			ended = True
-		else:
-			len1 = len1 + len(data1)
-			sum1.update(data1)
+			len1 = len2 = 0
+			ended = False
+			while (len1 == len2 and sum1.digest() == sum2.digest() and
+				not ended):
+				data1 = f1.read(BLOCKSIZE)
+				if not data1:
+					ended = True
+				else:
+					len1 = len1 + len(data1)
+					sum1.update(data1)
 
-		data2 = f2.read(BLOCKSIZE)
-		if not data2:
-			ended = True
-		else:
-			len2 = len2 + len(data2)
-			sum2.update(data2)
+				data2 = f2.read(BLOCKSIZE)
+				if not data2:
+					ended = True
+				else:
+					len2 = len2 + len(data2)
+					sum2.update(data2)
 
-		if sum1.digest() != sum2.digest():
-			# checksum mismatch; early exit
-			break
+				if sum1.digest() != sum2.digest():
+					# checksum mismatch; early exit
+					break
 
-	f1.close()
-	f2.close()
 	return sum1.digest(), sum2.digest()
 
 
