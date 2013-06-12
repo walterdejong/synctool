@@ -257,7 +257,7 @@ def config_package_manager(arr, configfile, lineno):
 		return 1
 
 	if synctool_param.PACKAGE_MANAGER != None:
-		stderr('%s:%d: redefiniton of package_manager' % (configfile, lineno))
+		stderr('%s:%d: redefinition of package_manager' % (configfile, lineno))
 		return 1
 
 	if not arr[1] in synctool_param.KNOWN_PACKAGE_MANAGERS:
@@ -474,7 +474,7 @@ def config_group(arr, configfile, lineno):
 		return 1
 
 	if synctool_param.GROUP_DEFS.has_key(group):
-		stderr('%s:%d: redefiniton of group %s' % (configfile, lineno, group))
+		stderr('%s:%d: redefinition of group %s' % (configfile, lineno, group))
 		return 1
 
 	if synctool_param.NODES.has_key(group):
