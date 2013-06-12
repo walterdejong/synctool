@@ -535,7 +535,7 @@ def config_group(arr, configfile, lineno):
 		return 1
 
 	if synctool.param.GROUP_DEFS.has_key(group):
-		stderr('%s:%d: redefiniton of group %s' % (configfile, lineno, group))
+		stderr('%s:%d: redefinition of group %s' % (configfile, lineno, group))
 		return 1
 
 	if synctool.param.NODES.has_key(group):
