@@ -54,7 +54,7 @@ class SyncStat:
 			if err.errno != errno.ENOENT:
 				# "No such file or directory" is a valid error
 				# when the destination is missing
-				stderr('error: stat(%s) failed: %s' % (path, reason))
+				stderr('error: stat(%s) failed: %s' % (path, err))
 
 			self.entry_exists = False
 			self.mode = self.uid = self.gid = self.size = None
