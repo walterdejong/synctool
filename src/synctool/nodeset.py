@@ -30,108 +30,86 @@ class NodeSet:
 	'''class representing a set of nodes'''
 
 	def __init__(self):
-		self.nodelist = []
-		self.grouplist = []
-		self.exclude_nodes = []
-		self.exclude_groups = []
+		self.nodelist = set()
+		self.grouplist = set()
+		self.exclude_nodes = set()
+		self.exclude_groups = set()
 		self.namemap = {}
 
 	def add_node(self, nodelist):
-		nodes = string.split(nodelist, ',')
-		for node in nodes:
-			if not node in self.nodelist:
-				self.nodelist.append(node)
+		self.nodelist = set(string.split(nodelist, ','))
 
 	def add_group(self, grouplist):
-		groups = string.split(grouplist, ',')
-		for group in groups:
-			if not group in self.grouplist:
-				self.grouplist.append(group)
+		self.grouplist = set(string.split(grouplist, ','))
 
 	def exclude_node(self, nodelist):
-		nodes = string.split(nodelist, ',')
-		for node in nodes:
-			if not node in self.exclude_nodes:
-				self.exclude_nodes.append(node)
+		self.exclude_nodes = set(string.split(nodelist, ','))
 
 	def exclude_group(self, grouplist):
-		groups = string.split(grouplist, ',')
-		for group in groups:
-			if not group in self.exclude_groups:
-				self.exclude_groups.append(group)
+		self.exclude_groups = set(string.split(grouplist, ','))
 
 	def addresses(self):
 		'''return list of addresses of relevant nodes'''
 
-		explicit_includes = self.nodelist[:]
+		# FIXME what a mess ... This is not correct
+		# FIXME what should the behaviour be for ignored nodes & groups,
+		# FIXME when you can also explicitly add them on the command-line?
+
+		explicit_includes = self.nodelist.copy()
 
 		# by default, work on default_nodeset
 		if not self.nodelist and not self.grouplist:
 			if not synctool.param.DEFAULT_NODESET:
 				return []
 
-			self.nodelist = list(synctool.param.DEFAULT_NODESET)
+			self.nodelist = synctool.param.DEFAULT_NODESET
 		else:
 			# check if the nodes exist at all
 			# the user may have given bogus names
-			all_nodes = synctool.config.get_all_nodes()
-			for node in self.nodelist:
-				if not node in all_nodes:
-					stderr("no such node '%s'" % node)
-					return None
+			all_nodes = set(synctool.config.get_all_nodes())
+			unknown = self.nodelist - all_nodes
+			for node in unknown:
+				stderr("no such node '%s'" % node)
+				return None
 
-			if self.grouplist:
-				# check if the groups exist at all
-				for group in self.grouplist:
-					if not group in synctool.param.ALL_GROUPS:
-						stderr("no such group '%s'" % group)
-						return None
+			# check if the groups exist at all
+			unknown = self.grouplist - synctool.param.ALL_GROUPS
+			for group in unknown:
+				stderr("no such group '%s'" % group)
+				return None
 
-				self.nodelist.extend(list(
-					synctool.config.get_nodes_in_groups(self.grouplist)))
+			self.nodelist |= synctool.config.get_nodes_in_groups(
+								self.grouplist)
 
-		if self.exclude_groups:
-			self.exclude_nodes.extend(list(
-				synctool.config.get_nodes_in_groups(self.exclude_groups)))
+		self.exclude_nodes |= synctool.config.get_nodes_in_groups(
+								self.exclude_groups)
 
-		for node in self.exclude_nodes:
-			# remove excluded nodes, if not explicitly included
-			if node in self.nodelist and not node in explicit_includes:
-				self.nodelist.remove(node)
+		# remove explicitly included nodes from exclude_nodes
+		self.exclude_nodes -= explicit_includes
+		# remove excluded nodes from nodelist
+		self.nodelist -= self.exclude_nodes
 
-		if len(self.nodelist) <= 0:
+		if not self.nodelist:
 			return []
 
 		addrs = []
-		ignored_nodes = ''
 
-		for node in self.nodelist:
-			if (node in synctool.param.IGNORE_GROUPS and
-				not node in explicit_includes):
+		ignored_nodes = self.nodelist & synctool.param.IGNORE_GROUPS
+		ignored_nodes -= explicit_includes
+
+		if synctool.lib.VERBOSE:
+			for node in ignored_nodes:
 				verbose('node %s is ignored' % node)
 
-				if not ignored_nodes:
-					ignored_nodes = node
-				else:
-					ignored_nodes = ignored_nodes + ',' + node
-				continue
+		self.nodelist -= ignored_nodes
 
-			groups = synctool.config.get_groups(node)
-			do_continue = False
-
-			for group in groups:
-				if group in synctool.param.IGNORE_GROUPS:
-					verbose('group %s is ignored' % group)
-
-					if not ignored_nodes:
-						ignored_nodes = node
-					else:
-						ignored_nodes = ignored_nodes + ',' + node
-
-					do_continue = True
-					break
-
-			if do_continue:
+		for node in self.nodelist:
+			# ignoring a group results in also ignoring the node
+			my_groups = set(synctool.config.get_groups(node))
+			my_groups &= synctool.param.IGNORE_GROUPS
+			if len(my_groups) > 0:
+				verbose('node %s is ignored' % node)
+				ignored_nodes.add(node)
 				continue
 
 			addr = synctool.config.get_node_ipaddress(node)
@@ -141,15 +119,16 @@ class NodeSet:
 				addrs.append(addr)
 
 		# print message about ignored nodes
-		if (ignored_nodes and not synctool.lib.QUIET and
+		if (len(ignored_nodes) > 0 and not synctool.lib.QUIET and
 			not synctool.lib.UNIX_CMD):
 			if synctool.param.TERSE:
 				synctool.lib.terse(synctool.lib.TERSE_WARNING,
 									'ignored nodes')
 			else:
-				ignored_nodes = 'warning: ignored nodes: ' + ignored_nodes
-				if len(ignored_nodes) < 80:
-					print ignored_nodes
+				ignored_str = ('warning: ignored nodes: ' +
+								string.join(list(ignored_nodes), ','))
+				if len(ignored_str) < 80:
+					print ignored_str
 				else:
 					print 'warning: some nodes are ignored'
 

@@ -88,7 +88,8 @@ def read_config():
 	# remove ignored groups from node definitions
 	# FIXME this is NOT ok for synctool-config !
 	# FIXME because it can not print any ignored groups
-	remove_ignored_groups()
+	# FIXME and nodeset chokes on it
+#	remove_ignored_groups()
 
 	if errors > 0:
 		sys.exit(-1)
