@@ -580,19 +580,20 @@ def config_node(arr, configfile, lineno):
 		# TODO "previous definition of %s was here"
 		return 1
 
-	if g == 'all':
-		stderr("%s:%d: illegal to use group 'all' in node definition" %
-			(configfile, lineno))
-		stderr("%s:%d: group 'all' automatically applies to all nodes" %
-			(configfile, lineno))
-		return 1
+	for g in groups:
+		if g == 'all':
+			stderr("%s:%d: illegal to use group 'all' in node definition" %
+				(configfile, lineno))
+			stderr("%s:%d: group 'all' automatically applies to all nodes" %
+				(configfile, lineno))
+			return 1
 
-	if g == 'none':
-		stderr("%s:%d: illegal to use group 'none' in node definition" %
-			(configfile, lineno))
-		stderr("%s:%d: use 'ignore_node' to disable a node" %
-			(configfile, lineno))
-		return 1
+		if g == 'none':
+			stderr("%s:%d: illegal to use group 'none' in node definition" %
+				(configfile, lineno))
+			stderr("%s:%d: use 'ignore_node' to disable a node" %
+				(configfile, lineno))
+			return 1
 
 	if node in groups:
 		stderr("%s:%d: illegal to list '%s' as group for node %s" %
