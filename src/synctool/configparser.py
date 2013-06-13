@@ -501,17 +501,21 @@ def config_default_nodeset(arr, configfile, lineno):
 			(configfile, lineno))
 		return 1
 
-	# groups, but maybe also nodes
-	groups = arr[1:]
+	synctool.param.DEFAULT_NODESET = set()
 
-	for g in groups:
-		if not spellcheck(s):
+	for g in arr[1:]:
+		if not spellcheck(g):
 			stderr("%s:%d: invalid name '%s'" % (configfile, lineno, g))
 			return 1
 
+		if g == 'none':
+			synctool.param.DEFAULT_NODESET = set()
+		else:
+			synctool.param.DEFAULT_NODESET.add(g)
+
 	# for now, accept this as the default nodeset
-	# synctool_config.read_config() will expand this to a list of nodes
-	synctool.param.DEFAULT_NODESET = groups
+	# There can be compound groups in it, so
+	# synctool_config.read_config() will expand it to a list of nodes
 
 
 # keyword: group

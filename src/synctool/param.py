@@ -71,7 +71,7 @@ IGNORE_DOTDIRS = False
 IGNORE_FILES = []
 IGNORE_FILES_WITH_WILDCARDS = []
 
-DEFAULT_NODESET = ['all']
+DEFAULT_NODESET = set(['all'])
 
 # NODES is a dict of nodes
 # each node is a list of groups, ordered by importance;
@@ -99,7 +99,7 @@ HOSTNAMES = {}
 #
 HOSTNAMES_BY_NODE = {}
 
-# compound groups
+# compound groups are lists of groups, in order of importance
 #
 #   GROUP_DEFS[compound] -> [ list of groups ]
 #

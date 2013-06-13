@@ -122,12 +122,14 @@ def list_nodes(nodenames):
 
 
 def list_nodegroups(groups):
-	for group in groups:
-		if not group in synctool.param.ALL_GROUPS:
-			stderr("no such group '%s' defined" % group)
-			sys.exit(1)
+	groups = set(groups)
 
-	arr = synctool.config.get_nodes_in_groups(groups)
+	unknown = groups - synctool.param.ALL_GROUPS
+	for g in unknown:
+		stderr("no such group '%s' defined" % g)
+		sys.exit(1)
+
+	arr = list(synctool.config.get_nodes_in_groups(groups))
 	arr.sort()
 
 	for node in arr:

@@ -86,6 +86,8 @@ def read_config():
 	errors += make_default_nodeset()
 
 	# remove ignored groups from node definitions
+	# FIXME this is NOT ok for synctool-config !
+	# FIXME because it can not print any ignored groups
 	remove_ignored_groups()
 
 	if errors > 0:
@@ -93,30 +95,17 @@ def read_config():
 
 
 def make_default_nodeset():
+	synctool.param.DEFAULT_NODESET = get_nodes_in_groups(
+										synctool.param.DEFAULT_NODESET)
+
+	# unknowns are not in ALL_GROUPS
+	unknown = synctool.param.DEFAULT_NODESET - synctool.param.ALL_GROUPS
+
 	errors = 0
-
-	# check that the listed nodes / groups exist at all
-	groups = []
-	for g in synctool.param.DEFAULT_NODESET:
-		if g == 'none':
-			groups = []
-			continue
-
-		if not g in synctool.param.ALL_GROUPS:
-			stderr("config error: unknown node or group '%s' "
+	for g in unknown:
+		stderr("config error: unknown node or group '%s' "
 				"in default_nodeset" % g)
-			errors += 1
-			continue
-
-		if not g in groups:
-			groups.append(g)
-
-	if not errors:
-		if not groups:
-			# if there was 'none', the nodeset will be empty
-			synctool.param.DEFAULT_NODESET = []
-		else:
-			synctool.param.DEFAULT_NODESET = get_nodes_in_groups(groups)
+		errors += 1
 
 	return errors
 
@@ -278,18 +267,18 @@ def get_my_groups():
 
 
 def get_nodes_in_groups(groups):
-	'''returns the nodes that are in [groups]'''
+	'''returns a set of nodes that are in a set or list of groups'''
 
-	arr = []
-
-	nodes = synctool.param.NODES.keys()
+	s = set()
 
 	for g in groups:
-		for node in nodes:
-			if g in synctool.param.NODES[node] and not node in arr:
-				arr.append(node)
+		for node in synctool.param.NODES.keys():
+			# NODES[node] is an ordered list (groups in order of importance)
+			# so we can not do neat tricks with combining sets here ...
+			if g in synctool.param.NODES[node]:
+				s.add(node)
 
-	return arr
+	return s
 
 
 # EOB

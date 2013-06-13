@@ -70,7 +70,7 @@ class NodeSet:
 			if not synctool.param.DEFAULT_NODESET:
 				return []
 
-			self.nodelist = synctool.param.DEFAULT_NODESET
+			self.nodelist = list(synctool.param.DEFAULT_NODESET)
 		else:
 			# check if the nodes exist at all
 			# the user may have given bogus names
@@ -87,12 +87,12 @@ class NodeSet:
 						stderr("no such group '%s'" % group)
 						return None
 
-				self.nodelist.extend(synctool.config.get_nodes_in_groups(
-										self.grouplist))
+				self.nodelist.extend(list(
+					synctool.config.get_nodes_in_groups(self.grouplist)))
 
 		if self.exclude_groups:
-			self.exclude_nodes.extend(synctool.config.get_nodes_in_groups(
-										self.exclude_groups))
+			self.exclude_nodes.extend(list(
+				synctool.config.get_nodes_in_groups(self.exclude_groups)))
 
 		for node in self.exclude_nodes:
 			# remove excluded nodes, if not explicitly included
