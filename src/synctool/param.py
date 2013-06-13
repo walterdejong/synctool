@@ -111,7 +111,7 @@ IGNORE_GROUPS = []
 # list of my groups, ordered by importance
 MY_GROUPS = None
 
-# list of all known groups
+# set of all known groups
 ALL_GROUPS = None
 
 # string length of the 'MASTERDIR' variable

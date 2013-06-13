@@ -256,16 +256,13 @@ def get_node_hostname(node):
 
 
 def make_all_groups():
-	'''make a list of all possible groups
+	'''make a set of all possible groups
 	This is a set of all group names plus all node names'''
 
-	arr = synctool.param.GROUP_DEFS.keys()
-	arr.extend(synctool.param.NODES.keys())
+	s = set(synctool.param.GROUP_DEFS.keys())
+	s |= set(synctool.param.NODES.keys())
 
-# older versions of python do not support sets BUT that doesn't matter ...
-# all groups + nodes should have no duplicates anyway
-#	return list(set(arr))
-	return arr
+	return s
 
 
 def get_groups(nodename):
