@@ -75,8 +75,7 @@ def read_config():
 	if not synctool.param.GROUP_DEFS.has_key('none'):
 		synctool.param.GROUP_DEFS['none'] = None
 
-	if not 'none' in synctool.param.IGNORE_GROUPS:
-		synctool.param.IGNORE_GROUPS.append('none')
+	synctool.param.IGNORE_GROUPS.add('none')
 
 	# initialize ALL_GROUPS
 	synctool.param.ALL_GROUPS = make_all_groups()
@@ -213,15 +212,10 @@ def remove_ignored_groups():
 	'''remove ignored groups from all node definitions'''
 
 	for host in synctool.param.NODES.keys():
-		changed = False
 		groups = synctool.param.NODES[host]
 		for ignore in synctool.param.IGNORE_GROUPS:
 			if ignore in groups:
 				groups.remove(ignore)
-				changed = True
-
-		if changed:
-			synctool.param.NODES[host] = groups
 
 
 def insert_group(node, group):

@@ -707,8 +707,7 @@ def config_ignore_node(arr, configfile, lineno):
 			errors += 1
 			continue
 
-		if not node in synctool.param.IGNORE_GROUPS:
-			synctool.param.IGNORE_GROUPS.append(node)
+		synctool.param.IGNORE_GROUPS.add(node)
 
 	return errors
 
@@ -737,8 +736,7 @@ def config_ignore_group(arr, configfile, lineno):
 			errors += 1
 			continue
 
-		if not group in synctool.param.IGNORE_GROUPS:
-			synctool.param.IGNORE_GROUPS.append(group)
+		synctool.param.IGNORE_GROUPS.add(group)
 
 		# add any (yet) unknown group names to the group_defs dict
 		if not synctool.param.GROUP_DEFS.has_key(group):

@@ -54,22 +54,18 @@ def list_all_nodes():
 	nodes = synctool.config.get_all_nodes()
 	nodes.sort()
 
-	if synctool.param.IGNORE_GROUPS != None:
-		ignore_nodes = synctool.config.get_nodes_in_groups(
-						synctool.param.IGNORE_GROUPS)
-	else:
-		ignore_nodes = []
-
 	for host in nodes:
-		if host in ignore_nodes:
+		if host in synctool.param.IGNORE_GROUPS:
+			if OPT_FILTER_IGNORED:
+				continue
+
 			if OPT_IPADDRESS:
 				host = synctool.config.get_node_ipaddress(host)
 
 			elif OPT_HOSTNAME:
 				host = synctool.config.get_node_hostname(host)
 
-			if not OPT_FILTER_IGNORED:
-				print '%s (ignored)' % host
+			print '%s (ignored)' % host
 		else:
 			if OPT_IPADDRESS:
 				host = synctool.config.get_node_ipaddress(host)
@@ -86,8 +82,10 @@ def list_all_groups():
 
 	for group in groups:
 		if group in synctool.param.IGNORE_GROUPS:
-			if not OPT_FILTER_IGNORED:
-				print '%s (ignored)' % group
+			if OPT_FILTER_IGNORED:
+				continue
+
+			print '%s (ignored)' % group
 		else:
 			print group
 
@@ -115,8 +113,10 @@ def list_nodes(nodenames):
 
 	for group in groups:
 		if group in synctool.param.IGNORE_GROUPS:
-			if not OPT_FILTER_IGNORED:
-				print '%s (ignored)' % group
+			if OPT_FILTER_IGNORED:
+				continue
+
+			print '%s (ignored)' % group
 		else:
 			print group
 
@@ -132,14 +132,16 @@ def list_nodegroups(groups):
 
 	for node in arr:
 		if node in synctool.param.IGNORE_GROUPS:
+			if OPT_FILTER_IGNORED:
+				continue
+
 			if OPT_IPADDRESS:
 				node = synctool.config.get_node_ipaddress(node)
 
 			elif OPT_HOSTNAME:
 				node = synctool.config.get_node_hostname(node)
 
-			if not OPT_FILTER_IGNORED:
-				print '%s (ignored)' % node
+			print '%s (ignored)' % node
 		else:
 			if OPT_IPADDRESS:
 				node = synctool.config.get_node_ipaddress(node)

@@ -105,8 +105,8 @@ HOSTNAMES_BY_NODE = {}
 #
 GROUP_DEFS = {}
 
-# list of ignored groups and nodes
-IGNORE_GROUPS = []
+# set of ignored groups and nodes
+IGNORE_GROUPS = set()
 
 # list of my groups, ordered by importance
 MY_GROUPS = None
