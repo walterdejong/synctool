@@ -73,18 +73,45 @@ IGNORE_FILES_WITH_WILDCARDS = []
 
 DEFAULT_NODESET = ['all']
 
+# NODES is a dict of nodes
+# each node is a list of groups, ordered by importance;
+# first listed group is most important, last group is least important
+#
+#   NODES[node] -> [ list of groups ]
+#
 NODES = {}
+
+# dict of ipaddresses by nodename
+#
+#   IPADDRESSES[node] -> ipaddress
+#
 IPADDRESSES = {}
+
+# dict of nodes ... by hostname
+#
+#   HOSTNAMES[hostname] -> nodename
+#
 HOSTNAMES = {}
+
+# dict of hostnames by nodename
+#
+#   HOSTNAMES_BY_NODE[node] -> hostname
+#
 HOSTNAMES_BY_NODE = {}
 
+# compound groups
+#
+#   GROUP_DEFS[compound] -> [ list of groups ]
+#
 GROUP_DEFS = {}
 
+# list of ignored groups and nodes
 IGNORE_GROUPS = []
 
-# to be initialized externally ... (see synctool.py)
-# these are lists of group names
+# list of my groups, ordered by importance
 MY_GROUPS = None
+
+# list of all known groups
 ALL_GROUPS = None
 
 # string length of the 'MASTERDIR' variable
