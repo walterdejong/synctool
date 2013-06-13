@@ -571,21 +571,31 @@ def config_node(arr, configfile, lineno):
 
 	if synctool.param.NODES.has_key(node):
 		stderr('%s:%d: redefinition of node %s' % (configfile, lineno, node))
+		# TODO "previous definition of %s was here"
 		return 1
 
 	if synctool.param.GROUP_DEFS.has_key(node):
 		stderr('%s:%d: %s was previously defined as a group' %
 			(configfile, lineno, node))
+		# TODO "previous definition of %s was here"
 		return 1
 
-	for g in ('all', 'none'):
-		if g in groups:
-			stderr("%s:%d: illegal to use group '%s' in node definition" %
-				(configfile, lineno, g))
-			return 1
+	if g == 'all':
+		stderr("%s:%d: illegal to use group 'all' in node definition" %
+			(configfile, lineno))
+		stderr("%s:%d: group 'all' automatically applies to all nodes" %
+			(configfile, lineno))
+		return 1
+
+	if g == 'none':
+		stderr("%s:%d: illegal to use group 'none' in node definition" %
+			(configfile, lineno))
+		stderr("%s:%d: use 'ignore_node' to disable a node" %
+			(configfile, lineno))
+		return 1
 
 	if node in groups:
-		stderr("%s:%d: illegal to use group '%s' for node %s" %
+		stderr("%s:%d: illegal to list '%s' as group for node %s" %
 			(configfile, lineno, node, node))
 		return 1
 
