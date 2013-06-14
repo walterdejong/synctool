@@ -108,11 +108,16 @@ def list_nodes(nodenames):
 
 		else:
 			for group in synctool.config.get_groups(nodename):
-				# FIXME why this loop?
+				# extend groups, but do not have duplicates
 				if not group in groups:
 					groups.append(group)
 
-#	groups.sort()							# group order is important
+	# group order is important, so don't sort
+	# however, when you list multiple nodes at once, the groups will have
+	# been added to the end
+	# So the order is important, but may be incorrect when listing
+	# multiple nodes at once
+#	groups.sort()
 
 	for group in groups:
 		if group in synctool.param.IGNORE_GROUPS:
