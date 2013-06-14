@@ -437,7 +437,7 @@ def main():
 		print synctool.param.NUM_PROC
 
 	elif ACTION == ACTION_PREFIX:
-		print os.path.abspath(os.path.dirname(sys.argv[0]))
+		print synctool.param.PREFIX
 
 	elif ACTION == ACTION_LOGFILE:
 		print synctool.param.LOGFILE

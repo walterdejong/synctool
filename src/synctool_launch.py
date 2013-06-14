@@ -39,6 +39,11 @@ if __name__ == '__main__':
 		stderr('launch: fatal: unable to determine my base dir')
 		sys.exit(-1)
 
+	# Note that the prefix is in the config file,
+	# but the launcher does not use it
+	# It requires the other programs to be in the same dir
+	# as the launcher itself
+
 	(prefix, bindir) = os.path.split(base)
 	os.environ['PYTHONPATH'] = '%s/lib' % prefix
 

@@ -236,6 +236,23 @@ def config_include(arr, configfile, lineno):
 	return read_config_file(synctool.lib.prepare_path(arr[1]))
 
 
+# keyword: prefix
+def config_prefix(arr, configfile, lineno):
+	if not check_definition(arr[0], configfile, lineno):
+		return 1
+
+	d = string.join(arr[1:])
+	d = synctool.lib.strip_multiple_slashes(d)
+	d = synctool.lib.strip_trailing_slash(d)
+
+	if not os.path.isdir(d):
+		stderr('%s:%d: no such directory for prefix' % (configfile, lineno))
+		return 1
+
+	synctool.param.PREFIX = d
+	return 0
+
+
 # keyword: masterdir
 def config_masterdir(arr, configfile, lineno):
 	if not check_definition(arr[0], configfile, lineno):

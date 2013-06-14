@@ -468,16 +468,6 @@ def strip_trailing_slash(path):
 	return path
 
 
-def subst_masterdir(path):
-	master = '$masterdir' + os.path.sep
-	if path.find(master) >= 0:
-		if not synctool.param.MASTERDIR:
-			stderr('error: $masterdir referenced before it was set')
-			sys.exit(-1)
-
-	return path.replace(master, synctool.param.MASTERDIR + os.path.sep)
-
-
 def strip_path(path):
 	if not path:
 		return path
@@ -517,7 +507,9 @@ def prepare_path(path):
 
 	path = strip_multiple_slashes(path)
 	path = strip_trailing_slash(path)
-	path = subst_masterdir(path)
+
+	path = path.replace('$master/', synctool.param.MASTERDIR + os.path.sep)
+	path = path.replace('$prefix/', synctool.param.PREFIX + os.path.sep)
 
 	return path
 

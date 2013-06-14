@@ -24,11 +24,8 @@ BOOLEAN_VALUE_FALSE = ('0', 'off', 'no', 'false')
 #
 # config variables
 #
-# The prefix is initialized by init(),
-# and may be overridden in the config file
-# Also note that setting a default for masterdir is probably a bad idea
-#
-PREFIX = None
+# The prefix may be set in the config file
+PREFIX = '/opt/synctool'
 MASTERDIR = None
 OVERLAY_DIR = None
 DELETE_DIR = None
@@ -168,18 +165,6 @@ def init():
 		SYMLINK_MODE = 0777
 	else:
 		SYMLINK_MODE = 0755
-
-
-def reset_prefix(prefix):
-	'''reset dirs that are relative to the prefix'''
-
-	global PREFIX, SYNCTOOL_CMD, PKG_CMD
-
-	PREFIX = prefix
-
-	# FIXME what if synctool_cmd was already set in the cfg file?
-	SYNCTOOL_CMD = os.path.join(prefix, 'bin/synctool-client')
-	PKG_CMD = os.path.join(prefix, 'bin/synctool-pkg')
 
 
 def reset_masterdir(masterdir):
