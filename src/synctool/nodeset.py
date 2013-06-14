@@ -51,12 +51,6 @@ class NodeSet:
 	def addresses(self):
 		'''return list of addresses of relevant nodes'''
 
-		# FIXME what a mess ... This is not correct
-		# FIXME what should the behaviour be for ignored nodes & groups,
-		# FIXME when you can also explicitly add them on the command-line?
-
-		explicit_includes = self.nodelist.copy()
-
 		# by default, work on default_nodeset
 		if not self.nodelist and not self.grouplist:
 			if not synctool.param.DEFAULT_NODESET:
@@ -84,8 +78,6 @@ class NodeSet:
 		self.exclude_nodes |= synctool.config.get_nodes_in_groups(
 								self.exclude_groups)
 
-		# remove explicitly included nodes from exclude_nodes
-		self.exclude_nodes -= explicit_includes
 		# remove excluded nodes from nodelist
 		self.nodelist -= self.exclude_nodes
 
@@ -95,7 +87,6 @@ class NodeSet:
 		addrs = []
 
 		ignored_nodes = self.nodelist & synctool.param.IGNORE_GROUPS
-		ignored_nodes -= explicit_includes
 
 		if synctool.lib.VERBOSE:
 			for node in ignored_nodes:
@@ -108,7 +99,7 @@ class NodeSet:
 			my_groups = set(synctool.config.get_groups(node))
 			my_groups &= synctool.param.IGNORE_GROUPS
 			if len(my_groups) > 0:
-				verbose('node %s is ignored' % node)
+				verbose('node %s is ignored due to an ignored group' % node)
 				ignored_nodes.add(node)
 				continue
 
