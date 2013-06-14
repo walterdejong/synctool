@@ -85,12 +85,6 @@ def read_config():
 	# the NodeSet will print warnings about ignored nodes
 	errors += make_default_nodeset()
 
-	# remove ignored groups from node definitions
-	# FIXME this is NOT ok for synctool-config !
-	# FIXME because it can not print any ignored groups
-	# FIXME and nodeset chokes on it
-#	remove_ignored_groups()
-
 	if errors > 0:
 		sys.exit(-1)
 
@@ -196,16 +190,6 @@ def init_mynodename():
 
 	synctool.param.NODENAME = nodename
 	synctool.param.MY_GROUPS = get_my_groups()
-
-
-def remove_ignored_groups():
-	'''remove ignored groups from all node definitions'''
-
-	for host in synctool.param.NODES.keys():
-		groups = synctool.param.NODES[host]
-		for ignore in synctool.param.IGNORE_GROUPS:
-			if ignore in groups:
-				groups.remove(ignore)
 
 
 def insert_group(node, group):

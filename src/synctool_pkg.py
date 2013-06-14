@@ -378,6 +378,12 @@ def main():
 
 	synctool.lib.QUIET = not synctool.lib.VERBOSE
 
+	if synctool.param.NODENAME in synctool.param.IGNORE_GROUPS:
+		# this is only a warning ...
+		# you can still run synctool-pkg on the client by hand
+		stderr('%s: warning: node %s is disabled in the config file' %
+			(synctool.param.CONF_FILE, synctool.param.NODENAME))
+
 	pkg = package_manager()
 
 	if ACTION == ACTION_LIST:

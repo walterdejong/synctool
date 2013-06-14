@@ -616,9 +616,10 @@ def main():
 		sys.exit(1)
 
 	if synctool.param.NODENAME in synctool.param.IGNORE_GROUPS:
-		stderr('%s: node %s is disabled in the config file' %
-			(synctool.param.CONF_FILE, synctool.param.NODENAME))
-		sys.exit(1)
+		# this is only a warning ...
+		# you can still run synctool-pkg on the client by hand
+		stderr('warning: node %s is disabled in %s' %
+			(synctool.param.NODENAME, synctool.param.CONF_FILE))
 
 	if synctool.lib.UNIX_CMD:
 		t = time.localtime(time.time())
