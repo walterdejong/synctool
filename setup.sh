@@ -104,7 +104,7 @@ options:
   --masterdir=DIR   Make the masterdir structure under DIR
   --build-docs      Also install documentation
                     This depends on m4 and bash
-  --uninstall		Remove synctool from system
+  --uninstall       Remove synctool from system
 
 The default prefix is $PREFIX
 The default masterdir is $MASTERDIR
@@ -133,28 +133,6 @@ EOF
 	esac
 done
 
-
-if test "x$UNINSTALL" = "xyes"
-then
-	# uninstall
-
-	# TODO implement uninstall
-
-
-	exit
-fi
-
-
-# can I find the sources?
-
-if ! test -f src/synctool/overlay.py
-then
-	echo "setup.sh: error: unable to find my sources"
-	echo "setup.sh: are you in the top synctool source directory?"
-	exit 2
-fi
-
-
 makedir() {
 	if test "x$DRY_RUN" = "xno"
 	then
@@ -163,33 +141,41 @@ makedir() {
 		if test ! -d "$2"
 		then
 			echo "setup.sh: error: failed to create directory: $2"
-			exit 3
+			exit 2
 		fi
 	fi
 }
 
+remove_links() {
+	for link in $SYMLINKS synctool-master
+	do
+		rm -f "$PREFIX/bin/$link"
+	done
+}
+
 makelinks() {
+	remove_links
+
 	( cd "$PREFIX/bin" ;
-	rm -f synctool ; ln -s synctool_master.py synctool ;
-	rm -f synctool-master ;
-	rm -f synctool-pkg ; ln -s synctool_master_pkg.py synctool-pkg ;
-	rm -f dsh-pkg ; ln -s synctool_master_pkg.py dsh-pkg ;
-	rm -f synctool-ssh ; ln -s synctool_ssh.py synctool-ssh ;
-	rm -f dsh ; ln -s synctool_ssh.py dsh ;
-	rm -f synctool-scp ; ln -s synctool_scp.py synctool-scp ;
-	rm -f dcp ; ln -s synctool_scp.py dcp ;
-	rm -f synctool-ping ; ln -s synctool_ping.py synctool-ping ;
-	rm -f dsh-ping ; ln -s synctool_ping.py dsh-ping ;
-	rm -f synctool-aggr ; ln -s synctool_aggr.py synctool-aggr ;
-	rm -f dsh-aggr ; ln -s synctool_aggr.py dsh-aggr ;
-	rm -f synctool-config ; ln -s synctool_config.py synctool-config )
+	ln -s synctool_master.py synctool ;
+	ln -s synctool_master_pkg.py synctool-pkg ;
+	ln -s synctool_master_pkg.py dsh-pkg ;
+	ln -s synctool_ssh.py synctool-ssh ;
+	ln -s synctool_ssh.py dsh ;
+	ln -s synctool_scp.py synctool-scp ;
+	ln -s synctool_scp.py dcp ;
+	ln -s synctool_ping.py synctool-ping ;
+	ln -s synctool_ping.py dsh-ping ;
+	ln -s synctool_aggr.py synctool-aggr ;
+	ln -s synctool_aggr.py dsh-aggr ;
+	ln -s synctool_config.py synctool-config )
 
 	for link in $SYMLINKS
 	do
 		if test ! -e "$PREFIX/bin/$link"
 		then
 			echo "setup.sh: error: failed to create symlink $PREFIX/bin/$link"
-			exit 4
+			exit 3
 		fi
 	done
 }
@@ -217,7 +203,7 @@ install_clientprogs() {
 
 install_libs() {
 	echo "installing $PREFIX/lib"
-	
+
 	if test "x$DRY_RUN" = "xno"
 	then
 		makedir 755 "$PREFIX/lib/synctool/pkg"
@@ -230,7 +216,7 @@ install_docs() {
 	if test "x$BUILD_DOCS" = "xyes"
 	then
 		echo "installing $PREFIX/doc"
-		
+
 		if test "x$DRY_RUN" = "xno"
 		then
 			makedir 755 "$PREFIX/doc"
@@ -240,41 +226,164 @@ install_docs() {
 	fi
 }
 
-if test "x$DRY_RUN" = "xyes"
+do_install() {
+	# can I find the sources?
+
+	if ! test -f src/synctool/overlay.py
+	then
+		echo "setup.sh: error: unable to find my sources"
+		echo "setup.sh: are you in the top synctool source directory?"
+		exit 4
+	fi
+
+	if test "x$DRY_RUN" = "xyes"
+	then
+		echo "installing synctool (dry-run)"
+	else
+		echo "installing synctool"
+	fi
+
+	install_progs
+	install_clientprogs
+	install_libs
+	install_docs
+
+	echo "making $MASTERDIR"
+	makedir 700 "$MASTERDIR"
+	echo "making $MASTERDIR/overlay"
+	makedir 755 "$MASTERDIR/overlay"
+	echo "making $MASTERDIR/delete"
+	makedir 750 "$MASTERDIR/delete"
+
+	echo "copying -> /etc/synctool.conf.example"
+	if test "x$DRY_RUN" = "xno"
+	then
+		install -m 644 synctool.conf.example /etc
+	fi
+
+	if test "x$DRY_RUN" = "xno"
+	then
+		echo
+		echo "Please add $PREFIX to your PATH"
+		echo "Next, you should setup /etc/synctool.conf and"
+		echo "run synctool-deploy to install client nodes"
+		echo
+	fi
+}
+
+remove_progs() {
+	echo "removing synctool from $PREFIX/bin"
+	if test "x$DRY_RUN" = "xno"
+	then
+		remove_links
+
+		for prog in $PROGS
+		do
+			rm -f "$PREFIX/bin/$prog"
+		done
+	fi
+}
+
+remove_client_progs() {
+	echo "removing synctool from $PREFIX/sbin"
+	if test "x$DRY_RUN" = "xno"
+	then
+		for prog in $CLIENT_PROGS
+		do
+			rm -f "$PREFIX/sbin/$prog"
+		done
+	fi
+}
+
+remove_libs() {
+	echo "removing synctool from $PREFIX/lib"
+	if test "x$DRY_RUN" = "xno"
+	then
+		for lib in $PKG_LIBS
+		do
+			rm -f "$PREFIX/lib/synctool/pkg/$lib"
+		done
+		rmdir "$PREFIX/lib/synctool/pkg"
+
+		for lib in $LIBS
+		do
+			rm -f "$PREFIX/lib/synctool/$lib"
+		done
+		rmdir "$PREFIX/lib/synctool/lib"
+		rmdir "$PREFIX/lib/synctool"
+	fi
+}
+
+remove_docs() {
+	if test -d "$PREFIX/doc"
+	then
+		echo "removing synctool from $PREFIX/doc"
+		if test "x$DRY_RUN" = "xno"
+		then
+			for doc in $DOCS
+			do
+				rm -f "$PREFIX/doc/$doc"
+			done
+		fi
+	fi
+}
+
+remove_dirs() {
+	echo "cleaning up directories"
+	if test "x$DRY_RUN" = "xno"
+	then
+		# try removing directories
+		# it may well be "/usr" and fail (directory not empty)
+		# but if it is "/opt/synctool" then it has to be removed
+
+		# redirect to /dev/null to prevent user from freaking out
+		# when shown "rmdir: /usr: Directory not empty"
+
+		rmdir "$PREFIX/sbin" 2>/dev/null
+		rmdir "$PREFIX/bin" 2>/dev/null
+		rmdir "$PREFIX/lib" 2>/dev/null
+		rmdir "$PREFIX/doc" 2>/dev/null
+		rmdir "$PREFIX" 2>/dev/null
+
+		rmdir /tmp/synctool 2>/dev/null
+	fi
+}
+
+do_uninstall() {
+	if test ! -d "$PREFIX"
+	then
+		echo "setup.sh: error: so such directory: $PREFIX"
+		exit 5
+	fi
+
+	remove_progs
+	remove_client_progs
+	remove_libs
+	remove_docs
+	remove_dirs
+
+	if test -f /etc/synctool.conf
+	then
+		echo "leaving behind /etc/synctool.conf"
+	fi
+
+	if test -d "$MASTERDIR"
+	then
+		echo "leaving behind $MASTERDIR"
+	fi
+}
+
+if test "x$UNINSTALL" = "xyes"
 then
-	echo "installing synctool (dry-run)"
+	do_uninstall
 else
-	echo "installing synctool"
-fi
-
-install_progs
-install_clientprogs
-install_libs
-install_docs
-
-echo "making $MASTERDIR"
-makedir 700 "$MASTERDIR"
-echo "making $MASTERDIR/overlay"
-makedir 755 "$MASTERDIR/overlay"
-echo "making $MASTERDIR/delete"
-makedir 750 "$MASTERDIR/delete"
-
-echo "copying -> /etc/synctool.conf.example"
-if test "x$DRY_RUN" = "xno"
-then
-	install -m 644 synctool.conf.example /etc
+	do_install
 fi
 
 if test "x$DRY_RUN" = "xyes"
 then
 	echo
 	echo "This was a DRY RUN, actions not performed"
-	echo
-else
-	echo
-	echo "Please add $PREFIX to your PATH"
-	echo "Next, you should setup /etc/synctool.conf and"
-	echo "run synctool-deploy to install client nodes"
 	echo
 fi
 
