@@ -32,15 +32,14 @@ ACTION_LIST_NODES = 1
 ACTION_LIST_GROUPS = 2
 ACTION_NODES = 3
 ACTION_GROUPS = 4
-ACTION_MASTERDIR = 5
-ACTION_CMDS = 6
-ACTION_NUMPROC = 7
-ACTION_VERSION = 8
-ACTION_PREFIX = 9
-ACTION_LOGFILE = 10
-ACTION_NODENAME = 11
-ACTION_LIST_DIRS = 12
-ACTION_PKGMGR = 13
+ACTION_CMDS = 5
+ACTION_NUMPROC = 6
+ACTION_VERSION = 7
+ACTION_PREFIX = 8
+ACTION_LOGFILE = 9
+ACTION_NODENAME = 10
+ACTION_LIST_DIRS = 11
+ACTION_PKGMGR = 12
 
 # optional: do not list hosts/groups that are ignored
 OPT_FILTER_IGNORED = False
@@ -215,7 +214,7 @@ def list_commands(cmds):
 def list_dirs():
 	'''display directory settings'''
 
-	print 'masterdir', synctool.param.MASTERDIR
+	print 'rootdir', synctool.param.ROOTDIR
 	print 'tempdir', synctool.param.TEMP_DIR
 
 
@@ -249,7 +248,6 @@ def usage():
   -C, --command=command    Display setting for command
   -P, --package-manager    Display configured package manager
   -p, --numproc            Display numproc setting
-  -m, --masterdir          Display the masterdir setting
   -d, --list-dirs          Display directory settings
       --prefix             Display installation prefix
       --logfile            Display configured logfile
@@ -273,10 +271,10 @@ def get_options():
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:lLn:g:iHfC:Ppmdv',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:lLn:g:iHfC:Ppdv',
 			['help', 'conf=', 'list-nodes', 'list-groups', 'node=', 'group=',
 			'ipaddress', 'hostname', 'filter-ignored',
-			'command', 'package-manager', 'numproc', 'masterdir', 'list-dirs',
+			'command', 'package-manager', 'numproc', 'list-dirs',
 			'prefix', 'logfile', 'nodename', 'version'])
 
 	except getopt.error, (reason):
@@ -355,10 +353,6 @@ def get_options():
 			set_action(ACTION_NUMPROC, '--numproc')
 			continue
 
-		if opt in ('-m', '--masterdir'):
-			set_action(ACTION_MASTERDIR, '--masterdir')
-			continue
-
 		if opt in ('-d', '--list-dirs'):
 			set_action(ACTION_LIST_DIRS, '--list-dirs')
 			continue
@@ -426,9 +420,6 @@ def main():
 			sys.exit(1)
 
 		list_nodegroups(ARG_GROUPS)
-
-	elif ACTION == ACTION_MASTERDIR:
-		print synctool.param.MASTERDIR
 
 	elif ACTION == ACTION_CMDS:
 		list_commands(ARG_CMDS)

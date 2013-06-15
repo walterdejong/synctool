@@ -74,7 +74,7 @@ pkg_cmd $SYNCTOOL/bin/synctool-client-pkg
 # max amount of parallel processes that synctool uses on the master node
 #num_proc 16
 
-# display full paths or just '$masterdir/overlay/...'
+# display full paths or just '$overlay/...'
 #full_path no
 
 # show terse output with shortened paths?

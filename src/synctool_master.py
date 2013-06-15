@@ -56,9 +56,9 @@ def master_synctool(rank, nodes):
 	nodename = NODESET.get_nodename_from_address(node)
 
 	if not OPT_SKIP_RSYNC:
-		verbose('running rsync $masterdir/ to node %s' % nodename)
+		verbose('running rsync $SYNCTOOL/ to node %s' % nodename)
 		unix_out('%s %s %s:%s/' % (synctool.param.RSYNC_CMD,
-			synctool.param.MASTERDIR, node, synctool.param.MASTERDIR))
+			synctool.param.ROOTDIR, node, synctool.param.ROOTDIR))
 
 	verbose('running synctool on node %s' % nodename)
 	unix_out('%s %s %s --nodename=%s %s' % (synctool.param.SSH_CMD, node,
@@ -66,27 +66,27 @@ def master_synctool(rank, nodes):
 
 
 def worker_synctool(rank, nodes):
-	'''runs rsync of $masterdir to the nodes and ssh+synctool in parallel'''
+	'''run rsync of ROOTDIR to the nodes and ssh+synctool, in parallel'''
 
 	node = nodes[rank]
 	nodename = NODESET.get_nodename_from_address(node)
 
 	if not OPT_SKIP_RSYNC:
-		# rsync masterdir to the node
+		# rsync ROOTDIR to the node
 
 		tmp_filename = rsync_include_filter(nodename)
 
 		cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
-		cmd_arr.append("--filter=. %s" % tmp_filename)
-		cmd_arr.append('%s/' % synctool.param.MASTERDIR)
-		cmd_arr.append('%s:%s/' % (node, synctool.param.MASTERDIR))
+		cmd_arr.append('--filter=. %s' % tmp_filename)
+		cmd_arr.append('%s/' % synctool.param.ROOTDIR)
+		cmd_arr.append('%s:%s/' % (node, synctool.param.ROOTDIR))
 
 		# double check the rsync destination
 		# our filters are like playing with fire
-		if not synctool.param.MASTERDIR or (
-			synctool.param.MASTERDIR == os.path.sep):
-			stderr('cowardly refusing to rsync with masterdir == %s' %
-					synctool.param.MASTERDIR)
+		if not synctool.param.ROOTDIR or (
+			synctool.param.ROOTDIR == os.path.sep):
+			stderr('cowardly refusing to rsync with rootdir == %s' %
+					synctool.param.ROOTDIR)
 			sys.exit(-1)
 
 		synctool.lib.run_with_nodename(cmd_arr, nodename)
@@ -132,14 +132,14 @@ def rsync_include_filter(nodename):
 		stderr('failed to open temp file: %s' % reason)
 		sys.exit(-1)
 	else:
-		# include masterdir
-		# but exclude the top overlay/ and delete/ dir
+		# include $SYNCTOOL/var/ but exclude
+		# the top overlay/ and delete/ dir
 		with f:
 			f.write('''# synctool rsync filter
-+ /overlay/
-+ /overlay/all/
-+ /delete/
-+ /delete/all/
++ /var/overlay/
++ /var/overlay/all/
++ /var/delete/
++ /var/delete/all/
 ''')
 			f.write('+ /%s\n' % synctool.param.CONF_FILE)
 
@@ -151,18 +151,17 @@ def rsync_include_filter(nodename):
 			for g in synctool.param.MY_GROUPS:
 				d = os.path.join(synctool.param.OVERLAY_DIR, g)
 				if os.path.isdir(d):
-					f.write('+ /overlay/%s/\n' % g)
+					f.write('+ /var/overlay/%s/\n' % g)
 
 				d = os.path.join(synctool.param.DELETE_DIR, g)
 				if os.path.isdir(d):
-					f.write('+ delete/%s/\n' % g)
+					f.write('+ /var/delete/%s/\n' % g)
 
-			# FIXME when we have synctool-deploy, /sbin/ has to go out
 			# Note: sbin/*.pyc is excluded to keep major differences in
 			# Python versions (on master vs. client node) from clashing
 			f.write('''- /sbin/*.pyc
-- /overlay/*
-- /delete/*
+- /var/overlay/*
+- /var/delete/*
 ''')
 
 	# Note: remind to delete the temp file later
@@ -273,99 +272,6 @@ def upload(interface, upload_filename, upload_suffix=None):
 
 		if os.path.isfile(repos_filename):
 			stdout('uploaded %s' % synctool.lib.prettypath(repos_filename))
-
-
-def copy_config():
-	'''take the config file and copy it to masterdir, if needed
-	Return False on error, True on OK'''
-
-	src = os.path.realpath(synctool.param.CONF_FILE)
-	dst = os.path.realpath(os.path.join(synctool.param.MASTERDIR,
-										'client.conf'))
-	if src == dst:
-		# oh no, someone symlinked these together
-		if os.path.islink(synctool.param.CONF_FILE):
-			# leave it as is
-			verbose('oh my, %s is symlinked to %s' %
-					(synctool.param.CONF_FILE, dst))
-			return True
-
-		if os.path.islink(dst):
-			# bluntly remove the symlink
-			verbose('bluntly deleting symlink %s' % dst)
-			unix_out('rm -f %s' % dst)
-			try:
-				os.unlink(dst)
-			except OSError, reason:
-				stderr('failed to delete symlink %s : %s' % (dst, reason))
-				stderr('error: %s should never be a symbolic link' % dst)
-				return False
-
-	try:
-		src_stat = os.stat(src)
-	except OSError, reason:
-		stderr('error: stat(%s) failed: %s' % (src, reason))
-		return False
-
-	try:
-		dst_stat = os.lstat(dst)
-	except OSError, err:
-		# No such file or directory is a valid reason
-		# else, it's a hard error
-		if err.errno != errno.ENOENT:
-			stderr('error: stat(%s) failed: %s' % (path, err.strerror))
-			return False
-	else:
-		# no exception on dst
-
-		# do not accept dst to be a symblic link!
-		if stat.S_ISLNK(dst_stat.st_mode):
-			stderr('error: %s should never be a symbolic link' % dst)
-			return False
-
-		# check the mtime
-		if src_stat.st_mtime <= dst_stat.st_mtime:
-			# no copy of file needed
-			verbose('config not changed, no config_copy() needed')
-			return True
-
-	# copy the file
-	# rather than a plain copy, add a note with a warning
-	# do not edit this file
-
-	verbose('copying %s to %s' % (src, dst))
-	unix_out('cp %s %s' % (src, dst))
-
-	try:
-		f = open(src)
-	except IOError, reason:
-		stderr('failed to open %s : %s' % (src, reason))
-		return False
-	else:
-		with f:
-			lines = f.readlines()
-
-	try:
-		f = open(dst, 'w+t')
-	except IOError, reason:
-		stderr('failed to create %s : %s' % (src, reason))
-		return False
-	else:
-		with f:
-			f.write('''###
-### DO NOT EDIT this file
-###
-### This file is a copy of %s
-### and is intended as a local copy for the synctool target nodes
-### If you wish to modify the config, go ahead and edit the original
-### and rerun synctool as usual
-###
-#####################################################################
-
-''' % src)
-			f.writelines(lines)
-
-	return True
 
 
 def make_tempdir():
@@ -767,10 +673,6 @@ def main():
 				run_local_synctool()
 				nodes.remove(node)
 				break
-
-		# copy the synctool.conf to $masterdir/synctool-client.conf
-		if not copy_config():
-			sys.exit(-1)
 
 		run_remote_synctool(nodes)
 

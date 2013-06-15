@@ -24,9 +24,12 @@ BOOLEAN_VALUE_FALSE = ('0', 'off', 'no', 'false')
 # config variables
 #
 ROOTDIR = None
-MASTERDIR = None
+VAR_DIR = None
+VAR_LEN = 0
 OVERLAY_DIR = None
+OVERLAY_LEN = 0
 DELETE_DIR = None
+DELETE_LEN = 0
 TEMP_DIR = '/tmp/synctool'
 HOSTNAME = None
 NODENAME = None
@@ -109,11 +112,6 @@ MY_GROUPS = None
 # set of all known groups
 ALL_GROUPS = None
 
-# string length of the 'MASTERDIR' variable
-# although silly to keep this in a var,
-# it makes it easier to print messages
-MASTER_LEN = 0
-
 # colorize output
 COLORIZE = True
 COLORIZE_FULL_LINE = False
@@ -151,6 +149,7 @@ def init():
 	'''detect my rootdir and set default symlink mode'''
 
 	global ROOTDIR, CONF_FILE
+	global VAR_DIR, VAR_LEN, OVERLAY_DIR, OVERLAY_LEN, DELETE_DIR, DELETE_LEN
 
 	base = os.path.abspath(os.path.dirname(sys.argv[0]))
 	if not base:
@@ -160,20 +159,17 @@ def init():
 
 	CONF_FILE = os.path.join(ROOTDIR, 'etc/synctool.conf')
 
+	VAR_DIR = os.path.join(ROOTDIR, 'var')
+	VAR_LEN = len(VAR_DIR) + 1
+	OVERLAY_DIR = os.path.join(VAR_DIR, 'overlay')
+	OVERLAY_LEN = len(OVERLAY_DIR) + 1
+	DELETE_DIR = os.path.join(VAR_DIR, 'delete')
+	DELETE_LEN = len(DELETE_DIR) + 1
+
 	# detect symlink mode
 	if sys.platform[:5] == 'linux':
 		SYMLINK_MODE = 0777
 	else:
 		SYMLINK_MODE = 0755
-
-
-def reset_masterdir(masterdir):
-	global MASTERDIR, MASTER_LEN, OVERLAY_DIR, DELETE_DIR
-
-	MASTERDIR = os.path.join(ROOTDIR, 'var')
-	MASTER_LEN = len(MASTERDIR) + 1
-	OVERLAY_DIR = os.path.join(MASTERDIR, 'overlay')
-	DELETE_DIR = os.path.join(MASTERDIR, 'delete')
-
 
 # EOB

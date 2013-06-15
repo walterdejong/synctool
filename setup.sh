@@ -11,14 +11,15 @@
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
+# FIXME double check this script, because I changed the dir structure again
+
+# FIXME PREFIX and '--prefix=' is wrong; use 'rootdir='
 PREFIX=/opt/synctool
 MASTERDIR=/var/lib/synctool
 
 DRY_RUN="yes"
 UNINSTALL="no"
 BUILD_DOCS="no"
-
-# FIXME double check this script, because I changed the dir structure again
 
 PROGS="synctool_master.py synctool_master_pkg.py synctool_launch.py
 synctool_ssh.py synctool_scp.sh synctool_ping.py synctool_config.py
