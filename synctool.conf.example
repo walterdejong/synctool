@@ -2,9 +2,6 @@
 #	synctool.conf
 #
 
-masterdir   /var/lib/synctool
-
-#prefix      /opt/synctool
 #tempdir	 /tmp/synctool
 
 # use mode 0777 on Linux
@@ -49,8 +46,8 @@ scp_cmd scp -o ConnectTimeout=10 -p
 #
 rsync_cmd rsync -ar --numeric-ids --delete --delete-excluded -e 'ssh -o ConnectTimeout=10 -x -q' -q
 
-synctool_cmd $prefix/sbin/synctool_client.py -c $masterdir/client.conf
-pkg_cmd $prefix/sbin/synctool_pkg.py -c $masterdir/client.conf
+synctool_cmd $SYNCTOOL/bin/synctool-client
+pkg_cmd $SYNCTOOL/bin/synctool-client-pkg
 
 # Force the package manager for synctool-pkg / dsh-pkg to use
 # If you don't configure one, synctool-pkg will detect one

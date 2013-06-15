@@ -507,13 +507,7 @@ def prepare_path(path):
 
 	path = strip_multiple_slashes(path)
 	path = strip_trailing_slash(path)
-
-	if synctool.param.MASTERDIR != None:
-		path = path.replace('$masterdir/', synctool.param.MASTERDIR + os.path.sep)
-
-	if synctool.param.PREFIX != None:
-		path = path.replace('$prefix/', synctool.param.PREFIX + os.path.sep)
-
+	path = path.replace('$SYNCTOOL/', synctool.param.ROOTDIR + os.path.sep)
 	return path
 
 

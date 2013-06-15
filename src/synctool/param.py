@@ -14,8 +14,7 @@ import sys
 VERSION = '6.0-beta'
 
 # location of default config file on the master node
-# synctool-client generally runs with -c $masterdir/synctool-client.conf
-DEFAULT_CONF = '/etc/synctool.conf'
+DEFAULT_CONF = '/opt/synctool/etc/synctool.conf'
 CONF_FILE = DEFAULT_CONF
 
 BOOLEAN_VALUE_TRUE = ('1', 'on', 'yes', 'true')
@@ -24,8 +23,7 @@ BOOLEAN_VALUE_FALSE = ('0', 'off', 'no', 'false')
 #
 # config variables
 #
-# The prefix may be set in the config file
-PREFIX = '/opt/synctool'
+ROOTDIR = None
 MASTERDIR = None
 OVERLAY_DIR = None
 DELETE_DIR = None
@@ -150,13 +148,17 @@ KNOWN_PACKAGE_MANAGERS = (
 
 
 def init():
-	'''detect my prefix and set default symlink mode'''
+	'''detect my rootdir and set default symlink mode'''
+
+	global ROOTDIR, CONF_FILE
 
 	base = os.path.abspath(os.path.dirname(sys.argv[0]))
 	if not base:
 		raise RuntimeError, 'unable to determine base dir'
 
-	(prefix, bindir) = os.path.split(base)
+	(ROOTDIR, bindir) = os.path.split(base)
+
+	CONF_FILE = os.path.join(ROOTDIR, 'etc/synctool.conf')
 
 	# detect symlink mode
 	if sys.platform[:5] == 'linux':
@@ -168,7 +170,7 @@ def init():
 def reset_masterdir(masterdir):
 	global MASTERDIR, MASTER_LEN, OVERLAY_DIR, DELETE_DIR
 
-	MASTERDIR = masterdir
+	MASTERDIR = os.path.join(ROOTDIR, 'var')
 	MASTER_LEN = len(MASTERDIR) + 1
 	OVERLAY_DIR = os.path.join(MASTERDIR, 'overlay')
 	DELETE_DIR = os.path.join(MASTERDIR, 'delete')
