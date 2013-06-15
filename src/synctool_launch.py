@@ -49,13 +49,11 @@ if __name__ == '__main__':
 		stderr("launch: error: unknown program '%s'" % prognam)
 		sys.exit(1)
 
-	launch = os.path.join(base, LAUNCH[prognam])
-
+	(prefix, bindir) = os.path.split(base)
+	launch = os.path.join(prefix, 'sbin', LAUNCH[prognam])
 	if not os.path.isfile(launch):
 		stderr('launch: error: missing program %s' % launch)
 		sys.exit(-1)
-
-	(prefix, bindir) = os.path.split(base)
 
 	libdir = os.path.join(prefix, 'lib')
 	if not os.path.isdir(libdir):
