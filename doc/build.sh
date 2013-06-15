@@ -1,11 +1,10 @@
-#! /bin/bash
+#! /bin/sh
 
-FILES="toc.m4 chapter1.m4 chapter2.m4 chapter3.m4 chapter4.m4 chapter5.m4 thank_you.m4 single.m4"
+FILES="toc chapter1 chapter2 chapter3 chapter4 chapter5 thank_you single"
 
 for file in $FILES
 do
-	html="${file%%.m4}.html"
-	echo "$file -> $html"
-	m4 $file >$html
+	echo "${file}.m4 -> ${file}.html"
+	m4 ${file}.m4 >${file}.html
 done
 

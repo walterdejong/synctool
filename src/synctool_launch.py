@@ -25,6 +25,7 @@ LAUNCH = {
 	'synctool-aggr' : 'synctool_aggr.py',
 	'synctool-config' : 'synctool_config.py',
 	'synctool-client' : 'synctool_client.py'
+	'synctool-client-pkg' : 'synctool_pkg.py'
 }
 
 
@@ -39,9 +40,6 @@ if __name__ == '__main__':
 		stderr('launch: fatal: unable to determine my base dir')
 		sys.exit(-1)
 
-	(prefix, bindir) = os.path.split(base)
-	os.environ['PYTHONPATH'] = '%s/lib' % prefix
-
 	prognam = os.path.basename(sys.argv[0])
 
 	if prognam == 'synctool_launch.py':
@@ -52,11 +50,18 @@ if __name__ == '__main__':
 		stderr("launch: error: unknown program '%s'" % prognam)
 		sys.exit(1)
 
-	launch = os.path.join(base, LAUNCH[prognam])
-
+	(prefix, bindir) = os.path.split(base)
+	launch = os.path.join(prefix, 'sbin', LAUNCH[prognam])
 	if not os.path.isfile(launch):
 		stderr('launch: error: missing program %s' % launch)
 		sys.exit(-1)
+
+	libdir = os.path.join(prefix, 'lib')
+	if not os.path.isdir(libdir):
+		stderr('launch: error: no such directory: %s' % libdir)
+		sys.exit(-1)
+
+	os.environ['PYTHONPATH'] = '%s/lib' % prefix
 
 	argv = sys.argv[1:]
 	argv.insert(0, launch)

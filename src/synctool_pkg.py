@@ -366,12 +366,6 @@ def get_options():
 
 
 def main():
-	# set default config file for clients
-	# We don't actually know for sure what the masterdir is
-	# but it is a sane guess
-	synctool.param.DEFAULT_CONF = '/var/lib/synctool/client.conf'
-	synctool.param.CONF_FILE = synctool.param.DEFAULT_CONF
-
 	synctool.param.init()
 
 	get_options()

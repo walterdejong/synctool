@@ -141,7 +141,7 @@ def unix_out(str):
 
 
 def prettypath(path):
-	'''print long paths as "$masterdir/path"'''
+	'''print long paths as "$overlay/path"'''
 
 	if synctool.param.FULL_PATH:
 		return path
@@ -149,9 +149,13 @@ def prettypath(path):
 	if synctool.param.TERSE:
 		return terse_path(path)
 
-	if path[:synctool.param.MASTER_LEN] == (synctool.param.MASTERDIR +
+	if path[:synctool.param.OVERLAY_LEN] == (synctool.param.OVERLAY_DIR +
 											os.path.sep):
-		return os.path.join('$masterdir', path[synctool.param.MASTER_LEN:])
+		return os.path.join('$overlay', path[synctool.param.OVERLAY_LEN:])
+
+	if path[:synctool.param.DELETE_LEN] == (synctool.param.DELETE_DIR +
+											os.path.sep):
+		return os.path.join('$delete', path[synctool.param.DELETE_LEN:])
 
 	return path
 
@@ -167,9 +171,9 @@ def terse_path(path, maxlen = 55):
 	# because this function doesn't know whether it is working with
 	# a source or a destination path and it treats them both in the same way
 
-	if path[:synctool.param.MASTER_LEN] == (synctool.param.MASTERDIR +
-											os.path.sep):
-		path = os.path.sep + os.path.sep + path[synctool.param.MASTER_LEN:]
+	if path[:synctool.param.VAR_LEN] == (synctool.param.VAR_DIR +
+										os.path.sep):
+		path = os.path.sep + os.path.sep + path[synctool.param.VAR_LEN:]
 
 	if len(path) > maxlen:
 		arr = string.split(path, os.path.sep)
@@ -468,16 +472,6 @@ def strip_trailing_slash(path):
 	return path
 
 
-def subst_masterdir(path):
-	master = '$masterdir' + os.path.sep
-	if path.find(master) >= 0:
-		if not synctool.param.MASTERDIR:
-			stderr('error: $masterdir referenced before it was set')
-			sys.exit(-1)
-
-	return path.replace(master, synctool.param.MASTERDIR + os.path.sep)
-
-
 def strip_path(path):
 	if not path:
 		return path
@@ -517,8 +511,7 @@ def prepare_path(path):
 
 	path = strip_multiple_slashes(path)
 	path = strip_trailing_slash(path)
-	path = subst_masterdir(path)
-
+	path = path.replace('$SYNCTOOL/', synctool.param.ROOTDIR + os.path.sep)
 	return path
 
 

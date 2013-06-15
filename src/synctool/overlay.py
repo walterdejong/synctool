@@ -424,7 +424,7 @@ def find_terse(treedef, terse_path):
 	idx = string.find(terse_path, '...')
 	if idx == -1:
 		if terse_path[:2] == '//':
-			terse_path = os.path.join(synctool.param.MASTERDIR,
+			terse_path = os.path.join(synctool.param.VAR_DIR,
 				terse_path[2:])
 
 		# this is not really a terse path, return a regular find()

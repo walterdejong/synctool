@@ -161,25 +161,6 @@ def _config_integer(param, value, configfile, lineno, radix = 10):
 	return (0, n)
 
 
-def _config_dir(name, arr, configfile, lineno):
-	if not check_definition(name, configfile, lineno):
-		return 1
-
-	d = string.join(arr[1:])
-	d = synctool.lib.prepare_path(d)
-
-	if not os.path.isdir(d):
-		stderr('%s:%d: no such directory for %s' % (configfile, lineno, name))
-		return None
-
-	if d == synctool.param.MASTERDIR:
-		stderr("%s:%d: %s can not be set to '$masterdir', sorry" %
-			(name, configfile, lineno))
-		return None
-
-	return d
-
-
 def _config_color_variant(param, value, configfile, lineno):
 	'''set a color by name'''
 
@@ -236,8 +217,8 @@ def config_include(arr, configfile, lineno):
 	return read_config_file(synctool.lib.prepare_path(arr[1]))
 
 
-# keyword: masterdir
-def config_masterdir(arr, configfile, lineno):
+# keyword: prefix
+def config_prefix(arr, configfile, lineno):
 	if not check_definition(arr[0], configfile, lineno):
 		return 1
 
@@ -245,17 +226,12 @@ def config_masterdir(arr, configfile, lineno):
 	d = synctool.lib.strip_multiple_slashes(d)
 	d = synctool.lib.strip_trailing_slash(d)
 
-	if d in ('', '/', os.path.sep, '$masterdir'):
-		stderr("%s:%d: masterdir can not be set to '%s', sorry" %
-			(configfile, lineno, synctool.param.MASTERDIR))
-		return 1
+	synctool.param.PREFIX = d
 
 	if not os.path.isdir(d):
-		stderr('%s:%d: no such directory for masterdir' % (configfile, lineno))
+		stderr('%s:%d: no such directory for prefix' % (configfile, lineno))
 		return 1
 
-	# this initializes MASTERDIR, MASTER_LEN, OVERLAY_DIR, DELETE_DIR
-	synctool.param.reset_masterdir(d)
 	return 0
 
 
@@ -266,11 +242,6 @@ def config_tempdir(arr, configfile, lineno):
 
 	d = string.join(arr[1:])
 	d = synctool.lib.prepare_path(d)
-
-	if d == synctool.param.MASTERDIR:
-		stderr("%s:%d: tempdir can not be set to '$masterdir', sorry" %
-			(name, configfile, lineno))
-		return 1
 
 	if not os.path.isabs(d):
 		stderr("%s:%d: tempdir must be an absolute path" %

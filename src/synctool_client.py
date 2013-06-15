@@ -597,12 +597,6 @@ def get_options():
 
 
 def main():
-	# set default config file for clients
-	# We don't actually know for sure what the masterdir is
-	# but it is a sane guess
-	synctool.param.DEFAULT_CONF = '/var/lib/synctool/client.conf'
-	synctool.param.CONF_FILE = synctool.param.DEFAULT_CONF
-
 	synctool.param.init()
 
 	action = get_options()
@@ -631,7 +625,7 @@ def main():
 		unix_out('#')
 		unix_out('# NODENAME=%s' % synctool.param.NODENAME)
 		unix_out('# HOSTNAME=%s' % synctool.param.HOSTNAME)
-		unix_out('# MASTERDIR=%s' % synctool.param.MASTERDIR)
+		unix_out('# ROOTDIR=%s' % synctool.param.ROOTDIR)
 		unix_out('# SYMLINK_MODE=0%o' % synctool.param.SYMLINK_MODE)
 		unix_out('#')
 
@@ -644,7 +638,7 @@ def main():
 		if not synctool.lib.QUIET:
 			verbose('my nodename: %s' % synctool.param.NODENAME)
 			verbose('my hostname: %s' % synctool.param.HOSTNAME)
-			verbose('masterdir: %s' % synctool.param.MASTERDIR)
+			verbose('rootdir: %s' % synctool.param.ROOTDIR)
 			verbose('symlink_mode: 0%o' % synctool.param.SYMLINK_MODE)
 
 			if synctool.param.LOGFILE != None and not synctool.lib.DRY_RUN:
@@ -663,8 +657,8 @@ def main():
 
 	synctool.lib.openlog()
 
-	os.putenv('SYNCTOOL_NODENAME', synctool.param.NODENAME)
-	os.putenv('SYNCTOOL_MASTERDIR', synctool.param.MASTERDIR)
+	os.environ['SYNCTOOL_NODENAME'] = synctool.param.NODENAME
+	os.environ['SYNCTOOL_ROOTDIR'] = synctool.param.ROOTDIR
 
 	if action == ACTION_DIFF:
 		for file in SINGLE_FILES:
