@@ -18,12 +18,13 @@ DRY_RUN="yes"
 UNINSTALL="no"
 BUILD_DOCS="no"
 
+# FIXME double check this script, because I changed the dir structure again
 
 PROGS="synctool_master.py synctool_master_pkg.py synctool_launch.py
 synctool_ssh.py synctool_scp.sh synctool_ping.py synctool_config.py
-synctool_aggr.py synctool_deploy.py"
+synctool_aggr.py synctool_client.py synctool_pkg.py"
 
-CLIENT_PROGS="synctool_client.py synctool_pkg.py"
+LAUNCHER="synctool_launch.py"
 
 LIBS="__init__.py aggr.py config.py configparser.py lib.py nodeset.py
 object.py overlay.py param.py pkgclass.py stat.py unbuffered.py update.py"
@@ -77,6 +78,7 @@ do
 			PREFIX="$optarg"
 			;;
 
+		# FIXME take masterdir out
 		-masterdir | --masterdir)
 			prev="MASTERDIR"
 			;;
@@ -156,22 +158,10 @@ remove_links() {
 makelinks() {
 	remove_links
 
-	( cd "$PREFIX/bin" ;
-	ln -s synctool_master.py synctool ;
-	ln -s synctool_master_pkg.py synctool-pkg ;
-	ln -s synctool_master_pkg.py dsh-pkg ;
-	ln -s synctool_ssh.py synctool-ssh ;
-	ln -s synctool_ssh.py dsh ;
-	ln -s synctool_scp.py synctool-scp ;
-	ln -s synctool_scp.py dcp ;
-	ln -s synctool_ping.py synctool-ping ;
-	ln -s synctool_ping.py dsh-ping ;
-	ln -s synctool_aggr.py synctool-aggr ;
-	ln -s synctool_aggr.py dsh-aggr ;
-	ln -s synctool_config.py synctool-config )
-
 	for link in $SYMLINKS
 	do
+		ln -s $LAUNCHER "$PREFIX/bin/$link"
+
 		if test ! -e "$PREFIX/bin/$link"
 		then
 			echo "setup.sh: error: failed to create symlink $PREFIX/bin/$link"
@@ -181,34 +171,28 @@ makelinks() {
 }
 
 install_progs() {
-	echo "installing $PREFIX/bin"
+	echo "installing programs"
 
 	if test "x$DRY_RUN" = "xno"
 	then
 		makedir 755 "$PREFIX/bin"
-		install -m 755 $PROGS "$PREFIX/bin"
+		install -m 755 $LAUNCHER "$PREFIX/bin"
+
+		makedir 755 "$MASTERDIR/sbin"
+		install -m 755 $PROGS "$MASTERDIR/sbin"
+
 		makelinks
 	fi
 }
 
-install_clientprogs() {
-	echo "installing $PREFIX/sbin"
-
-	if test "x$DRY_RUN" = "xno"
-	then
-		makedir 755 "$PREFIX/sbin"
-		install -m 755 $CLIENT_PROGS "$PREFIX/sbin"
-	fi
-}
-
 install_libs() {
-	echo "installing $PREFIX/lib"
+	echo "installing modules"
 
 	if test "x$DRY_RUN" = "xno"
 	then
-		makedir 755 "$PREFIX/lib/synctool/pkg"
-		install -m 644 $LIBS "$PREFIX/lib/synctool"
-		install -m 644 $PKG_LIBS "$PREFIX/lib/synctool/pkg"
+		makedir 755 "$MASTERDIR/sbin/synctool/pkg"
+		install -m 644 $LIBS "$MASTERDIR/sbin/synctool"
+		install -m 644 $PKG_LIBS "$MASTERDIR/sbin/synctool/pkg"
 	fi
 }
 
