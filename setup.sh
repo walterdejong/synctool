@@ -13,15 +13,14 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
 # FIXME double check this script, because I changed the dir structure again
 
-# FIXME PREFIX and '--prefix=' is wrong; use 'rootdir='
-PREFIX=/opt/synctool
+INSTALL_ROOT=/opt/synctool
 
 DRY_RUN="yes"
 UNINSTALL="no"
 BUILD_DOCS="no"
 
 PROGS="synctool_master.py synctool_master_pkg.py synctool_launch.py
-synctool_ssh.py synctool_scp.sh synctool_ping.py synctool_config.py
+synctool_ssh.py synctool_scp.py synctool_ping.py synctool_config.py
 synctool_aggr.py synctool_client.py synctool_pkg.py"
 
 LAUNCHER="synctool_launch.py"
@@ -29,7 +28,7 @@ LAUNCHER="synctool_launch.py"
 LIBS="__init__.py aggr.py config.py configparser.py lib.py nodeset.py
 object.py overlay.py param.py pkgclass.py stat.py unbuffered.py update.py"
 
-LIBS_PKG="__init__.py aptget.py brew.py bsdpkg.py pacman.py yum.py zypper.py"
+PKG_LIBS="__init__.py aptget.py brew.py bsdpkg.py pacman.py yum.py zypper.py"
 
 DOCS="chapter1.html chapter2.html chapter3.html chapter4.html chapter5.html
 thank_you.html footer.html header.html toc.html single.html synctool_doc.css
@@ -70,12 +69,12 @@ do
 	esac
 
 	case "$option" in
-		-prefix | --prefix )
-			prev="PREFIX"
+		-installdir | --installdir )
+			prev="INSTALL_ROOT"
 			;;
 
-		-prefix=* | --prefix=*)
-			PREFIX="$optarg"
+		-installdir=* | --installdir=*)
+			INSTALL_ROOT="$optarg"
 			;;
 
 		--build-docs)
@@ -90,15 +89,16 @@ do
 			cat << EOF
 usage: setup.sh [options]
 options:
-  -h, --help        Display this information
-  -f, --fix         Do the installation
+  -h, --help         Display this information
+  -f, --fix          Do the installation
 
-  --prefix=PREFIX   Install synctool under PREFIX directory
-  --build-docs      Also install documentation
-                    This depends on m4 and bash
-  --uninstall       Remove synctool from system
+  --installdir=DIR   Install synctool under this directory
+  --build-docs       Also install documentation (requires: m4)
+  --uninstall        Remove synctool from system
 
-The default prefix is $PREFIX
+The default installdir is $INSTALL_ROOT
+Whatever you do, do NOT put synctool directly under /usr or /usr/local
+Use a _dedicated_ installdir like /opt/synctool or /home/synctool
 
 By default setup.sh does a DRY RUN, use -f or --fix to
 really setup synctool on the master node
@@ -140,7 +140,7 @@ makedir() {
 remove_links() {
 	for link in $SYMLINKS synctool-master
 	do
-		rm -f "$PREFIX/bin/$link"
+		rm -f "$INSTALL_ROOT/bin/$link"
 	done
 }
 
@@ -149,11 +149,11 @@ makelinks() {
 
 	for link in $SYMLINKS
 	do
-		ln -s $LAUNCHER "$PREFIX/bin/$link"
+		ln -s $LAUNCHER "$INSTALL_ROOT/bin/$link"
 
-		if test ! -e "$PREFIX/bin/$link"
+		if test ! -e "$INSTALL_ROOT/bin/$link"
 		then
-			echo "setup.sh: error: failed to create symlink $PREFIX/bin/$link"
+			echo "setup.sh: error: failed to create symlink $INSTALL_ROOT/bin/$link"
 			exit 3
 		fi
 	done
@@ -164,11 +164,11 @@ install_progs() {
 
 	if test "x$DRY_RUN" = "xno"
 	then
-		makedir 755 "$PREFIX/bin"
-		install -m 755 $LAUNCHER "$PREFIX/bin"
+		makedir 755 "$INSTALL_ROOT/bin"
+		install -m 755 src/$LAUNCHER "$INSTALL_ROOT/bin"
 
-		makedir 755 "$PREFIX/sbin"
-		install -m 755 $LAUNCHER "$PREFIX/sbin"
+		makedir 755 "$INSTALL_ROOT/sbin"
+		( cd src && install -m 755 $PROGS "$INSTALL_ROOT/sbin" )
 
 		makelinks
 	fi
@@ -179,34 +179,49 @@ install_libs() {
 
 	if test "x$DRY_RUN" = "xno"
 	then
-		makedir 755 "$PREFIX/lib/synctool/pkg"
-		install -m 644 $LIBS "$PREFIX/lib/synctool"
-		install -m 644 $PKG_LIBS "$PREFIX/lib/synctool/pkg"
+		makedir 755 "$INSTALL_ROOT/lib/synctool/pkg"
+		( cd src/synctool && install -m 644 $LIBS "$INSTALL_ROOT/lib/synctool" )
+		( cd src/synctool/pkg && install -m 644 $PKG_LIBS "$INSTALL_ROOT/lib/synctool/pkg" )
 	fi
 }
 
 install_docs() {
 	if test "x$BUILD_DOCS" = "xyes"
 	then
-		echo "installing $PREFIX/doc"
+		echo "installing $INSTALL_ROOT/doc"
 
 		if test "x$DRY_RUN" = "xno"
 		then
-			makedir 755 "$PREFIX/doc"
+			makedir 755 "$INSTALL_ROOT/doc"
 			( cd doc && ./build.sh )
-			install -m 644 $DOCS "$PREFIX/doc"
+			( cd doc && install -m 644 $DOCS "$INSTALL_ROOT/doc" )
 		fi
 	fi
 }
 
 do_install() {
+	FIRST=`echo "$INSTALL_ROOT" | cut -c 1`
+	if test "x$FIRST" = "x~"
+	then
+		echo "setup.sh: error: do not use ~ paths"
+		echo "please use an absolute path"
+		exit 4
+	fi
+
+	if test -d "$INSTALL_ROOT"
+	then
+		echo "setup.sh: directory already exists: $INSTALL_ROOT"
+		echo "You may want to move it out of the way"
+		exit 5
+	fi
+
 	# can I find the sources?
 
 	if ! test -f src/synctool/overlay.py
 	then
 		echo "setup.sh: error: unable to find my sources"
 		echo "setup.sh: are you in the top synctool source directory?"
-		exit 4
+		exit 6
 	fi
 
 	if test "x$DRY_RUN" = "xyes"
@@ -216,48 +231,41 @@ do_install() {
 		echo "installing synctool"
 	fi
 
-	if test -e "$PREFIX/sbin/synctool"
+	if test -e "$INSTALL_ROOT/bin/synctool_master.py"
 	then
-		echo "Detected an old synctool installation under $PREFIX"
-		echo "You should move it out of the way first"
-		exit 1
-	fi
-
-	if test -e "$PREFIX/bin/synctool_master.py"
-	then
-		echo "Detected an previous install of synctool under $PREFIX"
+		echo "Detected an previous install of synctool under $INSTALL_ROOT"
 		echo "You should move it out of the way or uninstall with:"
-		echo "  setup.sh --prefix=$PREFIX --uninstall"
+		echo "  setup.sh --installdir=$INSTALL_ROOT --uninstall"
 		exit 1
 	fi
 
 	install_progs
-	install_clientprogs
 	install_libs
 	install_docs
 
-	echo "making $PREFIX/var"
-	makedir 700 "$PREFIX/var"
-	echo "making $PREFIX/var/overlay"
-	makedir 755 "$PREFIX/var/overlay"
-	echo "making $PREFIX/var/delete"
-	makedir 750 "$PREFIX/var/delete"
+	echo "making $INSTALL_ROOT/var"
+	makedir 700 "$INSTALL_ROOT/var"
+	echo "making $INSTALL_ROOT/var/overlay"
+	makedir 755 "$INSTALL_ROOT/var/overlay"
+	echo "making $INSTALL_ROOT/var/delete"
+	makedir 750 "$INSTALL_ROOT/var/delete"
 
 	# FIXME mkdir etc/
-	echo "copying -> $PREFIX/etc/synctool.conf.example"
+	echo "copying -> $INSTALL_ROOT/etc/synctool.conf.example"
 	if test "x$DRY_RUN" = "xno"
 	then
-		install -m 644 synctool.conf.example "$PREFIX/etc"
+		makedir 0755 "$INSTALL_ROOT/etc"
+		install -m 644 synctool.conf.example "$INSTALL_ROOT/etc"
 	fi
 
-	if test -f "x$PREFIX" != "x/var/lib/synctool"
+	if test "x$INSTALL_ROOT" != "x/var/lib/synctool"
 	then
 		if test -d "/var/lib/synctool"
 		then
 			echo
 			echo "warning: /var/lib/synctool is obsolete"
 			echo "You should migrate /var/lib/synctool/overlay/ and delete/"
-			echo "to $PREFIX/var/overlay/ and delete/"
+			echo "to $INSTALL_ROOT/var/overlay/ and delete/"
 			echo "Note that scripts/ and tasks/ have been obsoleted"
 		fi
 	fi
@@ -266,70 +274,67 @@ do_install() {
 	then
 		echo
 		echo "warning: /var/lib/synctool/synctool.conf is obsolete"
-		echo "You should migrate to $PREFIX/etc/synctool.conf"
+		echo "You should migrate to $INSTALL_ROOT/etc/synctool.conf"
 	fi
 
 	if test "x$DRY_RUN" = "xno"
 	then
 		echo
-		echo "Please add $PREFIX to your PATH"
-		echo "and edit $PREFIX/etc/synctool.conf to suit your needs"
+		echo "Please add $INSTALL_ROOT/bin to your PATH"
+		echo "and edit $INSTALL_ROOT/etc/synctool.conf to suit your needs"
 		echo
 	fi
 }
 
 remove_progs() {
-	echo "removing synctool from $PREFIX/bin"
+	echo "removing synctool from $INSTALL_ROOT/bin"
 	if test "x$DRY_RUN" = "xno"
 	then
 		remove_links
 
-		for prog in $PROGS
-		do
-			rm -f "$PREFIX/bin/$prog"
-		done
+		rm -f "$INSTALL_ROOT/bin/$LAUNCHER" "$INSTALL_ROOT/bin/${LAUNCHER}[co]"
 	fi
 }
 
 remove_client_progs() {
-	echo "removing synctool from $PREFIX/sbin"
+	echo "removing synctool from $INSTALL_ROOT/sbin"
 	if test "x$DRY_RUN" = "xno"
 	then
-		for prog in $CLIENT_PROGS
+		for prog in $PROGS
 		do
-			rm -f "$PREFIX/sbin/$prog"
+			rm -f "$INSTALL_ROOT/sbin/$prog" "$INSTALL_ROOT/sbin/${prog}c" "$INSTALL_ROOT/sbin/${prog}o"
 		done
 	fi
 }
 
 remove_libs() {
-	echo "removing synctool from $PREFIX/lib"
+	echo "removing synctool from $INSTALL_ROOT/lib"
 	if test "x$DRY_RUN" = "xno"
 	then
 		for lib in $PKG_LIBS
 		do
-			rm -f "$PREFIX/lib/synctool/pkg/$lib"
+			rm -f "$INSTALL_ROOT/lib/synctool/pkg/$lib" "$INSTALL_ROOT/lib/synctool/pkg/${lib}c" "$INSTALL_ROOT/lib/synctool/pkg/${lib}o"
 		done
-		rmdir "$PREFIX/lib/synctool/pkg"
+		rmdir "$INSTALL_ROOT/lib/synctool/pkg" 2>/dev/null
 
 		for lib in $LIBS
 		do
-			rm -f "$PREFIX/lib/synctool/$lib"
+			rm -f "$INSTALL_ROOT/lib/synctool/$lib" "$INSTALL_ROOT/lib/synctool/${lib}c" "$INSTALL_ROOT/lib/synctool/${lib}o"
 		done
-		rmdir "$PREFIX/lib/synctool/lib"
-		rmdir "$PREFIX/lib/synctool"
+		rmdir "$INSTALL_ROOT/lib/synctool/lib" 2>/dev/null
+		rmdir "$INSTALL_ROOT/lib/synctool" 2>/dev/null
 	fi
 }
 
 remove_docs() {
-	if test -d "$PREFIX/doc"
+	if test -d "$INSTALL_ROOT/doc"
 	then
-		echo "removing synctool from $PREFIX/doc"
+		echo "removing synctool from $INSTALL_ROOT/doc"
 		if test "x$DRY_RUN" = "xno"
 		then
 			for doc in $DOCS
 			do
-				rm -f "$PREFIX/doc/$doc"
+				rm -f "$INSTALL_ROOT/doc/$doc"
 			done
 		fi
 	fi
@@ -341,20 +346,20 @@ remove_overlay() {
 
 	if test "x$DRY_RUN" = "xno"
 	then
-		rmdir "$PREFIX/var/overlay/all" 2>/dev/null
-		rmdir "$PREFIX/var/overlay" 2>/dev/null
-		rmdir "$PREFIX/var/delete/all" 2>/dev/null
-		rmdir "$PREFIX/var/delete" 2>/dev/null
-		rmdir "$PREFIX/var" 2>/dev/null
+		rmdir "$INSTALL_ROOT/var/overlay/all" 2>/dev/null
+		rmdir "$INSTALL_ROOT/var/overlay" 2>/dev/null
+		rmdir "$INSTALL_ROOT/var/delete/all" 2>/dev/null
+		rmdir "$INSTALL_ROOT/var/delete" 2>/dev/null
+		rmdir "$INSTALL_ROOT/var" 2>/dev/null
 	fi
 
-	if test -d "$PREFIX/var/overlay"
+	if test -d "$INSTALL_ROOT/var/overlay"
 	then
-		echo "leaving behind $PREFIX/var/overlay/"
+		echo "leaving behind $INSTALL_ROOT/var/overlay/"
 	fi
-	if test -d "$PREFIX/var/delete"
+	if test -d "$INSTALL_ROOT/var/delete"
 	then
-		echo "leaving behind $PREFIX/var/delete/"
+		echo "leaving behind $INSTALL_ROOT/var/delete/"
 	fi
 }
 
@@ -362,27 +367,30 @@ remove_dirs() {
 	echo "cleaning up directories"
 	if test "x$DRY_RUN" = "xno"
 	then
+		rm -f "$INSTALL_ROOT/etc/synctool.conf.example"
+
 		# try to remove empty directories
 
-		rmdir "$PREFIX/sbin" 2>/dev/null
-		rmdir "$PREFIX/bin" 2>/dev/null
-		rmdir "$PREFIX/lib" 2>/dev/null
-		rmdir "$PREFIX/doc" 2>/dev/null
-		rmdir "$PREFIX" 2>/dev/null
+		rmdir "$INSTALL_ROOT/sbin" 2>/dev/null
+		rmdir "$INSTALL_ROOT/bin" 2>/dev/null
+		rmdir "$INSTALL_ROOT/etc" 2>/dev/null
+		rmdir "$INSTALL_ROOT/lib" 2>/dev/null
+		rmdir "$INSTALL_ROOT/doc" 2>/dev/null
+		rmdir "$INSTALL_ROOT" 2>/dev/null
 
 		rmdir /tmp/synctool 2>/dev/null
 	fi
 
-	if test -d "$PREFIX"
+	if test -d "$INSTALL_ROOT"
 	then
-		echo "leaving behind $PREFIX/"
+		echo "leaving behind $INSTALL_ROOT/"
 	fi
 }
 
 do_uninstall() {
-	if test ! -d "$PREFIX"
+	if test ! -d "$INSTALL_ROOT"
 	then
-		echo "setup.sh: error: so such directory: $PREFIX"
+		echo "setup.sh: error: so such directory: $INSTALL_ROOT"
 		exit 5
 	fi
 
@@ -393,9 +401,9 @@ do_uninstall() {
 	remove_overlay
 	remove_dirs
 
-	if test -f "$PREFIX/etc/synctool.conf"
+	if test -f "$INSTALL_ROOT/etc/synctool.conf"
 	then
-		echo "leaving behind $PREFIX/etc/synctool.conf"
+		echo "leaving behind $INSTALL_ROOT/etc/synctool.conf"
 	fi
 }
 
