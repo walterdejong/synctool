@@ -158,8 +158,6 @@ def init():
 
 	(prefix, bindir) = os.path.split(base)
 
-	reset_prefix(prefix)
-
 	# detect symlink mode
 	if sys.platform[:5] == 'linux':
 		SYMLINK_MODE = 0777
