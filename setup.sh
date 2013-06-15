@@ -243,6 +243,21 @@ do_install() {
 		echo "installing synctool"
 	fi
 
+	if test -e "$PREFIX/sbin/synctool"
+	then
+		echo "Detected an old synctool installation under $PREFIX"
+		echo "You should move it out of the way first"
+		exit 1
+	fi
+
+	if test -e "$PREFIX/bin/synctool_master.py"
+	then
+		echo "Detected an previous install of synctool under $PREFIX"
+		echo "You should move it out of the way or uninstall with:"
+		echo "  setup.sh --prefix=$PREFIX --uninstall"
+		exit 1
+	fi
+
 	install_progs
 	install_clientprogs
 	install_libs
@@ -259,6 +274,34 @@ do_install() {
 	if test "x$DRY_RUN" = "xno"
 	then
 		install -m 644 synctool.conf.example /etc
+	fi
+
+	if test -f "$MASTERDIR/synctool.conf"
+	then
+		echo
+		echo "warning: $MASTERDIR/synctool.conf is obsolete"
+		echo "warning: You should migrate to /etc/synctool.conf on the master node"
+	fi
+
+	suggest_remove="no"
+	if test -d "$MASTERDIR/sbin"
+	then
+		echo "warning: \$masterdir/sbin is obsolete"
+		suggest_remove="yes"
+	fi
+	if test -d "$MASTERDIR/tasks"
+	then
+		echo "warning: \$masterdir/tasks is obsolete"
+		suggest_remove="yes"
+	fi
+	if test -d "$MASTERDIR/scripts"
+	then
+		echo "warning: \$masterdir/scripts is obsolete"
+		suggest_remove="yes"
+	fi
+	if test "x$suggest_remove" = "xyes"
+	then
+		echo "warning: You should remove it"
 	fi
 
 	if test "x$DRY_RUN" = "xno"
