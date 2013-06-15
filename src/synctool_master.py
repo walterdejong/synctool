@@ -71,6 +71,7 @@ def worker_synctool(rank, nodes):
 	node = nodes[rank]
 	nodename = NODESET.get_nodename_from_address(node)
 
+	# FIXME add option to rsync to only 1 node (NFS server node)
 	if not OPT_SKIP_RSYNC:
 		# rsync ROOTDIR to the node
 
