@@ -35,7 +35,8 @@ thank_you.html footer.html header.html toc.html single.html synctool_doc.css
 synctool_logo.jpg synctool_logo_large.jpg"
 
 SYMLINKS="synctool synctool-pkg dsh-pkg synctool-ssh dsh synctool-scp dcp
-synctool-ping dsh-ping synctool-config synctool-aggr dsh-aggr"
+synctool-ping dsh-ping synctool-config synctool-aggr dsh-aggr
+synctool-client synctool-client-pkg"
 
 
 if test "x$1" = x
