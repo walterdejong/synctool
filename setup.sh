@@ -15,7 +15,6 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
 # FIXME PREFIX and '--prefix=' is wrong; use 'rootdir='
 PREFIX=/opt/synctool
-MASTERDIR=/var/lib/synctool
 
 DRY_RUN="yes"
 UNINSTALL="no"
@@ -79,15 +78,6 @@ do
 			PREFIX="$optarg"
 			;;
 
-		# FIXME take masterdir out
-		-masterdir | --masterdir)
-			prev="MASTERDIR"
-			;;
-
-		-masterdir=* | --masterdir=*)
-			MASTERDIR="$optarg"
-			;;
-
 		--build-docs)
 			BUILD_DOCS="yes"
 			;;
@@ -104,13 +94,11 @@ options:
   -f, --fix         Do the installation
 
   --prefix=PREFIX   Install synctool under PREFIX directory
-  --masterdir=DIR   Make the masterdir structure under DIR
   --build-docs      Also install documentation
                     This depends on m4 and bash
   --uninstall       Remove synctool from system
 
 The default prefix is $PREFIX
-The default masterdir is $MASTERDIR
 
 By default setup.sh does a DRY RUN, use -f or --fix to
 really setup synctool on the master node
@@ -179,8 +167,8 @@ install_progs() {
 		makedir 755 "$PREFIX/bin"
 		install -m 755 $LAUNCHER "$PREFIX/bin"
 
-		makedir 755 "$MASTERDIR/sbin"
-		install -m 755 $PROGS "$MASTERDIR/sbin"
+		makedir 755 "$PREFIX/sbin"
+		install -m 755 $LAUNCHER "$PREFIX/sbin"
 
 		makelinks
 	fi
@@ -191,9 +179,9 @@ install_libs() {
 
 	if test "x$DRY_RUN" = "xno"
 	then
-		makedir 755 "$MASTERDIR/sbin/synctool/pkg"
-		install -m 644 $LIBS "$MASTERDIR/sbin/synctool"
-		install -m 644 $PKG_LIBS "$MASTERDIR/sbin/synctool/pkg"
+		makedir 755 "$PREFIX/lib/synctool/pkg"
+		install -m 644 $LIBS "$PREFIX/lib/synctool"
+		install -m 644 $PKG_LIBS "$PREFIX/lib/synctool/pkg"
 	fi
 }
 
@@ -248,53 +236,44 @@ do_install() {
 	install_libs
 	install_docs
 
-	echo "making $MASTERDIR"
-	makedir 700 "$MASTERDIR"
-	echo "making $MASTERDIR/overlay"
-	makedir 755 "$MASTERDIR/overlay"
-	echo "making $MASTERDIR/delete"
-	makedir 750 "$MASTERDIR/delete"
+	echo "making $PREFIX/var"
+	makedir 700 "$PREFIX/var"
+	echo "making $PREFIX/var/overlay"
+	makedir 755 "$PREFIX/var/overlay"
+	echo "making $PREFIX/var/delete"
+	makedir 750 "$PREFIX/var/delete"
 
-	echo "copying -> /etc/synctool.conf.example"
+	# FIXME mkdir etc/
+	echo "copying -> $PREFIX/etc/synctool.conf.example"
 	if test "x$DRY_RUN" = "xno"
 	then
-		install -m 644 synctool.conf.example /etc
+		install -m 644 synctool.conf.example "$PREFIX/etc"
 	fi
 
-	if test -f "$MASTERDIR/synctool.conf"
+	if test -f "x$PREFIX" != "x/var/lib/synctool"
+	then
+		if test -d "/var/lib/synctool"
+		then
+			echo
+			echo "warning: /var/lib/synctool is obsolete"
+			echo "You should migrate /var/lib/synctool/overlay/ and delete/"
+			echo "to $PREFIX/var/overlay/ and delete/"
+			echo "Note that scripts/ and tasks/ have been obsoleted"
+		fi
+	fi
+
+	if test -f "/var/lib/synctool/synctool.conf"
 	then
 		echo
-		echo "warning: $MASTERDIR/synctool.conf is obsolete"
-		echo "warning: You should migrate to /etc/synctool.conf on the master node"
-	fi
-
-	suggest_remove="no"
-	if test -d "$MASTERDIR/sbin"
-	then
-		echo "warning: \$masterdir/sbin is obsolete"
-		suggest_remove="yes"
-	fi
-	if test -d "$MASTERDIR/tasks"
-	then
-		echo "warning: \$masterdir/tasks is obsolete"
-		suggest_remove="yes"
-	fi
-	if test -d "$MASTERDIR/scripts"
-	then
-		echo "warning: \$masterdir/scripts is obsolete"
-		suggest_remove="yes"
-	fi
-	if test "x$suggest_remove" = "xyes"
-	then
-		echo "warning: You should remove it"
+		echo "warning: /var/lib/synctool/synctool.conf is obsolete"
+		echo "You should migrate to $PREFIX/etc/synctool.conf"
 	fi
 
 	if test "x$DRY_RUN" = "xno"
 	then
 		echo
 		echo "Please add $PREFIX to your PATH"
-		echo "Next, you should setup /etc/synctool.conf and"
-		echo "run synctool-deploy to install client nodes"
+		echo "and edit $PREFIX/etc/synctool.conf to suit your needs"
 		echo
 	fi
 }
@@ -356,16 +335,34 @@ remove_docs() {
 	fi
 }
 
+remove_overlay() {
+	# do not delete any data
+	# just try to remove any empty directories
+
+	if test "x$DRY_RUN" = "xno"
+	then
+		rmdir "$PREFIX/var/overlay/all" 2>/dev/null
+		rmdir "$PREFIX/var/overlay" 2>/dev/null
+		rmdir "$PREFIX/var/delete/all" 2>/dev/null
+		rmdir "$PREFIX/var/delete" 2>/dev/null
+		rmdir "$PREFIX/var" 2>/dev/null
+	fi
+
+	if test -d "$PREFIX/var/overlay"
+	then
+		echo "leaving behind $PREFIX/var/overlay/"
+	fi
+	if test -d "$PREFIX/var/delete"
+	then
+		echo "leaving behind $PREFIX/var/delete/"
+	fi
+}
+
 remove_dirs() {
 	echo "cleaning up directories"
 	if test "x$DRY_RUN" = "xno"
 	then
-		# try removing directories
-		# it may well be "/usr" and fail (directory not empty)
-		# but if it is "/opt/synctool" then it has to be removed
-
-		# redirect to /dev/null to prevent user from freaking out
-		# when shown "rmdir: /usr: Directory not empty"
+		# try to remove empty directories
 
 		rmdir "$PREFIX/sbin" 2>/dev/null
 		rmdir "$PREFIX/bin" 2>/dev/null
@@ -374,6 +371,11 @@ remove_dirs() {
 		rmdir "$PREFIX" 2>/dev/null
 
 		rmdir /tmp/synctool 2>/dev/null
+	fi
+
+	if test -d "$PREFIX"
+	then
+		echo "leaving behind $PREFIX/"
 	fi
 }
 
@@ -388,16 +390,12 @@ do_uninstall() {
 	remove_client_progs
 	remove_libs
 	remove_docs
+	remove_overlay
 	remove_dirs
 
-	if test -f /etc/synctool.conf
+	if test -f "$PREFIX/etc/synctool.conf"
 	then
-		echo "leaving behind /etc/synctool.conf"
-	fi
-
-	if test -d "$MASTERDIR"
-	then
-		echo "leaving behind $MASTERDIR"
+		echo "leaving behind $PREFIX/etc/synctool.conf"
 	fi
 }
 
