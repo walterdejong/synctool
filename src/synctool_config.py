@@ -215,6 +215,8 @@ def list_dirs():
 	'''display directory settings'''
 
 	print 'rootdir', synctool.param.ROOTDIR
+	print 'overlaydir', synctool.param.OVERLAY_DIR
+	print 'deletedir', synctool.param.DELETE_DIR
 	print 'tempdir', synctool.param.TEMP_DIR
 
 
