@@ -4,10 +4,10 @@
 
 #tempdir	 /tmp/synctool
 
-# use mode 0777 on Linux
-#symlink_mode 0777
-# use mode 0755 on most other Unix platforms
-symlink_mode 0755
+# when synctool detects Linux, it will set the symlink mode to 0777
+# otherwise, it will default to mode 0755 for symlinks
+# You can change the default here
+#symlink_mode 0755
 
 # all files in the repository must have a group extension
 #require_extension yes
@@ -21,7 +21,7 @@ symlink_mode 0755
 # ignore all directories beginning with a dot (like .git, .svn, ...)
 #ignore_dotdirs no
 
-# ignore specific files/directories
+# ignore certain files/directories
 ignore .svn
 ignore .gitignore
 ignore .*.swp
