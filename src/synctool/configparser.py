@@ -245,11 +245,12 @@ def config_prefix(arr, configfile, lineno):
 	d = synctool.lib.strip_multiple_slashes(d)
 	d = synctool.lib.strip_trailing_slash(d)
 
+	synctool.param.PREFIX = d
+
 	if not os.path.isdir(d):
 		stderr('%s:%d: no such directory for prefix' % (configfile, lineno))
 		return 1
 
-	synctool.param.PREFIX = d
 	return 0
 
 
@@ -262,6 +263,9 @@ def config_masterdir(arr, configfile, lineno):
 	d = synctool.lib.strip_multiple_slashes(d)
 	d = synctool.lib.strip_trailing_slash(d)
 
+	# this initializes MASTERDIR, MASTER_LEN, OVERLAY_DIR, DELETE_DIR
+	synctool.param.reset_masterdir(d)
+
 	if d in ('', '/', os.path.sep, '$masterdir'):
 		stderr("%s:%d: masterdir can not be set to '%s', sorry" %
 			(configfile, lineno, synctool.param.MASTERDIR))
@@ -271,8 +275,6 @@ def config_masterdir(arr, configfile, lineno):
 		stderr('%s:%d: no such directory for masterdir' % (configfile, lineno))
 		return 1
 
-	# this initializes MASTERDIR, MASTER_LEN, OVERLAY_DIR, DELETE_DIR
-	synctool.param.reset_masterdir(d)
 	return 0
 
 
