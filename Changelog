@@ -6,6 +6,8 @@ June 2013
 - node and group names are checked against a character set;
   'strange' symbols are no longer allowed
 - master passes nodename to the client; "hostid:" no longer needed
+- new node qualifier 'rsync:no' may be given if the synctool repository is
+  on a shared filesystem
 - fix issue with multi-OS; do not check all paths of configured commands
   like ping_cmd, ssh_cmd, etc.
 - fix issue; --erase-saved -f would also apply changes

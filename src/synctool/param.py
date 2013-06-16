@@ -10,6 +10,7 @@
 
 import os
 import sys
+import string
 
 VERSION = '6.0-beta'
 
@@ -111,6 +112,9 @@ MY_GROUPS = None
 
 # set of all known groups
 ALL_GROUPS = None
+
+# set of nodes that don't want an rsync copy
+NO_RSYNC = set()
 
 # colorize output
 COLORIZE = True

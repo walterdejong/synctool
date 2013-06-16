@@ -71,10 +71,10 @@ def worker_synctool(rank, nodes):
 	node = nodes[rank]
 	nodename = NODESET.get_nodename_from_address(node)
 
-	# FIXME add option to rsync to only 1 node (NFS server node)
-	if not OPT_SKIP_RSYNC:
-		# rsync ROOTDIR to the node
-
+	# rsync ROOTDIR/dirs/ to the node
+	# if "it wants it"
+	if not (OPT_SKIP_RSYNC or node in synctool.param.NO_RSYNC):
+		# make rsync filter to include the correct dirs
 		tmp_filename = rsync_include_filter(nodename)
 
 		cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
