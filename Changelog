@@ -29,6 +29,9 @@ June 2013
 - ignore_dir is obsolete; use ignore
 - ignore_dirs is obsolete; use ignore
 - masterdir is obsolete
+- symlink_mode is obsolete; now correctly ignores the mode of symbolic links
+- new documentation in markdown format
+- run setup.sh to install synctool
 
 Aug 2012
 - added dsh --numproc, patch by Werner Maier
