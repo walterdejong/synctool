@@ -191,9 +191,10 @@ def init():
  		path_arr = string.split(path, os.pathsep)
 
  	# add the synctool/bin/ dir
- 	path_arr.append(os.path.join(ROOTDIR, 'bin'))
-
- 	os.environ['PATH'] = string.join(path_arr, os.pathsep)
+ 	bindir = os.path.join(ROOTDIR, 'bin')
+ 	if not bindir in path_arr:
+	 	path_arr.append(bindir)
+	 	os.environ['PATH'] = string.join(path_arr, os.pathsep)
 
 
 # EOB
