@@ -30,19 +30,16 @@ ARG_CMDS = None
 # these are enums for the "list" command-line options
 ACTION_LIST_NODES = 1
 ACTION_LIST_GROUPS = 2
-ACTION_LIST_IPADDRESS = 3
-ACTION_LIST_HOSTNAMES = 4
-ACTION_LIST_RSYNC = 5
-ACTION_NODES = 6
-ACTION_GROUPS = 7
-ACTION_CMDS = 8
-ACTION_NUMPROC = 9
-ACTION_VERSION = 10
-ACTION_PREFIX = 11
-ACTION_LOGFILE = 12
-ACTION_NODENAME = 13
-ACTION_LIST_DIRS = 14
-ACTION_PKGMGR = 15
+ACTION_NODES = 3
+ACTION_GROUPS = 4
+ACTION_CMDS = 5
+ACTION_NUMPROC = 6
+ACTION_VERSION = 7
+ACTION_PREFIX = 8
+ACTION_LOGFILE = 9
+ACTION_NODENAME = 10
+ACTION_LIST_DIRS = 11
+ACTION_PKGMGR = 12
 
 # optional: do not list hosts/groups that are ignored
 OPT_FILTER_IGNORED = False
@@ -50,6 +47,8 @@ OPT_FILTER_IGNORED = False
 OPT_IPADDRESS = False
 # optional: list hostnames of the selected nodes
 OPT_HOSTNAME = False
+# optional: list rsync yes/no qualifier
+OPT_RSYNC = False
 
 
 def list_all_nodes():
@@ -59,49 +58,26 @@ def list_all_nodes():
 	for node in nodes:
 		ignored = set(synctool.config.get_groups(node))
 		ignored &= synctool.param.IGNORE_GROUPS
+
+		if OPT_FILTER_IGNORED and len(ignored) > 0:
+			continue
+
+		if OPT_IPADDRESS:
+			node += ' ' + synctool.config.get_node_ipaddress(node)
+
+		elif OPT_HOSTNAME:
+			node += ' ' + synctool.config.get_node_hostname(node)
+
+		elif OPT_RSYNC:
+			if node in synctool.param.NO_RSYNC:
+				node += ' no'
+			else:
+				node += ' yes'
+
 		if len(ignored) > 0:
-			if OPT_FILTER_IGNORED:
-				continue
+			node += ' (ignored)'
 
-# FIXME change this behaviour
-# FIXME list by ipaddress, hostname should be an action on its own
-# FIXME add list rsync qualifier
-			if OPT_IPADDRESS:
-				node = synctool.config.get_node_ipaddress(node)
-
-			elif OPT_HOSTNAME:
-				node = synctool.config.get_node_hostname(node)
-
-			print '%s (ignored)' % node
-		else:
-			if OPT_IPADDRESS:
-				node = synctool.config.get_node_ipaddress(node)
-
-			elif OPT_HOSTNAME:
-				node = synctool.config.get_node_hostname(node)
-
-			print node
-
-
-def list_nodes_rsync():
-	nodes = synctool.config.get_all_nodes()
-	nodes.sort()
-
-	for node in nodes:
-		if node in synctool.param.NO_RSYNC:
-			rsync_it = 'no'
-		else:
-			rsync_it = 'yes'
-
-		ignored = set(synctool.config.get_groups(node))
-		ignored &= synctool.param.IGNORE_GROUPS
-		if len(ignored) > 0:
-			if OPT_FILTER_IGNORED:
-				continue
-
-			print '%s rsync %s (ignored)' % (node, rsync_it)
-		else:
-			print '%s rsync %s' % (node, rsync_it)
+		print node
 
 
 def list_all_groups():
@@ -109,31 +85,42 @@ def list_all_groups():
 	groups.sort()
 
 	for group in groups:
-		if group in synctool.param.IGNORE_GROUPS:
-			if OPT_FILTER_IGNORED:
-				continue
+		if OPT_FILTER_IGNORED and group in synctool.param.IGNORE_GROUPS:
+			continue
 
-			print '%s (ignored)' % group
-		else:
-			print group
+		if group in synctool.param.IGNORE_GROUPS:
+			group += ' (ignored)'
+
+		print group
 
 
 def list_nodes(nodenames):
 	groups = []
 
-	for nodename in nodenames:
-		if not synctool.param.NODES.has_key(nodename):
-			stderr("no such node '%s' defined" % nodename)
+	for node in nodenames:
+		if not synctool.param.NODES.has_key(node):
+			stderr("no such node '%s' defined" % node)
 			sys.exit(1)
 
-		if OPT_IPADDRESS:
-			print synctool.config.get_node_ipaddress(nodename)
+		if OPT_IPADDRESS or OPT_HOSTNAME or OPT_RSYNC:
+			out = ''
 
-		elif OPT_HOSTNAME:
-			print synctool.config.get_node_hostname(nodename)
+			if OPT_IPADDRESS:
+				out += ' ' + synctool.config.get_node_ipaddress(node)
+
+			if OPT_HOSTNAME:
+				out += ' ' + synctool.config.get_node_hostname(node)
+
+			if OPT_RSYNC:
+				if node in synctool.param.NO_RSYNC:
+					out += ' no'
+				else:
+					out += ' yes'
+
+			print out[1:]
 
 		else:
-			for group in synctool.config.get_groups(nodename):
+			for group in synctool.config.get_groups(node):
 				# extend groups, but do not have duplicates
 				if not group in groups:
 					groups.append(group)
@@ -146,13 +133,13 @@ def list_nodes(nodenames):
 #	groups.sort()
 
 	for group in groups:
-		if group in synctool.param.IGNORE_GROUPS:
-			if OPT_FILTER_IGNORED:
-				continue
+		if OPT_FILTER_IGNORED and group in synctool.param.IGNORE_GROUPS:
+			continue
 
-			print '%s (ignored)' % group
-		else:
-			print group
+		if group in synctool.param.IGNORE_GROUPS:
+			group += ' (ignored)'
+
+		print group
 
 
 def list_nodegroups(groups):
@@ -167,25 +154,28 @@ def list_nodegroups(groups):
 	arr.sort()
 
 	for node in arr:
-		if node in synctool.param.IGNORE_GROUPS:
-			if OPT_FILTER_IGNORED:
-				continue
+		ignored = set(synctool.config.get_groups(node))
+		ignored &= synctool.param.IGNORE_GROUPS
 
-			if OPT_IPADDRESS:
-				node = synctool.config.get_node_ipaddress(node)
+		if OPT_FILTER_IGNORED and len(ignored) > 0:
+			continue
 
-			elif OPT_HOSTNAME:
-				node = synctool.config.get_node_hostname(node)
+		if OPT_IPADDRESS:
+			node += ' ' + synctool.config.get_node_ipaddress(node)
 
-			print '%s (ignored)' % node
-		else:
-			if OPT_IPADDRESS:
-				node = synctool.config.get_node_ipaddress(node)
+		elif OPT_HOSTNAME:
+			node += ' ' + synctool.config.get_node_hostname(node)
 
-			elif OPT_HOSTNAME:
-				node = synctool.config.get_node_hostname(node)
+		elif OPT_RSYNC:
+			if node in synctool.param.NO_RSYNC:
+				node += ' no'
+			else:
+				node += ' yes'
 
-			print node
+		if len(ignored) > 0:
+			node += ' (ignored)'
+
+		print node
 
 
 def list_commands(cmds):
@@ -270,9 +260,9 @@ def usage():
   -L, --list-groups        List all configured groups
   -n, --node=nodelist      List all groups this node is in
   -g, --group=grouplist    List all nodes in this group
-  -i, --ipaddress          List selected nodes by IP address
-  -H, --hostname           List selected nodes by hostname
-  -r, --rsync              List all nodes' rsync qualifier
+  -i, --ipaddress          List selected nodes' IP address
+  -H, --hostname           List selected nodes' hostname
+  -r, --rsync              List selected nodes' rsync qualifier
   -f, --filter-ignored     Do not list ignored nodes and groups
 
   -C, --command=command    Display setting for command
@@ -292,7 +282,7 @@ synctool-config by Walter de Jong <walter@heiho.net> (c) 2009-2013'''
 
 def get_options():
 	global CONF_FILE, ARG_NODENAMES, ARG_GROUPS, ARG_CMDS
-	global OPT_FILTER_IGNORED, OPT_IPADDRESS, OPT_HOSTNAME
+	global OPT_FILTER_IGNORED, OPT_IPADDRESS, OPT_HOSTNAME, OPT_RSYNC
 
 	progname = os.path.basename(sys.argv[0])
 
@@ -367,7 +357,7 @@ def get_options():
 			continue
 
 		if opt in ('-r', '--rsync'):
-			set_action(ACTION_LIST_RSYNC, '--rsync')
+			OPT_RSYNC = True
 			continue
 
 		if opt in ('-f', '--filter-ignored'):
@@ -428,10 +418,6 @@ def main():
 		print synctool.param.VERSION
 		sys.exit(0)
 
-	if OPT_IPADDRESS and OPT_HOSTNAME:
-		stderr('options --ipaddress and --hostname can not be combined')
-		sys.exit(1)
-
 	synctool.config.read_config()
 
 	if ACTION == ACTION_LIST_NODES:
@@ -439,9 +425,6 @@ def main():
 
 	elif ACTION == ACTION_LIST_GROUPS:
 		list_all_groups()
-
-	elif ACTION == ACTION_LIST_RSYNC:
-		list_nodes_rsync()
 
 	elif ACTION == ACTION_NODES:
 		if not ARG_NODENAMES:
@@ -479,21 +462,7 @@ def main():
 			stderr('please check %s' % synctool.param.CONF_FILE)
 			sys.exit(1)
 
-		if synctool.param.NODENAME in synctool.param.IGNORE_GROUPS:
-			if not synctool.param.OPT_FILTER_IGNORED:
-				if OPT_IPADDRESS:
-					print ('none (%s ignored)' %
-							synctool.config.get_node_ipaddress(
-							synctool.param.NODENAME))
-				else:
-					print 'none (%s ignored)' % synctool.param.NODENAME
-
-			sys.exit(0)
-
-		if OPT_IPADDRESS:
-			print synctool.config.get_node_ipaddress(synctool.param.NODENAME)
-		else:
-			print synctool.param.NODENAME
+		print synctool.param.NODENAME
 
 	elif ACTION == ACTION_LIST_DIRS:
 		list_dirs()
