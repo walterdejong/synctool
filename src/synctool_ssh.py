@@ -39,6 +39,20 @@ def run_dsh(remote_cmd_arr):
 		print 'no valid nodes specified'
 		sys.exit(1)
 
+	# if the command is under scripts/, assume its full path
+	# This is nice because scripts/ isn't likely to be in PATH
+	# It is moderately evil however, because it's not 100% correct
+	# but it's reliable enough to keep in here
+	full_path = synctool.lib.search_path(remote_cmd_arr[0])
+	if string.find(full_path, os.sep) < 0 or (os.altsep != None and
+		string.find(full_path, os.altsep) < 0):
+		# relative command was not found in PATH
+		# look under scripts/
+		full_path = os.path.join(synctool.param.SCRIPT_DIR, remote_cmd_arr[0])
+		if os.access(full_path, os.X_OK):
+			# found the command under scripts/
+			remote_cmd_arr[0] = full_path
+
 	ssh_cmd_arr = shlex.split(synctool.param.SSH_CMD)
 
 	if SSH_OPTIONS:
