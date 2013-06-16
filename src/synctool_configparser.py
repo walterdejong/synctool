@@ -676,7 +676,11 @@ def config_on_update(arr, configfile, lineno):
 	cmdfile = arr[0]
 
 	if not os.path.isfile(cmdfile):
-		stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmdfile))
+		stderr("%s:%d: no such command: '%s'" % (configfile, lineno, cmdfile))
+		return 1
+
+	if not os.access(cmdfile, os.X_OK):
+		stderr("%s:%d: not an executable: '%s'" % (configfile, lineno, cmdfile))
 		return 1
 
 	synctool_param.ON_UPDATE[file] = cmd
@@ -713,7 +717,11 @@ def config_always_run(arr, configfile, lineno):
 	cmdfile = arr[0]
 
 	if not os.path.isfile(cmdfile):
-		stderr("%s:%d: no such command '%s'" % (configfile, lineno, cmdfile))
+		stderr("%s:%d: no such command: '%s'" % (configfile, lineno, cmdfile))
+		return 1
+
+	if not os.access(cmdfile, os.X_OK):
+		stderr("%s:%d: not an executable: '%s'" % (configfile, lineno, cmdfile))
 		return 1
 
 	synctool_param.ALWAYS_RUN.append(cmd)
