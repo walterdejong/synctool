@@ -576,7 +576,7 @@ def config_node(arr, configfile, lineno):
 		return 1
 
 	# node lines may end with special optional qualifiers like
-	# 'ipaddress:', 'hostname:', 'hostid:'
+	# 'ipaddress:', 'hostname:', 'hostid:', 'rsync:'
 
 	while len(groups) >= 1:
 		n = string.find(groups[-1], ':')
