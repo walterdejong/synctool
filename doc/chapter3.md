@@ -232,14 +232,14 @@ By using directives in the `synctool.conf` file, synctool can be told to
 ignore certain files, nodes, or groups. These will be excluded, skipped.
 For example:
 
-    ignore_dotfiles no
-    ignore_dotdirs yes
-    ignore .svn
-    ignore .gitignore .git
-    ignore .*.swp
-    ignore_node node1 node2
-    ignore_group oldgroup
-    ignore_group test
+        ignore_dotfiles no
+        ignore_dotdirs yes
+        ignore .svn
+        ignore .gitignore .git
+        ignore .*.swp
+        ignore_node node1 node2
+        ignore_group oldgroup
+        ignore_group test
 
 
 About symbolic links
