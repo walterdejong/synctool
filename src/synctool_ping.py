@@ -129,6 +129,7 @@ def usage():
   -X, --exclude-group=grouplist  Exclude these groups from the selection
   -a, --aggregate                Condense output
 
+  -p, --numproc=num              Number of concurrent procs
   -v, --verbose                  Be verbose
       --unix                     Output actions as unix shell commands
       --version                  Print current version number
@@ -142,9 +143,10 @@ def get_options():
 	global NODESET, REMOTE_CMD, MASTER_OPTS, OPT_AGGREGATE
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:aNq',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:aNqp',
 			['help', 'conf=', 'verbose', 'node=', 'group=',
-			'exclude=', 'exclude-group=', 'aggregate', 'unix', 'quiet'])
+			'exclude=', 'exclude-group=', 'aggregate', 'unix', 'quiet',
+			'numproc='])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -219,6 +221,21 @@ def get_options():
 
 		if opt in ('-q', '--quiet'):
 			# silently ignore this option
+			continue
+
+		if opt in ('-p', '--numproc'):
+			try:
+				synctool.param.NUM_PROC = int(arg)
+			except ValueError:
+				print ("%s: option '%s' requires a numeric value" %
+					(os.path.basename(sys.argv[0]), opt))
+				sys.exit(1)
+
+			if synctool.param.NUM_PROC < 1:
+				print ('%s: invalid value for numproc' %
+					os.path.basename(sys.argv[0]))
+				sys.exit(1)
+
 			continue
 
 	if args != None:

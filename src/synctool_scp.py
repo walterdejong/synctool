@@ -128,6 +128,7 @@ def usage():
   -d, --dest=dir/file            Set destination name to copy to
 
   -N, --no-nodename              Do not prepend nodename to output
+  -p, --numproc=num              Number of concurrent procs
   -v, --verbose                  Be verbose
       --unix                     Output actions as unix shell commands
       --dry-run                  Do not run the remote copy command
@@ -149,10 +150,10 @@ def get_options():
 	SCP_OPTIONS = None
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vd:o:n:g:x:X:Nq',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vd:o:n:g:x:X:Nqp',
 			['help', 'conf=', 'verbose', 'dest=', 'options=',
 			'node=', 'group=', 'exclude=', 'exclude-group=',
-			'no-nodename', 'unix', 'dry-run', 'quiet'])
+			'no-nodename', 'numproc=', 'unix', 'dry-run', 'quiet'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -243,6 +244,21 @@ def get_options():
 
 		if opt in ('-q', '--quiet'):
 			# silently ignore this option
+			continue
+
+		if opt in ('-p', '--numproc'):
+			try:
+				synctool.param.NUM_PROC = int(arg)
+			except ValueError:
+				print ("%s: option '%s' requires a numeric value" %
+					(os.path.basename(sys.argv[0]), opt))
+				sys.exit(1)
+
+			if synctool.param.NUM_PROC < 1:
+				print ('%s: invalid value for numproc' %
+					os.path.basename(sys.argv[0]))
+				sys.exit(1)
+
 			continue
 
 	if not args:

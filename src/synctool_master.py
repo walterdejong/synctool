@@ -402,6 +402,7 @@ def usage():
   -e, --erase-saved              Erase *.saved backup files
   -f, --fix                      Perform updates (otherwise, do dry-run)
       --no-post                  Do not run any .post scripts
+  -p, --numproc=num              Number of concurrent procs
   -F, --fullpath                 Show full paths instead of shortened ones
   -T, --terse                    Show terse, shortened paths
       --color                    Use colored output (only for terse mode)
@@ -432,11 +433,11 @@ def get_options():
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-			'hc:vn:g:x:X:d:1:r:u:s:efFTqa',
+			'hc:vn:g:x:X:d:1:r:u:s:efpFTqa',
 			['help', 'conf=', 'verbose', 'node=', 'group=',
 			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=',
 			'upload=', 'suffix=', 'erase-saved', 'fix', 'no-post',
-			'fullpath', 'terse', 'color', 'no-color',
+			'numproc=', 'fullpath', 'terse', 'color', 'no-color',
 			'quiet', 'aggregate', 'unix', 'skip-rsync',
 			'version', 'check-update', 'download'])
 	except getopt.error, (reason):
@@ -494,8 +495,8 @@ def get_options():
 	# then process all the other options
 	#
 	# Note: some options are passed on to synctool on the node, while
-	#       others are not. Therefore some 'continue', while others don't
-	#
+	# others are not. Therefore some 'continue', while others don't
+
 	for opt, arg in opts:
 		if opt:
 			MASTER_OPTS.append(opt)
@@ -555,6 +556,24 @@ def get_options():
 			opt_fix = True
 			synctool.lib.DRY_RUN = False
 
+		if opt == '--no-post':
+			synctool.lib.NO_POST = True
+
+		if opt in ('-p', '--numproc'):
+			try:
+				synctool.param.NUM_PROC = int(arg)
+			except ValueError:
+				print ("%s: option '%s' requires a numeric value" %
+					(os.path.basename(sys.argv[0]), opt))
+				sys.exit(1)
+
+			if synctool.param.NUM_PROC < 1:
+				print ('%s: invalid value for numproc' %
+					os.path.basename(sys.argv[0]))
+				sys.exit(1)
+
+			continue
+
 		if opt in ('-F', '--fullpath'):
 			synctool.param.FULL_PATH = True
 			synctool.param.TERSE = False
@@ -579,9 +598,6 @@ def get_options():
 		if opt == '--skip-rsync':
 			OPT_SKIP_RSYNC = True
 			continue
-
-		if opt == '--no-post':
-			synctool.lib.NO_POST = True
 
 		if opt == '--check-update':
 			OPT_CHECK_UPDATE = True

@@ -166,6 +166,7 @@ def usage():
   -C, --clean                    Cleanup caches of downloaded packages
 
   -f, --fix                      Perform upgrade (otherwise, do dry-run)
+  -p, --numproc=num              Number of concurrent procs
   -v, --verbose                  Be verbose
       --unix                     Output actions as unix shell commands
   -a, --aggregate                Condense output
@@ -212,11 +213,11 @@ def get_options():
 	arglist = rearrange_options()
 
 	try:
-		opts, args = getopt.getopt(arglist, 'hc:n:g:x:X:iRluUCm:fvqa',
+		opts, args = getopt.getopt(arglist, 'hc:n:g:x:X:iRluUCm:fpvqa',
 			['help', 'conf=', 'node=', 'group=', 'exclude=', 'exclude-group=',
 			'list', 'install', 'remove', 'update', 'upgrade', 'clean',
 			'cleanup', 'manager=',
-			'fix', 'verbose', 'quiet', 'unix', 'aggregate',
+			'fix', 'numproc=', 'verbose', 'quiet', 'unix', 'aggregate',
 			])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
@@ -254,7 +255,6 @@ def get_options():
 	#
 	# Note: some options are passed on to synctool-pkg on the node, while
 	#       others are not. Therefore some 'continue', while others don't
-	#
 
 	action = 0
 	needs_package_list = False
@@ -316,6 +316,21 @@ def get_options():
 
 		if opt in ('-f', '--fix'):
 			synctool.lib.DRY_RUN = False
+
+		if opt in ('-p', '--numproc'):
+			try:
+				synctool.param.NUM_PROC = int(arg)
+			except ValueError:
+				print ("%s: option '%s' requires a numeric value" %
+					(os.path.basename(sys.argv[0]), opt))
+				sys.exit(1)
+
+			if synctool.param.NUM_PROC < 1:
+				print ('%s: invalid value for numproc' %
+					os.path.basename(sys.argv[0]))
+				sys.exit(1)
+
+			continue
 
 		if opt in ('-q', '--quiet'):
 			synctool.lib.QUIET = True
