@@ -52,6 +52,16 @@ def read_config():
 		synctool.param.TEMP_DIR = '/tmp/synctool'
 		# do not make temp dir here; it is only used on the master node
 
+	# if commands not set, select sensible defaults
+	# the existence of the commands is checked later ...
+	if not synctool.param.SYNCTOOL_CMD:
+		synctool.param.SYNCTOOL_CMD = os.path.join(synctool.param.ROOTDIR,
+													'bin', 'synctool-client')
+
+	if not synctool.param.PKG_CMD:
+		synctool.param.PKG_CMD = os.path.join(synctool.param.ROOTDIR,
+												'bin', 'synctool-client-pkg')
+
 	# implicitly add group 'all'
 	if not synctool.param.GROUP_DEFS.has_key('all'):
 		synctool.param.GROUP_DEFS['all'] = None
