@@ -2,6 +2,7 @@ June 2013
 - overlay dirs are grouped; default overlay dir is overlay/all/
 - rsync only relevant directories to the nodes
 - default_nodeset: by default run only on these nodes
+- new command synctool-template helps with 'templating' config files
 - node and group names are checked against a character set;
   'strange' symbols are no longer allowed
 - master passes nodename to the client; "hostid:" no longer needed
@@ -24,6 +25,7 @@ June 2013
 - ignore_files is obsolete; use ignore
 - ignore_dir is obsolete; use ignore
 - ignore_dirs is obsolete; use ignore
+- masterdir is obsolete
 
 Aug 2012
 - added dsh --numproc, patch by Werner Maier

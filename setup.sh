@@ -19,7 +19,7 @@ BUILD_DOCS="no"
 
 PROGS="synctool_master.py synctool_master_pkg.py synctool_launch.py
 synctool_ssh.py synctool_scp.py synctool_ping.py synctool_config.py
-synctool_aggr.py synctool_client.py synctool_pkg.py"
+synctool_aggr.py synctool_client.py synctool_pkg.py synctool_template.py"
 
 LAUNCHER="synctool_launch.py"
 
@@ -34,7 +34,7 @@ synctool_logo.jpg synctool_logo_large.jpg"
 
 SYMLINKS="synctool synctool-pkg dsh-pkg synctool-ssh dsh synctool-scp dcp
 synctool-ping dsh-ping synctool-config synctool-aggr dsh-aggr
-synctool-client synctool-client-pkg"
+synctool-client synctool-client-pkg synctool-template"
 
 
 if test "x$1" = x

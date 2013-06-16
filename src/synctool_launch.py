@@ -24,8 +24,9 @@ LAUNCH = {
 	'dsh-ping' : 'synctool_ping.py',
 	'synctool-aggr' : 'synctool_aggr.py',
 	'synctool-config' : 'synctool_config.py',
-	'synctool-client' : 'synctool_client.py'
-	'synctool-client-pkg' : 'synctool_pkg.py'
+	'synctool-client' : 'synctool_client.py',
+	'synctool-client-pkg' : 'synctool_pkg.py',
+	'synctool-template' : 'synctool_template.py'
 }
 
 
