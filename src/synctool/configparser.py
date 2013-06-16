@@ -643,6 +643,21 @@ def config_node(arr, configfile, lineno):
 
 				synctool.param.HOST_ID = hostid
 
+			elif qualifier == 'rsync':
+				if not arg:
+					stderr("%s:%d: missing argument to node qualifier "
+						"'rsync'" % (configfile, lineno))
+					return 1
+
+				if arg == 'yes':
+					pass
+				elif arg == 'no':
+					synctool.param.NO_RSYNC.add(node)
+				else:
+					stderr("%s:%d: node qualifier 'rsync' can have value "
+						"'yes' or 'no'" % (configfile, lineno))
+					return 1
+
 			else:
 				stderr('%s:%d: unknown node qualifier %s' %
 					(configfile, lineno, qualifier))

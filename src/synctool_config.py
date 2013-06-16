@@ -30,16 +30,19 @@ ARG_CMDS = None
 # these are enums for the "list" command-line options
 ACTION_LIST_NODES = 1
 ACTION_LIST_GROUPS = 2
-ACTION_NODES = 3
-ACTION_GROUPS = 4
-ACTION_CMDS = 5
-ACTION_NUMPROC = 6
-ACTION_VERSION = 7
-ACTION_PREFIX = 8
-ACTION_LOGFILE = 9
-ACTION_NODENAME = 10
-ACTION_LIST_DIRS = 11
-ACTION_PKGMGR = 12
+ACTION_LIST_IPADDRESS = 3
+ACTION_LIST_HOSTNAMES = 4
+ACTION_LIST_RSYNC = 5
+ACTION_NODES = 6
+ACTION_GROUPS = 7
+ACTION_CMDS = 8
+ACTION_NUMPROC = 9
+ACTION_VERSION = 10
+ACTION_PREFIX = 11
+ACTION_LOGFILE = 12
+ACTION_NODENAME = 13
+ACTION_LIST_DIRS = 14
+ACTION_PKGMGR = 15
 
 # optional: do not list hosts/groups that are ignored
 OPT_FILTER_IGNORED = False
@@ -60,21 +63,45 @@ def list_all_nodes():
 			if OPT_FILTER_IGNORED:
 				continue
 
+# FIXME change this behaviour
+# FIXME list by ipaddress, hostname should be an action on its own
+# FIXME add list rsync qualifier
 			if OPT_IPADDRESS:
-				node = synctool.config.get_node_ipaddress(host)
+				node = synctool.config.get_node_ipaddress(node)
 
 			elif OPT_HOSTNAME:
-				node = synctool.config.get_node_hostname(host)
+				node = synctool.config.get_node_hostname(node)
 
 			print '%s (ignored)' % node
 		else:
 			if OPT_IPADDRESS:
-				node = synctool.config.get_node_ipaddress(host)
+				node = synctool.config.get_node_ipaddress(node)
 
 			elif OPT_HOSTNAME:
-				node = synctool.config.get_node_hostname(host)
+				node = synctool.config.get_node_hostname(node)
 
 			print node
+
+
+def list_nodes_rsync():
+	nodes = synctool.config.get_all_nodes()
+	nodes.sort()
+
+	for node in nodes:
+		if node in synctool.param.NO_RSYNC:
+			rsync_it = 'no'
+		else:
+			rsync_it = 'yes'
+
+		ignored = set(synctool.config.get_groups(node))
+		ignored &= synctool.param.IGNORE_GROUPS
+		if len(ignored) > 0:
+			if OPT_FILTER_IGNORED:
+				continue
+
+			print '%s rsync %s (ignored)' % (node, rsync_it)
+		else:
+			print '%s rsync %s' % (node, rsync_it)
 
 
 def list_all_groups():
@@ -245,6 +272,7 @@ def usage():
   -g, --group=grouplist    List all nodes in this group
   -i, --ipaddress          List selected nodes by IP address
   -H, --hostname           List selected nodes by hostname
+  -r, --rsync              List all nodes' rsync qualifier
   -f, --filter-ignored     Do not list ignored nodes and groups
 
   -C, --command=command    Display setting for command
@@ -273,9 +301,9 @@ def get_options():
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:lLn:g:iHfC:Ppdv',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:lLn:g:iHrfC:Ppdv',
 			['help', 'conf=', 'list-nodes', 'list-groups', 'node=', 'group=',
-			'ipaddress', 'hostname', 'filter-ignored',
+			'ipaddress', 'hostname', 'rsync', 'filter-ignored',
 			'command', 'package-manager', 'numproc', 'list-dirs',
 			'prefix', 'logfile', 'nodename', 'version'])
 
@@ -336,6 +364,10 @@ def get_options():
 
 		if opt in ('-H', '--hostname'):
 			OPT_HOSTNAME = True
+			continue
+
+		if opt in ('-r', '--rsync'):
+			set_action(ACTION_LIST_RSYNC, '--rsync')
 			continue
 
 		if opt in ('-f', '--filter-ignored'):
@@ -407,6 +439,9 @@ def main():
 
 	elif ACTION == ACTION_LIST_GROUPS:
 		list_all_groups()
+
+	elif ACTION == ACTION_LIST_RSYNC:
+		list_nodes_rsync()
 
 	elif ACTION == ACTION_NODES:
 		if not ARG_NODENAMES:
