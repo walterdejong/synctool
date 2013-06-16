@@ -22,7 +22,6 @@ LAUNCH = {
 	'dcp' : 'synctool_scp.py',
 	'dsh-pkg' : 'synctool_master_pkg.py',
 	'dsh-ping' : 'synctool_ping.py',
-	'synctool-aggr' : 'synctool_aggr.py',
 	'synctool-config' : 'synctool_config.py',
 	'synctool-client' : 'synctool_client.py',
 	'synctool-client-pkg' : 'synctool_pkg.py',
