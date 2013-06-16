@@ -166,10 +166,28 @@ def init():
 	DELETE_DIR = os.path.join(VAR_DIR, 'delete')
 	DELETE_LEN = len(DELETE_DIR) + 1
 
+	# the following only makes sense for synctool-client
+	# but OK
+
 	# detect symlink mode
 	if sys.platform[:5] == 'linux':
 		SYMLINK_MODE = 0777
 	else:
 		SYMLINK_MODE = 0755
+
+	# add base dir (which is the bin/ dir) to PATH
+	path = os.environ['PATH']
+	if not path:
+		# no path, set a sensible default
+		path_arr = ['/bin', '/sbin', '/usr/bin', '/usr/sbin',
+			'/usr/local/bin', '/usr/local/sbin']
+ 	else:
+ 		path_arr = string.split(path, os.pathsep)
+
+ 	# add the synctool/bin/ dir
+ 	path_arr.append(os.path.join(ROOTDIR, 'bin'))
+
+ 	os.environ['PATH'] = string.join(path_arr, os.pathsep)
+
 
 # EOB
