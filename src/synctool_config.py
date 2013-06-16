@@ -234,6 +234,7 @@ def list_dirs():
 	print 'rootdir', synctool.param.ROOTDIR
 	print 'overlaydir', synctool.param.OVERLAY_DIR
 	print 'deletedir', synctool.param.DELETE_DIR
+	print 'scriptdir', synctool.param.SCRIPT_DIR
 	print 'tempdir', synctool.param.TEMP_DIR
 
 

@@ -242,6 +242,8 @@ do_install() {
 	install_libs
 	install_docs
 
+	echo "making $INSTALL_ROOT/scripts"
+	makedir 755 "$INSTALL_ROOT/scripts"
 	echo "making $INSTALL_ROOT/var"
 	makedir 700 "$INSTALL_ROOT/var"
 	echo "making $INSTALL_ROOT/var/overlay"
@@ -349,6 +351,7 @@ remove_overlay() {
 		rmdir "$INSTALL_ROOT/var/delete/all" 2>/dev/null
 		rmdir "$INSTALL_ROOT/var/delete" 2>/dev/null
 		rmdir "$INSTALL_ROOT/var" 2>/dev/null
+		rmdir "$INSTALL_ROOT/scripts" 2>/dev/null
 	fi
 
 	if test -d "$INSTALL_ROOT/var/overlay"
@@ -358,6 +361,10 @@ remove_overlay() {
 	if test -d "$INSTALL_ROOT/var/delete"
 	then
 		echo "leaving behind $INSTALL_ROOT/var/delete/"
+	fi
+	if test -d "$INSTALL_ROOT/scripts"
+	then
+		echo "leaving behind $INSTALL_ROOT/scripts/"
 	fi
 }
 

@@ -31,6 +31,7 @@ OVERLAY_DIR = None
 OVERLAY_LEN = 0
 DELETE_DIR = None
 DELETE_LEN = 0
+SCRIPT_DIR = None
 TEMP_DIR = '/tmp/synctool'
 HOSTNAME = None
 NODENAME = None
@@ -169,6 +170,7 @@ def init():
 	OVERLAY_LEN = len(OVERLAY_DIR) + 1
 	DELETE_DIR = os.path.join(VAR_DIR, 'delete')
 	DELETE_LEN = len(DELETE_DIR) + 1
+	SCRIPT_DIR = os.path.join(ROOTDIR, 'scripts')
 
 	# the following only makes sense for synctool-client
 	# but OK
