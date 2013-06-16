@@ -11,8 +11,6 @@
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
-# FIXME double check this script, because I changed the dir structure again
-
 INSTALL_ROOT=/opt/synctool
 
 DRY_RUN="yes"
@@ -251,7 +249,6 @@ do_install() {
 	echo "making $INSTALL_ROOT/var/delete"
 	makedir 750 "$INSTALL_ROOT/var/delete"
 
-	# FIXME mkdir etc/
 	echo "copying -> $INSTALL_ROOT/etc/synctool.conf.example"
 	if test "x$DRY_RUN" = "xno"
 	then
