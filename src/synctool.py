@@ -711,8 +711,8 @@ def main():
 
 	synctool_lib.openlog()
 
-	os.putenv('SYNCTOOL_NODENAME', synctool_param.NODENAME)
-	os.putenv('SYNCTOOL_MASTERDIR', synctool_param.MASTERDIR)
+	os.environ['SYNCTOOL_NODENAME'] = synctool_param.NODENAME
+	os.environ['SYNCTOOL_MASTERDIR'] = synctool_param.MASTERDIR
 
 	if action == ACTION_DIFF:
 		for file in SINGLE_FILES:

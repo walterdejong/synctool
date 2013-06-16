@@ -440,14 +440,14 @@ def search_path(cmd):
 		string.find(cmd, os.altsep) >= 0):
 		return cmd
 
-	path = os.getenv('PATH')
-
+	path = os.environ['PATH']
 	if not path:
-		path = '/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin'
+		path = string.join(['/bin', '/sbin', '/usr/bin', '/usr/sbin',
+							'/usr/local/bin', '/usr/local/sbin'], os.pathsep)
 
 	for d in string.split(path, os.pathsep):
 		full_path = os.path.join(d, cmd)
-		if os.path.isfile(full_path):
+		if os.access(full_path, os.X_OK):
 			return full_path
 
 	return cmd
