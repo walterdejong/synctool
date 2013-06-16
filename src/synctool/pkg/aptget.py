@@ -39,7 +39,7 @@ class SyncPkgAptget(SyncPkg):
 	def install(self, pkgs):
 		SyncPkg.install(self, pkgs)
 
-		os.putenv('DEBIAN_FRONTEND', 'noninteractive')
+		os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
 
 		cmd = 'apt-get -y install ' + string.join(pkgs)
 
@@ -49,7 +49,7 @@ class SyncPkgAptget(SyncPkg):
 	def remove(self, pkgs):
 		SyncPkg.remove(self, pkgs)
 
-		os.putenv('DEBIAN_FRONTEND', 'noninteractive')
+		os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
 
 		cmd = 'apt-get -y remove ' + string.join(pkgs)
 
@@ -59,14 +59,14 @@ class SyncPkgAptget(SyncPkg):
 	def update(self):
 		SyncPkg.update(self)
 
-		os.putenv('DEBIAN_FRONTEND', 'noninteractive')
+		os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
 		synctool.lib.shell_command('apt-get update')
 
 
 	def upgrade(self):
 		SyncPkg.upgrade(self)
 
-		os.putenv('DEBIAN_FRONTEND', 'noninteractive')
+		os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
 
 		if self.dryrun:
 			cmd = 'apt-get -s upgrade'		# --simulate
