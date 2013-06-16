@@ -10,6 +10,7 @@
 
 import os
 import sys
+import string
 
 VERSION = '6.0-beta'
 
