@@ -66,7 +66,6 @@ def get_latest_version_and_checksum():
 
 	# format of the data in LATEST.txt is:
 	# <version> <MD5 checksum>
-	# FIXME why not include release date?
 	arr = string.split(data)
 	if len(arr) < 2:
 		return None
@@ -81,7 +80,6 @@ def check():
 
 	latest_version = get_latest_version()
 
-	# FIXME why not check a release date?
 	if latest_version == synctool.param.VERSION:
 		stdout('You are running the latest version of synctool')
 		return False
