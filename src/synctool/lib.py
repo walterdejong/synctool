@@ -383,7 +383,7 @@ def search_path(cmd):
 	'''search the PATH for the location of cmd'''
 
 	if string.find(cmd, os.sep) >= 0 or (os.altsep != None and
-		string.find(cmd, os.altsep) >= 0):
+										string.find(cmd, os.altsep) >= 0):
 		return cmd
 
 	path = os.environ['PATH']
@@ -393,7 +393,7 @@ def search_path(cmd):
 
 	for d in string.split(path, os.pathsep):
 		full_path = os.path.join(d, cmd)
-		if os.path.isfile(full_path):
+		if os.access(full_path, os.X_OK):
 			return full_path
 
 	return cmd
