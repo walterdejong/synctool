@@ -236,16 +236,6 @@ class SyncObject:
 					unix_out('# relink symbolic link %s' % dest_path)
 					need_update = True
 
-				if (dest_stat.mode & 07777) != synctool.param.SYMLINK_MODE:
-					stdout('%s should have mode %04o (symlink), '
-						'but has %04o' % (dest_path,
-						synctool.param.SYMLINK_MODE, dest_stat.mode & 07777))
-					terse(synctool.lib.TERSE_MODE, '%04o %s' %
-						(synctool.param.SYMLINK_MODE, dest_path))
-					unix_out('# fix permissions of symbolic link %s' %
-						dest_path)
-					need_update = True
-
 			elif dest_stat.isDir():
 				stdout('%s should be a symbolic link' % dest_path)
 				terse(synctool.lib.TERSE_LINK, dest_path)
@@ -508,16 +498,14 @@ class SyncObject:
 		if self.dest_exists():
 			unix_out('mv %s %s.saved' % (newpath, newpath))
 
-		#
-		# actually, if we want the ownership of the symlink to be correct,
+		# symlinks are created using the default umask
+		# on Linux, the mode of symlinks is always 0777 (weird!)
+		# on other platforms, it gets a mode according to umask
+
+		# if we want the ownership of the symlink to be correct,
 		# we should do setuid() here
 		# matching ownerships of symbolic links is not yet implemented
-		#
 
-		# linux makes all symlinks mode 0777, but some other platforms do not
-		umask_mode = synctool.param.SYMLINK_MODE ^ 0777
-
-		unix_out('umask %03o' % umask_mode)
 		unix_out('ln -s %s %s' % (oldpath, newpath))
 
 		if not synctool.lib.DRY_RUN:
@@ -530,8 +518,6 @@ class SyncObject:
 							(newpath, newpath, reason))
 					terse(synctool.lib.TERSE_FAIL, 'save %s.saved' % newpath)
 
-			old_umask = os.umask(umask_mode)
-
 			verbose('  os.symlink(%s, %s)' % (oldpath, newpath))
 			try:
 				os.symlink(oldpath, newpath)
@@ -539,8 +525,6 @@ class SyncObject:
 				stderr('failed to create symlink %s -> %s : %s' %
 						(newpath, oldpath, reason))
 				terse(synctool.lib.TERSE_FAIL, 'link %s' % newpath)
-
-			os.umask(old_umask)
 
 		else:
 			verbose(dryrun_msg('  os.symlink(%s, %s)' % (oldpath, newpath)))

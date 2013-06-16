@@ -4,11 +4,6 @@
 
 #tempdir	 /tmp/synctool
 
-# when synctool detects Linux, it will set the symlink mode to 0777
-# otherwise, it will default to mode 0755 for symlinks
-# You can change the default here
-#symlink_mode 0755
-
 # all files in the repository must have a group extension
 #require_extension yes
 

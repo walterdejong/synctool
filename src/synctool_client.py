@@ -626,7 +626,6 @@ def main():
 		unix_out('# NODENAME=%s' % synctool.param.NODENAME)
 		unix_out('# HOSTNAME=%s' % synctool.param.HOSTNAME)
 		unix_out('# ROOTDIR=%s' % synctool.param.ROOTDIR)
-		unix_out('# SYMLINK_MODE=0%o' % synctool.param.SYMLINK_MODE)
 		unix_out('#')
 
 		if not synctool.lib.DRY_RUN:
@@ -639,7 +638,6 @@ def main():
 			verbose('my nodename: %s' % synctool.param.NODENAME)
 			verbose('my hostname: %s' % synctool.param.HOSTNAME)
 			verbose('rootdir: %s' % synctool.param.ROOTDIR)
-			verbose('symlink_mode: 0%o' % synctool.param.SYMLINK_MODE)
 
 			if synctool.param.LOGFILE != None and not synctool.lib.DRY_RUN:
 				verbose('logfile: %s' % synctool.param.LOGFILE)

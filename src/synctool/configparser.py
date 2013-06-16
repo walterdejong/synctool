@@ -271,13 +271,6 @@ def config_package_manager(arr, configfile, lineno):
 	return 0
 
 
-# keyword: symlink_mode
-def config_symlink_mode(arr, configfile, lineno):
-	(err, synctool.param.SYMLINK_MODE) = _config_integer('symlink_mode',
-		arr[1], configfile, lineno, 8)
-	return err
-
-
 # keyword: require_extension
 def config_require_extension(arr, configfile, lineno):
 	(err, synctool.param.REQUIRE_EXTENSION) = _config_boolean(

@@ -51,17 +51,6 @@ PACKAGE_MANAGER = None
 LOGFILE = None
 NUM_PROC = 16				# use sensible default
 
-# default symlink mode
-# Linux makes them 0777 no matter what umask you have ...
-# but how do you like them on a different platform?
-#
-# The symlink mode can be set in the config file
-# with keyword symlink_mode
-#
-# Changing this value here has no effect ...
-# By default, detect_root() will set it to 0777 on Linux and 0755 otherwise
-SYMLINK_MODE = 0755
-
 REQUIRE_EXTENSION = True
 FULL_PATH = False
 TERSE = False
@@ -172,14 +161,7 @@ def init():
 	DELETE_LEN = len(DELETE_DIR) + 1
 	SCRIPT_DIR = os.path.join(ROOTDIR, 'scripts')
 
-	# the following only makes sense for synctool-client
-	# but OK
-
-	# detect symlink mode
-	if sys.platform[:5] == 'linux':
-		SYMLINK_MODE = 0777
-	else:
-		SYMLINK_MODE = 0755
+	# the following only makes sense for synctool-client, but OK
 
 	# add base dir (which is the bin/ dir) to PATH
 	path = os.environ['PATH']
