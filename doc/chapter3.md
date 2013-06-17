@@ -85,6 +85,11 @@ overlay directory specific to the group `wn`.
 > group. Instead, think about what subclusters you have, and arrange your
 > repository accordingly. See also chapter 5 on Best Practices.
 
+> In synctool version 5, you would configure 'overlaydir' and synctool would
+> still consider all overlay directories no matter what name the subdirectory
+> had. In synctool 6, the group is strictly enforced and the subtree is
+> synced to only those nodes that are in the group.
+
 To populate the repository, you can `scp` files from nodes, or you can use
 synctool's super convenient upload feature:
 
