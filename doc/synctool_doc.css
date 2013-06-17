@@ -39,7 +39,7 @@ h1 {
 	font-size: 2em;
 	font-weight: bold;
 /*	text-transform: capitalize;	*/
-	margin: 0 0 .5em 0;
+	margin: 2em 0 .5em 0;
 }
 
 h2 {
@@ -142,7 +142,7 @@ div#footer {
 	font-size: .8em;
 }
 
-.example {
+pre {
 	border: solid 1px #000;
 	background-color: #eee;
 	font-family: menlo, courier, monospace;
@@ -152,28 +152,17 @@ div#footer {
 	padding-left: 1.5em;
 }
 
-.note {
+blockquote {
 	border: dashed 1px #aaa;
 	background-color: #eee;
 	margin: 1em auto 1em auto;
 	padding: 1em;
 }
 
-.system {
+code {
 	font-family: menlo, courier, monospace;
 	font-size: .95em;
 	word-break: keep-all;
-}
-
-.cmd {
-	font-family: menlo, courier, monospace;
-	font-size: .95em;
-	word-break: keep-all;
-}
-
-.path {
-	font-family: menlo, courier, monospace;
-	font-size: .95em;
 }
 
 .vtab {
@@ -184,11 +173,6 @@ div#footer {
 
 .line {
 	border: dashed 2px #eee;
-}
-
-.smallcaps {
-	text-transform: uppercase;
-	font-size: 80%;
 }
 
 /* EOB */
