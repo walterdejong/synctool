@@ -30,14 +30,15 @@ OPT_AGGREGATE = False
 MASTER_OPTS = None
 SSH_OPTIONS = None
 
+# ugly globals help parallelism
+SSH_CMD_ARR = None
+REMOTE_CMD_ARR = None
 
-def run_dsh(remote_cmd_arr):
+
+def run_dsh(address_list, remote_cmd_arr):
 	'''run remote command to a set of nodes using ssh (param ssh_cmd)'''
 
-	nodes = NODESET.addresses()
-	if not nodes:
-		print 'no valid nodes specified'
-		sys.exit(1)
+	global SSH_CMD_ARR, REMOTE_CMD_ARR
 
 	# if the command is under scripts/, assume its full path
 	# This is nice because scripts/ isn't likely to be in PATH
@@ -53,51 +54,43 @@ def run_dsh(remote_cmd_arr):
 			# found the command under scripts/
 			remote_cmd_arr[0] = full_path
 
-	ssh_cmd_arr = shlex.split(synctool.param.SSH_CMD)
+	SSH_CMD_ARR = shlex.split(synctool.param.SSH_CMD)
 
 	if SSH_OPTIONS:
-		ssh_cmd_arr.extend(shlex.split(SSH_OPTIONS))
+		SSH_CMD_ARR.extend(shlex.split(SSH_OPTIONS))
 
-	synctool.lib.run_parallel(master_ssh, worker_ssh,
-		(nodes, ssh_cmd_arr, remote_cmd_arr), len(nodes))
+	REMOTE_CMD_ARR = remote_cmd_arr
 
-
-def master_ssh(rank, args):
-	(nodes, ssh_cmd_arr, remote_cmd_arr) = args
-
-	node = nodes[rank]
-	cmd_str = string.join(remote_cmd_arr)
-
-	if node == synctool.param.NODENAME:
-		verbose('running %s' % cmd_str)
-		unix_out(cmd_str)
-	else:
-		verbose('running %s to %s %s' % (os.path.basename(ssh_cmd_arr[0]),
-			NODESET.get_nodename_from_address(node), cmd_str))
-
-		if SSH_OPTIONS:
-			unix_out('%s %s %s %s' % (string.join(ssh_cmd_arr), SSH_OPTIONS,
-				node, cmd_str))
-		else:
-			unix_out('%s %s %s' % (string.join(ssh_cmd_arr), node, cmd_str))
+	synctool.lib.multiprocess(worker_ssh, address_list)
 
 
-def worker_ssh(rank, args):
+def worker_ssh(addr):
+	global SSH_CMD_ARR
+
 	if synctool.lib.DRY_RUN:		# got here for nothing
 		return
 
-	(nodes, ssh_cmd_arr, remote_cmd_arr) = args
+	nodename = NODESET.get_nodename_from_address(addr)
 
-	node = nodes[rank]
-	nodename = NODESET.get_nodename_from_address(node)
+	cmd_str = string.join(REMOTE_CMD_ARR)
+
+	# create local copy
+	# or else parallelism may screw things up
+	ssh_cmd_arr = SSH_CMD_ARR[:]
 
 	if nodename == synctool.param.NODENAME:
+		verbose('running %s' % cmd_str)
+
 		# is this node the local node? Then do not use ssh
 		ssh_cmd_arr = []
 	else:
-		ssh_cmd_arr.append(node)
+		verbose('running %s to %s %s' % (os.path.basename(SSH_CMD_ARR[0]),
+										nodename, cmd_str))
+		ssh_cmd_arr.append(addr)
 
-	ssh_cmd_arr.extend(remote_cmd_arr)
+	ssh_cmd_arr.extend(REMOTE_CMD_ARR)
+
+	unix_out(string.join(ssh_cmd_arr))
 
 	# execute ssh+remote command and show output with the nodename
 	synctool.lib.run_with_nodename(ssh_cmd_arr, nodename)
@@ -301,7 +294,12 @@ def main():
 
 	synctool.config.init_mynodename()
 
-	run_dsh(cmd_args)
+	address_list = NODESET.addresses()
+	if not address_list:
+		print 'no valid nodes specified'
+		sys.exit(1)
+
+	run_dsh(address_list, cmd_args)
 
 
 if __name__ == '__main__':

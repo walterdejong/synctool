@@ -66,6 +66,10 @@ def worker_scp(addr):
 
 	# note that the fileset already had been added to SCP_CMD_ARR
 
+	# create local copy
+	# or parallelism may screw things up
+	scp_cmd_arr = SCP_CMD_ARR[:]
+
 	if DESTDIR:
 		verbose('copying %s to %s:%s' % (FILES_STR, nodename, DESTDIR))
 
@@ -75,7 +79,7 @@ def worker_scp(addr):
 		else:
 			unix_out('%s %s %s:%s' % (synctool.param.SCP_CMD, FILES_STR,
 										addr, DESTDIR))
-		SCP_CMD_ARR.append('%s:%s' % (addr, DESTDIR))
+		scp_cmd_arr.append('%s:%s' % (addr, DESTDIR))
 	else:
 		verbose('copying %s to %s' % (FILES_STR, nodename))
 
@@ -85,9 +89,9 @@ def worker_scp(addr):
 		else:
 			unix_out('%s %s %s:' % (synctool.param.SCP_CMD, FILES_STR, addr))
 
-		SCP_CMD_ARR.append('%s:' % addr)
+		scp_cmd_arr.append('%s:' % addr)
 
-	synctool.lib.run_with_nodename(SCP_CMD_ARR, nodename)
+	synctool.lib.run_with_nodename(scp_cmd_arr, nodename)
 
 
 def check_cmd_config():
