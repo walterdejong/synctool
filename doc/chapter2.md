@@ -12,16 +12,11 @@ of this document (see the SSH documentation or just google around), but
 I'd like to say this about it:
 
 * use an SSH keypair
-
 * or use hostbased authentication, also for root
-
 * set `PermitRootLogin without-password` in `sshd_config` on the nodes
-
 * use `ssh-keyscan` to create `/etc/ssh/ssh_known_hosts`
-
 * run `sshd` only the internal network interface to secure your system;
   configure `ListenAddress` appropriately
-
 * in general, passwordless SSH from any cluster node to your master node
   should _not_ work or be allowed -- or at least, synctool does not need this
 
@@ -50,35 +45,40 @@ The rest of the documentation assumes the default `/opt/synctool`.
 
 `setup.sh` creates the following directory structure:
 
-    /opt/synctool/bin/
-    /opt/synctool/sbin/
-    /opt/synctool/etc/
-    /opt/synctool/lib/
+    /opt/synctool/bin/                  synctool commands
+    /opt/synctool/sbin/                 'system' programs
+    /opt/synctool/etc/                  configuration files
+    /opt/synctool/lib/                  libraries, modules
     /opt/synctool/lib/synctool/
     /opt/synctool/lib/synctool/pkg/
-    /opt/synctool/scripts/
-    /opt/synctool/var/
+    /opt/synctool/doc/                  documentation
+    /opt/synctool/scripts/              place to store your scripts
+    /opt/synctool/var/                  repository directory
     /opt/synctool/var/overlay/
     /opt/synctool/var/delete/
+
+The `doc/` directory contains a copy of this documentation.
+You may build the HTML documentation from the plain text sources
+by running `setup.sh` with `--build-docs`.
 
 The following synctool commands will be made available in
 `/opt/synctool/bin/`:
 
-    synctool              Main command
-    synctool-pkg          Upgrade or install packages
-    synctool-ssh          Run remote commands
-    synctool-scp          Copy files to nodes
-    synctool-ping         Check whether nodes are up
-    synctool-config       Inspect the configuration
+    synctool               Main command
+    synctool-pkg           Upgrade or install packages
+    synctool-ssh           Run remote commands
+    synctool-scp           Copy files to nodes
+    synctool-ping          Check whether nodes are up
+    synctool-config        Inspect the configuration
 
-    dsh-pkg               Short name for synctool-pkg
-    dsh                   Short name for synctool-ssh
-    dcp                   Short name for synctool-scp
-    dsh-ping              Short name for synctool-ping
+    dsh-pkg                Short name for synctool-pkg
+    dsh                    Short name for synctool-ssh
+    dcp                    Short name for synctool-scp
+    dsh-ping               Short name for synctool-ping
 
-    synctool-client       Only run on target nodes
-    synctool-client-pkg   Only run on target nodes
-    synctool-template     Useful command for .post scripts
+    synctool-client        Only run on target nodes
+    synctool-client-pkg    Only run on target nodes
+    synctool-template      Useful command for .post scripts
 
 
 2.3 synctool configuration: nodes and groups

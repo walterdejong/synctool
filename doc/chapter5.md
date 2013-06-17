@@ -115,7 +115,7 @@ And the accompanying `.post` script:
 
     IPADDR=`ifconfig en0 | awk '/inet / { print $2 }'`
     synctool-template -v IPADDR "$IPADDR" \
-        fiction.conf.template._all >/etc/fiction.conf
+        fiction.conf.template >fiction.conf
     service fiction reload
 
 This example uses `ifconfig` to get the IP address of the node. You may also

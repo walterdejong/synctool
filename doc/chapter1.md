@@ -51,12 +51,9 @@ concepts:
 
 * Some clusters are more homogeneous than others. To handle differentiation
   within a cluster, a host can be part of one or more logical groups;
-
 * Files are designated to a group by means of filename extension;
-
 * The 'overlay' directory tree contains the files that are 'synced' to the
   target hosts;
-
 * When certain files are updated, you will want to execute a script
   (e.g, to run `'service daemon restart'`).
   synctool has a mechanism for this. You can make synctool more powerful

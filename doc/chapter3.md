@@ -11,8 +11,9 @@ belongs to that node.
 Under the synctool root there are two very important directories:
 
 * `/opt/synctool/var/overlay/`
-
 * `/opt/synctool/var/delete/`
+
+This is referred to as 'the repository'.
 
 The `overlay/` tree contains files that have to be copied to the target nodes.
 When synctool detects a difference between a file on the system and a file
@@ -34,66 +35,118 @@ cluster, you may put synctool on there and use the option `--skip-rsync` to
 skip the mirroring of the repository. You may also use `rsync:no` in a node
 definition in the config file to tell synctool not to run `rsync`.
 
+> Previously, synctool was located under `/var/lib/synctool/`.
+> It worked for me (tm), except that the Filesystem Hierarchy Standard (FHS)
+> has various things to say about it:
+>
+> * thou shalt put configuration files under an `etc/` directory;
+> * thou shalt not execute programs from the `/var` partition;
+> * `/var` may be mounted read-only;
+> * programs that want to keep things together, should use `/opt`.
+>
+> If you have difficulty with getting used to synctool's new root,
+> try this:
+>
+> * symlink `/var/lib/synctool -> /opt/synctool/var`
+> * `export overlay=/opt/synctool/var/overlay ; cd $overlay`
 
-3.1 Running synctool
---------------------
-Let's have a look at this example:
+
+3.1 Populating the repository
+-----------------------------
+In the repository you will store all the important system configuration files
+of the cluster nodes. The overlay directory represents the root directory of
+the cluster nodes. By assigning an extension to a file in the repository,
+you can tell synctool what nodes should get what copy of a file.
+Consider this example:
+
+    /opt/synctool/var/overlay/all/
+      etc/ntp.conf._all
+      etc/ntp.conf._node1
+      etc/ntp.conf._wn
+
+Here, worker nodes (nodes tagged with group `wn` in `synctool.conf`) will
+get the file `ntp.conf._wn` for `/etc/ntp.conf`. Node `node1` is special
+and gets a different file. All other nodes will get `ntp.conf._all`.
+
+synctool responds to the directory directly under `overlay/`; it selects
+this subtree as a candidate when the node has a matching group. For example,
+
+    /opt/synctool/var/overlay/wn/
+      etc/ntp.conf._all
+
+this file will only be used on worker nodes because it resides in the
+overlay directory specific to the group `wn`.
+
+> Tip: Do not make group-specific overlay directories for each and every
+> group. Instead, think about what subclusters you have, and arrange your
+> repository accordingly. See also chapter 5 on Best Practices.
+
+To populate the repository, you can `scp` files from nodes, or you can use
+synctool's super convenient upload feature:
+
+    synctool -n node1 --upload /etc/ntp.conf
+    synctool -n node1 -u /etc/ntp.conf
+
+synctool will automatically choose an extension for the file to save. If you
+disagree and want a different suffix, choose one:
+
+    synctool -n node1 --upload /etc/ntp.conf --suffix wn
+    synctool -n node1 -u /etc/ntp.conf -s wn
+
+Now edit the file, make changes to the `ntp.conf` and run synctool:
 
     root@masternode:/# synctool
-    node3: DRY RUN, not doing any updates
-    node3: /etc/xinetd.d/identd updated (file size mismatch)
+    node1: DRY RUN, not doing any updates
+    node1: /etc/ntp.conf updated (file size mismatch)
 
 The file is being updated because there is a mismatch in the file size.
 Should the file size be the same, synctool will calculate an MD5 checksum to
 see whether the file was changed or not.
 
 By default synctool does a _dry run_. It will not do anything but show
-what would happen if this would not be a dry run. Use option `-f` or `--fix`
-to apply any changes.
+what would happen if this would not be a dry run.
+
+You may want to review your changes before applying them, or inspect the
+difference between the version in the repository with what's currently
+installed on a node:
+
+    synctool -n node1 --diff /etc/ntp.conf
+    synctool -n node1 -d /etc/ntp.conf
+
+This will present a UNIX 'diff' of the files. Note the destination path in
+the syntax of the command.
+
+To apply the change, you could now run synctool with option `--fix`.
+But maybe it's better to read on, we are going to have synctool automatically
+reload the `ntpd` after updating the `ntp.conf` file.
 
 
 3.2 Adding actions to updates
 -----------------------------
-Now I would like the `xinetd` to be automatically reloaded after I change
-the `identd` file. This is done by adding a trigger script, in synctool-speak
-known as a ".post" script.
+Now I would like the `ntpd` to be automatically reloaded after I change
+the `ntp.conf` file. This is done by adding a trigger script, in
+synctool-speak known as a ".post" script.
 
-In `overlay/all/etc/xinetd.d/identd.post` put only this line:
+Make a new file `overlay/all/etc/ntp.conf.post` and put only this line in it:
 
-    /etc/init.d/xinetd reload
+    service ntp reload
 
-Make the `.post` script executable: `chmod +x identd.post`
+Make the `.post` script executable: `chmod +x ntp.conf.post`.
 
 The `.post` script will be run when the file changes:
 
     root@masternode:/# synctool -f
-    node3: /etc/xinetd.d/identd updated (file size mismatch)
-    node3: running command $overlay/all/etc/xinetd.d/identd.post
+    node1: /etc/ntp.conf updated (file size mismatch)
+    node1: running command $overlay/all/etc/ntp.conf.post
 
 The `.post` script is executed in the directory where the accompanying file
-is in, in this case `/etc/xinetd.d/`. It is possible to add a group
-extension to the `.post` script, so that you can have one group of nodes
-perform different actions than another.
+is in, in this case `/etc/`. It is possible to add a group extension to
+the `.post` script, so that you can have one group of nodes perform different
+actions than another.
 
 
-3.3 Special groups
-------------------
-The next example shows that the nodename can be used as a group.
-In the example, the `fstab` file is identical throughout the cluster, with
-the exception of node5 and node7.
-
-    root@masternode:/opt/synctool/var# ls -F overlay/all/etc
-    fstab._all    motd.production._batch  sudoers._all
-    fstab._node5  nsswitch.conf._all      sysconfig/
-    fstab._node7  nsswitch.conf.old._all  sysctl.conf._all
-
-Group `all` implictly applies to all nodes. Likewise, there is an implicit
-group `none` that matches no nodes. Group `none` can be convenient when you
-to have a copy of a file around, but do not wish to push it to any nodes yet.
-
-
-3.4 Useful options
-------------------
+3.3 Other useful options
+------------------------
 The option `-q` of synctool gives less output:
 
     root@masternode:/# synctool -q
@@ -124,9 +177,6 @@ file, use option `-ref` or `-r`:
 
     root@masternode:/# synctool -q -n node1 -r /etc/resolv.conf
     node1: /etc/resolv.conf._somegroup
-
-To inspect differences between the master copy and the client copy of a file,
-use option `--diff` or `-d`.
 
 synctool can be run on a subset of nodes, a group, or even on individual
 nodes using the options `--group` or `-g`, `--node` or `-n`, `--exclude`
@@ -214,78 +264,7 @@ not shared with the master server, you can specify `rsync:no` in the config
 file.
 
 
-3.5 Logging
------------
-When using option `--fix` to apply changes, synctool can log the performed
-actions to a file. Use the `logfile` directive in `synctool.conf` to specify
-that you want logging:
-
-    logfile /var/log/synctool.log
-
-synctool will write this logfile on each node seperately, and a concatenated
-log on the master node.
-
-
-3.6 Ignoring them: I'm not touching you
----------------------------------------
-By using directives in the `synctool.conf` file, synctool can be told to
-ignore certain files, nodes, or groups. These will be excluded, skipped.
-For example:
-
-    ignore_dotfiles no
-    ignore_dotdirs yes
-    ignore .svn
-    ignore .gitignore .git
-    ignore .*.swp
-    ignore_node node1 node2
-    ignore_group oldgroup
-    ignore_group test
-
-
-3.7 About symbolic links
-------------------------
-synctool requires all files in the repository to have an extension (well ...
-unless you changed the default configuration), and symbolic links must have
-extensions too. Symbolic links in the repository will be _dead_ symlinks but
-they will point to the correct destination on the target node.
-
-Consider the following example, where `file` does not exist 'as is' in the
-repository:
-
-    $overlay/all/etc/motd._red -> file
-    $overlay/all/etc/file._red
-
-In the repository, `motd._red` is a red & dead symlink to `file`. On the
-target node, `/etc/motd` is going to be fine.
-
-
-3.8 Backup copies
------------------
-For any file synctool updates, it keeps a backup copy around on the target
-node with the extension `.saved`. If you don't like this, you can tell
-synctool to not make any backup copies with:
-
-    backup_copies no
-
-It is however highly recommended that you run with `backup_copies` enabled.
-You can manually specify that you want to remove backup copies using:
-
-    synctool --erase-saved
-    synctool -e
-
-
-3.9 Checking for updates
-------------------------
-synctool can check whether a new version of synctool itself is available by
-using the option `--check-update` on the master node. You can check
-periodically for updates by using `--check-update` in a crontab entry.
-To download the latest version, run `synctool --download` on the master node.
-These functions connect to the main website at [www.heiho.net/synctool][1].
-
-[1]: http://www.heiho.net/synctool/
-
-
-3.10 synctool-pkg, the synctool package manager
+3.4 synctool-pkg, the synctool package manager
 -----------------------------------------------
 synctool comes with a package manager named `synctool-pkg`.
 Rather than being yet another package manager with its own format of packages,
@@ -355,16 +334,78 @@ If you want to further examine what synctool-pkg is doing, you may specify
 under the hood.
 
 
-3.11 Slow updates
+3.5 Ignoring them: I'm not touching you
+---------------------------------------
+By using directives in the `synctool.conf` file, synctool can be told to
+ignore certain files, nodes, or groups. These will be excluded, skipped.
+For example:
+
+    ignore_dotfiles no
+    ignore_dotdirs yes
+    ignore .svn
+    ignore .gitignore .git
+    ignore .*.swp
+    ignore_node node1 node2
+    ignore_group oldgroup
+    ignore_group test
+
+
+3.6 Backup copies
 -----------------
+For any file synctool updates, it keeps a backup copy around on the target
+node with the extension `.saved`. If you don't like this, you can tell
+synctool to not make any backup copies with:
+
+    backup_copies no
+
+It is however highly recommended that you run with `backup_copies` enabled.
+You can manually specify that you want to remove backup copies using:
+
+    synctool --erase-saved
+    synctool -e
+
+
+3.7 Logging
+-----------
+When using option `--fix` to apply changes, synctool can log the performed
+actions to a file. Use the `logfile` directive in `synctool.conf` to specify
+that you want logging:
+
+    logfile /var/log/synctool.log
+
+synctool will write this logfile on each node seperately, and a concatenated
+log on the master node.
+
+
+3.8 About symbolic links
+------------------------
+synctool requires all files in the repository to have an extension (well ...
+unless you changed the default configuration), and symbolic links must have
+extensions too. Symbolic links in the repository will be _dead_ symlinks but
+they will point to the correct destination on the target node.
+
+Consider the following example, where `file` does not exist 'as is' in the
+repository:
+
+    $overlay/all/etc/motd._red -> file
+    $overlay/all/etc/file._red
+
+In the repository, `motd._red` is a red & dead symlink to `file`. On the
+target node, `/etc/motd` is going to be fine.
+
+
+3.9 Slow updates
+----------------
 By default, synctool addresses the nodes in parallel, and they are running
 updates concurrently. In some cases, like when doing rolling upgrades,
 you will not want to have this parallelism. There are two easy ways around
 this.
 
     dsh --numproc=1 uptime
+    dsh -p 1 uptime
 
     dsh --zzz=10 uptime
+    dsh -z 10 uptime
 
 The first one tells synctool (or in this case, `dsh`) to run only one
 process at a time. The second does the same thing, and sleeps for ten seconds
@@ -375,3 +416,14 @@ after running the command.
 
 The options `--numproc` and `--zzz` work for both `synctool` and `dsh`
 programs.
+
+
+3.10 Checking for updates
+-------------------------
+synctool can check whether a new version of synctool itself is available by
+using the option `--check-update` on the master node. You can check
+periodically for updates by using `--check-update` in a crontab entry.
+To download the latest version, run `synctool --download` on the master node.
+These functions connect to the main website at [www.heiho.net/synctool][1].
+
+[1]: http://www.heiho.net/synctool/

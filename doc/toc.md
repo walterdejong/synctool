@@ -11,17 +11,16 @@ Table of contents
   2.6 Client installation
 
 3. [Using synctool](chapter3.html)                       <br />
-  3.1 Running synctool                                   <br />
+  3.1 Populating the repository                          <br />
   3.2 Adding actions to updates                          <br />
-  3.3 Special groups                                     <br />
-  3.4 Useful options                                     <br />
-  3.5 Logging                                            <br />
-  3.6 Ignoring them: I'm not touching you                <br />
-  3.7 About symbolic links                               <br />
-  3.8 Backup copies                                      <br />
-  3.9 Checking for updates                               <br />
-  3.10 synctool-pkg, the synctool package manager        <br />
-  3.11 Slow updates
+  3.3 Other useful options                               <br />
+  3.4 synctool-pkg, the synctool package manager         <br />
+  3.5 Ignoring them: I'm not touching you                <br />
+  3.6 Backup copies                                      <br />
+  3.7 Logging                                            <br />
+  3.8 About symbolic links                               <br />
+  3.9 Slow updates                                       <br />
+  3.10 Checking for updates
 
 4. [All configuration parameters explained](chapter4.html)
 
