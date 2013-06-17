@@ -138,6 +138,10 @@ node:
 
 You may also leave the master node out of the configuration altogether.
 
+> Previous versions of synctool had a `masterdir` setting.
+> It no longer exists; the overlay directory must reside under
+> the synctool root, under `/opt/synctool/var/`.
+
 
 2.4 Testing with dsh
 --------------------
