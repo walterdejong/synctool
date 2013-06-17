@@ -30,7 +30,7 @@ PKG_LIBS="__init__.py aptget.py brew.py bsdpkg.py pacman.py yum.py zypper.py"
 
 DOCS="chapter1.html chapter2.html chapter3.html chapter4.html chapter5.html
 thank_you.html footer.html header.html toc.html single.html synctool_doc.css
-synctool_logo.jpg synctool_logo_large.jpg"
+synctool_logo.jpg synctool_logo_large.jpg build.sh"
 
 SYMLINKS="synctool synctool-pkg dsh-pkg synctool-ssh dsh synctool-scp dcp
 synctool-ping dsh-ping synctool-config synctool-client synctool-client-pkg
@@ -92,7 +92,8 @@ options:
   -f, --fix          Do the installation
 
   --installdir=DIR   Install synctool under this directory
-  --build-docs       Also install documentation (requires: m4)
+  --build-docs       Also build HTML documentation
+                     This requires 'markdown' and 'smartypants'
   --uninstall        Remove synctool from system
 
 The default installdir is $INSTALL_ROOT
@@ -185,15 +186,16 @@ install_libs() {
 }
 
 install_docs() {
-	if test "x$BUILD_DOCS" = "xyes"
-	then
-		echo "installing $INSTALL_ROOT/doc"
+	echo "installing documentation"
 
-		if test "x$DRY_RUN" = "xno"
+	if test "x$DRY_RUN" = "xno"
+	then
+		makedir 755 "$INSTALL_ROOT/doc"
+		( cd doc && install -m 644 $DOCS "$INSTALL_ROOT/doc" )
+
+		if test "x$BUILD_DOCS" = "xyes"
 		then
-			makedir 755 "$INSTALL_ROOT/doc"
-			( cd doc && ./build.sh )
-			( cd doc && install -m 644 $DOCS "$INSTALL_ROOT/doc" )
+			( cd "$INSTALL_ROOT/doc" && ./build.sh )
 		fi
 	fi
 }
