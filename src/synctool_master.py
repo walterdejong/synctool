@@ -40,47 +40,33 @@ PASS_ARGS = None
 MASTER_OPTS = None
 
 
-def run_remote_synctool(nodes):
-	if not nodes:
-		return
-
-	# run in parallel
-	synctool.lib.run_parallel(master_synctool, worker_synctool,
-		nodes, len(nodes))
+def run_remote_synctool(address_list):
+	synctool.lib.multiprocess(worker_synctool, address_list)
 
 
-def master_synctool(rank, nodes):
-	# the master node only displays what we're running
-
-	node = nodes[rank]
-	nodename = NODESET.get_nodename_from_address(node)
-
-	if not OPT_SKIP_RSYNC:
-		verbose('running rsync $SYNCTOOL/ to node %s' % nodename)
-		unix_out('%s %s %s:%s/' % (synctool.param.RSYNC_CMD,
-			synctool.param.ROOTDIR, node, synctool.param.ROOTDIR))
-
-	verbose('running synctool on node %s' % nodename)
-	unix_out('%s %s %s --nodename=%s %s' % (synctool.param.SSH_CMD, node,
-		synctool.param.SYNCTOOL_CMD, nodename, string.join(PASS_ARGS)))
-
-
-def worker_synctool(rank, nodes):
+def worker_synctool(addr):
 	'''run rsync of ROOTDIR to the nodes and ssh+synctool, in parallel'''
 
-	node = nodes[rank]
-	nodename = NODESET.get_nodename_from_address(node)
+	nodename = NODESET.get_nodename_from_address(addr)
+
+	if nodename == synctool.param.NODENAME:
+		run_local_synctool()
+		return
 
 	# rsync ROOTDIR/dirs/ to the node
 	# if "it wants it"
 	if not (OPT_SKIP_RSYNC or node in synctool.param.NO_RSYNC):
+		verbose('running rsync $SYNCTOOL/ to node %s' % nodename)
+		unix_out('%s %s %s:%s/' % (synctool.param.RSYNC_CMD,
+			synctool.param.ROOTDIR, addr, synctool.param.ROOTDIR))
+
 		# make rsync filter to include the correct dirs
 		tmp_filename = rsync_include_filter(nodename)
 
 		cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
 		cmd_arr.append('--filter=. %s' % tmp_filename)
 		cmd_arr.append('%s/' % synctool.param.ROOTDIR)
-		cmd_arr.append('%s:%s/' % (node, synctool.param.ROOTDIR))
+		cmd_arr.append('%s:%s/' % (addr, synctool.param.ROOTDIR))
 
 		# double check the rsync destination
 		# our filters are like playing with fire
@@ -101,16 +87,22 @@ def worker_synctool(rank, nodes):
 
 	# run 'ssh node synctool_cmd'
 	cmd_arr = shlex.split(synctool.param.SSH_CMD)
-	cmd_arr.append(node)
+	cmd_arr.append(addr)
 	cmd_arr.extend(shlex.split(synctool.param.SYNCTOOL_CMD))
 	cmd_arr.append('--nodename=%s' % nodename)
 	cmd_arr.extend(PASS_ARGS)
+
+	verbose('running synctool on node %s' % nodename)
+	unix_out(string.join(cmd_arr))
 
 	synctool.lib.run_with_nodename(cmd_arr, nodename)
 
 
 def run_local_synctool():
 	cmd_arr = shlex.split(synctool.param.SYNCTOOL_CMD) + PASS_ARGS
+
+	verbose('running synctool on node %s' % synctool.param.NODENAME)
+	unix_out(string.join(cmd_arr))
 
 	synctool.lib.run_with_nodename(cmd_arr, synctool.param.NODENAME)
 
@@ -678,19 +670,6 @@ def main():
 	else:
 		# do regular synctool run
 		make_tempdir()
-
-		local_address = synctool.config.get_node_ipaddress(
-							synctool.param.NODENAME)
-
-		for node in nodes:
-			#
-			#	is this node the localhost? then run locally
-			#
-			if node == local_address:
-				run_local_synctool()
-				nodes.remove(node)
-				break
-
 		run_remote_synctool(nodes)
 
 	synctool.lib.closelog()

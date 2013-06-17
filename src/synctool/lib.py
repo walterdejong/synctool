@@ -18,6 +18,8 @@ import shlex
 import time
 import errno
 import hashlib
+import time
+import multiprocessing
 
 import synctool.param
 
@@ -585,6 +587,38 @@ def run_parallel(master_func, worker_func, args, worklen):
 		except KeyboardInterrupt:
 			print
 			break
+
+
+def multiprocess(fn, work):
+	'''run a function in parallel'''
+
+	if synctool.param.SLEEP_TIME != 0:
+		synctool.param.NUM_PROC = 1
+
+	pool = multiprocessing.Pool(synctool.param.NUM_PROC)
+
+	for item in work:
+		pool.apply_async(multiprocess_helper, (fn, item))
+
+	pool.close()
+	pool.join()
+
+
+def multiprocess_helper(fn, arg):
+	'''helper for Python multiprocessing module
+	If --zzz was given, sleep after finishing the command'''
+
+	ret = fn(arg)
+
+	if synctool.param.SLEEP_TIME > 0:
+		time.sleep(synctool.param.SLEEP_TIME)
+
+	return ret
+
+
+if __name__ == '__main__':
+	# __main__ is needed because of multiprocessing module
+	pass
 
 
 # EOB

@@ -30,33 +30,27 @@ NODESET = synctool.nodeset.NodeSet()
 OPT_AGGREGATE = False
 
 
-def ping_nodes(nodes):
+def ping_nodes(address_list):
 	'''ping nodes in parallel'''
-	'''nodes is a list of addresses, really'''
 
-	synctool.lib.run_parallel(master_ping, worker_ping, nodes, len(nodes))
-
-
-def master_ping(rank, nodes):
-	nodename = NODESET.get_nodename_from_address(nodes[rank])
-	if nodename == synctool.param.NODENAME:
-		print '%s: up' % nodename
-		return
-
-	verbose('pinging %s' % nodename)
-	unix_out('%s %s' % (synctool.param.PING_CMD, nodes[rank]))
+	synctool.lib.multiprocess(ping_node, address_list)
 
 
-def worker_ping(rank, nodes):
+def ping_node(addr):
 	'''ping a single node'''
 
-	node = nodes[rank]
-	nodename = NODESET.get_nodename_from_address(node)
+	node = NODESET.get_nodename_from_address(addr)
+	if node == synctool.param.NODENAME:
+		print '%s: up' % node
+		return
+
+	verbose('pinging %s' % node)
+	unix_out('%s %s' % (synctool.param.PING_CMD, addr))
 
 	packets_received = 0
 
 	# execute ping command and show output with the nodename
-	cmd = '%s %s' % (synctool.param.PING_CMD, node)
+	cmd = '%s %s' % (synctool.param.PING_CMD, addr)
 	cmd_arr = shlex.split(cmd)
 
 	try:
@@ -101,9 +95,9 @@ def worker_ping(rank, nodes):
 					packets_received = -1
 
 	if packets_received > 0:
-		print '%s: up' % nodename
+		print '%s: up' % node
 	else:
-		print '%s: not responding' % nodename
+		print '%s: not responding' % node
 
 
 def check_cmd_config():
