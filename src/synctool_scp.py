@@ -30,76 +30,64 @@ OPT_AGGREGATE = False
 MASTER_OPTS = None
 SCP_OPTIONS = None
 
+# ugly globals help parallelism
+SCP_CMD_ARR = None
+FILES_STR = None
 
-def run_remote_copy(nodes, files):
+
+def run_remote_copy(address_list, files):
 	'''copy files[] to nodes[]'''
 
-	scp_cmd_arr = shlex.split(synctool.param.SCP_CMD)
+	global SCP_CMD_ARR, FILES_STR
+
+	SCP_CMD_ARR = shlex.split(synctool.param.SCP_CMD)
 
 	if SCP_OPTIONS:
-		scp_cmd_arr.extend(shlex.split(SCP_OPTIONS))
+		SCP_CMD_ARR.extend(shlex.split(SCP_OPTIONS))
 
-	for node in nodes:
-		if node == synctool.param.NODENAME:
-			verbose('skipping node %s' % node)
-			nodes.remove(node)
-			break
+	SCP_CMD_ARR.extend(files)
 
-	scp_cmd_arr.extend(files)
+	FILES_STR = string.join(files)		# only used for printing
 
-	files_str = string.join(files)		# this is used only for printing
-
-	synctool.lib.run_parallel(master_scp, worker_scp,
-		(nodes, scp_cmd_arr, files_str), len(nodes))
+	synctool.lib.multiprocess(worker_scp, address_list)
 
 
-def master_scp(rank, args):
-	(nodes, scp_cmd_arr, files_str) = args
-
-	node = nodes[rank]
-	nodename = NODESET.get_nodename_from_address(node)
-
-	# master thread only displays what we're running
-
-	if DESTDIR:
-		verbose('copying %s to %s:%s' % (files_str, nodename, DESTDIR))
-
-		if SCP_OPTIONS:
-			unix_out('%s %s %s %s:%s' % (synctool.param.SCP_CMD, SCP_OPTIONS,
-										files_str, node, DESTDIR))
-		else:
-			unix_out('%s %s %s:%s' % (synctool.param.SCP_CMD, files_str,
-										node, DESTDIR))
-
-	else:
-		verbose('copying %s to %s' % (files_str, nodename))
-
-		if SCP_OPTIONS:
-			unix_out('%s %s %s %s:' % (synctool.param.SCP_CMD, SCP_OPTIONS,
-										files_str, node))
-		else:
-			unix_out('%s %s %s:' % (synctool.param.SCP_CMD, files_str, node))
-
-
-def worker_scp(rank, args):
+def worker_scp(addr):
 	'''runs scp (remote copy) to node'''
+
+	global SCP_CMD_ARR
 
 	if synctool.lib.DRY_RUN:	# got here for nothing
 		return
 
-	(nodes, scp_cmd_arr, files_str) = args
+	nodename = NODESET.get_nodename_from_address(addr)
+	if nodename == synctool.param.NODENAME:
+		return
 
-	node = nodes[rank]
-	nodename = NODESET.get_nodename_from_address(node)
-
-	# note that the fileset already had been added to scp_cmd_arr
+	# note that the fileset already had been added to SCP_CMD_ARR
 
 	if DESTDIR:
-		scp_cmd_arr.append('%s:%s' % (node, DESTDIR))
-	else:
-		scp_cmd_arr.append('%s:' % node)
+		verbose('copying %s to %s:%s' % (FILES_STR, nodename, DESTDIR))
 
-	synctool.lib.run_with_nodename(scp_cmd_arr, nodename)
+		if SCP_OPTIONS:
+			unix_out('%s %s %s %s:%s' % (synctool.param.SCP_CMD, SCP_OPTIONS,
+										FILES_STR, addr, DESTDIR))
+		else:
+			unix_out('%s %s %s:%s' % (synctool.param.SCP_CMD, FILES_STR,
+										addr, DESTDIR))
+		SCP_CMD_ARR.append('%s:%s' % (addr, DESTDIR))
+	else:
+		verbose('copying %s to %s' % (FILES_STR, nodename))
+
+		if SCP_OPTIONS:
+			unix_out('%s %s %s %s:' % (synctool.param.SCP_CMD, SCP_OPTIONS,
+										FILES_STR, addr))
+		else:
+			unix_out('%s %s %s:' % (synctool.param.SCP_CMD, FILES_STR, addr))
+
+		SCP_CMD_ARR.append('%s:' % addr)
+
+	synctool.lib.run_with_nodename(SCP_CMD_ARR, nodename)
 
 
 def check_cmd_config():
