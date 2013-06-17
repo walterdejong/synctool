@@ -20,7 +20,8 @@ Table of contents
   3.7 Ignoring them: I'm not touching you                <br />
   3.8 Backup copies                                      <br />
   3.9 Checking for updates                               <br />
-  3.10 synctool-pkg, the synctool package manager
+  3.10 synctool-pkg, the synctool package manager        <br />
+  3.11 Slow updates
 
 4. [All configuration parameters explained](chapter4.html)
 

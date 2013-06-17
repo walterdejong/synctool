@@ -353,3 +353,25 @@ A specific package manager may be selected from the command-line.
 If you want to further examine what synctool-pkg is doing, you may specify
 `--verbose` or `--unix` to display more information about what is going on
 under the hood.
+
+
+3.11 Slow updates
+-----------------
+By default, synctool addresses the nodes in parallel, and they are running
+updates concurrently. In some cases, like when doing rolling upgrades,
+you will not want to have this parallelism. There are two easy ways around
+this.
+
+    dsh --numproc=1 uptime
+
+    dsh --zzz=10 uptime
+
+The first one tells synctool (or in this case, `dsh`) to run only one
+process at a time. The second does the same thing, and sleeps for ten seconds
+after running the command.
+
+> Suppose you have a 60 node cluster, and run with `--zzz=60`.
+> You now have to wait at least one hour for the run to complete.
+
+The options `--numproc` and `--zzz` work for both `synctool` and `dsh`
+programs.

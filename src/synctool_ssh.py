@@ -126,7 +126,8 @@ def usage():
   -X, --exclude-group=grouplist  Exclude these groups from the selection
   -a, --aggregate                Condense output
   -o, --options=options          Set additional ssh options
-  -p, --numproc=num              Number of concurrent procs
+  -p, --numproc=NUM              Set number of concurrent procs
+  -z, --zzz=NUM                  Sleep NUM seconds between each run
 
   -N, --no-nodename              Do not prepend nodename to output
   -v, --verbose                  Be verbose
@@ -147,10 +148,10 @@ def get_options():
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:ao:Nqp:',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:ao:Nqp:z:',
 			['help', 'conf=', 'verbose', 'node=', 'group=', 'exclude=',
 			'exclude-group=', 'aggregate', 'options=', 'no-nodename',
-			'unix', 'dry-run', 'quiet', 'numproc='])
+			'unix', 'dry-run', 'quiet', 'numproc=', 'zzz='])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -226,6 +227,27 @@ def get_options():
 				print ('%s: invalid value for numproc' %
 					os.path.basename(sys.argv[0]))
 				sys.exit(1)
+
+			continue
+
+		if opt in ('-z', '--zzz'):
+			try:
+				synctool.param.SLEEP_TIME = int(arg)
+			except ValueError:
+				print ("%s: option '%s' requires a numeric value" %
+					(os.path.basename(sys.argv[0]), opt))
+				sys.exit(1)
+
+			if synctool.param.SLEEP_TIME < 0:
+				print ('%s: invalid value for sleep time' %
+					os.path.basename(sys.argv[0]))
+				sys.exit(1)
+
+			if not synctool.param.SLEEP_TIME:
+				# (temporarily) set to -1 to indicate we want
+				# to run serialized
+				# synctool.lib.run_parallel() will use this
+				synctool.param.SLEEP_TIME = -1
 
 			continue
 

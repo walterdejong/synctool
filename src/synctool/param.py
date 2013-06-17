@@ -50,6 +50,7 @@ PACKAGE_MANAGER = None
 
 LOGFILE = None
 NUM_PROC = 16				# use sensible default
+SLEEP_TIME = 0
 
 REQUIRE_EXTENSION = True
 FULL_PATH = False

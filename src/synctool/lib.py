@@ -528,6 +528,9 @@ def run_parallel(master_func, worker_func, args, worklen):
 	# more elegant. However, it needs Python >= 2.6 and some systems
 	# still ship with the older Python 2.4 (at the time of writing this)
 
+	if synctool.param.SLEEP_TIME != 0:
+		synctool.param.NUM_PROC = 1
+
 	parallel = 0
 	n = 0
 	while n < worklen:
@@ -539,7 +542,12 @@ def run_parallel(master_func, worker_func, args, worklen):
 				pass
 
 			else:
-				parallel = parallel - 1
+				parallel -= 1
+
+				if synctool.param.SLEEP_TIME > 0:
+					verbose('sleeping %d seconds' % synctool.param.SLEEP_TIME)
+					unix_out('sleep %d' % synctool.param.SLEEP_TIME)
+					time.sleep(synctool.param.SLEEP_TIME)
 
 		try:
 			pid = os.fork()

@@ -166,7 +166,8 @@ def usage():
   -C, --clean                    Cleanup caches of downloaded packages
 
   -f, --fix                      Perform upgrade (otherwise, do dry-run)
-  -p, --numproc=num              Number of concurrent procs
+  -p, --numproc=NUM              Set number of concurrent procs
+  -z, --zzz=NUM                  Sleep NUM seconds between each run
   -v, --verbose                  Be verbose
       --unix                     Output actions as unix shell commands
   -a, --aggregate                Condense output
@@ -213,12 +214,11 @@ def get_options():
 	arglist = rearrange_options()
 
 	try:
-		opts, args = getopt.getopt(arglist, 'hc:n:g:x:X:iRluUCm:fpvqa',
+		opts, args = getopt.getopt(arglist, 'hc:n:g:x:X:iRluUCm:fp:z:vqa',
 			['help', 'conf=', 'node=', 'group=', 'exclude=', 'exclude-group=',
 			'list', 'install', 'remove', 'update', 'upgrade', 'clean',
-			'cleanup', 'manager=',
-			'fix', 'numproc=', 'verbose', 'quiet', 'unix', 'aggregate',
-			])
+			'cleanup', 'manager=', 'numproc=', 'zzz=',
+			'fix', 'verbose', 'quiet', 'unix', 'aggregate'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -329,6 +329,27 @@ def get_options():
 				print ('%s: invalid value for numproc' %
 					os.path.basename(sys.argv[0]))
 				sys.exit(1)
+
+			continue
+
+		if opt in ('-z', '--zzz'):
+			try:
+				synctool.param.SLEEP_TIME = int(arg)
+			except ValueError:
+				print ("%s: option '%s' requires a numeric value" %
+					(os.path.basename(sys.argv[0]), opt))
+				sys.exit(1)
+
+			if synctool.param.SLEEP_TIME < 0:
+				print ('%s: invalid value for sleep time' %
+					os.path.basename(sys.argv[0]))
+				sys.exit(1)
+
+			if not synctool.param.SLEEP_TIME:
+				# (temporarily) set to -1 to indicate we want
+				# to run serialized
+				# synctool.lib.run_parallel() will use this
+				synctool.param.SLEEP_TIME = -1
 
 			continue
 
