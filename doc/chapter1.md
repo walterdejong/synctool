@@ -70,6 +70,6 @@ across the cluster and do synchronized updates of software packages.
 synctool does not hide UNIX from you.
 Making clever use of synctool makes it a very powerful tool.
 
-synctool is successfully being used to administer several clusters at
-the Dutch national supercomputer facility since 2003. Hopefully it will be
-of some value to you as well.
+synctool started in 2003 and has since been in use with great success, doing
+real work at big computing sites. Hopefully, it will be of some value to you
+as well.

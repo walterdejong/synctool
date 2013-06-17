@@ -20,7 +20,7 @@ in the overlay tree, the file will be copied from the overlay tree onto
 the node.
 
 The `delete/` tree contains files that always have to be deleted from the
-node. Only the filename matters, so it is alright if the files in this tree
+nodes. Only the filename matters, so it is alright if the files in this tree
 are only zero bytes in size.
 
 synctool uses `rsync` to copy these trees to the node, and afterwards it

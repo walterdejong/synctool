@@ -4,9 +4,7 @@ synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 synctool is distributed under terms described in the GNU General Public
 License.
 
-See the INSTALL file for information on how to deploy synctool.
-See the DOCUMENTATION file for information on how to use synctool.
-
+Documentation is in the doc/ directory.
 Online documentation in HTML pages is available at:
 http://www.heiho.net/synctool/
 
@@ -25,26 +23,12 @@ synctool simplyfies things by working with the following concepts:
    be copied (or 'synced') to the target host
  * when certain files are updated, you will want to execute a script
    (eg, /etc/init.d/daemon restart)
- * synctool is a simple tool. By itself, it does not even communicate over the
-   network. It uses rsync to distribute repositories over an SSH channel.
-   Not only does this make synctool fast, it also makes it easy to understand
-   and use.
+ * synctool is easy to learn
 
-However, synctool does more than just this. Note how synctool manages
-files, not processes, and not full system installations. However, synctool
-is extensible in the sense that it can run scripts on hosts (via the
-'tasks' mechanism). This is primarily meant to do synchronized updates of
-software packages on all systems in the cluster, but can also be used
-to check daemons, or perform other system administration tasks.
+synctool does not hide UNIX from you.
 Making clever use of synctool makes it a very powerful tool.
 
-synctool is successfully being used to administrate several clusters at the
-Dutch national supercomputer facility for over 8 years now. Hopefully,
-it will be of some value to you as well.
+synctool started in 2003 and has since been in use with great success,
+doing real work at big computing centers. Hopefully, it will be of
+some value to you as well.
 
-
-Greets,
-
-     --Walter
-
-EOB
