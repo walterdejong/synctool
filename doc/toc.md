@@ -20,7 +20,8 @@ Table of contents
   3.7 Logging                                            <br />
   3.8 About symbolic links                               <br />
   3.9 Slow updates                                       <br />
-  3.10 Checking for updates
+  3.10 Checking for updates                              <br />
+  3.11 Running tasks with synctool
 
 4. [All configuration parameters explained](chapter4.html)
 

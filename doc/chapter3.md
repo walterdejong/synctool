@@ -431,3 +431,16 @@ To download the latest version, run `synctool --download` on the master node.
 These functions connect to the main website at [www.heiho.net/synctool][1].
 
 [1]: http://www.heiho.net/synctool/
+
+
+3.11 Running tasks with synctool
+--------------------------------
+synctool's `dsh` command is ideal for running commands on groups of nodes.
+On occasion, you will also want to run custom scripts with `dsh`.
+These scripts can be placed in `scripts/`, and `dsh` will find them.
+Mind that you have to do a (dry) synctool run to get the scripts onto the
+nodes; `dsh` does not distribute scripts by itself.
+
+> Previous versions had a `tasks/` directory under the repository and you
+> could invoke synctool with the `--tasks` option. This mechanism has been
+> obsoleted by `dsh` and the `scripts/` directory.
