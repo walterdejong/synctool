@@ -408,12 +408,12 @@ def main():
 #	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
 #		synctool.lib.openlog()
 
-	nodes = NODESET.addresses()
-	if not nodes:
+	address_list = NODESET.addresses()
+	if not address_list:
 		print 'no valid nodes specified'
 		sys.exit(1)
 
-	run_remote_pkg(nodes)
+	run_remote_pkg(address_list)
 
 #	synctool.lib.closelog()
 

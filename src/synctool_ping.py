@@ -276,12 +276,12 @@ def main():
 
 	synctool.config.init_mynodename()
 
-	nodes = NODESET.addresses()
-	if not nodes:
+	address_list = NODESET.addresses()
+	if not address_list:
 		print 'no valid nodes specified'
 		sys.exit(1)
 
-	ping_nodes(nodes)
+	ping_nodes(address_list)
 
 
 if __name__ == '__main__':

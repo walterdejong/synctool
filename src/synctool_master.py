@@ -652,25 +652,25 @@ def main():
 	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
 		synctool.lib.openlog()
 
-	nodes = NODESET.addresses()
-	if not nodes:
+	address_list = NODESET.addresses()
+	if not address_list:
 		print 'no valid nodes specified'
 		sys.exit(1)
 
 	if upload_filename:
 		# upload a file
-		if len(nodes) != 1:
+		if len(address_list) != 1:
 			print 'The option --upload can only be run on just one node'
 			print ('Please use --node=nodename to specify the node '
 				'to upload from')
 			sys.exit(1)
 
-		upload(nodes[0], upload_filename, upload_suffix)
+		upload(address_list[0], upload_filename, upload_suffix)
 
 	else:
 		# do regular synctool run
 		make_tempdir()
-		run_remote_synctool(nodes)
+		run_remote_synctool(address_list)
 
 	synctool.lib.closelog()
 

@@ -296,12 +296,12 @@ def main():
 
 	synctool.config.init_mynodename()
 
-	nodes = NODESET.addresses()
-	if not nodes:
+	address_list = NODESET.addresses()
+	if not address_list:
 		print 'no valid nodes specified'
 		sys.exit(1)
 
-	run_remote_copy(nodes, files)
+	run_remote_copy(address_list, files)
 
 
 if __name__ == '__main__':
