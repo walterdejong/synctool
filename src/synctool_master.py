@@ -162,7 +162,7 @@ def rsync_include_filter(nodename):
 	return filename
 
 
-def upload(interface, upload_filename, upload_suffix=None):
+def upload(address, upload_filename, upload_suffix=None):
 	'''copy a file from a node into the overlay/ tree'''
 
 	if upload_filename[0] != os.path.sep:
@@ -184,7 +184,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 			stdout('DRY RUN, not uploading any files')
 			terse(synctool.lib.TERSE_DRYRUN, 'not uploading any files')
 
-	node = NODESET.get_nodename_from_address(interface)
+	node = NODESET.get_nodename_from_address(address)
 
 	# pretend that the current node is now the given node;
 	# this is needed for find() to find the best reference for the file
@@ -239,7 +239,7 @@ def upload(interface, upload_filename, upload_suffix=None):
 
 	verbose('%s:%s uploaded as %s' % (node, upload_filename, repos_filename))
 	terse(synctool.lib.TERSE_UPLOAD, repos_filename)
-	unix_out('%s %s:%s %s' % (synctool.param.SCP_CMD, interface,
+	unix_out('%s %s:%s %s' % (synctool.param.SCP_CMD, address,
 								upload_filename, repos_filename))
 
 	if dry_run:
@@ -257,11 +257,11 @@ def upload(interface, upload_filename, upload_suffix=None):
 
 		# make scp command array
 		scp_cmd_arr = shlex.split(synctool.param.SCP_CMD)
-		scp_cmd_arr.append('%s:%s' % (interface, upload_filename))
+		scp_cmd_arr.append('%s:%s' % (address, upload_filename))
 		scp_cmd_arr.append(repos_filename)
 
 		synctool.lib.run_with_nodename(scp_cmd_arr,
-			NODESET.get_nodename_from_address(interface))
+			NODESET.get_nodename_from_address(address))
 
 		if os.path.isfile(repos_filename):
 			stdout('uploaded %s' % synctool.lib.prettypath(repos_filename))
