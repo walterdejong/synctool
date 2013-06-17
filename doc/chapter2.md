@@ -3,8 +3,9 @@
 > In synctool terminology, a _node_ is a host, a computer in a group
 > of computers. A group of computers is called a _cluster_.
 
-Passwordless SSH
-----------------
+
+2.1 Passwordless SSH
+--------------------
 First of all, synctool requires passwordless SSH from the master node to
 each cluster node as root. Exactly how to do this is beyond the scope
 of this document (see the SSH documentation or just google around), but
@@ -33,8 +34,9 @@ one that does suit your security needs.
 
 When passwordless SSH as root works, proceed to installing the software.
 
-Installing the software
------------------------
+
+2.2 Installing the software
+---------------------------
 To install synctool on the master node, run `setup.sh` like so:
 
         # ./setup.sh --installroot=/opt/synctool
@@ -79,8 +81,8 @@ The following synctool commands will be made available in
         synctool-template       Useful command for .post scripts
 
 
-synctool configuration: nodes and groups
-----------------------------------------
+2.3 synctool configuration: nodes and groups
+--------------------------------------------
 Copy the `synctool.conf.example` file to `/opt/synctool/etc/synctool.conf`.
 Edit `synctool.conf`, adjusting it as needed.
 
@@ -137,8 +139,8 @@ node:
 You may also leave the master node out of the configuration altogether.
 
 
-Testing with dsh
-----------------
+2.4 Testing with dsh
+--------------------
 After filling in a couple of nodes in `synctool.conf`, try the command
 `dsh-ping` to see if the nodes are 'up'. If they are, try running the
 commands `dsh hostname`, `dsh uptime`, or `dsh date`.
@@ -153,8 +155,8 @@ that this works before proceeding.
 Tip: Add `/opt/synctool/bin` to your `PATH`.
 
 
-Your first synctool run
------------------------
+2.5 Your first synctool run
+---------------------------
 Now that you have a rough setup on the master node, try running `synctool`
 to a single node:
 
@@ -172,8 +174,8 @@ When synctool to every node works, the basic setup is done and you can start
 filling your repository with useful files.
 
 
-Client installation
--------------------
+2.6 Client installation
+-----------------------
 As you may have noticed, we never installed any client software on the nodes.
 There is no client installation step; the master node automatically
 updates synctool on the client nodes. The binaries needed for this are

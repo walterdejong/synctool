@@ -35,8 +35,8 @@ skip the mirroring of the repository. You may also use `rsync:no` in a node
 definition in the config file to tell synctool not to run `rsync`.
 
 
-Running synctool
-----------------
+3.1 Running synctool
+--------------------
 Let's have a look at this example:
 
         root@masternode:/# synctool
@@ -52,8 +52,8 @@ what would happen if this would not be a dry run. Use option `-f` or `--fix`
 to apply any changes.
 
 
-Adding actions to updates
--------------------------
+3.2 Adding actions to updates
+-----------------------------
 Now I would like the `xinetd` to be automatically reloaded after I change
 the `identd` file. This is done by adding a trigger script, in synctool-speak
 known as a ".post" script.
@@ -76,8 +76,8 @@ extension to the `.post` script, so that you can have one group of nodes
 perform different actions than another.
 
 
-Special groups
---------------
+3.3 Special groups
+------------------
 The next example shows that the nodename can be used as a group.
 In the example, the `fstab` file is identical throughout the cluster, with
 the exception of node5 and node7.
@@ -92,8 +92,8 @@ group `none` that matches no nodes. Group `none` can be convenient when you
 to have a copy of a file around, but do not wish to push it to any nodes yet.
 
 
-Useful options
---------------
+3.4 Useful options
+------------------
 The option `-q` of synctool gives less output:
 
         root@masternode:/# synctool -q
@@ -214,8 +214,8 @@ not shared with the master server, you can specify `rsync:no` in the config
 file.
 
 
-Logging
--------
+3.5 Logging
+-----------
 When using option `--fix` to apply changes, synctool can log the performed
 actions to a file. Use the `logfile` directive in `synctool.conf` to specify
 that you want logging:
@@ -226,8 +226,8 @@ synctool will write this logfile on each node seperately, and a concatenated
 log on the master node.
 
 
-Ignoring them: I'm not touching you
------------------------------------
+3.6 Ignoring them: I'm not touching you
+---------------------------------------
 By using directives in the `synctool.conf` file, synctool can be told to
 ignore certain files, nodes, or groups. These will be excluded, skipped.
 For example:
@@ -242,8 +242,8 @@ For example:
         ignore_group test
 
 
-About symbolic links
---------------------
+3.7 About symbolic links
+------------------------
 synctool requires all files in the repository to have an extension (well ...
 unless you changed the default configuration), and symbolic links must have
 extensions too. Symbolic links in the repository will be _dead_ symlinks but
@@ -259,8 +259,8 @@ In the repository, `motd._red` is a red & dead symlink to `file`. On the
 target node, `/etc/motd` is going to be fine.
 
 
-Backup copies
--------------
+3.8 Backup copies
+-----------------
 For any file synctool updates, it keeps a backup copy around on the target
 node with the extension `.saved`. If you don't like this, you can tell
 synctool to not make any backup copies with:
@@ -274,8 +274,8 @@ You can manually specify that you want to remove backup copies using
         synctool -e
 
 
-Checking for updates
---------------------
+3.9 Checking for updates
+------------------------
 synctool can check whether a new version of synctool itself is available by
 using the option `--check-update` on the master node. You can check
 periodically for updates by using `--check-update` in a crontab entry.
@@ -285,8 +285,8 @@ These functions connect to the main website at [www.heiho.net/synctool][1].
 [1]: href="http://www.heiho.net/synctool/
 
 
-synctool-pkg, the synctool package manager
-------------------------------------------
+3.10 synctool-pkg, the synctool package manager
+-----------------------------------------------
 synctool comes with a package manager named `synctool-pkg`.
 Rather than being yet another package manager with its own format of packages,
 synctool-pkg is a wrapper around existing package management software.
