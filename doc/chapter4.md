@@ -71,9 +71,9 @@ synctool's configuration file.
   You may put multiple filenames on a line, and you may use wildcards.
   Example:
 
-        ignore .gitignore .git .svn
-        ignore .*.swp
-        ignore tmp[0-9][0-9][0-9]??
+    ignore .gitignore .git .svn
+    ignore .*.swp
+    ignore tmp[0-9][0-9][0-9]??
 
 * `ignore_file <file name>`
 
@@ -97,7 +97,7 @@ synctool's configuration file.
   By default, no logfile is specified, and thus logging is not enabled.
   Example:
 
-        logfile /var/log/synctool.log
+    logfile /var/log/synctool.log
 
   Mind that synctool does not rotate the logfile by itself.
 
@@ -194,12 +194,12 @@ synctool's configuration file.
 
   Valid values for `package_manager` are:
 
-        apt-get
-        yum
-        zypper
-        pacman
-        brew
-        bsdpkg
+    apt-get
+    yum
+    zypper
+    pacman
+    brew
+    bsdpkg
 
 * `num_proc <number>`
 
@@ -229,7 +229,7 @@ synctool's configuration file.
   The default is `all`. You may set it to `none` to make synctool not run
   on a default set of nodes at all.
 
-        default_nodeset test1 test2
+    default_nodeset test1 test2
 
 * `group <groupname> <subgroup> [..]`
 
@@ -237,15 +237,15 @@ synctool's configuration file.
   several subgroups together into a single group. If the subgroups did not
   exist yet, they are defined automatically as new, empty groups.
 
-        group wn workernode batch
-        group test wn
-        group g1 batch test wn
+    group wn workernode batch
+    group test wn
+    group g1 batch test wn
 
   Group names are alphanumeric, but can have an underscore, minus, or plus
   symbol in between. The following are valid group names:
 
-        group group1 group-1 group_1 group+1 192_168_1 10 node1+node2
-        group A+B+C A B C
+    group group1 group-1 group_1 group+1 192_168_1 10 node1+node2
+    group A+B+C A B C
 
 * `node <nodename> <group> [..] [ipaddress:<IP address>]
   [hostname:<fully qualified hostname>] [hostid:<filename>]
@@ -294,22 +294,21 @@ synctool's configuration file.
   the node has access to the repository via another way, such as a shared
   network filesystem.
 
-        node node1 fs sched rack1 ipaddress:node1-mgmt
-        node node2 login    rack1 ipaddress:node2-mgmt \
-                                  hostname:login.mydomain.com
-
-        node node3 wn       rack1 ipaddress:node3-mgmt
-        node node4 wn       rack1 ipaddress:node4-mgmt
-        node node5 wn       rack1 ipaddress:node5-mgmt
-        node node6 wn       rack1 ipaddress:node6-mgmt
-        node node7 wn       rack1 ipaddress:node7-mgmt
-        node node8 test     rack1 ipaddress:node8-mgmt
-        node node9 batch    rack1 ipaddress:node9-mgmt rsync:no
+    node node1 fs sched rack1 ipaddress:node1-mgmt
+    node node2 login    rack1 ipaddress:node2-mgmt \
+                                hostname:login.mydomain.com
+    node node3 wn       rack1 ipaddress:node3-mgmt
+    node node4 wn       rack1 ipaddress:node4-mgmt
+    node node5 wn       rack1 ipaddress:node5-mgmt
+    node node6 wn       rack1 ipaddress:node6-mgmt
+    node node7 wn       rack1 ipaddress:node7-mgmt
+    node node8 test     rack1 ipaddress:node8-mgmt
+    node node9 batch    rack1 ipaddress:node9-mgmt rsync:no
 
   Node names are alphanumeric, but can have an underscore, minus, or plus
   symbol in between. The following are valid node names:
 
-        node node1 node-1 node_1 node+1 10_0_0_2 10 node1+node2
+    node node1 node-1 node_1 node+1 10_0_0_2 10 node1+node2
 
 * `ignore_node <nodename> [..]`
 
@@ -343,12 +342,12 @@ synctool's configuration file.
   important, especially in setups where you are running a multitude of
   operating systems.
 
-        include /etc/synctool_local.conf
+    include /etc/synctool_local.conf
 
   Another good use of this option is to clean up your configuration:
 
-        include /opt/synctool/etc/nodes.conf
-        include /opt/synctool/etc/colors.conf
+    include /opt/synctool/etc/nodes.conf
+    include /opt/synctool/etc/colors.conf
 
 * `terse <yes/no>`
 
@@ -384,9 +383,9 @@ synctool's configuration file.
 
 Following are keywords to customize colors. Valid color codes are:
 
-        white       red       blue       default
-        black       green     magenta    bold
-        darkgray    yellow    cyan
+    white       red       blue       default
+    black       green     magenta    bold
+    darkgray    yellow    cyan
 
 * `color_info <color>`
 

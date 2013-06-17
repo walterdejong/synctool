@@ -39,7 +39,7 @@ When passwordless SSH as root works, proceed to installing the software.
 ---------------------------
 To install synctool on the master node, run `setup.sh` like so:
 
-        # ./setup.sh --installroot=/opt/synctool
+    # ./setup.sh --installroot=/opt/synctool
 
 The default location is `/opt/synctool`, a good place to put it.
 Note that synctool requires an 'installroot' directory of its own. The
@@ -50,35 +50,35 @@ The rest of the documentation assumes the default `/opt/synctool`.
 
 `setup.sh` creates the following directory structure:
 
-        /opt/synctool/bin/
-        /opt/synctool/sbin/
-        /opt/synctool/etc/
-        /opt/synctool/lib/
-        /opt/synctool/lib/synctool/
-        /opt/synctool/lib/synctool/pkg/
-        /opt/synctool/scripts/
-        /opt/synctool/var/
-        /opt/synctool/var/overlay/
-        /opt/synctool/var/delete/
+    /opt/synctool/bin/
+    /opt/synctool/sbin/
+    /opt/synctool/etc/
+    /opt/synctool/lib/
+    /opt/synctool/lib/synctool/
+    /opt/synctool/lib/synctool/pkg/
+    /opt/synctool/scripts/
+    /opt/synctool/var/
+    /opt/synctool/var/overlay/
+    /opt/synctool/var/delete/
 
 The following synctool commands will be made available in
 `/opt/synctool/bin/`:
 
-        synctool                Main command
-        synctool-pkg            Upgrade or install packages
-        synctool-ssh            Run remote commands
-        synctool-scp            Copy files to nodes
-        synctool-ping           Check whether nodes are up
-        synctool-config         Inspect the configuration
+    synctool              Main command
+    synctool-pkg          Upgrade or install packages
+    synctool-ssh          Run remote commands
+    synctool-scp          Copy files to nodes
+    synctool-ping         Check whether nodes are up
+    synctool-config       Inspect the configuration
 
-        dsh-pkg                 Short name for synctool-pkg
-        dsh                     Short name for synctool-ssh
-        dcp                     Short name for synctool-scp
-        dsh-ping                Short name for synctool-ping
+    dsh-pkg               Short name for synctool-pkg
+    dsh                   Short name for synctool-ssh
+    dcp                   Short name for synctool-scp
+    dsh-ping              Short name for synctool-ping
 
-        synctool-client         Only run on target nodes
-        synctool-client-pkg     Only run on target nodes
-        synctool-template       Useful command for .post scripts
+    synctool-client       Only run on target nodes
+    synctool-client-pkg   Only run on target nodes
+    synctool-template     Useful command for .post scripts
 
 
 2.3 synctool configuration: nodes and groups
@@ -91,7 +91,7 @@ what nodes have what roles, and how synctool can contact them.
 Think a bit about what role each machine has. There is no need to go into
 great depth right now; you can always adjust the configuration later.
 
-        node n1  group1 group2  ipaddress:machine-n01
+    node n1  group1 group2  ipaddress:machine-n01
 
 The nodename is the 'synctool name that the node has.' It is in general the
 short hostname of the host, but in fact it can be anything you like.
@@ -106,8 +106,8 @@ term 'group', but you can also think of them as node properties. You can make
 up as many different properties as you like. You can split long lines by
 ending them with a backslash:
 
-        node n101 workernode plasma mathworks solar \
-                  fsmounted backup debian  ipaddress:if0-n101
+    node n101 workernode plasma mathworks solar \
+          fsmounted backup debian  ipaddress:if0-n101
 
 > Mind that in practice, synctool repositories are generally easiest
 > maintainable with as few groups as possible. Make sure to use
@@ -118,10 +118,10 @@ If you have many nodes that all share the same long list of groups, the
 groups may be abbreviated by defining a _compound_ group. This compound
 group must be defined before defining the nodes:
 
-        group wn workernode plasma mathworks solar \
-                 fsmounted backup
+    group wn workernode plasma mathworks solar \
+         fsmounted backup
 
-        node n101  wn  debian  ipaddress:if0-n101
+    node n101  wn  debian  ipaddress:if0-n101
 
 You have to add a node definition for each and every node in your cluster.
 If your cluster is large, you may want to script the generation of a node
@@ -133,8 +133,8 @@ Some people like managing the master node itself with synctool.
 While it _is_ possible to do this, it's often better to exclude the master
 node:
 
-        node n1 master     hostname:n1.mycluster.org
-        ignore_node n1
+    node n1 master     hostname:n1.mycluster.org
+    ignore_node n1
 
 You may also leave the master node out of the configuration altogether.
 
@@ -160,13 +160,13 @@ Tip: Add `/opt/synctool/bin` to your `PATH`.
 Now that you have a rough setup on the master node, try running `synctool`
 to a single node:
 
-        synctool -n nodename
+    synctool -n nodename
 
 There should be some output message saying **DRY RUN**.
 This means that synctool is now working. You can try running synctool across
 all nodes:
 
-        synctool
+    synctool
 
 Check that every node responds. If it doesn't, go back to the step where
 we tested the setup using `dsh`.
