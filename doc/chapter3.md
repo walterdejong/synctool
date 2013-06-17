@@ -68,6 +68,10 @@ Here, worker nodes (nodes tagged with group `wn` in `synctool.conf`) will
 get the file `ntp.conf._wn` for `/etc/ntp.conf`. Node `node1` is special
 and gets a different file. All other nodes will get `ntp.conf._all`.
 
+There is a special group named `'none'`. Files with the extension `._none`
+will be copied to no nodes at all. This can be convenient when you
+temporarily wish to 'disable' a file.
+
 synctool responds to the directory directly under `overlay/`; it selects
 this subtree as a candidate when the node has a matching group. For example,
 
