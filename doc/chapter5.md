@@ -124,6 +124,8 @@ use the `ip addr` command, consult DNS or you might be able to use
 
 In this case, you could also easily use the UNIX `sed` command. If you have
 multiple variables to replace, `synctool-template` is more easy.
+synctool-template accepts variables either from the command-line or from
+the shell environment.
 
 Now, when you want to change the configuration, edit the template file
 instead. synctool will see the change in the template, and update the
