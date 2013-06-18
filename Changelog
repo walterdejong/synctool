@@ -6,7 +6,7 @@ June 2013
 - node and group names are checked against a character set;
   'strange' symbols are no longer allowed
 - master passes nodename to the client; "hostid:" no longer needed
-- new node qualifier 'rsync:no' may be given if the synctool repository is
+- new node specifier 'rsync:no' may be given if the synctool repository is
   on a shared filesystem
 - option --numproc now works on synctool, dsh and friends
 - synctool-config output has changed ... check your scripts
@@ -22,7 +22,7 @@ June 2013
 - tasksdir is obsolete; tasks are obsolete
 - scriptdir is obsolete; use .post scripts instead
 - use new tempdir setting as location for temp files
-- interface: qualifier is obsolete; use ipaddress:
+- interface: specifier is obsolete; use ipaddress:
 - ignore_host is obsolete; use ignore_node
 - host is obsolete; use node
 - ignore_file is obsolete; use ignore
