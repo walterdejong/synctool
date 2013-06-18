@@ -65,7 +65,7 @@ location of a file in the repository, chances are that you making things
 harder on yourself than ought to be.<br />
 There are situations where adding a group extension to a directory makes
 perfect sense. For example, when having an <span class="path">/usr/local</span>
-tree that only exists on a small group of nodes. Personally, I like to move 
+tree that only exists on a small group of nodes. Personally, I like to move
 such trees out of the main <span class="system">overlay</span> tree and park
 them under a different <span class="system">overlaydir</span> just to get them
 out of sight and clean up the repository a little.

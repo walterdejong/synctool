@@ -2,7 +2,7 @@
 #
 #	synctool-ssh	WJ109
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2012
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -34,60 +34,72 @@ SSH_OPTIONS = None
 
 def run_dsh(remote_cmd_arr):
 	'''run remote command to a set of nodes using ssh (param ssh_cmd)'''
-	
+
 	nodes = NODESET.interfaces()
 	if nodes == None or len(nodes) <= 0:
 		print 'no valid nodes specified'
 		sys.exit(1)
-	
+
 	if not synctool_param.SSH_CMD:
 		stderr('%s: error: ssh_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
 
 	ssh_cmd_arr = shlex.split(synctool_param.SSH_CMD)
-	
+
 	if SSH_OPTIONS:
 		ssh_cmd_arr.extend(shlex.split(SSH_OPTIONS))
-	
+
 	synctool_lib.run_parallel(master_ssh, worker_ssh,
 		(nodes, ssh_cmd_arr, remote_cmd_arr), len(nodes))
 
 
 def master_ssh(rank, args):
 	(nodes, ssh_cmd_arr, remote_cmd_arr) = args
-	
+
 	node = nodes[rank]
 	cmd_str = string.join(remote_cmd_arr)
-	
+
 	if node == synctool_param.NODENAME:
 		verbose('running %s' % cmd_str)
 		unix_out(cmd_str)
 	else:
 		verbose('running %s to %s %s' % (os.path.basename(ssh_cmd_arr[0]),
 			NODESET.get_nodename_from_interface(node), cmd_str))
-		
-		unix_out('%s %s %s' % (string.join(ssh_cmd_arr), node, cmd_str))
+
+		if SSH_OPTIONS:
+			unix_out('%s %s %s %s' % (string.join(ssh_cmd_arr), SSH_OPTIONS,
+				node, cmd_str))
+		else:
+			unix_out('%s %s %s' % (string.join(ssh_cmd_arr), node, cmd_str))
 
 
 def worker_ssh(rank, args):
 	if synctool_lib.DRY_RUN:		# got here for nothing
 		return
-	
+
 	(nodes, ssh_cmd_arr, remote_cmd_arr) = args
-	
+
 	node = nodes[rank]
 	nodename = NODESET.get_nodename_from_interface(node)
-	
+
 	if nodename == synctool_param.NODENAME:
 		# is this node the local node? Then do not use ssh
 		ssh_cmd_arr = []
 	else:
 		ssh_cmd_arr.append(node)
-	
+
 	ssh_cmd_arr.extend(remote_cmd_arr)
-	
+
 	# execute ssh+remote command and show output with the nodename
 	synctool_lib.run_with_nodename(ssh_cmd_arr, nodename)
+
+
+def check_cmd_config():
+	'''check whether the commands as given in synctool.conf actually exist'''
+
+	(ok, synctool_param.SSH_CMD) = synctool_config.check_cmd_config('ssh_cmd', synctool_param.SSH_CMD)
+	if not ok:
+		sys.exit(-1)
 
 
 def usage():
@@ -102,6 +114,7 @@ def usage():
 	print '  -X, --exclude-group=grouplist  Exclude these groups from the selection'
 	print '  -a, --aggregate                Condense output'
 	print '  -o, --options=options          Set additional ssh options'
+	print '  -p, --numproc=num              Number of concurrent procs'
 	print
 	print '  -N, --no-nodename              Do not prepend nodename to output'
 	print '  -v, --verbose                  Be verbose'
@@ -111,21 +124,21 @@ def usage():
 	print
 	print 'A nodelist or grouplist is a comma-separated list'
 	print
-	print 'synctool-ssh by Walter de Jong <walter@heiho.net> (c) 2009-2012'
+	print 'synctool-ssh by Walter de Jong <walter@heiho.net> (c) 2009-2013'
 
 
 def get_options():
 	global NODESET, REMOTE_CMD, MASTER_OPTS, OPT_AGGREGATE, SSH_OPTIONS
-	
+
 	if len(sys.argv) <= 1:
 		usage()
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:ao:Nq',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:ao:Nqp:',
 			['help', 'conf=', 'verbose', 'node=', 'group=', 'exclude=',
 			'exclude-group=', 'aggregate', 'options=', 'no-nodename',
-			'unix', 'dry-run', 'quiet'])
+			'unix', 'dry-run', 'quiet', 'numproc='])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -145,17 +158,18 @@ def get_options():
 		if opt in ('-h', '--help', '-?'):
 			usage()
 			sys.exit(1)
-		
+
 		if opt in ('-c', '--conf'):
 			synctool_param.CONF_FILE = arg
 			continue
-		
+
 		if opt == '--version':
 			print synctool_param.VERSION
 			sys.exit(0)
-	
+
 	synctool_config.read_config()
-	
+	check_cmd_config()
+
 	# then process the other options
 	MASTER_OPTS = [ sys.argv[0] ]
 
@@ -186,6 +200,19 @@ def get_options():
 
 		if opt in ('-X', '--exclude-group'):
 			NODESET.exclude_group(arg)
+			continue
+
+		if opt in ('-p', '--numproc'):
+			try:
+				synctool_param.NUM_PROC = int(arg)
+			except ValueError:
+				print "%s: option '%s' requires a numeric value" % (os.path.basename(sys.argv[0]), opt)
+				sys.exit(1)
+
+			if synctool_param.NUM_PROC < 1:
+				print '%s: invalid value for numproc' % os.path.basename(sys.argv[0])
+				sys.exit(1)
+
 			continue
 
 		if opt in ('-a', '--aggregate'):
@@ -225,15 +252,15 @@ def get_options():
 def main():
 	sys.stdout = synctool_unbuffered.Unbuffered(sys.stdout)
 	sys.stderr = synctool_unbuffered.Unbuffered(sys.stderr)
-	
+
 	cmd_args = get_options()
-	
+
 	if OPT_AGGREGATE:
 		synctool_aggr.run(MASTER_OPTS)
 		sys.exit(0)
-	
+
 	synctool_config.add_myhostname()
-	
+
 	run_dsh(cmd_args)
 
 

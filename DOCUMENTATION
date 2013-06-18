@@ -1,4 +1,4 @@
-synctool by Walter de Jong <walter@heiho.net> (c) 2003-2012
+synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
 
 synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 synctool is distributed under terms described in the GNU General Public
@@ -10,8 +10,11 @@ See the INSTALL file for information on how to deploy synctool.
 
 This DOCUMENTATION file tries to explain using synctool.
 
-Online documentation in HTML pages are available at:
+This text is only a small excerpt. The full documentation is available
+in HTML pages at:
 http://www.heiho.net/synctool/
+
+The sources to the full documentation is in the doc/ directory.
 
 
 In 'synctool terminology', a node is a host, a computer in a group of

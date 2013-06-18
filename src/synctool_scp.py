@@ -2,7 +2,7 @@
 #
 #	synctool-scp	WJ109
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2012
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -35,48 +35,48 @@ SCP_OPTIONS = None
 
 def run_remote_copy(nodes, files):
 	'''copy files[] to nodes[]'''
-	
+
 	if not synctool_param.SCP_CMD:
 		stderr('%s: error: scp_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
 		sys.exit(-1)
-	
+
 	scp_cmd_arr = shlex.split(synctool_param.SCP_CMD)
-	
+
 	if SCP_OPTIONS:
 		scp_cmd_arr.extend(shlex.split(SCP_OPTIONS))
-	
+
 	for node in nodes:
 		if node == synctool_param.NODENAME:
 			verbose('skipping node %s' % node)
 			nodes.remove(node)
 			break
-	
+
 	scp_cmd_arr.extend(files)
-	
+
 	files_str = string.join(files)		# this is used only for printing
-	
+
 	synctool_lib.run_parallel(master_scp, worker_scp, (nodes, scp_cmd_arr, files_str), len(nodes))
 
 
 def master_scp(rank, args):
 	(nodes, scp_cmd_arr, files_str) = args
-	
+
 	node = nodes[rank]
 	nodename = NODESET.get_nodename_from_interface(node)
-	
+
 	# master thread only displays what we're running
-	
+
 	if DESTDIR:
 		verbose('copying %s to %s:%s' % (files_str, nodename, DESTDIR))
-		
+
 		if SCP_OPTIONS:
 			unix_out('%s %s %s %s:%s' % (synctool_param.SCP_CMD, SCP_OPTIONS, files_str, node, DESTDIR))
 		else:
 			unix_out('%s %s %s:%s' % (synctool_param.SCP_CMD, files_str, node, DESTDIR))
-	
+
 	else:
 		verbose('copying %s to %s' % (files_str, nodename))
-		
+
 		if SCP_OPTIONS:
 			unix_out('%s %s %s %s:' % (synctool_param.SCP_CMD, SCP_OPTIONS, files_str, node))
 		else:
@@ -85,23 +85,31 @@ def master_scp(rank, args):
 
 def worker_scp(rank, args):
 	'''runs scp (remote copy) to node'''
-	
+
 	if synctool_lib.DRY_RUN:		# got here for nothing
 		return
 
 	(nodes, scp_cmd_arr, files_str) = args
-	
+
 	node = nodes[rank]
 	nodename = NODESET.get_nodename_from_interface(node)
-	
+
 	# note that the fileset already had been added to scp_cmd_arr
-	
+
 	if DESTDIR:
 		scp_cmd_arr.append('%s:%s' % (node, DESTDIR))
 	else:
 		scp_cmd_arr.append('%s:' % node)
-	
+
 	synctool_lib.run_with_nodename(scp_cmd_arr, nodename)
+
+
+def check_cmd_config():
+	'''check whether the commands as given in synctool.conf actually exist'''
+
+	(ok, synctool_param.SCP_CMD) = synctool_config.check_cmd_config('scp_cmd', synctool_param.SCP_CMD)
+	if not ok:
+		sys.exit(-1)
 
 
 def usage():
@@ -126,7 +134,7 @@ def usage():
 	print
 	print 'A nodelist or grouplist is a comma-separated list'
 	print
-	print 'synctool-scp by Walter de Jong <walter@heiho.net> (c) 2009-2012'
+	print 'synctool-scp by Walter de Jong <walter@heiho.net> (c) 2009-2013'
 
 
 def get_options():
@@ -163,17 +171,18 @@ def get_options():
 		if opt in ('-h', '--help', '-?'):
 			usage()
 			sys.exit(1)
-		
+
 		if opt in ('-c', '--conf'):
 			synctool_param.CONF_FILE = arg
 			continue
-		
+
 		if opt == '--version':
 			print synctool_param.VERSION
 			sys.exit(0)
-	
+
 	synctool_config.read_config()
-	
+	check_cmd_config()
+
 	# then process the other options
 	MASTER_OPTS = [ sys.argv[0] ]
 
@@ -238,29 +247,29 @@ def get_options():
 	if args == None or len(args) <= 0:
 		print '%s: missing file to copy' % os.path.basename(sys.argv[0])
 		sys.exit(1)
-	
+
 	MASTER_OPTS.extend(args)
-	
+
 	return args
 
 
 def main():
 	sys.stdout = synctool_unbuffered.Unbuffered(sys.stdout)
 	sys.stderr = synctool_unbuffered.Unbuffered(sys.stderr)
-	
+
 	files = get_options()
-	
+
 	if OPT_AGGREGATE:
 		synctool_aggr.run(MASTER_OPTS)
 		sys.exit(0)
-	
+
 	synctool_config.add_myhostname()
-	
+
 	nodes = NODESET.interfaces()
 	if nodes == None or len(nodes) <= 0:
 		print 'no valid nodes specified'
 		sys.exit(1)
-	
+
 	run_remote_copy(nodes, files)
 
 

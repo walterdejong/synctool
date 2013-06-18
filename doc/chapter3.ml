@@ -121,7 +121,7 @@ on_update &nbsp; /etc/xinetd.d/identd &nbsp; &nbsp; &nbsp;
 <div class="example">
 /etc/init.d/xinetd reload
 </div>
-Use <span class="cmd">chmod</span> to make the 
+Use <span class="cmd">chmod</span> to make the
 <span class="system">.post</span> script executable as you would do with any
 other shell script. The <span class="system">.post</span> script will be run
 when the file changes:
@@ -437,7 +437,7 @@ backup_copies no
 </div>
 It is however highly recommended that you run with
 <span class="system">backup_copies</span> enabled.
-You can manually specify that you want to remove all backup copies using
+You can manually specify that you want to remove backup copies using
 <span class="cmd">synctool -e</span> or
 <span class="cmd">synctool --erase-saved</span>.
 </p>

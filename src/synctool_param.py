@@ -1,14 +1,14 @@
 #
 #	synctool_param.py	WJ111
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2012
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
 #   License.
 #
 
-VERSION = '5.2'
+VERSION = '5.3-beta'
 
 DEFAULT_CONF = '/var/lib/synctool/synctool.conf'
 CONF_FILE = DEFAULT_CONF

@@ -2,7 +2,7 @@
 #
 #	synctool_update.py	WJ110
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2012
+#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -52,7 +52,7 @@ def get_latest_version_and_checksum():
 	try:
 		opener = urllib.FancyURLopener({})
 		f = opener.open(VERSION_CHECKING_URL)
-		data = f.read()	
+		data = f.read()
 		f.close()
 	except:
 		stderr('error accessing the file at %s' % VERSION_CHECKING_URL)
@@ -69,7 +69,7 @@ def get_latest_version_and_checksum():
 	arr = string.split(data)
 	if len(arr) != 2:
 		return None
-	
+
 	return (arr[0], arr[1])
 
 
@@ -92,7 +92,7 @@ def make_local_filename_for_version(version):
 	'''make filename for the downloaded synctool-x.y.tar.gz'''
 
 	filename = 'synctool-%s.tar.gz' % version
-	
+
 	if not os.path.isfile(filename):
 		return filename
 
@@ -124,7 +124,7 @@ def download_progress(seqnumber, blocksize, totalsize):
 
 def download():
 	'''download latest version'''
-	
+
 	# ugly globals because of callback function
 	global DOWNLOAD_FILENAME, DOWNLOAD_BYTES
 
@@ -151,7 +151,7 @@ def download():
 		return 1
 	else:
 		print
-	
+
 	#
 	#	compute and compare MD5 checksums
 	#	sadly, there is no easy way to do this 'live' while downloading,
