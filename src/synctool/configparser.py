@@ -569,7 +569,7 @@ def config_node(arr, configfile, lineno):
 			(configfile, lineno, node, node))
 		return 1
 
-	# node lines may end with special optional qualifiers like
+	# node lines may end with special optional specifiers like
 	# 'ipaddress:', 'hostname:', 'hostid:', 'rsync:'
 
 	while len(groups) >= 1:
@@ -578,29 +578,29 @@ def config_node(arr, configfile, lineno):
 			break
 
 		if n == 0:
-			stderr("%s:%d: syntax error in node qualifier '%s'" %
+			stderr("%s:%d: syntax error in node specifier '%s'" %
 				(configfile, lineno, groups[-1]))
 			return 1
 
 		if n > 0:
 			option = groups.pop()
-			qualifier = option[:n]
+			specifier = option[:n]
 			arg = option[n+1:]
 
-			if qualifier == 'ipaddress':
+			if specifier == 'ipaddress':
 				if synctool.param.IPADDRESSES.has_key(node):
 					stderr('%s:%d: redefinition of IP address for node %s' %
 						(configfile, lineno, node))
 					return 1
 
 				if not arg:
-					stderr("%s:%d: missing argument to node qualifier '%s'" %
-						(configfile, lineno, qualifier))
+					stderr("%s:%d: missing argument to node specifier '%s'" %
+						(configfile, lineno, specifier))
 					return 1
 
 				synctool.param.IPADDRESSES[node] = arg
 
-			elif qualifier == 'hostname':
+			elif specifier == 'hostname':
 				if synctool.param.HOSTNAMES.has_key(arg):
 					stderr('%s:%d: hostname %s already in use for node %s' %
 						(configfile, lineno, arg,
@@ -608,14 +608,14 @@ def config_node(arr, configfile, lineno):
 					return 1
 
 				if not arg:
-					stderr("%s:%d: missing argument to node qualifier "
+					stderr("%s:%d: missing argument to node specifier "
 						"'hostname'" % (configfile, lineno))
 					return 1
 
 				synctool.param.HOSTNAMES[arg] = node
 				synctool.param.HOSTNAMES_BY_NODE[node] = arg
 
-			elif qualifier == 'hostid':
+			elif specifier == 'hostid':
 				try:
 					f = open(arg, 'r')
 				except IOError:
@@ -637,9 +637,9 @@ def config_node(arr, configfile, lineno):
 
 				synctool.param.HOST_ID = hostid
 
-			elif qualifier == 'rsync':
+			elif specifier == 'rsync':
 				if not arg:
-					stderr("%s:%d: missing argument to node qualifier "
+					stderr("%s:%d: missing argument to node specifier "
 						"'rsync'" % (configfile, lineno))
 					return 1
 
@@ -648,13 +648,13 @@ def config_node(arr, configfile, lineno):
 				elif arg == 'no':
 					synctool.param.NO_RSYNC.add(node)
 				else:
-					stderr("%s:%d: node qualifier 'rsync' can have value "
+					stderr("%s:%d: node specifier 'rsync' can have value "
 						"'yes' or 'no'" % (configfile, lineno))
 					return 1
 
 			else:
-				stderr('%s:%d: unknown node qualifier %s' %
-					(configfile, lineno, qualifier))
+				stderr('%s:%d: unknown node specifier %s' %
+					(configfile, lineno, specifier))
 				return 1
 
 	try:
