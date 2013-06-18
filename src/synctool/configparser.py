@@ -480,6 +480,7 @@ def config_default_nodeset(arr, configfile, lineno):
 	# for now, accept this as the default nodeset
 	# There can be compound groups in it, so
 	# synctool_config.read_config() will expand it to a list of nodes
+	return 0
 
 
 # keyword: group
