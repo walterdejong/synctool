@@ -67,17 +67,17 @@ def aggregate(f):
 			print line
 
 
-def run(cmd_args):
+def run(cmd_arr):
 	'''pipe the output through the aggregator
 	Returns False on error, else True'''
 
 	# simply re-run this command, but with a pipe
 
-	if '-a' in cmd_args:
-		cmd_args.remove('-a')
+	if '-a' in cmd_arr:
+		cmd_arr.remove('-a')
 
-	if '--aggregate' in cmd_args:
-		cmd_args.remove('--aggregate')
+	if '--aggregate' in cmd_arr:
+		cmd_arr.remove('--aggregate')
 
 	try:
 		f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
