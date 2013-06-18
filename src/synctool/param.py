@@ -145,6 +145,7 @@ def init():
 
 	global ROOTDIR, CONF_FILE
 	global VAR_DIR, VAR_LEN, OVERLAY_DIR, OVERLAY_LEN, DELETE_DIR, DELETE_LEN
+	global SCRIPT_DIR
 
 	base = os.path.abspath(os.path.dirname(sys.argv[0]))
 	if not base:
