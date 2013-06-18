@@ -55,7 +55,7 @@ def worker_synctool(addr):
 
 	# rsync ROOTDIR/dirs/ to the node
 	# if "it wants it"
-	if not (OPT_SKIP_RSYNC or node in synctool.param.NO_RSYNC):
+	if not (OPT_SKIP_RSYNC or nodename in synctool.param.NO_RSYNC):
 		verbose('running rsync $SYNCTOOL/ to node %s' % nodename)
 		unix_out('%s %s %s:%s/' % (synctool.param.RSYNC_CMD,
 			synctool.param.ROOTDIR, addr, synctool.param.ROOTDIR))
