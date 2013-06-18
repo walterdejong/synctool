@@ -23,7 +23,7 @@ import synctool.lib
 from synctool.lib import verbose,stdout,stderr,terse,unix_out,dryrun_msg
 import synctool.overlay
 import synctool.param
-import synctool.stat
+import synctool.syncstat
 
 # get_options() returns these action codes
 ACTION_DEFAULT = 0
@@ -46,7 +46,7 @@ def run_command(cmd):
 	arr = shlex.split(cmd)
 	cmdfile = arr[0]
 
-	stat = synctool.stat.SyncStat(cmdfile)
+	stat = synctool.syncstat.SyncStat(cmdfile)
 
 	if not stat.exists():
 		stderr('error: command %s not found' %
@@ -105,7 +105,7 @@ def run_post(src, dest):
 	if synctool.lib.NO_POST:
 		return
 
-	stat = synctool.stat.SyncStat(dest)
+	stat = synctool.syncstat.SyncStat(dest)
 
 	if stat.isDir():
 		# directories will be handled later, so save this pair

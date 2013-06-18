@@ -19,7 +19,7 @@ import synctool.config
 import synctool.lib
 from synctool.lib import verbose,stdout,stderr,terse,unix_out,dryrun_msg
 import synctool.param
-import synctool.stat
+import synctool.syncstat
 
 # enums for command-line options
 ACTION_INSTALL = 1
@@ -118,7 +118,7 @@ def detect_installer():
 	if platform == 'Linux':
 		verbose('detected platform Linux')
 
-		stat = synctool.stat.SyncStat()
+		stat = synctool.syncstat.SyncStat()
 
 		# use release file to detect Linux distro,
 		# and choose package manager based on that

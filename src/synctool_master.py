@@ -25,7 +25,7 @@ from synctool.lib import verbose,stdout,stderr,terse,unix_out
 import synctool.nodeset
 import synctool.overlay
 import synctool.param
-import synctool.stat
+import synctool.syncstat
 import synctool.unbuffered
 import synctool.update
 
@@ -248,7 +248,7 @@ def upload(address, upload_filename, upload_suffix=None):
 	else:
 		# first check if the directory in the repository exists
 		repos_dir = os.path.dirname(repos_filename)
-		stat = synctool.stat.SyncStat(repos_dir)
+		stat = synctool.syncstat.SyncStat(repos_dir)
 		if not stat.exists():
 			verbose('making directory %s' %
 				synctool.lib.prettypath(repos_dir))

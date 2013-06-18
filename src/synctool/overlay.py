@@ -17,7 +17,7 @@ import synctool.lib
 from synctool.lib import verbose, stderr, terse
 import synctool.object
 import synctool.param
-import synctool.stat
+import synctool.syncstat
 
 # enums for designating trees
 OV_OVERLAY = 0
@@ -164,7 +164,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.path.sep,
 			continue
 
 		src_path = os.path.join(overlay_dir, entry)
-		src_statbuf = synctool.stat.SyncStat(src_path)
+		src_statbuf = synctool.syncstat.SyncStat(src_path)
 
 		if src_statbuf.isDir():
 			if synctool.param.IGNORE_DOTDIRS and entry[0] == '.':
