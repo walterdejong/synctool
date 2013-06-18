@@ -268,7 +268,7 @@ do_install() {
 			echo "warning: /var/lib/synctool is obsolete"
 			echo "You should migrate /var/lib/synctool/overlay/ and delete/"
 			echo "to $INSTALL_ROOT/var/overlay/ and delete/"
-			echo "Note that scripts/ and tasks/ have been obsoleted"
+			echo "Note that tasks/ has been obsoleted"
 		fi
 	fi
 
