@@ -28,8 +28,8 @@ object.py overlay.py param.py pkgclass.py stat.py unbuffered.py update.py"
 
 PKG_LIBS="__init__.py aptget.py brew.py bsdpkg.py pacman.py yum.py zypper.py"
 
-DOCS="chapter1.html chapter2.html chapter3.html chapter4.html chapter5.html
-thank_you.html footer.html header.html toc.html single.html synctool_doc.css
+DOCS="chapter1.md chapter2.md chapter3.md chapter4.md chapter5.md
+thank_you.md footer.html header.html toc.md synctool_doc.css
 synctool_logo.jpg synctool_logo_large.jpg build.sh"
 
 SYMLINKS="synctool synctool-pkg dsh-pkg synctool-ssh dsh synctool-scp dcp
