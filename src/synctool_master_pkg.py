@@ -35,7 +35,7 @@ MASTER_OPTS = None
 
 
 def run_remote_pkg(address_list):
-	synctool.lib.multiprocess(worker_synctool, address_list)
+	synctool.lib.multiprocess(worker_pkg, address_list)
 
 
 def worker_pkg(addr):
