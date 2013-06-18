@@ -192,6 +192,7 @@ install_docs() {
 	then
 		makedir 755 "$INSTALL_ROOT/doc"
 		( cd doc && install -m 644 $DOCS "$INSTALL_ROOT/doc" )
+		chmod +x "$INSTALL_ROOT/doc/build.sh"
 
 		if test "x$BUILD_DOCS" = "xyes"
 		then
