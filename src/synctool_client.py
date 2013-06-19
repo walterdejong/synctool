@@ -20,7 +20,7 @@ import subprocess
 
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose,stdout,stderr,terse,unix_out,dryrun_msg
+from synctool.lib import verbose, stdout, stderr, terse, unix_out
 import synctool.overlay
 import synctool.param
 import synctool.syncstat
@@ -225,8 +225,8 @@ def erase_saved():
 
 
 def single_files(filename):
-	'''check/update a single file'''
-	'''returns (True, path_in_synctree) if file is different'''
+	'''check/update a single file
+	Returns (True, path_in_synctree) if file is different'''
 
 	if not filename:
 		stderr('missing filename')
@@ -659,12 +659,12 @@ def main():
 	os.environ['SYNCTOOL_ROOTDIR'] = synctool.param.ROOTDIR
 
 	if action == ACTION_DIFF:
-		for file in SINGLE_FILES:
-			diff_files(file)
+		for f in SINGLE_FILES:
+			diff_files(f)
 
 	elif action == ACTION_REFERENCE:
-		for file in SINGLE_FILES:
-			reference(file)
+		for f in SINGLE_FILES:
+			reference(f)
 
 	elif action == ACTION_ERASE_SAVED:
 		if SINGLE_FILES:
