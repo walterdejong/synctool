@@ -14,7 +14,6 @@ import sys
 import string
 import getopt
 import shlex
-import stat
 import tempfile
 import errno
 
