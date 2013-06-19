@@ -12,7 +12,6 @@
 import os
 import sys
 import string
-import socket
 import getopt
 import errno
 
@@ -282,7 +281,7 @@ synctool-config by Walter de Jong <walter@heiho.net> (c) 2009-2013'''
 
 
 def get_options():
-	global CONF_FILE, ARG_NODENAMES, ARG_GROUPS, ARG_CMDS
+	global ARG_NODENAMES, ARG_GROUPS, ARG_CMDS
 	global OPT_FILTER_IGNORED, OPT_IPADDRESS, OPT_HOSTNAME, OPT_RSYNC
 
 	progname = os.path.basename(sys.argv[0])
@@ -328,7 +327,7 @@ def get_options():
 			sys.exit(1)
 
 		if opt in ('-c', '--conf'):
-			synctool.param.CONF_FILE=arg
+			synctool.param.CONF_FILE = arg
 			continue
 
 		if opt in ('-l', '--list-nodes'):
@@ -459,7 +458,7 @@ def main():
 
 		if not synctool.param.NODENAME:
 			stderr('unable to determine my nodename (%s)' %
-					synctool_config.HOSTNAME)
+					synctool.param.HOSTNAME)
 			stderr('please check %s' % synctool.param.CONF_FILE)
 			sys.exit(1)
 

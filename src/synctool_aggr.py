@@ -13,7 +13,6 @@
 
 import os
 import sys
-import string
 import getopt
 
 import synctool.aggr

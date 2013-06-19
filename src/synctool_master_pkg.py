@@ -21,7 +21,7 @@ import errno
 import synctool.aggr
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose,stderr,unix_out
+from synctool.lib import verbose, stderr, unix_out
 import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
@@ -192,7 +192,7 @@ Written by Walter de Jong <walter@heiho.net> (c) 2013'''
 
 
 def get_options():
-	global NODESET, MASTER_OPTS, PASS_ARGS, OPT_AGGREGATE
+	global MASTER_OPTS, PASS_ARGS, OPT_AGGREGATE
 
 	if len(sys.argv) <= 1:
 		usage()

@@ -28,8 +28,6 @@ def spellcheck(name):
 	'''Check for valid spelling of name
 	Returns True if OK, False if not OK'''
 
-	global SPELLCHECK
-
 	m = SPELLCHECK.match(name)
 	if not m:
 		return False
@@ -136,6 +134,14 @@ def get_options():
 				# put it in the environment
 				os.environ[key] = value
 
+	if not args:
+		print '%s: missing input file' % PROGNAM
+		sys.exit(1)
+	
+	if len(args) > 1:
+		print '%s: too many arguments' % PROGNAM
+		sys.exit(1)
+
 	# return the input filename
 	return args[0]
 
@@ -143,9 +149,9 @@ def get_options():
 if __name__ == '__main__':
 	PROGNAM = os.path.basename(sys.argv[0])
 
-	filename = get_options()
+	INPUT_FILE = get_options()
 
-	template(filename)
+	template(INPUT_FILE)
 
 
 # EOB

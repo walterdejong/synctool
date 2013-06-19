@@ -100,8 +100,6 @@ def run_command_in_dir(dest_dir, cmd):
 def run_post(src, dest):
 	'''run any on_update or .post script commands for destination path'''
 
-	global DIR_CHANGED
-
 	if synctool.lib.NO_POST:
 		return
 
@@ -558,24 +556,24 @@ def get_options():
 		if opt in ('-d', '--diff'):
 			opt_diff = True
 			action = ACTION_DIFF
-			file = synctool.lib.strip_path(arg)
-			if not file in SINGLE_FILES:
-				SINGLE_FILES.append(file)
+			f = synctool.lib.strip_path(arg)
+			if not f in SINGLE_FILES:
+				SINGLE_FILES.append(f)
 			continue
 
 		if opt in ('-1', '--single'):
 			opt_single = True
-			file = synctool.lib.strip_path(arg)
-			if not file in SINGLE_FILES:
-				SINGLE_FILES.append(file)
+			f = synctool.lib.strip_path(arg)
+			if not f in SINGLE_FILES:
+				SINGLE_FILES.append(f)
 			continue
 
 		if opt in ('-r', '--ref', '--reference'):
 			opt_reference = True
 			action = ACTION_REFERENCE
-			file = synctool.lib.strip_path(arg)
-			if not file in SINGLE_FILES:
-				SINGLE_FILES.append(file)
+			f = synctool.lib.strip_path(arg)
+			if not f in SINGLE_FILES:
+				SINGLE_FILES.append(f)
 			continue
 
 		if opt in ('-e', '--erase-saved'):

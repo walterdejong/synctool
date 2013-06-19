@@ -20,7 +20,7 @@ import errno
 import synctool.aggr
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose,stderr,unix_out
+from synctool.lib import verbose, stderr, unix_out
 import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
@@ -28,6 +28,8 @@ import synctool.unbuffered
 NODESET = synctool.nodeset.NodeSet()
 
 OPT_AGGREGATE = False
+
+MASTER_OPTS = []
 
 
 def ping_nodes(address_list):
@@ -135,7 +137,7 @@ synctool-ping by Walter de Jong <walter@heiho.net> (c) 2013'''
 
 
 def get_options():
-	global NODESET, REMOTE_CMD, MASTER_OPTS, OPT_AGGREGATE
+	global MASTER_OPTS, OPT_AGGREGATE
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:aNqp:z:',
@@ -254,10 +256,9 @@ def get_options():
 
 			continue
 
-	if args != None:
-		MASTER_OPTS.extend(args)
-
-	return args
+	if args != None and len(args) > 0:
+		print '%s: too many arguments' % os.path.basename(sys.argv[0])
+		sys.exit(1)
 
 
 def main():
@@ -266,7 +267,7 @@ def main():
 	sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)
 	sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)
 
-	cmd_args = get_options()
+	get_options()
 
 	if OPT_AGGREGATE:
 		if not synctool.aggr.run(MASTER_OPTS):

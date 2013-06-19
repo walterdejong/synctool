@@ -18,7 +18,7 @@ import errno
 
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose,stderr,unix_out
+from synctool.lib import verbose, unix_out
 import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
@@ -54,8 +54,6 @@ def run_remote_copy(address_list, files):
 
 def worker_scp(addr):
 	'''runs scp (remote copy) to node'''
-
-	global SCP_CMD_ARR
 
 	if synctool.lib.DRY_RUN:	# got here for nothing
 		return
@@ -133,7 +131,7 @@ synctool-scp by Walter de Jong <walter@heiho.net> (c) 2009-2013'''
 
 
 def get_options():
-	global NODESET, DESTDIR, MASTER_OPTS, OPT_AGGREGATE, SCP_OPTIONS
+	global DESTDIR, MASTER_OPTS, OPT_AGGREGATE, SCP_OPTIONS
 
 	if len(sys.argv) <= 1:
 		usage()

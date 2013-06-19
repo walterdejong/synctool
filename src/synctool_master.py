@@ -20,7 +20,7 @@ import errno
 import synctool.aggr
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose,stdout,stderr,terse,unix_out
+from synctool.lib import verbose, stdout, stderr, terse, unix_out
 import synctool.nodeset
 import synctool.overlay
 import synctool.param
@@ -415,7 +415,7 @@ Written by Walter de Jong <walter@heiho.net> (c) 2003-2013'''
 
 
 def get_options():
-	global NODESET, PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE
+	global PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE
 	global OPT_CHECK_UPDATE, OPT_DOWNLOAD, MASTER_OPTS
 
 	# check for typo's on the command-line;

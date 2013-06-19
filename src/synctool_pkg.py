@@ -17,7 +17,7 @@ import errno
 
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose,stdout,stderr,terse,unix_out,dryrun_msg
+from synctool.lib import verbose, stderr
 import synctool.param
 import synctool.syncstat
 

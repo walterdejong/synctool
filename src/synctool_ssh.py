@@ -19,7 +19,7 @@ import errno
 import synctool.aggr
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose,stderr,unix_out
+from synctool.lib import verbose, unix_out
 import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
@@ -65,8 +65,6 @@ def run_dsh(address_list, remote_cmd_arr):
 
 
 def worker_ssh(addr):
-	global SSH_CMD_ARR
-
 	if synctool.lib.DRY_RUN:		# got here for nothing
 		return
 
@@ -134,7 +132,7 @@ synctool-ssh by Walter de Jong <walter@heiho.net> (c) 2009-2013'''
 
 
 def get_options():
-	global NODESET, REMOTE_CMD, MASTER_OPTS, OPT_AGGREGATE, SSH_OPTIONS
+	global MASTER_OPTS, OPT_AGGREGATE, SSH_OPTIONS
 
 	if len(sys.argv) <= 1:
 		usage()
