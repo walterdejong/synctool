@@ -251,7 +251,7 @@ def get_options():
 			if not synctool.param.SLEEP_TIME:
 				# (temporarily) set to -1 to indicate we want
 				# to run serialized
-				# synctool.lib.run_parallel() will use this
+				# synctool.lib.multiprocess() will use this
 				synctool.param.SLEEP_TIME = -1
 
 			continue

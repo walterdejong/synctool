@@ -12,7 +12,7 @@ import os
 import shutil
 
 import synctool.lib
-from synctool.lib import verbose,stdout,stderr,terse,unix_out,dryrun_msg
+from synctool.lib import verbose, stdout, stderr, terse, unix_out, dryrun_msg
 import synctool.param
 import synctool.syncstat
 
@@ -343,7 +343,7 @@ class SyncObject:
 					try:
 						src_sum, dest_sum = synctool.lib.checksum_files(
 											src_path, dest_path)
-					except IOError, (err, reason):
+					except IOError:
 # error was already printed
 #						stderr('error: %s' % reason)
 						return False
@@ -531,83 +531,82 @@ class SyncObject:
 
 
 	def set_permissions(self):
-		file = self.dest_path
+		fn = self.dest_path
 		mode = self.src_statbuf.mode
 
-		unix_out('chmod 0%o %s' % (mode & 07777, file))
+		unix_out('chmod 0%o %s' % (mode & 07777, fn))
 
 		if not synctool.lib.DRY_RUN:
-			verbose('  os.chmod(%s, %04o)' % (file, mode & 07777))
+			verbose('  os.chmod(%s, %04o)' % (fn, mode & 07777))
 			try:
-				os.chmod(file, mode & 07777)
+				os.chmod(fn, mode & 07777)
 			except OSError, reason:
 				stderr('failed to chmod %04o %s : %s' %
-						(mode & 07777, file, reason))
+						(mode & 07777, fn, reason))
 		else:
-			verbose(dryrun_msg('  os.chmod(%s, %04o)' % (file, mode & 07777)))
+			verbose(dryrun_msg('  os.chmod(%s, %04o)' % (fn, mode & 07777)))
 
 
 	def set_owner(self):
-		file = self.dest_path
+		fn = self.dest_path
 		uid = self.src_statbuf.uid
 		gid = self.src_statbuf.gid
 
 		unix_out('chown %s.%s %s' % (self.src_ascii_uid(),
-									self.src_ascii_gid(), file))
+									self.src_ascii_gid(), fn))
 
 		if not synctool.lib.DRY_RUN:
-			verbose('  os.chown(%s, %d, %d)' % (file, uid, gid))
+			verbose('  os.chown(%s, %d, %d)' % (fn, uid, gid))
 			try:
-				os.chown(file, uid, gid)
+				os.chown(fn, uid, gid)
 			except OSError, reason:
 				stderr('failed to chown %s.%s %s : %s' %
 						(self.src_ascii_uid(), self.src_ascii_gid(),
-						file, reason))
+						fn, reason))
 		else:
-			verbose(dryrun_msg('  os.chown(%s, %d, %d)' % (file, uid, gid)))
+			verbose(dryrun_msg('  os.chown(%s, %d, %d)' % (fn, uid, gid)))
 
 
 	def delete_file(self):
-		file = self.dest_path
+		fn = self.dest_path
 
 		if not synctool.lib.DRY_RUN:
 			if synctool.param.BACKUP_COPIES:
-				unix_out('mv %s %s.saved' % (file, file))
+				unix_out('mv %s %s.saved' % (fn, fn))
 
-				verbose('moving %s to %s.saved' % (file, file))
+				verbose('moving %s to %s.saved' % (fn, fn))
 				try:
-					os.rename(file, '%s.saved' % file)
+					os.rename(file, '%s.saved' % fn)
 				except OSError, reason:
 					stderr('failed to move file to %s.saved : %s' %
-							(file, reason))
+							(fn, reason))
 			else:
-				unix_out('rm %s' % file)
-				verbose('  os.unlink(%s)' % file)
+				unix_out('rm %s' % fn)
+				verbose('  os.unlink(%s)' % fn)
 				try:
-					os.unlink(file)
+					os.unlink(fn)
 				except OSError, reason:
-					stderr('failed to delete %s : %s' %
-							(file, reason))
+					stderr('failed to delete %s : %s' % (fn, reason))
 		else:
 			if synctool.param.BACKUP_COPIES:
-				verbose(dryrun_msg('moving %s to %s.saved' % (file, file)))
+				verbose(dryrun_msg('moving %s to %s.saved' % (fn, fn)))
 			else:
-				verbose(dryrun_msg('deleting %s' % file, 'delete'))
+				verbose(dryrun_msg('deleting %s' % fn, 'delete'))
 
 
 	def hard_delete_file(self):
-		file = self.dest_path
+		fn = self.dest_path
 
-		unix_out('rm -f %s' % file)
+		unix_out('rm -f %s' % fn)
 
 		if not synctool.lib.DRY_RUN:
-			verbose('  os.unlink(%s)' % file)
+			verbose('  os.unlink(%s)' % fn)
 			try:
-				os.unlink(file)
+				os.unlink(fn)
 			except OSError, reason:
-				stderr('failed to delete %s : %s' % (file, reason))
+				stderr('failed to delete %s : %s' % (fn, reason))
 		else:
-			verbose(dryrun_msg('deleting %s' % file, 'delete'))
+			verbose(dryrun_msg('deleting %s' % fn, 'delete'))
 
 
 	def erase_saved(self):

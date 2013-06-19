@@ -14,7 +14,7 @@ import string
 import urllib2
 import hashlib
 
-from synctool.lib import verbose,stderr,stdout
+from synctool.lib import verbose, stderr, stdout
 import synctool.param
 
 
@@ -41,13 +41,13 @@ def get_latest_version_and_checksum():
 	try:
 		# can not use 'with' statement with urlopen()..?
 		web = urllib2.urlopen(VERSION_CHECKING_URL)
-	except urllib2.URLError, reason:
-		stderr('error accessing URL %s: %s' % (VERSION_CHECKING_URL, reason))
-		return None
-
 	except urllib2.HTTPError, reason:
 		stderr('error from webserver at %s: %s' % (VERSION_CHECKING_URL,
 													reason))
+		return None
+
+	except urllib2.URLError, reason:
+		stderr('error accessing URL %s: %s' % (VERSION_CHECKING_URL, reason))
 		return None
 
 	except IOError, reason:

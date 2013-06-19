@@ -8,12 +8,9 @@
 #   License.
 #
 
-import os
 import string
 
 import synctool.lib
-from synctool.lib import stderr
-import synctool.object
 from synctool.pkgclass import SyncPkg
 
 

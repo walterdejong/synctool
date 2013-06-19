@@ -11,7 +11,6 @@
 import string
 
 import synctool.lib
-from synctool.lib import verbose
 from synctool.pkgclass import SyncPkg
 
 

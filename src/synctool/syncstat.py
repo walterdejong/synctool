@@ -14,6 +14,8 @@ import pwd
 import grp
 import errno
 
+from synctool.lib import stderr
+
 
 class SyncStat:
 	'''structure to hold the relevant fields of a stat() buf'''
@@ -25,6 +27,9 @@ class SyncStat:
 	# Python object
 
 	def __init__(self, path = None):
+		self.entry_exists = False
+		self.mode = self.uid = self.gid = self.size = None
+
 		self.stat(path)
 
 

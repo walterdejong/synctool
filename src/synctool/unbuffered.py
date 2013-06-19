@@ -35,7 +35,7 @@ class Unbuffered:
 	def __enter__(self):
 		return self.stream
 
-	def __exit__(self, type, value, traceback):
+	def __exit__(self, the_type, value, traceback):
 		self.stream.close()
 
 

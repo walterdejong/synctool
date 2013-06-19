@@ -40,8 +40,8 @@ LOGFD = None
 # This option is pretty useless except in synctool-ssh it may be useful
 OPT_NODENAME = True
 
-MONTHS = ( 'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct',
-		'Nov','Dec' )
+MONTHS = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+			'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
 
 # enums for terse output
 TERSE_INFO = 0
@@ -83,23 +83,23 @@ COLORMAP = {
 }
 
 
-def verbose(str):
+def verbose(msg):
 	'''do conditional output based on the verbose command line parameter'''
 
 	if VERBOSE:
-		print str
+		print msg
 
 
-def stdout(str):
+def stdout(msg):
 	if not (UNIX_CMD or synctool.param.TERSE):
-		print str
+		print msg
 
-	log(str)
+	log(msg)
 
 
-def stderr(str):
-	print str
-	log(str)
+def stderr(msg):
+	print msg
+	log(msg)
 
 
 def terse(code, msg):
@@ -224,7 +224,7 @@ def openlog():
 	LOGFD = None
 	try:
 		LOGFD = open(synctool.param.LOGFILE, 'a')
-	except IOError, (err, reason):
+	except IOError, reason:
 		print ('error: failed to open logfile %s : %s' %
 			(synctool.param.LOGFILE, reason))
 		sys.exit(-1)
@@ -243,42 +243,41 @@ def closelog():
 		LOGFD = None
 
 
-def masterlog(str):
+def masterlog(msg):
 	'''log only locally (on the masternode)'''
 
 	if not DRY_RUN and LOGFD != None:
 		t = time.localtime(time.time())
 		LOGFD.write('%s %02d %02d:%02d:%02d %s\n' %
-			(MONTHS[t[1]-1], t[2], t[3], t[4], t[5], str))
+			(MONTHS[t[1]-1], t[2], t[3], t[4], t[5], msg))
 
 
-def log(str):
+def log(msg):
 	'''log message locally, and print it so that synctool-master will pick it up'''
 
 	if not DRY_RUN and LOGFD != None:
 		t = time.localtime(time.time())
 		LOGFD.write('%s %02d %02d:%02d:%02d %s\n' %
-			(MONTHS[t[1]-1], t[2], t[3], t[4], t[5], str))
+			(MONTHS[t[1]-1], t[2], t[3], t[4], t[5], msg))
 
 		if MASTERLOG:
-			print '%synctool-log%', str
+			print '%synctool-log%', msg
 
 
 def checksum_files(file1, file2):
 	'''do a quick checksum of 2 files'''
 
-	err = None
 	reason = None
 	try:
 		f1 = open(file1, 'r')
-	except IOError, (err, reason):
+	except IOError, reason:
 		stderr('error: failed to open %s : %s' % (file1, reason))
 		raise
 
 	with f1:
 		try:
 			f2 = open(file2, 'r')
-		except IOError, (err, reason):
+		except IOError, reason:
 			stderr('error: failed to open %s : %s' % (file2, reason))
 			raise
 
@@ -493,15 +492,15 @@ def strip_terse_path(path):
 
 	# terse paths may start with two slashes
 	if len(path) >= 2 and path[:1] == '//':
-		isTerse = True
+		is_terse = True
 	else:
-		isTerse = False
+		is_terse = False
 
 	path = strip_multiple_slashes(path)
 	path = strip_trailing_slash(path)
 
 	# the first slash was accidentally stripped, so restore it
-	if isTerse:
+	if is_terse:
 		path = os.path.sep + path
 
 	return path
@@ -515,78 +514,6 @@ def prepare_path(path):
 	path = strip_trailing_slash(path)
 	path = path.replace('$SYNCTOOL/', synctool.param.ROOTDIR + os.path.sep)
 	return path
-
-
-def run_parallel(master_func, worker_func, args, worklen):
-	'''runs a callback functions with arguments in parallel
-	master_func is called in the master; worker_func is called in the worker
-	master_func and worker_func are called with two arguments: rank, args
-	All arguments 'args' are always passed; check the rank to see what rank
-	this parallel process has
-	worklen is the total amount of work items to be processed
-	This function will not fork more than NUM_PROC processes'''
-
-	# Note: I guess using Python's multiprocessing module would be
-	# more elegant. However, it needs Python >= 2.6 and some systems
-	# still ship with the older Python 2.4 (at the time of writing this)
-
-	if synctool.param.SLEEP_TIME != 0:
-		synctool.param.NUM_PROC = 1
-
-	parallel = 0
-	n = 0
-	while n < worklen:
-		if parallel > synctool.param.NUM_PROC:
-			try:
-				(pid, status) = os.wait()
-			except OSError:
-				# odd condition?
-				pass
-
-			else:
-				parallel -= 1
-
-				if synctool.param.SLEEP_TIME > 0:
-					verbose('sleeping %d seconds' % synctool.param.SLEEP_TIME)
-					unix_out('sleep %d' % synctool.param.SLEEP_TIME)
-					time.sleep(synctool.param.SLEEP_TIME)
-
-		try:
-			pid = os.fork()
-			if not pid:
-				try:
-					# the nth thread gets rank n
-					worker_func(n, args)
-				except KeyboardInterrupt:
-					print
-
-				sys.exit(0)
-
-			if pid == -1:
-				stderr('error: fork() failed, breaking off forking loop')
-				break
-
-			else:
-				master_func(n, args)
-
-				parallel += 1
-				n += 1
-
-		except KeyboardInterrupt:
-			print
-			break
-
-	# wait for all children to terminate
-	while True:
-		try:
-			(pid, status) = os.wait()
-		except OSError:
-			# no more child processes
-			break
-
-		except KeyboardInterrupt:
-			print
-			break
 
 
 def multiprocess(fn, work):

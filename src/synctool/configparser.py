@@ -36,8 +36,8 @@ SPELLCHECK = re.compile(
 DEFINED = {}
 
 
-def stderr(str):
-	sys.stderr.write(str + '\n')
+def stderr(msg):
+	sys.stderr.write(msg + '\n')
 
 
 def read_config_file(configfile):
@@ -115,8 +115,6 @@ def read_config_file(configfile):
 def check_definition(keyword, configfile, lineno):
 	'''check whether a param was not defined earlier
 	Returns False on error, True if OK'''
-
-	global DEFINED
 
 	if DEFINED.has_key(keyword):
 		stderr("%s:%d: redefinition of '%s'" % (configfile, lineno, keyword))
@@ -198,8 +196,6 @@ def _config_command(param, arr, short_cmd, configfile, lineno):
 def spellcheck(name):
 	'''Check for valid spelling of name
 	Returns True if OK, False if not OK'''
-
-	global SPELLCHECK
 
 	m = SPELLCHECK.match(name)
 	if not m:
@@ -313,16 +309,16 @@ def config_ignore(arr, configfile, lineno):
 			"the file or directory to ignore" %	(configfile, lineno))
 		return 1
 
-	for file in arr[1:]:
-		# if file has wildcards, put it in array IGNORE_FILES_WITH_WILDCARDS
-		if string.find(file, '*') >= 0 or string.find(file, '?') >= 0 \
-			or (string.find(file, '[') >= 0 and string.find(file, ']') >= 0):
-			if not file in synctool.param.IGNORE_FILES_WITH_WILDCARDS:
-				synctool.param.IGNORE_FILES_WITH_WILDCARDS.append(file)
+	for fn in arr[1:]:
+		# if fn has wildcards, put it in array IGNORE_FILES_WITH_WILDCARDS
+		if string.find(fn, '*') >= 0 or string.find(fn, '?') >= 0 \
+			or (string.find(fn, '[') >= 0 and string.find(fn, ']') >= 0):
+			if not fn in synctool.param.IGNORE_FILES_WITH_WILDCARDS:
+				synctool.param.IGNORE_FILES_WITH_WILDCARDS.append(fn)
 		else:
 			# no wildcards, do a regular ignore
-			if not file in synctool.param.IGNORE_FILES:
-				synctool.param.IGNORE_FILES.append(file)
+			if not fn in synctool.param.IGNORE_FILES:
+				synctool.param.IGNORE_FILES.append(fn)
 
 	return 0
 
@@ -514,7 +510,7 @@ def config_group(arr, configfile, lineno):
 
 	try:
 		synctool.param.GROUP_DEFS[group] = expand_grouplist(arr[2:])
-	except RuntimeError, e:
+	except RuntimeError:
 		stderr('%s:%d: compound groups can not contain node names' %
 			(configfile, lineno))
 		return 1
@@ -659,7 +655,7 @@ def config_node(arr, configfile, lineno):
 
 	try:
 		synctool.param.NODES[node] = expand_grouplist(groups)
-	except RuntimeError, e:
+	except RuntimeError:
 		stderr('%s:%d: a group list can not contain node names' %
 			(configfile, lineno))
 		return 1

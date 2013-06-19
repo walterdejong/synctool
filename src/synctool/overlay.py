@@ -46,10 +46,10 @@ DELETE_LOADED = False
 
 def split_extension(filename, require_extension):
 	'''split a simple filename (without leading path)
-	in a tuple: (name, group number, isPost)
+	in a tuple: (name, group number, is_post)
 	The importance is the index to MY_GROUPS[]
 	or negative if it is not a relevant group
-	The return parameter isPost is a boolean
+	The return parameter is_post is a boolean
 	showing whether it is a .post script
 
 	Prereq: GROUP_ALL must be set to MY_GROUPS.index('all')'''
@@ -155,8 +155,6 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.path.sep,
 	'''do pass #1 of 2; create list of source and dest files
 	Each element in the list is an instance of SyncObject'''
 
-	global POST_SCRIPTS
-
 #	verbose('overlay pass 1 %s/' % overlay_dir)
 
 	for entry in os.listdir(overlay_dir):
@@ -188,7 +186,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.path.sep,
 		if wildcard_match:
 			continue
 
-		(name, importance, isPost) = split_extension(entry, not isDir)
+		(name, importance, is_post) = split_extension(entry, not isDir)
 
 		if importance < 0:
 			# not a relevant group, so skip it
@@ -208,7 +206,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.path.sep,
 		if importance > highest_importance:
 			importance = highest_importance
 
-		if isPost:
+		if is_post:
 			if handle_postscripts:
 				if not src_statbuf.isExec():
 					stderr('warning: .post script %s is not executable, '
@@ -404,12 +402,12 @@ def find(treedef, dest_path):
 	Return value is a tuple: (SyncObject, OV_FOUND)
 	Return value is (None, OV_NOT_FOUND) if source does not exist'''
 
-	(dict, filelist) = select_tree(treedef)
+	(tree_dict, filelist) = select_tree(treedef)
 
-	if not dict.has_key(dest_path):
+	if not tree_dict.has_key(dest_path):
 		return (None, OV_NOT_FOUND)
 
-	return (dict[dest_path], OV_FOUND)
+	return (tree_dict[dest_path], OV_FOUND)
 
 
 def find_terse(treedef, terse_path):
@@ -419,7 +417,7 @@ def find_terse(treedef, terse_path):
 	Return value is (None, OV_FOUND_MULTIPLE) if multiple sources
 	are possible'''
 
-	(dict, filelist) = select_tree(treedef)
+	(tree_dict, filelist) = select_tree(treedef)
 
 	idx = string.find(terse_path, '...')
 	if idx == -1:
@@ -446,7 +444,7 @@ def find_terse(treedef, terse_path):
 	# Yeah, well ...
 	#
 	for entry in filelist:
-		overlay_entry = dict[entry]
+		overlay_entry = tree_dict[entry]
 
 		l = len(overlay_entry.dest_path)
 		if l > len_ending:
@@ -481,15 +479,15 @@ def visit(treedef, callback):
 	'''call the callback function on every entry in the tree
 	callback will called with one argument: the SyncObject'''
 
-	(dict, filelist) = select_tree(treedef)
+	(tree_dict, filelist) = select_tree(treedef)
 
 	# now call the callback function
 	#
 	# note that the order is important, so do not use
-	# "for obj in dict: callback(obj)"
+	# "for obj in tree_dict: callback(obj)"
 	#
 	for dest_path in filelist:
-		callback(dict[dest_path])
+		callback(tree_dict[dest_path])
 
 
 # EOB

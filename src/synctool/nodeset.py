@@ -12,7 +12,7 @@ import string
 
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose,stderr
+from synctool.lib import verbose, stderr
 import synctool.param
 
 
