@@ -212,9 +212,7 @@ do_install() {
 
 	if test -d "$INSTALL_ROOT"
 	then
-		echo "setup.sh: directory already exists: $INSTALL_ROOT"
-		echo "You may want to move it out of the way"
-		exit 5
+		echo "setup.sh: warning: directory already exists: $INSTALL_ROOT"
 	fi
 
 	# can I find the sources?
