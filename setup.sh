@@ -24,7 +24,7 @@ synctool_aggr.py synctool_client.py synctool_pkg.py synctool_template.py"
 LAUNCHER="synctool_launch.py"
 
 LIBS="__init__.py aggr.py config.py configparser.py lib.py nodeset.py
-object.py overlay.py param.py pkgclass.py stat.py unbuffered.py update.py"
+object.py overlay.py param.py pkgclass.py syncstat.py unbuffered.py update.py"
 
 PKG_LIBS="__init__.py aptget.py brew.py bsdpkg.py pacman.py yum.py zypper.py"
 
