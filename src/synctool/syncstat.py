@@ -72,15 +72,15 @@ class SyncStat:
 			self.size = statbuf.st_size
 
 
-	def isDir(self):
+	def is_dir(self):
 		return (self.entry_exists and stat.S_ISDIR(self.mode))
 
 
-	def isFile(self):
+	def is_file(self):
 		return (self.entry_exists and stat.S_ISREG(self.mode))
 
 
-	def isLink(self):
+	def is_link(self):
 		return (self.entry_exists and stat.S_ISLNK(self.mode))
 
 
@@ -88,7 +88,7 @@ class SyncStat:
 		return self.entry_exists
 
 
-	def isExec(self):
+	def is_exec(self):
 		return (self.entry_exists and ((self.mode & 0111) != 0))
 
 

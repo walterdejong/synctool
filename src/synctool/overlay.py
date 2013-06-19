@@ -164,16 +164,16 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.path.sep,
 		src_path = os.path.join(overlay_dir, entry)
 		src_statbuf = synctool.syncstat.SyncStat(src_path)
 
-		if src_statbuf.isDir():
+		if src_statbuf.is_dir():
 			if synctool.param.IGNORE_DOTDIRS and entry[0] == '.':
 				continue
 
-			isDir = True
+			is_dir = True
 		else:
 			if synctool.param.IGNORE_DOTFILES and entry[0] == '.':
 				continue
 
-			isDir = False
+			is_dir = False
 
 		# check any ignored files with wildcards
 		# before any group extension is examined
@@ -186,7 +186,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.path.sep,
 		if wildcard_match:
 			continue
 
-		(name, importance, is_post) = split_extension(entry, not isDir)
+		(name, importance, is_post) = split_extension(entry, not is_dir)
 
 		if importance < 0:
 			# not a relevant group, so skip it
@@ -208,7 +208,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.path.sep,
 
 		if is_post:
 			if handle_postscripts:
-				if not src_statbuf.isExec():
+				if not src_statbuf.is_exec():
 					stderr('warning: .post script %s is not executable, '
 						'ignored' % synctool.lib.prettypath(src_path))
 					continue
@@ -241,7 +241,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.path.sep,
 		filelist.append(synctool.object.SyncObject(src_path, dest_path,
 						importance, src_statbuf))
 
-		if isDir:
+		if is_dir:
 			# recurse into subdir
 			overlay_pass1(src_path, filelist, dest_path, importance,
 				handle_postscripts)
@@ -264,7 +264,7 @@ def overlay_pass2(filelist, filedict):
 
 			# duplicate paths are a problem, unless they are directories
 			# They are easy to fix however, just assign the right extension
-			elif ((not (entry.src_isDir() and entry2.src_isDir())) and
+			elif ((not (entry.src_is_dir() and entry2.src_is_dir())) and
 				entry.importance == entry2.importance):
 
 				if synctool.param.TERSE:

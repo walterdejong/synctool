@@ -63,19 +63,19 @@ class SyncObject:
 			self.src_statbuf = synctool.syncstat.SyncStat(self.src_path)
 
 
-	def src_isDir(self):
+	def src_is_dir(self):
 		self.src_stat()
-		return self.src_statbuf.isDir()
+		return self.src_statbuf.is_dir()
 
 
-	def src_isFile(self):
+	def src_is_file(self):
 		self.src_stat()
-		return self.src_statbuf.isFile()
+		return self.src_statbuf.is_file()
 
 
-	def src_isLink(self):
+	def src_is_link(self):
 		self.src_stat()
-		return self.src_statbuf.isLink()
+		return self.src_statbuf.is_link()
 
 
 	def src_exists(self):
@@ -83,9 +83,9 @@ class SyncObject:
 		return self.src_statbuf.exists()
 
 
-	def src_isExec(self):
+	def src_is_exec(self):
 		self.src_stat()
-		return self.src_statbuf.isExec()
+		return self.src_statbuf.is_exec()
 
 
 	def src_ascii_uid(self):
@@ -105,19 +105,19 @@ class SyncObject:
 			self.dest_statbuf = synctool.syncstat.SyncStat(self.dest_path)
 
 
-	def dest_isDir(self):
+	def dest_is_dir(self):
 		self.dest_stat()
-		return self.dest_statbuf.isDir()
+		return self.dest_statbuf.is_dir()
 
 
-	def dest_isFile(self):
+	def dest_is_file(self):
 		self.dest_stat()
-		return self.dest_statbuf.isFile()
+		return self.dest_statbuf.is_file()
 
 
-	def dest_isLink(self):
+	def dest_is_link(self):
 		self.dest_stat()
-		return self.dest_statbuf.isLink()
+		return self.dest_statbuf.is_link()
 
 
 	def dest_exists(self):
@@ -125,9 +125,9 @@ class SyncObject:
 		return self.dest_statbuf.exists()
 
 
-	def dest_isExec(self):
+	def dest_is_exec(self):
 		self.dest_stat()
-		return self.dest_statbuf.isExec()
+		return self.dest_statbuf.is_exec()
 
 
 	def dest_ascii_uid(self):
@@ -205,7 +205,7 @@ class SyncObject:
 		#
 		# if source is a symbolic link ...
 		#
-		if src_stat.isLink():
+		if src_stat.is_link():
 			need_update = False
 			try:
 				src_link = os.readlink(src_path)
@@ -220,7 +220,7 @@ class SyncObject:
 				unix_out('# create symbolic link %s' % dest_path)
 				need_update = True
 
-			elif dest_stat.isLink():
+			elif dest_stat.is_link():
 				try:
 					dest_link = os.readlink(dest_path)
 				except OSError, reason:
@@ -236,7 +236,7 @@ class SyncObject:
 					unix_out('# relink symbolic link %s' % dest_path)
 					need_update = True
 
-			elif dest_stat.isDir():
+			elif dest_stat.is_dir():
 				stdout('%s should be a symbolic link' % dest_path)
 				terse(synctool.lib.TERSE_LINK, dest_path)
 				unix_out('# target should be a symbolic link')
@@ -263,14 +263,14 @@ class SyncObject:
 		#
 		# if the source is a directory ...
 		#
-		elif src_stat.isDir():
+		elif src_stat.is_dir():
 			if not dest_stat.exists():
 				stdout('%s/ does not exist' % dest_path)
 				terse(synctool.lib.TERSE_MKDIR, dest_path)
 				unix_out('# make directory %s' % dest_path)
 				need_update = True
 
-			elif dest_stat.isLink():
+			elif dest_stat.is_link():
 				stdout('%s is a symbolic link, but should be a directory' %
 					dest_path)
 				terse(synctool.lib.TERSE_MKDIR, dest_path)
@@ -282,7 +282,7 @@ class SyncObject:
 			#
 			# treat as a regular file
 			#
-			elif not dest_stat.isDir():
+			elif not dest_stat.is_dir():
 				stdout('%s should be a directory' % dest_path)
 				terse(synctool.lib.TERSE_MKDIR, dest_path)
 				unix_out('# target should be a directory')
@@ -302,14 +302,14 @@ class SyncObject:
 		#
 		# if source is a file ...
 		#
-		elif src_stat.isFile():
+		elif src_stat.is_file():
 			if not dest_stat.exists():
 				stdout('%s does not exist' % dest_path)
 				terse(synctool.lib.TERSE_NEW, dest_path)
 				unix_out('# copy file %s' % dest_path)
 				need_update = True
 
-			elif dest_stat.isLink():
+			elif dest_stat.is_link():
 				stdout('%s is a symbolic link, but should not be' % dest_path)
 				terse(synctool.lib.TERSE_TYPE, dest_path)
 				unix_out('# target should be a file instead of '
@@ -317,7 +317,7 @@ class SyncObject:
 				self.delete_file()
 				need_update = True
 
-			elif dest_stat.isDir():
+			elif dest_stat.is_dir():
 				stdout('%s is a directory, but should not be' % dest_path)
 				terse(synctool.lib.TERSE_TYPE, dest_path)
 				unix_out('# target should be a file instead of a directory')
@@ -327,7 +327,7 @@ class SyncObject:
 			#
 			# check file size
 			#
-			elif dest_stat.isFile():
+			elif dest_stat.is_file():
 				if src_stat.size != dest_stat.size:
 					if synctool.lib.DRY_RUN:
 						stdout('%s mismatch (file size)' % dest_path)
@@ -382,16 +382,16 @@ class SyncObject:
 			if not dest_stat.exists():
 				return False
 
-			if dest_stat.isLink():
+			if dest_stat.is_link():
 				stdout('%s should not be a symbolic link' % dest_path)
 				terse(synctool.lib.TERSE_WARNING, 'wrong type %s' % dest_path)
 			else:
-				if dest_stat.isDir():
+				if dest_stat.is_dir():
 					stdout('%s should not be a directory' % dest_path)
 					terse(synctool.lib.TERSE_WARNING, 'wrong type %s' %
 														dest_path)
 				else:
-					if dest_stat.isFile():
+					if dest_stat.is_file():
 						stdout('%s should not be a regular file' % dest_path)
 						terse(synctool.lib.TERSE_WARNING, 'wrong type %s' %
 															dest_path)
@@ -408,7 +408,7 @@ class SyncObject:
 		# python lacks an os.lchmod() and os.lchown(), they are not portable
 		# anyway, symbolic links have been dealt with already ...
 		#
-		if dest_stat.exists() and not dest_stat.isLink():
+		if dest_stat.exists() and not dest_stat.is_link():
 			if src_stat.uid != dest_stat.uid or src_stat.gid != dest_stat.gid:
 				owner = src_stat.ascii_uid()
 				group = src_stat.ascii_gid()
@@ -458,7 +458,7 @@ class SyncObject:
 		src = self.src_path
 		dest = self.dest_path
 
-		if self.dest_isFile():
+		if self.dest_is_file():
 			unix_out('cp %s %s.saved' % (dest, dest))
 
 		unix_out('umask 077')
@@ -468,22 +468,23 @@ class SyncObject:
 			old_umask = os.umask(077)
 
 			if synctool.param.BACKUP_COPIES:
-				if self.dest_isFile():
+				if self.dest_is_file():
 					verbose('  saving %s as %s.saved' % (dest, dest))
 					try:
 						shutil.copy2(dest, '%s.saved' % dest)
-					except:
-						stderr('failed to save %s as %s.saved' % (dest, dest))
+					except IOError, reason:
+						stderr('failed to save %s as %s.saved: %s' %
+								(dest, dest, reason))
 
 			verbose('  cp %s %s' % (src, dest))
 			try:
 				shutil.copy2(src, dest)			# copy file and stats
-			except:
-				stderr('failed to copy %s to %s' % (self.print_src(), dest))
-
+			except IOError, reason:
+				stderr('failed to copy %s to %s' % (self.print_src(), dest,
+													reason))
 			os.umask(old_umask)
 		else:
-			if self.dest_isFile() and synctool.param.BACKUP_COPIES:
+			if self.dest_is_file() and synctool.param.BACKUP_COPIES:
 				verbose('  saving %s as %s.saved' % (dest, dest))
 
 			verbose(dryrun_msg('  cp %s %s' % (src, dest)))
@@ -614,7 +615,7 @@ class SyncObject:
 
 		stat_saved_path = synctool.syncstat.SyncStat('%s.saved' % dest)
 
-		if stat_saved_path.exists() and not stat_saved_path.isDir():
+		if stat_saved_path.exists() and not stat_saved_path.is_dir():
 			terse(synctool.lib.TERSE_DELETE, '%s.saved' % dest)
 			unix_out('rm %s.saved' % dest)
 

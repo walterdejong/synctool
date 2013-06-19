@@ -53,7 +53,7 @@ def run_command(cmd):
 			synctool.lib.prettypath(cmdfile))
 		return
 
-	if not stat.isExec():
+	if not stat.is_exec():
 		stderr("warning: file '%s' is not executable" %
 			synctool.lib.prettypath(cmdfile))
 		return
@@ -105,7 +105,7 @@ def run_post(src, dest):
 
 	stat = synctool.syncstat.SyncStat(dest)
 
-	if stat.isDir():
+	if stat.is_dir():
 		# directories will be handled later, so save this pair
 		pair = (src, dest)
 		DIR_CHANGED.append(pair)
@@ -189,7 +189,7 @@ def overlay_files():
 def delete_callback(obj):
 	'''delete files'''
 
-	if obj.dest_isDir():		# do not delete directories
+	if obj.dest_is_dir():		# do not delete directories
 		return
 
 	if obj.dest_exists():
