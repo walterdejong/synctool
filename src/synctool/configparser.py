@@ -138,6 +138,38 @@ def check_definition(keyword, configfile, lineno):
 	return True
 
 
+def check_node_definition(node, configfile, lineno):
+	'''check whether a node was not defined earlier
+	Returns False on error, True if OK'''
+
+	key = 'node %s' % node
+
+	if SYMBOLS.has_key(key):
+		stderr("%s:%d: redefinition of node '%s'" % (configfile, lineno,
+													node))
+		stderr("%s: previous definition was here" % SYMBOLS[key].origin())
+		return False
+
+	SYMBOLS[key] = Symbol(node, configfile, lineno)
+	return True
+
+
+def check_group_definition(group, configfile, lineno):
+	'''check whether a group was not defined earlier
+	Returns False on error, True if OK'''
+
+	key = 'group %s' % group
+
+	if SYMBOLS.has_key(key):
+		stderr("%s:%d: redefinition of group '%s'" % (configfile, lineno,
+														group))
+		stderr("%s: previous definition was here" % SYMBOLS[key].origin())
+		return False
+
+	SYMBOLS[key] = Symbol(group, configfile, lineno)
+	return True
+
+
 #
 # config functions return the number of errors in the line
 # This enables the 'include' keyword to return more than 1 error
@@ -511,13 +543,14 @@ def config_group(arr, configfile, lineno):
 			(configfile, lineno, group))
 		return 1
 
-	if synctool.param.GROUP_DEFS.has_key(group):
-		stderr('%s:%d: redefinition of group %s' % (configfile, lineno, group))
+	if not check_group_definition(group, configfile, lineno):
 		return 1
 
-	if synctool.param.NODES.has_key(group):
+	key = 'node %s' % group
+	if SYMBOLS.has_key(key):
 		stderr('%s:%d: %s was previously defined as a node' %
 			(configfile, lineno, group))
+		stderr('%s: previous definition was here' % SYMBOLS[key].origin())
 		return 1
 
 	try:
@@ -546,15 +579,14 @@ def config_node(arr, configfile, lineno):
 
 	groups = arr[2:]
 
-	if synctool.param.NODES.has_key(node):
-		stderr('%s:%d: redefinition of node %s' % (configfile, lineno, node))
-		# TODO "previous definition of %s was here"
+	if not check_node_definition(node, configfile, lineno):
 		return 1
 
-	if synctool.param.GROUP_DEFS.has_key(node):
+	key = 'group %s' % node
+	if SYMBOLS.has_key(key):
 		stderr('%s:%d: %s was previously defined as a group' %
 			(configfile, lineno, node))
-		# TODO "previous definition of %s was here"
+		stderr('%s: previous definition was here' % SYMBOLS[key].origin())
 		return 1
 
 	for g in groups:
