@@ -14,7 +14,6 @@
 
 import os
 import sys
-import string
 import re
 import getopt
 
@@ -113,14 +112,14 @@ def get_options():
 		print '%s: too many arguments' % PROGNAM
 		sys.exit(1)
 
-	for opt, arg in opts:
+	for opt, optarg in opts:
 		if opt in ('-h', '--help', '-?'):
 			usage()
 			sys.exit(1)
 
 		if opt in ('-v', '--var'):
 			try:
-				(key, value) = string.split(arg, '=', 1)
+				(key, value) = optarg.split('=', 1)
 			except ValueError:
 				print '%s: syntax error in command-line' % PROGNAM
 				sys.exit(1)
