@@ -31,9 +31,22 @@ import synctool.param
 SPELLCHECK = re.compile(
 	r'[a-zA-Z0-9]+(\_[a-zA-Z0-9]+|\-[a-zA-Z0-9]+|\+[a-zA-Z0-9]+)*')
 
-# dict with {keyword: lineno}
+# dict of defined Symbols
 # to see if a parameter is being redefined
-DEFINED = {}
+SYMBOLS = {}
+
+
+class Symbol(object):
+	'''structure that says where a symbol was first defined'''
+	def __init__(self, name=None, filename=None, lineno=0):
+		self.name = name					# not really used ...
+		self.filename = filename
+		self.lineno = lineno
+
+	def origin(self):
+		'''return string "filename:lineno" where the symbol was
+		first defined'''
+		return '%s:%d' % (self.filename, self.lineno)
 
 
 def stderr(msg):
@@ -116,13 +129,12 @@ def check_definition(keyword, configfile, lineno):
 	'''check whether a param was not defined earlier
 	Returns False on error, True if OK'''
 
-	if DEFINED.has_key(keyword):
+	if SYMBOLS.has_key(keyword):
 		stderr("%s:%d: redefinition of '%s'" % (configfile, lineno, keyword))
-		stderr("%s:%d: previous definition was at line %d" %
-				(configfile, lineno, DEFINED[keyword]))
+		stderr("%s: previous definition was here" % SYMBOLS[keyword].origin())
 		return False
 
-	DEFINED[keyword] = lineno
+	SYMBOLS[keyword] = Symbol(keyword, configfile, lineno)
 	return True
 
 
