@@ -1,7 +1,7 @@
 /*
 	synctool_doc.css	WJ111
 
-	synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
+	synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 
 	synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 	synctool is distributed under terms described in the GNU General Public
@@ -105,11 +105,11 @@ dd {
 div#page {
 	position: relative;
     width: 80%;
-    
+
 	height: auto !important;	/* real browsers */
 	height: 100%;				/* IE6: treated as min-height*/
 	min-height: 100%;			/* real browsers */
-	
+
 	margin: 0 auto;
 	padding: 0;
 	background-color: #fff;
@@ -136,7 +136,7 @@ div#footer {
 	width: 100%;
 	bottom: 0;				/* stick to bottom */
 	padding: 0em 0em .5em;
-	
+
 	font-family: georgia, times, serif;
 	font-style: italic;
 	font-size: .8em;

@@ -2,7 +2,7 @@
 #
 #	synctool_aggr.py	WJ109
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
+#   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -26,7 +26,6 @@ def usage():
 	print 'synctool-aggr is built in to synctool-master and synctool-ssh'
 	print "and activated by the '-a' option"
 	print
-	print 'Written by Walter de Jong <walter@heiho.net> (c) 2009-2013'
 
 
 def get_options():

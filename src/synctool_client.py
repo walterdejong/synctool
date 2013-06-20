@@ -2,7 +2,7 @@
 #
 #	synctool	WJ103
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
+#   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -419,8 +419,7 @@ def usage():
 
 synctool can help you administer your cluster of machines
 Note that synctool does a dry run unless you specify --fix
-
-Written by Walter de Jong <walter@heiho.net> (c) 2003-2013'''
+'''
 
 
 def get_options():

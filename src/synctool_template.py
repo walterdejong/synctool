@@ -2,7 +2,7 @@
 #
 #	synctool_template	WJ113
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
+#   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -77,8 +77,6 @@ options:
 synctool-template replaces all occurrences of "@VAR@" in the input
 with "VALUE" prints the result to stdout. VAR may be given on the
 command-line, but may also be an existing environment variable.
-
-synctool-template by Walter de Jong <walter@heiho.net> (c) 2013
 ''' % PROGNAM
 
 
@@ -136,7 +134,7 @@ def get_options():
 	if not args:
 		print '%s: missing input file' % PROGNAM
 		sys.exit(1)
-	
+
 	if len(args) > 1:
 		print '%s: too many arguments' % PROGNAM
 		sys.exit(1)

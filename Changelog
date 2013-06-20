@@ -9,6 +9,7 @@ June 2013
 - new node specifier 'rsync:no' may be given if the synctool repository is
   on a shared filesystem
 - option --numproc now works on synctool, dsh and friends
+- config parser shows better error messages
 - synctool-config output has changed ... check your scripts
 - fix issue with multi-OS; do not check all paths of configured commands
   like ping_cmd, ssh_cmd, etc.
