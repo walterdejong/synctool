@@ -102,6 +102,12 @@ disagree and want a different suffix, choose one:
     synctool -n node1 --upload /etc/ntp.conf --suffix wn
     synctool -n node1 -u /etc/ntp.conf -s wn
 
+synctool will suggest the overlay directory where to put the file in
+the repository. If you disagree, use:
+
+    synctool -n node1 --overlay mycluster --upload /etc/ntp.conf
+    synctool -n node1 -o mycluster -u /etc/ntp.conf
+
 Now edit the file, make changes to the `ntp.conf` and run synctool:
 
     root@masternode:/# synctool
