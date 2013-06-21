@@ -19,7 +19,9 @@ import time
 import errno
 import hashlib
 import time
+import signal
 import multiprocessing
+import Queue
 
 import synctool.param
 
@@ -518,29 +520,63 @@ def prepare_path(path):
 
 def multiprocess(fn, work):
 	'''run a function in parallel'''
+	
+	# Thanks go to Bryce Boe
+	# http://www.bryceboe.com/2010/08/26/python-multiprocessing-and-keyboardinterrupt/
 
 	if synctool.param.SLEEP_TIME != 0:
 		synctool.param.NUM_PROC = 1
 
-	pool = multiprocessing.Pool(synctool.param.NUM_PROC)
-
+	# make a work queue
+	jobq = multiprocessing.Queue()
 	for item in work:
-		pool.apply_async(multiprocess_helper, (fn, item))
+		jobq.put(item)
+	
+	# start NUMPROC worker processes
+	pool = []
+	i = 0
+	while i < synctool.param.NUM_PROC:
+		p = multiprocessing.Process(target=_worker, args=(fn, jobq))
+		pool.append(p)
+		p.start()
+		i += 1
+	
+	try:
+		for p in pool:
+			p.join()
 
-	pool.close()
-	pool.join()
+	except KeyboardInterrupt:
+		# user hit Ctrl-C
+		# terminate all workers
+		for p in pool:
+			p.terminate()
+			p.join()
+	
+		# re-raise KeyboardInterrupt, for __main__ to catch
+		raise
 
 
-def multiprocess_helper(fn, arg):
-	'''helper for Python multiprocessing module
-	If --zzz was given, sleep after finishing the command'''
+def _worker(fn, jobq):
+	'''fn is the worker function to call
+	jobq is a multiprocessing.Queue of function arguments
+	If --zzz was given, sleep after finishing the work
+	No return value is passed back'''
 
-	ret = fn(arg)
+	# ignore interrupts, ignore Ctrl-C
+	# the Ctrl-C will be caught by the parent process
+	signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-	if synctool.param.SLEEP_TIME > 0:
-		time.sleep(synctool.param.SLEEP_TIME)
+	while not jobq.empty():
+		try:
+			arg = jobq.get(block=False)
+		except Queue.Empty:
+			break
 
-	return ret
+		else:
+			fn(arg)
+
+			if synctool.param.SLEEP_TIME > 0:
+				time.sleep(synctool.param.SLEEP_TIME)
 
 
 if __name__ == '__main__':
