@@ -38,6 +38,39 @@ OPT_DOWNLOAD = False
 PASS_ARGS = None
 MASTER_OPTS = None
 
+UPLOAD_FILE = None
+
+
+class UploadFile(object):
+	'''class that holds information on requested upload'''
+
+	def __init__(self):
+		self.filename = None
+		self.overlay = 'all'
+		self.suffix = None
+		self.node = None
+		self.address = None
+
+	def ready(self):
+		if self.node and self.filename:
+			return True
+
+		return False
+
+	def repos_path(self):
+		fn = self.filename
+		if fn[0] == '/':
+			fn = fn[1:]
+
+		if not self.suffix and synctool.param.REQUIRE_EXTENSION:
+			self.suffix = 'all'
+
+		if not self.suffix:
+			return os.path.join(synctool.param.OVERLAY_DIR, self.overlay, fn)
+
+		return os.path.join(synctool.param.OVERLAY_DIR, self.overlay,
+							fn + '._' + self.suffix)
+
 
 def run_remote_synctool(address_list):
 	synctool.lib.multiprocess(worker_synctool, address_list)
@@ -161,17 +194,16 @@ def rsync_include_filter(nodename):
 	return filename
 
 
-def upload(address, upload_filename, upload_suffix=None):
-	'''copy a file from a node into the overlay/ tree'''
+def upload(up):
+	'''copy a file from a node into the overlay/ tree
+	'up' is an UploadFile object'''
 
-	if upload_filename[0] != os.path.sep:
+	if up.filename[0] != os.path.sep:
 		stderr('error: the filename to upload must be an absolute path')
 		sys.exit(-1)
 
-	trimmed_upload_fn = upload_filename[1:]		# remove leading slash
-
-	if upload_suffix and not upload_suffix in synctool.param.ALL_GROUPS:
-		stderr("no such group '%s'" % upload_suffix)
+	if up.suffix and not up.suffix in synctool.param.ALL_GROUPS:
+		stderr("no such group '%s'" % up.suffix)
 		sys.exit(-1)
 
 	# shadow DRY_RUN because that var can not be used correctly here
@@ -183,20 +215,18 @@ def upload(address, upload_filename, upload_suffix=None):
 			stdout('DRY RUN, not uploading any files')
 			terse(synctool.lib.TERSE_DRYRUN, 'not uploading any files')
 
-	node = NODESET.get_nodename_from_address(address)
-
 	# pretend that the current node is now the given node;
 	# this is needed for find() to find the best reference for the file
-	orig_NODENAME = synctool.param.NODENAME
-	synctool.param.NODENAME = node
-	synctool.config.insert_group(node, node)
+	orig_nodename = synctool.param.NODENAME
+	synctool.param.NODENAME = up.node
+	synctool.config.insert_group(up.node, up.node)
 
-	orig_MY_GROUPS = synctool.param.MY_GROUPS[:]
+	orig_my_groups = synctool.param.MY_GROUPS[:]
 	synctool.param.MY_GROUPS = synctool.config.get_my_groups()
 
 	# see if file is already in the repository
 	(obj, err) = synctool.overlay.find_terse(synctool.overlay.OV_OVERLAY,
-					upload_filename)
+												up.filename)
 
 	if err == synctool.overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
@@ -205,62 +235,69 @@ def upload(address, upload_filename, upload_suffix=None):
 
 	if err == synctool.overlay.OV_NOT_FOUND:
 		# no source path found
-		if string.find(upload_filename, '...') >= 0:
+		if string.find(up.filename, '...') >= 0:
 			stderr("%s is not in the repository, don't know what to map "
-				"this path to\n"
-				"Please give the full path instead of a terse path, "
-				"or touch the source file\n"
-				"in the repository first and try again" %
-				os.path.basename(upload_filename))
+					"this path to\n"
+					"Please give the full path instead of a terse path, "
+					"or touch the source file\n"
+					"in the repository first and try again" %
+					os.path.basename(up.filename))
 			sys.exit(1)
 
-		# it wasn't a terse path, throw a source path together
-		# This picks the 'all' overlay dir as default source,
-		# which may not be correct -- but it is a good guess
-		repos_filename = os.path.join(synctool.param.OVERLAY_DIR, 'all',
-							trimmed_upload_fn)
-		if upload_suffix:
-			repos_filename = repos_filename + '._' + upload_suffix
-		else:
-			# use _nodename as default suffix
-			repos_filename = repos_filename + '._' + node
+		# it wasn't a terse path, choose standard source path
+		# $overlay/group/path/file._suffix
+		repos_filename = up.repos_path()
+
 	else:
-		if upload_suffix:
+		if up.suffix:
 			# remove the current group suffix
 			# and add the specified suffix to the filename
 			(repos_filename, ext) = os.path.splitext(obj.src_path)
-			repos_filename += '._' + upload_suffix
+			repos_filename += '._' + up.suffix
 		else:
 			repos_filename = obj.src_path
 
-	synctool.param.NODENAME = orig_NODENAME
-	synctool.param.MY_GROUPS = orig_MY_GROUPS
+		if up.overlay:
+			# user supplied (maybe a different) overlay group dir
+			# so take repos_filename apart and insert a new group dir
+			if (repos_filename[:synctool.param.OVERLAY_LEN] ==
+				synctool.param.OVERLAY_DIR + os.path.sep):
+				arr = repos_filename.split(os.path.sep)
+				overlay_arr = synctool.param.OVERLAY_DIR.split(os.path.sep)
+				# replace the group dir with what the user gave
+				arr[len(overlay_arr)] = up.overlay
+				# reassemble the full path with up.overlay as group dir
+				repos_filename = os.path.sep.join(arr)
+#			else:
+#				I don't know, give up
 
-	verbose('%s:%s uploaded as %s' % (node, upload_filename, repos_filename))
+	synctool.param.NODENAME = orig_nodename
+	synctool.param.MY_GROUPS = orig_my_groups
+
+	verbose('%s:%s uploaded as %s' % (up.node, up.filename, repos_filename))
 	terse(synctool.lib.TERSE_UPLOAD, repos_filename)
-	unix_out('%s %s:%s %s' % (synctool.param.SCP_CMD, address,
-								upload_filename, repos_filename))
+	unix_out('%s %s:%s %s' % (synctool.param.SCP_CMD, up.address,
+								up.filename, repos_filename))
 
 	if dry_run:
 		stdout('would be uploaded as %s' %
-			synctool.lib.prettypath(repos_filename))
+				synctool.lib.prettypath(repos_filename))
 	else:
 		# first check if the directory in the repository exists
 		repos_dir = os.path.dirname(repos_filename)
 		stat = synctool.syncstat.SyncStat(repos_dir)
 		if not stat.exists():
 			verbose('making directory %s' %
-				synctool.lib.prettypath(repos_dir))
+					synctool.lib.prettypath(repos_dir))
 			unix_out('mkdir -p %s' % repos_dir)
 			synctool.lib.mkdir_p(repos_dir)
 
 		# make scp command array
 		scp_cmd_arr = shlex.split(synctool.param.SCP_CMD)
-		scp_cmd_arr.append('%s:%s' % (address, upload_filename))
+		scp_cmd_arr.append('%s:%s' % (up.address, up.filename))
 		scp_cmd_arr.append(repos_filename)
 
-		synctool.lib.run_with_nodename(scp_cmd_arr,
-			NODESET.get_nodename_from_address(address))
+		synctool.lib.run_with_nodename(scp_cmd_arr, up.node)
 
 		if os.path.isfile(repos_filename):
 			stdout('uploaded %s' % synctool.lib.prettypath(repos_filename))
@@ -347,7 +384,7 @@ def be_careful_with_getopt():
 
 
 def	option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
-	opt_upload, opt_suffix, opt_fix):
+	opt_upload, opt_fix):
 
 	'''some combinations of command-line options don't make sense;
 	alert the user and abort'''
@@ -358,10 +395,6 @@ def	option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
 
 	if opt_upload and (opt_diff or opt_single or opt_reference):
 		stderr("option --upload can not be combined with other actions")
-		sys.exit(1)
-
-	if opt_suffix and not opt_upload:
-		stderr("option --suffix can only be used together with --upload")
 		sys.exit(1)
 
 	if opt_diff and (opt_single or opt_reference or opt_fix):
@@ -389,6 +422,7 @@ def usage():
   -1, --single=file              Update a single file
   -r, --ref=file                 Show which source file synctool chooses
   -u, --upload=file              Pull a remote file into the overlay tree
+  -o, --overlay=group            Place uploaded file under $overlay/group
   -s, --suffix=group             Give group suffix for the uploaded file
   -e, --erase-saved              Erase *.saved backup files
   -f, --fix                      Perform updates (otherwise, do dry-run)
@@ -417,6 +451,7 @@ Written by Walter de Jong <walter@heiho.net> (c) 2003-2013'''
 def get_options():
 	global PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE
 	global OPT_CHECK_UPDATE, OPT_DOWNLOAD, MASTER_OPTS
+	global UPLOAD_FILE
 
 	# check for typo's on the command-line;
 	# things like "-diff" will trigger "-f" => "--fix"
@@ -427,7 +462,7 @@ def get_options():
 			'hc:vn:g:x:X:d:1:r:u:s:efpFTqa',
 			['help', 'conf=', 'verbose', 'node=', 'group=',
 			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=',
-			'upload=', 'suffix=', 'erase-saved', 'fix', 'no-post',
+			'upload=', 'overlay=', 'suffix=', 'erase-saved', 'fix', 'no-post',
 			'numproc=', 'fullpath', 'terse', 'color', 'no-color',
 			'quiet', 'aggregate', 'unix', 'skip-rsync',
 			'version', 'check-update', 'download'])
@@ -449,8 +484,7 @@ def get_options():
 		stderr('error: excessive arguments on command line')
 		sys.exit(1)
 
-	upload_filename = None
-	upload_suffix = None
+	UPLOAD_FILE = UploadFile()
 
 	# these are only used for checking the validity of option combinations
 	opt_diff = False
@@ -458,7 +492,6 @@ def get_options():
 	opt_reference = False
 	opt_erase_saved = False
 	opt_upload = False
-	opt_suffix = False
 	opt_fix = False
 
 	PASS_ARGS = []
@@ -504,6 +537,10 @@ def get_options():
 
 		if opt in ('-n', '--node'):
 			NODESET.add_node(arg)
+
+			if not UPLOAD_FILE.node:
+				UPLOAD_FILE.node = arg
+
 			continue
 
 		if opt in ('-g', '--group'):
@@ -529,12 +566,15 @@ def get_options():
 
 		if opt in ('-u', '--upload'):
 			opt_upload = True
-			upload_filename = synctool.lib.strip_path(arg)
+			UPLOAD_FILE.filename = synctool.lib.strip_path(arg)
+			continue
+
+		if opt in ('-o', '--overlay'):
+			UPLOAD_FILE.overlay = arg
 			continue
 
 		if opt in ('-s', '--suffix'):
-			opt_suffix = True
-			upload_suffix = arg
+			UPLOAD_FILE.suffix = arg
 			continue
 
 		if opt in ('-e', '--erase-saved'):
@@ -604,6 +644,17 @@ def get_options():
 		if arg:
 			PASS_ARGS.append(arg)
 
+	# do basic checks for uploading
+	if UPLOAD_FILE.overlay and not UPLOAD_FILE.filename:
+		print ('%s: option --overlay must be used in conjunction with '
+			'--upload' % os.path.basename(sys.argv[0]))
+		sys.exit(1)
+
+	if UPLOAD_FILE.suffix and not UPLOAD_FILE.filename:
+		print ('%s: option --suffix must be used in conjunction with '
+			'--upload' % os.path.basename(sys.argv[0]))
+		sys.exit(1)
+
 	# enable logging at the master node
 	PASS_ARGS.append('--masterlog')
 
@@ -612,9 +663,7 @@ def get_options():
 		PASS_ARGS.extend(args)
 
 	option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
-		opt_upload, opt_suffix, opt_fix)
-
-	return (upload_filename, upload_suffix)
+		opt_upload, opt_fix)
 
 
 def main():
@@ -623,7 +672,7 @@ def main():
 	sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)
 	sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)
 
-	(upload_filename, upload_suffix) = get_options()
+	get_options()
 
 	if OPT_CHECK_UPDATE:
 		if not synctool.update.check():
@@ -656,7 +705,7 @@ def main():
 		print 'no valid nodes specified'
 		sys.exit(1)
 
-	if upload_filename:
+	if UPLOAD_FILE.filename:
 		# upload a file
 		if len(address_list) != 1:
 			print 'The option --upload can only be run on just one node'
@@ -664,7 +713,8 @@ def main():
 				'to upload from')
 			sys.exit(1)
 
-		upload(address_list[0], upload_filename, upload_suffix)
+		UPLOAD_FILE.address = address_list[0]
+		upload(UPLOAD_FILE)
 
 	else:
 		# do regular synctool run
@@ -685,6 +735,5 @@ if __name__ == '__main__':
 
 	except KeyboardInterrupt:		# user pressed Ctrl-C
 		print
-		pass
 
 # EOB
