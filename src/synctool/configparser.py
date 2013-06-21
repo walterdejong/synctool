@@ -16,7 +16,6 @@
 
 import os
 import sys
-import string
 import re
 
 import synctool.lib
@@ -82,23 +81,23 @@ def read_config_file(configfile):
 
 				lineno += 1
 
-				n = string.find(tmp_line, '#')
+				n = tmp_line.find('#')
 				if n >= 0:
 					tmp_line = tmp_line[:n]		# strip comment
 
-				tmp_line = string.strip(tmp_line)
+				tmp_line = tmp_line.strip()
 				if not tmp_line:
 					continue
 
 				if tmp_line[-1] == '\\':
-					tmp_line = string.strip(tmp_line[:-1])
+					tmp_line = tmp_line[:-1].strip()
 					line = line + ' ' + tmp_line
 					continue
 
 				line = line + ' ' + tmp_line
 				tmp_line = ''
 
-				arr = string.split(line)
+				arr = line.split()
 
 				line = ''	# <-- line is being reset here;
 							# use arr[] from here on
@@ -109,7 +108,7 @@ def read_config_file(configfile):
 					errors += 1
 					continue
 
-				keyword = string.lower(arr[0])
+				keyword = arr[0].lower()
 
 				# get the parser function
 				try:
@@ -179,7 +178,7 @@ def _config_boolean(param, value, configfile, lineno):
 	if not check_definition(param, configfile, lineno):
 		return (1, False)
 
-	value = string.lower(value)
+	value = value.lower()
 	if value in synctool.param.BOOLEAN_VALUE_TRUE:
 		return (0, True)
 
@@ -209,7 +208,7 @@ def _config_color_variant(param, value, configfile, lineno):
 	if not check_definition(param, configfile, lineno):
 		return 1
 
-	value = string.lower(value)
+	value = value.lower()
 	if value in synctool.lib.COLORMAP.keys():
 		synctool.param.TERSE_COLORS[param[6:]] = value
 		return 0
@@ -234,7 +233,7 @@ def _config_command(param, arr, short_cmd, configfile, lineno):
 	# That is deferred until later; the client only runs diff_cmd,
 	# while the master runs a bunch of commands
 
-	return (0, synctool.lib.prepare_path(string.join(arr[1:])))
+	return (0, synctool.lib.prepare_path(arr[1:].join()))
 
 
 def spellcheck(name):
@@ -262,7 +261,7 @@ def config_prefix(arr, configfile, lineno):
 	if not check_definition(arr[0], configfile, lineno):
 		return 1
 
-	d = string.join(arr[1:])
+	d = arr[1:].join()
 	d = synctool.lib.strip_multiple_slashes(d)
 	d = synctool.lib.strip_trailing_slash(d)
 
@@ -280,7 +279,7 @@ def config_tempdir(arr, configfile, lineno):
 	if not check_definition(arr[0], configfile, lineno):
 		return 1
 
-	d = string.join(arr[1:])
+	d = arr[1:].join()
 	d = synctool.lib.prepare_path(d)
 
 	if not os.path.isabs(d):
@@ -355,8 +354,8 @@ def config_ignore(arr, configfile, lineno):
 
 	for fn in arr[1:]:
 		# if fn has wildcards, put it in array IGNORE_FILES_WITH_WILDCARDS
-		if string.find(fn, '*') >= 0 or string.find(fn, '?') >= 0 \
-			or (string.find(fn, '[') >= 0 and string.find(fn, ']') >= 0):
+		if (fn.find('*') >= 0 or fn.find('?') >= 0 or
+			(fn.find('[') >= 0 and fn.find(']') >= 0)):
 			if not fn in synctool.param.IGNORE_FILES_WITH_WILDCARDS:
 				synctool.param.IGNORE_FILES_WITH_WILDCARDS.append(fn)
 		else:
@@ -613,7 +612,7 @@ def config_node(arr, configfile, lineno):
 	# 'ipaddress:', 'hostname:', 'hostid:', 'rsync:'
 
 	while len(groups) >= 1:
-		n = string.find(groups[-1], ':')
+		n = groups[-1].find(':')
 		if n < 0:
 			break
 
@@ -671,7 +670,7 @@ def config_node(arr, configfile, lineno):
 				if not hostid:
 					continue
 
-				hostid = string.strip(hostid)
+				hostid = hostid.strip()
 				if not hostid:
 					continue
 
@@ -834,7 +833,7 @@ def config_logfile(arr, configfile, lineno):
 			(configfile, lineno))
 		return 1
 
-	synctool.param.LOGFILE = synctool.lib.prepare_path(string.join(arr[1:]))
+	synctool.param.LOGFILE = synctool.lib.prepare_path(arr[1:].join())
 	return 0
 
 

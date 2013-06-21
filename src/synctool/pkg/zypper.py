@@ -8,8 +8,6 @@
 #   License.
 #
 
-import string
-
 import synctool.lib
 from synctool.pkgclass import SyncPkg
 
@@ -27,7 +25,7 @@ class SyncPkgZypper(SyncPkg):
 		cmd = 'rpm -qa'			# zypper has no 'list-installed' ?
 
 		if pkgs:
-			cmd = cmd + ' ' + string.join(pkgs)
+			cmd = cmd + ' ' + ' '.join(pkgs)
 
 		synctool.lib.DRY_RUN = False
 		synctool.lib.shell_command(cmd)
@@ -38,7 +36,7 @@ class SyncPkgZypper(SyncPkg):
 		SyncPkg.install(self, pkgs)
 
 		cmd = ('zypper --non-interactive install '
-			'--auto-agree-with-licenses ' + string.join(pkgs))
+			'--auto-agree-with-licenses ' + ' '.join(pkgs))
 
 		synctool.lib.shell_command(cmd)
 
@@ -46,7 +44,7 @@ class SyncPkgZypper(SyncPkg):
 	def remove(self, pkgs):
 		SyncPkg.remove(self, pkgs)
 
-		cmd = 'zypper --non-interactive remove ' + string.join(pkgs)
+		cmd = 'zypper --non-interactive remove ' + ' '.join(pkgs)
 
 		synctool.lib.shell_command(cmd)
 

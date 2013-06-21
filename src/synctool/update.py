@@ -10,7 +10,6 @@
 
 import os
 import sys
-import string
 import urllib2
 import hashlib
 
@@ -62,11 +61,11 @@ def get_latest_version_and_checksum():
 		stderr('error accessing the file at %s' % VERSION_CHECKING_URL)
 		return None
 
-	data = string.strip(data)
+	data = data.strip()
 
 	# format of the data in LATEST.txt is:
 	# <version> <MD5 checksum>
-	arr = string.split(data)
+	arr = data.split()
 	if len(arr) < 2:
 		return None
 

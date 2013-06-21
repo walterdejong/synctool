@@ -10,7 +10,6 @@
 
 import os
 import sys
-import string
 import fnmatch
 
 import synctool.lib
@@ -419,7 +418,7 @@ def find_terse(treedef, terse_path):
 
 	(tree_dict, filelist) = select_tree(treedef)
 
-	idx = string.find(terse_path, '...')
+	idx = terse_path.find('...')
 	if idx == -1:
 		if terse_path[:2] == '//':
 			terse_path = os.path.join(synctool.param.VAR_DIR,

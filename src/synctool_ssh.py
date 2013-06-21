@@ -11,7 +11,6 @@
 
 import os
 import sys
-import string
 import getopt
 import shlex
 import errno
@@ -45,8 +44,8 @@ def run_dsh(address_list, remote_cmd_arr):
 	# It is moderately evil however, because it's not 100% correct
 	# but it's reliable enough to keep in here
 	full_path = synctool.lib.search_path(remote_cmd_arr[0])
-	if string.find(full_path, os.sep) < 0 or (os.altsep != None and
-		string.find(full_path, os.altsep) < 0):
+	if full_path.find(os.sep) < 0 or (os.altsep != None and
+										full_path.find(os.altsep) < 0):
 		# relative command was not found in PATH
 		# look under scripts/
 		full_path = os.path.join(synctool.param.SCRIPT_DIR, remote_cmd_arr[0])
@@ -70,7 +69,7 @@ def worker_ssh(addr):
 
 	nodename = NODESET.get_nodename_from_address(addr)
 
-	cmd_str = string.join(REMOTE_CMD_ARR)
+	cmd_str = ' '.join(REMOTE_CMD_ARR)
 
 	# create local copy
 	# or else parallelism may screw things up
@@ -88,7 +87,7 @@ def worker_ssh(addr):
 
 	ssh_cmd_arr.extend(REMOTE_CMD_ARR)
 
-	unix_out(string.join(ssh_cmd_arr))
+	unix_out(' '.join(ssh_cmd_arr))
 
 	# execute ssh+remote command and show output with the nodename
 	synctool.lib.run_with_nodename(ssh_cmd_arr, nodename)

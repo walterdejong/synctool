@@ -12,7 +12,6 @@
 
 import os
 import sys
-import string
 import subprocess
 import shlex
 import time
@@ -109,11 +108,11 @@ def terse(code, msg):
 
 	if synctool.param.TERSE:
 		# convert any path to terse path
-		if string.find(msg, ' ') >= 0:
-			arr = string.split(msg)
+		if msg.find(' ') >= 0:
+			arr = msg.split()
 			if arr[-1][0] == os.path.sep:
 				arr[-1] = terse_path(arr[-1])
-				msg = string.join(arr)
+				msg = ' '.join(arr)
 
 		else:
 			if msg[0] == os.path.sep:
@@ -122,7 +121,7 @@ def terse(code, msg):
 		if synctool.param.COLORIZE:		# and sys.stdout.isatty():
 			txt = TERSE_TXT[code]
 			color = COLORMAP[synctool.param.TERSE_COLORS[
-							string.lower(TERSE_TXT[code])]]
+							TERSE_TXT[code].lower()]]
 
 			if synctool.param.COLORIZE_BRIGHT:
 				bright = ';1'
@@ -180,12 +179,12 @@ def terse_path(path, maxlen = 55):
 		path = os.path.sep + os.path.sep + path[synctool.param.VAR_LEN:]
 
 	if len(path) > maxlen:
-		arr = string.split(path, os.path.sep)
+		arr = path.split(os.path.sep)
 
 		while len(arr) >= 3:
 			idx = len(arr) / 2
 			arr[idx] = '...'
-			new_path = string.join(arr, os.path.sep)
+			new_path = os.path.sep.join(arr)
 
 			if len(new_path) > maxlen:
 				arr.pop(idx)
@@ -328,7 +327,7 @@ def run_with_nodename(cmd_arr, nodename):
 			if not line:
 				break
 
-			line = string.strip(line)
+			line = line.strip()
 
 			# pass output on; simply use 'print' rather than 'stdout()'
 			if line[:15] == '%synctool-log% ':
@@ -385,16 +384,16 @@ def shell_command(cmd):
 def search_path(cmd):
 	'''search the PATH for the location of cmd'''
 
-	if string.find(cmd, os.sep) >= 0 or (os.altsep != None and
-										string.find(cmd, os.altsep) >= 0):
+	if cmd.find(os.sep) >= 0 or (os.altsep != None and
+								cmd.find(os.altsep) >= 0):
 		return cmd
 
 	path = os.environ['PATH']
 	if not path:
-		path = string.join(['/bin', '/sbin', '/usr/bin', '/usr/sbin',
-			'/usr/local/bin', '/usr/local/sbin'], os.pathsep)
+		path = os.pathsep.join(['/bin', '/sbin', '/usr/bin', '/usr/sbin',
+			'/usr/local/bin', '/usr/local/sbin'])
 
-	for d in string.split(path, os.pathsep):
+	for d in path.split(os.pathsep):
 		full_path = os.path.join(d, cmd)
 		if os.access(full_path, os.X_OK):
 			return full_path
@@ -407,7 +406,7 @@ def mkdir_p(path):
 
 	# note: this function does not change the umask
 
-	arr = string.split(path, os.path.sep)
+	arr = path.split(os.sep)
 	if arr[0] == '':
 		# first element is empty; this happens when path starts with '/'
 		arr.pop(0)
@@ -520,7 +519,7 @@ def prepare_path(path):
 
 def multiprocess(fn, work):
 	'''run a function in parallel'''
-	
+
 	# Thanks go to Bryce Boe
 	# http://www.bryceboe.com/2010/08/26/python-multiprocessing-and-keyboardinterrupt/
 
@@ -531,7 +530,7 @@ def multiprocess(fn, work):
 	jobq = multiprocessing.Queue()
 	for item in work:
 		jobq.put(item)
-	
+
 	# start NUMPROC worker processes
 	pool = []
 	i = 0
@@ -540,7 +539,7 @@ def multiprocess(fn, work):
 		pool.append(p)
 		p.start()
 		i += 1
-	
+
 	try:
 		for p in pool:
 			p.join()
@@ -551,7 +550,7 @@ def multiprocess(fn, work):
 		for p in pool:
 			p.terminate()
 			p.join()
-	
+
 		# re-raise KeyboardInterrupt, for __main__ to catch
 		raise
 

@@ -10,7 +10,6 @@
 
 import os
 import sys
-import string
 import socket
 import getopt
 import errno
@@ -115,7 +114,7 @@ def check_cmd_config(param_name, cmd):
 			(synctool.param.CONF_FILE, param_name))
 		return (False, None)
 
-	arr = string.split(cmd)
+	arr = cmd.split()
 	path = synctool.lib.search_path(arr[0])
 	if not path:
 		stderr("%s: error: %s '%s' not found in PATH" %
@@ -124,7 +123,7 @@ def check_cmd_config(param_name, cmd):
 
 	# reassemble command with full path
 	arr[0] = path
-	cmd = string.join(arr)
+	cmd = ' '.join(arr)
 	return (True, cmd)
 
 
@@ -144,7 +143,7 @@ def init_mynodename():
 	# get my hostname
 	synctool.param.HOSTNAME = hostname = socket.getfqdn()
 
-	arr = string.split(hostname, '.')
+	arr = hostname.split('.')
 	short_hostname = arr[0]
 
 	all_nodes = get_all_nodes()
@@ -156,7 +155,7 @@ def init_mynodename():
 		pass
 
 	elif synctool.param.HOST_ID != None:
-		arr = string.split(synctool.param.HOST_ID, '.')
+		arr = synctool.param.HOST_ID.split('.')
 		nodename = arr[0]
 
 	elif synctool.param.HOSTNAMES.has_key(hostname):

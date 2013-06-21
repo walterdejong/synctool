@@ -9,7 +9,6 @@
 #
 
 import os
-import string
 
 import synctool.lib
 from synctool.pkgclass import SyncPkg
@@ -28,7 +27,7 @@ class SyncPkgAptget(SyncPkg):
 		cmd = 'dpkg -l'
 
 		if pkgs:
-			cmd = cmd + ' ' + string.join(pkgs)
+			cmd = cmd + ' ' + ' '.join(pkgs)
 
 		synctool.lib.DRY_RUN = False
 		synctool.lib.shell_command(cmd)
@@ -40,7 +39,7 @@ class SyncPkgAptget(SyncPkg):
 
 		os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
 
-		cmd = 'apt-get -y install ' + string.join(pkgs)
+		cmd = 'apt-get -y install ' + ' '.join(pkgs)
 
 		synctool.lib.shell_command(cmd)
 
@@ -50,7 +49,7 @@ class SyncPkgAptget(SyncPkg):
 
 		os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
 
-		cmd = 'apt-get -y remove ' + string.join(pkgs)
+		cmd = 'apt-get -y remove ' + ' '.join(pkgs)
 
 		synctool.lib.shell_command(cmd)
 

@@ -8,8 +8,6 @@
 #   License.
 #
 
-import string
-
 import synctool.config
 import synctool.lib
 from synctool.lib import verbose, stderr
@@ -37,16 +35,16 @@ class NodeSet:
 		self.namemap = {}
 
 	def add_node(self, nodelist):
-		self.nodelist = set(string.split(nodelist, ','))
+		self.nodelist = set(nodelist.split(','))
 
 	def add_group(self, grouplist):
-		self.grouplist = set(string.split(grouplist, ','))
+		self.grouplist = set(grouplist.split(','))
 
 	def exclude_node(self, nodelist):
-		self.exclude_nodes = set(string.split(nodelist, ','))
+		self.exclude_nodes = set(nodelist.split(','))
 
 	def exclude_group(self, grouplist):
-		self.exclude_groups = set(string.split(grouplist, ','))
+		self.exclude_groups = set(grouplist.split(','))
 
 	def addresses(self):
 		'''return list of addresses of relevant nodes'''
@@ -117,7 +115,7 @@ class NodeSet:
 									'ignored nodes')
 			else:
 				ignored_str = ('warning: ignored nodes: ' +
-								string.join(list(ignored_nodes), ','))
+								','.join(list(ignored_nodes)))
 				if len(ignored_str) < 80:
 					print ignored_str
 				else:

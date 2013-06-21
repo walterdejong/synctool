@@ -11,7 +11,6 @@
 
 import os
 import sys
-import string
 import getopt
 import shlex
 import tempfile
@@ -125,7 +124,7 @@ def worker_synctool(addr):
 	cmd_arr.extend(PASS_ARGS)
 
 	verbose('running synctool on node %s' % nodename)
-	unix_out(string.join(cmd_arr))
+	unix_out(' '.join(cmd_arr))
 
 	synctool.lib.run_with_nodename(cmd_arr, nodename)
 
@@ -134,7 +133,7 @@ def run_local_synctool():
 	cmd_arr = shlex.split(synctool.param.SYNCTOOL_CMD) + PASS_ARGS
 
 	verbose('running synctool on node %s' % synctool.param.NODENAME)
-	unix_out(string.join(cmd_arr))
+	unix_out(' '.join(cmd_arr))
 
 	synctool.lib.run_with_nodename(cmd_arr, synctool.param.NODENAME)
 
@@ -235,7 +234,7 @@ def upload(up):
 
 	if err == synctool.overlay.OV_NOT_FOUND:
 		# no source path found
-		if string.find(up.filename, '...') >= 0:
+		if up.filename.find('...') >= 0:
 			stderr("%s is not in the repository, don't know what to map "
 					"this path to\n"
 					"Please give the full path instead of a terse path, "
@@ -371,12 +370,12 @@ def be_careful_with_getopt():
 		# This is probably going to give stupid-looking output
 		# in some cases, but it's better to be safe than sorry
 
-		if arg[:2] == '-d' and string.find(arg, 'f') > -1:
+		if arg[:2] == '-d' and arg.find('f') > -1:
 			print "Did you mean '--diff'?"
 			sys.exit(1)
 
-		if arg[:2] == '-r' and string.find(arg, 'f') > -1:
-			if string.count(arg, 'e') >= 2:
+		if arg[:2] == '-r' and arg.find('f') > -1:
+			if arg.count('e') >= 2:
 				print "Did you mean '--reference'?"
 			else:
 				print "Did you mean '--ref'?"

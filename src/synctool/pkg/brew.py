@@ -8,8 +8,6 @@
 #   License.
 #
 
-import string
-
 import synctool.lib
 from synctool.pkgclass import SyncPkg
 
@@ -27,7 +25,7 @@ class SyncPkgBrew(SyncPkg):
 		cmd = 'brew list'
 
 		if pkgs:
-			cmd = cmd + ' ' + string.join(pkgs)
+			cmd = cmd + ' ' + ' '.join(pkgs)
 
 		synctool.lib.DRY_RUN = False
 		synctool.lib.shell_command(cmd)
@@ -37,7 +35,7 @@ class SyncPkgBrew(SyncPkg):
 	def install(self, pkgs):
 		SyncPkg.install(self, pkgs)
 
-		cmd = 'brew install ' + string.join(pkgs)
+		cmd = 'brew install ' + ' '.join(pkgs)
 
 		synctool.lib.shell_command(cmd)
 
@@ -45,7 +43,7 @@ class SyncPkgBrew(SyncPkg):
 	def remove(self, pkgs):
 		SyncPkg.remove(self, pkgs)
 
-		cmd = 'brew remove ' + string.join(pkgs)
+		cmd = 'brew remove ' + ' '.join(pkgs)
 
 		synctool.lib.shell_command(cmd)
 
