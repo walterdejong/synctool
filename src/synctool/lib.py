@@ -110,12 +110,12 @@ def terse(code, msg):
 		# convert any path to terse path
 		if msg.find(' ') >= 0:
 			arr = msg.split()
-			if arr[-1][0] == os.path.sep:
+			if arr[-1][0] == os.sep:
 				arr[-1] = terse_path(arr[-1])
 				msg = ' '.join(arr)
 
 		else:
-			if msg[0] == os.path.sep:
+			if msg[0] == os.sep:
 				msg = terse_path(msg)
 
 		if synctool.param.COLORIZE:		# and sys.stdout.isatty():
@@ -153,11 +153,11 @@ def prettypath(path):
 		return terse_path(path)
 
 	if path[:synctool.param.OVERLAY_LEN] == (synctool.param.OVERLAY_DIR +
-											os.path.sep):
+											os.sep):
 		return os.path.join('$overlay', path[synctool.param.OVERLAY_LEN:])
 
 	if path[:synctool.param.DELETE_LEN] == (synctool.param.DELETE_DIR +
-											os.path.sep):
+											os.sep):
 		return os.path.join('$delete', path[synctool.param.DELETE_LEN:])
 
 	return path
@@ -175,16 +175,16 @@ def terse_path(path, maxlen = 55):
 	# a source or a destination path and it treats them both in the same way
 
 	if path[:synctool.param.VAR_LEN] == (synctool.param.VAR_DIR +
-										os.path.sep):
-		path = os.path.sep + os.path.sep + path[synctool.param.VAR_LEN:]
+										os.sep):
+		path = os.sep + os.sep + path[synctool.param.VAR_LEN:]
 
 	if len(path) > maxlen:
-		arr = path.split(os.path.sep)
+		arr = path.split(os.sep)
 
 		while len(arr) >= 3:
 			idx = len(arr) / 2
 			arr[idx] = '...'
-			new_path = os.path.sep.join(arr)
+			new_path = os.sep.join(arr)
 
 			if len(new_path) > maxlen:
 				arr.pop(idx)
@@ -452,14 +452,14 @@ def strip_multiple_slashes(path):
 	if not path:
 		return path
 
-	double = os.path.sep + os.path.sep
+	double = os.sep + os.sep
 	while path.find(double) != -1:
-		path = path.replace(double, os.path.sep)
+		path = path.replace(double, os.sep)
 
 	if os.path.altsep:
 		double = os.path.altsep + os.path.altsep
 		while path.find(double) != -1:
-			path = path.replace(double, os.path.sep)
+			path = path.replace(double, os.sep)
 
 	return path
 
@@ -468,7 +468,7 @@ def strip_trailing_slash(path):
 	if not path:
 		return path
 
-	while len(path) > 1 and path[-1] == os.path.sep:
+	while len(path) > 1 and path[-1] == os.sep:
 		path = path[:-1]
 
 	return path
@@ -502,7 +502,7 @@ def strip_terse_path(path):
 
 	# the first slash was accidentally stripped, so restore it
 	if is_terse:
-		path = os.path.sep + path
+		path = os.sep + path
 
 	return path
 
@@ -513,7 +513,7 @@ def prepare_path(path):
 
 	path = strip_multiple_slashes(path)
 	path = strip_trailing_slash(path)
-	path = path.replace('$SYNCTOOL/', synctool.param.ROOTDIR + os.path.sep)
+	path = path.replace('$SYNCTOOL/', synctool.param.ROOTDIR + os.sep)
 	return path
 
 

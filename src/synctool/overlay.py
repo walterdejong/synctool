@@ -149,7 +149,7 @@ def relevant_overlay_dirs(overlay_dir):
 	return a
 
 
-def overlay_pass1(overlay_dir, filelist, dest_dir = os.path.sep,
+def overlay_pass1(overlay_dir, filelist, dest_dir = os.sep,
 	highest_importance = sys.maxint, handle_postscripts = True):
 	'''do pass #1 of 2; create list of source and dest files
 	Each element in the list is an instance of SyncObject'''
@@ -313,7 +313,7 @@ def load_overlay_tree():
 
 	# do pass #1 for multiple overlay dirs: load them into filelist
 	for (d, importance) in relevant_overlay_dirs(synctool.param.OVERLAY_DIR):
-		overlay_pass1(d, filelist, os.path.sep, importance)
+		overlay_pass1(d, filelist, os.sep, importance)
 
 	# run pass #2 : 'squash' filelist into OVERLAY_DICT
 	overlay_pass2(filelist, OVERLAY_DICT)
@@ -345,7 +345,7 @@ def load_delete_tree():
 
 	# do pass #1 for multiple delete dirs: load them into filelist
 	for (d, importance) in relevant_overlay_dirs(synctool.param.DELETE_DIR):
-		overlay_pass1(d, filelist, os.path.sep, importance)
+		overlay_pass1(d, filelist, os.sep, importance)
 
 	# run pass #2 : 'squash' filelist into OVERLAY_DICT
 	overlay_pass2(filelist, DELETE_DICT)

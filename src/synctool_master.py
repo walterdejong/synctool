@@ -102,7 +102,7 @@ def worker_synctool(addr):
 		# double check the rsync destination
 		# our filters are like playing with fire
 		if not synctool.param.ROOTDIR or (
-			synctool.param.ROOTDIR == os.path.sep):
+			synctool.param.ROOTDIR == os.sep):
 			stderr('cowardly refusing to rsync with rootdir == %s' %
 					synctool.param.ROOTDIR)
 			sys.exit(-1)
@@ -197,7 +197,7 @@ def upload(up):
 	'''copy a file from a node into the overlay/ tree
 	'up' is an UploadFile object'''
 
-	if up.filename[0] != os.path.sep:
+	if up.filename[0] != os.sep:
 		stderr('error: the filename to upload must be an absolute path')
 		sys.exit(-1)
 
@@ -260,13 +260,13 @@ def upload(up):
 			# user supplied (maybe a different) overlay group dir
 			# so take repos_filename apart and insert a new group dir
 			if (repos_filename[:synctool.param.OVERLAY_LEN] ==
-				synctool.param.OVERLAY_DIR + os.path.sep):
-				arr = repos_filename.split(os.path.sep)
-				overlay_arr = synctool.param.OVERLAY_DIR.split(os.path.sep)
+				synctool.param.OVERLAY_DIR + os.sep):
+				arr = repos_filename.split(os.sep)
+				overlay_arr = synctool.param.OVERLAY_DIR.split(os.sep)
 				# replace the group dir with what the user gave
 				arr[len(overlay_arr)] = up.overlay
 				# reassemble the full path with up.overlay as group dir
-				repos_filename = os.path.sep.join(arr)
+				repos_filename = os.sep.join(arr)
 #			else:
 #				I don't know, give up
 
