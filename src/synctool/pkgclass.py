@@ -8,8 +8,6 @@
 #   License.
 #
 
-import string
-
 import synctool.lib
 from synctool.lib import verbose
 
@@ -27,17 +25,17 @@ class SyncPkg:
 
 	def list(self, pkgs = None):
 		if pkgs:
-			verbose('list packages: %s' % string.join(pkgs))
+			verbose('list packages: %s' % ' '.join(pkgs))
 		else:
 			verbose('list all packages')
 
 
 	def install(self, pkgs):
-		verbose('install packages: %s' % string.join(pkgs))
+		verbose('install packages: %s' % ' '.join(pkgs))
 
 
 	def remove(self, pkgs):
-		verbose('removing packages: %s' % string.join(pkgs))
+		verbose('removing packages: %s' % ' '.join(pkgs))
 
 
 	def update(self):

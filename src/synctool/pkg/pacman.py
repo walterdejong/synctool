@@ -8,8 +8,6 @@
 #   License.
 #
 
-import string
-
 import synctool.lib
 from synctool.pkgclass import SyncPkg
 
@@ -30,7 +28,7 @@ class SyncPkgPacman(SyncPkg):
 		cmd = 'pacman -Q'
 
 		if pkgs:
-			cmd = cmd + 's ' + string.join(pkgs)	# use pacman -Qs ...
+			cmd = cmd + 's ' + ' '.join(pkgs)	# use pacman -Qs ...
 
 		synctool.lib.DRY_RUN = False
 		synctool.lib.shell_command(cmd)
@@ -40,7 +38,7 @@ class SyncPkgPacman(SyncPkg):
 	def install(self, pkgs):
 		SyncPkg.install(self, pkgs)
 
-		cmd = 'pacman -S --noconfirm ' + string.join(pkgs)
+		cmd = 'pacman -S --noconfirm ' + ' '.join(pkgs)
 
 		synctool.lib.shell_command(cmd)
 
@@ -48,7 +46,7 @@ class SyncPkgPacman(SyncPkg):
 	def remove(self, pkgs):
 		SyncPkg.remove(self, pkgs)
 
-		cmd = 'pacman -Rs --noconfirm ' + string.join(pkgs)
+		cmd = 'pacman -Rs --noconfirm ' + ' '.join(pkgs)
 
 		synctool.lib.shell_command(cmd)
 

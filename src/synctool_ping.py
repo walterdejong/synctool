@@ -11,7 +11,6 @@
 
 import os
 import sys
-import string
 import subprocess
 import getopt
 import shlex
@@ -68,7 +67,7 @@ def ping_node(addr):
 			if not line:
 				break
 
-			line = string.strip(line)
+			line = line.strip()
 
 			# argh, we have to parse output here
 			#
@@ -78,7 +77,7 @@ def ping_node(addr):
 			# on Linux, ping says something like:
 			# "2 packets transmitted, 0 received, 100.0% packet loss, time 1001ms"
 
-			arr = string.split(line)
+			arr = line.split()
 			if len(arr) > 3 and arr[1] == 'packets' and arr[2] == 'transmitted,':
 				try:
 					packets_received = int(arr[3])

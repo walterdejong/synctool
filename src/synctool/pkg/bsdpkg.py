@@ -9,7 +9,6 @@
 #
 
 import os
-import string
 
 import synctool.lib
 from synctool.pkgclass import SyncPkg
@@ -33,7 +32,7 @@ class SyncPkgBsdpkg(SyncPkg):
 		cmd = 'pkg_info'
 
 		if pkgs:
-			cmd = cmd + ' ' + string.join(pkgs)
+			cmd = cmd + ' ' + ' '.join(pkgs)
 		else:
 			cmd = cmd + ' -a'		# list all installed packages
 
@@ -45,7 +44,7 @@ class SyncPkgBsdpkg(SyncPkg):
 	def install(self, pkgs):
 		SyncPkg.install(self, pkgs)
 
-		cmd = 'pkg_add -v ' + string.join(pkgs)
+		cmd = 'pkg_add -v ' + ' '.join(pkgs)
 
 		synctool.lib.shell_command(cmd)
 
@@ -53,7 +52,7 @@ class SyncPkgBsdpkg(SyncPkg):
 	def remove(self, pkgs):
 		SyncPkg.remove(self, pkgs)
 
-		cmd = 'pkg_delete -v ' + string.join(pkgs)
+		cmd = 'pkg_delete -v ' + ' '.join(pkgs)
 
 		synctool.lib.shell_command(cmd)
 

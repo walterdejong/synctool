@@ -11,7 +11,6 @@
 
 import os
 import sys
-import string
 import getopt
 import errno
 
@@ -339,12 +338,12 @@ def get_options():
 
 		if opt in ('-n', '--node'):
 			set_action(ACTION_NODES, '--node')
-			ARG_NODENAMES = string.split(arg, ',')
+			ARG_NODENAMES = arg.split(',')
 			continue
 
 		if opt in ('-g', '--group'):
 			set_action(ACTION_GROUPS, '--group')
-			ARG_GROUPS = string.split(arg, ',')
+			ARG_GROUPS = arg.split(',')
 			continue
 
 		if opt in ('-i', 'ipaddress'):
@@ -365,7 +364,7 @@ def get_options():
 
 		if opt in ('-C', '--command'):
 			set_action(ACTION_CMDS, '--command')
-			ARG_CMDS = string.split(arg, ',')
+			ARG_CMDS = arg.split(',')
 			continue
 
 		if opt in ('-P', '--package-manager'):

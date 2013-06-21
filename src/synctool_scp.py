@@ -11,7 +11,6 @@
 
 import os
 import sys
-import string
 import getopt
 import shlex
 import errno
@@ -47,7 +46,7 @@ def run_remote_copy(address_list, files):
 
 	SCP_CMD_ARR.extend(files)
 
-	FILES_STR = string.join(files)		# only used for printing
+	FILES_STR = ' '.join(files)		# only used for printing
 
 	synctool.lib.multiprocess(worker_scp, address_list)
 

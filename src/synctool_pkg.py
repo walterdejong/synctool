@@ -11,7 +11,6 @@
 
 import os
 import sys
-import string
 import getopt
 import errno
 
@@ -66,7 +65,7 @@ def package_manager():
 
 	for mgr in synctool.param.KNOWN_PACKAGE_MANAGERS:
 		if synctool.param.PACKAGE_MANAGER == mgr:
-			short_mgr = string.replace(mgr, '-', '')
+			short_mgr = mgr.replace('-', '')
 
 			# load the module
 			module = __import__('synctool.pkg.%s' % short_mgr)
@@ -76,8 +75,7 @@ def package_manager():
 			module = getattr(module, short_mgr)
 
 			# find the package manager class
-			pkgclass = getattr(module, 'SyncPkg%s' %
-										string.capitalize(short_mgr))
+			pkgclass = getattr(module, 'SyncPkg%s' % short_mgr.capitalize())
 
 			# instantiate the class
 			return pkgclass()

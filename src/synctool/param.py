@@ -10,7 +10,6 @@
 
 import os
 import sys
-import string
 
 VERSION = '6.0-beta'
 
@@ -172,13 +171,13 @@ def init():
 		path_arr = ['/bin', '/sbin', '/usr/bin', '/usr/sbin',
 			'/usr/local/bin', '/usr/local/sbin']
  	else:
- 		path_arr = string.split(path, os.pathsep)
+ 		path_arr = ' '.split(path, os.pathsep)
 
  	# add the synctool/bin/ dir
  	bindir = os.path.join(ROOTDIR, 'bin')
  	if not bindir in path_arr:
 	 	path_arr.append(bindir)
-	 	os.environ['PATH'] = string.join(path_arr, os.pathsep)
+	 	os.environ['PATH'] = os.sep.join(path_arr)
 
 
 # EOB

@@ -12,7 +12,6 @@
 
 import os
 import sys
-import string
 import subprocess
 import getopt
 
@@ -24,19 +23,19 @@ def aggregate(f):
 	if not lines:
 		return
 
-	lines = map(string.strip, lines)
+	lines = [x.strip() for x in lines]
 
 	output_per_node = {}
 
 	for line in lines:
-		arr = string.split(line, ':')
+		arr = line.split(':')
 
 		if len(arr) <= 1:
 			print line
 			continue
 
 		node = arr[0]
-		output = string.join(arr[1:], ':')
+		output = ':'.join(arr[1:])
 
 		if not output_per_node.has_key(node):
 			output_per_node[node] = [output]
@@ -62,7 +61,7 @@ def aggregate(f):
 				del output_per_node[node2]
 				nodes.remove(node2)
 
-		print '%s:' % string.join(nodelist, ',')
+		print '%s:' % ','.join(nodelist)
 		for line in out:
 			print line
 

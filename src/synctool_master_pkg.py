@@ -13,7 +13,6 @@
 
 import os
 import sys
-import string
 import getopt
 import shlex
 import errno
@@ -54,7 +53,7 @@ def worker_pkg(addr):
 	cmd_arr.extend(PASS_ARGS)
 
 	verbose('running synctool-pkg on node %s' % nodename)
-	unix_out(string.join(cmd_arr))
+	unix_out(' '.join(cmd_arr))
 
 	synctool.lib.run_with_nodename(cmd_arr, nodename)
 
@@ -63,7 +62,7 @@ def run_local_pkg():
 	cmd_arr = shlex.split(synctool.param.PKG_CMD) + PASS_ARGS
 
 	verbose('running synctool-pkg on node %s' % synctool.param.NODENAME)
-	unix_out(string.join(cmd_arr))
+	unix_out(' '.join(cmd_arr))
 
 	synctool.lib.run_with_nodename(cmd_arr, synctool.param.NODENAME)
 

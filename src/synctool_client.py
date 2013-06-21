@@ -11,7 +11,6 @@
 
 import os
 import sys
-import string
 import time
 import shlex
 import getopt
@@ -347,12 +346,12 @@ def be_careful_with_getopt():
 		# This is probably going to give stupid-looking output
 		# in some cases, but it's better to be safe than sorry
 
-		if arg[:2] == '-d' and string.find(arg, 'f') > -1:
+		if arg[:2] == '-d' and arg.find('f') > -1:
 			print "Did you mean '--diff'?"
 			sys.exit(1)
 
-		if arg[:2] == '-r' and string.find(arg, 'f') > -1:
-			if string.count(arg, 'e') >= 2:
+		if arg[:2] == '-r' and arg.find('f') > -1:
+			if arg.count('e') >= 2:
 				print "Did you mean '--reference'?"
 			else:
 				print "Did you mean '--ref'?"
