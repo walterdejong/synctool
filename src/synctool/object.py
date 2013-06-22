@@ -156,10 +156,6 @@ class SyncObject:
 
 		if self.src_stat.is_link():
 			need_update = self._compare_link()
-			# ignore mode and ownership of symlinks;
-			# return here and now
-			# FIXME symlinks should have mode & ownership too
-			return need_update
 
 		elif self.src_stat.is_dir():
 			need_update = self._compare_dir()
@@ -194,8 +190,7 @@ class SyncObject:
 													self.dest_path)
 
 		# check mode and owner/group of files and/or directories
-		# ignore mode/ownership of symbolic links
-		if self.dest_stat.exists() and not self.dest_stat.is_link():
+		if self.dest_stat.exists():
 			if self._compare_ownership():
 				need_update = True
 
@@ -255,6 +250,8 @@ class SyncObject:
 		# (re)create the symbolic link
 		if need_update:
 			self._symlink_file(src_link)
+			self._set_symlink_ownership()
+			self._set_symlink_permissions()
 			unix_out('')
 			return True
 
@@ -443,6 +440,12 @@ class SyncObject:
 	def _compare_permissions(self):
 		'''compare permission bits of src and dest'''
 
+		if self.is_link() and not hasattr(os, 'lchmod'):
+			# this platform does not support changing the mode
+			# of a symbolic link
+			# eg. on Linux all symlinks are mode 0777 (weird!)
+			return False
+
 		if (self.src_stat.mode & 07777) != (self.dest_stat.mode & 07777):
 			stdout('%s should have mode %04o, but has %04o' % (self.dest_path,
 					self.src_stat.mode & 07777, self.dest_stat.mode & 07777))
@@ -504,15 +507,6 @@ class SyncObject:
 		if self.dest_exists():
 			unix_out('mv %s %s.saved' % (newpath, newpath))
 
-		# symlinks are created using the default umask
-		# on Linux, the mode of symlinks is always 0777 (weird!)
-		# on other platforms, it gets a mode according to umask
-
-		# FIXME links should have mode & ownership
-		# if we want the ownership of the symlink to be correct,
-		# we should do setuid() here
-		# matching ownerships of symbolic links is not yet implemented
-
 		unix_out('ln -s %s %s' % (oldpath, newpath))
 
 		if not synctool.lib.DRY_RUN:
@@ -537,7 +531,56 @@ class SyncObject:
 			verbose(dryrun_msg('  os.symlink(%s, %s)' % (oldpath, newpath)))
 
 
+	def _set_symlink_permissions(self):
+		# check if this platform supports lchmod()
+		# Linux does not have lchmod: its symlinks are always mode 0777
+		if not hasattr(os, 'lchmod'):
+			return
+
+		fn = self.dest_path
+		mode = self.src_statbuf.mode
+
+		unix_out('lchmod 0%o %s' % (mode & 07777, fn))
+
+		if not synctool.lib.DRY_RUN:
+			verbose('  os.lchmod(%s, %04o)' % (fn, mode & 07777))
+			try:
+				os.lchmod(fn, mode & 07777)
+			except OSError, reason:
+				stderr('failed to lchmod %04o %s : %s' %
+						(mode & 07777, fn, reason))
+		else:
+			verbose(dryrun_msg('  os.lchmod(%s, %04o)' % (fn, mode & 07777)))
+
+
+	def _set_symlink_ownership(self):
+		if not hasattr(os, 'lchown'):
+			return
+
+		fn = self.dest_path
+		uid = self.src_statbuf.uid
+		gid = self.src_statbuf.gid
+
+		unix_out('lchown %s.%s %s' % (self.src_ascii_uid(),
+										self.src_ascii_gid(), fn))
+
+		if not synctool.lib.DRY_RUN:
+			verbose('  os.lchown(%s, %d, %d)' % (fn, uid, gid))
+			try:
+				os.chown(fn, uid, gid)
+			except OSError, reason:
+				stderr('failed to lchown %s.%s %s : %s' %
+						(self.src_ascii_uid(), self.src_ascii_gid(),
+						fn, reason))
+		else:
+			verbose(dryrun_msg('  os.lchown(%s, %d, %d)' % (fn, uid, gid)))
+
+
 	def _set_permissions(self):
+		if self.is_link():
+			self._set_symlink_permissions()
+			return
+
 		fn = self.dest_path
 		mode = self.src_statbuf.mode
 
@@ -555,6 +598,10 @@ class SyncObject:
 
 
 	def _set_ownership(self):
+		if self.is_link():
+			self._set_symlink_ownership()
+			return
+
 		fn = self.dest_path
 		uid = self.src_statbuf.uid
 		gid = self.src_statbuf.gid
