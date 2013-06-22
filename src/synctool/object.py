@@ -440,7 +440,7 @@ class SyncObject:
 	def _compare_permissions(self):
 		'''compare permission bits of src and dest'''
 
-		if self.is_link() and not hasattr(os, 'lchmod'):
+		if self.src_is_link() and not hasattr(os, 'lchmod'):
 			# this platform does not support changing the mode
 			# of a symbolic link
 			# eg. on Linux all symlinks are mode 0777 (weird!)
@@ -577,7 +577,7 @@ class SyncObject:
 
 
 	def _set_permissions(self):
-		if self.is_link():
+		if self.src_is_link():
 			self._set_symlink_permissions()
 			return
 
@@ -598,7 +598,7 @@ class SyncObject:
 
 
 	def _set_ownership(self):
-		if self.is_link():
+		if self.src_is_link():
 			self._set_symlink_ownership()
 			return
 
