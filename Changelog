@@ -1,6 +1,7 @@
 June 2013
 - overlay dirs are grouped; default overlay dir is overlay/all/
-- rsync only relevant directories to the nodes
+- rsync only relevant directories to the target nodes
+- when uploading, use option --overlay to change the suggested overlay dir
 - default_nodeset: by default run only on these nodes
 - new command synctool-template helps with 'templating' config files
 - node and group names are checked against a character set;
@@ -14,24 +15,25 @@ June 2013
 - fix issue with multi-OS; do not check all paths of configured commands
   like ping_cmd, ssh_cmd, etc.
 - fix issue; --erase-saved -f would also apply changes
+- fix issues with ownership and mode of symbolic links
 - fix; groups "all" and "none" can not be redefined
 - option --tasks is obsolete; use dsh and dsh-pkg
 - on_update is obsolete; use .post scripts
 - always_run is obsolete; use dsh or a wrapper script if you really need it
-- overlaydir is obsolete; hardcoded as $masterdir/overlay
-- deletedir is obsolete; hardcoded as $masterdir/delete
+- overlaydir is obsolete; hardcoded as ROOT/var/overlay
+- deletedir is obsolete; hardcoded as ROOT/var/delete
+- scriptdir is obsolete; hardcoded as ROOT/scripts
 - tasksdir is obsolete; tasks are obsolete
-- scriptdir is obsolete; use .post scripts instead
 - use new tempdir setting as location for temp files
-- interface: specifier is obsolete; use ipaddress:
-- ignore_host is obsolete; use ignore_node
+- interface: specifier is obsolete; use "ipaddress:"
+- ignore_host is obsolete; use "ignore_node"
 - host is obsolete; use node
-- ignore_file is obsolete; use ignore
-- ignore_files is obsolete; use ignore
-- ignore_dir is obsolete; use ignore
-- ignore_dirs is obsolete; use ignore
+- ignore_file is obsolete; use "ignore"
+- ignore_files is obsolete; use "ignore"
+- ignore_dir is obsolete; use "ignore"
+- ignore_dirs is obsolete; use "ignore"
 - masterdir is obsolete
-- symlink_mode is obsolete; now correctly ignores the mode of symbolic links
+- symlink_mode is obsolete
 - new documentation in markdown format
 - run setup.sh to install synctool
 
