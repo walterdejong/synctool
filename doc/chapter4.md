@@ -35,7 +35,7 @@ synctool's configuration file.
 
 * `symlink_mode <octal number>`
 
-  **obsolete** synctool now ignores the mode of symbolic links.
+  **obsolete** synctool now handles symbolic links in the correct way.
 
 * `require_extension <yes/no>`
 
