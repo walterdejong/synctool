@@ -170,7 +170,7 @@ def terse_path(path, maxlen = 55):
 		return path
 
 	# by the way, this function will misbehave a bit for a _destination_
-	# path named "/var/lib/synctool/" again
+	# path named "/opt/synctool/var/" again
 	# because this function doesn't know whether it is working with
 	# a source or a destination path and it treats them both in the same way
 
