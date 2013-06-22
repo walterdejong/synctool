@@ -16,17 +16,12 @@ import subprocess
 import shlex
 import time
 import errno
-import hashlib
 import time
 import signal
 import multiprocessing
 import Queue
 
 import synctool.param
-
-
-# blocksize for doing I/O while checksumming files
-BLOCKSIZE = 16 * 1024
 
 # options (mostly) set by command-line arguments
 DRY_RUN = False
@@ -263,52 +258,6 @@ def log(msg):
 
 		if MASTERLOG:
 			print '%synctool-log%', msg
-
-
-def checksum_files(file1, file2):
-	'''do a quick checksum of 2 files'''
-
-	reason = None
-	try:
-		f1 = open(file1, 'r')
-	except IOError, reason:
-		stderr('error: failed to open %s : %s' % (file1, reason))
-		raise
-
-	with f1:
-		try:
-			f2 = open(file2, 'r')
-		except IOError, reason:
-			stderr('error: failed to open %s : %s' % (file2, reason))
-			raise
-
-		with f2:
-			sum1 = hashlib.md5()
-			sum2 = hashlib.md5()
-
-			len1 = len2 = 0
-			ended = False
-			while (len1 == len2 and sum1.digest() == sum2.digest() and
-				not ended):
-				data1 = f1.read(BLOCKSIZE)
-				if not data1:
-					ended = True
-				else:
-					len1 = len1 + len(data1)
-					sum1.update(data1)
-
-				data2 = f2.read(BLOCKSIZE)
-				if not data2:
-					ended = True
-				else:
-					len2 = len2 + len(data2)
-					sum2.update(data2)
-
-				if sum1.digest() != sum2.digest():
-					# checksum mismatch; early exit
-					break
-
-	return sum1.digest(), sum2.digest()
 
 
 def run_with_nodename(cmd_arr, nodename):
