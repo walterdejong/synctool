@@ -10,7 +10,7 @@
 #	- unbuffered output, needed for synctool_master
 #
 
-class Unbuffered:
+class Unbuffered(object):
 	def __init__(self, stream):
 		self.stream = stream
 

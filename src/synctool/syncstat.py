@@ -17,7 +17,7 @@ import errno
 from synctool.lib import stderr
 
 
-class SyncStat:
+class SyncStat(object):
 	'''structure to hold the relevant fields of a stat() buf'''
 
 	# NB. the reasoning behind keeping a subset of the statbuf is that
