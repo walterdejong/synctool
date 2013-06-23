@@ -491,6 +491,8 @@ def get_options():
 	opt_reference = False
 	opt_erase_saved = False
 	opt_upload = False
+	opt_overlay = False
+	opt_suffix = False
 	opt_fix = False
 
 	PASS_ARGS = []
@@ -569,10 +571,12 @@ def get_options():
 			continue
 
 		if opt in ('-o', '--overlay'):
+			opt_overlay = True
 			UPLOAD_FILE.overlay = arg
 			continue
 
 		if opt in ('-s', '--suffix'):
+			opt_suffix = True
 			UPLOAD_FILE.suffix = arg
 			continue
 
@@ -644,12 +648,12 @@ def get_options():
 			PASS_ARGS.append(arg)
 
 	# do basic checks for uploading
-	if UPLOAD_FILE.overlay and not UPLOAD_FILE.filename:
+	if opt_overlay and not opt_upload:
 		print ('%s: option --overlay must be used in conjunction with '
 			'--upload' % os.path.basename(sys.argv[0]))
 		sys.exit(1)
 
-	if UPLOAD_FILE.suffix and not UPLOAD_FILE.filename:
+	if opt_suffix and not opt_upload:
 		print ('%s: option --suffix must be used in conjunction with '
 			'--upload' % os.path.basename(sys.argv[0]))
 		sys.exit(1)
