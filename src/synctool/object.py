@@ -687,10 +687,11 @@ class SyncObject(object):
 	def vnode_obj(self):
 		'''create vnode object for this SyncObject'''
 
-		exists = self.dest_path.exists()
+		exists = self.dest_stat.exists()
 
 		if self.src_stat.is_file():
-			return VNodeFile(self.dest_path, self.src_stat, exists)
+			return VNodeFile(self.dest_path, self.src_stat, exists,
+								self.src_path)
 
 		if self.src_stat.is_dir():
 			return VNodeDir(self.dest_path, self.src_stat, exists)
