@@ -45,14 +45,13 @@ def run_command(cmd):
 	arr = shlex.split(cmd)
 	cmdfile = arr[0]
 
-	stat = synctool.syncstat.SyncStat(cmdfile)
-
-	if not stat.exists():
+	statbuf = synctool.syncstat.SyncStat(cmdfile)
+	if not statbuf.exists():
 		stderr('error: command %s not found' %
 			synctool.lib.prettypath(cmdfile))
 		return
 
-	if not stat.is_exec():
+	if not statbuf.is_exec():
 		stderr("warning: file '%s' is not executable" %
 			synctool.lib.prettypath(cmdfile))
 		return
@@ -102,9 +101,8 @@ def run_post(src, dest):
 	if synctool.lib.NO_POST:
 		return
 
-	stat = synctool.syncstat.SyncStat(dest)
-
-	if stat.is_dir():
+	statbuf = synctool.syncstat.SyncStat(dest)
+	if statbuf.is_dir():
 		# directories will be handled later, so save this pair
 		pair = (src, dest)
 		DIR_CHANGED.append(pair)
@@ -188,7 +186,8 @@ def overlay_files():
 def delete_callback(obj):
 	'''delete files'''
 
-	if obj.dest_is_dir():		# do not delete directories
+	if obj.dest_stat.is_dir():		# do not delete directories
+		# FIXME just try rmdir, maybe it's an empty dir
 		return
 
 	if obj.dest_exists():

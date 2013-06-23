@@ -161,9 +161,9 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.sep,
 			continue
 
 		src_path = os.path.join(overlay_dir, entry)
-		src_statbuf = synctool.syncstat.SyncStat(src_path)
+		src_stat = synctool.syncstat.SyncStat(src_path)
 
-		if src_statbuf.is_dir():
+		if src_stat.is_dir():
 			if synctool.param.IGNORE_DOTDIRS and entry[0] == '.':
 				continue
 
@@ -207,9 +207,9 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.sep,
 
 		if is_post:
 			if handle_postscripts:
-				if not src_statbuf.is_exec():
+				if not src_stat.is_exec():
 					stderr('warning: .post script %s is not executable, '
-						'ignored' % synctool.lib.prettypath(src_path))
+							'ignored' % synctool.lib.prettypath(src_path))
 					continue
 
 				# register .post script
@@ -222,7 +222,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.sep,
 						continue
 
 				POST_SCRIPTS[trigger] = synctool.object.SyncObject(src_path,
-										dest_dir, importance, src_statbuf)
+										dest_dir, importance, src_stat)
 			else:
 				# unfortunately, the name has been messed up already
 				# so therefore just ignore the file and issue a warning
@@ -231,19 +231,18 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.sep,
 														src_path)
 				else:
 					stderr('warning: ignoring .post script %s' %
-						synctool.lib.prettypath(src_path))
+							synctool.lib.prettypath(src_path))
 
 			continue
 
 		dest_path = os.path.join(dest_dir, name)
-
 		filelist.append(synctool.object.SyncObject(src_path, dest_path,
-						importance, src_statbuf))
+						importance, src_stat))
 
 		if is_dir:
 			# recurse into subdir
 			overlay_pass1(src_path, filelist, dest_path, importance,
-				handle_postscripts)
+							handle_postscripts)
 
 
 def overlay_pass2(filelist, filedict):
@@ -263,16 +262,17 @@ def overlay_pass2(filelist, filedict):
 
 			# duplicate paths are a problem, unless they are directories
 			# They are easy to fix however, just assign the right extension
-			elif ((not (entry.src_is_dir() and entry2.src_is_dir())) and
+			elif ((not (entry.src_stat.is_dir() and
+				entry2.src_stat.is_dir())) and
 				entry.importance == entry2.importance):
 
 				if synctool.param.TERSE:
 					synctool.lib.terse(synctool.lib.TERSE_ERROR,
-						'duplicate source paths in repository for:')
+								'duplicate source paths in repository for:')
 					synctool.lib.terse(synctool.lib.TERSE_ERROR,
-						entry.src_path)
+										entry.src_path)
 					synctool.lib.terse(synctool.lib.TERSE_ERROR,
-						entry2.src_path)
+										entry2.src_path)
 				else:
 					stderr('error: duplicate source paths in repository '
 							'for:\n'

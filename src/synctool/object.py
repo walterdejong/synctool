@@ -39,10 +39,16 @@ class SyncObject:
 
 	def __init__(self, src, dest, importance, statbuf1=None, statbuf2=None):
 		self.src_path = src
-		self.src_statbuf = statbuf1
+		if not statbuf1:
+			self.src_stat = synctool.syncstat.SyncStat(self.src_path)
+		else:
+			self.src_stat = statbuf1
 
 		self.dest_path = dest
-		self.dest_statbuf = statbuf2
+		if not statbuf2:
+			self.dest_stat = synctool.syncstat.SyncStat(self.dest_path)
+		else:
+			self.dest_stat = statbuf2
 
 		self.importance = importance
 
@@ -57,100 +63,6 @@ class SyncObject:
 
 	def print_dest(self):
 		return synctool.lib.prettypath(self.dest_path)
-
-
-	def src_stat(self):
-		'''call os.stat() if needed. Keep the statbuf cached'''
-
-		if not self.src_statbuf:
-			self.src_statbuf = synctool.syncstat.SyncStat(self.src_path)
-
-
-	def src_is_dir(self):
-		self.src_stat()
-		return self.src_statbuf.is_dir()
-
-
-	def src_is_file(self):
-		self.src_stat()
-		return self.src_statbuf.is_file()
-
-
-	def src_is_link(self):
-		self.src_stat()
-		return self.src_statbuf.is_link()
-
-
-	def src_is_fifo(self):
-		self.src_stat()
-		return self.src_statbuf.is_fifo()
-
-
-	def src_exists(self):
-		self.src_stat()
-		return self.src_statbuf.exists()
-
-
-	def src_is_exec(self):
-		self.src_stat()
-		return self.src_statbuf.is_exec()
-
-
-	def src_ascii_uid(self):
-		self.src_stat()
-		return self.src_statbuf.ascii_uid()
-
-
-	def src_ascii_gid(self):
-		self.src_stat()
-		return self.src_statbuf.ascii_gid()
-
-
-	def dest_stat(self):
-		'''call os.stat() if needed. Keep the statbuf cached'''
-
-		if not self.dest_statbuf:
-			self.dest_statbuf = synctool.syncstat.SyncStat(self.dest_path)
-
-
-	def dest_is_dir(self):
-		self.dest_stat()
-		return self.dest_statbuf.is_dir()
-
-
-	def dest_is_file(self):
-		self.dest_stat()
-		return self.dest_statbuf.is_file()
-
-
-	def dest_is_link(self):
-		self.dest_stat()
-		return self.dest_statbuf.is_link()
-
-
-	def dest_is_fifo(self):
-		self.src_stat()
-		return self.dest_statbuf.is_fifo()
-
-
-	def dest_exists(self):
-		self.dest_stat()
-		return self.dest_statbuf.exists()
-
-
-	def dest_is_exec(self):
-		self.dest_stat()
-		return self.dest_statbuf.is_exec()
-
-
-	def dest_ascii_uid(self):
-		self.dest_stat()
-		return self.dest_statbuf.ascii_uid()
-
-
-	def dest_ascii_gid(self):
-		self.dest_stat()
-		return self.dest_statbuf.ascii_gid()
 
 
 	def compare_files(self):
@@ -509,7 +421,7 @@ class SyncObject:
 	def _compare_permissions(self):
 		'''compare permission bits of src and dest'''
 
-		if self.src_is_link() and not hasattr(os, 'lchmod'):
+		if self.src_stat.is_link() and not hasattr(os, 'lchmod'):
 			# this platform does not support changing the mode
 			# of a symbolic link
 			# eg. on Linux all symlinks are mode 0777 (weird!)
@@ -535,7 +447,7 @@ class SyncObject:
 		src = self.src_path
 		dest = self.dest_path
 
-		if self.dest_is_file():		# FIXME backup copies
+		if self.dest_stat.is_file():		# FIXME backup copies
 			unix_out('cp %s %s.saved' % (dest, dest))
 
 		unix_out('umask 077')
@@ -545,7 +457,7 @@ class SyncObject:
 			old_umask = os.umask(077)
 
 			if synctool.param.BACKUP_COPIES:
-				if self.dest_is_file():
+				if self.dest_stat.is_file():
 					verbose('  saving %s as %s.saved' % (dest, dest))
 					try:
 						shutil.copy2(dest, '%s.saved' % dest)
@@ -561,7 +473,7 @@ class SyncObject:
 						(self.print_src(), dest, reason))
 			os.umask(old_umask)
 		else:
-			if self.dest_is_file() and synctool.param.BACKUP_COPIES:
+			if self.dest_stat.is_file() and synctool.param.BACKUP_COPIES:
 				verbose('  saving %s as %s.saved' % (dest, dest))
 
 			verbose(dryrun_msg('  cp %s %s' % (src, dest)))
@@ -574,13 +486,13 @@ class SyncObject:
 		newpath = self.dest_path
 
 		# FIXME backup copies
-		if self.dest_exists():
+		if self.dest_stat.exists():
 			unix_out('mv %s %s.saved' % (newpath, newpath))
 
 		unix_out('ln -s %s %s' % (oldpath, newpath))
 
 		if not synctool.lib.DRY_RUN:
-			if self.dest_exists():
+			if self.dest_stat.exists():
 				verbose('saving %s as %s.saved' % (newpath, newpath))
 				try:
 					os.rename(newpath, '%s.saved' % newpath)
@@ -604,7 +516,7 @@ class SyncObject:
 	def _make_fifo(self):
 		self._mkdir_basepath()
 
-		if self.dest_exists() and synctool.param.BACKUP_COPIES:
+		if self.dest_stat.exists() and synctool.param.BACKUP_COPIES:
 			unix_out('mv %s %s.saved' % (self.dest_path, self.dest_path))
 
 		# FIXME what about umask
@@ -612,7 +524,7 @@ class SyncObject:
 		unix_out('mkfifo %s' % self.dest_path)
 
 		if not synctool.lib.DRY_RUN:
-			if self.dest_exists() and synctool.param.BACKUP_COPIES:
+			if self.dest_stat.exists() and synctool.param.BACKUP_COPIES:
 				verbose('saving %s as %s.saved' % (self.dest_path,
 													self.dest_path))
 				try:
@@ -642,7 +554,7 @@ class SyncObject:
 			return
 
 		fn = self.dest_path
-		mode = self.src_statbuf.mode
+		mode = self.src_stat.mode
 
 		unix_out('lchmod 0%o %s' % (mode & 07777, fn))
 
@@ -662,11 +574,11 @@ class SyncObject:
 			return
 
 		fn = self.dest_path
-		uid = self.src_statbuf.uid
-		gid = self.src_statbuf.gid
+		uid = self.src_stat.uid
+		gid = self.src_stat.gid
 
-		unix_out('lchown %s.%s %s' % (self.src_ascii_uid(),
-										self.src_ascii_gid(), fn))
+		unix_out('lchown %s.%s %s' % (self.src_stat.ascii_uid(),
+										self.src_stat.ascii_gid(), fn))
 
 		if not synctool.lib.DRY_RUN:
 			verbose('  os.lchown(%s, %d, %d)' % (fn, uid, gid))
@@ -674,19 +586,19 @@ class SyncObject:
 				os.chown(fn, uid, gid)
 			except OSError, reason:
 				stderr('failed to lchown %s.%s %s : %s' %
-						(self.src_ascii_uid(), self.src_ascii_gid(),
-						fn, reason))
+						(self.src_stat.ascii_uid(),
+						self.src_stat.ascii_gid(), fn, reason))
 		else:
 			verbose(dryrun_msg('  os.lchown(%s, %d, %d)' % (fn, uid, gid)))
 
 
 	def _set_permissions(self):
-		if self.src_is_link():
+		if self.src_stat.is_link():
 			self._set_symlink_permissions()
 			return
 
 		fn = self.dest_path
-		mode = self.src_statbuf.mode
+		mode = self.src_stat.mode
 
 		unix_out('chmod 0%o %s' % (mode & 07777, fn))
 
@@ -702,16 +614,16 @@ class SyncObject:
 
 
 	def _set_ownership(self):
-		if self.src_is_link():
+		if self.src_stat.is_link():
 			self._set_symlink_ownership()
 			return
 
 		fn = self.dest_path
-		uid = self.src_statbuf.uid
-		gid = self.src_statbuf.gid
+		uid = self.src_stat.uid
+		gid = self.src_stat.gid
 
-		unix_out('chown %s.%s %s' % (self.src_ascii_uid(),
-									self.src_ascii_gid(), fn))
+		unix_out('chown %s.%s %s' % (self.src_stat.ascii_uid(),
+									self.src_stat.ascii_gid(), fn))
 
 		if not synctool.lib.DRY_RUN:
 			verbose('  os.chown(%s, %d, %d)' % (fn, uid, gid))
@@ -719,8 +631,8 @@ class SyncObject:
 				os.chown(fn, uid, gid)
 			except OSError, reason:
 				stderr('failed to chown %s.%s %s : %s' %
-						(self.src_ascii_uid(), self.src_ascii_gid(),
-						fn, reason))
+						(self.src_stat.ascii_uid(),
+						self.src_stat.ascii_gid(), fn, reason))
 		else:
 			verbose(dryrun_msg('  os.chown(%s, %d, %d)' % (fn, uid, gid)))
 
