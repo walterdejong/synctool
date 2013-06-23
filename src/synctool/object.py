@@ -25,6 +25,7 @@ class VNode(object):
 	'''base class for doing actions with directory entries'''
 
 	# TODO use prettypath() for stdout(), stderr()
+	# TODO stderr() and terse errors
 
 	def __init__(self, filename, statbuf, exists):
 		'''filename is typically destination path
@@ -125,9 +126,6 @@ class VNode(object):
 							(self.name, self.stat.uid, self.stat.gid)))
 		unix_out('chown %s.%s %s' % (self.stat.ascii_uid(),
 									self.stat.ascii_gid(), self.name))
-		terse(synctool.lib.TERSE_OWNER, '%s.%s %s' % (self.stat.ascii_uid(),
-														self.stat.ascii_gid(),
-														self.name))
 		if not synctool.lib.DRY_RUN:
 			verbose('  os.chown(%s, %d, %d)' % (self.name, self.stat.uid,
 												self.stat.gid))
@@ -146,8 +144,6 @@ class VNode(object):
 		verbose(dryrun_msg('  os.chmod(%s, %04o)' %
 							(self.name, self.stat.mode & 07777)))
 		unix_out('chmod 0%o %s' % (self.stat.mode & 07777, self.name))
-		terse(synctool.lib.TERSE_MODE, '%04o %s' % (self.stat.mode & 07777,
-													self.name))
 		if not synctool.lib.DRY_RUN:
 			try:
 				os.chmod(self.name, self.stat.mode & 07777)
@@ -272,10 +268,7 @@ class VNodeFile(VNode):
 		'''copy file'''
 
 		if not self.exists:
-			stdout('%s does not exist' % self.name)
 			terse(synctool.lib.TERSE_NEW, self.name)
-		else:
-			terse(synctool.lib.TERSE_SYNC, self.name)
 
 		verbose(dryrun_msg('  copy %s %s' % (self.src_path, self.name)))
 		unix_out('cp %s %s' % (self.src_path, self.name))
@@ -399,9 +392,6 @@ class VNodeLink(VNode):
 							(self.name, self.stat.uid, self.stat.gid)))
 		unix_out('lchown %s.%s %s' % (self.stat.ascii_uid(),
 									self.stat.ascii_gid(), self.name))
-		terse(synctool.lib.TERSE_OWNER, '%s.%s %s' % (self.stat.ascii_uid(),
-														self.stat.ascii_gid(),
-														self.name))
 		if not synctool.lib.DRY_RUN:
 			verbose('  os.lchown(%s, %d, %d)' % (self.name, self.stat.uid,
 												self.stat.gid))
@@ -425,8 +415,6 @@ class VNodeLink(VNode):
 		verbose(dryrun_msg('  os.lchmod(%s, %04o)' %
 							(self.name, self.stat.mode & 07777)))
 		unix_out('lchmod 0%o %s' % (self.stat.mode & 07777, self.name))
-		terse(synctool.lib.TERSE_MODE, '%04o %s' % (self.stat.mode & 07777,
-													self.name))
 		if not synctool.lib.DRY_RUN:
 			try:
 				os.lchmod(self.name, self.stat.mode & 07777)
@@ -632,7 +620,6 @@ class SyncObject(object):
 
 		if not self.dest_stat.exists():
 			stdout('%s does not exist' % self.dest_path)
-			terse(synctool.lib.TERSE_NEW, self.dest_path)
 			vnode = self.vnode_obj()
 			vnode.fix()
 			return False
@@ -668,6 +655,10 @@ class SyncObject(object):
 					self.dest_stat.ascii_uid(),
 					self.dest_stat.ascii_gid(),
 					self.dest_stat.uid, self.dest_stat.gid))
+			terse(synctool.lib.TERSE_OWNER, '%s.%s %s' %
+											(self.src_stat.ascii_uid(),
+											self.src_stat.ascii_gid(),
+											self.dest_path))
 			vnode.set_owner()
 			updated = True
 
@@ -675,6 +666,9 @@ class SyncObject(object):
 			stdout('%s should have mode %04o, but has %04o' %
 					(self.dest_path, self.src_stat.mode & 07777,
 					self.dest_stat.mode & 07777))
+			terse(synctool.lib.TERSE_MODE, '%04o %s' %
+											(self.src_stat.mode & 07777,
+											self.dest_path))
 			vnode.set_permissions()
 			updated = True
 
