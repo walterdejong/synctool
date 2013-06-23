@@ -11,18 +11,18 @@
 import os
 
 import synctool.lib
-from synctool.pkgclass import SyncPkg
+import synctool.pkgclass
 
 
-class SyncPkgAptget(SyncPkg):
+class SyncPkgAptget(synctool.pkgclass.SyncPkg):
 	'''package installer class for apt-get + dpkg'''
 
 	def __init__(self):
-		SyncPkg.__init__(self)
+		super(SyncPkgAptget, self).__init__(self)
 
 
 	def list(self, pkgs = None):
-		SyncPkg.list(self, pkgs)
+		super(SyncPkgAptget, self).list(self, pkgs)
 
 		cmd = 'dpkg -l'
 
@@ -35,7 +35,7 @@ class SyncPkgAptget(SyncPkg):
 
 
 	def install(self, pkgs):
-		SyncPkg.install(self, pkgs)
+		super(SyncPkgAptget, self).install(self, pkgs)
 
 		os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
 
@@ -45,7 +45,7 @@ class SyncPkgAptget(SyncPkg):
 
 
 	def remove(self, pkgs):
-		SyncPkg.remove(self, pkgs)
+		super(SyncPkgAptget, self).remove(self, pkgs)
 
 		os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
 
@@ -55,14 +55,14 @@ class SyncPkgAptget(SyncPkg):
 
 
 	def update(self):
-		SyncPkg.update(self)
+		super(SyncPkgAptget, self).update(self)
 
 		os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
 		synctool.lib.shell_command('apt-get update')
 
 
 	def upgrade(self):
-		SyncPkg.upgrade(self)
+		super(SyncPkgAptget, self).upgrade(self)
 
 		os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
 
@@ -77,7 +77,7 @@ class SyncPkgAptget(SyncPkg):
 
 
 	def clean(self):
-		SyncPkg.clean(self)
+		super(SyncPkgAptget, self).clean(self)
 
 		synctool.lib.shell_command('apt-get clean')
 

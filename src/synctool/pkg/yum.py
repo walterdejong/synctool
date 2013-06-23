@@ -9,18 +9,18 @@
 #
 
 import synctool.lib
-from synctool.pkgclass import SyncPkg
+import synctool.pkgclass
 
 
-class SyncPkgYum(SyncPkg):
+class SyncPkgYum(synctool.pkgclass.SyncPkg):
 	'''package installer class for yum'''
 
 	def __init__(self):
-		SyncPkg.__init__(self)
+		super(SyncPkgYum, self).__init__(self)
 
 
 	def list(self, pkgs = None):
-		SyncPkg.list(self, pkgs)
+		super(SyncPkgYum, self).list(self, pkgs)
 
 		cmd = 'yum list installed'
 
@@ -33,7 +33,7 @@ class SyncPkgYum(SyncPkg):
 
 
 	def install(self, pkgs):
-		SyncPkg.install(self, pkgs)
+		super(SyncPkgYum, self).install(self, pkgs)
 
 		cmd = 'yum -y install ' + ' '.join(pkgs)
 
@@ -41,7 +41,7 @@ class SyncPkgYum(SyncPkg):
 
 
 	def remove(self, pkgs):
-		SyncPkg.remove(self, pkgs)
+		super(SyncPkgYum, self).remove(self, pkgs)
 
 		cmd = 'yum -y remove ' + ' '.join(pkgs)
 
@@ -49,7 +49,7 @@ class SyncPkgYum(SyncPkg):
 
 
 	def update(self):
-		SyncPkg.update(self)
+		super(SyncPkgYum, self).update(self)
 
 		# yum has no 'update' command, but will fetch a new database
 		# next time when it has no metadata
@@ -59,7 +59,7 @@ class SyncPkgYum(SyncPkg):
 
 
 	def upgrade(self):
-		SyncPkg.upgrade(self)
+		super(SyncPkgYum, self).upgrade(self)
 
 		if self.dryrun:
 			cmd = 'yum -y check-update'
@@ -72,7 +72,7 @@ class SyncPkgYum(SyncPkg):
 
 
 	def clean(self):
-		SyncPkg.clean(self)
+		super(SyncPkgYum, self).clean(self)
 
 		synctool.lib.shell_command('yum clean packages')
 
