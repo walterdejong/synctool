@@ -208,8 +208,12 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.sep,
 		if is_post:
 			if handle_postscripts:
 				if not src_stat.is_exec():
-					stderr('warning: .post script %s is not executable, '
-							'ignored' % synctool.lib.prettypath(src_path))
+					if synctool.param.TERSE:
+						terse(synctool.lib.TERSE_WARNING, 'not exec %s' %
+															src_path)
+					else:
+						stderr('warning: .post script %s is not executable, '
+								'ignored' % synctool.lib.prettypath(src_path))
 					continue
 
 				# register .post script
