@@ -102,7 +102,7 @@ class SyncObject:
 				terse(synctool.lib.TERSE_WARNING, 'wrong type %s' %
 													self.dest_path)
 			elif self.dest_stat.is_dir():
-				stdout('%s should not be a directory' % self.dest_path)
+				stdout('%s/ should not be a directory' % self.dest_path)
 				terse(synctool.lib.TERSE_WARNING, 'wrong type %s' %
 													self.dest_path)
 			elif self.dest_stat.is_file():
@@ -163,7 +163,7 @@ class SyncObject:
 				need_update = True
 
 		elif self.dest_stat.is_dir():
-			stdout('%s should be a symbolic link' % self.dest_path)
+			stdout('%s/ should be a symbolic link' % self.dest_path)
 			terse(synctool.lib.TERSE_LINK, self.dest_path)
 			unix_out('# target should be a symbolic link')
 			self._save_dir()
@@ -248,7 +248,7 @@ class SyncObject:
 			need_update = True
 
 		elif self.dest_stat.is_dir():
-			stdout('%s is a directory, but should not be' % self.dest_path)
+			stdout('%s/ is a directory, but should not be' % self.dest_path)
 			terse(synctool.lib.TERSE_TYPE, self.dest_path)
 			unix_out('# target should be a file instead of a directory')
 			self._save_dir()
@@ -302,19 +302,10 @@ class SyncObject:
 			unix_out('# make fifo %s' % self.dest_path)
 			need_update = True
 
-		elif self.dest_stat.is_link():
-			stdout('%s is a symbolic link, but should not be' %
-					self.dest_path)
-			terse(synctool.lib.TERSE_TYPE, self.dest_path)
-			unix_out('# target should be a fifo instead of '
-				'a symbolic link')
-			self.delete_file()
-			need_update = True
-
 		elif self.dest_stat.is_dir():
-			stdout('%s is a directory, but should not be' % self.dest_path)
+			stdout('%s/ should be a fifo' % self.dest_path)
 			terse(synctool.lib.TERSE_TYPE, self.dest_path)
-			unix_out('# target should be a file instead of a directory')
+			unix_out('# target should be a fifo instead of a directory')
 			self._save_dir()
 			need_update = True
 
