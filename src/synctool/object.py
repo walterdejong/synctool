@@ -81,6 +81,11 @@ class SyncObject:
 		return self.src_statbuf.is_link()
 
 
+	def src_is_fifo(self):
+		self.src_stat()
+		return self.src_statbuf.is_fifo()
+
+
 	def src_exists(self):
 		self.src_stat()
 		return self.src_statbuf.exists()
@@ -123,6 +128,11 @@ class SyncObject:
 		return self.dest_statbuf.is_link()
 
 
+	def dest_is_fifo(self):
+		self.src_stat()
+		return self.dest_statbuf.is_fifo()
+
+
 	def dest_exists(self):
 		self.dest_stat()
 		return self.dest_statbuf.exists()
@@ -163,6 +173,9 @@ class SyncObject:
 		elif self.src_stat.is_file():
 			need_update = self._compare_file()
 
+		elif self.src_stat.is_fifo():
+			need_update = self._compare_fifo()
+
 		else:
 			# source is not a symbolic link, not a directory,
 			# and not a regular file
@@ -182,6 +195,10 @@ class SyncObject:
 													self.dest_path)
 			elif self.dest_stat.is_file():
 				stdout('%s should not be a regular file' % self.dest_path)
+				terse(synctool.lib.TERSE_WARNING, 'wrong type %s' %
+													self.dest_path)
+			elif self.dest_stat.is_fifo():
+				stdout('%s should not be a fifo' % self.dest_path)
 				terse(synctool.lib.TERSE_WARNING, 'wrong type %s' %
 													self.dest_path)
 			else:
@@ -245,6 +262,7 @@ class SyncObject:
 			stdout('%s should be a symbolic link' % self.dest_path)
 			terse(synctool.lib.TERSE_LINK, self.dest_path)
 			unix_out('# target should be a symbolic link')
+			self.delete_file()
 			need_update = True
 
 		# (re)create the symbolic link
@@ -324,6 +342,13 @@ class SyncObject:
 			self._save_dir()
 			need_update = True
 
+		elif self.dest_stat.is_fifo():
+			stdout('%s is a fifo, but should not be' % self.dest_path)
+			terse(synctool.lib.TERSE_TYPE, self.dest_path)
+			unix_out('# target should be a file instead of a fifo')
+			self.delete_file()
+			need_update = True
+
 		elif self.dest_stat.is_file():
 			# check file size
 			if self.src_stat.size != self.dest_stat.size:
@@ -346,6 +371,50 @@ class SyncObject:
 
 		if need_update:
 			self._copy_file()
+			self._set_ownership()
+			self._set_permissions()
+			unix_out('')
+			return True
+
+		return False
+
+
+	def _compare_fifo(self):
+		'''compare fifo src with dest'''
+
+		need_update = False
+
+		if not self.dest_stat.exists():
+			stdout('%s does not exist' % self.dest_path)
+			terse(synctool.lib.TERSE_NEW, self.dest_path)
+			unix_out('# make fifo %s' % self.dest_path)
+			need_update = True
+
+		elif self.dest_stat.is_link():
+			stdout('%s is a symbolic link, but should not be' %
+					self.dest_path)
+			terse(synctool.lib.TERSE_TYPE, self.dest_path)
+			unix_out('# target should be a fifo instead of '
+				'a symbolic link')
+			self.delete_file()
+			need_update = True
+
+		elif self.dest_stat.is_dir():
+			stdout('%s is a directory, but should not be' % self.dest_path)
+			terse(synctool.lib.TERSE_TYPE, self.dest_path)
+			unix_out('# target should be a file instead of a directory')
+			self._save_dir()
+			need_update = True
+
+		else:	# treat as regular file
+			stdout('%s should be a fifo' % self.dest_path)
+			terse(synctool.lib.TERSE_TYPE, self.dest_path)
+			unix_out('# target should be a fifo')
+			self.delete_file()
+			need_update = True
+
+		if need_update:
+			self._make_fifo()
 			self._set_ownership()
 			self._set_permissions()
 			unix_out('')
@@ -466,7 +535,7 @@ class SyncObject:
 		src = self.src_path
 		dest = self.dest_path
 
-		if self.dest_is_file():
+		if self.dest_is_file():		# FIXME backup copies
 			unix_out('cp %s %s.saved' % (dest, dest))
 
 		unix_out('umask 077')
@@ -504,6 +573,7 @@ class SyncObject:
 		# note that old_path is the readlink() of the self.src_path
 		newpath = self.dest_path
 
+		# FIXME backup copies
 		if self.dest_exists():
 			unix_out('mv %s %s.saved' % (newpath, newpath))
 
@@ -529,6 +599,40 @@ class SyncObject:
 
 		else:
 			verbose(dryrun_msg('  os.symlink(%s, %s)' % (oldpath, newpath)))
+
+
+	def _make_fifo(self):
+		self._mkdir_basepath()
+
+		if self.dest_exists() and synctool.param.BACKUP_COPIES:
+			unix_out('mv %s %s.saved' % (self.dest_path, self.dest_path))
+
+		# FIXME what about umask
+		# FIXME umask should be 077 all the time
+		unix_out('mkfifo %s' % self.dest_path)
+
+		if not synctool.lib.DRY_RUN:
+			if self.dest_exists() and synctool.param.BACKUP_COPIES:
+				verbose('saving %s as %s.saved' % (self.dest_path,
+													self.dest_path))
+				try:
+					os.rename(self.dest_path, '%s.saved' % self.dest_path)
+				except OSError, reason:
+					stderr('failed to save %s as %s.saved : %s' %
+							(self.dest_path, self.dest_path, reason))
+					terse(synctool.lib.TERSE_FAIL, 'save %s.saved' %
+													self.dest_path)
+
+			verbose('  os.mkfifo(%s)' % self.dest_path)
+			try:
+				os.mkfifo(self.dest_path)
+			except OSError, reason:
+				stderr('failed to create fifo %s : %s' % (self.dest_path,
+															reason))
+				terse(synctool.lib.TERSE_FAIL, 'fifo %s' % self.dest_path)
+
+		else:
+			verbose(dryrun_msg('  os.mkfifo(%s)' % self.dest_path))
 
 
 	def _set_symlink_permissions(self):

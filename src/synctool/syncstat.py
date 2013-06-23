@@ -84,6 +84,10 @@ class SyncStat:
 		return (self.entry_exists and stat.S_ISLNK(self.mode))
 
 
+	def is_fifo(self):
+		return (self.entry_exists and stat.S_ISFIFO(self.mode))
+
+
 	def exists(self):
 		return self.entry_exists
 
