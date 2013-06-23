@@ -450,12 +450,9 @@ class SyncObject:
 		if self.dest_stat.is_file():		# FIXME backup copies
 			unix_out('cp %s %s.saved' % (dest, dest))
 
-		unix_out('umask 077')
 		unix_out('cp %s %s' % (src, dest))
 
 		if not synctool.lib.DRY_RUN:
-			old_umask = os.umask(077)
-
 			if synctool.param.BACKUP_COPIES:
 				if self.dest_stat.is_file():
 					verbose('  saving %s as %s.saved' % (dest, dest))
@@ -471,7 +468,6 @@ class SyncObject:
 			except IOError, reason:
 				stderr('failed to copy %s to %s: %s' %
 						(self.print_src(), dest, reason))
-			os.umask(old_umask)
 		else:
 			if self.dest_stat.is_file() and synctool.param.BACKUP_COPIES:
 				verbose('  saving %s as %s.saved' % (dest, dest))
@@ -519,8 +515,6 @@ class SyncObject:
 		if self.dest_stat.exists() and synctool.param.BACKUP_COPIES:
 			unix_out('mv %s %s.saved' % (self.dest_path, self.dest_path))
 
-		# FIXME what about umask
-		# FIXME umask should be 077 all the time
 		unix_out('mkfifo %s' % self.dest_path)
 
 		if not synctool.lib.DRY_RUN:
@@ -704,19 +698,14 @@ class SyncObject:
 
 		path = self.dest_path
 
-		unix_out('umask 077')
 		unix_out('mkdir %s' % path)
 
 		if not synctool.lib.DRY_RUN:
-			old_umask = os.umask(077)
-
 			verbose('  os.mkdir(%s)' % path)
 			try:
 				os.mkdir(path)
 			except OSError, reason:
 				stderr('failed to make directory %s : %s' % (path, reason))
-
-			os.umask(old_umask)
 		else:
 			verbose(dryrun_msg('  os.mkdir(%s)' % path))
 

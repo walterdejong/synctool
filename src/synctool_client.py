@@ -30,6 +30,7 @@ ACTION_DIFF = 1
 ACTION_ERASE_SAVED = 2
 ACTION_REFERENCE = 3
 
+ORIG_UMASK = 022
 SINGLE_FILES = []
 
 # list of changed directories
@@ -113,7 +114,11 @@ def run_post(src, dest):
 	# file has changed, run appropriate .post script
 	postscript = synctool.overlay.postscript_for_path(src, dest)
 	if postscript:
+		# temporarily restore original umask
+		# so the script runs with the umask set by the sysadmin
+		os.umask(ORIG_UMASK)
 		run_command_in_dir(dest_dir, postscript)
+		os.umask(077)
 
 	# content of directory was changed, so save this pair
 	pair = (os.path.dirname(src), dest_dir)
@@ -592,6 +597,8 @@ def get_options():
 
 
 def main():
+	global ORIG_UMASK
+
 	synctool.param.init()
 
 	action = get_options()
@@ -652,6 +659,10 @@ def main():
 
 	os.environ['SYNCTOOL_NODENAME'] = synctool.param.NODENAME
 	os.environ['SYNCTOOL_ROOTDIR'] = synctool.param.ROOTDIR
+
+	unix_out('umask 077')
+	unix_out('')
+	ORIG_UMASK = os.umask(077)
 
 	if action == ACTION_DIFF:
 		for f in SINGLE_FILES:
