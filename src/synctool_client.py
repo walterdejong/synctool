@@ -178,7 +178,7 @@ def overlay_callback(obj):
 
 	verbose('checking %s' % obj.print_src())
 
-	if obj.compare_files():
+	if not obj.check():
 		run_post(obj.src_path, obj.dest_path)
 
 
@@ -239,13 +239,13 @@ def single_files(filename):
 
 	verbose('checking against %s' % obj.print_src())
 
-	changed = obj.compare_files()
-	if not changed:
+	if obj.check():
 		stdout('%s is up to date' % filename)
 		terse(synctool.lib.TERSE_OK, filename)
 		unix_out('# %s is up to date\n' % obj.print_dest())
+		return (False, obj.src_path)
 
-	return (changed, obj.src_path)
+	return (True, obj.src_path)
 
 
 def single_erase_saved(filename):
