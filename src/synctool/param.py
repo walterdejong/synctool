@@ -171,7 +171,7 @@ def init():
 		path_arr = ['/bin', '/sbin', '/usr/bin', '/usr/sbin',
 			'/usr/local/bin', '/usr/local/sbin']
  	else:
- 		path_arr = ' '.split(path, os.pathsep)
+ 		path_arr = path.split(os.pathsep)
 
  	# add the synctool/bin/ dir
  	bindir = os.path.join(ROOTDIR, 'bin')
