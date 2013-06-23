@@ -191,19 +191,9 @@ def overlay_files():
 def delete_callback(obj):
 	'''delete files'''
 
-	if obj.dest_stat.is_dir():		# do not delete directories
-		# FIXME just try rmdir, maybe it's an empty dir
-		return
-
 	if obj.dest_exists():
-		if synctool.lib.DRY_RUN:
-			not_str = 'not '
-		else:
-			not_str = ''
-
-		stdout('%sdeleting %s : %s' % (not_str, obj.print_src(),
-										obj.print_dest()))
-		obj.hard_delete_file()
+		vnode = obj.vnode_obj()
+		vnode.harddelete()
 		run_post(obj.src_path, obj.dest_path)
 
 
@@ -214,9 +204,12 @@ def delete_files():
 def erase_saved_callback(obj):
 	'''erase *.saved backup files'''
 
-	# really, this is all
+	obj.dest_path += '.saved'
+	obj.dest_stat = synctool.syncstat.SyncStat(obj.dest_path)
 
-	obj.erase_saved()
+	if obj.dest_stat.exists():
+		vnode = obj.vnode_obj()
+		vnode.harddelete()
 
 
 def erase_saved():

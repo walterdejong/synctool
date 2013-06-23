@@ -25,6 +25,8 @@ class SyncStat(object):
 	# However it may be possible that the Python object takes more
 	# But then again, this object should take less than the posix.stat_result
 	# Python object
+	# Also note how I left device files (major, minor) out, they are so rare
+	# that they get special treatment in object.py
 
 	def __init__(self, path = None):
 		self.entry_exists = False
@@ -86,6 +88,18 @@ class SyncStat(object):
 
 	def is_fifo(self):
 		return (self.entry_exists and stat.S_ISFIFO(self.mode))
+
+
+	def is_chardev(self):
+		return (self.entry_exists and stat.S_ISCHR(self.mode))
+
+
+	def is_blockdev(self):
+		return (self.entry_exists and stat.S_ISCHR(self.mode))
+
+
+	def filetype(self):
+		return stat.S_IFMT(self.mode)
 
 
 	def exists(self):
