@@ -226,8 +226,8 @@ def single_files(filename):
 		stderr('missing filename')
 		return (False, None)
 
-	(obj, err) = synctool.overlay.find_terse(
-					synctool.overlay.OV_OVERLAY, filename)
+	(obj, err) = synctool.overlay.find_terse(synctool.overlay.OV_OVERLAY,
+											filename)
 	if err == synctool.overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
@@ -242,7 +242,7 @@ def single_files(filename):
 	if obj.check():
 		stdout('%s is up to date' % filename)
 		terse(synctool.lib.TERSE_OK, filename)
-		unix_out('# %s is up to date\n' % obj.print_dest())
+		unix_out('# %s is up to date\n' % obj.dest_path)
 		return (False, obj.src_path)
 
 	return (True, obj.src_path)
@@ -255,8 +255,8 @@ def single_erase_saved(filename):
 		stderr('missing filename')
 		return (False, None)
 
-	(obj, err) = synctool.overlay.find_terse(
-					synctool.overlay.OV_OVERLAY, filename)
+	(obj, err) = synctool.overlay.find_terse(synctool.overlay.OV_OVERLAY,
+											filename)
 	if err == synctool.overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
@@ -276,8 +276,8 @@ def reference(filename):
 		stderr('missing filename')
 		return
 
-	(obj, err) = synctool.overlay.find_terse(
-		synctool.overlay.OV_OVERLAY, filename)
+	(obj, err) = synctool.overlay.find_terse(synctool.overlay.OV_OVERLAY,
+											filename)
 	if err == synctool.overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
@@ -301,8 +301,8 @@ def diff_files(filename):
 	# be sure that it doesn't do any updates
 	synctool.lib.DRY_RUN = True
 
-	(obj, err) = synctool.overlay.find_terse(
-		synctool.overlay.OV_OVERLAY, filename)
+	(obj, err) = synctool.overlay.find_terse(synctool.overlay.OV_OVERLAY,
+											filename)
 	if err == synctool.overlay.OV_FOUND_MULTIPLE:
 		# multiple source possible
 		# possibilities have already been printed
