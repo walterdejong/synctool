@@ -177,7 +177,7 @@ def init():
  	bindir = os.path.join(ROOTDIR, 'bin')
  	if not bindir in path_arr:
 	 	path_arr.append(bindir)
-	 	os.environ['PATH'] = os.sep.join(path_arr)
+	 	os.environ['PATH'] = os.pathsep.join(path_arr)
 
 
 # EOB
