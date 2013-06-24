@@ -604,10 +604,6 @@ class SyncObject(object):
 		return synctool.lib.prettypath(self.src_path)
 
 
-	def print_dest(self):
-		return synctool.lib.prettypath(self.dest_path)
-
-
 	def check(self):
 		'''check differences between src and dest,
 		and fix it when not a dry run
@@ -648,7 +644,7 @@ class SyncObject(object):
 		if ((self.src_stat.uid != self.dest_stat.uid) or
 			(self.src_stat.gid != self.dest_stat.gid)):
 			stdout('%s should have owner %s.%s (%d.%d), '
-					'but has %s.%s (%d.%d)' % (self.print_dest(),
+					'but has %s.%s (%d.%d)' % (self.dest_path,
 					self.src_stat.ascii_uid(),
 					self.src_stat.ascii_gid(),
 					self.src_stat.uid, self.src_stat.gid,
