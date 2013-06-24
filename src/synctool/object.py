@@ -24,9 +24,6 @@ IO_SIZE = 16 * 1024
 class VNode(object):
 	'''base class for doing actions with directory entries'''
 
-	# TODO use prettypath() for stdout(), stderr()
-	# TODO stderr() and terse errors
-
 	def __init__(self, filename, statbuf, exists):
 		'''filename is typically destination path
 		statbuf is source statbuf
@@ -479,9 +476,15 @@ class VNodeChrDev(VNode):
 			stderr('error checking %s : %s' % (self.name, reason))
 			return False
 
-		if (os.major(self.src_stat.st_rdev) != os.major(dest_stat.st_rdev) or
-			os.minor(self.src_stat.st_rdev) != os.minor(dest_stat.st_rdev)):
-			# TODO stdout()
+		src_major = os.major(self.src_stat.st_rdev)
+		src_minor = os.minor(self.src_stat.st_rdev)
+		dest_major = os.major(dest_stat.st_rdev)
+		dest_minor = os.minor(dest_stat.st_rdev)
+		if src_major != dest_major or src_minor != dest_minor:
+			stdout('%s should have major,minor %d,%d but has %d,%d' %
+				(self.name, src_major, src_minor, dest_major, dest_minor))
+			unix_out('# updating major,minor %s' % self.name)
+			terse(synctool.lib.TERSE_SYNC, self.name)
 			return False
 
 		return True
@@ -535,9 +538,15 @@ class VNodeBlkDev(VNode):
 			stderr('error checking %s : %s' % (self.name, reason))
 			return False
 
-		if (os.major(self.src_stat.st_rdev) != os.major(dest_stat.st_rdev) or
-			os.minor(self.src_stat.st_rdev) != os.minor(dest_stat.st_rdev)):
-			# TODO stdout()
+		src_major = os.major(self.src_stat.st_rdev)
+		src_minor = os.minor(self.src_stat.st_rdev)
+		dest_major = os.major(dest_stat.st_rdev)
+		dest_minor = os.minor(dest_stat.st_rdev)
+		if src_major != dest_major or src_minor != dest_minor:
+			stdout('%s should have major,minor %d,%d but has %d,%d' %
+				(self.name, src_major, src_minor, dest_major, dest_minor))
+			unix_out('# updating major,minor %s' % self.name)
+			terse(synctool.lib.TERSE_SYNC, self.name)
 			return False
 
 		return True
