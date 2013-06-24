@@ -9,18 +9,18 @@
 #
 
 import synctool.lib
-from synctool.pkgclass import SyncPkg
+import synctool.pkgclass
 
 
-class SyncPkgZypper(SyncPkg):
+class SyncPkgZypper(synctool.pkgclass.SyncPkg):
 	'''package installer class for zypper'''
 
 	def __init__(self):
-		SyncPkg.__init__(self)
+		super(SyncPkgZypper, self).__init__(self)
 
 
 	def list(self, pkgs = None):
-		SyncPkg.list(self, pkgs)
+		super(SyncPkgZypper, self).list(self, pkgs)
 
 		cmd = 'rpm -qa'			# zypper has no 'list-installed' ?
 
@@ -33,7 +33,7 @@ class SyncPkgZypper(SyncPkg):
 
 
 	def install(self, pkgs):
-		SyncPkg.install(self, pkgs)
+		super(SyncPkgZypper, self).install(self, pkgs)
 
 		cmd = ('zypper --non-interactive install '
 			'--auto-agree-with-licenses ' + ' '.join(pkgs))
@@ -42,7 +42,7 @@ class SyncPkgZypper(SyncPkg):
 
 
 	def remove(self, pkgs):
-		SyncPkg.remove(self, pkgs)
+		super(SyncPkgZypper, self).remove(self, pkgs)
 
 		cmd = 'zypper --non-interactive remove ' + ' '.join(pkgs)
 
@@ -50,13 +50,13 @@ class SyncPkgZypper(SyncPkg):
 
 
 	def update(self):
-		SyncPkg.update(self)
+		super(SyncPkgZypper, self).update(self)
 
 		synctool.lib.shell_command('zypper --non-interactive refresh')
 
 
 	def upgrade(self):
-		SyncPkg.upgrade(self)
+		super(SyncPkgZypper, self).upgrade(self)
 
 		if self.dryrun:
 			cmd = 'zypper list-updates'
@@ -70,7 +70,7 @@ class SyncPkgZypper(SyncPkg):
 
 
 	def clean(self):
-		SyncPkg.clean(self)
+		super(SyncPkgZypper, self).clean(self)
 
 		synctool.lib.DRY_RUN = False
 		synctool.lib.shell_command('zypper clean')

@@ -233,7 +233,7 @@ def _config_command(param, arr, short_cmd, configfile, lineno):
 	# That is deferred until later; the client only runs diff_cmd,
 	# while the master runs a bunch of commands
 
-	return (0, synctool.lib.prepare_path(arr[1:].join()))
+	return (0, synctool.lib.prepare_path(' '.join(arr[1:])))
 
 
 def spellcheck(name):

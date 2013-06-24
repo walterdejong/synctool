@@ -9,21 +9,21 @@
 #
 
 import synctool.lib
-from synctool.pkgclass import SyncPkg
+import synctool.pkgclass
 
 
 # I no longer have an ArchLinux system to test this on,
 # but here it goes ... :P
 
-class SyncPkgPacman(SyncPkg):
+class SyncPkgPacman(synctool.pkgclass.SyncPkg):
 	'''package installer class for pacman'''
 
 	def __init__(self):
-		SyncPkg.__init__(self)
+		super(SyncPkgPacman, self).__init__(self)
 
 
 	def list(self, pkgs = None):
-		SyncPkg.list(self, pkgs)
+		super(SyncPkgPacman, self).list(self, pkgs)
 
 		cmd = 'pacman -Q'
 
@@ -36,7 +36,7 @@ class SyncPkgPacman(SyncPkg):
 
 
 	def install(self, pkgs):
-		SyncPkg.install(self, pkgs)
+		super(SyncPkgPacman, self).install(self, pkgs)
 
 		cmd = 'pacman -S --noconfirm ' + ' '.join(pkgs)
 
@@ -44,7 +44,7 @@ class SyncPkgPacman(SyncPkg):
 
 
 	def remove(self, pkgs):
-		SyncPkg.remove(self, pkgs)
+		super(SyncPkgPacman, self).remove(self, pkgs)
 
 		cmd = 'pacman -Rs --noconfirm ' + ' '.join(pkgs)
 
@@ -52,13 +52,13 @@ class SyncPkgPacman(SyncPkg):
 
 
 	def update(self):
-		SyncPkg.update(self)
+		super(SyncPkgPacman, self).update(self)
 
 		synctool.lib.shell_command('pacman -Sy --noconfirm')
 
 
 	def upgrade(self):
-		SyncPkg.upgrade(self)
+		super(SyncPkgPacman, self).upgrade(self)
 
 		synctool.lib.DRY_RUN = False
 
@@ -72,7 +72,7 @@ class SyncPkgPacman(SyncPkg):
 
 
 	def clean(self):
-		SyncPkg.clean(self)
+		super(SyncPkgPacman, self).clean(self)
 
 		synctool.lib.shell_command('pacman -Scc --noconfirm')
 

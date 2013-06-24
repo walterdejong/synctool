@@ -30,6 +30,7 @@ ACTION_DIFF = 1
 ACTION_ERASE_SAVED = 2
 ACTION_REFERENCE = 3
 
+ORIG_UMASK = 022
 SINGLE_FILES = []
 
 # list of changed directories
@@ -45,14 +46,13 @@ def run_command(cmd):
 	arr = shlex.split(cmd)
 	cmdfile = arr[0]
 
-	stat = synctool.syncstat.SyncStat(cmdfile)
-
-	if not stat.exists():
+	statbuf = synctool.syncstat.SyncStat(cmdfile)
+	if not statbuf.exists():
 		stderr('error: command %s not found' %
 			synctool.lib.prettypath(cmdfile))
 		return
 
-	if not stat.is_exec():
+	if not statbuf.is_exec():
 		stderr("warning: file '%s' is not executable" %
 			synctool.lib.prettypath(cmdfile))
 		return
@@ -102,9 +102,8 @@ def run_post(src, dest):
 	if synctool.lib.NO_POST:
 		return
 
-	stat = synctool.syncstat.SyncStat(dest)
-
-	if stat.is_dir():
+	statbuf = synctool.syncstat.SyncStat(dest)
+	if statbuf.is_dir():
 		# directories will be handled later, so save this pair
 		pair = (src, dest)
 		DIR_CHANGED.append(pair)
@@ -115,7 +114,11 @@ def run_post(src, dest):
 	# file has changed, run appropriate .post script
 	postscript = synctool.overlay.postscript_for_path(src, dest)
 	if postscript:
+		# temporarily restore original umask
+		# so the script runs with the umask set by the sysadmin
+		os.umask(ORIG_UMASK)
 		run_command_in_dir(dest_dir, postscript)
+		os.umask(077)
 
 	# content of directory was changed, so save this pair
 	pair = (os.path.dirname(src), dest_dir)
@@ -175,7 +178,7 @@ def overlay_callback(obj):
 
 	verbose('checking %s' % obj.print_src())
 
-	if obj.compare_files():
+	if not obj.check():
 		run_post(obj.src_path, obj.dest_path)
 
 
@@ -188,18 +191,9 @@ def overlay_files():
 def delete_callback(obj):
 	'''delete files'''
 
-	if obj.dest_is_dir():		# do not delete directories
-		return
-
 	if obj.dest_exists():
-		if synctool.lib.DRY_RUN:
-			not_str = 'not '
-		else:
-			not_str = ''
-
-		stdout('%sdeleting %s : %s' % (not_str, obj.print_src(),
-										obj.print_dest()))
-		obj.hard_delete_file()
+		vnode = obj.vnode_obj()
+		vnode.harddelete()
 		run_post(obj.src_path, obj.dest_path)
 
 
@@ -210,9 +204,12 @@ def delete_files():
 def erase_saved_callback(obj):
 	'''erase *.saved backup files'''
 
-	# really, this is all
+	obj.dest_path += '.saved'
+	obj.dest_stat = synctool.syncstat.SyncStat(obj.dest_path)
 
-	obj.erase_saved()
+	if obj.dest_stat.exists():
+		vnode = obj.vnode_obj()
+		vnode.harddelete()
 
 
 def erase_saved():
@@ -242,13 +239,13 @@ def single_files(filename):
 
 	verbose('checking against %s' % obj.print_src())
 
-	changed = obj.compare_files()
-	if not changed:
+	if obj.check():
 		stdout('%s is up to date' % filename)
 		terse(synctool.lib.TERSE_OK, filename)
 		unix_out('# %s is up to date\n' % obj.print_dest())
+		return (False, obj.src_path)
 
-	return (changed, obj.src_path)
+	return (True, obj.src_path)
 
 
 def single_erase_saved(filename):
@@ -593,6 +590,8 @@ def get_options():
 
 
 def main():
+	global ORIG_UMASK
+
 	synctool.param.init()
 
 	action = get_options()
@@ -653,6 +652,10 @@ def main():
 
 	os.environ['SYNCTOOL_NODENAME'] = synctool.param.NODENAME
 	os.environ['SYNCTOOL_ROOTDIR'] = synctool.param.ROOTDIR
+
+	unix_out('umask 077')
+	unix_out('')
+	ORIG_UMASK = os.umask(077)
 
 	if action == ACTION_DIFF:
 		for f in SINGLE_FILES:

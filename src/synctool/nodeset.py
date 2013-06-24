@@ -24,7 +24,7 @@ import synctool.param
 #        use the address list to contact the nodes
 #        use nodeset.get_nodename_from_address() to get a nodename
 
-class NodeSet:
+class NodeSet(object):
 	'''class representing a set of nodes'''
 
 	def __init__(self):

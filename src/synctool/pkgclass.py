@@ -12,7 +12,7 @@ import synctool.lib
 from synctool.lib import verbose
 
 
-class SyncPkg:
+class SyncPkg(object):
 	'''generic package installer class'''
 
 	# You may create a new class that has this interface
