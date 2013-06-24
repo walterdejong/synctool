@@ -44,9 +44,8 @@ def run_dsh(address_list, remote_cmd_arr):
 	# It is moderately evil however, because it's not 100% correct
 	# but it's reliable enough to keep in here
 	full_path = synctool.lib.search_path(remote_cmd_arr[0])
-	if full_path.find(os.sep) < 0 or (os.altsep != None and
-										full_path.find(os.altsep) < 0):
-		# relative command was not found in PATH
+	if not full_path:
+		# command was not found in PATH
 		# look under scripts/
 		full_path = os.path.join(synctool.param.SCRIPT_DIR, remote_cmd_arr[0])
 		if os.access(full_path, os.X_OK):

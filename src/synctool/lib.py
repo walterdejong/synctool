@@ -347,7 +347,7 @@ def search_path(cmd):
 		if os.access(full_path, os.X_OK):
 			return full_path
 
-	return cmd
+	return None
 
 
 def mkdir_p(path):
