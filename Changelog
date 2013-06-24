@@ -4,7 +4,7 @@ June 2013
 - when uploading, use option --overlay to change the suggested overlay dir
 - default_nodeset: by default run only on these nodes
 - new command synctool-template helps with 'templating' config files
-- added support for fifo's
+- added support for fifo's and device files
 - node and group names are checked against a character set;
   'strange' symbols are no longer allowed
 - master passes nodename to the client; "hostid:" no longer needed
