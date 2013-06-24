@@ -124,8 +124,6 @@ class VNode(object):
 		unix_out('chown %s.%s %s' % (self.stat.ascii_uid(),
 									self.stat.ascii_gid(), self.name))
 		if not synctool.lib.DRY_RUN:
-			verbose('  os.chown(%s, %d, %d)' % (self.name, self.stat.uid,
-												self.stat.gid))
 			try:
 				os.chown(self.name, self.stat.uid, self.stat.gid)
 			except OSError, reason:
@@ -390,8 +388,6 @@ class VNodeLink(VNode):
 		unix_out('lchown %s.%s %s' % (self.stat.ascii_uid(),
 									self.stat.ascii_gid(), self.name))
 		if not synctool.lib.DRY_RUN:
-			verbose('  os.lchown(%s, %d, %d)' % (self.name, self.stat.uid,
-												self.stat.gid))
 			try:
 				os.lchown(self.name, self.stat.uid, self.stat.gid)
 			except OSError, reason:
