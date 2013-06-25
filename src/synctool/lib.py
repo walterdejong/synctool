@@ -249,7 +249,8 @@ def masterlog(msg):
 
 
 def log(msg):
-	'''log message locally, and print it so that synctool-master will pick it up'''
+	'''log message locally, and print it so that synctool-master
+	will pick it up'''
 
 	if not DRY_RUN and LOGFD != None:
 		t = time.localtime(time.time())
@@ -467,7 +468,8 @@ def multiprocess(fn, work):
 	'''run a function in parallel'''
 
 	# Thanks go to Bryce Boe
-	# http://www.bryceboe.com/2010/08/26/python-multiprocessing-and-keyboardinterrupt/
+	# http://www.bryceboe.com/2010/08/26/ \
+	#   python-multiprocessing-and-keyboardinterrupt/
 
 	if synctool.param.SLEEP_TIME != 0:
 		synctool.param.NUM_PROC = 1
