@@ -201,6 +201,10 @@ def upload(up):
 		stderr('error: the filename to upload must be an absolute path')
 		sys.exit(-1)
 
+	if not up.overlay in synctool.param.ALL_GROUPS:
+		stderr("no such group '%s'" % up.overlay)
+		sys.exit(-1)
+
 	if up.suffix and not up.suffix in synctool.param.ALL_GROUPS:
 		stderr("no such group '%s'" % up.suffix)
 		sys.exit(-1)
@@ -458,7 +462,7 @@ def get_options():
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-			'hc:vn:g:x:X:d:1:r:u:s:efpFTqa',
+			'hc:vn:g:x:X:d:1:r:u:o:s:efpFTqa',
 			['help', 'conf=', 'verbose', 'node=', 'group=',
 			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=',
 			'upload=', 'overlay=', 'suffix=', 'erase-saved', 'fix', 'no-post',
