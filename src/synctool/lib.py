@@ -308,13 +308,12 @@ def shell_command(cmd):
 	if not QUIET:
 		stdout('%srunning command %s' % (not_str, prettypath(cmd)))
 
-	terse(TERSE_EXEC, cmdfile)
+	verbose(dryrun_msg('  os.system("%s")' % prettypath(cmd), 'action'))
 	unix_out('# run command %s' % cmdfile)
 	unix_out(cmd)
+	terse(TERSE_EXEC, cmdfile)
 
 	if not DRY_RUN:
-		verbose('  os.system("%s")' % prettypath(cmd))
-
 		sys.stdout.flush()
 		sys.stderr.flush()
 
@@ -326,8 +325,6 @@ def shell_command(cmd):
 
 		sys.stdout.flush()
 		sys.stderr.flush()
-	else:
-		verbose(dryrun_msg('  os.system("%s")' % prettypath(cmd), 'action'))
 
 
 def search_path(cmd):
