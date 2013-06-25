@@ -51,6 +51,7 @@ def run_dsh(address_list, remote_cmd_arr):
 		if os.access(full_path, os.X_OK):
 			# found the command under scripts/
 			remote_cmd_arr[0] = full_path
+			# FIXME TODO in this case, it should rsync the script to the nodes!
 
 	SSH_CMD_ARR = shlex.split(synctool.param.SSH_CMD)
 
