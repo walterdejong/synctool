@@ -172,7 +172,7 @@ cluster, it is possible to specify `-a` to condense (aggregate) output.
 The condensed output groups together output that is the same for many nodes.
 
 One of my favorite commands is `synctool -qa`.
-You may also use this to condense output from `dsh`, for example
+You may also use option `-a` to condense output from `dsh`, for example
 
     # dsh -a date
 
@@ -449,8 +449,10 @@ These functions connect to the main website at [www.heiho.net/synctool][1].
 synctool's `dsh` command is ideal for running commands on groups of nodes.
 On occasion, you will also want to run custom scripts with `dsh`.
 These scripts can be placed in `scripts/`, and `dsh` will find them.
-Mind that you have to do a (dry) synctool run to get the scripts onto the
-nodes; `dsh` does not distribute scripts by itself.
+When running a command that resides under `scripts/`, `dsh` will sync this
+script to the target node prior to running the command on the remote side.
+This is done to make sure that always the 'current' version of the script
+runs on the target node.
 
 > Previous versions had a `tasks/` directory under the repository and you
 > could invoke synctool with the `--tasks` option. This mechanism has been
