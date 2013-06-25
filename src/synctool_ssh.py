@@ -33,11 +33,17 @@ SSH_OPTIONS = None
 SSH_CMD_ARR = None
 REMOTE_CMD_ARR = None
 
+# boolean saying whether we should sync the script to the nodes
+# before running it
+# It allows you to edit a script on the master node, and then
+# immediately run it using 'dsh' / 'synctool-ssh'
+SYNC_IT = False
+
 
 def run_dsh(address_list, remote_cmd_arr):
 	'''run remote command to a set of nodes using ssh (param ssh_cmd)'''
 
-	global SSH_CMD_ARR, REMOTE_CMD_ARR
+	global SSH_CMD_ARR, REMOTE_CMD_ARR, SYNC_IT
 
 	# if the command is under scripts/, assume its full path
 	# This is nice because scripts/ isn't likely to be in PATH
@@ -51,7 +57,8 @@ def run_dsh(address_list, remote_cmd_arr):
 		if os.access(full_path, os.X_OK):
 			# found the command under scripts/
 			remote_cmd_arr[0] = full_path
-			# FIXME TODO in this case, it should rsync the script to the nodes!
+			# sync the script to the node
+			SYNC_IT = True
 
 	SSH_CMD_ARR = shlex.split(synctool.param.SSH_CMD)
 
@@ -68,6 +75,19 @@ def worker_ssh(addr):
 		return
 
 	nodename = NODESET.get_nodename_from_address(addr)
+
+	if SYNC_IT:
+		# first, sync the script to the node using rsync
+		# REMOTE_CMD_ARR[0] is the full path to the cmd in SCRIPT_DIR
+		verbose('running rsync $SYNCTOOL/scripts/%s to node %s' %
+				(os.path.basename(REMOTE_CMD_ARR[0]), nodename))
+		unix_out('%s %s %s:%s' % (synctool.param.RSYNC_CMD,
+			REMOTE_CMD_ARR[0], addr, REMOTE_CMD_ARR[0]))
+
+		cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
+		cmd_arr.append('%s' % REMOTE_CMD_ARR[0])
+		cmd_arr.append('%s:%s/' % (addr, REMOTE_CMD_ARR[0]))
+		synctool.lib.run_with_nodename(cmd_arr, nodename)
 
 	cmd_str = ' '.join(REMOTE_CMD_ARR)
 
