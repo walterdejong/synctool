@@ -191,7 +191,7 @@ def overlay_files():
 def delete_callback(obj):
 	'''delete files'''
 
-	if obj.dest_exists():
+	if obj.dest_stat.exists():
 		vnode = obj.vnode_obj()
 		vnode.harddelete()
 		run_post(obj.src_path, obj.dest_path)
