@@ -2,6 +2,8 @@ June 2013
 - overlay dirs are grouped; default overlay dir is overlay/all/
 - rsync only relevant directories to the target nodes
 - when uploading, use option --overlay to change the suggested overlay dir
+- when dsh runs a script from the scripts/ dir, it will first sync it
+  to the nodes to make sure it runs the latest version of the script
 - default_nodeset: by default run only on these nodes
 - new command synctool-template helps with 'templating' config files
 - added support for fifo's and device files
