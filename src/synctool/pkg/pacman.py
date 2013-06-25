@@ -19,11 +19,11 @@ class SyncPkgPacman(synctool.pkgclass.SyncPkg):
 	'''package installer class for pacman'''
 
 	def __init__(self):
-		super(SyncPkgPacman, self).__init__(self)
+		super(SyncPkgPacman, self).__init__()
 
 
 	def list(self, pkgs = None):
-		super(SyncPkgPacman, self).list(self, pkgs)
+		super(SyncPkgPacman, self).list(pkgs)
 
 		cmd = 'pacman -Q'
 
@@ -36,7 +36,7 @@ class SyncPkgPacman(synctool.pkgclass.SyncPkg):
 
 
 	def install(self, pkgs):
-		super(SyncPkgPacman, self).install(self, pkgs)
+		super(SyncPkgPacman, self).install(pkgs)
 
 		cmd = 'pacman -S --noconfirm ' + ' '.join(pkgs)
 
@@ -44,7 +44,7 @@ class SyncPkgPacman(synctool.pkgclass.SyncPkg):
 
 
 	def remove(self, pkgs):
-		super(SyncPkgPacman, self).remove(self, pkgs)
+		super(SyncPkgPacman, self).remove(pkgs)
 
 		cmd = 'pacman -Rs --noconfirm ' + ' '.join(pkgs)
 
@@ -52,13 +52,13 @@ class SyncPkgPacman(synctool.pkgclass.SyncPkg):
 
 
 	def update(self):
-		super(SyncPkgPacman, self).update(self)
+		super(SyncPkgPacman, self).update()
 
 		synctool.lib.shell_command('pacman -Sy --noconfirm')
 
 
 	def upgrade(self):
-		super(SyncPkgPacman, self).upgrade(self)
+		super(SyncPkgPacman, self).upgrade()
 
 		synctool.lib.DRY_RUN = False
 
@@ -72,7 +72,7 @@ class SyncPkgPacman(synctool.pkgclass.SyncPkg):
 
 
 	def clean(self):
-		super(SyncPkgPacman, self).clean(self)
+		super(SyncPkgPacman, self).clean()
 
 		synctool.lib.shell_command('pacman -Scc --noconfirm')
 

@@ -23,11 +23,11 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
 	# set it in the environment of the root user
 
 	def __init__(self):
-		super(SyncPkgBsdpkg, self).__init__(self)
+		super(SyncPkgBsdpkg, self).__init__()
 
 
 	def list(self, pkgs = None):
-		super(SyncPkgBsdpkg, self).list(self, pkgs)
+		super(SyncPkgBsdpkg, self).list(pkgs)
 
 		cmd = 'pkg_info'
 
@@ -42,7 +42,7 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
 
 
 	def install(self, pkgs):
-		super(SyncPkgBsdpkg, self).install(self, pkgs)
+		super(SyncPkgBsdpkg, self).install(pkgs)
 
 		cmd = 'pkg_add -v ' + ' '.join(pkgs)
 
@@ -50,7 +50,7 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
 
 
 	def remove(self, pkgs):
-		super(SyncPkgBsdpkg, self).remove(self, pkgs)
+		super(SyncPkgBsdpkg, self).remove(pkgs)
 
 		cmd = 'pkg_delete -v ' + ' '.join(pkgs)
 
@@ -58,14 +58,14 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
 
 
 	def update(self):
-		super(SyncPkgBsdpkg, self).update(self)
+		super(SyncPkgBsdpkg, self).update()
 
 		# There is no update command
 		# or is there?
 
 
 	def upgrade(self):
-		super(SyncPkgBsdpkg, self).upgrade(self)
+		super(SyncPkgBsdpkg, self).upgrade()
 
 		if os.uname()[0] == 'FreeBSD':
 			# FreeBSD has no pkg_add -u, but freebsd-update instead
@@ -89,7 +89,7 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
 
 
 	def clean(self):
-		super(SyncPkgBsdpkg, self).clean(self)
+		super(SyncPkgBsdpkg, self).clean()
 
 		# there is a PKG_TMPDIR but I won't touch it
 		# because the man page says it defaults to /var/tmp
