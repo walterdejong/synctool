@@ -833,7 +833,7 @@ def config_logfile(arr, configfile, lineno):
 			(configfile, lineno))
 		return 1
 
-	synctool.param.LOGFILE = synctool.lib.prepare_path(arr[1:].join())
+	synctool.param.LOGFILE = synctool.lib.prepare_path(' '.join(arr[1:]))
 	return 0
 
 
