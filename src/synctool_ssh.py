@@ -121,9 +121,20 @@ def worker_ssh(addr):
 def check_cmd_config():
 	'''check whether the commands as given in synctool.conf actually exist'''
 
+	errors = 0
+
 	(ok, synctool.param.SSH_CMD) = synctool.config.check_cmd_config(
 									'ssh_cmd', synctool.param.SSH_CMD)
 	if not ok:
+		errors += 1
+
+	if not OPT_SKIP_RSYNC:
+		(ok, synctool.param.RSYNC_CMD) = synctool.config.check_cmd_config(
+										'rsync_cmd', synctool.param.RSYNC_CMD)
+		if not ok:
+			errors += 1
+
+	if errors > 0:
 		sys.exit(-1)
 
 
