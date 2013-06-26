@@ -231,7 +231,7 @@ def get_options():
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:iRluUCm:fvq',
 			['help', 'conf=',
 			'list', 'install', 'remove', 'update', 'upgrade', 'clean',
-			'cleanup', 'manager=',
+			'cleanup', 'manager=', 'masterlog',
 			'fix', 'verbose', 'unix', 'quiet'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
@@ -317,6 +317,11 @@ def get_options():
 				sys.exit(1)
 
 			synctool.param.PACKAGE_MANAGER = arg
+			continue
+
+		if opt == '--masterlog':
+			# used by the master for message logging purposes
+			synctool.lib.MASTERLOG = True
 			continue
 
 		if opt in ('-f', '--fix'):

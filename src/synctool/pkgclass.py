@@ -9,7 +9,7 @@
 #
 
 import synctool.lib
-from synctool.lib import verbose
+from synctool.lib import verbose, log, dryrun_msg
 
 
 class SyncPkg(object):
@@ -23,19 +23,38 @@ class SyncPkg(object):
 		self.dryrun = synctool.lib.DRY_RUN
 
 
-	def list(self, pkgs = None):
+	def list(self, pkgs=None):
 		if pkgs:
-			verbose('list packages: %s' % ' '.join(pkgs))
+			if len(pkgs) > 1:
+				plural = 's'
+			else:
+				plural = ''
+
+			verbose('list package%s: %s' % (plural, ' '.join(pkgs)))
 		else:
 			verbose('list all packages')
 
 
 	def install(self, pkgs):
-		verbose('install packages: %s' % ' '.join(pkgs))
+		if len(pkgs) > 1:
+			plural = 's'
+		else:
+			plural = ''
+
+		msg = 'installing package%s: %s' % (plural, ' '.join(pkgs))
+		verbose(dryrun_msg(msg, 'install'))
+		log(msg)
 
 
 	def remove(self, pkgs):
-		verbose('removing packages: %s' % ' '.join(pkgs))
+		if len(pkgs) > 1:
+			plural = 's'
+		else:
+			plural = ''
+
+		msg = 'removing package%s: %s' % (plural, ' '.join(pkgs))
+		verbose(dryrun_msg(msg, 'remove'))
+		log(msg)
 
 
 	def update(self):
@@ -43,7 +62,14 @@ class SyncPkg(object):
 
 
 	def upgrade(self):
-		verbose('upgrading packages')
+		if len(pkgs) > 1:
+			plural = 's'
+		else:
+			plural = ''
+
+		msg = 'upgrading package%s: %s' % (plural, ' '.join(pkgs))
+		verbose(dryrun_msg(msg, 'upgrade'))
+		log(msg)
 
 
 	def clean(self):

@@ -189,7 +189,7 @@ def terse_path(path, maxlen = 55):
 	return path
 
 
-def dryrun_msg(str, action = 'update'):
+def dryrun_msg(str, action='update'):
 	'''print a "dry run" message filled to (almost) 80 chars
 	so that it looks nice on the terminal'''
 

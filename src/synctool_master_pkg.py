@@ -366,8 +366,7 @@ def get_options():
 			PASS_ARGS.append(arg)
 
 	# enable logging at the master node
-# TODO it should have logging
-#	PASS_ARGS.append('--masterlog')
+	PASS_ARGS.append('--masterlog')
 
 	if args != None:
 		MASTER_OPTS.extend(args)
@@ -401,10 +400,7 @@ def main():
 		sys.exit(0)
 
 	synctool.config.init_mynodename()
-
-	# ooh ... testing for DRY_RUN doesn't work here
-#	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
-#		synctool.lib.openlog()
+	synctool.lib.openlog()
 
 	address_list = NODESET.addresses()
 	if not address_list:
@@ -413,7 +409,7 @@ def main():
 
 	run_remote_pkg(address_list)
 
-#	synctool.lib.closelog()
+	synctool.lib.closelog()
 
 
 if __name__ == '__main__':
