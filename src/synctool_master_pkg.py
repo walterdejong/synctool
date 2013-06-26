@@ -196,8 +196,6 @@ def get_options():
 		usage()
 		sys.exit(1)
 
-	synctool.lib.DRY_RUN = True				# set default dry-run
-
 	# getopt() assumes that all options given after the first non-option
 	# argument are all arguments (this is standard UNIX behavior, not GNU)
 	# but in this case, I like the GNU way better, so re-arrange the options

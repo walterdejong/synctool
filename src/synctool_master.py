@@ -213,14 +213,9 @@ def upload(up):
 		stderr("no such group '%s'" % up.suffix)
 		sys.exit(-1)
 
-	# shadow DRY_RUN because that var can not be used correctly here
-	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
-		dry_run = False
-	else:
-		dry_run = True
-		if not synctool.lib.QUIET:
-			stdout('DRY RUN, not uploading any files')
-			terse(synctool.lib.TERSE_DRYRUN, 'not uploading any files')
+	if synctool.lib.DRY_RUN and not synctool.lib.QUIET:
+		stdout('DRY RUN, not uploading any files')
+		terse(synctool.lib.TERSE_DRYRUN, 'not uploading any files')
 
 	# pretend that the current node is now the given node;
 	# this is needed for find() to find the best reference for the file
@@ -286,7 +281,7 @@ def upload(up):
 	unix_out('%s %s:%s %s' % (synctool.param.SCP_CMD, up.address,
 								up.filename, repos_filename))
 
-	if dry_run:
+	if synctool.lib.DRY_RUN:
 		stdout('would be uploaded as %s' %
 				synctool.lib.prettypath(repos_filename))
 	else:
@@ -707,10 +702,7 @@ def main():
 		sys.exit(0)
 
 	synctool.config.init_mynodename()
-
-	# ooh ... testing for DRY_RUN doesn't work here
-	if '-f' in PASS_ARGS or '--fix' in PASS_ARGS:
-		synctool.lib.openlog()
+	synctool.lib.openlog()
 
 	address_list = NODESET.addresses()
 	if not address_list:

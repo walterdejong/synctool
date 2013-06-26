@@ -423,8 +423,6 @@ def get_options():
 
 	progname = os.path.basename(sys.argv[0])
 
-	synctool.lib.DRY_RUN = True		# set default dry-run
-
 	# check for dangerous common typo's on the command-line
 	be_careful_with_getopt()
 
@@ -502,12 +500,6 @@ def get_options():
 			'-T', '--terse', '-F', '--fullpath', '--version'):
 			# already done
 			continue
-
-# dry run already is default
-#
-#		if opt in ('-n', '--dry-run'):
-#			synctool.lib.DRY_RUN = True
-#			continue
 
 		if opt in ('-f', '--fix'):
 			opt_fix = True

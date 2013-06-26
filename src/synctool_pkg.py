@@ -225,8 +225,6 @@ def get_options():
 		usage()
 		sys.exit(1)
 
-	synctool.lib.DRY_RUN = True		# set default dry-run
-
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:iRluUCm:fvq',
 			['help', 'conf=',
@@ -362,7 +360,6 @@ def get_options():
 	# --upgrade -f will do the upgrade
 	#
 	# The other actions will execute immediatly
-
 	if ACTION != ACTION_UPGRADE:
 		synctool.lib.DRY_RUN = False
 

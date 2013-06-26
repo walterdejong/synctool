@@ -24,7 +24,7 @@ import Queue
 import synctool.param
 
 # options (mostly) set by command-line arguments
-DRY_RUN = False
+DRY_RUN = True
 VERBOSE = False
 QUIET = False
 UNIX_CMD = False
@@ -262,7 +262,8 @@ def log(msg):
 
 
 def run_with_nodename(cmd_arr, nodename):
-	'''run command and show output with nodename'''
+	'''run command and show output with nodename
+	It will run regardless of what DRY_RUN is'''
 
 	try:
 		f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
@@ -290,7 +291,8 @@ def run_with_nodename(cmd_arr, nodename):
 
 
 def shell_command(cmd):
-	'''run a shell command'''
+	'''run a shell command
+	Unless DRY_RUN is set'''
 
 	if DRY_RUN:
 		not_str = 'not '
