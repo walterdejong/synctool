@@ -239,7 +239,7 @@ def closelog():
 		LOGFD = None
 
 
-def masterlog(msg):
+def _masterlog(msg):
 	'''log only locally (on the masternode)'''
 
 	if not DRY_RUN and LOGFD != None:
@@ -272,20 +272,15 @@ def run_with_nodename(cmd_arr, nodename):
 		return
 
 	with f:
-		while True:
-			line = f.readline()
-			if not line:
-				break
-
-			line = line.strip()
-
-			# pass output on; simply use 'print' rather than 'stdout()'
+		for line in f:
+			# if output is a log line, pass it to the masterlog file
 			if line[:15] == '%synctool-log% ':
 				if line[15:] == '--':
 					pass
 				else:
-					masterlog('%s: %s' % (nodename, line[15:]))
+					_masterlog('%s: %s' % (nodename, line[15:]))
 			else:
+				# pass output on; simply use 'print' rather than 'stdout()'
 				if OPT_NODENAME:
 					print '%s: %s' % (nodename, line)
 				else:
