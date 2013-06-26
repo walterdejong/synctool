@@ -45,7 +45,7 @@ class UploadFile(object):
 
 	def __init__(self):
 		self.filename = None
-		self.overlay = 'all'
+		self.overlay = None
 		self.suffix = None
 		self.node = None
 		self.address = None
@@ -61,13 +61,17 @@ class UploadFile(object):
 		if fn[0] == '/':
 			fn = fn[1:]
 
+		overlay_dir = self.overlay
+		if not overlay_dir:
+			overlay_dir = 'all'
+
 		if not self.suffix and synctool.param.REQUIRE_EXTENSION:
 			self.suffix = 'all'
 
 		if not self.suffix:
-			return os.path.join(synctool.param.OVERLAY_DIR, self.overlay, fn)
+			return os.path.join(synctool.param.OVERLAY_DIR, overlay_dir, fn)
 
-		return os.path.join(synctool.param.OVERLAY_DIR, self.overlay,
+		return os.path.join(synctool.param.OVERLAY_DIR, overlay_dir,
 							fn + '._' + self.suffix)
 
 
@@ -201,7 +205,7 @@ def upload(up):
 		stderr('error: the filename to upload must be an absolute path')
 		sys.exit(-1)
 
-	if not up.overlay in synctool.param.ALL_GROUPS:
+	if up.overlay and not up.overlay in synctool.param.ALL_GROUPS:
 		stderr("no such group '%s'" % up.overlay)
 		sys.exit(-1)
 
