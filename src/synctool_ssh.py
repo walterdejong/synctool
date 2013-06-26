@@ -25,6 +25,7 @@ import synctool.unbuffered
 
 NODESET = synctool.nodeset.NodeSet()
 
+OPT_SKIP_RSYNC = False
 OPT_AGGREGATE = False
 MASTER_OPTS = None
 SSH_OPTIONS = None
@@ -59,6 +60,9 @@ def run_dsh(address_list, remote_cmd_arr):
 			remote_cmd_arr[0] = full_path
 			# sync the script to the node
 			SYNC_IT = True
+	elif (full_path[:len(synctool.param.SCRIPT_DIR)+1] ==
+			synctool.param.SCRIPT_DIR + os.sep):
+		SYNC_IT = True
 
 	SSH_CMD_ARR = shlex.split(synctool.param.SSH_CMD)
 
@@ -76,7 +80,8 @@ def worker_ssh(addr):
 
 	nodename = NODESET.get_nodename_from_address(addr)
 
-	if SYNC_IT:
+	if (SYNC_IT and
+		not (OPT_SKIP_RSYNC or nodename in synctool.param.NO_RSYNC)):
 		# first, sync the script to the node using rsync
 		# REMOTE_CMD_ARR[0] is the full path to the cmd in SCRIPT_DIR
 		verbose('running rsync $SYNCTOOL/scripts/%s to node %s' %
@@ -86,7 +91,7 @@ def worker_ssh(addr):
 
 		cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
 		cmd_arr.append('%s' % REMOTE_CMD_ARR[0])
-		cmd_arr.append('%s:%s/' % (addr, REMOTE_CMD_ARR[0]))
+		cmd_arr.append('%s:%s' % (addr, REMOTE_CMD_ARR[0]))
 		synctool.lib.run_with_nodename(cmd_arr, nodename)
 
 	cmd_str = ' '.join(REMOTE_CMD_ARR)
@@ -142,6 +147,8 @@ def usage():
   -N, --no-nodename              Do not prepend nodename to output
   -v, --verbose                  Be verbose
       --unix                     Output actions as unix shell commands
+      --skip-rsync               Do not sync commands from the scripts/ dir
+                                 (eg. when it is on a shared filesystem)
       --dry-run                  Do not run the remote command
       --version                  Print current version number
 
@@ -150,7 +157,7 @@ A nodelist or grouplist is a comma-separated list
 
 
 def get_options():
-	global MASTER_OPTS, OPT_AGGREGATE, SSH_OPTIONS
+	global MASTER_OPTS, OPT_SKIP_RSYNC, OPT_AGGREGATE, SSH_OPTIONS
 
 	if len(sys.argv) <= 1:
 		usage()
@@ -160,7 +167,7 @@ def get_options():
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:ao:Nqp:z:',
 			['help', 'conf=', 'verbose', 'node=', 'group=', 'exclude=',
 			'exclude-group=', 'aggregate', 'options=', 'no-nodename',
-			'unix', 'dry-run', 'quiet', 'numproc=', 'zzz='])
+			'unix', 'skip-rsync', 'dry-run', 'quiet', 'numproc=', 'zzz='])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -274,6 +281,10 @@ def get_options():
 
 		if opt == '--unix':
 			synctool.lib.UNIX_CMD = True
+			continue
+
+		if opt == '--skip-rsync':
+			OPT_SKIP_RSYNC = True
 			continue
 
 		if opt == '--dry-run':
