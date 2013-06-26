@@ -640,8 +640,6 @@ def main():
 
 			verbose('')
 
-	synctool.lib.openlog()
-
 	os.environ['SYNCTOOL_NODENAME'] = synctool.param.NODENAME
 	os.environ['SYNCTOOL_ROOTDIR'] = synctool.param.ROOTDIR
 
@@ -678,8 +676,6 @@ def main():
 		run_post_on_directories()
 
 	unix_out('# EOB')
-
-	synctool.lib.closelog()
 
 
 if __name__ == '__main__':

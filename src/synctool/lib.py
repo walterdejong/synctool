@@ -242,20 +242,20 @@ def closelog():
 def _masterlog(msg):
 	'''log only locally (on the masternode)'''
 
-	if not DRY_RUN and LOGFD != None:
+	if not DRY_RUN and LOGFD:
 		t = time.localtime(time.time())
 		LOGFD.write('%s %02d %02d:%02d:%02d %s\n' %
 			(MONTHS[t[1]-1], t[2], t[3], t[4], t[5], msg))
 
 
 def log(msg):
-	'''log message locally, and print it so that synctool-master
-	will pick it up'''
+	'''log message, print it so that synctool-master will pick it up'''
 
-	if not DRY_RUN and LOGFD != None:
-		t = time.localtime(time.time())
-		LOGFD.write('%s %02d %02d:%02d:%02d %s\n' %
-			(MONTHS[t[1]-1], t[2], t[3], t[4], t[5], msg))
+	if not DRY_RUN:
+		if LOGFD:
+			t = time.localtime(time.time())
+			LOGFD.write('%s %02d %02d:%02d:%02d %s\n' %
+				(MONTHS[t[1]-1], t[2], t[3], t[4], t[5], msg))
 
 		if MASTERLOG:
 			print '%synctool-log%', msg
