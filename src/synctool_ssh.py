@@ -75,9 +75,6 @@ def run_dsh(address_list, remote_cmd_arr):
 
 
 def worker_ssh(addr):
-	if synctool.lib.DRY_RUN:		# got here for nothing
-		return
-
 	nodename = NODESET.get_nodename_from_address(addr)
 
 	if (SYNC_IT and
@@ -160,7 +157,6 @@ def usage():
       --unix                     Output actions as unix shell commands
       --skip-rsync               Do not sync commands from the scripts/ dir
                                  (eg. when it is on a shared filesystem)
-      --dry-run                  Do not run the remote command
       --version                  Print current version number
 
 A nodelist or grouplist is a comma-separated list
@@ -178,7 +174,7 @@ def get_options():
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:ao:Nqp:z:',
 			['help', 'conf=', 'verbose', 'node=', 'group=', 'exclude=',
 			'exclude-group=', 'aggregate', 'options=', 'no-nodename',
-			'unix', 'skip-rsync', 'dry-run', 'quiet', 'numproc=', 'zzz='])
+			'unix', 'skip-rsync', 'quiet', 'numproc=', 'zzz='])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -296,10 +292,6 @@ def get_options():
 
 		if opt == '--skip-rsync':
 			OPT_SKIP_RSYNC = True
-			continue
-
-		if opt == '--dry-run':
-			synctool.lib.DRY_RUN = True
 			continue
 
 		if opt in ('-q', '--quiet'):

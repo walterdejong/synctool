@@ -54,9 +54,6 @@ def run_remote_copy(address_list, files):
 def worker_scp(addr):
 	'''runs scp (remote copy) to node'''
 
-	if synctool.lib.DRY_RUN:	# got here for nothing
-		return
-
 	nodename = NODESET.get_nodename_from_address(addr)
 	if nodename == synctool.param.NODENAME:
 		return
@@ -121,7 +118,6 @@ def usage():
   -z, --zzz=NUM                  Sleep NUM seconds between each run
   -v, --verbose                  Be verbose
       --unix                     Output actions as unix shell commands
-      --dry-run                  Do not run the remote copy command
       --version                  Print current version number
 
 A nodelist or grouplist is a comma-separated list
@@ -142,7 +138,7 @@ def get_options():
 		opts, args = getopt.getopt(sys.argv[1:], 'hc:vd:o:n:g:x:X:Nqp:z:',
 			['help', 'conf=', 'verbose', 'dest=', 'options=',
 			'node=', 'group=', 'exclude=', 'exclude-group=',
-			'no-nodename', 'numproc=', 'zzz=', 'unix', 'dry-run', 'quiet'])
+			'no-nodename', 'numproc=', 'zzz=', 'unix', 'quiet'])
 	except getopt.error, (reason):
 		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #		usage()
@@ -225,10 +221,6 @@ def get_options():
 
 		if opt == '--unix':
 			synctool.lib.UNIX_CMD = True
-			continue
-
-		if opt == '--dry-run':
-			synctool.lib.DRY_RUN = True
 			continue
 
 		if opt in ('-q', '--quiet'):
