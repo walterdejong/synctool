@@ -344,10 +344,11 @@ def check_cmd_config():
 #	if not ok:
 #		errors += 1
 
-	(ok, synctool.param.RSYNC_CMD) = synctool.config.check_cmd_config(
-									'rsync_cmd', synctool.param.RSYNC_CMD)
-	if not ok:
-		errors += 1
+	if not OPT_SKIP_RSYNC:
+		(ok, synctool.param.RSYNC_CMD) = synctool.config.check_cmd_config(
+										'rsync_cmd', synctool.param.RSYNC_CMD)
+		if not ok:
+			errors += 1
 
 	(ok, synctool.param.SYNCTOOL_CMD) = synctool.config.check_cmd_config(
 								'synctool_cmd', synctool.param.SYNCTOOL_CMD)
