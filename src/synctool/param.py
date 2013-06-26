@@ -47,7 +47,7 @@ PKG_CMD = None
 
 PACKAGE_MANAGER = None
 
-LOGFILE = None
+LOGFILE = '/var/log/synctool.log'
 NUM_PROC = 16				# use sensible default
 SLEEP_TIME = 0
 

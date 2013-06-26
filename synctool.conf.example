@@ -1,6 +1,8 @@
 #
 #	synctool.conf
 #
+# This is an example file; adjust your synctool.conf as needed
+# commented parameters resemble built-in defaults
 
 #tempdir	 /tmp/synctool
 
@@ -22,14 +24,15 @@ ignore .gitignore
 ignore .*.swp
 
 # log to file
-logfile /var/log/synctool.log
+# set to /dev/null if you don't want any logging
+#logfile /var/log/synctool.log
 
 # configure external commands that synctool uses
-diff_cmd diff -u
+#diff_cmd diff -u
 #ping_cmd fping -t 500
-ping_cmd ping -q -c 1 -t 1
-ssh_cmd ssh -o ConnectTimeout=10 -x -q
-scp_cmd scp -o ConnectTimeout=10 -p
+#ping_cmd ping -q -c 1 -t 1
+#ssh_cmd ssh -o ConnectTimeout=10 -x -q
+#scp_cmd scp -o ConnectTimeout=10 -p
 
 # synctool depends on rsync, but this command is configurable
 # so that you can do things like:
@@ -39,10 +42,10 @@ scp_cmd scp -o ConnectTimeout=10 -p
 # synctool-master automatically appends another option:
 #  --filter=/tmp/synctool/synctool-tempfile
 #
-rsync_cmd rsync -ar --numeric-ids --delete --delete-excluded -e 'ssh -o ConnectTimeout=10 -x -q' -q
+#rsync_cmd rsync -ar --numeric-ids --delete --delete-excluded -e 'ssh -o ConnectTimeout=10 -x -q' -q
 
-synctool_cmd $SYNCTOOL/bin/synctool-client
-pkg_cmd $SYNCTOOL/bin/synctool-client-pkg
+#synctool_cmd $SYNCTOOL/bin/synctool-client
+#pkg_cmd $SYNCTOOL/bin/synctool-client-pkg
 
 # Force the package manager for synctool-pkg / dsh-pkg to use
 # If you don't configure one, synctool-pkg will detect one
