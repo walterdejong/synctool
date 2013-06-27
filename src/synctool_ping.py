@@ -62,11 +62,7 @@ def ping_node(addr):
 		return False
 
 	with f:
-		while True:
-			line = f.readline()
-			if not line:
-				break
-
+		for line in f:
 			line = line.strip()
 
 			# argh, we have to parse output here
@@ -75,10 +71,12 @@ def ping_node(addr):
 			# "2 packets transmitted, 0 packets received, 100.0% packet loss"
 			#
 			# on Linux, ping says something like:
-			# "2 packets transmitted, 0 received, 100.0% packet loss, time 1001ms"
+			# "2 packets transmitted, 0 received, 100.0% packet loss, " \
+			# "time 1001ms"
 
 			arr = line.split()
-			if len(arr) > 3 and arr[1] == 'packets' and arr[2] == 'transmitted,':
+			if len(arr) > 3 and (arr[1] == 'packets' and
+								arr[2] == 'transmitted,'):
 				try:
 					packets_received = int(arr[3])
 				except ValueError:
