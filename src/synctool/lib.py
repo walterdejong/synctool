@@ -274,6 +274,8 @@ def run_with_nodename(cmd_arr, nodename):
 
 	with f:
 		for line in f:
+			line = line.strip()
+
 			# if output is a log line, pass it to the masterlog file
 			if line[:15] == '%synctool-log% ':
 				if line[15:] == '--':
