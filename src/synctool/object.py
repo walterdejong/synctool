@@ -13,7 +13,8 @@ import shutil
 import hashlib
 
 import synctool.lib
-from synctool.lib import verbose, stdout, stderr, terse, unix_out, dryrun_msg
+from synctool.lib import verbose, stdout, stderr, terse, unix_out, log
+from synctool.lib import dryrun_msg
 import synctool.param
 import synctool.syncstat
 
@@ -621,6 +622,7 @@ class SyncObject(object):
 
 		if not self.dest_stat.exists():
 			stdout('%s does not exist' % self.dest_path)
+			log('creating %s' % self.dest_path)
 			vnode = self.vnode_obj()
 			vnode.fix()
 			return False
@@ -633,12 +635,14 @@ class SyncObject(object):
 			verbose('%s should be a %s' % (self.dest_path, vnode.typename()))
 			terse(synctool.lib.TERSE_WARNING, 'wrong type %s' %
 												self.dest_path)
+			log('fix type %s' % self.dest_path)
 			vnode.fix()
 			return False
 
 		vnode = self.vnode_obj()
 		if not vnode.compare(self.src_path, self.dest_stat):
 			# content is different; change the entire object
+			log('updating %s' % self.dest_stat)
 			vnode.fix()
 			return False
 
@@ -660,6 +664,10 @@ class SyncObject(object):
 											(self.src_stat.ascii_uid(),
 											self.src_stat.ascii_gid(),
 											self.dest_path))
+			log('set owner %s.%s (%d.%d) %s' %
+				(self.src_stat.ascii_uid(), self.src_stat.ascii_gid(),
+				self.src_stat.uid, self.src_stat.gid,
+				self.dest_path))
 			vnode.set_owner()
 			updated = True
 
@@ -670,6 +678,8 @@ class SyncObject(object):
 			terse(synctool.lib.TERSE_MODE, '%04o %s' %
 											(self.src_stat.mode & 07777,
 											self.dest_path))
+			log('set mode %04o %s' % (self.src_stat.mode & 07777,
+										self.dest_path))
 			vnode.set_permissions()
 			updated = True
 

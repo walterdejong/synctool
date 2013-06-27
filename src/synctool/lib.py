@@ -189,26 +189,29 @@ def terse_path(path, maxlen = 55):
 	return path
 
 
-def dryrun_msg(str, action='update'):
+def dryrun_msg(s, action='update'):
 	'''print a "dry run" message filled to (almost) 80 chars
 	so that it looks nice on the terminal'''
 
-	l1 = len(str) + 4
+	if not DRY_RUN:
+		return s
+
+	l1 = len(s) + 4
 
 	msg = '# dry run, %s not performed' % action
 	l2 = len(msg)
 
 	if l1 + l2 <= 79:
-		return str + (' ' * (79 - (l1 + l2))) + msg
+		return s + (' ' * (79 - (l1 + l2))) + msg
 
 	if l1 + 13 <= 79:
 		# message is long, but we can shorten and it will fit on a line
 		msg = '# dry run'
 		l2 = 9
-		return str + (' ' * (79 - (l1 + l2))) + msg
+		return s + (' ' * (79 - (l1 + l2))) + msg
 
 	# don't bother, return a long message
-	return str + '    ' + msg
+	return s + '    ' + msg
 
 
 def openlog():
@@ -217,12 +220,11 @@ def openlog():
 	if DRY_RUN or not synctool.param.LOGFILE:
 		return
 
-	LOGFD = None
 	try:
-		LOGFD = open(synctool.param.LOGFILE, 'a')
+		LOGFD = open(synctool.param.LOGFILE, 'a+')
 	except IOError, reason:
 		print ('error: failed to open logfile %s : %s' %
-			(synctool.param.LOGFILE, reason))
+				(synctool.param.LOGFILE, reason))
 		sys.exit(-1)
 
 #	log('start run')
@@ -241,6 +243,11 @@ def closelog():
 
 def _masterlog(msg):
 	'''log only locally (on the masternode)'''
+
+	# FIXME logging doesn't work
+	# FIXME the reason is that it runs in a multiprocessing context
+	# FIXME so you can't use the (inherited) open file handle there
+	# FIXME maybe the thread should pass logging back through a Queue
 
 	if not DRY_RUN and LOGFD:
 		t = time.localtime(time.time())
@@ -466,6 +473,9 @@ def prepare_path(path):
 def multiprocess(fn, work):
 	'''run a function in parallel'''
 
+	if LOGFD:
+		LOGFD.flush()
+
 	# Thanks go to Bryce Boe
 	# http://www.bryceboe.com/2010/08/26/ \
 	#   python-multiprocessing-and-keyboardinterrupt/
@@ -507,6 +517,11 @@ def _worker(fn, jobq):
 	jobq is a multiprocessing.Queue of function arguments
 	If --zzz was given, sleep after finishing the work
 	No return value is passed back'''
+
+	global LOGFD
+
+	# workers do not write directly to log file
+	LOGFD = None
 
 	# ignore interrupts, ignore Ctrl-C
 	# the Ctrl-C will be caught by the parent process
