@@ -383,14 +383,16 @@ You can manually specify that you want to remove backup copies using:
 3.7 Logging
 -----------
 When using option `--fix` to apply changes, synctool logs the made changes
-to a file on the master node -- by default, `/var/log/synctool.log`.
-If you don't want any logging, you can disable it by logging to `/dev/null`:
+to syslog on the master node.
+If you don't want any logging, you can disable it in `synctool.conf`:
 
-    logfile /dev/null
+    syslogging no
 
-Mind that when you change the `logfile` setting, you should also have a look
-at `/etc/logrotate.d/`.  During setup, a `logrotate` config file will be put
-in place to rotate `/var/log/synctool.log` on a regular basis.
+When you do use syslogging, you may want to split off the synctool messages
+to a separate file like `/var/log/synctool.log`. Please see your `syslogd`
+manual on how to do this. In the `contrib/` directory in the synctool source,
+you will find a `logrotate` config file for rotating the log on a regular
+basis.
 
 
 3.8 About symbolic links
