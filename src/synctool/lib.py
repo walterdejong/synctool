@@ -217,7 +217,7 @@ def openlog():
 
 	# TODO only log when parameter SYSLOGGING is set
 
-	syslog.openlog('synctool', syslog.LOG_PID, syslog.LOG_USER)
+	syslog.openlog('synctool', 0, syslog.LOG_USER)
 
 
 def closelog():
