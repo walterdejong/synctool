@@ -266,9 +266,7 @@ def single_erase_saved(filename):
 		stderr('%s is not in the overlay tree' % filename)
 		return (False, None)
 
-	if obj.dest_stat.exists():
-		vnode = obj.vnode_obj()
-		vnode.harddelete()
+	erase_saved_callback(obj)
 
 
 def reference(filename):
