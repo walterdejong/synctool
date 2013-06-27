@@ -90,12 +90,9 @@ def stdout(msg):
 	if not (UNIX_CMD or synctool.param.TERSE):
 		print msg
 
-	log(msg)
-
 
 def stderr(msg):
 	print msg
-	log(msg)
 
 
 def terse(code, msg):
