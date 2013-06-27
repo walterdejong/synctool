@@ -71,6 +71,8 @@ class VNode(object):
 			except OSError, reason:
 				stderr('failed to delete %s : %s' % (self.name, reason))
 				terse(synctool.lib.TERSE_FAIL, 'delete %s' % self.name)
+			else:
+				log('deleted %s' % self.name)
 
 
 	def mkdir_basepath(self):
