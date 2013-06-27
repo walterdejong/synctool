@@ -302,25 +302,23 @@ def diff_files(filename):
 	if err == synctool.overlay.OV_NOT_FOUND:
 		return
 
-	if synctool.lib.UNIX_CMD:
-		unix_out('%s %s %s' % (synctool.param.DIFF_CMD,
-								obj.dest_path, obj.src_path))
-	else:
-		verbose('%s %s %s' % (synctool.param.DIFF_CMD,
-								obj.dest_path, obj.print_src()))
-		sys.stdout.flush()
-		sys.stderr.flush()
+	verbose('%s %s %s' % (synctool.param.DIFF_CMD,
+							obj.dest_path, obj.print_src()))
+	unix_out('%s %s %s' % (synctool.param.DIFF_CMD,
+							obj.dest_path, obj.src_path))
+	sys.stdout.flush()
+	sys.stderr.flush()
 
-		cmd_arr = shlex.split(synctool.param.DIFF_CMD)
-		cmd_arr.append(obj.dest_path)
-		cmd_arr.append(obj.src_path)
-		try:
-			subprocess.call(cmd_arr, shell=False)
-		except OSError, reason:
-			stderr('failed to run diff_cmd: %s' % reason)
+	cmd_arr = shlex.split(synctool.param.DIFF_CMD)
+	cmd_arr.append(obj.dest_path)
+	cmd_arr.append(obj.src_path)
+	try:
+		subprocess.call(cmd_arr, shell=False)
+	except OSError, reason:
+		stderr('failed to run diff_cmd: %s' % reason)
 
-		sys.stdout.flush()
-		sys.stderr.flush()
+	sys.stdout.flush()
+	sys.stderr.flush()
 
 
 def be_careful_with_getopt():
