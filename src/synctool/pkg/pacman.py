@@ -30,9 +30,7 @@ class SyncPkgPacman(synctool.pkgclass.SyncPkg):
 		if pkgs:
 			cmd = cmd + 's ' + ' '.join(pkgs)	# use pacman -Qs ...
 
-		synctool.lib.DRY_RUN = False
 		synctool.lib.shell_command(cmd)
-		synctool.lib.DRY_RUN = self.dryrun
 
 
 	def install(self, pkgs):
@@ -60,15 +58,15 @@ class SyncPkgPacman(synctool.pkgclass.SyncPkg):
 	def upgrade(self):
 		super(SyncPkgPacman, self).upgrade()
 
-		synctool.lib.DRY_RUN = False
-
-		if self.dryrun:
+		if synctool.lib.DRY_RUN:
 			cmd = 'pacman -Qu --noconfirm'		# query updates
 		else:
 			cmd = 'pacman -Su --noconfirm'		# do upgrade
 
+		tmp = synctool.lib.DRY_RUN
+		synctool.lib.DRY_RUN = False
 		synctool.lib.shell_command(cmd)
-		synctool.lib.DRY_RUN = self.dryrun
+		synctool.lib.DRY_RUN = tmp
 
 
 	def clean(self):

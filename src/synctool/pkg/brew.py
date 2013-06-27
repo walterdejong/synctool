@@ -27,9 +27,7 @@ class SyncPkgBrew(synctool.pkgclass.SyncPkg):
 		if pkgs:
 			cmd = cmd + ' ' + ' '.join(pkgs)
 
-		synctool.lib.DRY_RUN = False
 		synctool.lib.shell_command(cmd)
-		synctool.lib.DRY_RUN = self.dryrun
 
 
 	def install(self, pkgs):
@@ -57,14 +55,15 @@ class SyncPkgBrew(synctool.pkgclass.SyncPkg):
 	def upgrade(self):
 		super(SyncPkgBrew, self).upgrade()
 
-		if self.dryrun:
+		if synctool.lib.DRY_RUN:
 			cmd = 'brew outdated'
 		else:
 			cmd = 'brew upgrade'
 
+		tmp = synctool.lib.DRY_RUN
 		synctool.lib.DRY_RUN = False
 		synctool.lib.shell_command(cmd)
-		synctool.lib.DRY_RUN = self.dryrun
+		synctool.lib.DRY_RUN = tmp
 
 
 	def clean(self):

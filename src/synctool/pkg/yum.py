@@ -27,9 +27,7 @@ class SyncPkgYum(synctool.pkgclass.SyncPkg):
 		if pkgs:
 			cmd = cmd + ' ' + ' '.join(pkgs)
 
-		synctool.lib.DRY_RUN = False
 		synctool.lib.shell_command(cmd)
-		synctool.lib.DRY_RUN = self.dryrun
 
 
 	def install(self, pkgs):
@@ -61,14 +59,15 @@ class SyncPkgYum(synctool.pkgclass.SyncPkg):
 	def upgrade(self):
 		super(SyncPkgYum, self).upgrade()
 
-		if self.dryrun:
+		if synctool.lib.DRY_RUN:
 			cmd = 'yum -y check-update'
 		else:
 			cmd = 'yum -y update'
 
+		tmp = synctool.lib.DRY_RUN
 		synctool.lib.DRY_RUN = False
 		synctool.lib.shell_command(cmd)
-		synctool.lib.DRY_RUN = self.dryrun
+		synctool.lib.DRY_RUN = tmp
 
 
 	def clean(self):

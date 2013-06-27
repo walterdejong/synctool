@@ -36,9 +36,7 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
 		else:
 			cmd = cmd + ' -a'		# list all installed packages
 
-		synctool.lib.DRY_RUN = False
 		synctool.lib.shell_command(cmd)
-		synctool.lib.DRY_RUN = self.dryrun
 
 
 	def install(self, pkgs):
@@ -70,7 +68,7 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
 		if os.uname()[0] == 'FreeBSD':
 			# FreeBSD has no pkg_add -u, but freebsd-update instead
 
-			if self.dryrun:
+			if synctool.lib.DRY_RUN:
 				cmd = 'freebsd-update fetch'
 			else:
 				cmd = 'freebsd-update fetch install'
@@ -78,14 +76,15 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
 		else:
 			# OpenBSD/NetBSD/other BSD, use pkg_add -u
 
-			if self.dryrun:
+			if synctool.lib.DRY_RUN:
 				cmd = 'pkg_add -uvn'
 			else:
 				cmd = 'pkg_add -uv'
 
+		tmp = synctool.lib.DRY_RUN
 		synctool.lib.DRY_RUN = False
 		synctool.lib.shell_command(cmd)
-		synctool.lib.DRY_RUN = self.dryrun
+		synctool.lib.DRY_RUN = tmp
 
 
 	def clean(self):

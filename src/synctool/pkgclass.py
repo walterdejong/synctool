@@ -20,7 +20,7 @@ class SyncPkg(object):
 	# And/or you may use this class as a superclass
 
 	def __init__(self):
-		self.dryrun = synctool.lib.DRY_RUN
+		pass
 
 
 	def list(self, pkgs=None):
