@@ -173,7 +173,7 @@ def run_post_on_directories():
 	DIR_CHANGED = {}
 
 
-def overlay_callback(obj):
+def _overlay_callback(obj):
 	'''compare files and run post-script if needed'''
 
 	verbose('checking %s' % obj.print_src())
@@ -185,10 +185,10 @@ def overlay_callback(obj):
 def overlay_files():
 	'''run the overlay function'''
 
-	synctool.overlay.visit(synctool.overlay.OV_OVERLAY, overlay_callback)
+	synctool.overlay.visit(synctool.overlay.OV_OVERLAY, _overlay_callback)
 
 
-def delete_callback(obj):
+def _delete_callback(obj):
 	'''delete files'''
 
 	if obj.dest_stat.exists():
@@ -198,10 +198,10 @@ def delete_callback(obj):
 
 
 def delete_files():
-	synctool.overlay.visit(synctool.overlay.OV_DELETE, delete_callback)
+	synctool.overlay.visit(synctool.overlay.OV_DELETE, _delete_callback)
 
 
-def erase_saved_callback(obj):
+def _erase_saved_callback(obj):
 	'''erase *.saved backup files'''
 
 	obj.dest_path += '.saved'
@@ -215,16 +215,15 @@ def erase_saved_callback(obj):
 def erase_saved():
 	'''List and delete *.saved backup files'''
 
-	synctool.overlay.visit(synctool.overlay.OV_OVERLAY, erase_saved_callback)
+	synctool.overlay.visit(synctool.overlay.OV_OVERLAY, _erase_saved_callback)
 
 
 def single_files(filename):
-	'''check/update a single file
-	Returns (True, path_in_synctree) if file is different'''
+	'''check/update a single file'''
 
 	if not filename:
 		stderr('missing filename')
-		return (False, None)
+		return
 
 	(obj, err) = synctool.overlay.find_terse(synctool.overlay.OV_OVERLAY,
 											filename)
@@ -235,17 +234,9 @@ def single_files(filename):
 
 	if err == synctool.overlay.OV_NOT_FOUND:
 		stderr('%s is not in the overlay tree' % filename)
-		return (False, None)
+		return
 
-	verbose('checking against %s' % obj.print_src())
-
-	if obj.check():
-		stdout('%s is up to date' % filename)
-		terse(synctool.lib.TERSE_OK, filename)
-		unix_out('# %s is up to date\n' % obj.dest_path)
-		return (False, obj.src_path)
-
-	return (True, obj.src_path)
+	_overlay_callback(obj)
 
 
 def single_erase_saved(filename):
@@ -266,7 +257,7 @@ def single_erase_saved(filename):
 		stderr('%s is not in the overlay tree' % filename)
 		return (False, None)
 
-	erase_saved_callback(obj)
+	_erase_saved_callback(obj)
 
 
 def reference(filename):
@@ -659,9 +650,7 @@ def main():
 
 	elif SINGLE_FILES:
 		for single_file in SINGLE_FILES:
-			(changed, src) = single_files(single_file)
-			if changed:
-				run_post(src, single_file)
+			single_files(single_file)
 
 		run_post_on_directories()
 
