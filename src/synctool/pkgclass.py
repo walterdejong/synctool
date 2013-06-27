@@ -62,12 +62,7 @@ class SyncPkg(object):
 
 
 	def upgrade(self):
-		if len(pkgs) > 1:
-			plural = 's'
-		else:
-			plural = ''
-
-		msg = 'upgrading package%s: %s' % (plural, ' '.join(pkgs))
+		msg = 'upgrading packages'
 		verbose(dryrun_msg(msg, 'upgrade'))
 		log(msg)
 
