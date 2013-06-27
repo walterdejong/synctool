@@ -212,15 +212,16 @@ def dryrun_msg(s, action='update'):
 
 
 def openlog():
-	if DRY_RUN:
+	if DRY_RUN or not synctool.param.SYSLOGGING:
 		return
-
-	# TODO only log when parameter SYSLOGGING is set
 
 	syslog.openlog('synctool', 0, syslog.LOG_USER)
 
 
 def closelog():
+	if DRY_RUN or not synctool.param.SYSLOGGING:
+		return
+
 	log('--')
 	syslog.closelog()
 
@@ -228,20 +229,24 @@ def closelog():
 def _masterlog(msg):
 	'''log only locally (on the master node)'''
 
-	if not DRY_RUN:
-		syslog.syslog(syslog.LOG_INFO|syslog.LOG_USER, msg)
+	if DRY_RUN or not synctool.param.SYSLOGGING:
+		return
+
+	syslog.syslog(syslog.LOG_INFO|syslog.LOG_USER, msg)
 
 
 def log(msg):
 	'''log message to syslog'''
 
-	if not DRY_RUN:
-		if MASTERLOG:
-			# print it with magic prefix,
-			# synctool-master will pick it up
-			print '%synctool-log%', msg
-		else:
-			_masterlog(msg)
+	if DRY_RUN or not synctool.param.SYSLOGGING:
+		return
+
+	if MASTERLOG:
+		# print it with magic prefix,
+		# synctool-master will pick it up
+		print '%synctool-log%', msg
+	else:
+		_masterlog(msg)
 
 
 def run_with_nodename(cmd_arr, nodename):

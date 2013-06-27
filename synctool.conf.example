@@ -12,6 +12,9 @@
 # make backup copies named *.saved
 #backup_copies yes
 
+# log to syslog
+#syslogging yes
+
 # ignore all files beginning with a dot (like .profile, .bashrc, ...)
 #ignore_dotfiles no
 
@@ -22,10 +25,6 @@
 ignore .svn
 ignore .gitignore
 ignore .*.swp
-
-# log to file
-# set to /dev/null if you don't want any logging
-#logfile /var/log/synctool.log
 
 # configure external commands that synctool uses
 #diff_cmd diff -u

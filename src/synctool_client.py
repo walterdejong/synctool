@@ -625,10 +625,6 @@ def main():
 			verbose('my nodename: %s' % synctool.param.NODENAME)
 			verbose('my hostname: %s' % synctool.param.HOSTNAME)
 			verbose('rootdir: %s' % synctool.param.ROOTDIR)
-
-			if synctool.param.LOGFILE != None and not synctool.lib.DRY_RUN:
-				verbose('logfile: %s' % synctool.param.LOGFILE)
-
 			verbose('')
 
 			if synctool.lib.DRY_RUN:
