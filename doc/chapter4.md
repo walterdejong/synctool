@@ -93,13 +93,11 @@ synctool's configuration file.
 
 * `logfile <filename>`
 
-  Have synctool log any updates to file. Nothing is logged for dry runs.
-  By default, no logfile is specified, and thus logging is not enabled.
-  Example:
+  **obsolete** Use the `syslogging` keyword instead.
 
-    logfile /var/log/synctool.log
+* `syslogging <yes/no>`
 
-  Mind that synctool does not rotate the logfile by itself.
+  Log any updates to syslog. Nothing is logged for dry runs.
 
 * `diff_cmd <diff UNIX command>`
 
