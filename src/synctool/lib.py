@@ -17,6 +17,7 @@ import shlex
 import time
 import errno
 import time
+import syslog
 import signal
 import multiprocessing
 import Queue
@@ -30,7 +31,6 @@ QUIET = False
 UNIX_CMD = False
 NO_POST = False
 MASTERLOG = False
-LOGFD = None
 
 # print nodename in output?
 # This option is pretty useless except in synctool-ssh it may be useful
@@ -90,12 +90,9 @@ def stdout(msg):
 	if not (UNIX_CMD or synctool.param.TERSE):
 		print msg
 
-	log(msg)
-
 
 def stderr(msg):
 	print msg
-	log(msg)
 
 
 def terse(code, msg):
@@ -215,57 +212,41 @@ def dryrun_msg(s, action='update'):
 
 
 def openlog():
-	global LOGFD
-
-	if DRY_RUN or not synctool.param.LOGFILE:
+	if DRY_RUN or not synctool.param.SYSLOGGING:
 		return
 
-	try:
-		LOGFD = open(synctool.param.LOGFILE, 'a+')
-	except IOError, reason:
-		print ('error: failed to open logfile %s : %s' %
-				(synctool.param.LOGFILE, reason))
-		sys.exit(-1)
-
-#	log('start run')
+	syslog.openlog('synctool', 0, syslog.LOG_USER)
 
 
 def closelog():
-	global LOGFD
+	if DRY_RUN or not synctool.param.SYSLOGGING:
+		return
 
-	if LOGFD != None:
-#		log('end run')
-		log('--')
-
-		LOGFD.close()
-		LOGFD = None
+	log('--')
+	syslog.closelog()
 
 
 def _masterlog(msg):
-	'''log only locally (on the masternode)'''
+	'''log only locally (on the master node)'''
 
-	# FIXME logging doesn't work
-	# FIXME the reason is that it runs in a multiprocessing context
-	# FIXME so you can't use the (inherited) open file handle there
-	# FIXME maybe the thread should pass logging back through a Queue
+	if DRY_RUN or not synctool.param.SYSLOGGING:
+		return
 
-	if not DRY_RUN and LOGFD:
-		t = time.localtime(time.time())
-		LOGFD.write('%s %02d %02d:%02d:%02d %s\n' %
-			(MONTHS[t[1]-1], t[2], t[3], t[4], t[5], msg))
+	syslog.syslog(syslog.LOG_INFO|syslog.LOG_USER, msg)
 
 
 def log(msg):
-	'''log message, print it so that synctool-master will pick it up'''
+	'''log message to syslog'''
 
-	if not DRY_RUN:
-		if LOGFD:
-			t = time.localtime(time.time())
-			LOGFD.write('%s %02d %02d:%02d:%02d %s\n' %
-				(MONTHS[t[1]-1], t[2], t[3], t[4], t[5], msg))
+	if DRY_RUN or not synctool.param.SYSLOGGING:
+		return
 
-		if MASTERLOG:
-			print '%synctool-log%', msg
+	if MASTERLOG:
+		# print it with magic prefix,
+		# synctool-master will pick it up
+		print '%synctool-log%', msg
+	else:
+		_masterlog(msg)
 
 
 def run_with_nodename(cmd_arr, nodename):
@@ -283,7 +264,7 @@ def run_with_nodename(cmd_arr, nodename):
 		for line in f:
 			line = line.strip()
 
-			# if output is a log line, pass it to the masterlog file
+			# if output is a log line, pass it to the master's syslog
 			if line[:15] == '%synctool-log% ':
 				if line[15:] == '--':
 					pass
@@ -473,9 +454,6 @@ def prepare_path(path):
 def multiprocess(fn, work):
 	'''run a function in parallel'''
 
-	if LOGFD:
-		LOGFD.flush()
-
 	# Thanks go to Bryce Boe
 	# http://www.bryceboe.com/2010/08/26/ \
 	#   python-multiprocessing-and-keyboardinterrupt/
@@ -517,11 +495,6 @@ def _worker(fn, jobq):
 	jobq is a multiprocessing.Queue of function arguments
 	If --zzz was given, sleep after finishing the work
 	No return value is passed back'''
-
-	global LOGFD
-
-	# workers do not write directly to log file
-	LOGFD = None
 
 	# ignore interrupts, ignore Ctrl-C
 	# the Ctrl-C will be caught by the parent process

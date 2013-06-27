@@ -47,14 +47,14 @@ PKG_CMD = None
 
 PACKAGE_MANAGER = None
 
-LOGFILE = '/var/log/synctool.log'
 NUM_PROC = 16				# use sensible default
 SLEEP_TIME = 0
 
 REQUIRE_EXTENSION = True
+BACKUP_COPIES = True
+SYSLOGGING = True
 FULL_PATH = False
 TERSE = False
-BACKUP_COPIES = True
 IGNORE_DOTFILES = False
 IGNORE_DOTDIRS = False
 IGNORE_FILES = []

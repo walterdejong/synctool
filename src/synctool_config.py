@@ -34,10 +34,9 @@ ACTION_CMDS = 5
 ACTION_NUMPROC = 6
 ACTION_VERSION = 7
 ACTION_PREFIX = 8
-ACTION_LOGFILE = 9
-ACTION_NODENAME = 10
-ACTION_LIST_DIRS = 11
-ACTION_PKGMGR = 12
+ACTION_NODENAME = 9
+ACTION_LIST_DIRS = 10
+ACTION_PKGMGR = 11
 
 # optional: do not list hosts/groups that are ignored
 OPT_FILTER_IGNORED = False
@@ -269,7 +268,6 @@ def usage():
   -p, --numproc            Display numproc setting
   -d, --list-dirs          Display directory settings
       --prefix             Display installation prefix
-      --logfile            Display configured logfile
       --nodename           Display my nodename
   -v, --version            Display synctool version
 
@@ -293,7 +291,7 @@ def get_options():
 			['help', 'conf=', 'list-nodes', 'list-groups', 'node=', 'group=',
 			'ipaddress', 'hostname', 'rsync', 'filter-ignored',
 			'command', 'package-manager', 'numproc', 'list-dirs',
-			'prefix', 'logfile', 'nodename', 'version'])
+			'prefix', 'nodename', 'version'])
 
 	except getopt.error, (reason):
 		print
@@ -383,10 +381,6 @@ def get_options():
 			set_action(ACTION_PREFIX, '--prefix')
 			continue
 
-		if opt == '--logfile':
-			set_action(ACTION_LOGFILE, '--logfile')
-			continue
-
 		if opt == '--nodename':
 			set_action(ACTION_NODENAME, '--nodename')
 			continue
@@ -447,9 +441,6 @@ def main():
 
 	elif ACTION == ACTION_PREFIX:
 		print synctool.param.PREFIX
-
-	elif ACTION == ACTION_LOGFILE:
-		print synctool.param.LOGFILE
 
 	elif ACTION == ACTION_NODENAME:
 		synctool.config.init_mynodename()

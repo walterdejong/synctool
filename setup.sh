@@ -201,23 +201,6 @@ install_docs() {
 	fi
 }
 
-install_logrotate() {
-	if test -d /etc/logrotate.d
-	then
-		echo "installing /etc/logrotate.d/synctool"
-
-		if test -f /etc/logrotate.d/synctool
-		then
-			echo "/etc/logrotate.d/synctool already present, not overwriting it"
-		else
-			if test "x$DRY_RUN" = "xno"
-			then
-				install -m 644 logrotate.conf /etc/logrotate.d/synctool
-			fi
-		fi
-	fi
-}
-
 do_install() {
 	FIRST=`echo "$INSTALL_ROOT" | cut -c 1`
 	if test "x$FIRST" = "x~"
@@ -259,7 +242,6 @@ do_install() {
 	install_progs
 	install_libs
 	install_docs
-	install_logrotate
 
 	echo "making $INSTALL_ROOT/scripts"
 	makedir 755 "$INSTALL_ROOT/scripts"
@@ -359,18 +341,6 @@ remove_docs() {
 	fi
 }
 
-remove_logrotate() {
-	if test -f /etc/logrotate.d/synctool
-	then
-		echo "removing /etc/logrotate.d/synctool"
-
-		if test "x$DRY_RUN" = "xno"
-		then
-			rm -f /etc/logrotate.d/synctool
-		fi
-	fi
-}
-
 remove_overlay() {
 	# do not delete any data
 	# just try to remove any empty directories
@@ -434,7 +404,6 @@ do_uninstall() {
 	remove_client_progs
 	remove_libs
 	remove_docs
-	remove_logrotate
 	remove_overlay
 	remove_dirs
 

@@ -42,7 +42,7 @@ class SyncPkg(object):
 			plural = ''
 
 		msg = 'installing package%s: %s' % (plural, ' '.join(pkgs))
-		verbose(dryrun_msg(msg, 'install'))
+		verbose(msg)
 		log(msg)
 
 
@@ -53,7 +53,7 @@ class SyncPkg(object):
 			plural = ''
 
 		msg = 'removing package%s: %s' % (plural, ' '.join(pkgs))
-		verbose(dryrun_msg(msg, 'remove'))
+		verbose(msg)
 		log(msg)
 
 
@@ -64,6 +64,9 @@ class SyncPkg(object):
 	def upgrade(self):
 		msg = 'upgrading packages'
 		verbose(dryrun_msg(msg, 'upgrade'))
+
+		# log the upgrade action ...
+		# don't know which packages are upgraded here, sorry
 		log(msg)
 
 

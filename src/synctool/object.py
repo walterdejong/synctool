@@ -71,6 +71,8 @@ class VNode(object):
 			except OSError, reason:
 				stderr('failed to delete %s : %s' % (self.name, reason))
 				terse(synctool.lib.TERSE_FAIL, 'delete %s' % self.name)
+			else:
+				log('deleted %s' % self.name)
 
 
 	def mkdir_basepath(self):
@@ -642,7 +644,7 @@ class SyncObject(object):
 		vnode = self.vnode_obj()
 		if not vnode.compare(self.src_path, self.dest_stat):
 			# content is different; change the entire object
-			log('updating %s' % self.dest_stat)
+			log('updating %s' % self.dest_path)
 			vnode.fix()
 			return False
 
