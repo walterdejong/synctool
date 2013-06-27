@@ -309,7 +309,7 @@ def shell_command(cmd):
 			subprocess.call(cmd, shell=True)
 		except OSError, reason:
 			stderr("failed to run shell command '%s' : %s" %
-				(prettypath(cmd), reason))
+					(prettypath(cmd), reason))
 
 		sys.stdout.flush()
 		sys.stderr.flush()
@@ -325,7 +325,7 @@ def search_path(cmd):
 	path = os.environ['PATH']
 	if not path:
 		path = os.pathsep.join(['/bin', '/sbin', '/usr/bin', '/usr/sbin',
-			'/usr/local/bin', '/usr/local/sbin'])
+								'/usr/local/bin', '/usr/local/sbin'])
 
 	for d in path.split(os.pathsep):
 		full_path = os.path.join(d, cmd)
