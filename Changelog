@@ -13,7 +13,7 @@ June 2013
 - new node specifier 'rsync:no' may be given if the synctool repository is
   on a shared filesystem
 - option --numproc now works on synctool, dsh and friends
-- synctool now logs updates to syslog
+- synctool now logs updates to syslog on the master node
 - dsh-pkg now logs package installs/removals/upgrades
 - config parser shows better error messages
 - synctool-config output has changed ... check your scripts
