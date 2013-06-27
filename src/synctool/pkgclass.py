@@ -42,7 +42,7 @@ class SyncPkg(object):
 			plural = ''
 
 		msg = 'installing package%s: %s' % (plural, ' '.join(pkgs))
-		verbose(dryrun_msg(msg, 'install'))
+		verbose(msg)
 		log(msg)
 
 
@@ -53,7 +53,7 @@ class SyncPkg(object):
 			plural = ''
 
 		msg = 'removing package%s: %s' % (plural, ' '.join(pkgs))
-		verbose(dryrun_msg(msg, 'remove'))
+		verbose(msg)
 		log(msg)
 
 
