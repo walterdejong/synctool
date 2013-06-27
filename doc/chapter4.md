@@ -98,6 +98,7 @@ synctool's configuration file.
 * `syslogging <yes/no>`
 
   Log any updates to syslog. Nothing is logged for dry runs.
+  The default is: `yes`.
 
 * `diff_cmd <diff UNIX command>`
 

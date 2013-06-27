@@ -383,8 +383,9 @@ You can manually specify that you want to remove backup copies using:
 3.7 Logging
 -----------
 When using option `--fix` to apply changes, synctool logs the made changes
-to syslog on the master node.
-If you don't want any logging, you can disable it in `synctool.conf`:
+to syslog on the master node. It provides a trace of what was changed on the
+systems. On large clusters, this may produce a lot of log records. If you
+don't want any logging, you can disable it in `synctool.conf`:
 
     syslogging no
 
