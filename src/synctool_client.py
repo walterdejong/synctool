@@ -19,7 +19,7 @@ import subprocess
 
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose, stdout, stderr, terse, unix_out
+from synctool.lib import verbose, stdout, stderr, terse, unix_out, dryrun_msg
 import synctool.overlay
 import synctool.param
 import synctool.syncstat
@@ -208,6 +208,7 @@ def _erase_saved_callback(obj):
 	obj.dest_stat = synctool.syncstat.SyncStat(obj.dest_path)
 
 	if obj.dest_stat.exists():
+		stdout(dryrun_msg('deleting %s' % obj.dest_path, 'delete'))
 		vnode = obj.vnode_obj()
 		vnode.harddelete()
 
@@ -244,7 +245,12 @@ def single_erase_saved(filename):
 
 	if not filename:
 		stderr('missing filename')
-		return (False, None)
+		return
+
+	# maybe the user supplied a '.saved' filename
+	(name, ext) = os.path.splitext(filename)
+	if ext == '.saved':
+		filename = name
 
 	(obj, err) = synctool.overlay.find_terse(synctool.overlay.OV_OVERLAY,
 											filename)
@@ -255,7 +261,7 @@ def single_erase_saved(filename):
 
 	if err == synctool.overlay.OV_NOT_FOUND:
 		stderr('%s is not in the overlay tree' % filename)
-		return (False, None)
+		return
 
 	_erase_saved_callback(obj)
 
