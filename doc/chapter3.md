@@ -392,8 +392,7 @@ don't want any logging, you can disable it in `synctool.conf`:
 When you do use syslogging, you may want to split off the synctool messages
 to a separate file like `/var/log/synctool.log`. Please see your `syslogd`
 manual on how to do this. In the `contrib/` directory in the synctool source,
-you will find a `logrotate` config file for rotating the log on a regular
-basis.
+you will find config files for use with `syslog-ng` and `logrotate`.
 
 
 3.8 About symbolic links
