@@ -237,7 +237,16 @@ def single_files(filename):
 		stderr('%s is not in the overlay tree' % filename)
 		return
 
-	_overlay_callback(obj)
+	# this is the same as _overlay_callback(), except
+	# that it also prints a message when all is OK
+	verbose('checking %s' % obj.print_src())
+
+	if not obj.check():
+		run_post(obj.src_path, obj.dest_path)
+	else:
+		stdout('%s is up to date' % obj.dest_path)
+		terse(synctool.lib.TERSE_OK, obj.dest_path)
+		unix_out('# %s is up to date\n' % obj.dest_path)
 
 
 def single_erase_saved(filename):
