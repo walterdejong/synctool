@@ -136,8 +136,7 @@ def relevant_overlay_dirs(overlay_dir):
 			continue
 
 		if importance == -1:
-			verbose('dir %s/ is not one of my groups, skipping' %
-					entry)
+			verbose('dir %s/ is not one of my groups, skipping' % entry)
 			continue
 
 		d = os.path.join(overlay_dir, entry)
