@@ -125,8 +125,7 @@ def ov_perror(errorcode, src_path):
 
 def relevant_overlay_dirs(overlay_dir):
 	'''return list of subdirs that are relevant groups
-	Return value is an array of pairs: (fullpath to dir, importance)
-	'''
+	Return value is an array of pairs: (fullpath to dir, importance)'''
 
 	a = []
 
