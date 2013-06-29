@@ -52,19 +52,23 @@ class OverlayEntry(object):
 		self.is_post = is_post
 
 
-def _split_extension(filename, require_extension):
-	'''split a simple filename (without leading path)
-	Returns: instance of OverlayEntry
-	Returns: None on error or not one of my groups
+def _split_extension(src_path, filename, require_extension):
+	'''split simple filename in name, extension
+	Returns: instance of OverlayEntry or None
+	on error or not one of my groups
 
 	Prereq: GROUP_ALL must be set to MY_GROUPS.index('all')'''
+
+	# src_path is only passed for printing error messages, really
+	# I don't want to have to call os.path.basename() all the time
+	# when it is unnecessary (see it as a peephole optimisation)
 
 	require_extension = require_extension and synctool.param.REQUIRE_EXTENSION
 
 	(name, ext) = os.path.splitext(filename)
 	if not ext:
 		if require_extension:
-			_no_group_ext(filename)
+			_no_group_ext(src_path)
 			return None
 
 		return OverlayEntry(filename, GROUP_ALL, False)
@@ -75,7 +79,7 @@ def _split_extension(filename, require_extension):
 
 	if ext[:2] != '._':
 		if require_extension:
-			_no_group_ext(filename)
+			_no_group_ext(src_path)
 			return None
 
 		return OverlayEntry(filename, GROUP_ALL, False)
@@ -83,7 +87,7 @@ def _split_extension(filename, require_extension):
 	ext = ext[2:]
 	if not ext:
 		if require_extension:
-			_no_group_ext(filename)
+			_no_group_ext(src_path)
 			return None
 
 		return OverlayEntry(filename, GROUP_ALL, False)
@@ -92,7 +96,7 @@ def _split_extension(filename, require_extension):
 		importance = synctool.param.MY_GROUPS.index(ext)
 	except ValueError:
 		if not ext in synctool.param.ALL_GROUPS:
-			_unknown_group(filename)
+			_unknown_group(src_path)
 			return None
 
 		# it is not one of my groups
@@ -188,7 +192,7 @@ def _overlay_pass1(overlay_dir, filelist, dest_dir=os.sep,
 		if wildcard_match:
 			continue
 
-		ov_entry = _split_extension(entry, not is_dir)
+		ov_entry = _split_extension(src_path, entry, not is_dir)
 		if not ov_entry:
 			# either not a relevant group (skip it)
 			# or an error occurred (error message already printed)
