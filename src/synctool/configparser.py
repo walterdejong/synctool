@@ -367,8 +367,7 @@ def config_ignore(arr, configfile, lineno):
 				synctool.param.IGNORE_FILES_WITH_WILDCARDS.append(fn)
 		else:
 			# no wildcards, do a regular ignore
-			if not fn in synctool.param.IGNORE_FILES:
-				synctool.param.IGNORE_FILES.append(fn)
+			synctool.param.IGNORE_FILES.add(fn)
 
 	return 0
 
