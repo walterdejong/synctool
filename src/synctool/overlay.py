@@ -43,83 +43,93 @@ DELETE_FILES = []
 DELETE_LOADED = False
 
 
+class OverlayEntry(object):
+	'''structure that describes a source file under $overlay/'''
+
+	def __init__(self, name, importance, is_post):
+		'''name is the 'basename' of the source file
+		importance is the index to MY_GROUPS[] or
+		negative if it is not a relevant group
+		is_post is a boolean saying whether it is a .post script'''
+
+		self.name = name
+		self.importance = importance
+		self.is_post = is_post
+
+
 def split_extension(filename, require_extension):
 	'''split a simple filename (without leading path)
-	in a tuple: (name, group number, is_post)
-	The importance is the index to MY_GROUPS[]
-	or negative if it is not a relevant group
-	The return parameter is_post is a boolean
-	showing whether it is a .post script
+	Returns: instance of OverlayEntry
+	Returns: None on error or not one of my groups
 
 	Prereq: GROUP_ALL must be set to MY_GROUPS.index('all')'''
 
 	require_extension = require_extension and synctool.param.REQUIRE_EXTENSION
 
 	(name, ext) = os.path.splitext(filename)
-
 	if not ext:
 		if require_extension:
-			return (None, OV_NO_GROUP_EXT, False)
+			_no_group_ext(filename)
+			return None
 
-		return (filename, GROUP_ALL, False)
+		return OverlayEntry(filename, GROUP_ALL, False)
 
 	if ext == '.post':
 		# register generic .post script
-		return (name, GROUP_ALL, True)
+		return OverlayEntry(name, GROUP_ALL, True)
 
 	if ext[:2] != '._':
 		if require_extension:
-			return (None, OV_NO_GROUP_EXT, False)
+			_no_group_ext(filename)
+			return None
 
-		return (filename, GROUP_ALL, False)
+		return OverlayEntry(filename, GROUP_ALL, False)
 
 	ext = ext[2:]
 	if not ext:
 		if require_extension:
-			return (None, OV_NO_GROUP_EXT, False)
+			_no_group_ext(filename)
+			return None
 
-		return (filename, GROUP_ALL, False)
+		return OverlayEntry(filename, GROUP_ALL, False)
 
 	try:
 		importance = synctool.param.MY_GROUPS.index(ext)
 	except ValueError:
 		if not ext in synctool.param.ALL_GROUPS:
-			return (None, OV_UNKNOWN_GROUP, False)
+			_unknown_group(filename)
+			return None
 
-		return (None, OV_NOT_MY_GROUP, False)
+		# it is not one of my groups
+		return None
 
 	(name2, ext) = os.path.splitext(name)
 
 	if ext == '.post':
 		# register group-specific .post script
-		return (name2, importance, True)
+		return OverlayEntry(name2, importance, True)
 
-	return (name, importance, False)
+	return OverlayEntry(name, importance, False)
 
 
-def ov_perror(errorcode, src_path):
-	'''print error message for source path'''
+def _no_group_ext(src_path):
+	'''prints error message; group extension was required,
+	but no group extension was found on the source filename'''
 
-	if errorcode >= 0:
-		# this is not an error but a valid group number
-		return
+	if synctool.param.TERSE:
+		terse(synctool.lib.TERSE_ERROR, 'no group on %s' % src_path)
+	else:
+		stderr('no underscored group extension on %s, skipped' %
+			synctool.lib.prettypath(src_path))
 
-	if errorcode == OV_NOT_MY_GROUP:
-		# this is not an error but a normal condition
-		return
 
-	if errorcode == OV_NO_GROUP_EXT:
-		if synctool.param.TERSE:
-			terse(synctool.lib.TERSE_ERROR, 'no group on %s' % src_path)
-		else:
-			stderr('no underscored group extension on %s, skipped' %
-				synctool.lib.prettypath(src_path))
+def _unknown_group(src_path):
+	'''prints error message; source has an unknown group as extension'''
 
-	elif errorcode == OV_UNKNOWN_GROUP:
-		if synctool.param.TERSE:
-			terse(synctool.lib.TERSE_ERROR, 'invalid group on %s' % src_path)
-		else:
-			stderr('unknown group on %s, skipped' %
+	if synctool.param.TERSE:
+		terse(synctool.lib.TERSE_ERROR, 'invalid group on %s' % src_path)
+	else:
+		stderr('unknown group on %s, skipped' %
 				synctool.lib.prettypath(src_path))
 
 
@@ -183,27 +193,20 @@ def overlay_pass1(overlay_dir, filelist, dest_dir=os.sep,
 		if wildcard_match:
 			continue
 
-		(name, importance, is_post) = split_extension(entry, not is_dir)
-
-		if importance < 0:
-			# not a relevant group, so skip it
-			# This also prunes trees if you have group-specific subdirs
-
-			if importance != OV_NOT_MY_GROUP:
-				# "not my group" is a rather normal error code, but if it is
-				# something else, it's a serious error that we should report
-				ov_perror(importance, os.path.join(overlay_dir, entry))
-
+		ov_entry = split_extension(entry, not is_dir)
+		if not ov_entry:
+			# either not a relevant group (skip it)
+			# or an error occurred (error message already printed)
 			continue
 
-		if name in synctool.param.IGNORE_FILES:
+		if ov_entry.name in synctool.param.IGNORE_FILES:
 			continue
 
 		# inherit lower group level from parent directory
-		if importance > highest_importance:
-			importance = highest_importance
+		if ov_entry.importance > highest_importance:
+			ov_entry.importance = highest_importance
 
-		if is_post:
+		if ov_entry.is_post:
 			if handle_postscripts:
 				if not src_stat.is_exec():
 					if synctool.param.TERSE:
@@ -217,14 +220,16 @@ def overlay_pass1(overlay_dir, filelist, dest_dir=os.sep,
 				# register .post script
 				# trigger is the source file that would trigger
 				# the .post script to run
-				trigger = os.path.join(overlay_dir, name)
+				trigger = os.path.join(overlay_dir, ov_entry.name)
 
 				if POST_SCRIPTS.has_key(trigger):
-					if importance >= POST_SCRIPTS[trigger].importance:
+					if (ov_entry.importance >=
+						POST_SCRIPTS[trigger].importance):
 						continue
 
 				POST_SCRIPTS[trigger] = synctool.object.SyncObject(src_path,
-										dest_dir, importance, src_stat)
+											dest_dir, ov_entry.importance,
+											src_stat)
 			else:
 				# unfortunately, the name has been messed up already
 				# so therefore just ignore the file and issue a warning
@@ -237,13 +242,13 @@ def overlay_pass1(overlay_dir, filelist, dest_dir=os.sep,
 
 			continue
 
-		dest_path = os.path.join(dest_dir, name)
+		dest_path = os.path.join(dest_dir, ov_entry.name)
 		filelist.append(synctool.object.SyncObject(src_path, dest_path,
-						importance, src_stat))
+						ov_entry.importance, src_stat))
 
 		if is_dir:
 			# recurse into subdir
-			overlay_pass1(src_path, filelist, dest_path, importance,
+			overlay_pass1(src_path, filelist, dest_path, ov_entry.importance,
 							handle_postscripts)
 
 
@@ -280,7 +285,7 @@ def overlay_pass2(filelist, filedict):
 							'for:\n'
 							'error: %s\n'
 							'error: %s\n' % (entry.print_src(),
-											entry2.print_src())
+											entry2.print_src()))
 				continue
 
 			else:
@@ -484,7 +489,7 @@ def visit(treedef, callback):
 	#
 	# note that the order is important, so do not use
 	# "for obj in tree_dict: callback(obj)"
-	#
+
 	for dest_path in filelist:
 		callback(tree_dict[dest_path])
 
