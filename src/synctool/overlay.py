@@ -148,8 +148,8 @@ def relevant_overlay_dirs(overlay_dir):
 	return a
 
 
-def overlay_pass1(overlay_dir, filelist, dest_dir = os.sep,
-	highest_importance = sys.maxint, handle_postscripts = True):
+def overlay_pass1(overlay_dir, filelist, dest_dir=os.sep,
+	highest_importance=sys.maxint, handle_postscripts=True):
 	'''do pass #1 of 2; create list of source and dest files
 	Each element in the list is an instance of SyncObject'''
 
@@ -250,7 +250,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir = os.sep,
 
 def overlay_pass2(filelist, filedict):
 	'''do pass #2 of 2; create dictionary of destination paths from list
-	Each element in the dictionary is an instance of OverlayEntry'''
+	Each element in the dictionary is an instance of SyncObject'''
 
 #	verbose('overlay pass 2')
 
@@ -297,7 +297,7 @@ def overlay_pass2(filelist, filedict):
 def load_overlay_tree():
 	'''scans all overlay dirs in and loads them into OVERLAY_DICT
 	which is a dict indexed by destination path, and every element
-	in OVERLAY_DICT is an instance of OverlayEntry
+	in OVERLAY_DICT is an instance of SyncObject
 	This also prepares POST_SCRIPTS'''
 
 	global OVERLAY_DICT, OVERLAY_FILES, OVERLAY_LOADED, POST_SCRIPTS
@@ -331,7 +331,7 @@ def load_overlay_tree():
 def load_delete_tree():
 	'''scans all delete dirs in and loads them into DELETE_DICT
 	which is a dict indexed by destination path, and every element
-	in DELETE_DICT is an instance of OverlayEntry
+	in DELETE_DICT is an instance of SyncObject
 	This also prepares POST_SCRIPTS that may be in the delete/ tree'''
 
 	global DELETE_DICT, DELETE_FILES, DELETE_LOADED, GROUP_ALL
