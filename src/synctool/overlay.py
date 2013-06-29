@@ -269,21 +269,16 @@ def overlay_pass2(filelist, filedict):
 				entry2.src_stat.is_dir())) and
 				entry.importance == entry2.importance):
 
-				if synctool.param.TERSE:
-					synctool.lib.terse(synctool.lib.TERSE_ERROR,
-								'duplicate source paths in repository for:')
-					synctool.lib.terse(synctool.lib.TERSE_ERROR,
-										entry.src_path)
-					synctool.lib.terse(synctool.lib.TERSE_ERROR,
-										entry2.src_path)
-				else:
-					stderr('error: duplicate source paths in repository '
-							'for:\n'
-							'error: %s\n'
-							'error: %s\n' %
-							(synctool.lib.prettypath(entry.src_path),
-							synctool.lib.prettypath(entry2.src_path)))
+				stderr('error: duplicate source paths in repository '
+						'for:\n'
+						'error: %s\n'
+						'error: %s\n' % (entry.print_src(),
+										entry2.print_src())
 
+				synctool.lib.terse(synctool.lib.TERSE_ERROR,
+								'duplicate source paths in repository for:')
+				synctool.lib.terse(synctool.lib.TERSE_ERROR, entry.src_path)
+				synctool.lib.terse(synctool.lib.TERSE_ERROR, entry2.src_path)
 				continue
 
 			else:
