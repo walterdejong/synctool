@@ -597,7 +597,12 @@ def main():
 		stderr('unable to determine my nodename (%s)' %
 				synctool.param.HOSTNAME)
 		stderr('please check %s' % synctool.param.CONF_FILE)
-		sys.exit(1)
+		sys.exit(-1)
+
+	if not synctool.param.NODES.has_key(synctool.param.NODENAME):
+		stderr("unknown node '%s'" % synctool.param.NODENAME)
+		stderr('please check %s' % synctool.param.CONF_FILE)
+		sys.exit(-1)
 
 	if synctool.param.NODENAME in synctool.param.IGNORE_GROUPS:
 		# this is only a warning ...
