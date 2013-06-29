@@ -157,7 +157,7 @@ def relevant_overlay_dirs(overlay_dir):
 
 
 def _overlay_pass1(overlay_dir, filelist, dest_dir=os.sep,
-	highest_importance=sys.maxint, handle_postscripts=True):
+	highest_importance=sys.maxint):
 	'''do pass #1 of 2; create list of source and dest files
 	Each element in the list is an instance of SyncObject'''
 
@@ -206,39 +206,28 @@ def _overlay_pass1(overlay_dir, filelist, dest_dir=os.sep,
 			ov_entry.importance = highest_importance
 
 		if ov_entry.is_post:
-			if handle_postscripts:
-				if not src_stat.is_exec():
-					if synctool.param.TERSE:
-						terse(synctool.lib.TERSE_WARNING, 'not exec %s' %
-															src_path)
-					else:
-						stderr('warning: .post script %s is not executable, '
-								'ignored' % synctool.lib.prettypath(src_path))
-					continue
-
-				# register .post script
-				# trigger is the source file that would trigger
-				# the .post script to run
-				trigger = os.path.join(overlay_dir, ov_entry.name)
-
-				if POST_SCRIPTS.has_key(trigger):
-					if (ov_entry.importance >=
-						POST_SCRIPTS[trigger].importance):
-						continue
-
-				POST_SCRIPTS[trigger] = synctool.object.SyncObject(src_path,
-											dest_dir, ov_entry.importance,
-											src_stat)
-			else:
-				# unfortunately, the name has been messed up already
-				# so therefore just ignore the file and issue a warning
+			if not src_stat.is_exec():
 				if synctool.param.TERSE:
-					terse(synctool.lib.TERSE_WARNING, 'ignoring %s' %
+					terse(synctool.lib.TERSE_WARNING, 'not exec %s' %
 														src_path)
 				else:
-					stderr('warning: ignoring .post script %s' %
-							synctool.lib.prettypath(src_path))
+					stderr('warning: .post script %s is not executable, '
+							'ignored' % synctool.lib.prettypath(src_path))
+				continue
 
+			# register .post script
+			# trigger is the source file that would trigger
+			# the .post script to run
+			trigger = os.path.join(overlay_dir, ov_entry.name)
+
+			if POST_SCRIPTS.has_key(trigger):
+				if (ov_entry.importance >=
+					POST_SCRIPTS[trigger].importance):
+					continue
+
+			POST_SCRIPTS[trigger] = synctool.object.SyncObject(src_path,
+										dest_dir, ov_entry.importance,
+										src_stat)
 			continue
 
 		dest_path = os.path.join(dest_dir, ov_entry.name)
@@ -247,8 +236,7 @@ def _overlay_pass1(overlay_dir, filelist, dest_dir=os.sep,
 
 		if is_dir:
 			# recurse into subdir
-			_overlay_pass1(src_path, filelist, dest_path, ov_entry.importance,
-							handle_postscripts)
+			_overlay_pass1(src_path, filelist, dest_path, ov_entry.importance)
 
 
 def _overlay_pass2(filelist, filedict):
