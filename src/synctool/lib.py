@@ -296,7 +296,7 @@ def shell_command(cmd):
 	if not QUIET:
 		stdout('%srunning command %s' % (not_str, prettypath(cmd)))
 
-	verbose(dryrun_msg('  os.system("%s")' % prettypath(cmd), 'action'))
+	verbose(dryrun_msg('  os.system(%s)' % prettypath(cmd), 'action'))
 	unix_out('# run command %s' % cmdfile)
 	unix_out(cmd)
 	terse(TERSE_EXEC, cmdfile)
