@@ -163,12 +163,12 @@ def overlay_pass1(overlay_dir, filelist, dest_dir=os.sep,
 		src_stat = synctool.syncstat.SyncStat(src_path)
 
 		if src_stat.is_dir():
-			if synctool.param.IGNORE_DOTDIRS and entry[0] == '.':
+			if entry[0] == '.' and synctool.param.IGNORE_DOTDIRS:
 				continue
 
 			is_dir = True
 		else:
-			if synctool.param.IGNORE_DOTFILES and entry[0] == '.':
+			if entry[0] == '.' and synctool.param.IGNORE_DOTFILES:
 				continue
 
 			is_dir = False
