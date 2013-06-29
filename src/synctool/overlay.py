@@ -22,11 +22,6 @@ import synctool.syncstat
 OV_OVERLAY = 0
 OV_DELETE = 1
 
-# error codes for split_extension()
-OV_NOT_MY_GROUP = -1
-OV_NO_GROUP_EXT = -2
-OV_UNKNOWN_GROUP = -3
-
 # error codes for find() and find_terse()
 OV_FOUND = 0
 OV_NOT_FOUND = 1
@@ -57,7 +52,7 @@ class OverlayEntry(object):
 		self.is_post = is_post
 
 
-def split_extension(filename, require_extension):
+def _split_extension(filename, require_extension):
 	'''split a simple filename (without leading path)
 	Returns: instance of OverlayEntry
 	Returns: None on error or not one of my groups
@@ -157,7 +152,7 @@ def relevant_overlay_dirs(overlay_dir):
 	return a
 
 
-def overlay_pass1(overlay_dir, filelist, dest_dir=os.sep,
+def _overlay_pass1(overlay_dir, filelist, dest_dir=os.sep,
 	highest_importance=sys.maxint, handle_postscripts=True):
 	'''do pass #1 of 2; create list of source and dest files
 	Each element in the list is an instance of SyncObject'''
@@ -193,7 +188,7 @@ def overlay_pass1(overlay_dir, filelist, dest_dir=os.sep,
 		if wildcard_match:
 			continue
 
-		ov_entry = split_extension(entry, not is_dir)
+		ov_entry = _split_extension(entry, not is_dir)
 		if not ov_entry:
 			# either not a relevant group (skip it)
 			# or an error occurred (error message already printed)
@@ -248,11 +243,11 @@ def overlay_pass1(overlay_dir, filelist, dest_dir=os.sep,
 
 		if is_dir:
 			# recurse into subdir
-			overlay_pass1(src_path, filelist, dest_path, ov_entry.importance,
+			_overlay_pass1(src_path, filelist, dest_path, ov_entry.importance,
 							handle_postscripts)
 
 
-def overlay_pass2(filelist, filedict):
+def _overlay_pass2(filelist, filedict):
 	'''do pass #2 of 2; create dictionary of destination paths from list
 	Each element in the dictionary is an instance of SyncObject'''
 
@@ -296,7 +291,7 @@ def overlay_pass2(filelist, filedict):
 		filedict[entry.dest_path] = entry
 
 
-def load_overlay_tree():
+def _load_overlay_tree():
 	'''scans all overlay dirs in and loads them into OVERLAY_DICT
 	which is a dict indexed by destination path, and every element
 	in OVERLAY_DICT is an instance of SyncObject
@@ -318,10 +313,10 @@ def load_overlay_tree():
 
 	# do pass #1 for multiple overlay dirs: load them into filelist
 	for (d, importance) in relevant_overlay_dirs(synctool.param.OVERLAY_DIR):
-		overlay_pass1(d, filelist, os.sep, importance)
+		_overlay_pass1(d, filelist, os.sep, importance)
 
 	# run pass #2 : 'squash' filelist into OVERLAY_DICT
-	overlay_pass2(filelist, OVERLAY_DICT)
+	_overlay_pass2(filelist, OVERLAY_DICT)
 
 	# sort the filelist
 	OVERLAY_FILES = OVERLAY_DICT.keys()
@@ -330,7 +325,7 @@ def load_overlay_tree():
 	OVERLAY_LOADED = True
 
 
-def load_delete_tree():
+def _load_delete_tree():
 	'''scans all delete dirs in and loads them into DELETE_DICT
 	which is a dict indexed by destination path, and every element
 	in DELETE_DICT is an instance of SyncObject
@@ -350,10 +345,10 @@ def load_delete_tree():
 
 	# do pass #1 for multiple delete dirs: load them into filelist
 	for (d, importance) in relevant_overlay_dirs(synctool.param.DELETE_DIR):
-		overlay_pass1(d, filelist, os.sep, importance)
+		_overlay_pass1(d, filelist, os.sep, importance)
 
 	# run pass #2 : 'squash' filelist into OVERLAY_DICT
-	overlay_pass2(filelist, DELETE_DICT)
+	_overlay_pass2(filelist, DELETE_DICT)
 
 	# sort the filelist
 	DELETE_FILES = DELETE_DICT.keys()
@@ -366,7 +361,7 @@ def postscript_for_path(src, dest):
 	'''return the .post script for a given source and destination path'''
 
 	if not OVERLAY_LOADED:
-		load_overlay_tree()
+		_load_overlay_tree()
 
 	# the trigger for .post scripts is the source path of
 	# the script with the .post and group extensions stripped off
@@ -385,17 +380,17 @@ def postscript_for_path(src, dest):
 	return None
 
 
-def select_tree(treedef):
+def _select_tree(treedef):
 	'''Returns (dict, filelist) for the corresponding treedef number'''
 
 	if treedef == OV_OVERLAY:
-		load_overlay_tree()
+		_load_overlay_tree()
 		return (OVERLAY_DICT, OVERLAY_FILES)
 
 	elif treedef == OV_DELETE:
 		# overlay_tree is needed for .post scripts on dirs that change
-		load_overlay_tree()
-		load_delete_tree()
+		_load_overlay_tree()
+		_load_delete_tree()
 		return (DELETE_DICT, DELETE_FILES)
 
 	raise RuntimeError, 'unknown treedef %d' % treedef
@@ -406,7 +401,7 @@ def find(treedef, dest_path):
 	Return value is a tuple: (SyncObject, OV_FOUND)
 	Return value is (None, OV_NOT_FOUND) if source does not exist'''
 
-	(tree_dict, filelist) = select_tree(treedef)
+	(tree_dict, filelist) = _select_tree(treedef)
 
 	if not tree_dict.has_key(dest_path):
 		return (None, OV_NOT_FOUND)
@@ -421,7 +416,7 @@ def find_terse(treedef, terse_path):
 	Return value is (None, OV_FOUND_MULTIPLE) if multiple sources
 	are possible'''
 
-	(tree_dict, filelist) = select_tree(treedef)
+	(tree_dict, filelist) = _select_tree(treedef)
 
 	idx = terse_path.find('...')
 	if idx == -1:
@@ -483,7 +478,7 @@ def visit(treedef, callback):
 	'''call the callback function on every entry in the tree
 	callback will called with one argument: the SyncObject'''
 
-	(tree_dict, filelist) = select_tree(treedef)
+	(tree_dict, filelist) = _select_tree(treedef)
 
 	# now call the callback function
 	#
