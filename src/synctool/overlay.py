@@ -249,33 +249,7 @@ def _overlay_pass2(filelist, filedict):
 		if filedict.has_key(entry.dest_path):
 			entry2 = filedict[entry.dest_path]
 
-			if entry.importance < entry2.importance:
-				# this group is more important, so override it
-				del filedict[entry.dest_path]
-				entry2 = None
-
-			# duplicate paths are a problem, unless they are directories
-			# They are easy to fix however, just assign the right extension
-			elif ((not (entry.src_stat.is_dir() and
-				entry2.src_stat.is_dir())) and
-				entry.importance == entry2.importance):
-
-				if synctool.param.TERSE:
-					synctool.lib.terse(synctool.lib.TERSE_ERROR,
-								'duplicate source paths in repository for:')
-					synctool.lib.terse(synctool.lib.TERSE_ERROR,
-										entry.src_path)
-					synctool.lib.terse(synctool.lib.TERSE_ERROR,
-										entry2.src_path)
-				else:
-					stderr('error: duplicate source paths in repository '
-							'for:\n'
-							'error: %s\n'
-							'error: %s\n' % (entry.print_src(),
-											entry2.print_src()))
-				continue
-
-			else:
+			if entry.importance > entry2.importance:
 				# this group is less important, skip it
 				continue
 
