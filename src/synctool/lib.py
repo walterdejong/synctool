@@ -186,29 +186,28 @@ def terse_path(path, maxlen = 55):
 	return path
 
 
-def dryrun_msg(s, action='update'):
-	'''print a "dry run" message filled to (almost) 80 chars
-	so that it looks nice on the terminal'''
+def dryrun_msg(msg):
+	'''print a "dry run" message filled to (almost) 80 chars'''
 
 	if not DRY_RUN:
-		return s
+		return msg
 
-	l1 = len(s) + 4
+	l1 = len(msg) + 4
 
-	msg = '# dry run, %s not performed' % action
-	l2 = len(msg)
+	add = '# dry run'
+	l2 = len(add)
 
-	if l1 + l2 <= 79:
-		return s + (' ' * (79 - (l1 + l2))) + msg
+	i = 0
+	while i < 4:
+		# format output; align columns by steps of 20
+		col = 79 + i * 20
+		if l1 + l2 <= col:
+			return msg + (' ' * (col - (l1 + l2))) + add
 
-	if l1 + 13 <= 79:
-		# message is long, but we can shorten and it will fit on a line
-		msg = '# dry run'
-		l2 = 9
-		return s + (' ' * (79 - (l1 + l2))) + msg
+		i += 1
 
-	# don't bother, return a long message
-	return s + '    ' + msg
+	# else return a longer message
+	return msg + '    ' + add
 
 
 def openlog():
@@ -296,7 +295,7 @@ def shell_command(cmd):
 	if not QUIET:
 		stdout('%srunning command %s' % (not_str, prettypath(cmd)))
 
-	verbose(dryrun_msg('  os.system(%s)' % prettypath(cmd), 'action'))
+	verbose(dryrun_msg('  os.system(%s)' % prettypath(cmd)))
 	unix_out('# run command %s' % cmdfile)
 	unix_out(cmd)
 	terse(TERSE_EXEC, cmdfile)

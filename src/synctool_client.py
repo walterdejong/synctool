@@ -180,7 +180,6 @@ def _erase_saved_callback(obj, post_dict, dir_changed=False):
 	# .saved directories will be removed, but only when they are empty
 
 	if obj.dest_stat.exists():
-		stdout(dryrun_msg('deleting %s' % obj.dest_path, 'delete'))
 		vnode = obj.vnode_dest_obj()
 		vnode.harddelete()
 		return True, True

@@ -63,7 +63,7 @@ class SyncPkg(object):
 
 	def upgrade(self):
 		msg = 'upgrading packages'
-		verbose(dryrun_msg(msg, 'upgrade'))
+		verbose(dryrun_msg(msg))
 
 		# log the upgrade action ...
 		# don't know which packages are upgraded here, sorry

@@ -43,8 +43,7 @@ class VNode(object):
 	def move_saved(self):
 		'''move existing entry to .saved'''
 
-		verbose(dryrun_msg('saving %s as %s.saved' % (self.name, self.name),
-							'save'))
+		verbose(dryrun_msg('saving %s as %s.saved' % (self.name, self.name)))
 		unix_out('mv %s %s.saved' % (self.name, self.name))
 
 		if not synctool.lib.DRY_RUN:
@@ -60,7 +59,12 @@ class VNode(object):
 	def harddelete(self):
 		'''delete existing entry'''
 
-		stdout(dryrun_msg('deleting %s' % self.name, 'delete'))
+		if synctool.lib.DRY_RUN:
+			not_str = 'not '
+		else:
+			not_str = ''
+
+		stdout('%sdeleting %s' % (not_str, self.name))
 		unix_out('rm %s' % self.name)
 		terse(synctool.lib.TERSE_DELETE, self.name)
 
@@ -313,9 +317,14 @@ class VNodeDir(VNode):
 	def harddelete(self):
 		'''delete directory'''
 
-		stdout(dryrun_msg('deleting %s' % self.name, 'delete'))
+		if synctool.lib.DRY_RUN:
+			not_str = 'not '
+		else:
+			not_str = ''
+
+		stdout('%sremoving %s' % (not_str, self.name + os.sep))
 		unix_out('rmdir %s' % self.name)
-		terse(synctool.lib.TERSE_DELETE, self.name)
+		terse(synctool.lib.TERSE_DELETE, self.name + os.sep)
 
 		if not synctool.lib.DRY_RUN and not synctool.param.BACKUP_COPIES:
 			verbose('  os.rmdir(%s)' % self.name)
