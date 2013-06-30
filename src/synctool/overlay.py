@@ -55,6 +55,7 @@ GROUP_ALL = 1000
 # used with find() and _find_callback() function
 _SEARCH = None
 _FOUND = None
+_POST_DICT = None
 
 
 class OverlayObject(object):
@@ -379,10 +380,11 @@ def visit(overlay, callback):
 def _find_callback(obj, post_dict, dir_changed=False):
 	'''callback function used with find()'''
 
-	global _FOUND
+	global _FOUND, _POST_DICT
 
 	if obj.dest_path == _SEARCH:
 		_FOUND = obj
+		_POST_DICT = post_dict
 		return False, False		# signal quick exit
 
 	return True, False
@@ -390,18 +392,20 @@ def _find_callback(obj, post_dict, dir_changed=False):
 
 def find(overlay, dest_path):
 	'''search repository for source of dest_path
-	Returns the SyncObject, or None if not found'''
+	Returns two values: SyncObject, post_dict
+	or None, None if not found'''
 
-	global _SEARCH, _FOUND
+	global _SEARCH, _FOUND, _POST_DICT
 
 	# TODO handle terse paths
 
 	_SEARCH = dest_path
 	_FOUND = None
+	_POST_DICT = None
 
 	visit(overlay, _find_callback)
 
-	return _FOUND
+	return _FOUND, _POST_DICT
 
 
 # EOB
