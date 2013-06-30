@@ -91,18 +91,6 @@ def run_command_in_dir(dest_dir, cmd):
 			stderr('error changing directory to %s: %s' % (cwd, reason))
 
 
-def _sort_directory_pair(a, b):
-	'''sort function for directory pairs
-	a and b are directory pair tuples: (src, dest)
-	sort the deepest destination directories first'''
-
-	n = -cmp(len(a[1]), len(b[1]))
-	if not n:
-		return cmp(a[1], b[1])
-
-	return n
-
-
 def _run_post(obj, post_dict):
 	'''run the .post script that goes with the object'''
 
@@ -158,8 +146,10 @@ def _delete_callback(obj, post_dict, dir_changed=False):
 
 	# don't delete directories
 	if obj.src_stat.is_dir():
-		# FIXME handle .post script on parent dir
 #		verbose('refusing to delete directory %s' % (obj.dest_path + os.sep))
+		if dir_changed:
+			_run_post(obj, post_dict)
+
 		return True, False
 
 	if obj.dest_stat.is_dir():
