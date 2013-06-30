@@ -33,13 +33,6 @@ ACTION_REFERENCE = 3
 ORIG_UMASK = 022
 SINGLE_FILES = []
 
-# list of changed directories
-# This is for running .post scripts on changed directories
-# every element is a tuple: (src_path, dest_path)
-DIR_CHANGED = []
-
-CHANGED_DIRS = set()
-
 
 def run_command(cmd):
 	'''run a shell command'''
@@ -98,51 +91,7 @@ def run_command_in_dir(dest_dir, cmd):
 			stderr('error changing directory to %s: %s' % (cwd, reason))
 
 
-def run_post(src, dest):
-	'''run any on_update or .post script commands for destination path'''
-
-	if synctool.lib.NO_POST:
-		return
-
-	statbuf = synctool.syncstat.SyncStat(dest)
-	if statbuf.is_dir():
-		# directories will be handled later, so save this pair
-		pair = (src, dest)
-		DIR_CHANGED.append(pair)
-		return
-
-	dest_dir = os.path.dirname(dest)
-
-	# file has changed, run appropriate .post script
-	postscript = synctool.overlay.postscript_for_path(src, dest)
-	if postscript:
-		# temporarily restore original umask
-		# so the script runs with the umask set by the sysadmin
-		os.umask(ORIG_UMASK)
-		run_command_in_dir(dest_dir, postscript)
-		os.umask(077)
-
-	# content of directory was changed, so save this pair
-	pair = (os.path.dirname(src), dest_dir)
-	if not pair in DIR_CHANGED:
-		DIR_CHANGED.append(pair)
-
-
-def run_post_on_directory(src, dest):
-	'''run .post script for a changed directory'''
-
-	if synctool.lib.NO_POST:
-		return
-
-	# the script is executed with the changed dir as current working dir
-
-	# run appropriate .post script
-	postscript = synctool.overlay.postscript_for_path(src, dest)
-	if postscript:
-		run_command_in_dir(dest, postscript)
-
-
-def sort_directory_pair(a, b):
+def _sort_directory_pair(a, b):
 	'''sort function for directory pairs
 	a and b are directory pair tuples: (src, dest)
 	sort the deepest destination directories first'''
@@ -154,62 +103,48 @@ def sort_directory_pair(a, b):
 	return n
 
 
-def run_post_on_directories():
-	'''run pending .post scripts on directories that were changed'''
+def _run_post(obj, post_dict):
+	'''run the .post script that goes with the object'''
 
 	if synctool.lib.NO_POST:
 		return
 
-	global DIR_CHANGED
-
-	# sort by dest_dir with deepest dirs first
-	DIR_CHANGED.sort(sort_directory_pair)
-
-	# run .post scripts on every dir
-	# Note how you can have multiple sources for the same destination,
-	# and this triggers all .post scripts for those sources
-	for (src, dest) in DIR_CHANGED:
-		run_post_on_directory(src, dest)
-
-	# they have run, now cleanup DIR_CHANGED
-	DIR_CHANGED = {}
-
-
-def _run_post(obj, post_dict):
-	if synctool.lib.NO_POST:
+	if not post_dict.has_key(obj.dest_path):
 		return
 
 	# temporarily restore original umask
 	# so the script runs with the umask set by the sysadmin
 	os.umask(ORIG_UMASK)
-	run_command_in_dir(os.path.dirname(obj.dest_path),
-						post_dict[obj.dest_path])
+
+	if obj.dest_stat.is_dir():
+		# run in the directory itself
+		run_command_in_dir(obj.dest_path, post_dict[obj.dest_path])
+	else:
+		# run in the directory where the file is
+		run_command_in_dir(os.path.dirname(obj.dest_path),
+							post_dict[obj.dest_path])
 	os.umask(077)
 
 
-def _overlay_callback(obj, post_dict):
+def _overlay_callback(obj, post_dict, dir_changed=False):
 	'''compare files and run post-script if needed'''
-
-	global CHANGED_DIRS
 
 	verbose('checking %s' % obj.print_src())
 
 	if obj.src_stat.is_dir():
 		if not obj.check():
-			CHANGED_DIRS.add(obj.dest_path)
+			dir_changed = True
 
-		if obj.dest_path in CHANGED_DIRS and post_dict.has_key(obj.dest_path):
+		if dir_changed:
 			_run_post(obj, post_dict)
 
-		# dirs are run last; this means we can reset CHANGED_DIRS
-		CHANGED_DIRS = set()
-	else:
-		if not obj.check():
-			CHANGED_DIRS.add(os.path.dirname(obj.dest_path))
-			if post_dict.has_key(obj.dest_path):
-				_run_post(obj, post_dict)
+		return True, False
 
-	return True
+	if not obj.check():
+		_run_post(obj, post_dict)
+		return True, True
+
+	return True, False
 
 
 def overlay_files():
@@ -218,35 +153,35 @@ def overlay_files():
 	synctool.overlay.visit(synctool.param.OVERLAY_DIR, _overlay_callback)
 
 
-def _delete_callback(obj, post_dict):
+def _delete_callback(obj, post_dict, dir_changed=False):
 	'''delete files'''
 
 	# don't delete directories
 	if obj.src_stat.is_dir():
+		# FIXME handle .post script on parent dir
 #		verbose('refusing to delete directory %s' % (obj.dest_path + os.sep))
-		return True
+		return True, False
 
 	if obj.dest_stat.is_dir():
 		verbose('destination is a directory: %s, skipped' % obj.print_src())
-		return True
+		return True, False
 
 	verbose('checking %s' % obj.print_src())
 
 	if obj.dest_stat.exists():
-		# FIXME handle .post script on parent dir
 		vnode = obj.vnode_dest_obj()
 		vnode.harddelete()
-		if post_dict.has_key(obj.dest_path):
-			_run_post(obj, post_dict)
+		_run_post(obj, post_dict)
+		return True, True
 
-	return True
+	return True, False
 
 
 def delete_files():
 	synctool.overlay.visit(synctool.param.DELETE_DIR, _delete_callback)
 
 
-def _erase_saved_callback(obj, post_dict):
+def _erase_saved_callback(obj, post_dict, dir_changed=False):
 	'''erase *.saved backup files'''
 
 	obj.dest_path += '.saved'
@@ -258,8 +193,9 @@ def _erase_saved_callback(obj, post_dict):
 		stdout(dryrun_msg('deleting %s' % obj.dest_path, 'delete'))
 		vnode = obj.vnode_dest_obj()
 		vnode.harddelete()
+		return True, True
 
-	return True
+	return True, False
 
 
 def erase_saved():
@@ -278,14 +214,9 @@ def single_files(filename):
 		stderr('%s is not in the overlay tree' % filename)
 		return
 
-	# this is the same as _overlay_callback(), except
-	# that it also prints a message when all is OK
-	verbose('checking %s' % obj.print_src())
-
-	if not obj.check():
-		run_post(obj.src_path, obj.dest_path)
-		# FIXME what about .post script on the parent dir?
-	else:
+	# FIXME what about .post script?
+	ok, updated = _overlay_callback(obj, {})
+	if not updated:
 		stdout('%s is up to date' % obj.dest_path)
 		terse(synctool.lib.TERSE_OK, obj.dest_path)
 		unix_out('# %s is up to date\n' % obj.dest_path)
@@ -715,12 +646,9 @@ def main():
 		for single_file in SINGLE_FILES:
 			single_files(single_file)
 
-		run_post_on_directories()
-
 	else:
 		overlay_files()
 		delete_files()
-		run_post_on_directories()
 
 	unix_out('# EOB')
 

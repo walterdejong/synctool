@@ -250,8 +250,8 @@ def _sort_by_importance_post_first(item1, item2):
 
 
 def _walk_subtree(src_dir, dest_dir, duplicates, callback):
-	'''duplicates is a set that keeps us from selecting any duplicate
-	matches in the overlay tree'''
+	'''walk subtree under overlay/group/
+	duplicates is a set that keeps us from selecting any duplicate matches'''
 
 #	verbose('_walk_subtree(%s)' % src_dir)
 
@@ -286,6 +286,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, callback):
 	arr.sort(_sort_by_importance_post_first)
 
 	post_dict = {}
+	dir_changed = False
 
 	for obj, importance in arr:
 		obj.make(src_dir, dest_dir)
@@ -309,10 +310,17 @@ def _walk_subtree(src_dir, dest_dir, duplicates, callback):
 				# quick exit
 				return False
 
+			if obj.dest_path in duplicates:
+				# there already was a more important source for this dir
+				continue
+
+			duplicates.add(obj.dest_path)
+
 			# run callback on the directory itself
 			sync_obj = synctool.object.SyncObject(obj.src_path, obj.dest_path,
 											0, obj.src_stat, obj.dest_stat)
-			if not callback(sync_obj, post_dict):
+			ok, changed = callback(sync_obj, post_dict, dir_changed)
+			if not ok:
 				# quick exit
 				return False
 
@@ -340,9 +348,12 @@ def _walk_subtree(src_dir, dest_dir, duplicates, callback):
 
 		sync_obj = synctool.object.SyncObject(obj.src_path, obj.dest_path,
 										0, obj.src_stat, obj.dest_stat)
-		if not callback(sync_obj, post_dict):
+		ok, updated = callback(sync_obj, post_dict)
+		if not ok:
 			# quick exit
 			return False
+
+		dir_changed |= updated
 
 	return True
 
@@ -350,7 +361,8 @@ def _walk_subtree(src_dir, dest_dir, duplicates, callback):
 def visit(overlay, callback):
 	'''visit all entries in the overlay tree
 	overlay is either synctool.param.OVERLAY_DIR or synctool.param.DELETE_DIR
-	callback will called with arguments: (SyncObject, post_dict)'''
+	callback will called with arguments: (SyncObject, post_dict)
+	callback must return a two booleans: ok, updated'''
 
 	global GROUP_ALL
 
@@ -364,16 +376,16 @@ def visit(overlay, callback):
 			break
 
 
-def _find_callback(obj, post_dict):
+def _find_callback(obj, post_dict, dir_changed=False):
 	'''callback function used with find()'''
 
 	global _FOUND
 
 	if obj.dest_path == _SEARCH:
 		_FOUND = obj
-		return False	# signal quick exit
+		return False, False		# signal quick exit
 
-	return True
+	return True, False
 
 
 def find(overlay, dest_path):
