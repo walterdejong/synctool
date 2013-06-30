@@ -8,6 +8,36 @@
 #   License.
 #
 
+'''synctool.overlay
+
+	There are two ways of implementing an overlay procedure:
+	1. foreach direntry split the extension; get the 'importance'
+	   sort by importance
+	   keep the first entry with 'name', discard others (less important)
+
+	2. foreach direntry split the extension; get the 'importance'
+	   put entry into dictionary with destination as key
+	   If dictionary entry already exists, compare the importance, overrule
+
+	synctool 5 uses method 2. Older synctool uses method 1.
+
+	Consider this tree:
+	 $overlay/all/etc/ntp.conf._n1
+     $overlay/all/etc._n1/ntp.conf._all
+	 $overlay/all/etc._n1/ntp.conf._n1
+	 $overlay/n1/etc/ntp.conf._all
+	 $overlay/n1/etc/ntp.conf._n1
+	 $overlay/n1/etc._n1/ntp.conf._all
+	 $overlay/n1/etc._n1/ntp.conf._n1
+
+	Method 1 can not correctly resolve inter-directory duplicates.
+	Method 2 works most of the time, but may encounter difficulty
+	with inter-directory duplicates. The reason is that all of the
+	above listed entries have the same importance: 0.
+	Ideally synctool should select the final entry. This is only
+	correctly resolved when both method 1 and 2 are combined.
+'''
+
 import os
 import sys
 import fnmatch
