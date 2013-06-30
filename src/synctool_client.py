@@ -657,20 +657,25 @@ def main():
 
 		unix_out('')
 	else:
-		if not synctool.lib.QUIET:
-			verbose('my nodename: %s' % synctool.param.NODENAME)
-			verbose('my hostname: %s' % synctool.param.HOSTNAME)
-			verbose('rootdir: %s' % synctool.param.ROOTDIR)
-			verbose('')
+		if not synctool.lib.MASTERLOG:
+			# only print this when running stand-alone
+			if not synctool.lib.QUIET:
+				if synctool.lib.DRY_RUN:
+					stdout('DRY RUN, not doing any updates')
+					terse(synctool.lib.TERSE_DRYRUN, 'not doing any updates')
+				else:
+					stdout('--fix specified, applying changes')
+					terse(synctool.lib.TERSE_FIXING, ' applying changes')
 
-			if synctool.lib.DRY_RUN:
-				stdout('DRY RUN, not doing any updates')
-				terse(synctool.lib.TERSE_DRYRUN, 'not doing any updates')
 			else:
-				stdout('--fix specified, applying changes')
-				terse(synctool.lib.TERSE_FIXING, ' applying changes')
+				if synctool.lib.DRY_RUN:
+					verbose('DRY RUN, not doing any updates')
+				else:
+					verbose('--fix specified, applying changes')
 
-			verbose('')
+		verbose('my nodename: %s' % synctool.param.NODENAME)
+		verbose('my hostname: %s' % synctool.param.HOSTNAME)
+		verbose('rootdir: %s' % synctool.param.ROOTDIR)
 
 	os.environ['SYNCTOOL_NODENAME'] = synctool.param.NODENAME
 	os.environ['SYNCTOOL_ROOTDIR'] = synctool.param.ROOTDIR

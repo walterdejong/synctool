@@ -722,6 +722,21 @@ def main():
 
 	else:
 		# do regular synctool run
+		# first print message about DRY RUN
+		if not synctool.lib.QUIET:
+			if synctool.lib.DRY_RUN:
+				stdout('DRY RUN, not doing any updates')
+				terse(synctool.lib.TERSE_DRYRUN, 'not doing any updates')
+			else:
+				stdout('--fix specified, applying changes')
+				terse(synctool.lib.TERSE_FIXING, ' applying changes')
+
+		else:
+			if synctool.lib.DRY_RUN:
+				verbose('DRY RUN, not doing any updates')
+			else:
+				verbose('--fix specified, applying changes')
+
 		make_tempdir()
 		run_remote_synctool(address_list)
 
