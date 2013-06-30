@@ -60,7 +60,7 @@ class VNode(object):
 	def harddelete(self):
 		'''delete existing entry'''
 
-		verbose(dryrun_msg('deleting %s' % self.name, 'delete'))
+		stdout(dryrun_msg('deleting %s' % self.name, 'delete'))
 		unix_out('rm %s' % self.name)
 		terse(synctool.lib.TERSE_DELETE, self.name)
 
@@ -313,7 +313,7 @@ class VNodeDir(VNode):
 	def harddelete(self):
 		'''delete directory'''
 
-		verbose(dryrun_msg('deleting %s' % self.name, 'delete'))
+		stdout(dryrun_msg('deleting %s' % self.name, 'delete'))
 		unix_out('rmdir %s' % self.name)
 		terse(synctool.lib.TERSE_DELETE, self.name)
 

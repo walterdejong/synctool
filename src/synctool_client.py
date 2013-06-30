@@ -153,7 +153,7 @@ def _delete_callback(obj, post_dict, dir_changed=False):
 		return True, False
 
 	if obj.dest_stat.is_dir():
-		verbose('destination is a directory: %s, skipped' % obj.print_src())
+		stderr('destination is a directory: %s, skipped' % obj.print_src())
 		return True, False
 
 	verbose('checking %s' % obj.print_src())
@@ -201,8 +201,26 @@ def single_files(filename):
 	obj, post_dict = synctool.overlay.find(synctool.param.OVERLAY_DIR,
 											filename)
 	if not obj:
-		# TODO maybe in the delete tree?
-		stderr('%s is not in the overlay tree' % filename)
+		# maybe in the delete tree
+		obj, post_dict = synctool.overlay.find(synctool.param.DELETE_DIR,
+												filename)
+		if not obj:
+			stderr('%s is not in the overlay tree' % filename)
+			return
+
+		ok, updated = _delete_callback(obj, post_dict)
+		if updated:
+			# run .post on the parent dir, if it has a .post script
+			# the parent .post script was also passed in post_dict
+
+			obj.dest_path = os.path.dirname(obj.dest_path)
+			obj.dest_stat = synctool.syncstat.SyncStat(obj.dest_path)
+
+			if post_dict.has_key(obj.dest_path):
+				obj.src_path = post_dict[obj.dest_path]
+				obj.src_stat = synctool.syncstat.SyncStat(obj.src_path)
+				_run_post(obj, post_dict)
+
 		return
 
 	ok, updated = _overlay_callback(obj, post_dict)
