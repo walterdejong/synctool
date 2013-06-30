@@ -382,6 +382,8 @@ def find(overlay, dest_path):
 
 	global _SEARCH, _FOUND
 
+	# TODO handle terse paths
+
 	_SEARCH = dest_path
 	_FOUND = None
 
