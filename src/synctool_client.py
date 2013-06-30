@@ -198,13 +198,21 @@ def erase_saved():
 def single_files(filename):
 	'''check/update a single file'''
 
-	obj, post_dict = synctool.overlay.find(synctool.param.OVERLAY_DIR,
-											filename)
+	obj, post_dict = synctool.overlay.find_terse(synctool.param.OVERLAY_DIR,
+													filename)
 	if not obj:
+		if post_dict != None:
+			# multiple sources possible, message has already been printed
+			return
+
 		# maybe in the delete tree
-		obj, post_dict = synctool.overlay.find(synctool.param.DELETE_DIR,
-												filename)
+		obj, post_dict = synctool.overlay.find_terse(
+							synctool.param.DELETE_DIR, filename)
 		if not obj:
+			if post_dict != None:
+				# multiple sources possible, message has already been printed
+				return
+
 			stderr('%s is not in the overlay tree' % filename)
 			return
 
@@ -249,12 +257,20 @@ def single_erase_saved(filename):
 	if ext == '.saved':
 		filename = name
 
-	obj, post_dict = synctool.overlay.find(synctool.param.OVERLAY_DIR,
-											filename)
+	obj, post_dict = synctool.overlay.find_terse(synctool.param.OVERLAY_DIR,
+													filename)
 	if not obj:
-		obj, post_dict = synctool.overlay.find(synctool.param.DELETE_DIR,
-												filename)
+		if post_dict != None:
+			# multiple sources possible, message has already been printed
+			return
+
+		obj, post_dict = synctool.overlay.find_terse(
+							synctool.param.DELETE_DIR, filename)
 		if not obj:
+			if post_dict != None:
+				# multiple sources possible, message has already been printed
+				return
+
 			stderr('%s is not in the overlay tree' % filename)
 			return
 
@@ -264,12 +280,20 @@ def single_erase_saved(filename):
 def reference(filename):
 	'''show which source file in the repository synctool chooses to use'''
 
-	obj, post_dict = synctool.overlay.find(synctool.param.OVERLAY_DIR,
-											filename)
+	obj, post_dict = synctool.overlay.find_terse(synctool.param.OVERLAY_DIR,
+													filename)
 	if not obj:
-		obj, post_dict = synctool.overlay.find(synctool.param.DELETE_DIR,
-												filename)
+		if post_dict != None:
+			# multiple sources possible, message has already been printed
+			return
+
+		obj, post_dict = synctool.overlay.find_terse(
+							synctool.param.DELETE_DIR, filename)
 		if not obj:
+			if post_dict != None:
+				# multiple sources possible, message has already been printed
+				return
+
 			stderr('%s is not in the overlay tree' % filename)
 			return
 
@@ -287,9 +311,13 @@ def diff_files(filename):
 	# be sure that it doesn't do any updates
 	synctool.lib.DRY_RUN = True
 
-	obj, post_dict = synctool.overlay.find(synctool.param.OVERLAY_DIR,
-											filename)
+	obj, post_dict = synctool.overlay.find_terse(synctool.param.OVERLAY_DIR,
+													filename)
 	if not obj:
+		if post_dict != None:
+			# multiple sources possible, message has already been printed
+			return
+
 		stderr('%s is not in the overlay tree' % filename)
 		return
 

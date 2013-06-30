@@ -57,6 +57,11 @@ _SEARCH = None
 _FOUND = None
 _POST_DICT = None
 
+# used with _find_terse() and _find_terse_callback() function
+_TERSE_ENDING = None
+_TERSE_LEN = 0
+_TERSE_MATCHES = None
+
 
 class OverlayObject(object):
 	'''structure that represents an entry in the overlay/ tree'''
@@ -89,72 +94,6 @@ class OverlayObject(object):
 
 	def __repr__(self):
 		return self.src_path
-
-
-# TODO remove old find_terse()
-def find_terse(treedef, terse_path):
-	'''find the full source and dest paths for a terse destination path
-	Return value is a tuple (SyncObject, OV_FOUND)
-	Return value is (None, OV_NOT_FOUND) if source does not exist
-	Return value is (None, OV_FOUND_MULTIPLE) if multiple sources
-	are possible'''
-
-	(tree_dict, filelist) = _select_tree(treedef)
-
-	idx = terse_path.find('...')
-	if idx == -1:
-		if terse_path[:2] == '//':
-			terse_path = os.path.join(synctool.param.VAR_DIR,
-				terse_path[2:])
-
-		# this is not really a terse path, return a regular find()
-		return find(treedef, terse_path)
-
-	ending = terse_path[(idx+3):]
-
-	matches = []
-	len_ending = len(ending)
-
-	# do a stupid linear search and find all matches, which means
-	# keep on scanning even though you've already found a match ...
-	# but it must be done because we want to be sure that we have found
-	# the one perfect match
-	#
-	# A possibility to improve on the linear search would be to break
-	# the paths down into a in-memory directory tree and walk it from the
-	# leaves up to the root rather than from the root down to the leaves
-	# Yeah, well ...
-	#
-	for entry in filelist:
-		overlay_entry = tree_dict[entry]
-
-		l = len(overlay_entry.dest_path)
-		if l > len_ending:
-			# first do a quick test
-			if overlay_entry.dest_path[-1] != ending[-1]:
-				continue
-
-			# check the ending path
-			if overlay_entry.dest_path[(l - len_ending):] == ending:
-				matches.append(overlay_entry)
-
-	if not matches:
-		return (None, OV_NOT_FOUND)
-
-	if len(matches) > 1:
-		stderr('There are multiple possible sources for this terse path. '
-				'Pick one:')
-
-		n = 0
-		for overlay_entry in matches:
-			stderr('%2d. %s' % (n, overlay_entry.dest_path))
-			n += 1
-
-		return (None, OV_FOUND_MULTIPLE)
-
-	# good, there was only one match
-
-	return (matches[0], OV_FOUND)
 
 
 def _sort_by_importance(item1, item2):
@@ -411,6 +350,65 @@ def find(overlay, dest_path):
 	visit(overlay, _find_callback)
 
 	return _FOUND, _POST_DICT
+
+
+def _find_terse_callback(obj, post_dict, dir_changed=False):
+	'''callback function used with find_terse()'''
+
+	global _POST_DICT
+
+	l = len(obj.dest_path)
+	if l > _TERSE_LEN:
+		# first do a quick test
+		if obj.dest_path[-1] != _TERSE_ENDING[-1]:
+			return True, False
+
+		# check the ending path
+		if obj.dest_path[(l - _TERSE_LEN):] == _TERSE_ENDING:
+			_TERSE_MATCHES.append(obj)
+			_POST_DICT = post_dict
+			# keep on scanning to find all matches
+
+	return True, False
+
+
+def find_terse(overlay, terse_path):
+	'''find the full source and dest paths for a terse destination path
+	Returns two values: SyncObject, post_dict
+	or None, None if source does not exist
+	or None, {} if multiple sources are possible'''
+
+	global _TERSE_MATCHES, _TERSE_ENDING, _TERSE_LEN
+
+	idx = terse_path.find('...')
+	if idx == -1:
+		if terse_path[:2] == '//':
+			terse_path = os.path.join(synctool.param.VAR_DIR, terse_path[2:])
+
+		# this is not really a terse path, return a regular find()
+		return find(overlay, terse_path)
+
+	_TERSE_ENDING = terse_path[(idx+3):]
+	_TERSE_LEN = len(_TERSE_ENDING)
+	_TERSE_MATCHES = []
+
+	visit(overlay, _find_terse_callback)
+
+	if not _TERSE_MATCHES:
+		return None, None
+
+	if len(_TERSE_MATCHES) > 1:
+		stderr('There are multiple possible sources for this terse path.\n'
+				'Pick one full destination path:')
+		n = 1
+		for obj in _TERSE_MATCHES:
+			stderr('%2d. %s' % (n, obj.dest_path))
+			n += 1
+
+		return None, {}
+
+	# good, there was only one match
+	return _TERSE_MATCHES[0], _POST_DICT
 
 
 # EOB
