@@ -8,19 +8,7 @@
 #   License.
 #
 
-'''synctool.overlay
-
-	There are two ways of implementing an overlay procedure:
-	1. foreach direntry split the extension; get the 'importance'
-	   sort by importance
-	   keep the first entry with 'name', discard others (less important)
-
-	2. foreach direntry split the extension; get the 'importance'
-	   put entry into dictionary with destination as key
-	   If dictionary entry already exists, compare the importance, overrule
-
-	synctool 5 uses method 2. Older synctool uses method 1.
-	synctool 6 uses method 1 + 2.
+'''synctool.overlay maps the repository onto the root directory.
 
 	Consider this tree:
 	 $overlay/all/etc/ntp.conf._n1
@@ -31,12 +19,19 @@
 	 $overlay/n1/etc._n1/ntp.conf._all
 	 $overlay/n1/etc._n1/ntp.conf._n1
 
-	Method 1 can not correctly resolve inter-directory duplicates.
-	Method 2 works most of the time, but may encounter difficulty
-	with inter-directory duplicates. The reason is that all of the
-	above listed entries have the same importance: 0.
-	Ideally synctool should select the final entry. This is only
-	correctly resolved when both method 1 and 2 are combined.
+	[Ideally] synctool selects the final entry. It accomplishes this with
+	the following procedure:
+	 1. foreach direntry split the extension; get the 'importance'
+	 2. sort by importance
+	 3. first come, first served; first encountered entry is best choice
+	 4. register destination as 'already handled' (duplicate)
+	 5. if already handled, skip this entry
+
+	.post scripts are sorted in first so that a dictionary can be built
+	before it needs to be consulted. This dictionary only contains .post
+	scripts that are in the current directory. Additionally, if the current
+	directory itself has a .post script (which is in the parent directory),
+	then the .post script is passed in the dict as well.
 '''
 
 import os
@@ -340,8 +335,6 @@ def find(overlay, dest_path):
 	or None, None if not found'''
 
 	global _SEARCH, _FOUND, _POST_DICT
-
-	# TODO handle terse paths
 
 	_SEARCH = dest_path
 	_FOUND = None
