@@ -126,7 +126,7 @@ def _overlay_callback(obj, post_dict, dir_changed=False):
 		if dir_changed:
 			_run_post(obj, post_dict)
 
-		return True, False
+		return True, dir_changed
 
 	if not obj.check():
 		_run_post(obj, post_dict)
@@ -150,7 +150,7 @@ def _delete_callback(obj, post_dict, dir_changed=False):
 		if dir_changed:
 			_run_post(obj, post_dict)
 
-		return True, False
+		return True, dir_changed
 
 	if obj.dest_stat.is_dir():
 		stderr('destination is a directory: %s, skipped' % obj.print_src())
