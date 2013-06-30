@@ -634,7 +634,7 @@ class SyncObject(object):
 		if src_type != dest_type:
 			# entry is of a different file type
 			vnode = self.vnode_obj()
-			verbose('%s should be a %s' % (self.dest_path, vnode.typename()))
+			stdout('%s should be a %s' % (self.dest_path, vnode.typename()))
 			terse(synctool.lib.TERSE_WARNING, 'wrong type %s' %
 												self.dest_path)
 			log('fix type %s' % self.dest_path)
