@@ -38,6 +38,8 @@ SINGLE_FILES = []
 # every element is a tuple: (src_path, dest_path)
 DIR_CHANGED = []
 
+CHANGED_DIRS = set()
+
 
 def run_command(cmd):
 	'''run a shell command'''
@@ -173,13 +175,42 @@ def run_post_on_directories():
 	DIR_CHANGED = {}
 
 
-def _overlay_callback(obj):
+def _run_post(postscript, dest_dir):
+	if synctool.lib.NO_POST:
+		return
+
+	# temporarily restore original umask
+	# so the script runs with the umask set by the sysadmin
+	os.umask(ORIG_UMASK)
+	run_command_in_dir(dest_dir, postscript)
+	os.umask(077)
+
+
+def _overlay_callback(obj, post_dict):
 	'''compare files and run post-script if needed'''
+
+	global CHANGED_DIRS
 
 	verbose('checking %s' % obj.print_src())
 
-	if not obj.check():
-		run_post(obj.src_path, obj.dest_path)
+	if obj.src_stat.is_dir():
+		if not obj.check():
+			CHANGED_DIRS.add(obj.dest_path)
+
+		if obj.dest_path in CHANGED_DIRS and post_dict.has_key(obj.dest_path):
+			_run_post(post_dict[obj.dest_path], obj.dest_path)
+
+		# dirs are run last; this means we can reset CHANGED_DIRS
+		CHANGED_DIRS = set()
+	else:
+		if not obj.check():
+			CHANGED_DIRS.add(os.path.dirname(obj.dest_path))
+
+			if post_dict.has_key(obj.dest_path):
+				_run_post(post_dict[obj.dest_path],
+							os.path.dirname(obj.dest_path))
+
+	return True
 
 
 def overlay_files():
@@ -226,14 +257,8 @@ def single_files(filename):
 		stderr('missing filename')
 		return
 
-	(obj, err) = synctool.overlay.find_terse(synctool.overlay.OV_OVERLAY,
-											filename)
-	if err == synctool.overlay.OV_FOUND_MULTIPLE:
-		# multiple source possible
-		# possibilities have already been printed
-		sys.exit(1)
-
-	if err == synctool.overlay.OV_NOT_FOUND:
+	obj = synctool.overlay.find(filename)
+	if not obj:
 		stderr('%s is not in the overlay tree' % filename)
 		return
 
@@ -243,6 +268,7 @@ def single_files(filename):
 
 	if not obj.check():
 		run_post(obj.src_path, obj.dest_path)
+		# FIXME what about .post script on the parent dir?
 	else:
 		stdout('%s is up to date' % obj.dest_path)
 		terse(synctool.lib.TERSE_OK, obj.dest_path)
@@ -261,14 +287,8 @@ def single_erase_saved(filename):
 	if ext == '.saved':
 		filename = name
 
-	(obj, err) = synctool.overlay.find_terse(synctool.overlay.OV_OVERLAY,
-											filename)
-	if err == synctool.overlay.OV_FOUND_MULTIPLE:
-		# multiple source possible
-		# possibilities have already been printed
-		sys.exit(1)
-
-	if err == synctool.overlay.OV_NOT_FOUND:
+	obj = synctool.overlay.find(filename)
+	if not obj:
 		stderr('%s is not in the overlay tree' % filename)
 		return
 
@@ -282,14 +302,8 @@ def reference(filename):
 		stderr('missing filename')
 		return
 
-	(obj, err) = synctool.overlay.find_terse(synctool.overlay.OV_OVERLAY,
-											filename)
-	if err == synctool.overlay.OV_FOUND_MULTIPLE:
-		# multiple source possible
-		# possibilities have already been printed
-		sys.exit(1)
-
-	if err == synctool.overlay.OV_NOT_FOUND:
+	obj = synctool.overlay.find(filename)
+	if not obj:
 		stderr('%s is not in the overlay tree' % filename)
 		return
 
