@@ -41,8 +41,8 @@ import fnmatch
 import synctool.lib
 from synctool.lib import verbose, stderr, terse
 import synctool.object
+from synctool.object import SyncObject
 import synctool.param
-import synctool.syncstat
 
 # last index of MY_GROUPS
 GROUP_ALL = 1000
@@ -56,39 +56,6 @@ _POST_DICT = None
 _TERSE_ENDING = None
 _TERSE_LEN = 0
 _TERSE_MATCHES = None
-
-
-class OverlayObject(object):
-	'''structure that represents an entry in the overlay/ tree'''
-
-	def __init__(self, src_name, dest_name, is_post=False, no_ext=False):
-		'''src_name is simple filename without leading path
-		dest_name is the src_name without group extension'''
-
-		self.src_path = src_name
-		self.dest_path = dest_name
-		self.is_post = is_post
-		self.no_ext = no_ext
-		self.src_stat = self.dest_state = None
-
-	def make(self, src_dir, dest_dir):
-		'''make() fills in the full paths and stat structures'''
-
-		self.src_path = os.path.join(src_dir, self.src_path)
-		self.src_stat = synctool.syncstat.SyncStat(self.src_path)
-		self.dest_path = os.path.join(dest_dir, self.dest_path)
-		self.dest_stat = synctool.syncstat.SyncStat(self.dest_path)
-
-	def print_src(self):
-		'''pretty print my source path'''
-
-		if self.src_stat and self.src_stat.is_dir():
-			return synctool.lib.prettypath(self.src_path) + os.sep
-
-		return synctool.lib.prettypath(self.src_path)
-
-	def __repr__(self):
-		return self.src_path
 
 
 def _sort_by_importance(item1, item2):
@@ -120,24 +87,24 @@ def _toplevel(overlay):
 def _split_extension(filename, src_dir):
 	'''filename in the overlay tree, without leading path
 	src_dir is passed for the purpose of printing error messages
-	Returns tuple: OverlayObject, importance
+	Returns tuple: SyncObject, importance
 
 	Prereq: GROUP_ALL must be set to len(MY_GROUPS)-1'''
 
 	(name, ext) = os.path.splitext(filename)
 	if not ext:
-		return OverlayObject(filename, name, no_ext=True), GROUP_ALL
+		return SyncObject(filename, name, no_ext=True), GROUP_ALL
 
 	if ext == '.post':
 		# register generic .post script
-		return OverlayObject(filename, name, is_post=True), GROUP_ALL
+		return SyncObject(filename, name, is_post=True), GROUP_ALL
 
 	if ext[:2] != '._':
-		return OverlayObject(filename, filename, no_ext=True), GROUP_ALL
+		return SyncObject(filename, filename, no_ext=True), GROUP_ALL
 
 	ext = ext[2:]
 	if not ext:
-		return OverlayObject(filename, filename, no_ext=True), GROUP_ALL
+		return SyncObject(filename, filename, no_ext=True), GROUP_ALL
 
 	try:
 		importance = synctool.param.MY_GROUPS.index(ext)
@@ -161,9 +128,9 @@ def _split_extension(filename, src_dir):
 
 	if ext == '.post':
 		# register group-specific .post script
-		return OverlayObject(filename, name2, is_post=True), importance
+		return SyncObject(filename, name2, is_post=True), importance
 
-	return OverlayObject(filename, name), importance
+	return SyncObject(filename, name), importance
 
 
 def _sort_by_importance_post_first(item1, item2):
@@ -257,9 +224,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
 			duplicates.add(obj.dest_path)
 
 			# run callback on the directory itself
-			sync_obj = synctool.object.SyncObject(obj.src_path, obj.dest_path,
-											0, obj.src_stat, obj.dest_stat)
-			ok, changed = callback(sync_obj, post_dict, dir_changed)
+			ok, changed = callback(obj, post_dict, dir_changed)
 			if not ok:
 				# quick exit
 				return False
@@ -286,9 +251,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
 
 		duplicates.add(obj.dest_path)
 
-		sync_obj = synctool.object.SyncObject(obj.src_path, obj.dest_path,
-										0, obj.src_stat, obj.dest_stat)
-		ok, updated = callback(sync_obj, post_dict)
+		ok, updated = callback(obj, post_dict)
 		if not ok:
 			# quick exit
 			return False
