@@ -222,17 +222,15 @@ def single_files(filename):
 		unix_out('# %s is up to date\n' % obj.dest_path)
 	else:
 		# run .post on the parent dir, if it has a .post script
-		# Note that this may find a wrong .post script if it is missing
-		# here, but present in another subtree
-		# FIXME use a special subtree find()
-		obj, post_dict = synctool.overlay.find(synctool.param.OVERLAY_DIR,
-											os.path.dirname(obj.dest_path))
-		if not obj:
-			# odd, path not found ... silently exit
-			verbose('odd -- parent path not found')
-			return
+		# the parent .post script was also passed in post_dict
 
-		_run_post(obj, post_dict)
+		obj.dest_path = os.path.dirname(obj.dest_path)
+		obj.dest_stat = synctool.syncstat.SyncStat(obj.dest_path)
+
+		if post_dict.has_key(obj.dest_path):
+			obj.src_path = post_dict[obj.dest_path]
+			obj.src_stat = synctool.syncstat.SyncStat(obj.src_path)
+			_run_post(obj, post_dict)
 
 
 def single_erase_saved(filename):
