@@ -221,46 +221,60 @@ def overlay_files():
 def _delete_callback(obj, post_dict):
 	'''delete files'''
 
+	# don't delete directories
+	if obj.src_stat.is_dir():
+#		verbose('refusing to delete directory %s' % (obj.dest_path + os.sep))
+		return True
+
+	if obj.dest_stat.is_dir():
+		verbose('destination is a directory: %s, skipped' % obj.print_src())
+		return True
+
 	verbose('checking %s' % obj.print_src())
 
 	if obj.dest_stat.exists():
-		vnode = obj.vnode_obj()
+		# FIXME handle .post script on parent dir
+		vnode = obj.vnode_dest_obj()
 		vnode.harddelete()
 		if post_dict.has_key(obj.dest_path):
 			_run_post(obj, post_dict)
+
+	return True
 
 
 def delete_files():
 	synctool.overlay.visit(synctool.param.DELETE_DIR, _delete_callback)
 
 
-def _erase_saved_callback(obj):
+def _erase_saved_callback(obj, post_dict):
 	'''erase *.saved backup files'''
 
 	obj.dest_path += '.saved'
 	obj.dest_stat = synctool.syncstat.SyncStat(obj.dest_path)
 
+	# .saved directories will be removed, but only when they are empty
+
 	if obj.dest_stat.exists():
 		stdout(dryrun_msg('deleting %s' % obj.dest_path, 'delete'))
-		vnode = obj.vnode_obj()
+		vnode = obj.vnode_dest_obj()
 		vnode.harddelete()
+
+	return True
 
 
 def erase_saved():
 	'''List and delete *.saved backup files'''
 
 	synctool.overlay.visit(synctool.param.OVERLAY_DIR, _erase_saved_callback)
+	synctool.overlay.visit(synctool.param.DELETE_DIR, _erase_saved_callback)
 
 
 def single_files(filename):
 	'''check/update a single file'''
 
-	if not filename:
-		stderr('missing filename')
-		return
-
-	obj = synctool.overlay.find(filename)
+	obj = synctool.overlay.find(synctool.param.OVERLAY_DIR, filename)
 	if not obj:
+		# TODO maybe in the delete tree?
 		stderr('%s is not in the overlay tree' % filename)
 		return
 
@@ -280,34 +294,30 @@ def single_files(filename):
 def single_erase_saved(filename):
 	'''erase a single backup file'''
 
-	if not filename:
-		stderr('missing filename')
-		return
-
 	# maybe the user supplied a '.saved' filename
 	(name, ext) = os.path.splitext(filename)
 	if ext == '.saved':
 		filename = name
 
-	obj = synctool.overlay.find(filename)
+	obj = synctool.overlay.find(synctool.param.OVERLAY_DIR, filename)
 	if not obj:
-		stderr('%s is not in the overlay tree' % filename)
-		return
+		obj = synctool.overlay.find(synctool.param.DELETE_DIR, filename)
+		if not obj:
+			stderr('%s is not in the overlay tree' % filename)
+			return
 
-	_erase_saved_callback(obj)
+	_erase_saved_callback(obj, {})
 
 
 def reference(filename):
 	'''show which source file in the repository synctool chooses to use'''
 
-	if not filename:
-		stderr('missing filename')
-		return
-
-	obj = synctool.overlay.find(filename)
+	obj = synctool.overlay.find(synctool.param.OVERLAY_DIR, filename)
 	if not obj:
-		stderr('%s is not in the overlay tree' % filename)
-		return
+		obj = synctool.overlay.find(synctool.param.DELETE_DIR, filename)
+		if not obj:
+			stderr('%s is not in the overlay tree' % filename)
+			return
 
 	print obj.print_src()
 
@@ -323,14 +333,9 @@ def diff_files(filename):
 	# be sure that it doesn't do any updates
 	synctool.lib.DRY_RUN = True
 
-	(obj, err) = synctool.overlay.find_terse(synctool.overlay.OV_OVERLAY,
-											filename)
-	if err == synctool.overlay.OV_FOUND_MULTIPLE:
-		# multiple source possible
-		# possibilities have already been printed
-		sys.exit(1)
-
-	if err == synctool.overlay.OV_NOT_FOUND:
+	obj = synctool.overlay.find(synctool.param.OVERLAY_DIR, filename)
+	if not obj:
+		stderr('%s is not in the overlay tree' % filename)
 		return
 
 	verbose('%s %s %s' % (synctool.param.DIFF_CMD,
@@ -563,6 +568,14 @@ def get_options():
 			opt_diff = True
 			action = ACTION_DIFF
 			f = synctool.lib.strip_path(arg)
+			if not f:
+				stderr('missing filename')
+				sys.exit(1)
+
+			if f[0] != '/':
+				stderr('please supply a full destination path')
+				sys.exit(1)
+
 			if not f in SINGLE_FILES:
 				SINGLE_FILES.append(f)
 			continue
@@ -570,6 +583,14 @@ def get_options():
 		if opt in ('-1', '--single'):
 			opt_single = True
 			f = synctool.lib.strip_path(arg)
+			if not f:
+				stderr('missing filename')
+				sys.exit(1)
+
+			if f[0] != '/':
+				stderr('please supply a full destination path')
+				sys.exit(1)
+
 			if not f in SINGLE_FILES:
 				SINGLE_FILES.append(f)
 			continue
@@ -578,6 +599,14 @@ def get_options():
 			opt_reference = True
 			action = ACTION_REFERENCE
 			f = synctool.lib.strip_path(arg)
+			if not f:
+				stderr('missing filename')
+				sys.exit(1)
+
+			if f[0] != '/':
+				stderr('please supply a full destination path')
+				sys.exit(1)
+
 			if not f in SINGLE_FILES:
 				SINGLE_FILES.append(f)
 			continue

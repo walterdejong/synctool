@@ -359,7 +359,9 @@ def visit(overlay, callback):
 	duplicates = set()
 
 	for d in _toplevel(overlay):
-		_walk_subtree(d, os.sep, duplicates, callback)
+		if not _walk_subtree(d, os.sep, duplicates, callback):
+			# quick exit
+			break
 
 
 def _find_callback(obj, post_dict):
@@ -374,7 +376,7 @@ def _find_callback(obj, post_dict):
 	return True
 
 
-def find(dest_path):
+def find(overlay, dest_path):
 	'''search repository for source of dest_path
 	Returns the SyncObject, or None if not found'''
 
@@ -383,7 +385,7 @@ def find(dest_path):
 	_SEARCH = dest_path
 	_FOUND = None
 
-	visit(synctool.param.OVERLAY_DIR, _find_callback)
+	visit(overlay, _find_callback)
 
 	return _FOUND
 

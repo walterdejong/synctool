@@ -729,4 +729,42 @@ class SyncObject(object):
 		return None
 
 
+	def vnode_dest_obj(self):
+		'''create vnode object for this SyncObject's destination'''
+
+		exists = self.dest_stat.exists()
+
+		if self.dest_stat.is_file():
+			return VNodeFile(self.dest_path, self.src_stat, exists,
+								self.src_path)
+
+		if self.dest_stat.is_dir():
+			return VNodeDir(self.dest_path, self.src_stat, exists)
+
+		if self.dest_stat.is_link():
+			try:
+				oldpath = os.readlink(self.src_path)
+			except OSError, reason:
+				stderr('error reading symlink %s : %s' % (self.print_src(),
+															reason))
+				terse(synctool.lib.TERSE_FAIL, self.src_path)
+				return None
+
+			return VNodeLink(self.dest_path, self.src_stat, exists, oldpath)
+
+		if self.dest_stat.is_fifo():
+			return VNodeFifo(self.dest_path, self.src_stat, exists)
+
+		if self.dest_stat.is_chardev():
+			return VNodeChrDev(self.dest_path, self.src_stat, exists,
+								os.stat(self.src_path))
+
+		if self.dest_stat.is_blockdev():
+			return VNodeBlkDev(self.dest_path, self.src_stat, exists,
+								os.stat(self.src_path))
+
+		# error, can not handle file type of src_path
+		return None
+
+
 # EOB
