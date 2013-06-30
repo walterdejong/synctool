@@ -33,11 +33,6 @@ ACTION_REFERENCE = 3
 ORIG_UMASK = 022
 SINGLE_FILES = []
 
-# list of changed directories
-# This is for running .post scripts on changed directories
-# every element is a tuple: (src_path, dest_path)
-DIR_CHANGED = []
-
 
 def run_command(cmd):
 	'''run a shell command'''
@@ -96,202 +91,211 @@ def run_command_in_dir(dest_dir, cmd):
 			stderr('error changing directory to %s: %s' % (cwd, reason))
 
 
-def run_post(src, dest):
-	'''run any on_update or .post script commands for destination path'''
+def _run_post(obj, post_dict):
+	'''run the .post script that goes with the object'''
 
 	if synctool.lib.NO_POST:
 		return
 
-	statbuf = synctool.syncstat.SyncStat(dest)
-	if statbuf.is_dir():
-		# directories will be handled later, so save this pair
-		pair = (src, dest)
-		DIR_CHANGED.append(pair)
+	if not post_dict.has_key(obj.dest_path):
 		return
 
-	dest_dir = os.path.dirname(dest)
+	# temporarily restore original umask
+	# so the script runs with the umask set by the sysadmin
+	os.umask(ORIG_UMASK)
 
-	# file has changed, run appropriate .post script
-	postscript = synctool.overlay.postscript_for_path(src, dest)
-	if postscript:
-		# temporarily restore original umask
-		# so the script runs with the umask set by the sysadmin
-		os.umask(ORIG_UMASK)
-		run_command_in_dir(dest_dir, postscript)
-		os.umask(077)
-
-	# content of directory was changed, so save this pair
-	pair = (os.path.dirname(src), dest_dir)
-	if not pair in DIR_CHANGED:
-		DIR_CHANGED.append(pair)
+	if obj.dest_stat.is_dir():
+		# run in the directory itself
+		run_command_in_dir(obj.dest_path, post_dict[obj.dest_path])
+	else:
+		# run in the directory where the file is
+		run_command_in_dir(os.path.dirname(obj.dest_path),
+							post_dict[obj.dest_path])
+	os.umask(077)
 
 
-def run_post_on_directory(src, dest):
-	'''run .post script for a changed directory'''
-
-	if synctool.lib.NO_POST:
-		return
-
-	# the script is executed with the changed dir as current working dir
-
-	# run appropriate .post script
-	postscript = synctool.overlay.postscript_for_path(src, dest)
-	if postscript:
-		run_command_in_dir(dest, postscript)
-
-
-def sort_directory_pair(a, b):
-	'''sort function for directory pairs
-	a and b are directory pair tuples: (src, dest)
-	sort the deepest destination directories first'''
-
-	n = -cmp(len(a[1]), len(b[1]))
-	if not n:
-		return cmp(a[1], b[1])
-
-	return n
-
-
-def run_post_on_directories():
-	'''run pending .post scripts on directories that were changed'''
-
-	if synctool.lib.NO_POST:
-		return
-
-	global DIR_CHANGED
-
-	# sort by dest_dir with deepest dirs first
-	DIR_CHANGED.sort(sort_directory_pair)
-
-	# run .post scripts on every dir
-	# Note how you can have multiple sources for the same destination,
-	# and this triggers all .post scripts for those sources
-	for (src, dest) in DIR_CHANGED:
-		run_post_on_directory(src, dest)
-
-	# they have run, now cleanup DIR_CHANGED
-	DIR_CHANGED = {}
-
-
-def _overlay_callback(obj):
+def _overlay_callback(obj, post_dict, dir_changed=False):
 	'''compare files and run post-script if needed'''
 
 	verbose('checking %s' % obj.print_src())
 
+	if obj.src_stat.is_dir():
+		if not obj.check():
+			dir_changed = True
+
+		if dir_changed:
+			_run_post(obj, post_dict)
+
+		return True, dir_changed
+
 	if not obj.check():
-		run_post(obj.src_path, obj.dest_path)
+		_run_post(obj, post_dict)
+		return True, True
+
+	return True, False
 
 
 def overlay_files():
 	'''run the overlay function'''
 
-	synctool.overlay.visit(synctool.overlay.OV_OVERLAY, _overlay_callback)
+	synctool.overlay.visit(synctool.param.OVERLAY_DIR, _overlay_callback)
 
 
-def _delete_callback(obj):
+def _delete_callback(obj, post_dict, dir_changed=False):
 	'''delete files'''
 
+	# don't delete directories
+	if obj.src_stat.is_dir():
+#		verbose('refusing to delete directory %s' % (obj.dest_path + os.sep))
+		if dir_changed:
+			_run_post(obj, post_dict)
+
+		return True, dir_changed
+
+	if obj.dest_stat.is_dir():
+		stderr('destination is a directory: %s, skipped' % obj.print_src())
+		return True, False
+
+	verbose('checking %s' % obj.print_src())
+
 	if obj.dest_stat.exists():
-		vnode = obj.vnode_obj()
+		vnode = obj.vnode_dest_obj()
 		vnode.harddelete()
-		run_post(obj.src_path, obj.dest_path)
+		_run_post(obj, post_dict)
+		return True, True
+
+	return True, False
 
 
 def delete_files():
-	synctool.overlay.visit(synctool.overlay.OV_DELETE, _delete_callback)
+	synctool.overlay.visit(synctool.param.DELETE_DIR, _delete_callback)
 
 
-def _erase_saved_callback(obj):
+def _erase_saved_callback(obj, post_dict, dir_changed=False):
 	'''erase *.saved backup files'''
 
 	obj.dest_path += '.saved'
 	obj.dest_stat = synctool.syncstat.SyncStat(obj.dest_path)
 
+	# .saved directories will be removed, but only when they are empty
+
 	if obj.dest_stat.exists():
 		stdout(dryrun_msg('deleting %s' % obj.dest_path, 'delete'))
-		vnode = obj.vnode_obj()
+		vnode = obj.vnode_dest_obj()
 		vnode.harddelete()
+		return True, True
+
+	return True, False
 
 
 def erase_saved():
 	'''List and delete *.saved backup files'''
 
-	synctool.overlay.visit(synctool.overlay.OV_OVERLAY, _erase_saved_callback)
+	synctool.overlay.visit(synctool.param.OVERLAY_DIR, _erase_saved_callback)
+	synctool.overlay.visit(synctool.param.DELETE_DIR, _erase_saved_callback)
 
 
 def single_files(filename):
 	'''check/update a single file'''
 
-	if not filename:
-		stderr('missing filename')
+	obj, post_dict = synctool.overlay.find_terse(synctool.param.OVERLAY_DIR,
+													filename)
+	if not obj:
+		if post_dict != None:
+			# multiple sources possible, message has already been printed
+			return
+
+		# maybe in the delete tree
+		obj, post_dict = synctool.overlay.find_terse(
+							synctool.param.DELETE_DIR, filename)
+		if not obj:
+			if post_dict != None:
+				# multiple sources possible, message has already been printed
+				return
+
+			stderr('%s is not in the overlay tree' % filename)
+			return
+
+		ok, updated = _delete_callback(obj, post_dict)
+		if updated:
+			# run .post on the parent dir, if it has a .post script
+			# the parent .post script was also passed in post_dict
+
+			obj.dest_path = os.path.dirname(obj.dest_path)
+			obj.dest_stat = synctool.syncstat.SyncStat(obj.dest_path)
+
+			if post_dict.has_key(obj.dest_path):
+				obj.src_path = post_dict[obj.dest_path]
+				obj.src_stat = synctool.syncstat.SyncStat(obj.src_path)
+				_run_post(obj, post_dict)
+
 		return
 
-	(obj, err) = synctool.overlay.find_terse(synctool.overlay.OV_OVERLAY,
-											filename)
-	if err == synctool.overlay.OV_FOUND_MULTIPLE:
-		# multiple source possible
-		# possibilities have already been printed
-		sys.exit(1)
-
-	if err == synctool.overlay.OV_NOT_FOUND:
-		stderr('%s is not in the overlay tree' % filename)
-		return
-
-	# this is the same as _overlay_callback(), except
-	# that it also prints a message when all is OK
-	verbose('checking %s' % obj.print_src())
-
-	if not obj.check():
-		run_post(obj.src_path, obj.dest_path)
-	else:
+	ok, updated = _overlay_callback(obj, post_dict)
+	if not updated:
 		stdout('%s is up to date' % obj.dest_path)
 		terse(synctool.lib.TERSE_OK, obj.dest_path)
 		unix_out('# %s is up to date\n' % obj.dest_path)
+	else:
+		# run .post on the parent dir, if it has a .post script
+		# the parent .post script was also passed in post_dict
+
+		obj.dest_path = os.path.dirname(obj.dest_path)
+		obj.dest_stat = synctool.syncstat.SyncStat(obj.dest_path)
+
+		if post_dict.has_key(obj.dest_path):
+			obj.src_path = post_dict[obj.dest_path]
+			obj.src_stat = synctool.syncstat.SyncStat(obj.src_path)
+			_run_post(obj, post_dict)
 
 
 def single_erase_saved(filename):
 	'''erase a single backup file'''
-
-	if not filename:
-		stderr('missing filename')
-		return
 
 	# maybe the user supplied a '.saved' filename
 	(name, ext) = os.path.splitext(filename)
 	if ext == '.saved':
 		filename = name
 
-	(obj, err) = synctool.overlay.find_terse(synctool.overlay.OV_OVERLAY,
-											filename)
-	if err == synctool.overlay.OV_FOUND_MULTIPLE:
-		# multiple source possible
-		# possibilities have already been printed
-		sys.exit(1)
+	obj, post_dict = synctool.overlay.find_terse(synctool.param.OVERLAY_DIR,
+													filename)
+	if not obj:
+		if post_dict != None:
+			# multiple sources possible, message has already been printed
+			return
 
-	if err == synctool.overlay.OV_NOT_FOUND:
-		stderr('%s is not in the overlay tree' % filename)
-		return
+		obj, post_dict = synctool.overlay.find_terse(
+							synctool.param.DELETE_DIR, filename)
+		if not obj:
+			if post_dict != None:
+				# multiple sources possible, message has already been printed
+				return
 
-	_erase_saved_callback(obj)
+			stderr('%s is not in the overlay tree' % filename)
+			return
+
+	_erase_saved_callback(obj, post_dict)
 
 
 def reference(filename):
 	'''show which source file in the repository synctool chooses to use'''
 
-	if not filename:
-		stderr('missing filename')
-		return
+	obj, post_dict = synctool.overlay.find_terse(synctool.param.OVERLAY_DIR,
+													filename)
+	if not obj:
+		if post_dict != None:
+			# multiple sources possible, message has already been printed
+			return
 
-	(obj, err) = synctool.overlay.find_terse(synctool.overlay.OV_OVERLAY,
-											filename)
-	if err == synctool.overlay.OV_FOUND_MULTIPLE:
-		# multiple source possible
-		# possibilities have already been printed
-		sys.exit(1)
+		obj, post_dict = synctool.overlay.find_terse(
+							synctool.param.DELETE_DIR, filename)
+		if not obj:
+			if post_dict != None:
+				# multiple sources possible, message has already been printed
+				return
 
-	if err == synctool.overlay.OV_NOT_FOUND:
-		stderr('%s is not in the overlay tree' % filename)
-		return
+			stderr('%s is not in the overlay tree' % filename)
+			return
 
 	print obj.print_src()
 
@@ -307,14 +311,14 @@ def diff_files(filename):
 	# be sure that it doesn't do any updates
 	synctool.lib.DRY_RUN = True
 
-	(obj, err) = synctool.overlay.find_terse(synctool.overlay.OV_OVERLAY,
-											filename)
-	if err == synctool.overlay.OV_FOUND_MULTIPLE:
-		# multiple source possible
-		# possibilities have already been printed
-		sys.exit(1)
+	obj, post_dict = synctool.overlay.find_terse(synctool.param.OVERLAY_DIR,
+													filename)
+	if not obj:
+		if post_dict != None:
+			# multiple sources possible, message has already been printed
+			return
 
-	if err == synctool.overlay.OV_NOT_FOUND:
+		stderr('%s is not in the overlay tree' % filename)
 		return
 
 	verbose('%s %s %s' % (synctool.param.DIFF_CMD,
@@ -547,6 +551,14 @@ def get_options():
 			opt_diff = True
 			action = ACTION_DIFF
 			f = synctool.lib.strip_path(arg)
+			if not f:
+				stderr('missing filename')
+				sys.exit(1)
+
+			if f[0] != '/':
+				stderr('please supply a full destination path')
+				sys.exit(1)
+
 			if not f in SINGLE_FILES:
 				SINGLE_FILES.append(f)
 			continue
@@ -554,6 +566,14 @@ def get_options():
 		if opt in ('-1', '--single'):
 			opt_single = True
 			f = synctool.lib.strip_path(arg)
+			if not f:
+				stderr('missing filename')
+				sys.exit(1)
+
+			if f[0] != '/':
+				stderr('please supply a full destination path')
+				sys.exit(1)
+
 			if not f in SINGLE_FILES:
 				SINGLE_FILES.append(f)
 			continue
@@ -562,6 +582,14 @@ def get_options():
 			opt_reference = True
 			action = ACTION_REFERENCE
 			f = synctool.lib.strip_path(arg)
+			if not f:
+				stderr('missing filename')
+				sys.exit(1)
+
+			if f[0] != '/':
+				stderr('please supply a full destination path')
+				sys.exit(1)
+
 			if not f in SINGLE_FILES:
 				SINGLE_FILES.append(f)
 			continue
@@ -629,20 +657,25 @@ def main():
 
 		unix_out('')
 	else:
-		if not synctool.lib.QUIET:
-			verbose('my nodename: %s' % synctool.param.NODENAME)
-			verbose('my hostname: %s' % synctool.param.HOSTNAME)
-			verbose('rootdir: %s' % synctool.param.ROOTDIR)
-			verbose('')
+		if not synctool.lib.MASTERLOG:
+			# only print this when running stand-alone
+			if not synctool.lib.QUIET:
+				if synctool.lib.DRY_RUN:
+					stdout('DRY RUN, not doing any updates')
+					terse(synctool.lib.TERSE_DRYRUN, 'not doing any updates')
+				else:
+					stdout('--fix specified, applying changes')
+					terse(synctool.lib.TERSE_FIXING, ' applying changes')
 
-			if synctool.lib.DRY_RUN:
-				stdout('DRY RUN, not doing any updates')
-				terse(synctool.lib.TERSE_DRYRUN, 'not doing any updates')
 			else:
-				stdout('--fix specified, applying changes')
-				terse(synctool.lib.TERSE_FIXING, ' applying changes')
+				if synctool.lib.DRY_RUN:
+					verbose('DRY RUN, not doing any updates')
+				else:
+					verbose('--fix specified, applying changes')
 
-			verbose('')
+		verbose('my nodename: %s' % synctool.param.NODENAME)
+		verbose('my hostname: %s' % synctool.param.HOSTNAME)
+		verbose('rootdir: %s' % synctool.param.ROOTDIR)
 
 	os.environ['SYNCTOOL_NODENAME'] = synctool.param.NODENAME
 	os.environ['SYNCTOOL_ROOTDIR'] = synctool.param.ROOTDIR
@@ -670,12 +703,9 @@ def main():
 		for single_file in SINGLE_FILES:
 			single_files(single_file)
 
-		run_post_on_directories()
-
 	else:
 		overlay_files()
 		delete_files()
-		run_post_on_directories()
 
 	unix_out('# EOB')
 

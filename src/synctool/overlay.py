@@ -8,18 +8,7 @@
 #   License.
 #
 
-'''synctool.overlay
-
-	There are two ways of implementing an overlay procedure:
-	1. foreach direntry split the extension; get the 'importance'
-	   sort by importance
-	   keep the first entry with 'name', discard others (less important)
-
-	2. foreach direntry split the extension; get the 'importance'
-	   put entry into dictionary with destination as key
-	   If dictionary entry already exists, compare the importance, overrule
-
-	synctool 5 uses method 2. Older synctool uses method 1.
+'''synctool.overlay maps the repository onto the root directory.
 
 	Consider this tree:
 	 $overlay/all/etc/ntp.conf._n1
@@ -30,12 +19,19 @@
 	 $overlay/n1/etc._n1/ntp.conf._all
 	 $overlay/n1/etc._n1/ntp.conf._n1
 
-	Method 1 can not correctly resolve inter-directory duplicates.
-	Method 2 works most of the time, but may encounter difficulty
-	with inter-directory duplicates. The reason is that all of the
-	above listed entries have the same importance: 0.
-	Ideally synctool should select the final entry. This is only
-	correctly resolved when both method 1 and 2 are combined.
+	[Ideally] synctool selects the final entry. It accomplishes this with
+	the following procedure:
+	 1. foreach direntry split the extension; get the 'importance'
+	 2. sort by importance
+	 3. first come, first served; first encountered entry is best choice
+	 4. register destination as 'already handled' (duplicate)
+	 5. if already handled, skip this entry
+
+	.post scripts are sorted in first so that a dictionary can be built
+	before it needs to be consulted. This dictionary only contains .post
+	scripts that are in the current directory. Additionally, if the current
+	directory itself has a .post script (which is in the parent directory),
+	then the .post script is passed in the dict as well.
 '''
 
 import os
@@ -45,171 +41,129 @@ import fnmatch
 import synctool.lib
 from synctool.lib import verbose, stderr, terse
 import synctool.object
+from synctool.object import SyncObject
 import synctool.param
-import synctool.syncstat
 
-# enums for designating trees
-OV_OVERLAY = 0
-OV_DELETE = 1
+# last index of MY_GROUPS
+GROUP_ALL = 1000
 
-# error codes for find() and find_terse()
-OV_FOUND = 0
-OV_NOT_FOUND = 1
-OV_FOUND_MULTIPLE = 2
+# used with find() and _find_callback() function
+_SEARCH = None
+_FOUND = None
+_POST_DICT = None
 
-GROUP_ALL = 0
-OVERLAY_DICT = {}
-OVERLAY_FILES = []		# sorted list, index to OVERLAY_DICT{}
-OVERLAY_LOADED = False
-POST_SCRIPTS = {}		# dict indexed by trigger: full source path
-						# without final extension
-DELETE_DICT = {}
-DELETE_FILES = []
-DELETE_LOADED = False
+# used with _find_terse() and _find_terse_callback() function
+_TERSE_ENDING = None
+_TERSE_LEN = 0
+_TERSE_MATCHES = None
 
 
-class OverlayEntry(object):
-	'''structure that describes a source file under $overlay/'''
-
-	def __init__(self, name, importance, is_post):
-		'''name is the 'basename' of the source file
-		importance is the index to MY_GROUPS[] or
-		negative if it is not a relevant group
-		is_post is a boolean saying whether it is a .post script'''
-
-		self.name = name
-		self.importance = importance
-		self.is_post = is_post
+def _sort_by_importance(item1, item2):
+	'''item is a tuple (x, importance)'''
+	return cmp(item1[1], item2[1])
 
 
-def _split_extension(src_path, filename, require_extension):
-	'''split simple filename in name, extension
-	Returns: instance of OverlayEntry or None
-	on error or not one of my groups
+def _toplevel(overlay):
+	'''Returns sorted list of fullpath directories under overlay/'''
 
-	Prereq: GROUP_ALL must be set to MY_GROUPS.index('all')'''
+	arr = []
+	for entry in os.listdir(overlay):
+		fullpath = os.path.join(overlay, entry)
+		try:
+			importance = synctool.param.MY_GROUPS.index(entry)
+		except ValueError:
+			verbose('%s/ is not one of my groups, skipping' %
+					synctool.lib.prettypath(fullpath))
+			continue
 
-	# src_path is only passed for printing error messages, really
-	# I don't want to have to call os.path.basename() all the time
-	# when it is unnecessary (see it as a peephole optimisation)
+		arr.append((fullpath, importance))
 
-	require_extension = require_extension and synctool.param.REQUIRE_EXTENSION
+	arr.sort(_sort_by_importance)
+
+	# return list of only the directory names
+	return [x[0] for x in arr]
+
+
+def _split_extension(filename, src_dir):
+	'''filename in the overlay tree, without leading path
+	src_dir is passed for the purpose of printing error messages
+	Returns tuple: SyncObject, importance
+
+	Prereq: GROUP_ALL must be set to len(MY_GROUPS)-1'''
 
 	(name, ext) = os.path.splitext(filename)
 	if not ext:
-		if require_extension:
-			_no_group_ext(src_path)
-			return None
-
-		return OverlayEntry(filename, GROUP_ALL, False)
+		return SyncObject(filename, name, no_ext=True), GROUP_ALL
 
 	if ext == '.post':
 		# register generic .post script
-		return OverlayEntry(name, GROUP_ALL, True)
+		return SyncObject(filename, name, is_post=True), GROUP_ALL
 
 	if ext[:2] != '._':
-		if require_extension:
-			_no_group_ext(src_path)
-			return None
-
-		return OverlayEntry(filename, GROUP_ALL, False)
+		return SyncObject(filename, filename, no_ext=True), GROUP_ALL
 
 	ext = ext[2:]
 	if not ext:
-		if require_extension:
-			_no_group_ext(src_path)
-			return None
-
-		return OverlayEntry(filename, GROUP_ALL, False)
+		return SyncObject(filename, filename, no_ext=True), GROUP_ALL
 
 	try:
 		importance = synctool.param.MY_GROUPS.index(ext)
 	except ValueError:
 		if not ext in synctool.param.ALL_GROUPS:
-			_unknown_group(src_path)
-			return None
+			src_path = os.path.join(src_dir, filename)
+			if synctool.param.TERSE:
+				terse(synctool.lib.TERSE_ERROR, 'invalid group on %s' %
+												src_path)
+			else:
+				stderr('unknown group on %s, skipped' %
+						synctool.lib.prettypath(src_path))
+			return None, -1
 
 		# it is not one of my groups
-		return None
+		verbose('skipping %s, it is not one of my groups' %
+				synctool.lib.prettypath(os.path.join(src_dir, filename)))
+		return None, -1
 
 	(name2, ext) = os.path.splitext(name)
 
 	if ext == '.post':
 		# register group-specific .post script
-		return OverlayEntry(name2, importance, True)
+		return SyncObject(filename, name2, is_post=True), importance
 
-	return OverlayEntry(name, importance, False)
-
-
-def _no_group_ext(src_path):
-	'''prints error message; group extension was required,
-	but no group extension was found on the source filename'''
-
-	if synctool.param.TERSE:
-		terse(synctool.lib.TERSE_ERROR, 'no group on %s' % src_path)
-	else:
-		stderr('no underscored group extension on %s, skipped' %
-			synctool.lib.prettypath(src_path))
+	return SyncObject(filename, name), importance
 
 
-def _unknown_group(src_path):
-	'''prints error message; source has an unknown group as extension'''
+def _sort_by_importance_post_first(item1, item2):
+	'''sort by importance, but always put .post scripts first'''
 
-	if synctool.param.TERSE:
-		terse(synctool.lib.TERSE_ERROR, 'invalid group on %s' % src_path)
-	else:
-		stderr('unknown group on %s, skipped' %
-				synctool.lib.prettypath(src_path))
+	obj1, importance1 = item1
+	obj2, importance2 = item2
 
+	if obj1.is_post:
+		if obj2.is_post:
+			return cmp(importance1, importance2)
 
-def relevant_overlay_dirs(overlay_dir):
-	'''return list of subdirs that are relevant groups
-	Return value is an array of pairs: (fullpath to dir, importance)'''
+		return -1
 
-	a = []
+	if obj2.is_post:
+		return 1
 
-	for entry in os.listdir(overlay_dir):
-		try:
-			importance = synctool.param.MY_GROUPS.index(entry)
-		except ValueError:
-			continue
-
-		if importance == -1:
-			verbose('dir %s/ is not one of my groups, skipping' % entry)
-			continue
-
-		d = os.path.join(overlay_dir, entry)
-		if os.path.isdir(d):
-			a.append((d, importance))
-			verbose('scanning %s/' % synctool.lib.prettypath(d))
-
-	return a
+	return cmp(importance1, importance2)
 
 
-def _overlay_pass1(overlay_dir, filelist, dest_dir=os.sep,
-	highest_importance=sys.maxint):
-	'''do pass #1 of 2; create list of source and dest files
-	Each element in the list is an instance of SyncObject'''
+def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
+	'''walk subtree under overlay/group/
+	duplicates is a set that keeps us from selecting any duplicate matches
+	post_dict holds .post scripts with destination as key'''
 
-#	verbose('overlay pass 1 %s/' % overlay_dir)
+#	verbose('_walk_subtree(%s)' % src_dir)
 
-	for entry in os.listdir(overlay_dir):
+	arr = []
+	for entry in os.listdir(src_dir):
 		if entry in synctool.param.IGNORE_FILES:
+			verbose('ignoring %s' %
+					synctool.lib.prettypath(os.path.join(src_dir, entry)))
 			continue
-
-		src_path = os.path.join(overlay_dir, entry)
-		src_stat = synctool.syncstat.SyncStat(src_path)
-
-		if src_stat.is_dir():
-			if entry[0] == '.' and synctool.param.IGNORE_DOTDIRS:
-				continue
-
-			is_dir = True
-		else:
-			if entry[0] == '.' and synctool.param.IGNORE_DOTFILES:
-				continue
-
-			is_dir = False
 
 		# check any ignored files with wildcards
 		# before any group extension is examined
@@ -217,272 +171,200 @@ def _overlay_pass1(overlay_dir, filelist, dest_dir=os.sep,
 		for wildcard_entry in synctool.param.IGNORE_FILES_WITH_WILDCARDS:
 			if fnmatch.fnmatchcase(entry, wildcard_entry):
 				wildcard_match = True
+				verbose('ignoring %s (pattern match)' %
+						synctool.lib.prettypath(os.path.join(src_dir, entry)))
 				break
 
 		if wildcard_match:
 			continue
 
-		ov_entry = _split_extension(src_path, entry, not is_dir)
-		if not ov_entry:
-			# either not a relevant group (skip it)
-			# or an error occurred (error message already printed)
+		obj, importance = _split_extension(entry, src_dir)
+		if not obj:
 			continue
 
-		if ov_entry.name in synctool.param.IGNORE_FILES:
-			continue
+		arr.append((obj, importance))
 
-		# inherit lower group level from parent directory
-		if ov_entry.importance > highest_importance:
-			ov_entry.importance = highest_importance
+	# sort with .post scripts first
+	# this ensures that post_dict will have the required script when needed
+	arr.sort(_sort_by_importance_post_first)
 
-		if ov_entry.is_post:
-			if not src_stat.is_exec():
-				if synctool.param.TERSE:
-					terse(synctool.lib.TERSE_WARNING, 'not exec %s' %
-														src_path)
-				else:
-					stderr('warning: .post script %s is not executable, '
-							'ignored' % synctool.lib.prettypath(src_path))
+	dir_changed = False
+
+	for obj, importance in arr:
+		obj.make(src_dir, dest_dir)
+
+		if obj.is_post:
+			if post_dict.has_key(obj.dest_path):
 				continue
 
-			# register .post script
-			# trigger is the source file that would trigger
-			# the .post script to run
-			trigger = os.path.join(overlay_dir, ov_entry.name)
+			post_dict[obj.dest_path] = obj.src_path
+			continue
 
-			if POST_SCRIPTS.has_key(trigger):
-				if (ov_entry.importance >=
-					POST_SCRIPTS[trigger].importance):
+		if obj.src_stat.is_dir():
+			if synctool.param.IGNORE_DOTDIRS:
+				name = os.path.basename(obj.src_path)
+				if name[0] == '.':
+					verbose('ignoring dotdir %s' % obj.print_src())
 					continue
 
-			POST_SCRIPTS[trigger] = synctool.object.SyncObject(src_path,
-										dest_dir, ov_entry.importance,
-										src_stat)
-			continue
+			# if there is a .post script on this dir, pass it on
+			subdir_post_dict = {}
+			if post_dict.has_key(obj.dest_path):
+				subdir_post_dict[obj.dest_path] = post_dict[obj.dest_path]
 
-		dest_path = os.path.join(dest_dir, ov_entry.name)
-		filelist.append(synctool.object.SyncObject(src_path, dest_path,
-						ov_entry.importance, src_stat))
+			if not _walk_subtree(obj.src_path, obj.dest_path, duplicates,
+									subdir_post_dict, callback):
+				# quick exit
+				return False
 
-		if is_dir:
-			# recurse into subdir
-			_overlay_pass1(src_path, filelist, dest_path, ov_entry.importance)
-
-
-def _overlay_pass2(filelist, filedict):
-	'''do pass #2 of 2; create dictionary of destination paths from list
-	Each element in the dictionary is an instance of SyncObject'''
-
-#	verbose('overlay pass 2')
-
-	for entry in filelist:
-		if filedict.has_key(entry.dest_path):
-			entry2 = filedict[entry.dest_path]
-
-			if entry.importance > entry2.importance:
-				# this group is less important, skip it
+			if obj.dest_path in duplicates:
+				# there already was a more important source for this dir
 				continue
 
-		# add or update filedict
-		filedict[entry.dest_path] = entry
+			duplicates.add(obj.dest_path)
+
+			# run callback on the directory itself
+			ok, changed = callback(obj, post_dict, dir_changed)
+			if not ok:
+				# quick exit
+				return False
+
+			continue
+
+		if synctool.param.IGNORE_DOTFILES:
+			name = os.path.basename(obj.src_path)
+			if name[0] == '.':
+				verbose('ignoring dotfile %s' % obj.print_src())
+				continue
+
+		if synctool.param.REQUIRE_EXTENSION and obj.no_ext:
+			if synctool.param.TERSE:
+				terse(synctool.lib.TERSE_ERROR, 'no group on %s' %
+													obj.src_path)
+			else:
+				stderr('no group extension on %s, skipped' % obj.print_src())
+			continue
+
+		if obj.dest_path in duplicates:
+			# there already was a more important source for this destination
+			continue
+
+		duplicates.add(obj.dest_path)
+
+		ok, updated = callback(obj, post_dict)
+		if not ok:
+			# quick exit
+			return False
+
+		dir_changed |= updated
+
+	return True
 
 
-def _load_overlay_tree():
-	'''scans all overlay dirs in and loads them into OVERLAY_DICT
-	which is a dict indexed by destination path, and every element
-	in OVERLAY_DICT is an instance of SyncObject
-	This also prepares POST_SCRIPTS'''
+def visit(overlay, callback):
+	'''visit all entries in the overlay tree
+	overlay is either synctool.param.OVERLAY_DIR or synctool.param.DELETE_DIR
+	callback will called with arguments: (SyncObject, post_dict)
+	callback must return a two booleans: ok, updated'''
 
-	global OVERLAY_DICT, OVERLAY_FILES, OVERLAY_LOADED, POST_SCRIPTS
 	global GROUP_ALL
 
-	if OVERLAY_LOADED:
-		return
-
-	OVERLAY_DICT = {}
-	POST_SCRIPTS = {}
-
-	# ensure that GROUP_ALL is set correctly
 	GROUP_ALL = len(synctool.param.MY_GROUPS) - 1
 
-	filelist = []
+	duplicates = set()
 
-	# do pass #1 for multiple overlay dirs: load them into filelist
-	for (d, importance) in relevant_overlay_dirs(synctool.param.OVERLAY_DIR):
-		_overlay_pass1(d, filelist, os.sep, importance)
-
-	# run pass #2 : 'squash' filelist into OVERLAY_DICT
-	_overlay_pass2(filelist, OVERLAY_DICT)
-
-	# sort the filelist
-	OVERLAY_FILES = OVERLAY_DICT.keys()
-	OVERLAY_FILES.sort()
-
-	OVERLAY_LOADED = True
+	for d in _toplevel(overlay):
+		if not _walk_subtree(d, os.sep, duplicates, {}, callback):
+			# quick exit
+			break
 
 
-def _load_delete_tree():
-	'''scans all delete dirs in and loads them into DELETE_DICT
-	which is a dict indexed by destination path, and every element
-	in DELETE_DICT is an instance of SyncObject
-	This also prepares POST_SCRIPTS that may be in the delete/ tree'''
+def _find_callback(obj, post_dict, dir_changed=False):
+	'''callback function used with find()'''
 
-	global DELETE_DICT, DELETE_FILES, DELETE_LOADED, GROUP_ALL
+	global _FOUND, _POST_DICT
 
-	if DELETE_LOADED:
-		return
+	if obj.dest_path == _SEARCH:
+		_FOUND = obj
+		_POST_DICT = post_dict
+		return False, False		# signal quick exit
 
-	DELETE_DICT = {}
-
-	# ensure that GROUP_ALL is set correctly
-	GROUP_ALL = len(synctool.param.MY_GROUPS) - 1
-
-	filelist = []
-
-	# do pass #1 for multiple delete dirs: load them into filelist
-	for (d, importance) in relevant_overlay_dirs(synctool.param.DELETE_DIR):
-		_overlay_pass1(d, filelist, os.sep, importance)
-
-	# run pass #2 : 'squash' filelist into OVERLAY_DICT
-	_overlay_pass2(filelist, DELETE_DICT)
-
-	# sort the filelist
-	DELETE_FILES = DELETE_DICT.keys()
-	DELETE_FILES.sort()
-
-	DELETE_LOADED = True
+	return True, False
 
 
-def postscript_for_path(src, dest):
-	'''return the .post script for a given source and destination path'''
+def find(overlay, dest_path):
+	'''search repository for source of dest_path
+	Returns two values: SyncObject, post_dict
+	or None, None if not found'''
 
-	if not OVERLAY_LOADED:
-		_load_overlay_tree()
+	global _SEARCH, _FOUND, _POST_DICT
 
-	# the trigger for .post scripts is the source path of
-	# the script with the .post and group extensions stripped off
-	# -- which is the same as taking the source dir and appending
-	# the dest basename
-	# This ensures that the .post script that is chosen, is always
-	# the one that is next to the source file in the overlay tree
-	# This is important; otherwise having multiple overlay trees
-	# could lead to ambiguity regarding what .post script to run
+	_SEARCH = dest_path
+	_FOUND = None
+	_POST_DICT = None
 
-	trigger = os.path.join(os.path.dirname(src), os.path.basename(dest))
+	visit(overlay, _find_callback)
 
-	if POST_SCRIPTS.has_key(trigger):
-		return POST_SCRIPTS[trigger].src_path
-
-	return None
+	return _FOUND, _POST_DICT
 
 
-def _select_tree(treedef):
-	'''Returns (dict, filelist) for the corresponding treedef number'''
+def _find_terse_callback(obj, post_dict, dir_changed=False):
+	'''callback function used with find_terse()'''
 
-	if treedef == OV_OVERLAY:
-		_load_overlay_tree()
-		return (OVERLAY_DICT, OVERLAY_FILES)
+	global _POST_DICT
 
-	elif treedef == OV_DELETE:
-		# overlay_tree is needed for .post scripts on dirs that change
-		_load_overlay_tree()
-		_load_delete_tree()
-		return (DELETE_DICT, DELETE_FILES)
+	l = len(obj.dest_path)
+	if l > _TERSE_LEN:
+		# first do a quick test
+		if obj.dest_path[-1] != _TERSE_ENDING[-1]:
+			return True, False
 
-	raise RuntimeError, 'unknown treedef %d' % treedef
+		# check the ending path
+		if obj.dest_path[(l - _TERSE_LEN):] == _TERSE_ENDING:
+			_TERSE_MATCHES.append(obj)
+			_POST_DICT = post_dict
+			# keep on scanning to find all matches
 
-
-def find(treedef, dest_path):
-	'''find the source for a full destination path
-	Return value is a tuple: (SyncObject, OV_FOUND)
-	Return value is (None, OV_NOT_FOUND) if source does not exist'''
-
-	(tree_dict, filelist) = _select_tree(treedef)
-
-	if not tree_dict.has_key(dest_path):
-		return (None, OV_NOT_FOUND)
-
-	return (tree_dict[dest_path], OV_FOUND)
+	return True, False
 
 
-def find_terse(treedef, terse_path):
+def find_terse(overlay, terse_path):
 	'''find the full source and dest paths for a terse destination path
-	Return value is a tuple (SyncObject, OV_FOUND)
-	Return value is (None, OV_NOT_FOUND) if source does not exist
-	Return value is (None, OV_FOUND_MULTIPLE) if multiple sources
-	are possible'''
+	Returns two values: SyncObject, post_dict
+	or None, None if source does not exist
+	or None, {} if multiple sources are possible'''
 
-	(tree_dict, filelist) = _select_tree(treedef)
+	global _TERSE_MATCHES, _TERSE_ENDING, _TERSE_LEN
 
 	idx = terse_path.find('...')
 	if idx == -1:
 		if terse_path[:2] == '//':
-			terse_path = os.path.join(synctool.param.VAR_DIR,
-				terse_path[2:])
+			terse_path = os.path.join(synctool.param.VAR_DIR, terse_path[2:])
 
 		# this is not really a terse path, return a regular find()
-		return find(treedef, terse_path)
+		return find(overlay, terse_path)
 
-	ending = terse_path[(idx+3):]
+	_TERSE_ENDING = terse_path[(idx+3):]
+	_TERSE_LEN = len(_TERSE_ENDING)
+	_TERSE_MATCHES = []
 
-	matches = []
-	len_ending = len(ending)
+	visit(overlay, _find_terse_callback)
 
-	# do a stupid linear search and find all matches, which means
-	# keep on scanning even though you've already found a match ...
-	# but it must be done because we want to be sure that we have found
-	# the one perfect match
-	#
-	# A possibility to improve on the linear search would be to break
-	# the paths down into a in-memory directory tree and walk it from the
-	# leaves up to the root rather than from the root down to the leaves
-	# Yeah, well ...
-	#
-	for entry in filelist:
-		overlay_entry = tree_dict[entry]
+	if not _TERSE_MATCHES:
+		return None, None
 
-		l = len(overlay_entry.dest_path)
-		if l > len_ending:
-			# first do a quick test
-			if overlay_entry.dest_path[-1] != ending[-1]:
-				continue
-
-			# check the ending path
-			if overlay_entry.dest_path[(l - len_ending):] == ending:
-				matches.append(overlay_entry)
-
-	if not matches:
-		return (None, OV_NOT_FOUND)
-
-	if len(matches) > 1:
-		stderr('There are multiple possible sources for this terse path. '
-				'Pick one:')
-
-		n = 0
-		for overlay_entry in matches:
-			stderr('%2d. %s' % (n, overlay_entry.dest_path))
+	if len(_TERSE_MATCHES) > 1:
+		stderr('There are multiple possible sources for this terse path.\n'
+				'Pick one full destination path:')
+		n = 1
+		for obj in _TERSE_MATCHES:
+			stderr('%2d. %s' % (n, obj.dest_path))
 			n += 1
 
-		return (None, OV_FOUND_MULTIPLE)
+		return None, {}
 
 	# good, there was only one match
-
-	return (matches[0], OV_FOUND)
-
-
-def visit(treedef, callback):
-	'''call the callback function on every entry in the tree
-	callback will called with one argument: the SyncObject'''
-
-	(tree_dict, filelist) = _select_tree(treedef)
-
-	# now call the callback function
-	#
-	# note that the order is important, so do not use
-	# "for obj in tree_dict: callback(obj)"
-
-	for dest_path in filelist:
-		callback(tree_dict[dest_path])
+	return _TERSE_MATCHES[0], _POST_DICT
 
 
 # EOB

@@ -60,7 +60,7 @@ class VNode(object):
 	def harddelete(self):
 		'''delete existing entry'''
 
-		verbose(dryrun_msg('deleting %s' % self.name, 'delete'))
+		stdout(dryrun_msg('deleting %s' % self.name, 'delete'))
 		unix_out('rm %s' % self.name)
 		terse(synctool.lib.TERSE_DELETE, self.name)
 
@@ -313,7 +313,7 @@ class VNodeDir(VNode):
 	def harddelete(self):
 		'''delete directory'''
 
-		verbose(dryrun_msg('deleting %s' % self.name, 'delete'))
+		stdout(dryrun_msg('deleting %s' % self.name, 'delete'))
 		unix_out('rmdir %s' % self.name)
 		terse(synctool.lib.TERSE_DELETE, self.name)
 
@@ -575,42 +575,41 @@ class VNodeBlkDev(VNode):
 class SyncObject(object):
 	'''a class holding the source path (file in the repository)
 	and the destination path (target file on the system).
-	The group number denotes the importance of the group.
 	The SyncObject caches any stat info'''
 
-	# importance is really the index of the file's group in MY_GROUPS[]
-	# a lower importance is more important;
-	# negative is invalid/irrelevant group
+	def __init__(self, src_name, dest_name, is_post=False, no_ext=False):
+		'''src_name is simple filename without leading path
+		dest_name is the src_name without group extension'''
 
-	# stat info is cached so you don't have to call os.stat() all the time
+		# booleans is_post and no_ext are used by the overlay code
 
-	# POST_SCRIPTS uses the same SyncObject class, but interprets src_path
-	# as the path of the .post script and dest_path as the destination
-	# directory where the script is to be run
+		self.src_path = src_name
+		self.dest_path = dest_name
+		self.is_post = is_post
+		self.no_ext = no_ext
+		self.src_stat = self.dest_state = None
 
-	def __init__(self, src, dest, importance, statbuf1=None, statbuf2=None):
-		self.src_path = src
-		if not statbuf1:
-			self.src_stat = synctool.syncstat.SyncStat(self.src_path)
-		else:
-			self.src_stat = statbuf1
+	def make(self, src_dir, dest_dir):
+		'''make() fills in the full paths and stat structures'''
 
-		self.dest_path = dest
-		if not statbuf2:
-			self.dest_stat = synctool.syncstat.SyncStat(self.dest_path)
-		else:
-			self.dest_stat = statbuf2
+		self.src_path = os.path.join(src_dir, self.src_path)
+		self.src_stat = synctool.syncstat.SyncStat(self.src_path)
+		self.dest_path = os.path.join(dest_dir, self.dest_path)
+		self.dest_stat = synctool.syncstat.SyncStat(self.dest_path)
 
-		self.importance = importance
+	def print_src(self):
+		'''pretty print my source path'''
 
+		if self.src_stat and self.src_stat.is_dir():
+			return synctool.lib.prettypath(self.src_path) + os.sep
+
+		return synctool.lib.prettypath(self.src_path)
 
 	def __repr__(self):
 		return '[<SyncObject>: (%s) (%s)]' % (self.src_path, self.dest_path)
 
-
 	def print_src(self):
 		return synctool.lib.prettypath(self.src_path)
-
 
 	def check(self):
 		'''check differences between src and dest,
@@ -690,7 +689,6 @@ class SyncObject(object):
 
 		return True
 
-
 	def vnode_obj(self):
 		'''create vnode object for this SyncObject'''
 
@@ -722,6 +720,43 @@ class SyncObject(object):
 								os.stat(self.src_path))
 
 		if self.src_stat.is_blockdev():
+			return VNodeBlkDev(self.dest_path, self.src_stat, exists,
+								os.stat(self.src_path))
+
+		# error, can not handle file type of src_path
+		return None
+
+	def vnode_dest_obj(self):
+		'''create vnode object for this SyncObject's destination'''
+
+		exists = self.dest_stat.exists()
+
+		if self.dest_stat.is_file():
+			return VNodeFile(self.dest_path, self.src_stat, exists,
+								self.src_path)
+
+		if self.dest_stat.is_dir():
+			return VNodeDir(self.dest_path, self.src_stat, exists)
+
+		if self.dest_stat.is_link():
+			try:
+				oldpath = os.readlink(self.src_path)
+			except OSError, reason:
+				stderr('error reading symlink %s : %s' % (self.print_src(),
+															reason))
+				terse(synctool.lib.TERSE_FAIL, self.src_path)
+				return None
+
+			return VNodeLink(self.dest_path, self.src_stat, exists, oldpath)
+
+		if self.dest_stat.is_fifo():
+			return VNodeFifo(self.dest_path, self.src_stat, exists)
+
+		if self.dest_stat.is_chardev():
+			return VNodeChrDev(self.dest_path, self.src_stat, exists,
+								os.stat(self.src_path))
+
+		if self.dest_stat.is_blockdev():
 			return VNodeBlkDev(self.dest_path, self.src_stat, exists,
 								os.stat(self.src_path))
 
