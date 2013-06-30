@@ -49,24 +49,8 @@ import synctool.object
 import synctool.param
 import synctool.syncstat
 
-# enums for designating trees
-OV_OVERLAY = 0
-OV_DELETE = 1
-
-# error codes for find() and find_terse()
-OV_FOUND = 0
-OV_NOT_FOUND = 1
-OV_FOUND_MULTIPLE = 2
-
-GROUP_ALL = 0
-OVERLAY_DICT = {}
-OVERLAY_FILES = []		# sorted list, index to OVERLAY_DICT{}
-OVERLAY_LOADED = False
-POST_SCRIPTS = {}		# dict indexed by trigger: full source path
-						# without final extension
-DELETE_DICT = {}
-DELETE_FILES = []
-DELETE_LOADED = False
+# last index of MY_GROUPS
+GROUP_ALL = 1000
 
 # used with find() and _find_callback() function
 _SEARCH = None
@@ -363,20 +347,14 @@ def _walk_subtree(src_dir, dest_dir, duplicates, callback):
 	return True
 
 
-def visit(treedef, callback):
-	'''call the callback function on every entry in the tree
-	callback will called with one argument: the SyncObject'''
+def visit(overlay, callback):
+	'''visit all entries in the overlay tree
+	overlay is either synctool.param.OVERLAY_DIR or synctool.param.DELETE_DIR
+	callback will called with arguments: (SyncObject, post_dict)'''
 
 	global GROUP_ALL
 
 	GROUP_ALL = len(synctool.param.MY_GROUPS) - 1
-
-	if treedef == OV_OVERLAY:
-		overlay = synctool.param.OVERLAY_DIR
-	elif treedef == OV_DELETE:
-		overlay = synctool.param.DELETE_DIR
-	else:
-		raise RuntimeError, 'bug: unknown treedef %d' % treedef
 
 	duplicates = set()
 
@@ -405,7 +383,7 @@ def find(dest_path):
 	_SEARCH = dest_path
 	_FOUND = None
 
-	visit(OV_OVERLAY, _find_callback)
+	visit(synctool.param.OVERLAY_DIR, _find_callback)
 
 	return _FOUND
 

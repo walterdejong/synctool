@@ -175,14 +175,15 @@ def run_post_on_directories():
 	DIR_CHANGED = {}
 
 
-def _run_post(postscript, dest_dir):
+def _run_post(obj, post_dict):
 	if synctool.lib.NO_POST:
 		return
 
 	# temporarily restore original umask
 	# so the script runs with the umask set by the sysadmin
 	os.umask(ORIG_UMASK)
-	run_command_in_dir(dest_dir, postscript)
+	run_command_in_dir(os.path.dirname(obj.dest_path),
+						post_dict[obj.dest_path])
 	os.umask(077)
 
 
@@ -198,17 +199,15 @@ def _overlay_callback(obj, post_dict):
 			CHANGED_DIRS.add(obj.dest_path)
 
 		if obj.dest_path in CHANGED_DIRS and post_dict.has_key(obj.dest_path):
-			_run_post(post_dict[obj.dest_path], obj.dest_path)
+			_run_post(obj, post_dict)
 
 		# dirs are run last; this means we can reset CHANGED_DIRS
 		CHANGED_DIRS = set()
 	else:
 		if not obj.check():
 			CHANGED_DIRS.add(os.path.dirname(obj.dest_path))
-
 			if post_dict.has_key(obj.dest_path):
-				_run_post(post_dict[obj.dest_path],
-							os.path.dirname(obj.dest_path))
+				_run_post(obj, post_dict)
 
 	return True
 
@@ -216,20 +215,23 @@ def _overlay_callback(obj, post_dict):
 def overlay_files():
 	'''run the overlay function'''
 
-	synctool.overlay.visit(synctool.overlay.OV_OVERLAY, _overlay_callback)
+	synctool.overlay.visit(synctool.param.OVERLAY_DIR, _overlay_callback)
 
 
-def _delete_callback(obj):
+def _delete_callback(obj, post_dict):
 	'''delete files'''
+
+	verbose('checking %s' % obj.print_src())
 
 	if obj.dest_stat.exists():
 		vnode = obj.vnode_obj()
 		vnode.harddelete()
-		run_post(obj.src_path, obj.dest_path)
+		if post_dict.has_key(obj.dest_path):
+			_run_post(obj, post_dict)
 
 
 def delete_files():
-	synctool.overlay.visit(synctool.overlay.OV_DELETE, _delete_callback)
+	synctool.overlay.visit(synctool.param.DELETE_DIR, _delete_callback)
 
 
 def _erase_saved_callback(obj):
@@ -247,7 +249,7 @@ def _erase_saved_callback(obj):
 def erase_saved():
 	'''List and delete *.saved backup files'''
 
-	synctool.overlay.visit(synctool.overlay.OV_OVERLAY, _erase_saved_callback)
+	synctool.overlay.visit(synctool.param.OVERLAY_DIR, _erase_saved_callback)
 
 
 def single_files(filename):
