@@ -21,8 +21,8 @@ synctool simplyfies things by working with the following concepts:
  * files are designated a group by means of filename extension
  * the 'overlay' directory tree contains the files and directories that should
    be copied (or 'synced') to the target host
- * when certain files are updated, you will want to execute a script
-   (eg, /etc/init.d/daemon restart)
+ * when certain files are updated, you will want to execute a command
+   (eg, `service daemon restart`)
  * synctool is easy to learn
 
 synctool does not hide UNIX from you.
