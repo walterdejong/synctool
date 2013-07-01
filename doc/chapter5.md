@@ -48,6 +48,8 @@ The lesson here is that `overlay/all/` is a nice catch-all directory, but
 it's maybe best left unused. It's perfectly OK for files to be tagged as
 `._all`, but they really should be placed in a group-specific overlay
 directory.
+synctool requires the `overlay/all` directory to exist, but we actually have
+this file in place: `overlay/all/DO_NOT_USE` and: `ignore DO_NOT_USE`.
 
 
 5.3 Use group extensions on directories sparingly
@@ -91,52 +93,7 @@ If you still want to manage the master with synctool, do as you must. Just be
 sure to call `dsh -X master reboot` when you want to reboot your cluster.
 
 
-5.5 Write templates for 'dynamic' config files
-----------------------------------------------
-There are a number of rather standard configuration files that require the
-IP address of a node to be listed. These are not particularly 'synctool
-friendly'. You are free to upload each and every unique instance of the
-config file in question into the repository, however, if your cluster is large
-this does not make your repository look very nice, nor does it make them
-any easier to handle. Instead, make a template and couple it with a `.post`
-script that calls `synctool-template` to generate the config file on the node.
-
-As an example, I will use a fictional snippet of config file, but this
-trick applies to things like an `sshd_config` with a specific `ListenAddress`
-in it, and network configuration files that have static IPs configured.
-
-    # fiction.conf.template._all
-    MyPort 22
-    MyIPAddress @IPADDR@
-    SomeOption no
-    PrintMotd yes
-
-And the accompanying `.post` script:
-
-    IPADDR=`ifconfig en0 | awk '/inet / { print $2 }'`
-    synctool-template -v IPADDR "$IPADDR" \
-        fiction.conf.template >fiction.conf
-    service fiction reload
-
-This example uses `ifconfig` to get the IP address of the node. You may also
-use the `ip addr` command, consult DNS or you might be able to use
-`synctool-config` to get what you need.
-
-In this case, you could also easily use the UNIX `sed` command. If you have
-multiple variables to replace, `synctool-template` is more easy.
-synctool-template accepts variables either from the command-line or from
-the shell environment.
-
-Now, when you want to change the configuration, edit the template file
-instead. synctool will see the change in the template, and update the
-template on the node. The change in the template will trigger the `.post`
-script to be run, thus generating the new config file on the node.
-
-It may sound complicated, but once you have this in place it will be very easy
-to change the config file as you like by using the template.
-
-
-5.6 Managing multiple clusters with one synctool
+5.5 Managing multiple clusters with one synctool
 ------------------------------------------------
 It is really easy to manage just one cluster with one synctool. This means
 that your repository will contain files that apply only to that cluster.
@@ -171,7 +128,7 @@ Decide for yourself what files should go under what directory, and what
 layout works best for you.
 
 
-5.7 Use a tiered setup for large clusters
+5.6 Use a tiered setup for large clusters
 -----------------------------------------
 If you have a large cluster consisting of hundreds or thousands (or maybe
 more) nodes, you will run into a scaling issue at the master node.

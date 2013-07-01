@@ -283,7 +283,70 @@ not shared with the master server, you can specify `rsync:no` in the config
 file.
 
 
-3.4 synctool-pkg, the synctool package manager
+3.4 Templates
+-------------
+For 'dynamic' config files, synctool has a feature called templates.
+There are a number of rather standard configuration files that (for example)
+require the IP address of a node to be listed. These are not particularly
+synctool friendly. You are free to upload each and every unique instance
+of the config file in question into the repository, however, if your cluster
+is large this does not make your repository look very nice, nor does it
+make them any easier to handle. Instead, make a template and couple it with
+a `._template.post` script that calls `synctool-template` to generate the
+config file on the node.
+
+As an example, I will use a fictional snippet of config file, but this
+trick applies to things like `sshd_config` with a specific `ListenAddress`
+in it, and network configuration files that have static IPs configured.
+
+    # fiction.conf._template
+    MyPort 22
+    MyIPAddress @IPADDR@
+    SomeOption no
+    PrintMotd yes
+
+And the accompanying `fiction.conf._template.post` script:
+
+    #! /bin/sh
+    IPADDR=`ifconfig en0 | awk '/inet / { print $2 }'`
+    export IPADDR
+    synctool-template "$1" >"$2"
+
+This example uses `ifconfig` to get the IP address of the node. You may also
+use the `ip addr` command, consult DNS or you might be able to use
+`synctool-config` to get what you need.
+
+The `synctool-template` command takes as input the template file ("`$1`")
+and redirects the output to a newly generated file ("`$2`"). The "`$2`"
+on the last line expands to `fiction.conf._nodename`.
+Hence, synctool generates a new config file in the repository. It does so
+even on dry runs; you can ask synctool to display a diff of `fiction.conf`
+even though it is templated.
+
+> Note _not_ to redirect the output of `synctool-template` directly over
+> the target file. Doing that is destructive and wrong; it defies synctool's
+> dry-run mode and keeps you from being able to review changes, a core
+> function of synctool.
+
+Instead of using `synctool-template`, you might use the UNIX `sed` command.
+If you have multiple variables to replace, `synctool-template` is more easy.
+synctool-template accepts variables either from the command-line or from
+the shell environment. Like with regular `.post` scripts, the environment
+variables `SYNCTOOL_NODE` and `SYNCTOOL_ROOT` are also present here.
+However _unlike_ regular `.post` scripts, template post scripts require a `#!`
+hashbang line. This is required for shell arguments (like "`$1`", "`$2`")
+to work.
+
+Now, when you want to change the configuration, edit the template file.
+synctool will fill in the template and see the difference with the target
+file.
+
+If you want to automatically reload or restart a service after updating
+`fiction.conf`, you'll also have to implement a regular `.post` script for
+that: `fiction.conf.post`.
+
+
+3.5 synctool-pkg, the synctool package manager
 -----------------------------------------------
 synctool comes with a package manager named `synctool-pkg`.
 Rather than being yet another package manager with its own format of packages,
@@ -353,7 +416,7 @@ If you want to further examine what synctool-pkg is doing, you may specify
 under the hood.
 
 
-3.5 Ignoring them: I'm not touching you
+3.6 Ignoring them: I'm not touching you
 ---------------------------------------
 By using directives in the `synctool.conf` file, synctool can be told to
 ignore certain files, nodes, or groups. These will be excluded, skipped.
@@ -372,7 +435,7 @@ is ignored:
     ignore_group broken
 
 
-3.6 Backup copies
+3.7 Backup copies
 -----------------
 For any file synctool updates, it keeps a backup copy around on the target
 node with the extension `.saved`. If you don't like this, you can tell
@@ -390,7 +453,7 @@ To erase a single `.saved` file, use option `--single` in combination with
 `--erase-saved`.
 
 
-3.7 Logging
+3.8 Logging
 -----------
 When using option `--fix` to apply changes, synctool logs the made changes
 to syslog on the master node. It provides a trace of what was changed on the
@@ -405,7 +468,7 @@ manual on how to do this. In the `contrib/` directory in the synctool source,
 you will find config files for use with `syslog-ng` and `logrotate`.
 
 
-3.8 About symbolic links
+3.9 About symbolic links
 ------------------------
 synctool requires all files in the repository to have an extension (well ...
 unless you changed the default configuration), and symbolic links must have
@@ -422,8 +485,8 @@ In the repository, `motd._red` is a red & dead symlink to `file`. On the
 target node, `/etc/motd` is going to be fine.
 
 
-3.9 Slow updates
-----------------
+3.10 Slow updates
+-----------------
 By default, synctool addresses the nodes in parallel, and they are running
 updates concurrently. In some cases, like when doing rolling upgrades,
 you will not want to have this parallelism. There are two easy ways around
@@ -446,7 +509,7 @@ The options `--numproc` and `--zzz` work for both `synctool` and `dsh`
 programs.
 
 
-3.10 Checking for updates
+3.11 Checking for updates
 -------------------------
 synctool can check whether a new version of synctool itself is available by
 using the option `--check-update` on the master node. You can check
@@ -457,7 +520,7 @@ These functions connect to the main website at [www.heiho.net/synctool][1].
 [1]: http://www.heiho.net/synctool/
 
 
-3.11 Running tasks with synctool
+3.12 Running tasks with synctool
 --------------------------------
 synctool's `dsh` command is ideal for running commands on groups of nodes.
 On occasion, you will also want to run custom scripts with `dsh`.
