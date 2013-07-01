@@ -543,7 +543,7 @@ def config_group(arr, configfile, lineno):
 				(configfile, lineno, group))
 		return 1
 
-	if group in ('all', 'none'):
+	if group in ('all', 'none', 'template'):
 		stderr("%s:%d: implicit group '%s' can not be redefined" %
 				(configfile, lineno, group))
 		return 1
@@ -607,6 +607,13 @@ def config_node(arr, configfile, lineno):
 					(configfile, lineno))
 			stderr("%s:%d: use 'ignore_node' to disable a node" %
 					(configfile, lineno))
+			return 1
+
+		if g == 'template':
+			stderr("%s:%d: illegal to use group 'template' "
+					"in node definition" % (configfile, lineno))
+			stderr("%s:%d: file extension _template is reserved for "
+					"template files" % (configfile, lineno))
 			return 1
 
 	if node in groups:
@@ -731,8 +738,9 @@ def config_ignore_node(arr, configfile, lineno):
 		if node == 'none':
 			continue
 
-		if node == 'all':
-			stderr("%s:%d: illegal to ignore 'all'" % (configfile, lineno))
+		if node in ('all', 'template'):
+			stderr("%s:%d: illegal to ignore '%s'" % (configfile, lineno,
+														node))
 			errors += 1
 			continue
 
@@ -760,8 +768,9 @@ def config_ignore_group(arr, configfile, lineno):
 		if group == 'none':
 			continue
 
-		if group == 'all':
-			stderr("%s:%d: illegal to ignore 'all'" % (configfile, lineno))
+		if group in ('all', 'template'):
+			stderr("%s:%d: illegal to ignore '%s'" % (configfile, lineno,
+														group))
 			errors += 1
 			continue
 
