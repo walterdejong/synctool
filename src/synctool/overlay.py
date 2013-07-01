@@ -120,6 +120,9 @@ def generate_template(obj):
 	os.umask(077)
 
 	# chdir back to original location
+	# chdir to source directory
+	verbose('  os.chdir(%s)' % cwd)
+	unix_out('cd %s' % cwd)
 	try:
 		os.chdir(cwd)
 	except OSError, reason:
@@ -232,17 +235,12 @@ def _split_extension(filename, src_dir):
 def _sort_by_importance_post_first(item1, item2):
 	'''sort by importance, but always put .post scripts first'''
 
+	# after the .post scripts come ._template.post scripts
+	# then come regular files
+	# This order is important
+
 	obj1, importance1 = item1
 	obj2, importance2 = item2
-
-	if obj1.is_template_post:
-		if obj2.is_template_post:
-			return cmp(importance1, importance2)
-
-		return -1
-
-	if obj2.is_template_post:
-		return 1
 
 	if obj1.is_post:
 		if obj2.is_post:
@@ -251,6 +249,15 @@ def _sort_by_importance_post_first(item1, item2):
 		return -1
 
 	if obj2.is_post:
+		return 1
+
+	if obj1.is_template_post:
+		if obj2.is_template_post:
+			return cmp(importance1, importance2)
+
+		return -1
+
+	if obj2.is_template_post:
 		return 1
 
 	return cmp(importance1, importance2)
