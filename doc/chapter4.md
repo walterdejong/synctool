@@ -333,6 +333,9 @@ synctool's configuration file.
   this functionality, wrap the `synctool_cmd` command with a very short
   shell script.
 
+  Another way could be abusing the template generation mechanism in order
+  to always run a certain script.
+
 * `include <(local) synctool config file>`
 
   This keyword includes a synctool configuration file (that is possibly
