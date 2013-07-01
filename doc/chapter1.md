@@ -33,12 +33,12 @@ Because of that design philosophy:
   practices as an add-on tool, specifically to do configuration file
   management. It does not interfere with other things and does not need
   much either: It is written in the Python language, and it uses the power
-  of `rsync` and to distribute and check the consistency of files.
+  of `rsync` and `ssh` to distribute files.
 
 * It is possible to use synctool in the style that suits you best: Warn you
   whenever things are out of 'sync' or do automated repairs of deviations.
   It is even possible to manage some files with synctool and leave other
-  files to other mechanisms &mdash; what is not represented in the synctool
+  files to other mechanisms -- what is not represented in the synctool
   repository is not managed by it.
 
 * Although synctool has many command-line options, its set of core functions
