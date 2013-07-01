@@ -138,13 +138,15 @@ KNOWN_PACKAGE_MANAGERS = (
 #	'urpmi', 'portage', 'port', 'swaret',
 )
 
+ORIG_UMASK = 022
+
 
 def init():
 	'''detect my rootdir and set default symlink mode'''
 
 	global ROOTDIR, CONF_FILE
 	global VAR_DIR, VAR_LEN, OVERLAY_DIR, OVERLAY_LEN, DELETE_DIR, DELETE_LEN
-	global SCRIPT_DIR
+	global SCRIPT_DIR, ORIG_UMASK
 
 	base = os.path.abspath(os.path.dirname(sys.argv[0]))
 	if not base:
@@ -170,14 +172,18 @@ def init():
 		# no path, set a sensible default
 		path_arr = ['/bin', '/sbin', '/usr/bin', '/usr/sbin',
 			'/usr/local/bin', '/usr/local/sbin']
- 	else:
- 		path_arr = path.split(os.pathsep)
+	else:
+		path_arr = path.split(os.pathsep)
 
- 	# add the synctool/bin/ dir
- 	bindir = os.path.join(ROOTDIR, 'bin')
- 	if not bindir in path_arr:
-	 	path_arr.append(bindir)
-	 	os.environ['PATH'] = os.pathsep.join(path_arr)
+	# add the synctool/bin/ dir
+	bindir = os.path.join(ROOTDIR, 'bin')
+	if not bindir in path_arr:
+		path_arr.append(bindir)
+		os.environ['PATH'] = os.pathsep.join(path_arr)
+
+	# save original umask (and restore it)
+	ORIG_UMASK = os.umask(077)
+	os.umask(ORIG_UMASK)
 
 
 # EOB

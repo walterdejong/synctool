@@ -30,7 +30,6 @@ ACTION_DIFF = 1
 ACTION_ERASE_SAVED = 2
 ACTION_REFERENCE = 3
 
-ORIG_UMASK = 022
 SINGLE_FILES = []
 
 
@@ -102,7 +101,7 @@ def _run_post(obj, post_dict):
 
 	# temporarily restore original umask
 	# so the script runs with the umask set by the sysadmin
-	os.umask(ORIG_UMASK)
+	os.umask(synctool.param.ORIG_UMASK)
 
 	if obj.dest_stat.is_dir():
 		# run in the directory itself
@@ -612,8 +611,6 @@ def get_options():
 
 
 def main():
-	global ORIG_UMASK
-
 	synctool.param.init()
 
 	action = get_options()
@@ -681,7 +678,7 @@ def main():
 
 	unix_out('umask 077')
 	unix_out('')
-	ORIG_UMASK = os.umask(077)
+	os.umask(077)
 
 	if action == ACTION_DIFF:
 		for f in SINGLE_FILES:
