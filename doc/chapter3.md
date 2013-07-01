@@ -199,6 +199,7 @@ leads to any problems.
 
 To update only a single file rather than all files, use the option
 `--single` or `-1` (that's a number one, not the letter _ell_).
+You may give multiple `--single` options to update multiple files at once.
 
 If you want to check what file synctool is using for a given destination
 file, use option `-ref` or `-r`:
@@ -220,16 +221,6 @@ Another example:
 or copy a file to these three nodes:
 
     # dcp -n node1,node2,node3 -d /tmp patchfile-1.0.tar.gz
-
-You may also wish to pull a file from a node into the repository. You can do
-this from the masternode like this:
-
-    # synctool -n node1 --upload /path/to/file
-
-It may be desirable to give the file a different group extension than the
-default proposed by synctool:
-
-    # synctool -n node1 --upload /path/to/file --suffix=somegroup
 
 After rebooting a cluster, use `dsh-ping` to see if the nodes respond to ping
 yet. You may also do this on a group of nodes:
@@ -373,9 +364,12 @@ For example:
     ignore .svn
     ignore .gitignore .git
     ignore .*.swp
+
+synctool will not run on ignored nodes or on nodes that are in a group that
+is ignored:
+
     ignore_node node1 node2
-    ignore_group oldgroup
-    ignore_group test
+    ignore_group broken
 
 
 3.6 Backup copies
@@ -391,6 +385,9 @@ You can manually specify that you want to remove backup copies using:
 
     synctool --erase-saved
     synctool -e
+
+To erase a single `.saved` file, use option `--single` in combination with
+`--erase-saved`.
 
 
 3.7 Logging
