@@ -37,9 +37,10 @@
 import os
 import sys
 import fnmatch
+import subprocess
 
 import synctool.lib
-from synctool.lib import verbose, stderr, terse
+from synctool.lib import verbose, stderr, unix_out, terse
 import synctool.object
 from synctool.object import SyncObject
 import synctool.param
@@ -56,6 +57,81 @@ _POST_DICT = None
 _TERSE_ENDING = None
 _TERSE_LEN = 0
 _TERSE_MATCHES = None
+
+
+def generate_template(obj):
+	'''run template .post script, generating a new file
+	The script will run in the source dir (overlay tree) and
+	it will run even in dry-run mode
+	Returns: SyncObject of the new file or None on error'''
+
+	verbose('generating template %s' % obj.print_src())
+
+	src_dir = os.path.dirname(obj.src_path)
+	newname = os.path.basename(obj.dest_path)
+	template = newname + '._template'
+	# add most important extension
+	newname += '._' + synctool.param.NODENAME
+
+	# chdir to source directory
+	verbose('  os.chdir(%s)' % src_dir)
+	unix_out('cd %s' % src_dir)
+
+	cwd = os.getcwd()
+
+	try:
+		os.chdir(src_dir)
+	except OSError, reason:
+		stderr('error changing directory to %s: %s' % (src_dir, reason))
+		return None
+
+	# temporarily restore original umask
+	# so the script runs with the umask set by the sysadmin
+	os.umask(synctool.param.ORIG_UMASK)
+
+	# run the script
+	# pass template and newname as "$1" and "$2"
+	cmd_arr = [obj.src_path, template, newname]
+	verbose('  os.system(%s, %s, %s)' % (synctool.lib.prettypath(cmd_arr[0]),
+				cmd_arr[1], cmd_arr[2]))
+	unix_out('# run command %s' % os.path.basename(cmd_arr[0]))
+	unix_out('%s "%s" "%s"' % (cmd_arr[0], cmd_arr[1], cmd_arr[2]))
+
+	sys.stdout.flush()
+	sys.stderr.flush()
+
+	err = False
+	try:
+		subprocess.call(cmd_arr, shell=False)
+	except OSError, reason:
+		stderr("failed to run shell command '%s' : %s" %
+				(synctool.lib.prettypath(cmd_arr[0]), reason))
+		err = True
+
+	sys.stdout.flush()
+	sys.stderr.flush()
+
+	if not os.path.exists(newname):
+		verbose('warning: expected output %s was not generated' % newname)
+		err = True
+	else:
+		verbose('found generated output %s' % newname)
+
+	os.umask(077)
+
+	# chdir back to original location
+	try:
+		os.chdir(cwd)
+	except OSError, reason:
+		stderr('error changing directory to %s: %s' % (cwd, reason))
+		return None
+
+	if err:
+		return None
+
+	# this will return the new file as an object
+	obj, importance = _split_extension(newname, src_dir)
+	return obj
 
 
 def _sort_by_importance(item1, item2):
@@ -96,7 +172,13 @@ def _split_extension(filename, src_dir):
 		return SyncObject(filename, name, no_ext=True), GROUP_ALL
 
 	if ext == '.post':
-		# register generic .post script
+		(name2, ext) = os.path.splitext(name)
+		if ext == '._template':
+			# it's a generic template generator
+			return (SyncObject(filename, name2, is_template_post=True),
+								GROUP_ALL)
+
+		# it's a generic .post script
 		return SyncObject(filename, name, is_post=True), GROUP_ALL
 
 	if ext[:2] != '._':
@@ -105,6 +187,9 @@ def _split_extension(filename, src_dir):
 	ext = ext[2:]
 	if not ext:
 		return SyncObject(filename, filename, no_ext=True), GROUP_ALL
+
+	if ext == 'template':
+		return SyncObject(filename, name, is_template=True), GROUP_ALL
 
 	try:
 		importance = synctool.param.MY_GROUPS.index(ext)
@@ -127,8 +212,19 @@ def _split_extension(filename, src_dir):
 	(name2, ext) = os.path.splitext(name)
 
 	if ext == '.post':
+		(name3, ext) = os.path.splitext(name)
+		if ext == '._template':
+			# it's a group-specific template generator
+			return (SyncObject(filename, name3, is_template_post=True),
+								importance)
+
 		# register group-specific .post script
 		return SyncObject(filename, name2, is_post=True), importance
+
+	elif ext == '._template':
+		stderr('warning: template %s can not have a group extension' %
+				synctool.lib.prettypath(os.path.join(src_dir, filename)))
+		return None, -1
 
 	return SyncObject(filename, name), importance
 
@@ -138,6 +234,15 @@ def _sort_by_importance_post_first(item1, item2):
 
 	obj1, importance1 = item1
 	obj2, importance2 = item2
+
+	if obj1.is_template_post:
+		if obj2.is_template_post:
+			return cmp(importance1, importance2)
+
+		return -1
+
+	if obj2.is_template_post:
+		return 1
 
 	if obj1.is_post:
 		if obj2.is_post:
@@ -182,6 +287,11 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
 		if not obj:
 			continue
 
+		if obj.is_template:
+			# completely ignore templates
+			verbose('skimming over template %s' % obj.print_src())
+			continue
+
 		arr.append((obj, importance))
 
 	# sort with .post scripts first
@@ -194,11 +304,22 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
 		obj.make(src_dir, dest_dir)
 
 		if obj.is_post:
+			# register the .post script and continue
 			if post_dict.has_key(obj.dest_path):
 				continue
 
 			post_dict[obj.dest_path] = obj.src_path
 			continue
+
+		if obj.is_template_post:
+			obj = generate_template(obj)
+			if not obj:
+				# failed
+				continue
+
+			# we generated a new file, represented by obj
+			# so continue with the new obj
+			obj.make(src_dir, dest_dir)
 
 		if obj.src_stat.is_dir():
 			if synctool.param.IGNORE_DOTDIRS:

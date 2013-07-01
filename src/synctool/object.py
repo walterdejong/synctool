@@ -586,7 +586,8 @@ class SyncObject(object):
 	and the destination path (target file on the system).
 	The SyncObject caches any stat info'''
 
-	def __init__(self, src_name, dest_name, is_post=False, no_ext=False):
+	def __init__(self, src_name, dest_name, is_post=False,
+		is_template=False, is_template_post=False, no_ext=False):
 		'''src_name is simple filename without leading path
 		dest_name is the src_name without group extension'''
 
@@ -594,7 +595,10 @@ class SyncObject(object):
 
 		self.src_path = src_name
 		self.dest_path = dest_name
+		# TODO store these in a single integer?
 		self.is_post = is_post
+		self.is_template = is_template
+		self.is_template_post = is_template_post
 		self.no_ext = no_ext
 		self.src_stat = self.dest_state = None
 
