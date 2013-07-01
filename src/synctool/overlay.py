@@ -48,6 +48,13 @@ import synctool.param
 # last index of MY_GROUPS
 GROUP_ALL = 1000
 
+# const enum object types
+OV_REG = 0
+OV_POST = 1
+OV_TEMPLATE = 2
+OV_TEMPLATE_POST = 3
+OV_NO_EXT = 4
+
 # used with find() and _find_callback() function
 _SEARCH = None
 _FOUND = None
@@ -172,27 +179,26 @@ def _split_extension(filename, src_dir):
 
 	(name, ext) = os.path.splitext(filename)
 	if not ext:
-		return SyncObject(filename, name, no_ext=True), GROUP_ALL
+		return SyncObject(filename, name, OV_NO_EXT), GROUP_ALL
 
 	if ext == '.post':
 		(name2, ext) = os.path.splitext(name)
 		if ext == '._template':
 			# it's a generic template generator
-			return (SyncObject(filename, name2, is_template_post=True),
-								GROUP_ALL)
+			return (SyncObject(filename, name2, OV_TEMPLATE_POST), GROUP_ALL)
 
 		# it's a generic .post script
-		return SyncObject(filename, name, is_post=True), GROUP_ALL
+		return SyncObject(filename, name, OV_POST), GROUP_ALL
 
 	if ext[:2] != '._':
-		return SyncObject(filename, filename, no_ext=True), GROUP_ALL
+		return SyncObject(filename, filename, OV_NO_EXT), GROUP_ALL
 
 	ext = ext[2:]
 	if not ext:
-		return SyncObject(filename, filename, no_ext=True), GROUP_ALL
+		return SyncObject(filename, filename, OV_NO_EXT), GROUP_ALL
 
 	if ext == 'template':
-		return SyncObject(filename, name, is_template=True), GROUP_ALL
+		return SyncObject(filename, name, OV_TEMPLATE), GROUP_ALL
 
 	try:
 		importance = synctool.param.MY_GROUPS.index(ext)
@@ -218,11 +224,10 @@ def _split_extension(filename, src_dir):
 		(name3, ext) = os.path.splitext(name)
 		if ext == '._template':
 			# it's a group-specific template generator
-			return (SyncObject(filename, name3, is_template_post=True),
-								importance)
+			return (SyncObject(filename, name3, OV_TEMPLATE_POST), importance)
 
 		# register group-specific .post script
-		return SyncObject(filename, name2, is_post=True), importance
+		return SyncObject(filename, name2, OV_POST), importance
 
 	elif ext == '._template':
 		stderr('warning: template %s can not have a group extension' %
@@ -242,22 +247,22 @@ def _sort_by_importance_post_first(item1, item2):
 	obj1, importance1 = item1
 	obj2, importance2 = item2
 
-	if obj1.is_post:
-		if obj2.is_post:
+	if obj1.ov_type == OV_POST:
+		if obj2.ov_type == OV_POST:
 			return cmp(importance1, importance2)
 
 		return -1
 
-	if obj2.is_post:
+	if obj2.ov_type == OV_POST:
 		return 1
 
-	if obj1.is_template_post:
-		if obj2.is_template_post:
+	if obj1.ov_type == OV_TEMPLATE_POST:
+		if obj2.ov_type == OV_TEMPLATE_POST:
 			return cmp(importance1, importance2)
 
 		return -1
 
-	if obj2.is_template_post:
+	if obj2.ov_type == OV_TEMPLATE_POST:
 		return 1
 
 	return cmp(importance1, importance2)
@@ -294,7 +299,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
 		if not obj:
 			continue
 
-		if obj.is_template:
+		if obj.ov_type == OV_TEMPLATE:
 			# completely ignore templates
 			verbose('skimming over template %s' % obj.print_src())
 			continue
@@ -310,7 +315,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
 	for obj, importance in arr:
 		obj.make(src_dir, dest_dir)
 
-		if obj.is_post:
+		if obj.ov_type == OV_POST:
 			# register the .post script and continue
 			if post_dict.has_key(obj.dest_path):
 				continue
@@ -318,7 +323,8 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
 			post_dict[obj.dest_path] = obj.src_path
 			continue
 
-		if obj.is_template_post:
+		if obj.ov_type == OV_TEMPLATE_POST:
+			# it's a template generator. So generate
 			obj = generate_template(obj)
 			if not obj:
 				# failed
@@ -365,7 +371,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
 				verbose('ignoring dotfile %s' % obj.print_src())
 				continue
 
-		if synctool.param.REQUIRE_EXTENSION and obj.no_ext:
+		if synctool.param.REQUIRE_EXTENSION and obj.ov_type == OV_NO_EXT:
 			if synctool.param.TERSE:
 				terse(synctool.lib.TERSE_ERROR, 'no group on %s' %
 													obj.src_path)
