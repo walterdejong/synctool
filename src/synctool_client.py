@@ -673,8 +673,8 @@ def main():
 		verbose('my hostname: %s' % synctool.param.HOSTNAME)
 		verbose('rootdir: %s' % synctool.param.ROOTDIR)
 
-	os.environ['SYNCTOOL_NODENAME'] = synctool.param.NODENAME
-	os.environ['SYNCTOOL_ROOTDIR'] = synctool.param.ROOTDIR
+	os.environ['SYNCTOOL_NODE'] = synctool.param.NODENAME
+	os.environ['SYNCTOOL_ROOT'] = synctool.param.ROOTDIR
 
 	unix_out('umask 077')
 	unix_out('')
