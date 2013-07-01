@@ -161,13 +161,16 @@ actions than another.
 
 The `.post` script is run with `sh -c`. Note that `/bin/sh` is often not the
 same as `bash`, so some clever shell scripting tricks may not work. However,
-you can fix this by including `#! /bin/bash` in the top of the `.post` script.
+you can fix this by including "`#!/bin/bash`" in the top of the `.post`
+script.
 
 In the environment you will find two variables that might be useful:
+
 * `SYNCTOOL_NODE` is set to the node that we're running on
-* `SYNCTOOL_ROOT` is set to the directory where synctool lives.
-So `$SYNCTOOL_ROOT/bin/` is the bindir and the repository is under
-`$SYNCTOOL_ROOT/var/overlay/`.
+* `SYNCTOOL_ROOT` is set to the directory where synctool lives
+
+So expanding on that, `$SYNCTOOL_ROOT/bin/` is the bindir, and the repository
+is found under `$SYNCTOOL_ROOT/var/overlay/`.
 
 
 3.3 Other useful options
