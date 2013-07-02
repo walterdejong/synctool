@@ -196,6 +196,10 @@ def erase_saved():
 def single_files(filename):
 	'''check/update a single file'''
 
+	# FIXME this could be optimized;
+	# FIXME handle multiple --single entries in a single visit() call
+	# FIXME so no need to have find() search from the start every time
+
 	obj, post_dict = synctool.overlay.find_terse(synctool.param.OVERLAY_DIR,
 													filename)
 	if not obj:
