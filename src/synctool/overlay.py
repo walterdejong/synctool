@@ -65,12 +65,29 @@ _TERSE_ENDING = None
 _TERSE_LEN = 0
 _TERSE_MATCHES = None
 
+# set of templates to generate
+# only used when --single is active;
+# by default, all templates are generated
+_TEMPLATE_SET = set()
+
+
+def set_templates_to_generate(single_files):
+	'''register single files as set that templates may be generated for'''
+
+	global _TEMPLATE_SET
+
+	_TEMPLATE_SET = set(single_files)
+
 
 def generate_template(obj):
 	'''run template .post script, generating a new file
 	The script will run in the source dir (overlay tree) and
 	it will run even in dry-run mode
 	Returns: SyncObject of the new file or None on error'''
+
+	if len(_TEMPLATE_SET) > 0 and not obj.dest_path in _TEMPLATE_SET:
+		verbose('skipping template generation of %s' % obj.src_path)
+		return None
 
 	verbose('generating template %s' % obj.print_src())
 
@@ -327,7 +344,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
 			# it's a template generator. So generate
 			obj = generate_template(obj)
 			if not obj:
-				# failed
+				# either failed or skipped
 				continue
 
 			# we generated a new file, represented by obj

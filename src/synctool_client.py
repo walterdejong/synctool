@@ -278,6 +278,9 @@ def single_erase_saved(filename):
 def reference(filename):
 	'''show which source file in the repository synctool chooses to use'''
 
+	# reference() can't find ._template.post scripts
+	# Is this a bad thing?
+
 	obj, post_dict = synctool.overlay.find_terse(synctool.param.OVERLAY_DIR,
 													filename)
 	if not obj:
@@ -679,6 +682,9 @@ def main():
 	unix_out('umask 077')
 	unix_out('')
 	os.umask(077)
+
+	if len(SINGLE_FILES) > 0:
+		synctool.overlay.set_templates_to_generate(SINGLE_FILES)
 
 	if action == ACTION_DIFF:
 		for f in SINGLE_FILES:
