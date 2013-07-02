@@ -65,18 +65,10 @@ _TERSE_ENDING = None
 _TERSE_LEN = 0
 _TERSE_MATCHES = None
 
-# set of templates to generate
-# only used when --single is active;
-# by default, all templates are generated
-_TEMPLATE_SET = set()
-
-
-def set_templates_to_generate(single_files):
-	'''register single files as set that templates may be generated for'''
-
-	global _TEMPLATE_SET
-
-	_TEMPLATE_SET = set(single_files)
+# do not generate any templates, except for this one
+# used by find() to keep visit() from generating all templates,
+# when only a single file is requested
+_SINGLE_TEMPLATE = None
 
 
 def generate_template(obj):
@@ -85,7 +77,7 @@ def generate_template(obj):
 	it will run even in dry-run mode
 	Returns: SyncObject of the new file or None on error'''
 
-	if len(_TEMPLATE_SET) > 0 and not obj.dest_path in _TEMPLATE_SET:
+	if _SINGLE_TEMPLATE != None and _SINGLE_TEMPLATE != obj.dest_path:
 		verbose('skipping template generation of %s' % obj.src_path)
 		return None
 
@@ -448,14 +440,16 @@ def find(overlay, dest_path):
 	Returns two values: SyncObject, post_dict
 	or None, None if not found'''
 
-	global _SEARCH, _FOUND, _POST_DICT
+	global _SEARCH, _FOUND, _POST_DICT, _SINGLE_TEMPLATE
 
 	_SEARCH = dest_path
 	_FOUND = None
 	_POST_DICT = None
+	_SINGLE_TEMPLATE = dest_path
 
 	visit(overlay, _find_callback)
 
+	_SINGLE_TEMPLATE = None
 	return _FOUND, _POST_DICT
 
 
@@ -499,6 +493,9 @@ def find_terse(overlay, terse_path):
 	_TERSE_LEN = len(_TERSE_ENDING)
 	_TERSE_MATCHES = []
 
+	# FIXME find_terse() should not generate templates,
+	# FIXME unless it's the file we are looking for
+	# FIXME trick with _SINGLE_TEMPLATE does not work here ...
 	visit(overlay, _find_terse_callback)
 
 	if not _TERSE_MATCHES:

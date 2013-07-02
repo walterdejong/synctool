@@ -683,9 +683,6 @@ def main():
 	unix_out('')
 	os.umask(077)
 
-	if len(SINGLE_FILES) > 0:
-		synctool.overlay.set_templates_to_generate(SINGLE_FILES)
-
 	if action == ACTION_DIFF:
 		for f in SINGLE_FILES:
 			diff_files(f)
