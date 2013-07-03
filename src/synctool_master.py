@@ -292,6 +292,7 @@ def upload(up):
 			verbose('making directory %s' %
 					synctool.lib.prettypath(repos_dir))
 			unix_out('mkdir -p %s' % repos_dir)
+			# FIXME check repos_dir and cwd
 			synctool.lib.mkdir_p(repos_dir)
 
 		# make scp command array

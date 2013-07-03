@@ -338,6 +338,7 @@ def mkdir_p(path):
 	'''like mkdir -p; make directory and subdirectories'''
 
 	# note: this function does not change the umask
+	# FIXME what about absolute paths
 
 	arr = path.split(os.sep)
 	if arr[0] == '':
