@@ -198,7 +198,7 @@ def single_files(filename):
 
 	# FIXME this could be optimized;
 	# FIXME handle multiple --single entries in a single visit() call
-	# FIXME so no need to have find() search from the start every time
+	# FIXME we should really handle single_files entirely without find()
 
 	obj, post_dict = synctool.overlay.find_terse(synctool.param.OVERLAY_DIR,
 													filename)

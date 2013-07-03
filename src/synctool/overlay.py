@@ -334,6 +334,8 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
 
 		if obj.ov_type == OV_TEMPLATE_POST:
 			# it's a template generator. So generate
+			# FIXME How about calling callback() for this, too?
+			# FIXME And then find() would be able to find this, too
 			obj = generate_template(obj)
 			if not obj:
 				# either failed or skipped
@@ -439,6 +441,10 @@ def find(overlay, dest_path):
 	'''search repository for source of dest_path
 	Returns two values: SyncObject, post_dict
 	or None, None if not found'''
+
+	# FIXME find() could be able to find multiple entries in one visit() call
+	# FIXME but we should really handle single_files entirely without find()
+	# FIXME so focus on synctool-client code instead
 
 	global _SEARCH, _FOUND, _POST_DICT, _SINGLE_TEMPLATE
 
