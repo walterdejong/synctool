@@ -227,15 +227,15 @@ def upload(up):
 	synctool.param.MY_GROUPS = synctool.config.get_my_groups()
 
 	# see if file is already in the repository
-	(obj, err) = synctool.overlay.find_terse(synctool.overlay.OV_OVERLAY,
+	(obj, post) = synctool.overlay.find_terse(synctool.param.OVERLAY_DIR,
 												up.filename)
 
-	if err == synctool.overlay.OV_FOUND_MULTIPLE:
+	if obj == None and post != None:
 		# multiple source possible
 		# possibilities have already been printed
 		sys.exit(1)
 
-	if err == synctool.overlay.OV_NOT_FOUND:
+	if obj == None:
 		# no source path found
 		if up.filename.find('...') >= 0:
 			stderr("%s is not in the repository, don't know what to map "
@@ -292,7 +292,6 @@ def upload(up):
 			verbose('making directory %s' %
 					synctool.lib.prettypath(repos_dir))
 			unix_out('mkdir -p %s' % repos_dir)
-			# FIXME check repos_dir and cwd
 			synctool.lib.mkdir_p(repos_dir)
 
 		# make scp command array
