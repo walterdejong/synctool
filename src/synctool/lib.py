@@ -337,19 +337,21 @@ def search_path(cmd):
 def mkdir_p(path):
 	'''like mkdir -p; make directory and subdirectories'''
 
-	# note: this function does not change the umask
-	# FIXME what about absolute paths
+	mkdir_path = ''
 
 	arr = path.split(os.sep)
 	if arr[0] == '':
 		# first element is empty; this happens when path starts with '/'
 		arr.pop(0)
+		mkdir_path = '/'
 
 	if not arr:
 		return
 
+	# temporarily restore admin's umask
+	mask = os.umask(synctool.param.ORIG_UMASK)
+
 	# 'walk' the path
-	mkdir_path = ''
 	for elem in arr:
 		mkdir_path = os.path.join(mkdir_path, elem)
 
@@ -377,6 +379,8 @@ def mkdir_p(path):
 				continue
 
 			stderr('error: mkdir(%s) failed: %s' % (mkdir_path, err))
+
+	os.umask(mask)
 
 
 #
