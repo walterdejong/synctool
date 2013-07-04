@@ -80,20 +80,19 @@ class VNode(object):
 
 
 	def mkdir_basepath(self):
-		'''call mkdir -p if the dest directory does not exist yet'''
+		'''call mkdir -p to create leading path'''
 
 		if synctool.lib.DRY_RUN:
 			return
 
-		# check if the directory exists
 		basedir = os.path.dirname(self.name)
-		statbuf = synctool.syncstat.SyncStat(basedir)
-		if not statbuf.exists():
-			# create the directory
+
+		# be a bit quiet about it
+		if synctool.lib.VERBOSE or synctool.lib.UNIX_CMD:
 			verbose('making directory %s' % synctool.lib.prettypath(basedir))
 			unix_out('mkdir -p %s' % basedir)
-			terse(synctool.lib.TERSE_MKDIR, basedir)
-			synctool.lib.mkdir_p(basedir)
+
+		synctool.lib.mkdir_p(basedir)
 
 
 	def compare(self, src_path, dest_stat):

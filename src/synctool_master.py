@@ -289,6 +289,7 @@ def upload(up):
 	else:
 		# first check if the directory in the repository exists
 		# TODO would it make sense to use rsync for uploading in this case?
+		# TODO else mkdir_p() doesn't require first doing stat() anymore
 		repos_dir = os.path.dirname(repos_filename)
 		stat = synctool.syncstat.SyncStat(repos_dir)
 		if not stat.exists():
