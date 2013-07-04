@@ -14,6 +14,7 @@ import os
 import sys
 import subprocess
 import shlex
+import stat
 import time
 import errno
 import time
@@ -335,54 +336,57 @@ def search_path(cmd):
 
 
 def mkdir_p(path):
-	'''like mkdir -p; make directory and subdirectories'''
-
-	# FIXME mkdir_p() should be recursive to minimize # of stat() calls
-
-	mkdir_path = ''
-
-	arr = path.split(os.sep)
-	if arr[0] == '':
-		# first element is empty; this happens when path starts with '/'
-		arr.pop(0)
-		mkdir_path = '/'
-
-	if not arr:
-		return
+	'''like mkdir -p; make directory and subdirectories
+	Returns False on error, else True'''
 
 	# temporarily restore admin's umask
 	mask = os.umask(synctool.param.ORIG_UMASK)
 
-	# 'walk' the path
-	for elem in arr:
-		mkdir_path = os.path.join(mkdir_path, elem)
-
-		# see if the directory already exists
-		try:
-			os.stat(mkdir_path)
-		except OSError, err:
-			if err.errno == errno.ENOENT:
-				pass
-			else:
-				# odd ...
-				stderr('error: stat(%s): %s' % (mkdir_path, err))
-				# and what now??
-		else:
-			# no error from stat(), directory already exists
-			continue
-
-		# make the directory
-		try:
-			os.mkdir(mkdir_path)		# uses the default umask
-		except OSError, err:
-			if err.errno == errno.EEXIST:
-				# "File exists" (it's a directory, but OK)
-				# this is unexpected, but still possible
-				continue
-
-			stderr('error: mkdir(%s) failed: %s' % (mkdir_path, err))
+	ok = _mkdir_p(path)
+	if not ok:
+		stderr('error: failed to create directory %s' % path)
 
 	os.umask(mask)
+	return ok
+
+
+def _mkdir_p(path):
+	'''recursively make directory + leading directories'''
+
+	# recursive function; do not print error messages here
+
+	if not path:
+		# this happens at the root of a relative path
+		return True
+
+	try:
+		statbuf = os.stat(path)
+	except OSError, reason:
+		if reason.errno == errno.ENOENT:
+			# path does not exist
+			pass
+		else:
+			# stat() error
+			return False
+	else:
+		# path already exists
+		# check it's a directory, just to be sure
+		if not stat.S_ISDIR(statbuf.st_mode):
+			return False
+
+		return True
+
+	# recurse: make sure the parent directory exists
+	if not _mkdir_p(os.path.dirname(path)):
+		# there was an error
+		return False
+
+	try:
+		os.mkdir(path)
+	except OSError:
+		return False
+
+	return True
 
 
 #
