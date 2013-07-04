@@ -88,6 +88,8 @@ def worker_synctool(addr):
 		run_local_synctool()
 		return
 
+	# TODO add purge dirs (idea by Rob van der Wal)
+
 	# rsync ROOTDIR/dirs/ to the node
 	# if "it wants it"
 	if not (OPT_SKIP_RSYNC or nodename in synctool.param.NO_RSYNC):
