@@ -286,6 +286,7 @@ def upload(up):
 				synctool.lib.prettypath(repos_filename))
 	else:
 		# first check if the directory in the repository exists
+		# TODO would it make sense to use rsync for uploading in this case?
 		repos_dir = os.path.dirname(repos_filename)
 		stat = synctool.syncstat.SyncStat(repos_dir)
 		if not stat.exists():
