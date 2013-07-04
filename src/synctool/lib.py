@@ -337,6 +337,8 @@ def search_path(cmd):
 def mkdir_p(path):
 	'''like mkdir -p; make directory and subdirectories'''
 
+	# FIXME mkdir_p() should be recursive to minimize # of stat() calls
+
 	mkdir_path = ''
 
 	arr = path.split(os.sep)
