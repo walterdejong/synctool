@@ -31,6 +31,7 @@ ACTION_ERASE_SAVED = 2
 ACTION_REFERENCE = 3
 
 SINGLE_FILES = []
+DIR_CHANGED = None
 
 
 def run_command(cmd):
@@ -90,13 +91,13 @@ def run_command_in_dir(dest_dir, cmd):
 			stderr('error changing directory to %s: %s' % (cwd, reason))
 
 
-def _run_post(obj, post_dict):
+def _run_post(obj, post_script):
 	'''run the .post script that goes with the object'''
 
 	if synctool.lib.NO_POST:
 		return
 
-	if not post_dict.has_key(obj.dest_path):
+	if not post_script:
 		return
 
 	# temporarily restore original umask
@@ -105,11 +106,11 @@ def _run_post(obj, post_dict):
 
 	if obj.dest_stat.is_dir():
 		# run in the directory itself
-		run_command_in_dir(obj.dest_path, post_dict[obj.dest_path])
+		run_command_in_dir(obj.dest_path, post_script)
 	else:
 		# run in the directory where the file is
-		run_command_in_dir(os.path.dirname(obj.dest_path),
-							post_dict[obj.dest_path])
+		run_command_in_dir(os.path.dirname(obj.dest_path), post_script)
+
 	os.umask(077)
 
 
@@ -122,13 +123,13 @@ def _overlay_callback(obj, post_dict, dir_changed=False):
 		if not obj.check():
 			dir_changed = True
 
-		if dir_changed:
-			_run_post(obj, post_dict)
+		if dir_changed and post_dict.has_key(obj.dest_path):
+			_run_post(obj, post_dict[obj.dest_path])
 
 		return True, dir_changed
 
-	if not obj.check():
-		_run_post(obj, post_dict)
+	if not obj.check() and post_dict.has_key(obj.dest_path):
+		_run_post(obj, post_dict[obj.dest_path])
 		return True, True
 
 	return True, False
@@ -146,8 +147,8 @@ def _delete_callback(obj, post_dict, dir_changed=False):
 	# don't delete directories
 	if obj.src_stat.is_dir():
 #		verbose('refusing to delete directory %s' % (obj.dest_path + os.sep))
-		if dir_changed:
-			_run_post(obj, post_dict)
+		if dir_changed and post_dict.has_key(obj.dest_path):
+			_run_post(obj, post_dict[obj.dest_path])
 
 		return True, dir_changed
 
@@ -160,7 +161,9 @@ def _delete_callback(obj, post_dict, dir_changed=False):
 	if obj.dest_stat.exists():
 		vnode = obj.vnode_dest_obj()
 		vnode.harddelete()
-		_run_post(obj, post_dict)
+
+		if post_dict.has_key(obj.dest_path):
+			_run_post(obj, post_dict[obj.dest_path])
 		return True, True
 
 	return True, False
@@ -193,62 +196,86 @@ def erase_saved():
 	synctool.overlay.visit(synctool.param.DELETE_DIR, _erase_saved_callback)
 
 
-def single_files(filename):
-	'''check/update a single file'''
+def _single_overlay_callback(obj, post_dict, updated=False):
+	'''do overlay function for single files'''
 
-	# FIXME this could be optimized;
-	# FIXME handle multiple --single entries in a single visit() call
-	# FIXME we should really handle single_files entirely without find()
+	go_on = True
 
-	obj, post_dict = synctool.overlay.find_terse(synctool.param.OVERLAY_DIR,
-													filename)
-	if not obj:
-		if post_dict != None:
-			# multiple sources possible, message has already been printed
-			return
-
-		# maybe in the delete tree
-		obj, post_dict = synctool.overlay.find_terse(
-							synctool.param.DELETE_DIR, filename)
-		if not obj:
-			if post_dict != None:
-				# multiple sources possible, message has already been printed
-				return
-
-			stderr('%s is not in the overlay tree' % filename)
-			return
-
-		ok, updated = _delete_callback(obj, post_dict)
-		if updated:
-			# run .post on the parent dir, if it has a .post script
-			# the parent .post script was also passed in post_dict
-
+	# TODO match terse path
+	if obj.dest_path in SINGLE_FILES:
+		SINGLE_FILES.remove(obj.dest_path)
+		ok, updated = _overlay_callback(obj, post_dict)
+		if not updated:
+			stdout('%s is up to date' % obj.dest_path)
+			terse(synctool.lib.TERSE_OK, obj.dest_path)
+			unix_out('# %s is up to date\n' % obj.dest_path)
+		else:
+			# register .post on the parent dir, if it has a .post script
 			obj.dest_path = os.path.dirname(obj.dest_path)
 			obj.dest_stat = synctool.syncstat.SyncStat(obj.dest_path)
 
 			if post_dict.has_key(obj.dest_path):
-				obj.src_path = post_dict[obj.dest_path]
-				obj.src_stat = synctool.syncstat.SyncStat(obj.src_path)
-				_run_post(obj, post_dict)
+				DIR_CHANGED[obj.dest_path] = (obj, post_dict[obj.dest_path])
 
-		return
+		if not SINGLE_FILES:
+			return False, updated
 
-	ok, updated = _overlay_callback(obj, post_dict)
-	if not updated:
-		stdout('%s is up to date' % obj.dest_path)
-		terse(synctool.lib.TERSE_OK, obj.dest_path)
-		unix_out('# %s is up to date\n' % obj.dest_path)
-	else:
-		# run .post on the parent dir, if it has a .post script
-		# the parent .post script was also passed in post_dict
+	return go_on, updated
 
-		obj.dest_path = os.path.dirname(obj.dest_path)
-		obj.dest_stat = synctool.syncstat.SyncStat(obj.dest_path)
 
-		if post_dict.has_key(obj.dest_path):
-			obj.src_path = post_dict[obj.dest_path]
-			obj.src_stat = synctool.syncstat.SyncStat(obj.src_path)
-			_run_post(obj, post_dict)
+def _single_delete_callback(obj, post_dict, updated=False):
+	'''do delete function for single files'''
+
+	go_on = True
+
+	# TODO match terse path
+	if obj.dest_path in SINGLE_FILES:
+		SINGLE_FILES.remove(obj.dest_path)
+		ok, updated = _delete_callback(obj, post_dict)
+		if updated:
+			# register .post on the parent dir, if it has a .post script
+			obj.dest_path = os.path.dirname(obj.dest_path)
+			obj.dest_stat = synctool.syncstat.SyncStat(obj.dest_path)
+
+			if post_dict.has_key(obj.dest_path):
+				DIR_CHANGED[obj.dest_path] = (obj, post_dict[obj.dest_path])
+
+		if not SINGLE_FILES:
+			return False, updated
+
+	return go_on, updated
+
+
+def single_files():
+	'''check/update a list of single files'''
+
+	global DIR_CHANGED
+
+	DIR_CHANGED = {}
+	synctool.overlay.visit(synctool.param.OVERLAY_DIR,
+							_single_overlay_callback)
+
+	# run any .post scripts on updated directories
+	for path in DIR_CHANGED:
+		obj, post_script = DIR_CHANGED[path]
+		_run_post(obj, post_script)
+
+	if len(SINGLE_FILES) > 0:
+		DIR_CHANGED = {}
+
+		# there are still single files left
+		# maybe they are in the delete tree?
+		synctool.overlay.visit(synctool.param.DELETE_DIR,
+								_single_delete_callback)
+
+		# run any .post scripts on updated directories
+		# (it's really correct to do this twice; once overlay/, once delete/)
+		for path in DIR_CHANGED:
+			obj, post_script = DIR_CHANGED[path]
+			_run_post(obj, post_script)
+
+	for filename in SINGLE_FILES:
+		stderr('%s is not in the overlay tree' % filename)
 
 
 def single_erase_saved(filename):
@@ -703,8 +730,7 @@ def main():
 			erase_saved()
 
 	elif SINGLE_FILES:
-		for single_file in SINGLE_FILES:
-			single_files(single_file)
+		single_files()
 
 	else:
 		overlay_files()
