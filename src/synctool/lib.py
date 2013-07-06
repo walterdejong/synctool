@@ -187,6 +187,39 @@ def terse_path(path, maxlen = 55):
 	return path
 
 
+def terse_match(a_terse_path, path):
+	'''Return True if it matches, else False'''
+
+	if a_terse_path[:2] != os.sep + os.sep:
+		# it's not a terse path
+		return False
+
+	idx = a_terse_path.find(os.sep + '...' + os.sep)
+	if idx == -1:
+		# apparently it's a very short terse path
+		return a_terse_path[1:] == path
+
+	# match last part of the path
+	if a_terse_path[idx+4:] != path[-len(a_terse_path[idx+4:]):]:
+		return False
+
+	# match first part of the path
+	return a_terse_path[1:idx+1] == path[:len(a_terse_path[1:idx+1])]
+
+
+def terse_match_many(path, terse_path_list):
+	'''Return index of first path match in list of terse paths'''
+
+	idx = 0
+	for a_terse_path in terse_path_list:
+		if terse_match(a_terse_path, path):
+			return idx
+
+		idx += 1
+
+	return -1
+
+
 def dryrun_msg(msg):
 	'''print a "dry run" message filled to (almost) 80 chars'''
 
@@ -390,7 +423,7 @@ def _mkdir_p(path):
 
 
 #
-# functions straigthening out paths that were given by the user
+#	functions for straightening out paths that were given by the user
 #
 def strip_multiple_slashes(path):
 	if not path:
@@ -404,6 +437,10 @@ def strip_multiple_slashes(path):
 		double = os.path.altsep + os.path.altsep
 		while path.find(double) != -1:
 			path = path.replace(double, os.sep)
+
+	if path.find(os.sep + '...' + os.sep) >= 0:
+		# a terse path is marked with '//' at the beginning
+		path = os.sep + path
 
 	return path
 

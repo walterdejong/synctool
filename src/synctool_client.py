@@ -298,6 +298,21 @@ def erase_saved():
 	synctool.overlay.visit(synctool.param.DELETE_DIR, _erase_saved_callback)
 
 
+def _match_single(path):
+	'''Returns True if (terse) path is in SINGLE_FILES, else False'''
+
+	if path in SINGLE_FILES:
+		SINGLE_FILES.remove(path)
+		return True
+
+	idx = synctool.lib.terse_match_many(path, SINGLE_FILES)
+	if idx >= 0:
+		del SINGLE_FILES[idx]
+		return True
+
+	return False
+
+
 def _single_overlay_callback(obj, post_dict, updated=False):
 	'''do overlay function for single files'''
 
@@ -306,9 +321,7 @@ def _single_overlay_callback(obj, post_dict, updated=False):
 
 	go_on = True
 
-	# TODO match terse path
-	if obj.dest_path in SINGLE_FILES:
-		SINGLE_FILES.remove(obj.dest_path)
+	if _match_single(obj.dest_path):
 		ok, updated = _overlay_callback(obj, post_dict)
 		if not updated:
 			stdout('%s is up to date' % obj.dest_path)
@@ -336,9 +349,7 @@ def _single_delete_callback(obj, post_dict, updated=False):
 
 	go_on = True
 
-	# TODO match terse path
-	if obj.dest_path in SINGLE_FILES:
-		SINGLE_FILES.remove(obj.dest_path)
+	if _match_single(obj.dest_path):
 		ok, updated = _delete_callback(obj, post_dict)
 		if updated:
 			# register .post on the parent dir, if it has a .post script
@@ -394,9 +405,7 @@ def _single_erase_saved_callback(obj, post_dict, updated=False):
 
 	go_on = True
 
-	# TODO match terse path
-	if obj.dest_path in SINGLE_FILES:
-		SINGLE_FILES.remove(obj.dest_path)
+	if _match_single(obj.dest_path):
 		is_dest = True
 	else:
 		is_dest = False
@@ -473,9 +482,7 @@ def _reference_callback(obj, post_dict, dir_changed=False):
 
 		return False, False
 
-	# TODO match terse path
-	if obj.dest_path in SINGLE_FILES:
-		SINGLE_FILES.remove(obj.dest_path)
+	if _match_single(obj.dest_path):
 		print obj.print_src()
 
 	if not SINGLE_FILES:
@@ -497,10 +504,7 @@ def _diff_callback(obj, post_dict, dir_changed=False):
 	if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
 		return generate_template(obj), False
 
-	# TODO match terse path
-	if obj.dest_path in SINGLE_FILES:
-		SINGLE_FILES.remove(obj.dest_path)
-
+	if _match_single(obj.dest_path):
 		verbose('%s %s %s' % (synctool.param.DIFF_CMD,
 								obj.dest_path, obj.print_src()))
 		unix_out('%s %s %s' % (synctool.param.DIFF_CMD,
