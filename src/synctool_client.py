@@ -360,30 +360,29 @@ def single_erase_saved():
 		stderr('%s is not in the overlay tree' % filename)
 
 
-def reference(filename):
-	'''show which source file in the repository synctool chooses to use'''
+def _reference_callback(obj, post_dict, dir_changed=False):
+	# TODO match terse path
+	if obj.dest_path in SINGLE_FILES:
+		SINGLE_FILES.remove(obj.dest_path)
+
+		print obj.print_src()
+
+		if not SINGLE_FILES:
+			return False, False
+
+	return True, False
+
+
+def reference_files():
+	'''show which source file in the repository synctool uses'''
 
 	# reference() can't find ._template.post scripts
 	# Is this a bad thing?
 
-	obj, post_dict = synctool.overlay.find_terse(synctool.param.OVERLAY_DIR,
-													filename)
-	if not obj:
-		if post_dict != None:
-			# multiple sources possible, message has already been printed
-			return
+	synctool.overlay.visit(synctool.param.OVERLAY_DIR, _reference_callback)
 
-		obj, post_dict = synctool.overlay.find_terse(
-							synctool.param.DELETE_DIR, filename)
-		if not obj:
-			if post_dict != None:
-				# multiple sources possible, message has already been printed
-				return
-
-			stderr('%s is not in the overlay tree' % filename)
-			return
-
-	print obj.print_src()
+	for filename in SINGLE_FILES:
+		stderr('%s is not in the overlay tree' % filename)
 
 
 def diff_files(filename):
@@ -773,8 +772,7 @@ def main():
 			diff_files(f)
 
 	elif action == ACTION_REFERENCE:
-		for f in SINGLE_FILES:
-			reference(f)
+		reference_files()
 
 	elif action == ACTION_ERASE_SAVED:
 		if SINGLE_FILES:
