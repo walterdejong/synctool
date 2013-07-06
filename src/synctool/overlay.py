@@ -319,7 +319,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
 
 		if obj.ov_type == OV_TEMPLATE_POST:
 			# it's a template generator. So generate
-			# FIXME How about calling callback() for this, too?
+			# FIXME How about calling callback() for generating templates?
 			obj = generate_template(obj)
 			if not obj:
 				# either failed or skipped
