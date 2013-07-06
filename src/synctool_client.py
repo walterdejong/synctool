@@ -34,6 +34,93 @@ SINGLE_FILES = []
 DIR_CHANGED = None
 
 
+def generate_template(obj):
+	'''run template .post script, generating a new file
+	The script will run in the source dir (overlay tree) and
+	it will run even in dry-run mode
+	Returns: True or False on error or skipped'''
+
+	if synctool.lib.NO_POST:
+		return False
+
+	if len(SINGLE_FILES) > 0 and obj.dest_path not in SINGLE_FILES:
+		verbose('skipping template generation of %s' % obj.src_path)
+		return False
+
+	verbose('generating template %s' % obj.print_src())
+
+	src_dir = os.path.dirname(obj.src_path)
+	newname = os.path.basename(obj.dest_path)
+	template = newname + '._template'
+	# add most important extension
+	newname += '._' + synctool.param.NODENAME
+
+	# chdir to source directory
+	verbose('  os.chdir(%s)' % src_dir)
+	unix_out('cd %s' % src_dir)
+
+	cwd = os.getcwd()
+
+	try:
+		os.chdir(src_dir)
+	except OSError, reason:
+		stderr('error changing directory to %s: %s' % (src_dir, reason))
+		return False
+
+	# temporarily restore original umask
+	# so the script runs with the umask set by the sysadmin
+	os.umask(synctool.param.ORIG_UMASK)
+
+	# run the script
+	# pass template and newname as "$1" and "$2"
+	cmd_arr = [obj.src_path, template, newname]
+	verbose('  os.system(%s, %s, %s)' % (synctool.lib.prettypath(cmd_arr[0]),
+				cmd_arr[1], cmd_arr[2]))
+	unix_out('# run command %s' % os.path.basename(cmd_arr[0]))
+	unix_out('%s "%s" "%s"' % (cmd_arr[0], cmd_arr[1], cmd_arr[2]))
+
+	sys.stdout.flush()
+	sys.stderr.flush()
+
+	err = False
+	try:
+		subprocess.call(cmd_arr, shell=False)
+	except OSError, reason:
+		stderr("failed to run shell command '%s' : %s" %
+				(synctool.lib.prettypath(cmd_arr[0]), reason))
+		err = True
+
+	sys.stdout.flush()
+	sys.stderr.flush()
+
+	if not os.path.exists(newname):
+		verbose('warning: expected output %s was not generated' % newname)
+		err = True
+	else:
+		verbose('found generated output %s' % newname)
+
+	os.umask(077)
+
+	# chdir back to original location
+	# chdir to source directory
+	verbose('  os.chdir(%s)' % cwd)
+	unix_out('cd %s' % cwd)
+	try:
+		os.chdir(cwd)
+	except OSError, reason:
+		stderr('error changing directory to %s: %s' % (cwd, reason))
+		return False
+
+	if err:
+		return False
+
+	# modify the object; set new src and dest filenames
+	# later, visit() will call obj.make(), which will make full paths
+	obj.src_path = newname
+	obj.dest_path = os.path.basename(obj.dest_path)
+	return True
+
+
 def run_command(cmd):
 	'''run a shell command'''
 
@@ -117,6 +204,9 @@ def _run_post(obj, post_script):
 def _overlay_callback(obj, post_dict, dir_changed=False):
 	'''compare files and run post-script if needed'''
 
+	if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
+		return generate_template(obj), False
+
 	verbose('checking %s' % obj.print_src())
 
 	if obj.src_stat.is_dir():
@@ -178,6 +268,9 @@ def delete_files():
 def _erase_saved_callback(obj, post_dict, dir_changed=False):
 	'''erase *.saved backup files'''
 
+	if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
+		return generate_template(obj), False
+
 	if obj.src_stat.is_dir():
 		# run .post script on changed directory
 		if dir_changed and post_dict.has_key(obj.dest_path):
@@ -208,6 +301,9 @@ def erase_saved():
 def _single_overlay_callback(obj, post_dict, updated=False):
 	'''do overlay function for single files'''
 
+	if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
+		return generate_template(obj), False
+
 	go_on = True
 
 	# TODO match terse path
@@ -234,6 +330,9 @@ def _single_overlay_callback(obj, post_dict, updated=False):
 
 def _single_delete_callback(obj, post_dict, updated=False):
 	'''do delete function for single files'''
+
+	if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
+		return generate_template(obj), False
 
 	go_on = True
 
@@ -289,6 +388,9 @@ def single_files():
 
 def _single_erase_saved_callback(obj, post_dict, updated=False):
 	'''do 'erase saved' function for single files'''
+
+	if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
+		return generate_template(obj), False
 
 	go_on = True
 
@@ -361,23 +463,29 @@ def single_erase_saved():
 
 
 def _reference_callback(obj, post_dict, dir_changed=False):
+	'''callback for reference_files()'''
+
+	if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
+		if obj.dest_path in SINGLE_FILES:
+			# this template .post script generates the file
+			SINGLE_FILES.remove(obj.dest_path)
+			print obj.print_src()
+
+		return False, False
+
 	# TODO match terse path
 	if obj.dest_path in SINGLE_FILES:
 		SINGLE_FILES.remove(obj.dest_path)
-
 		print obj.print_src()
 
-		if not SINGLE_FILES:
-			return False, False
+	if not SINGLE_FILES:
+		return False, False
 
 	return True, False
 
 
 def reference_files():
 	'''show which source file in the repository synctool uses'''
-
-	# reference() can't find ._template.post scripts
-	# Is this a bad thing?
 
 	synctool.overlay.visit(synctool.param.OVERLAY_DIR, _reference_callback)
 
@@ -386,6 +494,9 @@ def reference_files():
 
 
 def _diff_callback(obj, post_dict, dir_changed=False):
+	if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
+		return generate_template(obj), False
+
 	# TODO match terse path
 	if obj.dest_path in SINGLE_FILES:
 		SINGLE_FILES.remove(obj.dest_path)

@@ -226,6 +226,9 @@ def rsync_include_filter(nodename):
 def _upload_callback(obj, post_dict, dir_changed=False):
 	'''find the overlay path for the destination in UPLOAD_FILE'''
 
+	if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
+		return False, False
+
 	# TODO match terse path
 	if obj.dest_path == UPLOAD_FILE.filename:
 		UPLOAD_FILE.repos_path = obj.src_path
