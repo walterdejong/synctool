@@ -773,13 +773,12 @@ def main():
 		reference_files()
 
 	elif action == ACTION_ERASE_SAVED:
-		if SINGLE_FILES:
-			for single_file in SINGLE_FILES:
-				single_erase_saved(single_file)
+		if len(SINGLE_FILES) > 0:
+			single_erase_saved()
 		else:
 			erase_saved()
 
-	elif SINGLE_FILES:
+	elif len(SINGLE_FILES) > 0:
 		single_files()
 
 	else:
