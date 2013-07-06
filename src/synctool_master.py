@@ -49,6 +49,7 @@ class UploadFile(object):
 		self.suffix = None
 		self.node = None
 		self.address = None
+		self.repos_path = None
 
 	def ready(self):
 		if self.node and self.filename:
@@ -56,23 +57,46 @@ class UploadFile(object):
 
 		return False
 
-	def repos_path(self):
-		fn = self.filename
-		if fn[0] == '/':
-			fn = fn[1:]
+	def make_repos_path(self):
+		if not self.repos_path:
+			fn = self.filename
+			if fn[0] == '/':
+				fn = fn[1:]
 
-		overlay_dir = self.overlay
-		if not overlay_dir:
-			overlay_dir = 'all'
+			overlay_dir = self.overlay
+			if not overlay_dir:
+				overlay_dir = 'all'
 
-		if not self.suffix and synctool.param.REQUIRE_EXTENSION:
-			self.suffix = 'all'
+			if not self.suffix and synctool.param.REQUIRE_EXTENSION:
+				self.suffix = 'all'
 
-		if not self.suffix:
-			return os.path.join(synctool.param.OVERLAY_DIR, overlay_dir, fn)
+			if not self.suffix:
+				self.repos_path = os.path.join(synctool.param.OVERLAY_DIR,
+												overlay_dir, fn)
+				return
 
-		return os.path.join(synctool.param.OVERLAY_DIR, overlay_dir,
-							fn + '._' + self.suffix)
+			self.repos_path = os.path.join(synctool.param.OVERLAY_DIR,
+											overlay_dir,
+											fn + '._' + self.suffix)
+			return
+
+		if self.suffix:
+			# remove the current group suffix
+			# and add the specified suffix to the filename
+			(self.repos_path, ext) = os.path.splitext(self.repos_path)
+			self.repos_path += '._' + self.suffix
+
+		if self.overlay:
+			# user supplied (maybe a different) overlay group dir
+			# so take repos_filename apart and insert a new group dir
+			if (self.repos_path[:synctool.param.OVERLAY_LEN] ==
+				synctool.param.OVERLAY_DIR + os.sep):
+				arr = self.repos_path.split(os.sep)
+				overlay_arr = synctool.param.OVERLAY_DIR.split(os.sep)
+				# replace the group dir with what the user gave
+				arr[len(overlay_arr)] = self.overlay
+				# reassemble the full path with up.overlay as group dir
+				self.repos_path = os.sep.join(arr)
 
 
 def run_remote_synctool(address_list):
@@ -199,9 +223,21 @@ def rsync_include_filter(nodename):
 	return filename
 
 
-def upload(up):
-	'''copy a file from a node into the overlay/ tree
-	'up' is an UploadFile object'''
+def _upload_callback(obj, post_dict, dir_changed=False):
+	'''find the overlay path for the destination in UPLOAD_FILE'''
+
+	# TODO match terse path
+	if obj.dest_path == UPLOAD_FILE.filename:
+		UPLOAD_FILE.repos_path = obj.src_path
+		return False, False
+
+	return True, False
+
+
+def upload():
+	'''copy a file from a node into the overlay/ tree'''
+
+	up = UPLOAD_FILE
 
 	if up.filename[0] != os.sep:
 		stderr('error: the filename to upload must be an absolute path')
@@ -229,68 +265,26 @@ def upload(up):
 	synctool.param.MY_GROUPS = synctool.config.get_my_groups()
 
 	# see if file is already in the repository
-	(obj, post) = synctool.overlay.find_terse(synctool.param.OVERLAY_DIR,
-												up.filename)
+	synctool.overlay.visit(synctool.param.OVERLAY_DIR, _upload_callback)
 
-	if obj == None and post != None:
-		# multiple source possible
-		# possibilities have already been printed
-		sys.exit(1)
-
-	if obj == None:
-		# no source path found
-		if up.filename.find('...') >= 0:
-			stderr("%s is not in the repository, don't know what to map "
-					"this path to\n"
-					"Please give the full path instead of a terse path, "
-					"or touch the source file\n"
-					"in the repository first and try again" %
-					os.path.basename(up.filename))
-			sys.exit(1)
-
-		# it wasn't a terse path, choose standard source path
-		# $overlay/group/path/file._suffix
-		repos_filename = up.repos_path()
-
-	else:
-		if up.suffix:
-			# remove the current group suffix
-			# and add the specified suffix to the filename
-			(repos_filename, ext) = os.path.splitext(obj.src_path)
-			repos_filename += '._' + up.suffix
-		else:
-			repos_filename = obj.src_path
-
-		if up.overlay:
-			# user supplied (maybe a different) overlay group dir
-			# so take repos_filename apart and insert a new group dir
-			if (repos_filename[:synctool.param.OVERLAY_LEN] ==
-				synctool.param.OVERLAY_DIR + os.sep):
-				arr = repos_filename.split(os.sep)
-				overlay_arr = synctool.param.OVERLAY_DIR.split(os.sep)
-				# replace the group dir with what the user gave
-				arr[len(overlay_arr)] = up.overlay
-				# reassemble the full path with up.overlay as group dir
-				repos_filename = os.sep.join(arr)
-#			else:
-#				I don't know, give up
+	up.make_repos_path()
 
 	synctool.param.NODENAME = orig_nodename
 	synctool.param.MY_GROUPS = orig_my_groups
 
-	verbose('%s:%s uploaded as %s' % (up.node, up.filename, repos_filename))
-	terse(synctool.lib.TERSE_UPLOAD, repos_filename)
+	verbose('%s:%s uploaded as %s' % (up.node, up.filename, up.repos_path))
+	terse(synctool.lib.TERSE_UPLOAD, up.repos_path)
 	unix_out('%s %s:%s %s' % (synctool.param.SCP_CMD, up.address,
-								up.filename, repos_filename))
+								up.filename, up.repos_path))
 
 	if synctool.lib.DRY_RUN:
 		stdout('would be uploaded as %s' %
-				synctool.lib.prettypath(repos_filename))
+				synctool.lib.prettypath(up.repos_path))
 	else:
 		# first check if the directory in the repository exists
 		# TODO would it make sense to use rsync for uploading in this case?
 		# TODO else mkdir_p() doesn't require first doing stat() anymore
-		repos_dir = os.path.dirname(repos_filename)
+		repos_dir = os.path.dirname(up.repos_path)
 		stat = synctool.syncstat.SyncStat(repos_dir)
 		if not stat.exists():
 			verbose('making directory %s' %
@@ -301,15 +295,17 @@ def upload(up):
 		# make scp command array
 		scp_cmd_arr = shlex.split(synctool.param.SCP_CMD)
 		scp_cmd_arr.append('%s:%s' % (up.address, up.filename))
-		scp_cmd_arr.append(repos_filename)
+		scp_cmd_arr.append(up.repos_path)
 
 		synctool.lib.run_with_nodename(scp_cmd_arr, up.node)
 
-		if os.path.isfile(repos_filename):
-			stdout('uploaded %s' % synctool.lib.prettypath(repos_filename))
+		if os.path.isfile(up.repos_path):
+			stdout('uploaded %s' % synctool.lib.prettypath(up.repos_path))
 
 
 def make_tempdir():
+	'''create temporary directory (for storing rsync filter files)'''
+
 	if not os.path.isdir(synctool.param.TEMP_DIR):
 		try:
 			os.mkdir(synctool.param.TEMP_DIR, 0750)
@@ -722,7 +718,7 @@ def main():
 			sys.exit(1)
 
 		UPLOAD_FILE.address = address_list[0]
-		upload(UPLOAD_FILE)
+		upload()
 
 	else:
 		# do regular synctool run

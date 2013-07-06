@@ -55,21 +55,6 @@ OV_TEMPLATE = 2
 OV_TEMPLATE_POST = 3
 OV_NO_EXT = 4
 
-# used with find() and _find_callback() function
-_SEARCH = None
-_FOUND = None
-_POST_DICT = None
-
-# used with _find_terse() and _find_terse_callback() function
-_TERSE_ENDING = None
-_TERSE_LEN = 0
-_TERSE_MATCHES = None
-
-# do not generate any templates, except for this one
-# used by find() to keep visit() from generating all templates,
-# when only a single file is requested
-_SINGLE_TEMPLATE = None
-
 
 def generate_template(obj):
 	'''run template .post script, generating a new file
@@ -334,8 +319,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
 
 		if obj.ov_type == OV_TEMPLATE_POST:
 			# it's a template generator. So generate
-			# FIXME How about calling callback() for this, too?
-			# FIXME And then find() would be able to find this, too
+			# FIXME How about calling callback() for generating templates?
 			obj = generate_template(obj)
 			if not obj:
 				# either failed or skipped
@@ -422,103 +406,5 @@ def visit(overlay, callback):
 		if not _walk_subtree(d, os.sep, duplicates, {}, callback):
 			# quick exit
 			break
-
-
-def _find_callback(obj, post_dict, dir_changed=False):
-	'''callback function used with find()'''
-
-	global _FOUND, _POST_DICT
-
-	if obj.dest_path == _SEARCH:
-		_FOUND = obj
-		_POST_DICT = post_dict
-		return False, False		# signal quick exit
-
-	return True, False
-
-
-def find(overlay, dest_path):
-	'''search repository for source of dest_path
-	Returns two values: SyncObject, post_dict
-	or None, None if not found'''
-
-	# FIXME find() could be able to find multiple entries in one visit() call
-	# FIXME but we should really handle single_files entirely without find()
-	# FIXME so focus on synctool-client code instead
-
-	global _SEARCH, _FOUND, _POST_DICT, _SINGLE_TEMPLATE
-
-	_SEARCH = dest_path
-	_FOUND = None
-	_POST_DICT = None
-	_SINGLE_TEMPLATE = dest_path
-
-	visit(overlay, _find_callback)
-
-	_SINGLE_TEMPLATE = None
-	return _FOUND, _POST_DICT
-
-
-def _find_terse_callback(obj, post_dict, dir_changed=False):
-	'''callback function used with find_terse()'''
-
-	global _POST_DICT
-
-	l = len(obj.dest_path)
-	if l > _TERSE_LEN:
-		# first do a quick test
-		if obj.dest_path[-1] != _TERSE_ENDING[-1]:
-			return True, False
-
-		# check the ending path
-		if obj.dest_path[(l - _TERSE_LEN):] == _TERSE_ENDING:
-			_TERSE_MATCHES.append(obj)
-			_POST_DICT = post_dict
-			# keep on scanning to find all matches
-
-	return True, False
-
-
-def find_terse(overlay, terse_path):
-	'''find the full source and dest paths for a terse destination path
-	Returns two values: SyncObject, post_dict
-	or None, None if source does not exist
-	or None, {} if multiple sources are possible'''
-
-	global _TERSE_MATCHES, _TERSE_ENDING, _TERSE_LEN
-
-	idx = terse_path.find('...')
-	if idx == -1:
-		if terse_path[:2] == '//':
-			terse_path = os.path.join(synctool.param.VAR_DIR, terse_path[2:])
-
-		# this is not really a terse path, return a regular find()
-		return find(overlay, terse_path)
-
-	_TERSE_ENDING = terse_path[(idx+3):]
-	_TERSE_LEN = len(_TERSE_ENDING)
-	_TERSE_MATCHES = []
-
-	# FIXME find_terse() should not generate templates,
-	# FIXME unless it's the file we are looking for
-	# FIXME trick with _SINGLE_TEMPLATE does not work here ...
-	visit(overlay, _find_terse_callback)
-
-	if not _TERSE_MATCHES:
-		return None, None
-
-	if len(_TERSE_MATCHES) > 1:
-		stderr('There are multiple possible sources for this terse path.\n'
-				'Pick one full destination path:')
-		n = 1
-		for obj in _TERSE_MATCHES:
-			stderr('%2d. %s' % (n, obj.dest_path))
-			n += 1
-
-		return None, {}
-
-	# good, there was only one match
-	return _TERSE_MATCHES[0], _POST_DICT
-
 
 # EOB
