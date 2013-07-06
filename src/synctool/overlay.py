@@ -56,88 +56,6 @@ OV_TEMPLATE_POST = 3
 OV_NO_EXT = 4
 
 
-def generate_template(obj):
-	'''run template .post script, generating a new file
-	The script will run in the source dir (overlay tree) and
-	it will run even in dry-run mode
-	Returns: SyncObject of the new file or None on error'''
-
-	if _SINGLE_TEMPLATE != None and _SINGLE_TEMPLATE != obj.dest_path:
-		verbose('skipping template generation of %s' % obj.src_path)
-		return None
-
-	verbose('generating template %s' % obj.print_src())
-
-	src_dir = os.path.dirname(obj.src_path)
-	newname = os.path.basename(obj.dest_path)
-	template = newname + '._template'
-	# add most important extension
-	newname += '._' + synctool.param.NODENAME
-
-	# chdir to source directory
-	verbose('  os.chdir(%s)' % src_dir)
-	unix_out('cd %s' % src_dir)
-
-	cwd = os.getcwd()
-
-	try:
-		os.chdir(src_dir)
-	except OSError, reason:
-		stderr('error changing directory to %s: %s' % (src_dir, reason))
-		return None
-
-	# temporarily restore original umask
-	# so the script runs with the umask set by the sysadmin
-	os.umask(synctool.param.ORIG_UMASK)
-
-	# run the script
-	# pass template and newname as "$1" and "$2"
-	cmd_arr = [obj.src_path, template, newname]
-	verbose('  os.system(%s, %s, %s)' % (synctool.lib.prettypath(cmd_arr[0]),
-				cmd_arr[1], cmd_arr[2]))
-	unix_out('# run command %s' % os.path.basename(cmd_arr[0]))
-	unix_out('%s "%s" "%s"' % (cmd_arr[0], cmd_arr[1], cmd_arr[2]))
-
-	sys.stdout.flush()
-	sys.stderr.flush()
-
-	err = False
-	try:
-		subprocess.call(cmd_arr, shell=False)
-	except OSError, reason:
-		stderr("failed to run shell command '%s' : %s" %
-				(synctool.lib.prettypath(cmd_arr[0]), reason))
-		err = True
-
-	sys.stdout.flush()
-	sys.stderr.flush()
-
-	if not os.path.exists(newname):
-		verbose('warning: expected output %s was not generated' % newname)
-		err = True
-	else:
-		verbose('found generated output %s' % newname)
-
-	os.umask(077)
-
-	# chdir back to original location
-	# chdir to source directory
-	verbose('  os.chdir(%s)' % cwd)
-	unix_out('cd %s' % cwd)
-	try:
-		os.chdir(cwd)
-	except OSError, reason:
-		stderr('error changing directory to %s: %s' % (cwd, reason))
-		return None
-
-	if err:
-		return None
-
-	# this will return the new file as an object
-	obj, importance = _split_extension(newname, src_dir)
-	return obj
-
-
 def _sort_by_importance(item1, item2):
 	'''item is a tuple (x, importance)'''
 	return cmp(item1[1], item2[1])
@@ -318,15 +236,16 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
 			continue
 
 		if obj.ov_type == OV_TEMPLATE_POST:
-			# it's a template generator. So generate
-			# FIXME How about calling callback() for generating templates?
-			obj = generate_template(obj)
-			if not obj:
+			# it's a template generator. So generate it in the callback
+			ok, changed = callback(obj, post_dict, dir_changed)
+			if not ok:
 				# either failed or skipped
 				continue
 
 			# we generated a new file, represented by obj
-			# so continue with the new obj
+			# so continue
+			obj.ov_type = OV_REG
+			importance = 0
 			obj.make(src_dir, dest_dir)
 
 		if obj.src_stat.is_dir():
