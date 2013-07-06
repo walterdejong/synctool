@@ -68,6 +68,7 @@ _TERSE_MATCHES = None
 # do not generate any templates, except for this one
 # used by find() to keep visit() from generating all templates,
 # when only a single file is requested
+# FIXME get rid of this hack
 _SINGLE_TEMPLATE = None
 
 
