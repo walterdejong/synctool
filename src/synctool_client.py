@@ -385,44 +385,43 @@ def reference_files():
 		stderr('%s is not in the overlay tree' % filename)
 
 
-def diff_files(filename):
-	'''display a diff of the file'''
+def _diff_callback(obj, post_dict, dir_changed=False):
+	# TODO match terse path
+	if obj.dest_path in SINGLE_FILES:
+		SINGLE_FILES.remove(obj.dest_path)
 
-	if not synctool.param.DIFF_CMD:
-		stderr('error: diff_cmd is undefined in %s' %
-				synctool.param.CONF_FILE)
-		return
+		verbose('%s %s %s' % (synctool.param.DIFF_CMD,
+								obj.dest_path, obj.print_src()))
+		unix_out('%s %s %s' % (synctool.param.DIFF_CMD,
+								obj.dest_path, obj.src_path))
+		# execute diff
+		sys.stdout.flush()
+		sys.stderr.flush()
 
-	# be sure that it doesn't do any updates
-	synctool.lib.DRY_RUN = True
+		cmd_arr = shlex.split(synctool.param.DIFF_CMD)
+		cmd_arr.append(obj.dest_path)
+		cmd_arr.append(obj.src_path)
+		try:
+			subprocess.call(cmd_arr, shell=False)
+		except OSError, reason:
+			stderr('failed to run diff_cmd: %s' % reason)
 
-	obj, post_dict = synctool.overlay.find_terse(synctool.param.OVERLAY_DIR,
-													filename)
-	if not obj:
-		if post_dict != None:
-			# multiple sources possible, message has already been printed
-			return
+		sys.stdout.flush()
+		sys.stderr.flush()
 
+		if not SINGLE_FILES:
+			return False, False
+
+	return True, False
+
+
+def diff_files():
+	'''display a diff of the single files'''
+
+	synctool.overlay.visit(synctool.param.OVERLAY_DIR, _diff_callback)
+
+	for filename in SINGLE_FILES:
 		stderr('%s is not in the overlay tree' % filename)
-		return
-
-	verbose('%s %s %s' % (synctool.param.DIFF_CMD,
-							obj.dest_path, obj.print_src()))
-	unix_out('%s %s %s' % (synctool.param.DIFF_CMD,
-							obj.dest_path, obj.src_path))
-	sys.stdout.flush()
-	sys.stderr.flush()
-
-	cmd_arr = shlex.split(synctool.param.DIFF_CMD)
-	cmd_arr.append(obj.dest_path)
-	cmd_arr.append(obj.src_path)
-	try:
-		subprocess.call(cmd_arr, shell=False)
-	except OSError, reason:
-		stderr('failed to run diff_cmd: %s' % reason)
-
-	sys.stdout.flush()
-	sys.stderr.flush()
 
 
 def be_careful_with_getopt():
@@ -768,8 +767,7 @@ def main():
 	os.umask(077)
 
 	if action == ACTION_DIFF:
-		for f in SINGLE_FILES:
-			diff_files(f)
+		diff_files()
 
 	elif action == ACTION_REFERENCE:
 		reference_files()
