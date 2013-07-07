@@ -418,7 +418,7 @@ def usage():
 	print 'usage: %s [options]' % os.path.basename(sys.argv[0])
 	print 'options:'
 	print '  -h, --help                  Display this information'
-	print '  -c, --conf=PATH             Use this config file'
+	print '  -c, --conf=FILE             Use this config file'
 	print ('                              (default: %s)' %
 		synctool.param.DEFAULT_CONF)
 	print '''  -n, --node=LIST             Execute only on these nodes
@@ -426,7 +426,7 @@ def usage():
   -x, --exclude=LIST          Exclude these nodes from the selected group
   -X, --exclude-group=LIST    Exclude these groups from the selection
 
-  -d, --diff=PATH             Show diff for file
+  -d, --diff=FILE             Show diff for file
   -1, --single=PATH           Update a single file
   -r, --ref=PATH              Show which source file synctool chooses
   -u, --upload=PATH           Pull a remote file into the overlay tree
