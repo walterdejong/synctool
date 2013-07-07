@@ -114,9 +114,8 @@ def worker_synctool(addr):
 		run_local_synctool()
 		return
 
-	# TODO add purge dirs (idea by Rob van der Wal)
-	if not (OPT_SKIP_RSYNC or nodename in synctool.param.NO_RSYNC):
-		purge_dirs(addr, nodename)
+	# first rsync the purge dirs (if any)
+	do_purge(addr, nodename)
 
 	# rsync ROOTDIR/dirs/ to the node
 	# if "it wants it"
@@ -164,7 +163,11 @@ def worker_synctool(addr):
 
 
 def run_local_synctool():
-	# TODO local purge run
+	'''run synctool on the master node itself'''
+
+	# do local purge run
+	do_purge('localhost', synctool.param.NODENAME, locally=True)
+
 	cmd_arr = shlex.split(synctool.param.SYNCTOOL_CMD) + PASS_ARGS
 
 	verbose('running synctool on node %s' % synctool.param.NODENAME)
@@ -173,9 +176,67 @@ def run_local_synctool():
 	synctool.lib.run_with_nodename(cmd_arr, synctool.param.NODENAME)
 
 
-def purge_dirs(addr, nodename):
-	'''rsync relevant purge dirs to node'''
-	pass
+def do_purge(addr, nodename, locally=False):
+	'''rsync all relevant purge dirs to node'''
+
+	if OPT_SKIP_RSYNC or nodename in synctool.param.NO_RSYNC:
+		return
+
+	# set mygroups for this nodename
+	synctool.param.NODENAME = nodename
+	synctool.param.MY_GROUPS = synctool.config.get_my_groups()
+
+	paths = []
+	# find the source purge paths that we need to copy
+	# scan only the group dirs that apply
+	for g in synctool.param.MY_GROUPS:
+		d = os.path.join(synctool.param.PURGE_DIR, g)
+		if os.path.isdir(d):
+			for path, subdirs, files in os.walk(d):
+				# rsync only purge dirs that actually contain files
+				# otherwise rsync --delete would wreak havoc
+				if not files:
+					continue
+
+				# paths has (src_dir, dest_dir)
+				paths.append((path, path[len(d):]))
+
+				# do not recurse into this dir any deeper
+				del subdirs[:]
+
+	cmd_rsync = shlex.split(synctool.param.RSYNC_CMD)
+
+	# call rsync to copy the purge dirs
+	for src, dest in paths:
+		# trailing slash on source path is important for rsync
+		src += os.sep
+		dest += os.sep
+
+		cmd_arr = cmd_rsync[:]
+
+		# opts is just for the 'visual aspect'; it is displayed when --verbose
+		opts = ' '
+		if synctool.lib.DRY_RUN:
+			cmd_arr.append('-n')
+			opts += '-n '
+
+		if synctool.lib.VERBOSE:
+			cmd_arr.append('-v')
+			opts += '-v '
+
+		cmd_arr.append(src)
+
+		if not locally:
+			# prepend node address to dest path
+			dest = addr + ':' + dest
+
+		cmd_arr.append(dest)
+
+		verbose('running rsync%s%s to %s' %
+				(opts, synctool.lib.prettypath(src), dest))
+		unix_out(' '.join(cmd_arr))
+
+		synctool.lib.run_with_nodename(cmd_arr, nodename)
 
 
 def rsync_include_filter(nodename):
