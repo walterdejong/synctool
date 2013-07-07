@@ -598,15 +598,15 @@ def check_cmd_config():
 
 
 def usage():
-	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
+	print 'usage: %s [options]' % os.path.basename(sys.argv[0])
 	print 'options:'
 	print '  -h, --help            Display this information'
-	print '  -c, --conf=dir/file   Use this config file'
+	print '  -c, --conf=FILE       Use this config file'
 	print ('                        (default: %s)' %
 		synctool.param.DEFAULT_CONF)
-	print '''  -d, --diff=file       Show diff for file
-  -1, --single=file     Update a single file
-  -r, --ref=file        Show which source file synctool chooses
+	print '''  -d, --diff=FILE       Show diff for file
+  -1, --single=PATH     Update a single file
+  -r, --ref=PATH        Show which source file synctool chooses
   -e, --erase-saved     Erase *.saved backup files
   -f, --fix             Perform updates (otherwise, do dry-run)
       --no-post         Do not run any .post scripts
@@ -619,7 +619,6 @@ def usage():
   -q, --quiet           Suppress informational startup messages
       --version         Print current version number
 
-synctool can help you administer your cluster of machines
 Note that synctool does a dry run unless you specify --fix
 '''
 
