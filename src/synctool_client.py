@@ -603,7 +603,7 @@ def usage():
 	print '  -h, --help            Display this information'
 	print '  -c, --conf=FILE       Use this config file'
 	print ('                        (default: %s)' %
-		synctool.param.DEFAULT_CONF)
+			synctool.param.DEFAULT_CONF)
 	print '''  -d, --diff=FILE       Show diff for file
   -1, --single=PATH     Update a single file
   -r, --ref=PATH        Show which source file synctool chooses
