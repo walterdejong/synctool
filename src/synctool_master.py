@@ -52,14 +52,13 @@ class UploadFile(object):
 		self.address = None
 		self.repos_path = None
 
-	def ready(self):
-		if self.node and self.filename:
-			return True
-
-		return False
-
 	def make_repos_path(self):
-		# TODO what about self.purge?
+		'''make $overlay repository path from elements'''
+
+		if self.purge:
+			self._make_purge_path()
+			return
+
 		if not self.repos_path:
 			fn = self.filename
 			if fn[0] == '/':
@@ -100,8 +99,20 @@ class UploadFile(object):
 				# reassemble the full path with up.overlay as group dir
 				self.repos_path = os.sep.join(arr)
 
+	def _make_purge_path(self):
+		'''make $purge repository path from elements'''
+
+		if len(self.filename) > 1 and self.filename[-1] == '/':
+			# strip trailing slash
+			self.filename = self.filename[:-1]
+
+		self.repos_path = (os.path.join(synctool.param.PURGE_DIR,
+							self.purge) + os.path.dirname(self.filename))
+
 
 def run_remote_synctool(address_list):
+	'''run synctool on target nodes'''
+
 	synctool.lib.multiprocess(worker_synctool, address_list)
 
 
@@ -299,10 +310,6 @@ def upload_purge():
 
 	up = UPLOAD_FILE
 
-	if len(up.filename) > 1 and up.filename[-1] == '/':
-		# strip trailing slash
-		up.filename = up.filename[:-1]
-
 	# make command: rsync [-n] [-v] node:/path/ $purge/group/path/
 	cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
 
@@ -316,15 +323,15 @@ def upload_purge():
 		cmd_arr.append('-v')
 		opts += '-v '
 
-	up.repos_path = (os.path.join(synctool.param.PURGE_DIR, up.purge) +
-					os.path.dirname(up.filename))
+	up.make_repos_path()
 
 	cmd_arr.append(up.filename)
 	cmd_arr.append(up.address + ':' + up.repos_path)
 
+	verbose_path = os.path.join(synctool.lib.prettypath(up.repos_path),
+								os.path.basename(up.filename))
 	if synctool.lib.DRY_RUN:
-		stdout('would be uploaded as %s' % synctool.lib.prettypath(
-											up.repos_path))
+		stdout('would be uploaded as %s' % verbose_path)
 
 	verbose('running rsync%s%s:%s to %s' % (opts, up.address, up.filename,
 									synctool.lib.prettypath(up.repos_path)))
@@ -332,7 +339,7 @@ def upload_purge():
 	synctool.lib.run_with_nodename(cmd_arr, up.node)
 
 	if not synctool.lib.DRY_RUN and os.path.exists(up.repos_path):
-		stdout('uploaded as %s' % synctool.lib.prettypath(up.repos_path))
+		stdout('uploaded as %s' % verbose_path)
 
 
 def _upload_callback(obj, post_dict, dir_changed=False):
