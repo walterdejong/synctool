@@ -15,6 +15,7 @@ import os
 import sys
 import getopt
 import shlex
+import time
 import errno
 
 import synctool.aggr
@@ -413,6 +414,9 @@ def main():
 if __name__ == '__main__':
 	try:
 		main()
+
+		# workaround exception in QueueFeederThread at exit
+		time.sleep(0.01)
 	except IOError, ioerr:
 		if ioerr.errno == errno.EPIPE:		# Broken pipe
 			pass
