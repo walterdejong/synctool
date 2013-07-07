@@ -251,6 +251,8 @@ do_install() {
 	makedir 755 "$INSTALL_ROOT/var/overlay"
 	echo "making $INSTALL_ROOT/var/delete"
 	makedir 750 "$INSTALL_ROOT/var/delete"
+	echo "making $INSTALL_ROOT/var/purge"
+	makedir 755 "$INSTALL_ROOT/var/purge"
 
 	echo "copying -> $INSTALL_ROOT/etc/synctool.conf.example"
 	if test "x$DRY_RUN" = "xno"
