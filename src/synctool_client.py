@@ -497,7 +497,21 @@ def reference_files():
 	synctool.overlay.visit(synctool.param.OVERLAY_DIR, _reference_callback)
 
 	for filename in SINGLE_FILES:
-		stderr('%s is not in the overlay tree' % filename)
+		# check the purge dir
+		filepath = filename
+		if filepath[0] == os.sep:
+			filepath = filepath[1:]
+
+		found = False
+		for g in synctool.param.MY_GROUPS:
+			fullpath = os.path.join(synctool.param.PURGE_DIR, g, filepath)
+			if os.path.exists(fullpath):
+				print synctool.lib.prettypath(fullpath)
+				found = True
+				break
+
+		if not found:
+			stderr('%s is not in the overlay tree' % filename)
 
 
 def _diff_callback(obj, post_dict, dir_changed=False):
