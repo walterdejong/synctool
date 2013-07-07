@@ -115,6 +115,8 @@ def worker_synctool(addr):
 		return
 
 	# TODO add purge dirs (idea by Rob van der Wal)
+	if not (OPT_SKIP_RSYNC or nodename in synctool.param.NO_RSYNC):
+		purge_dirs(addr, nodename)
 
 	# rsync ROOTDIR/dirs/ to the node
 	# if "it wants it"
@@ -162,12 +164,18 @@ def worker_synctool(addr):
 
 
 def run_local_synctool():
+	# TODO local purge run
 	cmd_arr = shlex.split(synctool.param.SYNCTOOL_CMD) + PASS_ARGS
 
 	verbose('running synctool on node %s' % synctool.param.NODENAME)
 	unix_out(' '.join(cmd_arr))
 
 	synctool.lib.run_with_nodename(cmd_arr, synctool.param.NODENAME)
+
+
+def purge_dirs(addr, nodename):
+	'''rsync relevant purge dirs to node'''
+	pass
 
 
 def rsync_include_filter(nodename):
@@ -251,13 +259,13 @@ def upload_purge():
 					os.path.dirname(up.filename))
 
 	cmd_arr.append(up.filename)
-	cmd_arr.append(up.node + ':' + up.repos_path)
+	cmd_arr.append(up.address + ':' + up.repos_path)
 
 	if synctool.lib.DRY_RUN:
 		stdout('would be uploaded as %s' % synctool.lib.prettypath(
 											up.repos_path))
 
-	verbose('running rsync%s%s:%s to %s' % (opts, up.node, up.filename,
+	verbose('running rsync%s%s:%s to %s' % (opts, up.address, up.filename,
 									synctool.lib.prettypath(up.repos_path)))
 	unix_out(' '.join(cmd_arr))
 	synctool.lib.run_with_nodename(cmd_arr, up.node)
