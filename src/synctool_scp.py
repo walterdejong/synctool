@@ -113,8 +113,8 @@ def usage():
   -o, --options=options          Set additional scp options
   -d, --dest=dir/file            Set destination name to copy to
 
-  -N, --no-nodename              Do not prepend nodename to output
-  -p, --numproc=NUM              Set number of concurrent procs
+      --no-nodename              Do not prepend nodename to output
+  -N, --numproc=NUM              Set number of concurrent procs
   -z, --zzz=NUM                  Sleep NUM seconds between each run
   -v, --verbose                  Be verbose
       --unix                     Output actions as unix shell commands
@@ -135,7 +135,7 @@ def get_options():
 	SCP_OPTIONS = None
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vd:o:n:g:x:X:Nqp:z:',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vd:o:n:g:x:X:qN:z:',
 			['help', 'conf=', 'verbose', 'dest=', 'options=',
 			'node=', 'group=', 'exclude=', 'exclude-group=',
 			'no-nodename', 'numproc=', 'zzz=', 'unix', 'quiet'])
@@ -215,7 +215,7 @@ def get_options():
 			DESTDIR = arg
 			continue
 
-		if opt in ('-N', '--no-nodename'):
+		if opt == '--no-nodename':
 			synctool.lib.OPT_NODENAME = False
 			continue
 
@@ -227,7 +227,7 @@ def get_options():
 			# silently ignore this option
 			continue
 
-		if opt in ('-p', '--numproc'):
+		if opt in ('-N', '--numproc'):
 			try:
 				synctool.param.NUM_PROC = int(arg)
 			except ValueError:

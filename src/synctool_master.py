@@ -435,7 +435,7 @@ def usage():
   -e, --erase-saved              Erase *.saved backup files
   -f, --fix                      Perform updates (otherwise, do dry-run)
       --no-post                  Do not run any .post scripts
-  -p, --numproc=num              Number of concurrent procs
+  -N, --numproc=num              Number of concurrent procs
   -F, --fullpath                 Show full paths instead of shortened ones
   -T, --terse                    Show terse, shortened paths
       --color                    Use colored output (only for terse mode)
@@ -467,7 +467,7 @@ def get_options():
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-			'hc:vn:g:x:X:d:1:r:u:o:s:efpFTqa',
+			'hc:vn:g:x:X:d:1:r:u:o:s:efN:FTqa',
 			['help', 'conf=', 'verbose', 'node=', 'group=',
 			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=',
 			'upload=', 'overlay=', 'suffix=', 'erase-saved', 'fix', 'no-post',
@@ -602,7 +602,7 @@ def get_options():
 		if opt == '--no-post':
 			synctool.lib.NO_POST = True
 
-		if opt in ('-p', '--numproc'):
+		if opt in ('-N', '--numproc'):
 			try:
 				synctool.param.NUM_PROC = int(arg)
 			except ValueError:

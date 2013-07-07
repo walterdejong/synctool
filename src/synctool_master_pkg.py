@@ -160,7 +160,7 @@ def usage():
   -C, --clean                    Cleanup caches of downloaded packages
 
   -f, --fix                      Perform upgrade (otherwise, do dry-run)
-  -p, --numproc=NUM              Set number of concurrent procs
+  -N, --numproc=NUM              Set number of concurrent procs
   -z, --zzz=NUM                  Sleep NUM seconds between each run
   -v, --verbose                  Be verbose
       --unix                     Output actions as unix shell commands
@@ -205,7 +205,7 @@ def get_options():
 	arglist = rearrange_options()
 
 	try:
-		opts, args = getopt.getopt(arglist, 'hc:n:g:x:X:iRluUCm:fp:z:vqa',
+		opts, args = getopt.getopt(arglist, 'hc:n:g:x:X:iRluUCm:fN:z:vqa',
 			['help', 'conf=', 'node=', 'group=', 'exclude=', 'exclude-group=',
 			'list', 'install', 'remove', 'update', 'upgrade', 'clean',
 			'cleanup', 'manager=', 'numproc=', 'zzz=',
@@ -308,7 +308,7 @@ def get_options():
 		if opt in ('-f', '--fix'):
 			synctool.lib.DRY_RUN = False
 
-		if opt in ('-p', '--numproc'):
+		if opt in ('-N', '--numproc'):
 			try:
 				synctool.param.NUM_PROC = int(arg)
 			except ValueError:

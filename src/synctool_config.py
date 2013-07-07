@@ -265,7 +265,7 @@ def usage():
 
   -C, --command=command    Display setting for command
   -P, --package-manager    Display configured package manager
-  -p, --numproc            Display numproc setting
+  -N, --numproc            Display numproc setting
   -d, --list-dirs          Display directory settings
       --prefix             Display installation prefix
       --nodename           Display my nodename
@@ -287,7 +287,7 @@ def get_options():
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:lLn:g:iHrfC:Ppdv',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:lLn:g:iHrfC:PNdv',
 			['help', 'conf=', 'list-nodes', 'list-groups', 'node=', 'group=',
 			'ipaddress', 'hostname', 'rsync', 'filter-ignored',
 			'command', 'package-manager', 'numproc', 'list-dirs',
@@ -369,7 +369,7 @@ def get_options():
 			set_action(ACTION_PKGMGR, '--package-manager')
 			continue
 
-		if opt in ('-p', '--numproc'):
+		if opt in ('-N', '--numproc'):
 			set_action(ACTION_NUMPROC, '--numproc')
 			continue
 

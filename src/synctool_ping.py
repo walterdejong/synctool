@@ -122,7 +122,7 @@ def usage():
   -X, --exclude-group=grouplist  Exclude these groups from the selection
   -a, --aggregate                Condense output
 
-  -p, --numproc=NUM              Set number of concurrent procs
+  -N, --numproc=NUM              Set number of concurrent procs
   -z, --zzz=NUM                  Sleep NUM seconds between each run
   -v, --verbose                  Be verbose
       --unix                     Output actions as unix shell commands
@@ -216,7 +216,7 @@ def get_options():
 			# silently ignore this option
 			continue
 
-		if opt in ('-p', '--numproc'):
+		if opt in ('-N', '--numproc'):
 			try:
 				synctool.param.NUM_PROC = int(arg)
 			except ValueError:
