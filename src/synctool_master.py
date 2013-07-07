@@ -46,6 +46,7 @@ class UploadFile(object):
 	def __init__(self):
 		self.filename = None
 		self.overlay = None
+		self.purge = None
 		self.suffix = None
 		self.node = None
 		self.address = None
@@ -58,6 +59,7 @@ class UploadFile(object):
 		return False
 
 	def make_repos_path(self):
+		# TODO what about self.purge?
 		if not self.repos_path:
 			fn = self.filename
 			if fn[0] == '/':
@@ -223,6 +225,13 @@ def rsync_include_filter(nodename):
 	return filename
 
 
+def upload_purge():
+	'''upload a file/dir to $purge/group/'''
+
+	# TODO implement this
+	pass
+
+
 def _upload_callback(obj, post_dict, dir_changed=False):
 	'''find the overlay path for the destination in UPLOAD_FILE'''
 
@@ -244,6 +253,10 @@ def _upload_callback(obj, post_dict, dir_changed=False):
 
 def upload():
 	'''copy a file from a node into the overlay/ tree'''
+
+	if UPLOAD_FILE.purge != None:
+		upload_purge()
+		return
 
 	up = UPLOAD_FILE
 
@@ -467,11 +480,11 @@ def get_options():
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-			'hc:vn:g:x:X:d:1:r:u:o:s:efN:FTqa',
+			'hc:vn:g:x:X:d:1:r:u:s:o:p:efN:FTqa',
 			['help', 'conf=', 'verbose', 'node=', 'group=',
 			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=',
-			'upload=', 'overlay=', 'suffix=', 'erase-saved', 'fix', 'no-post',
-			'numproc=', 'fullpath', 'terse', 'color', 'no-color',
+			'upload=', 'suffix=', 'overlay=', 'purge=', 'erase-saved', 'fix',
+			'no-post', 'numproc=', 'fullpath', 'terse', 'color', 'no-color',
 			'quiet', 'aggregate', 'unix', 'skip-rsync',
 			'version', 'check-update', 'download'])
 	except getopt.error, (reason):
@@ -500,8 +513,9 @@ def get_options():
 	opt_reference = False
 	opt_erase_saved = False
 	opt_upload = False
-	opt_overlay = False
 	opt_suffix = False
+	opt_overlay = False
+	opt_purge = False
 	opt_fix = False
 
 	PASS_ARGS = []
@@ -579,14 +593,19 @@ def get_options():
 			UPLOAD_FILE.filename = synctool.lib.strip_path(arg)
 			continue
 
+		if opt in ('-s', '--suffix'):
+			opt_suffix = True
+			UPLOAD_FILE.suffix = arg
+			continue
+
 		if opt in ('-o', '--overlay'):
 			opt_overlay = True
 			UPLOAD_FILE.overlay = arg
 			continue
 
-		if opt in ('-s', '--suffix'):
-			opt_suffix = True
-			UPLOAD_FILE.suffix = arg
+		if opt in ('-p', '--purge'):
+			opt_purge = True
+			UPLOAD_FILE.purge = arg
 			continue
 
 		if opt in ('-e', '--erase-saved'):
@@ -656,16 +675,32 @@ def get_options():
 		if arg:
 			PASS_ARGS.append(arg)
 
-	# do basic checks for uploading
-	if opt_overlay and not opt_upload:
-		print ('%s: option --overlay must be used in conjunction with '
-			'--upload' % os.path.basename(sys.argv[0]))
-		sys.exit(1)
-
+	# do basic checks for uploading and sub options
 	if opt_suffix and not opt_upload:
 		print ('%s: option --suffix must be used in conjunction with '
 			'--upload' % os.path.basename(sys.argv[0]))
 		sys.exit(1)
+
+	if opt_overlay and not opt_upload:
+		print ('%s: option --overlay must be used in conjunction with '
+				'--upload' % os.path.basename(sys.argv[0]))
+		sys.exit(1)
+
+	if opt_purge:
+		if not opt_upload:
+			print ('%s: option --purge must be used in conjunction with '
+					'--upload' % os.path.basename(sys.argv[0]))
+			sys.exit(1)
+
+		if opt_overlay:
+			print ('%s: option --overlay and --purge can not be combined' %
+					os.path.basename(sys.argv[0]))
+			sys.exit(1)
+
+		if opt_suffix:
+			print ('%s: option --suffix and --purge can not be combined' %
+					os.path.basename(sys.argv[0]))
+			sys.exit(1)
 
 	# enable logging at the master node
 	PASS_ARGS.append('--masterlog')
