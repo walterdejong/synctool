@@ -118,7 +118,6 @@ def usage():
   -z, --zzz=NUM                  Sleep NUM seconds between each run
   -v, --verbose                  Be verbose
       --unix                     Output actions as unix shell commands
-      --version                  Print current version number
 '''
 
 
@@ -161,10 +160,6 @@ def get_options():
 			synctool.param.CONF_FILE = arg
 			continue
 
-		if opt == '--version':
-			print synctool.param.VERSION
-			sys.exit(0)
-
 	synctool.config.read_config()
 	check_cmd_config()
 
@@ -177,7 +172,7 @@ def get_options():
 		if arg:
 			MASTER_OPTS.append(arg)
 
-		if opt in ('-h', '--help', '-?', '-c', '--conf', '--version'):
+		if opt in ('-h', '--help', '-?', '-c', '--conf'):
 			# already done
 			continue
 
