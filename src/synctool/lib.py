@@ -153,6 +153,10 @@ def prettypath(path):
 											os.sep):
 		return os.path.join('$delete', path[synctool.param.DELETE_LEN:])
 
+	if path[:synctool.param.PURGE_LEN] == (synctool.param.PURGE_DIR +
+											os.sep):
+		return os.path.join('$purge', path[synctool.param.PURGE_LEN:])
+
 	return path
 
 
@@ -204,6 +208,9 @@ def terse_match(a_terse_path, path):
 		return False
 
 	# match first part of the path
+	# Note: this is OK for destination paths, but bugged for source paths;
+	# in source paths, '//' should expand to $SYNCTOOL/var/
+	# (But terse_match() is used with dest paths only anyway)
 	return a_terse_path[1:idx+1] == path[:len(a_terse_path[1:idx+1])]
 
 

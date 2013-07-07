@@ -228,8 +228,42 @@ def rsync_include_filter(nodename):
 def upload_purge():
 	'''upload a file/dir to $purge/group/'''
 
-	# TODO implement this
-	pass
+	up = UPLOAD_FILE
+
+	if len(up.filename) > 1 and up.filename[-1] == '/':
+		# strip trailing slash
+		up.filename = up.filename[:-1]
+
+	# make command: rsync [-n] [-v] node:/path/ $purge/group/path/
+	cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
+
+	# opts is just for the 'visual aspect'; it is displayed when --verbose
+	opts = ' '
+	if synctool.lib.DRY_RUN:
+		cmd_arr.append('-n')
+		opts += '-n '
+
+	if synctool.lib.VERBOSE:
+		cmd_arr.append('-v')
+		opts += '-v '
+
+	up.repos_path = (os.path.join(synctool.param.PURGE_DIR, up.purge) +
+					os.path.dirname(up.filename))
+
+	cmd_arr.append(up.filename)
+	cmd_arr.append(up.node + ':' + up.repos_path)
+
+	if synctool.lib.DRY_RUN:
+		stdout('would be uploaded as %s' % synctool.lib.prettypath(
+											up.repos_path))
+
+	verbose('running rsync%s%s:%s to %s' % (opts, up.node, up.filename,
+									synctool.lib.prettypath(up.repos_path)))
+	unix_out(' '.join(cmd_arr))
+	synctool.lib.run_with_nodename(cmd_arr, up.node)
+
+	if not synctool.lib.DRY_RUN and os.path.exists(up.repos_path):
+		stdout('uploaded as %s' % synctool.lib.prettypath(up.repos_path))
 
 
 def _upload_callback(obj, post_dict, dir_changed=False):
@@ -254,27 +288,31 @@ def _upload_callback(obj, post_dict, dir_changed=False):
 def upload():
 	'''copy a file from a node into the overlay/ tree'''
 
-	if UPLOAD_FILE.purge != None:
-		upload_purge()
-		return
-
 	up = UPLOAD_FILE
 
 	if up.filename[0] != os.sep:
 		stderr('error: the filename to upload must be an absolute path')
 		sys.exit(-1)
 
+	if up.suffix and not up.suffix in synctool.param.ALL_GROUPS:
+		stderr("no such group '%s'" % up.suffix)
+		sys.exit(-1)
+
 	if up.overlay and not up.overlay in synctool.param.ALL_GROUPS:
 		stderr("no such group '%s'" % up.overlay)
 		sys.exit(-1)
 
-	if up.suffix and not up.suffix in synctool.param.ALL_GROUPS:
-		stderr("no such group '%s'" % up.suffix)
+	if up.purge and not up.purge in synctool.param.ALL_GROUPS:
+		stderr("no such group '%s'" % up.purge)
 		sys.exit(-1)
 
 	if synctool.lib.DRY_RUN and not synctool.lib.QUIET:
 		stdout('DRY RUN, not uploading any files')
 		terse(synctool.lib.TERSE_DRYRUN, 'not uploading any files')
+
+	if up.purge != None:
+		upload_purge()
+		return
 
 	# pretend that the current node is now the given node;
 	# this is needed for find() to find the best reference for the file
@@ -590,7 +628,7 @@ def get_options():
 
 		if opt in ('-u', '--upload'):
 			opt_upload = True
-			UPLOAD_FILE.filename = synctool.lib.strip_path(arg)
+			UPLOAD_FILE.filename = arg
 			continue
 
 		if opt in ('-s', '--suffix'):
