@@ -178,10 +178,10 @@ def there_can_be_only_one():
 
 
 def usage():
-	print 'usage: %s [options] [package list]' % os.path.basename(sys.argv[0])
+	print 'usage: %s [options] [package [..]]' % os.path.basename(sys.argv[0])
 	print 'options:'
 	print '  -h, --help                     Display this information'
-	print '  -c, --conf=dir/file            Use this config file'
+	print '  -c, --conf=FILE                Use this config file'
 	print ('                                 (default: %s)' %
 		synctool.param.DEFAULT_CONF)
 	print '''  -l, --list   [PACKAGE ...]     List installed packages

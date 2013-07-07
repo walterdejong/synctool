@@ -98,20 +98,20 @@ def check_cmd_config():
 
 
 def usage():
-	print ('usage: %s [options] <filename> [..]' %
+	print ('usage: %s [options] FILE [..]' %
 		os.path.basename(sys.argv[0]))
 	print 'options:'
 	print '  -h, --help                     Display this information'
-	print '  -c, --conf=dir/file            Use this config file'
+	print '  -c, --conf=FILE                Use this config file'
 	print ('                                 (default: %s)' %
 		synctool.param.DEFAULT_CONF)
-	print '''  -n, --node=nodelist            Execute only on these nodes
-  -g, --group=grouplist          Execute only on these groups of nodes
-  -x, --exclude=nodelist         Exclude these nodes from the selected group
-  -X, --exclude-group=grouplist  Exclude these groups from the selection
+	print '''  -n, --node=LIST                Execute only on these nodes
+  -g, --group=LIST               Execute only on these groups of nodes
+  -x, --exclude=LIST             Exclude these nodes from the selected group
+  -X, --exclude-group=LIST       Exclude these groups from the selection
   -a, --aggregate                Condense output
   -o, --options=options          Set additional scp options
-  -d, --dest=dir/file            Set destination name to copy to
+  -d, --dest=PATH                Set destination name to copy to
 
       --no-nodename              Do not prepend nodename to output
   -N, --numproc=NUM              Set number of concurrent procs
@@ -119,8 +119,6 @@ def usage():
   -v, --verbose                  Be verbose
       --unix                     Output actions as unix shell commands
       --version                  Print current version number
-
-A nodelist or grouplist is a comma-separated list
 '''
 
 

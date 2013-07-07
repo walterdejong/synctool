@@ -74,9 +74,9 @@ options:
   -h, --help               Display this information
   -v, --var VAR=VALUE      Set variable VAR to VALUE
 
-synctool-template replaces all occurrences of "@VAR@" in the input
-with "VALUE" prints the result to stdout. VAR may be given on the
-command-line, but may also be an existing environment variable.
+synctool-template replaces all occurrences of "@VAR@" in the input text
+with "VALUE" and prints the result to stdout. VAR may be given on the
+command-line, but may also be an existing environment variable
 ''' % PROGNAM
 
 

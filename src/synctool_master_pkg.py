@@ -140,7 +140,7 @@ def there_can_be_only_one():
 
 
 def usage():
-	print 'usage: %s [options] [arguments]' % os.path.basename(sys.argv[0])
+	print 'usage: %s [options] [package [..]]' % os.path.basename(sys.argv[0])
 	print 'options:'
 	print '  -h, --help                     Display this information'
 	print '  -c, --conf=FILE                Use this config file'
@@ -184,6 +184,7 @@ Supported package managers are:'''
 
 	print '''
 
+The package list must be given last
 Note that --upgrade does a dry run unless you specify --fix
 '''
 
