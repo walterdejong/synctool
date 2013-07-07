@@ -289,16 +289,13 @@ def upload():
 		stdout('would be uploaded as %s' %
 				synctool.lib.prettypath(up.repos_path))
 	else:
-		# first check if the directory in the repository exists
-		# TODO would it make sense to use rsync for uploading in this case?
-		# TODO else mkdir_p() doesn't require first doing stat() anymore
+		# mkdir in the repos (just in case it didn't exist yet)
+		# note: it may well make the dir with wrong ownership, mode
+		# but rsync-ing the dest to here is rather dangerous if the dest
+		# is a directory or something other than a regular file
 		repos_dir = os.path.dirname(up.repos_path)
-		stat = synctool.syncstat.SyncStat(repos_dir)
-		if not stat.exists():
-			verbose('making directory %s' %
-					synctool.lib.prettypath(repos_dir))
-			unix_out('mkdir -p %s' % repos_dir)
-			synctool.lib.mkdir_p(repos_dir)
+		unix_out('mkdir -p %s' % repos_dir)
+		synctool.lib.mkdir_p(repos_dir)
 
 		# make scp command array
 		scp_cmd_arr = shlex.split(synctool.param.SCP_CMD)
