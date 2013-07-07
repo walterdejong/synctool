@@ -229,8 +229,13 @@ def _upload_callback(obj, post_dict, dir_changed=False):
 	if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
 		return False, False
 
-	# TODO match terse path
 	if obj.dest_path == UPLOAD_FILE.filename:
+		UPLOAD_FILE.repos_path = obj.src_path
+		return False, False
+
+	if synctool.lib.terse_match(UPLOAD_FILE.filename, obj.dest_path):
+		# it's a terse path ; 'expand' it
+		UPLOAD_FILE.filename = obj.dest_path
 		UPLOAD_FILE.repos_path = obj.src_path
 		return False, False
 
