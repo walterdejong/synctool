@@ -15,14 +15,15 @@ Table of contents
   3.2 Adding actions to updates                          <br />
   3.3 Other useful options                               <br />
   3.4 Templates                                          <br />
-  3.5 synctool-pkg, the synctool package manager         <br />
-  3.6 Ignoring them: I'm not touching you                <br />
-  3.7 Backup copies                                      <br />
-  3.8 Logging                                            <br />
-  3.9 About symbolic links                               <br />
-  3.10 Slow updates                                       <br />
-  3.11 Checking for updates                              <br />
-  3.12 Running tasks with synctool
+  3.5 Purge directories                                  <br />
+  3.6 synctool-pkg, the synctool package manager         <br />
+  3.7 Ignoring them: I'm not touching you                <br />
+  3.8 Backup copies                                      <br />
+  3.9 Logging                                            <br />
+  3.10 About symbolic links                              <br />
+  3.11 Slow updates                                      <br />
+  3.12 Checking for updates                              <br />
+  3.13 Running tasks with synctool
 
 4. [All configuration parameters explained](chapter4.html)
 

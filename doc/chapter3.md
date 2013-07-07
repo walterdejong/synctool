@@ -8,10 +8,11 @@ In the configuration file, the nodename is associated with one or more groups.
 The nodename itself can also be used as a group to indicate that a file
 belongs to that node.
 
-Under the synctool root there are two very important directories:
+Under the synctool root there are these interesting directories:
 
 * `/opt/synctool/var/overlay/`
 * `/opt/synctool/var/delete/`
+* `/opt/synctool/var/purge/`
 
 This is referred to as 'the repository'.
 
@@ -23,6 +24,10 @@ the node.
 The `delete/` tree contains files that always have to be deleted from the
 nodes. Only the filename matters, so it is alright if the files in this tree
 are only zero bytes in size.
+
+The `purge/` tree contains directories that are copied as-is to the nodes,
+and deleting any files on the target node that are unmanaged -- files that
+should not be there.
 
 synctool uses `rsync` to copy these trees to the node, and afterwards it
 runs the `synctool-client` command on the node. Note that it is perfectly
@@ -346,7 +351,32 @@ If you want to automatically reload or restart a service after updating
 that: `fiction.conf.post`.
 
 
-3.5 synctool-pkg, the synctool package manager
+3.5 Purge directories
+---------------------
+In the previous sections we saw how you can use the `overlay/` and `delete/`
+trees to manage your cluster. synctool has a third mechanism of syncing
+files, and it works with the `purge/` tree. Purge directories are great for
+mirroring entire directory trees to groups of nodes.
+
+Unlike with the `overlay/` tree, files in the `purge/` tree do not have group
+extensions. Instead, synctool will copy the entire subtree to the node and
+it will _delete_ any files on the target node that do not reside in the
+source tree. So, it will make a perfect mirror of the source under `purge/`.
+
+To populate the `purge/` tree, use `--upload` with the `--purge` option:
+
+    # synctool -n n1 --upload /usr/local --purge compute
+    # synctool -n n1 -u /usr/local -p compute
+
+In this example, we want to upload the entire `/usr/local` tree from node `n1`
+to the repository directory `/opt/synctool/var/purge/compute/`.
+Afterwards, all compute nodes will get `/usr/local` synced from the master
+just by running `synctool -f`.
+Mind that purging will delete data that is not supposed to be there, so be
+extra careful with this feature.
+
+
+3.6 synctool-pkg, the synctool package manager
 -----------------------------------------------
 synctool comes with a package manager named `synctool-pkg`.
 Rather than being yet another package manager with its own format of packages,
@@ -416,7 +446,7 @@ If you want to further examine what synctool-pkg is doing, you may specify
 under the hood.
 
 
-3.6 Ignoring them: I'm not touching you
+3.7 Ignoring them: I'm not touching you
 ---------------------------------------
 By using directives in the `synctool.conf` file, synctool can be told to
 ignore certain files, nodes, or groups. These will be excluded, skipped.
@@ -435,7 +465,7 @@ is ignored:
     ignore_group broken
 
 
-3.7 Backup copies
+3.8 Backup copies
 -----------------
 For any file synctool updates, it keeps a backup copy around on the target
 node with the extension `.saved`. If you don't like this, you can tell
@@ -453,7 +483,7 @@ To erase a single `.saved` file, use option `--single` in combination with
 `--erase-saved`.
 
 
-3.8 Logging
+3.9 Logging
 -----------
 When using option `--fix` to apply changes, synctool logs the made changes
 to syslog on the master node. It provides a trace of what was changed on the
@@ -468,8 +498,8 @@ manual on how to do this. In the `contrib/` directory in the synctool source,
 you will find config files for use with `syslog-ng` and `logrotate`.
 
 
-3.9 About symbolic links
-------------------------
+3.10 About symbolic links
+-------------------------
 synctool requires all files in the repository to have an extension (well ...
 unless you changed the default configuration), and symbolic links must have
 extensions too. Symbolic links in the repository will be _dead_ symlinks but
@@ -485,7 +515,7 @@ In the repository, `motd._red` is a red & dead symlink to `file`. On the
 target node, `/etc/motd` is going to be fine.
 
 
-3.10 Slow updates
+3.11 Slow updates
 -----------------
 By default, synctool addresses the nodes in parallel, and they are running
 updates concurrently. In some cases, like when doing rolling upgrades,
@@ -509,7 +539,7 @@ The options `--numproc` and `--zzz` work for both `synctool` and `dsh`
 programs.
 
 
-3.11 Checking for updates
+3.12 Checking for updates
 -------------------------
 synctool can check whether a new version of synctool itself is available by
 using the option `--check-update` on the master node. You can check
@@ -520,7 +550,7 @@ These functions connect to the main website at [www.heiho.net/synctool][1].
 [1]: http://www.heiho.net/synctool/
 
 
-3.12 Running tasks with synctool
+3.13 Running tasks with synctool
 --------------------------------
 synctool's `dsh` command is ideal for running commands on groups of nodes.
 On occasion, you will also want to run custom scripts with `dsh`.

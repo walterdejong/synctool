@@ -56,6 +56,7 @@ The rest of the documentation assumes the default `/opt/synctool`.
     /opt/synctool/var/                  repository directory
     /opt/synctool/var/overlay/
     /opt/synctool/var/delete/
+    /opt/synctool/var/purge/
 
 The `doc/` directory contains a copy of this documentation.
 You may build the HTML documentation from the plain text sources
