@@ -247,25 +247,25 @@ def set_action(a, opt):
 
 
 def usage():
-	print 'usage: %s [options] [<argument>]' % os.path.basename(sys.argv[0])
+	print 'usage: %s [options]' % os.path.basename(sys.argv[0])
 	print 'options:'
 	print '  -h, --help               Display this information'
-	print '  -c, --conf=dir/file      Use this config file'
+	print '  -c, --conf=FILE          Use this config file'
 	print ('                           (default: %s)' %
 		synctool.param.DEFAULT_CONF)
 
 	print '''  -l, --list-nodes         List all configured nodes
   -L, --list-groups        List all configured groups
-  -n, --node=nodelist      List all groups this node is in
-  -g, --group=grouplist    List all nodes in this group
+  -n, --node=LIST          List all groups this node is in
+  -g, --group=LIST         List all nodes in this group
   -i, --ipaddress          List selected nodes' IP address
   -H, --hostname           List selected nodes' hostname
   -r, --rsync              List selected nodes' rsync qualifier
   -f, --filter-ignored     Do not list ignored nodes and groups
 
-  -C, --command=command    Display setting for command
+  -C, --command=COMMAND    Display setting for command
   -P, --package-manager    Display configured package manager
-  -p, --numproc            Display numproc setting
+  -N, --numproc            Display numproc setting
   -d, --list-dirs          Display directory settings
       --prefix             Display installation prefix
       --nodename           Display my nodename
@@ -287,7 +287,7 @@ def get_options():
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:lLn:g:iHrfC:Ppdv',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:lLn:g:iHrfC:PNdv',
 			['help', 'conf=', 'list-nodes', 'list-groups', 'node=', 'group=',
 			'ipaddress', 'hostname', 'rsync', 'filter-ignored',
 			'command', 'package-manager', 'numproc', 'list-dirs',
@@ -369,7 +369,7 @@ def get_options():
 			set_action(ACTION_PKGMGR, '--package-manager')
 			continue
 
-		if opt in ('-p', '--numproc'):
+		if opt in ('-N', '--numproc'):
 			set_action(ACTION_NUMPROC, '--numproc')
 			continue
 

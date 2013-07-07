@@ -46,18 +46,19 @@ class UploadFile(object):
 	def __init__(self):
 		self.filename = None
 		self.overlay = None
+		self.purge = None
 		self.suffix = None
 		self.node = None
 		self.address = None
 		self.repos_path = None
 
-	def ready(self):
-		if self.node and self.filename:
-			return True
-
-		return False
-
 	def make_repos_path(self):
+		'''make $overlay repository path from elements'''
+
+		if self.purge:
+			self._make_purge_path()
+			return
+
 		if not self.repos_path:
 			fn = self.filename
 			if fn[0] == '/':
@@ -98,8 +99,20 @@ class UploadFile(object):
 				# reassemble the full path with up.overlay as group dir
 				self.repos_path = os.sep.join(arr)
 
+	def _make_purge_path(self):
+		'''make $purge repository path from elements'''
+
+		if len(self.filename) > 1 and self.filename[-1] == '/':
+			# strip trailing slash
+			self.filename = self.filename[:-1]
+
+		self.repos_path = (os.path.join(synctool.param.PURGE_DIR,
+							self.purge) + os.path.dirname(self.filename))
+
 
 def run_remote_synctool(address_list):
+	'''run synctool on target nodes'''
+
 	synctool.lib.multiprocess(worker_synctool, address_list)
 
 
@@ -112,7 +125,8 @@ def worker_synctool(addr):
 		run_local_synctool()
 		return
 
-	# TODO add purge dirs (idea by Rob van der Wal)
+	# first rsync the purge dirs (if any)
+	do_purge(addr, nodename)
 
 	# rsync ROOTDIR/dirs/ to the node
 	# if "it wants it"
@@ -160,12 +174,80 @@ def worker_synctool(addr):
 
 
 def run_local_synctool():
+	'''run synctool on the master node itself'''
+
+	# do local purge run
+	do_purge('localhost', synctool.param.NODENAME, locally=True)
+
 	cmd_arr = shlex.split(synctool.param.SYNCTOOL_CMD) + PASS_ARGS
 
 	verbose('running synctool on node %s' % synctool.param.NODENAME)
 	unix_out(' '.join(cmd_arr))
 
 	synctool.lib.run_with_nodename(cmd_arr, synctool.param.NODENAME)
+
+
+def do_purge(addr, nodename, locally=False):
+	'''rsync all relevant purge dirs to node'''
+
+	if OPT_SKIP_RSYNC or nodename in synctool.param.NO_RSYNC:
+		return
+
+	# set mygroups for this nodename
+	synctool.param.NODENAME = nodename
+	synctool.param.MY_GROUPS = synctool.config.get_my_groups()
+
+	paths = []
+	# find the source purge paths that we need to copy
+	# scan only the group dirs that apply
+	for g in synctool.param.MY_GROUPS:
+		d = os.path.join(synctool.param.PURGE_DIR, g)
+		if os.path.isdir(d):
+			for path, subdirs, files in os.walk(d):
+				# rsync only purge dirs that actually contain files
+				# otherwise rsync --delete would wreak havoc
+				if not files:
+					continue
+
+				# paths has (src_dir, dest_dir)
+				paths.append((path, path[len(d):]))
+
+				# do not recurse into this dir any deeper
+				del subdirs[:]
+
+	cmd_rsync = shlex.split(synctool.param.RSYNC_CMD)
+
+	# call rsync to copy the purge dirs
+	for src, dest in paths:
+		# trailing slash on source path is important for rsync
+		src += os.sep
+		dest += os.sep
+
+		cmd_arr = cmd_rsync[:]
+
+		# opts is just for the 'visual aspect'; it is displayed when --verbose
+		opts = ' '
+		if synctool.lib.DRY_RUN:
+			cmd_arr.append('-n')
+			opts += '-n '
+
+		if synctool.lib.VERBOSE:
+			cmd_arr.append('-v')
+			opts += '-v '
+
+		cmd_arr.append(src)
+
+		if not locally:
+			# prepend node address to dest path
+			dest = addr + ':' + dest
+
+		cmd_arr.append(dest)
+
+		verbose('running rsync%s%s to %s' %
+				(opts, synctool.lib.prettypath(src), dest))
+		unix_out(' '.join(cmd_arr))
+
+		synctool.lib.run_with_nodename(cmd_arr, nodename)
 
 
 def rsync_include_filter(nodename):
@@ -223,6 +305,43 @@ def rsync_include_filter(nodename):
 	return filename
 
 
+def upload_purge():
+	'''upload a file/dir to $purge/group/'''
+
+	up = UPLOAD_FILE
+
+	# make command: rsync [-n] [-v] node:/path/ $purge/group/path/
+	cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
+
+	# opts is just for the 'visual aspect'; it is displayed when --verbose
+	opts = ' '
+	if synctool.lib.DRY_RUN:
+		cmd_arr.append('-n')
+		opts += '-n '
+
+	if synctool.lib.VERBOSE:
+		cmd_arr.append('-v')
+		opts += '-v '
+
+	up.make_repos_path()
+
+	cmd_arr.append(up.filename)
+	cmd_arr.append(up.address + ':' + up.repos_path)
+
+	verbose_path = os.path.join(synctool.lib.prettypath(up.repos_path),
+								os.path.basename(up.filename))
+	if synctool.lib.DRY_RUN:
+		stdout('would be uploaded as %s' % verbose_path)
+
+	verbose('running rsync%s%s:%s to %s' % (opts, up.address, up.filename,
+									synctool.lib.prettypath(up.repos_path)))
+	unix_out(' '.join(cmd_arr))
+	synctool.lib.run_with_nodename(cmd_arr, up.node)
+
+	if not synctool.lib.DRY_RUN and os.path.exists(up.repos_path):
+		stdout('uploaded as %s' % verbose_path)
+
+
 def _upload_callback(obj, post_dict, dir_changed=False):
 	'''find the overlay path for the destination in UPLOAD_FILE'''
 
@@ -251,17 +370,25 @@ def upload():
 		stderr('error: the filename to upload must be an absolute path')
 		sys.exit(-1)
 
+	if up.suffix and not up.suffix in synctool.param.ALL_GROUPS:
+		stderr("no such group '%s'" % up.suffix)
+		sys.exit(-1)
+
 	if up.overlay and not up.overlay in synctool.param.ALL_GROUPS:
 		stderr("no such group '%s'" % up.overlay)
 		sys.exit(-1)
 
-	if up.suffix and not up.suffix in synctool.param.ALL_GROUPS:
-		stderr("no such group '%s'" % up.suffix)
+	if up.purge and not up.purge in synctool.param.ALL_GROUPS:
+		stderr("no such group '%s'" % up.purge)
 		sys.exit(-1)
 
 	if synctool.lib.DRY_RUN and not synctool.lib.QUIET:
 		stdout('DRY RUN, not uploading any files')
 		terse(synctool.lib.TERSE_DRYRUN, 'not uploading any files')
+
+	if up.purge != None:
+		upload_purge()
+		return
 
 	# pretend that the current node is now the given node;
 	# this is needed for find() to find the best reference for the file
@@ -415,42 +542,42 @@ def	option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
 
 
 def usage():
-	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
+	print 'usage: %s [options]' % os.path.basename(sys.argv[0])
 	print 'options:'
-	print '  -h, --help                     Display this information'
-	print '  -c, --conf=dir/file            Use this config file'
-	print ('                                 (default: %s)' %
+	print '  -h, --help                  Display this information'
+	print '  -c, --conf=FILE             Use this config file'
+	print ('                              (default: %s)' %
 		synctool.param.DEFAULT_CONF)
-	print '''  -n, --node=nodelist            Execute only on these nodes
-  -g, --group=grouplist          Execute only on these groups of nodes
-  -x, --exclude=nodelist         Exclude these nodes from the selected group
-  -X, --exclude-group=grouplist  Exclude these groups from the selection
+	print '''  -n, --node=LIST             Execute only on these nodes
+  -g, --group=LIST            Execute only on these groups of nodes
+  -x, --exclude=LIST          Exclude these nodes from the selected group
+  -X, --exclude-group=LIST    Exclude these groups from the selection
 
-  -d, --diff=file                Show diff for file
-  -1, --single=file              Update a single file
-  -r, --ref=file                 Show which source file synctool chooses
-  -u, --upload=file              Pull a remote file into the overlay tree
-  -o, --overlay=group            Place uploaded file under $overlay/group
-  -s, --suffix=group             Give group suffix for the uploaded file
-  -e, --erase-saved              Erase *.saved backup files
-  -f, --fix                      Perform updates (otherwise, do dry-run)
-      --no-post                  Do not run any .post scripts
-  -p, --numproc=num              Number of concurrent procs
-  -F, --fullpath                 Show full paths instead of shortened ones
-  -T, --terse                    Show terse, shortened paths
-      --color                    Use colored output (only for terse mode)
-      --no-color                 Do not color output
-      --unix                     Output actions as unix shell commands
-      --skip-rsync               Do not sync the repository
-                                 (eg. when it is on a shared filesystem)
-      --version                  Show current version number
-      --check-update             Check for availibility of newer version
-      --download                 Download latest version
-  -v, --verbose                  Be verbose
-  -q, --quiet                    Suppress informational startup messages
-  -a, --aggregate                Condense output; list nodes per change
+  -d, --diff=FILE             Show diff for file
+  -1, --single=PATH           Update a single file
+  -r, --ref=PATH              Show which source file synctool chooses
+  -u, --upload=PATH           Pull a remote file into the overlay tree
+  -s, --suffix=GROUP          Give group suffix for the uploaded file
+  -o, --overlay=GROUP         Upload file to $overlay/group/
+  -p, --purge=GROUP           Upload directory to $purge/group/
+  -e, --erase-saved           Erase *.saved backup files
+  -f, --fix                   Perform updates (otherwise, do dry-run)
+      --no-post               Do not run any .post scripts
+  -N, --numproc=NUM           Number of concurrent procs
+  -F, --fullpath              Show full paths instead of shortened ones
+  -T, --terse                 Show terse, shortened paths
+      --color                 Use colored output (only for terse mode)
+      --no-color              Do not color output
+      --unix                  Output actions as unix shell commands
+      --skip-rsync            Do not sync the repository
+                              (eg. when it is on a shared filesystem)
+      --version               Show current version number
+      --check-update          Check for availibility of newer version
+      --download              Download latest version
+  -v, --verbose               Be verbose
+  -q, --quiet                 Suppress informational startup messages
+  -a, --aggregate             Condense output; list nodes per change
 
-A nodelist or grouplist is a comma-separated list
 Note that synctool does a dry run unless you specify --fix
 
 Written by Walter de Jong <walter@heiho.net> (c) 2003-2013'''
@@ -467,11 +594,11 @@ def get_options():
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:],
-			'hc:vn:g:x:X:d:1:r:u:o:s:efpFTqa',
+			'hc:vn:g:x:X:d:1:r:u:s:o:p:efN:FTqa',
 			['help', 'conf=', 'verbose', 'node=', 'group=',
 			'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=',
-			'upload=', 'overlay=', 'suffix=', 'erase-saved', 'fix', 'no-post',
-			'numproc=', 'fullpath', 'terse', 'color', 'no-color',
+			'upload=', 'suffix=', 'overlay=', 'purge=', 'erase-saved', 'fix',
+			'no-post', 'numproc=', 'fullpath', 'terse', 'color', 'no-color',
 			'quiet', 'aggregate', 'unix', 'skip-rsync',
 			'version', 'check-update', 'download'])
 	except getopt.error, (reason):
@@ -500,8 +627,9 @@ def get_options():
 	opt_reference = False
 	opt_erase_saved = False
 	opt_upload = False
-	opt_overlay = False
 	opt_suffix = False
+	opt_overlay = False
+	opt_purge = False
 	opt_fix = False
 
 	PASS_ARGS = []
@@ -576,7 +704,12 @@ def get_options():
 
 		if opt in ('-u', '--upload'):
 			opt_upload = True
-			UPLOAD_FILE.filename = synctool.lib.strip_path(arg)
+			UPLOAD_FILE.filename = arg
+			continue
+
+		if opt in ('-s', '--suffix'):
+			opt_suffix = True
+			UPLOAD_FILE.suffix = arg
 			continue
 
 		if opt in ('-o', '--overlay'):
@@ -584,9 +717,9 @@ def get_options():
 			UPLOAD_FILE.overlay = arg
 			continue
 
-		if opt in ('-s', '--suffix'):
-			opt_suffix = True
-			UPLOAD_FILE.suffix = arg
+		if opt in ('-p', '--purge'):
+			opt_purge = True
+			UPLOAD_FILE.purge = arg
 			continue
 
 		if opt in ('-e', '--erase-saved'):
@@ -602,7 +735,7 @@ def get_options():
 		if opt == '--no-post':
 			synctool.lib.NO_POST = True
 
-		if opt in ('-p', '--numproc'):
+		if opt in ('-N', '--numproc'):
 			try:
 				synctool.param.NUM_PROC = int(arg)
 			except ValueError:
@@ -656,16 +789,32 @@ def get_options():
 		if arg:
 			PASS_ARGS.append(arg)
 
-	# do basic checks for uploading
-	if opt_overlay and not opt_upload:
-		print ('%s: option --overlay must be used in conjunction with '
-			'--upload' % os.path.basename(sys.argv[0]))
-		sys.exit(1)
-
+	# do basic checks for uploading and sub options
 	if opt_suffix and not opt_upload:
 		print ('%s: option --suffix must be used in conjunction with '
 			'--upload' % os.path.basename(sys.argv[0]))
 		sys.exit(1)
+
+	if opt_overlay and not opt_upload:
+		print ('%s: option --overlay must be used in conjunction with '
+				'--upload' % os.path.basename(sys.argv[0]))
+		sys.exit(1)
+
+	if opt_purge:
+		if not opt_upload:
+			print ('%s: option --purge must be used in conjunction with '
+					'--upload' % os.path.basename(sys.argv[0]))
+			sys.exit(1)
+
+		if opt_overlay:
+			print ('%s: option --overlay and --purge can not be combined' %
+					os.path.basename(sys.argv[0]))
+			sys.exit(1)
+
+		if opt_suffix:
+			print ('%s: option --suffix and --purge can not be combined' %
+					os.path.basename(sys.argv[0]))
+			sys.exit(1)
 
 	# enable logging at the master node
 	PASS_ARGS.append('--masterlog')

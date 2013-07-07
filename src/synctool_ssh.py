@@ -140,26 +140,23 @@ def usage():
 		os.path.basename(sys.argv[0]))
 	print 'options:'
 	print '  -h, --help                     Display this information'
-	print '  -c, --conf=dir/file            Use this config file'
+	print '  -c, --conf=FILE                Use this config file'
 	print ('                                 (default: %s)' %
 		synctool.param.DEFAULT_CONF)
-	print '''  -n, --node=nodelist            Execute only on these nodes
-  -g, --group=grouplist          Execute only on these groups of nodes
-  -x, --exclude=nodelist         Exclude these nodes from the selected group
-  -X, --exclude-group=grouplist  Exclude these groups from the selection
+	print '''  -n, --node=LIST                Execute only on these nodes
+  -g, --group=LIST               Execute only on these groups of nodes
+  -x, --exclude=LIST             Exclude these nodes from the selected group
+  -X, --exclude-group=LIST       Exclude these groups from the selection
   -a, --aggregate                Condense output
-  -o, --options=options          Set additional ssh options
-  -p, --numproc=NUM              Set number of concurrent procs
+  -o, --options=SSH_OPTIONS      Set additional options for ssh
+  -N, --numproc=NUM              Set number of concurrent procs
   -z, --zzz=NUM                  Sleep NUM seconds between each run
 
-  -N, --no-nodename              Do not prepend nodename to output
+      --no-nodename              Do not prepend nodename to output
   -v, --verbose                  Be verbose
       --unix                     Output actions as unix shell commands
       --skip-rsync               Do not sync commands from the scripts/ dir
                                  (eg. when it is on a shared filesystem)
-      --version                  Print current version number
-
-A nodelist or grouplist is a comma-separated list
 '''
 
 
@@ -171,7 +168,7 @@ def get_options():
 		sys.exit(1)
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:ao:Nqp:z:',
+		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:ao:qN:z:',
 			['help', 'conf=', 'verbose', 'node=', 'group=', 'exclude=',
 			'exclude-group=', 'aggregate', 'options=', 'no-nodename',
 			'unix', 'skip-rsync', 'quiet', 'numproc=', 'zzz='])
@@ -199,10 +196,6 @@ def get_options():
 			synctool.param.CONF_FILE = arg
 			continue
 
-		if opt == '--version':
-			print synctool.param.VERSION
-			sys.exit(0)
-
 	synctool.config.read_config()
 	check_cmd_config()
 
@@ -215,7 +208,7 @@ def get_options():
 		if arg:
 			MASTER_OPTS.append(arg)
 
-		if opt in ('-h', '--help', '-?', '-c', '--conf', '--version'):
+		if opt in ('-h', '--help', '-?', '-c', '--conf'):
 			continue
 
 		if opt in ('-v', '--verbose'):
@@ -238,7 +231,7 @@ def get_options():
 			NODESET.exclude_group(arg)
 			continue
 
-		if opt in ('-p', '--numproc'):
+		if opt in ('-N', '--numproc'):
 			try:
 				synctool.param.NUM_PROC = int(arg)
 			except ValueError:
@@ -282,7 +275,7 @@ def get_options():
 			SSH_OPTIONS = arg
 			continue
 
-		if opt in ('-N', '--no-nodename'):
+		if opt == '--no-nodename':
 			synctool.lib.OPT_NODENAME = False
 			continue
 
