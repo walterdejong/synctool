@@ -163,7 +163,7 @@ def init():
 	OVERLAY_LEN = len(OVERLAY_DIR) + 1
 	DELETE_DIR = os.path.join(VAR_DIR, 'delete')
 	DELETE_LEN = len(DELETE_DIR) + 1
-	PURGE_DIR = os.path.join(ROOTDIR, 'purge')
+	PURGE_DIR = os.path.join(VAR_DIR, 'purge')
 	SCRIPT_DIR = os.path.join(ROOTDIR, 'scripts')
 
 	# the following only makes sense for synctool-client, but OK
