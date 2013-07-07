@@ -415,42 +415,42 @@ def	option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
 
 
 def usage():
-	print 'usage: %s [options] [<arguments>]' % os.path.basename(sys.argv[0])
+	print 'usage: %s [options]' % os.path.basename(sys.argv[0])
 	print 'options:'
-	print '  -h, --help                     Display this information'
-	print '  -c, --conf=dir/file            Use this config file'
-	print ('                                 (default: %s)' %
+	print '  -h, --help                  Display this information'
+	print '  -c, --conf=PATH             Use this config file'
+	print ('                              (default: %s)' %
 		synctool.param.DEFAULT_CONF)
-	print '''  -n, --node=nodelist            Execute only on these nodes
-  -g, --group=grouplist          Execute only on these groups of nodes
-  -x, --exclude=nodelist         Exclude these nodes from the selected group
-  -X, --exclude-group=grouplist  Exclude these groups from the selection
+	print '''  -n, --node=LIST             Execute only on these nodes
+  -g, --group=LIST            Execute only on these groups of nodes
+  -x, --exclude=LIST          Exclude these nodes from the selected group
+  -X, --exclude-group=LIST    Exclude these groups from the selection
 
-  -d, --diff=file                Show diff for file
-  -1, --single=file              Update a single file
-  -r, --ref=file                 Show which source file synctool chooses
-  -u, --upload=file              Pull a remote file into the overlay tree
-  -o, --overlay=group            Place uploaded file under $overlay/group
-  -s, --suffix=group             Give group suffix for the uploaded file
-  -e, --erase-saved              Erase *.saved backup files
-  -f, --fix                      Perform updates (otherwise, do dry-run)
-      --no-post                  Do not run any .post scripts
-  -N, --numproc=num              Number of concurrent procs
-  -F, --fullpath                 Show full paths instead of shortened ones
-  -T, --terse                    Show terse, shortened paths
-      --color                    Use colored output (only for terse mode)
-      --no-color                 Do not color output
-      --unix                     Output actions as unix shell commands
-      --skip-rsync               Do not sync the repository
-                                 (eg. when it is on a shared filesystem)
-      --version                  Show current version number
-      --check-update             Check for availibility of newer version
-      --download                 Download latest version
-  -v, --verbose                  Be verbose
-  -q, --quiet                    Suppress informational startup messages
-  -a, --aggregate                Condense output; list nodes per change
+  -d, --diff=PATH             Show diff for file
+  -1, --single=PATH           Update a single file
+  -r, --ref=PATH              Show which source file synctool chooses
+  -u, --upload=PATH           Pull a remote file into the overlay tree
+  -s, --suffix=GROUP          Give group suffix for the uploaded file
+  -o, --overlay=GROUP         Upload file to $overlay/group/
+  -p, --purge=GROUP           Upload directory to $purge/group/
+  -e, --erase-saved           Erase *.saved backup files
+  -f, --fix                   Perform updates (otherwise, do dry-run)
+      --no-post               Do not run any .post scripts
+  -N, --numproc=NUM           Number of concurrent procs
+  -F, --fullpath              Show full paths instead of shortened ones
+  -T, --terse                 Show terse, shortened paths
+      --color                 Use colored output (only for terse mode)
+      --no-color              Do not color output
+      --unix                  Output actions as unix shell commands
+      --skip-rsync            Do not sync the repository
+                              (eg. when it is on a shared filesystem)
+      --version               Show current version number
+      --check-update          Check for availibility of newer version
+      --download              Download latest version
+  -v, --verbose               Be verbose
+  -q, --quiet                 Suppress informational startup messages
+  -a, --aggregate             Condense output; list nodes per change
 
-A nodelist or grouplist is a comma-separated list
 Note that synctool does a dry run unless you specify --fix
 
 Written by Walter de Jong <walter@heiho.net> (c) 2003-2013'''
