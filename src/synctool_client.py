@@ -491,27 +491,46 @@ def _reference_callback(obj, post_dict, dir_changed=False):
 	return True, False
 
 
+def visit_purge_single(callback):
+	'''look in the purge/ dir for SINGLE_FILES, and call callback'''
+
+	if not SINGLE_FILES:
+		return
+
+	purge_groups = os.listdir(synctool.param.PURGE_DIR)
+
+	# use a copy of SINGLE_FILES, because the callback will remove items
+	for dest in SINGLE_FILES[:]:
+		filepath = dest
+		if filepath[0] == os.sep:
+			filepath = filepath[1:]
+
+		for g in synctool.param.MY_GROUPS:
+			if not g in purge_groups:
+				continue
+
+			src = os.path.join(synctool.param.PURGE_DIR, g, filepath)
+			if os.path.exists(src):
+				# make a SyncObject
+				obj = synctool.object.SyncObject(src, dest)
+				obj.src_stat = synctool.syncstat.SyncStat(obj.src_path)
+				obj.dest_stat = synctool.syncstat.SyncStat(obj.dest_path)
+
+				# call the callback function
+				callback(obj, {})
+				break
+
+
 def reference_files():
 	'''show which source file in the repository synctool uses'''
 
 	synctool.overlay.visit(synctool.param.OVERLAY_DIR, _reference_callback)
 
+	# look in the purge/ tree, too
+	visit_purge_single(_reference_callback)
+
 	for filename in SINGLE_FILES:
-		# check the purge dir
-		filepath = filename
-		if filepath[0] == os.sep:
-			filepath = filepath[1:]
-
-		found = False
-		for g in synctool.param.MY_GROUPS:
-			fullpath = os.path.join(synctool.param.PURGE_DIR, g, filepath)
-			if os.path.exists(fullpath):
-				print synctool.lib.prettypath(fullpath)
-				found = True
-				break
-
-		if not found:
-			stderr('%s is not in the overlay tree' % filename)
+		stderr('%s is not in the overlay tree' % filename)
 
 
 def _exec_diff(src, dest):

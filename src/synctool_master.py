@@ -289,11 +289,11 @@ def rsync_include_filter(nodename):
 			synctool.param.NODENAME = nodename
 			synctool.param.MY_GROUPS = synctool.config.get_my_groups()
 
-			overlay_dirs = os.listdir(synctool.param.OVERLAY_DIR)
+			overlay_groups = os.listdir(synctool.param.OVERLAY_DIR)
 
 			# add only the group dirs that apply
 			for g in synctool.param.MY_GROUPS:
-				if g in overlay_dirs:
+				if g in overlay_groups:
 					d = os.path.join(synctool.param.OVERLAY_DIR, g)
 					if not os.path.isdir(d):
 						continue
