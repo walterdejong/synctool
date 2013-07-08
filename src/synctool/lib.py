@@ -293,6 +293,9 @@ def run_with_nodename(cmd_arr, nodename):
 	'''run command and show output with nodename
 	It will run regardless of what DRY_RUN is'''
 
+	sys.stdout.flush()
+	sys.stderr.flush()
+
 	try:
 		f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
 				stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
@@ -353,6 +356,32 @@ def shell_command(cmd):
 
 		sys.stdout.flush()
 		sys.stderr.flush()
+
+
+def exec_command(cmd_arr):
+	'''run a command given in cmd_arr, regardless of DRY_RUN
+	Returns: True on success, False on error'''
+
+	if not cmd_arr:
+		raise RuntimeError, 'cmd_arr is not set'
+
+	sys.stdout.flush()
+	sys.stderr.flush()
+
+	err = False
+	try:
+		subprocess.call(cmd_arr, shell=False)
+	except OSError, reason:
+		stderr('error: failed to exec %s: %s' % (cmd_arr[0], reason))
+		err = True
+
+	sys.stdout.flush()
+	sys.stderr.flush()
+
+	if err:
+		return False
+
+	return True
 
 
 def search_path(cmd):
