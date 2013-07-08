@@ -359,9 +359,9 @@ files, and it works with the `purge/` tree. Purge directories are great for
 mirroring entire directory trees to groups of nodes.
 
 Unlike with the `overlay/` tree, files in the `purge/` tree do not have group
-extensions. Instead, synctool will copy the entire subtree to the node and
-it will _delete_ any files on the target node that do not reside in the
-source tree. So, it will make a perfect mirror of the source under `purge/`.
+extensions. Instead, synctool will copy the entire subtree and it will
+_delete_ any files on the target node that do not reside in the source tree.
+So, it will make a perfect mirror of the source under `purge/`.
 
 To populate the `purge/` tree, use `--upload` with the `--purge` option:
 
@@ -370,10 +370,21 @@ To populate the `purge/` tree, use `--upload` with the `--purge` option:
 
 In this example, we want to upload the entire `/usr/local` tree from node `n1`
 to the repository directory `/opt/synctool/var/purge/compute/`.
-Afterwards, all compute nodes will get `/usr/local` synced from the master
-just by running `synctool -f`.
-Mind that purging will delete data that is not supposed to be there, so be
-extra careful with this feature.
+Afterwards, all compute nodes will get `/usr/local` synced via the purge
+mechanism by running `synctool -f`.
+
+> Purging is a blunt but effective means to synchronise entire directory
+> trees. Mind that it will delete data that is not supposed to be there,
+> so be extra careful with this feature. For safety, synctool will not allow
+> you to purge the root directory of a system.
+
+Under the hood, synctool employs `rsync` to purge files. Run synctool in
+verbose mode to see `rsync`'s output and review what files would be deleted
+by the purge run.
+
+You can not trigger actions through `.post` scripts in the purge directory,
+but it is possible to use `synctool --diff`, `--ref`, and even `--single`
+with files that reside under `purge/`.
 
 
 3.6 synctool-pkg, the synctool package manager
