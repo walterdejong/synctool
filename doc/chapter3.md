@@ -493,6 +493,17 @@ You can manually specify that you want to remove backup copies using:
 To erase a single `.saved` file, use option `--single` in combination with
 `--erase-saved`.
 
+For some (Linux) directories like `/etc/cron.d/` and `/etc/xinet.d/`, it is
+not OK to keep `.saved` files around because it influences how the daemons
+function. For these directories it is recommended that you implement
+a `.post` script that removes the backup copies, like so:
+
+    # $overlay/all/etc/xinetd.d.post
+	rm -f *.saved
+	service xinetd reload
+
+Alternatively, you may want to move the backup copies to a safe location.
+
 
 3.9 Logging
 -----------
