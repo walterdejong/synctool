@@ -454,12 +454,14 @@ def single_files():
 
 	global DIR_CHANGED
 
-	# look in the purge/ tree
-	visit_purge_single(_single_overlay_callback)
-
 	DIR_CHANGED = {}
 	synctool.overlay.visit(synctool.param.OVERLAY_DIR,
 							_single_overlay_callback)
+
+	# For files that were not found, look in the purge/ tree
+	# Any overlay-ed files have already been removed from SINGLE_FILES
+	# So purge/ won't overrule overlay/
+	visit_purge_single(_single_overlay_callback)
 
 	# run any .post scripts on updated directories
 	for path in DIR_CHANGED:
