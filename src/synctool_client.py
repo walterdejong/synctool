@@ -514,29 +514,37 @@ def reference_files():
 			stderr('%s is not in the overlay tree' % filename)
 
 
+def _exec_diff(src, dest):
+	'''execute diff_cmd to display diff between dest and src'''
+
+	verbose('%s %s %s' % (synctool.param.DIFF_CMD, dest,
+							synctool.lib.prettypath(src)))
+	unix_out('%s %s %s' % (synctool.param.DIFF_CMD, dest, src))
+
+	# execute diff
+	sys.stdout.flush()
+	sys.stderr.flush()
+
+	cmd_arr = shlex.split(synctool.param.DIFF_CMD)
+	cmd_arr.append(dest)
+	cmd_arr.append(src)
+	try:
+		subprocess.call(cmd_arr, shell=False)
+	except OSError, reason:
+		stderr('failed to run diff_cmd: %s' % reason)
+
+	sys.stdout.flush()
+	sys.stderr.flush()
+
+
 def _diff_callback(obj, post_dict, dir_changed=False):
+	'''callback function for doing a diff on overlay/ files'''
+
 	if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
 		return generate_template(obj), False
 
 	if _match_single(obj.dest_path):
-		verbose('%s %s %s' % (synctool.param.DIFF_CMD,
-								obj.dest_path, obj.print_src()))
-		unix_out('%s %s %s' % (synctool.param.DIFF_CMD,
-								obj.dest_path, obj.src_path))
-		# execute diff
-		sys.stdout.flush()
-		sys.stderr.flush()
-
-		cmd_arr = shlex.split(synctool.param.DIFF_CMD)
-		cmd_arr.append(obj.dest_path)
-		cmd_arr.append(obj.src_path)
-		try:
-			subprocess.call(cmd_arr, shell=False)
-		except OSError, reason:
-			stderr('failed to run diff_cmd: %s' % reason)
-
-		sys.stdout.flush()
-		sys.stderr.flush()
+		_exec_diff(obj.src_path, obj.dest_path)
 
 		if not SINGLE_FILES:
 			return False, False
@@ -549,6 +557,7 @@ def diff_files():
 
 	synctool.overlay.visit(synctool.param.OVERLAY_DIR, _diff_callback)
 
+	# TODO make diff work for $purge/ files
 	for filename in SINGLE_FILES:
 		stderr('%s is not in the overlay tree' % filename)
 
