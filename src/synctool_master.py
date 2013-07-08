@@ -872,6 +872,7 @@ if __name__ == '__main__':
 		main()
 
 		# workaround exception in QueueFeederThread at exit
+		# which is a Python bug, really
 		time.sleep(0.01)
 	except IOError, ioerr:
 		if ioerr.errno == errno.EPIPE:		# Broken pipe
