@@ -201,6 +201,12 @@ def _run_post(obj, post_script):
 	os.umask(077)
 
 
+def purge_files():
+	'''run the purge function'''
+	# TODO move purging from synctool_master.py to here
+	pass
+
+
 def _overlay_callback(obj, post_dict, dir_changed=False):
 	'''compare files and run post-script if needed'''
 
@@ -399,6 +405,9 @@ def single_files():
 	'''check/update a list of single files'''
 
 	global DIR_CHANGED
+
+	# look in the purge/ tree
+	visit_purge_single(_single_overlay_callback)
 
 	DIR_CHANGED = {}
 	synctool.overlay.visit(synctool.param.OVERLAY_DIR,
@@ -940,6 +949,7 @@ def main():
 		single_files()
 
 	else:
+		purge_files()
 		overlay_files()
 		delete_files()
 
