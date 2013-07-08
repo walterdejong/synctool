@@ -199,12 +199,16 @@ def do_purge(addr, nodename, locally=False):
 	synctool.param.MY_GROUPS = synctool.config.get_my_groups()
 
 	paths = []
+	purge_groups = os.listdir(synctool.param.PURGE_DIR)
+
 	# find the source purge paths that we need to copy
 	# scan only the group dirs that apply
 	for g in synctool.param.MY_GROUPS:
-		d = os.path.join(synctool.param.PURGE_DIR, g)
-		# FIXME use listdir() instead
-		if os.path.isdir(d):
+		if g in purge_groups:
+			d = os.path.join(synctool.param.PURGE_DIR, g)
+			if not os.path.isdir(d):
+				continue
+
 			for path, subdirs, files in os.walk(d):
 				# rsync only purge dirs that actually contain files
 				# otherwise rsync --delete would wreak havoc
@@ -285,11 +289,15 @@ def rsync_include_filter(nodename):
 			synctool.param.NODENAME = nodename
 			synctool.param.MY_GROUPS = synctool.config.get_my_groups()
 
+			overlay_dirs = os.listdir(synctool.param.OVERLAY_DIR)
+
 			# add only the group dirs that apply
 			for g in synctool.param.MY_GROUPS:
-				d = os.path.join(synctool.param.OVERLAY_DIR, g)
-				# FIXME use listdir() instead
-				if os.path.isdir(d):
+				if g in overlay_dirs:
+					d = os.path.join(synctool.param.OVERLAY_DIR, g)
+					if not os.path.isdir(d):
+						continue
+
 					f.write('+ /var/overlay/%s/\n' % g)
 
 				d = os.path.join(synctool.param.DELETE_DIR, g)
