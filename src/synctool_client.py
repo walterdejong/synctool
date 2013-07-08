@@ -79,19 +79,8 @@ def generate_template(obj):
 	unix_out('# run command %s' % os.path.basename(cmd_arr[0]))
 	unix_out('%s "%s" "%s"' % (cmd_arr[0], cmd_arr[1], cmd_arr[2]))
 
-	sys.stdout.flush()
-	sys.stderr.flush()
-
-	err = False
-	try:
-		subprocess.call(cmd_arr, shell=False)
-	except OSError, reason:
-		stderr("failed to run shell command '%s' : %s" %
-				(synctool.lib.prettypath(cmd_arr[0]), reason))
+	if not synctool.lib.exec_command(cmd_arr):
 		err = True
-
-	sys.stdout.flush()
-	sys.stderr.flush()
 
 	if not os.path.exists(newname):
 		verbose('warning: expected output %s was not generated' % newname)
@@ -203,8 +192,59 @@ def _run_post(obj, post_script):
 
 def purge_files():
 	'''run the purge function'''
-	# TODO move purging from synctool_master.py to here
-	pass
+
+	paths = []
+	purge_groups = os.listdir(synctool.param.PURGE_DIR)
+
+	# find the source purge paths that we need to copy
+	# scan only the group dirs that apply
+	for g in synctool.param.MY_GROUPS:
+		if g in purge_groups:
+			d = os.path.join(synctool.param.PURGE_DIR, g)
+			if not os.path.isdir(d):
+				continue
+
+			for path, subdirs, files in os.walk(d):
+				# rsync only purge dirs that actually contain files
+				# otherwise rsync --delete would wreak havoc
+				if not files:
+					continue
+
+				# paths has (src_dir, dest_dir)
+				paths.append((path, path[len(d):]))
+
+				# do not recurse into this dir any deeper
+				del subdirs[:]
+
+	cmd_rsync = shlex.split(synctool.param.RSYNC_CMD)
+
+	# call rsync to copy the purge dirs
+	for src, dest in paths:
+		# trailing slash on source path is important for rsync
+		src += os.sep
+		dest += os.sep
+
+		cmd_arr = cmd_rsync[:]
+
+		# opts is just for the 'visual aspect';
+		# it is displayed when --verbose is active
+		opts = ' '
+		if synctool.lib.DRY_RUN:
+			cmd_arr.append('-n')
+			opts += '-n '
+
+		if synctool.lib.VERBOSE:
+			cmd_arr.append('-v')
+			opts += '-v '
+
+		cmd_arr.append(src)
+		cmd_arr.append(dest)
+
+		verbose('running rsync%s%s %s' %
+				(opts, synctool.lib.prettypath(src), dest))
+		unix_out(' '.join(cmd_arr))
+
+		synctool.lib.exec_command(cmd_arr)
 
 
 def _overlay_callback(obj, post_dict, dir_changed=False):
@@ -549,20 +589,11 @@ def _exec_diff(src, dest):
 							synctool.lib.prettypath(src)))
 	unix_out('%s %s %s' % (synctool.param.DIFF_CMD, dest, src))
 
-	# execute diff
-	sys.stdout.flush()
-	sys.stderr.flush()
-
 	cmd_arr = shlex.split(synctool.param.DIFF_CMD)
 	cmd_arr.append(dest)
 	cmd_arr.append(src)
-	try:
-		subprocess.call(cmd_arr, shell=False)
-	except OSError, reason:
-		stderr('failed to run diff_cmd: %s' % reason)
 
-	sys.stdout.flush()
-	sys.stderr.flush()
+	synctool.lib.exec_command(cmd_arr)
 
 
 def _diff_callback(obj, post_dict, dir_changed=False):

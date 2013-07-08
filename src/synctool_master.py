@@ -126,9 +126,6 @@ def worker_synctool(addr):
 		run_local_synctool()
 		return
 
-	# first rsync the purge dirs (if any)
-	do_purge(addr, nodename)
-
 	# rsync ROOTDIR/dirs/ to the node
 	# if "it wants it"
 	if not (OPT_SKIP_RSYNC or nodename in synctool.param.NO_RSYNC):
@@ -177,83 +174,12 @@ def worker_synctool(addr):
 def run_local_synctool():
 	'''run synctool on the master node itself'''
 
-	# do local purge run
-	do_purge('localhost', synctool.param.NODENAME, locally=True)
-
 	cmd_arr = shlex.split(synctool.param.SYNCTOOL_CMD) + PASS_ARGS
 
 	verbose('running synctool on node %s' % synctool.param.NODENAME)
 	unix_out(' '.join(cmd_arr))
 
 	synctool.lib.run_with_nodename(cmd_arr, synctool.param.NODENAME)
-
-
-def do_purge(addr, nodename, locally=False):
-	'''rsync all relevant purge dirs to node'''
-
-	if OPT_SKIP_RSYNC or nodename in synctool.param.NO_RSYNC:
-		return
-
-	# set mygroups for this nodename
-	synctool.param.NODENAME = nodename
-	synctool.param.MY_GROUPS = synctool.config.get_my_groups()
-
-	paths = []
-	purge_groups = os.listdir(synctool.param.PURGE_DIR)
-
-	# find the source purge paths that we need to copy
-	# scan only the group dirs that apply
-	for g in synctool.param.MY_GROUPS:
-		if g in purge_groups:
-			d = os.path.join(synctool.param.PURGE_DIR, g)
-			if not os.path.isdir(d):
-				continue
-
-			for path, subdirs, files in os.walk(d):
-				# rsync only purge dirs that actually contain files
-				# otherwise rsync --delete would wreak havoc
-				if not files:
-					continue
-
-				# paths has (src_dir, dest_dir)
-				paths.append((path, path[len(d):]))
-
-				# do not recurse into this dir any deeper
-				del subdirs[:]
-
-	cmd_rsync = shlex.split(synctool.param.RSYNC_CMD)
-
-	# call rsync to copy the purge dirs
-	for src, dest in paths:
-		# trailing slash on source path is important for rsync
-		src += os.sep
-		dest += os.sep
-
-		cmd_arr = cmd_rsync[:]
-
-		# opts is just for the 'visual aspect'; it is displayed when --verbose
-		opts = ' '
-		if synctool.lib.DRY_RUN:
-			cmd_arr.append('-n')
-			opts += '-n '
-
-		if synctool.lib.VERBOSE:
-			cmd_arr.append('-v')
-			opts += '-v '
-
-		cmd_arr.append(src)
-
-		if not locally:
-			# prepend node address to dest path
-			dest = addr + ':' + dest
-
-		cmd_arr.append(dest)
-
-		verbose('running rsync%s%s to %s' %
-				(opts, synctool.lib.prettypath(src), dest))
-		unix_out(' '.join(cmd_arr))
-
-		synctool.lib.run_with_nodename(cmd_arr, nodename)
 
 
 def rsync_include_filter(nodename):
@@ -282,6 +208,7 @@ def rsync_include_filter(nodename):
 + /var/overlay/all/
 + /var/delete/
 + /var/delete/all/
++ /var/purge/
 ''')
 			f.write('+ /%s\n' % synctool.param.CONF_FILE)
 
@@ -290,19 +217,23 @@ def rsync_include_filter(nodename):
 			synctool.param.MY_GROUPS = synctool.config.get_my_groups()
 
 			overlay_groups = os.listdir(synctool.param.OVERLAY_DIR)
+			delete_groups = os.listdir(synctool.param.DELETE_DIR)
+			purge_groups = os.listdir(synctool.param.PURGE_DIR)
 
 			# add only the group dirs that apply
 			for g in synctool.param.MY_GROUPS:
 				if g in overlay_groups:
 					d = os.path.join(synctool.param.OVERLAY_DIR, g)
-					if not os.path.isdir(d):
-						continue
+					if os.path.isdir(d):
+						f.write('+ /var/overlay/%s/\n' % g)
 
-					f.write('+ /var/overlay/%s/\n' % g)
+				if g in delete_groups:
+					d = os.path.join(synctool.param.DELETE_DIR, g)
+					if os.path.isdir(d):
+						f.write('+ /var/delete/%s/\n' % g)
 
-				d = os.path.join(synctool.param.DELETE_DIR, g)
-				if os.path.isdir(d):
-					f.write('+ /var/delete/%s/\n' % g)
+				# FIXME add purge dirs here
+				# FIXME mind that purge is more complicated; no empty dirs
 
 			# Note: sbin/*.pyc is excluded to keep major differences in
 			# Python versions (on master vs. client node) from clashing
