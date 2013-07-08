@@ -200,15 +200,23 @@ def purge_files():
 	# scan only the group dirs that apply
 	for g in synctool.param.MY_GROUPS:
 		if g in purge_groups:
-			d = os.path.join(synctool.param.PURGE_DIR, g)
-			if not os.path.isdir(d):
+			purge_root = os.path.join(synctool.param.PURGE_DIR, g)
+			if not os.path.isdir(purge_root):
 				continue
 
-			for path, subdirs, files in os.walk(d):
+			for path, subdirs, files in os.walk(purge_root):
 				# rsync only purge dirs that actually contain files
 				# otherwise rsync --delete would wreak havoc
 				if not files:
 					continue
+
+				if path == purge_root:
+					# root contains files; guard against user mistakes
+					# rsync --delete would destroy the whole filesystem
+					stderr('cowardly refusing to purge the root directory')
+					stderr('please fix: %s/' % synctool.lib.prettypath(
+												purge_root))
+					return
 
 				# paths has (src_dir, dest_dir)
 				paths.append((path, path[len(d):]))
