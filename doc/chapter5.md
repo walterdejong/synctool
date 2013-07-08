@@ -63,9 +63,17 @@ as well. If you catch yourself having to use `find` all the time to pinpoint
 the location of a file in the repository, chances are that you making things
 harder on yourself than ought to be.
 
-It is probably better structured as:
+Maybe it is better structured as:
 
     $overlay/mygroup/etc/
+
+but maybe it is better structured as:
+
+    $overlay/all/etc/somefile._all
+    $overlay/all/etc/somefile._mygroup
+
+The main message is "keep it simple". Try not to use too many group
+directories, because it makes things complicated.
 
 
 5.4 Do not manage the master node
