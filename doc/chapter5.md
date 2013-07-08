@@ -155,15 +155,18 @@ sync to subsets of nodes. Script it something along these lines:
     for rack in $RACKS
     do
         # give rackmasters a full copy of the repos
-        rsync -a /opt/synctool/ ${rack}-n1:/opt/synctool/
+        rsync -a --delete /opt/synctool/ ${rack}-n1:/opt/synctool/
+
+        # run synctool on rackmaster with its rack config
+        dsh -n ${rack}-n1 --no-nodename \
+          /opt/synctool/bin/synctool \
+            -c /opt/synctool/etc/${rack}.conf "$@"
     done &
     wait
 
-    dsh -g rackmaster --no-nodename /opt/synctool/bin/synctool "$@"
-
 So, the master node syncs to 'rack masters', and then it runs synctool on
 the masters, which will sync the nodes. The option `--no-nodename` is used
-to make the output come out right.
+with `dsh` to make the output come out right.
 You also still need to manage the rack masters -- with synctool, from the
 master node.
 
