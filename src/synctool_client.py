@@ -934,9 +934,9 @@ def main():
 				'%04d/%02d/%02d %02d:%02d:%02d' %
 				(t[0], t[1], t[2], t[3], t[4], t[5]))
 		unix_out('#')
-		unix_out('# NODENAME=%s' % synctool.param.NODENAME)
-		unix_out('# HOSTNAME=%s' % synctool.param.HOSTNAME)
-		unix_out('# ROOTDIR=%s' % synctool.param.ROOTDIR)
+		unix_out('# my hostname: %s' % synctool.param.HOSTNAME)
+		unix_out('# SYNCTOOL_NODE=%s' % synctool.param.NODENAME)
+		unix_out('# SYNCTOOL_ROOT=%s' % synctool.param.ROOTDIR)
 		unix_out('#')
 
 		if not synctool.lib.DRY_RUN:
