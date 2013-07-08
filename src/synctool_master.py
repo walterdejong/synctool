@@ -232,8 +232,35 @@ def rsync_include_filter(nodename):
 					if os.path.isdir(d):
 						f.write('+ /var/delete/%s/\n' % g)
 
-				# FIXME add purge dirs here
-				# FIXME mind that purge is more complicated; no empty dirs
+				if g in purge_groups:
+					purge_root = os.path.join(synctool.param.PURGE_DIR, g)
+					if not os.path.isdir(purge_root):
+						continue
+
+					for path, subdirs, files in os.walk(purge_root):
+						if path == purge_root:
+							# guard against user mistakes;
+							# danger of destroying the entire filesystem
+							# if it would rsync --delete the root
+							if len(files) > 0:
+								stderr('cowardly refusing to purge the root '
+										'directory')
+								stderr('please remove any files directly '
+										'under %s/' %
+										synctool.lib.prettypath(purge_root))
+
+								# delete temp file and exit
+								f.close()
+								try:
+									os.unlink(filename)
+								except OSError:
+									# silently ignore unlink error
+									pass
+
+								sys.exit(-1)
+						else:
+							f.write('+ /var/purge/%s/' % g)
+							break
 
 			# Note: sbin/*.pyc is excluded to keep major differences in
 			# Python versions (on master vs. client node) from clashing
