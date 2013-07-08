@@ -298,6 +298,36 @@ def erase_saved():
 	synctool.overlay.visit(synctool.param.DELETE_DIR, _erase_saved_callback)
 
 
+def visit_purge_single(callback):
+	'''look in the purge/ dir for SINGLE_FILES, and call callback'''
+
+	if not SINGLE_FILES:
+		return
+
+	purge_groups = os.listdir(synctool.param.PURGE_DIR)
+
+	# use a copy of SINGLE_FILES, because the callback will remove items
+	for dest in SINGLE_FILES[:]:
+		filepath = dest
+		if filepath[0] == os.sep:
+			filepath = filepath[1:]
+
+		for g in synctool.param.MY_GROUPS:
+			if not g in purge_groups:
+				continue
+
+			src = os.path.join(synctool.param.PURGE_DIR, g, filepath)
+			if os.path.exists(src):
+				# make a SyncObject
+				obj = synctool.object.SyncObject(src, dest)
+				obj.src_stat = synctool.syncstat.SyncStat(obj.src_path)
+				obj.dest_stat = synctool.syncstat.SyncStat(obj.dest_path)
+
+				# call the callback function
+				callback(obj, {})
+				break
+
+
 def _match_single(path):
 	'''Returns True if (terse) path is in SINGLE_FILES, else False'''
 
@@ -491,36 +521,6 @@ def _reference_callback(obj, post_dict, dir_changed=False):
 	return True, False
 
 
-def visit_purge_single(callback):
-	'''look in the purge/ dir for SINGLE_FILES, and call callback'''
-
-	if not SINGLE_FILES:
-		return
-
-	purge_groups = os.listdir(synctool.param.PURGE_DIR)
-
-	# use a copy of SINGLE_FILES, because the callback will remove items
-	for dest in SINGLE_FILES[:]:
-		filepath = dest
-		if filepath[0] == os.sep:
-			filepath = filepath[1:]
-
-		for g in synctool.param.MY_GROUPS:
-			if not g in purge_groups:
-				continue
-
-			src = os.path.join(synctool.param.PURGE_DIR, g, filepath)
-			if os.path.exists(src):
-				# make a SyncObject
-				obj = synctool.object.SyncObject(src, dest)
-				obj.src_stat = synctool.syncstat.SyncStat(obj.src_path)
-				obj.dest_stat = synctool.syncstat.SyncStat(obj.dest_path)
-
-				# call the callback function
-				callback(obj, {})
-				break
-
-
 def reference_files():
 	'''show which source file in the repository synctool uses'''
 
@@ -576,7 +576,9 @@ def diff_files():
 
 	synctool.overlay.visit(synctool.param.OVERLAY_DIR, _diff_callback)
 
-	# TODO make diff work for $purge/ files
+	# look in the purge/ tree, too
+	visit_purge_single(_diff_callback)
+
 	for filename in SINGLE_FILES:
 		stderr('%s is not in the overlay tree' % filename)
 
