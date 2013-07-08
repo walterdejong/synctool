@@ -51,10 +51,6 @@ def read_config():
 		stderr('error: no such directory: %s' % synctool.param.PURGE_DIR)
 		errors += 1
 
-	d = os.path.join(synctool.param.PURGE_DIR, 'all')
-	if not os.path.isdir(d):
-		stderr('warning: no such directory: %s' % d)
-
 	if not synctool.param.TEMP_DIR:
 		synctool.param.TEMP_DIR = '/tmp/synctool'
 		# do not make temp dir here; it is only used on the master node
