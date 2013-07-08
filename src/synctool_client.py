@@ -214,8 +214,8 @@ def purge_files():
 					# root contains files; guard against user mistakes
 					# rsync --delete would destroy the whole filesystem
 					stderr('cowardly refusing to purge the root directory')
-					stderr('please fix: %s/' % synctool.lib.prettypath(
-												purge_root))
+					stderr('please remove any files directly under %s/' %
+							synctool.lib.prettypath(purge_root))
 					return
 
 				# paths has (src_dir, dest_dir)
