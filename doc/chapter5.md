@@ -159,7 +159,7 @@ sync to subsets of nodes. Script it something along these lines:
     done &
     wait
 
-    dsh -g rackmaster /opt/synctool/bin/synctool "$@"
+    dsh -g rackmaster --no-nodename /opt/synctool/bin/synctool "$@"
 
 So, the master node syncs to 'rack masters', and then it runs synctool on
 the masters, which will sync the nodes. The option `--no-nodename` is used
