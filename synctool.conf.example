@@ -4,16 +4,50 @@
 # This is an example file; adjust your synctool.conf as needed
 # commented parameters resemble built-in defaults
 
-#tempdir	 /tmp/synctool
+# specify groups and nodes
 
-# all files in the repository must have a group extension
-#require_extension yes
+# by default, synctool will run on these nodes
+# You can specify a certain group or a list of groups/nodes
+# 'none' will result in synctool not running at all
+# This setting can be overridden by passing the nodes on the command-line
+#default_nodeset all
 
-# make backup copies named *.saved
-#backup_copies yes
+# compound groups may be specified like this
+group wn workernode batch
+group test wn
+group g1 batch test wn
 
-# log to syslog
-#syslogging yes
+# list all nodes and their groups
+# the nodename is a logical name known only to synctool
+# "ipaddress:" specifies the IP address where synctool connects to
+#
+# The optional 'hostname:' keyword may be used to tell synctool
+# the hostname of the node. This is generally not needed, unless
+# you ever decide to run synctool.py manually on the target node,
+# in stand-alone mode.
+#
+# Optionally, 'rsync:no' may be given to keep synctool from rsync-ing
+# the repository to that node. This is only useful when the node has access
+# to the repository via shared storage (like an NFS share)
+
+# managing the masternode also with synctool is generally not a great idea
+#node node0 master
+
+node node1 fs sched aix    ipaddress:node1-mgmt hostname:myhost1.mydomain.com
+node node2 login    debian ipaddress:node2-mgmt hostname:myhost2.mydomain.com
+node node3 wn       debian ipaddress:node3-mgmt
+node node4 wn       debian ipaddress:node4-mgmt rsync:no
+node node5 wn       centos ipaddress:node5-mgmt rsync:no
+node node6 wn       centos ipaddress:node6-mgmt
+node node7 wn       centos ipaddress:node7-mgmt
+node node8 test     sunos  ipaddress:node8-mgmt hostid:/etc/hostname.bnx0
+node node9 batch    sunos  ipaddress:node9-mgmt hostid:/etc/hostname.bnx0
+
+# ignore one or more nodes
+ignore_node node0 node9
+
+# ignore a number of groups
+ignore_group test test2
 
 # ignore all files beginning with a dot (like .profile, .bashrc, ...)
 #ignore_dotfiles no
@@ -25,6 +59,17 @@
 ignore .svn
 ignore .gitignore
 ignore .*.swp
+
+#tempdir	 /tmp/synctool
+
+# all files in the repository must have a group extension
+#require_extension yes
+
+# make backup copies named *.saved
+#backup_copies yes
+
+# log to syslog
+#syslogging yes
 
 # configure external commands that synctool uses
 #diff_cmd diff -u
@@ -108,51 +153,6 @@ ignore .*.swp
 #color_dryrun default
 #color_fixing default
 #color_ok     default
-
-# specify groups and nodes
-
-# by default, synctool will run on these nodes
-# You can specify a certain group or a list of groups/nodes
-# 'none' will result in synctool not running at all
-# This setting can be overridden by passing the nodes on the command-line
-#default_nodeset all
-
-# compound groups may be specified like this
-group wn workernode batch
-group test wn
-group g1 batch test wn
-
-# list all nodes and their groups
-# the nodename is a logical name known only to synctool
-# "ipaddress:" specifies the IP address where synctool connects to
-#
-# The optional 'hostname:' keyword may be used to tell synctool
-# the hostname of the node. This is generally not needed, unless
-# you ever decide to run synctool.py manually on the target node,
-# in stand-alone mode.
-#
-# Optionally, 'rsync:no' may be given to keep synctool from rsync-ing
-# the repository to that node. This is only useful when the node has access
-# to the repository via shared storage (like an NFS share)
-
-# managing the masternode also with synctool is generally not a great idea
-#node node0 master
-
-node node1 fs sched aix    ipaddress:node1-mgmt hostname:myhost1.mydomain.com
-node node2 login    debian ipaddress:node2-mgmt hostname:myhost2.mydomain.com
-node node3 wn       debian ipaddress:node3-mgmt
-node node4 wn       debian ipaddress:node4-mgmt rsync:no
-node node5 wn       centos ipaddress:node5-mgmt rsync:no
-node node6 wn       centos ipaddress:node6-mgmt
-node node7 wn       centos ipaddress:node7-mgmt
-node node8 test     sunos  ipaddress:node8-mgmt hostid:/etc/hostname.bnx0
-node node9 batch    sunos  ipaddress:node9-mgmt hostid:/etc/hostname.bnx0
-
-# ignore one or more nodes
-ignore_node node0 node9
-
-# ignore a number of groups
-ignore_group test test2
 
 # include a local synctool config file on the target node
 #include /etc/synctool_local.conf
