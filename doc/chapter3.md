@@ -373,10 +373,10 @@ to the repository directory `/opt/synctool/var/purge/compute/`.
 Afterwards, all compute nodes will get `/usr/local` synced via the purge
 mechanism by running `synctool -f`.
 
-> Purging is a blunt but effective means to synchronise entire directory
-> trees. Mind that it will delete data that is not supposed to be there,
-> so be extra careful with this feature. For safety, synctool will not allow
-> you to purge the root directory of a system.
+> Purging is a blunt but effective means to synchronise directory trees.
+> Mind that it will delete data that is not supposed to be there, so be
+> extra careful with this feature. For safety, synctool will not allow you
+> to purge the root directory of a system.
 
 Under the hood, synctool employs `rsync` to purge files. Run synctool in
 verbose mode to see `rsync`'s output and review what files would be deleted
