@@ -203,6 +203,7 @@ def do_purge(addr, nodename, locally=False):
 	# scan only the group dirs that apply
 	for g in synctool.param.MY_GROUPS:
 		d = os.path.join(synctool.param.PURGE_DIR, g)
+		# FIXME use listdir() instead
 		if os.path.isdir(d):
 			for path, subdirs, files in os.walk(d):
 				# rsync only purge dirs that actually contain files
@@ -287,6 +288,7 @@ def rsync_include_filter(nodename):
 			# add only the group dirs that apply
 			for g in synctool.param.MY_GROUPS:
 				d = os.path.join(synctool.param.OVERLAY_DIR, g)
+				# FIXME use listdir() instead
 				if os.path.isdir(d):
 					f.write('+ /var/overlay/%s/\n' % g)
 
@@ -299,6 +301,7 @@ def rsync_include_filter(nodename):
 			f.write('''- /sbin/*.pyc
 - /var/overlay/*
 - /var/delete/*
+- /var/purge/*
 ''')
 
 	# Note: remind to delete the temp file later
