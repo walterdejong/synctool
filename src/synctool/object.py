@@ -14,7 +14,7 @@ import hashlib
 
 import synctool.lib
 from synctool.lib import verbose, stdout, stderr, terse, unix_out, log
-from synctool.lib import dryrun_msg
+from synctool.lib import dryrun_msg, prettypath
 import synctool.param
 import synctool.syncstat
 
@@ -89,7 +89,7 @@ class VNode(object):
 
 		# be a bit quiet about it
 		if synctool.lib.VERBOSE or synctool.lib.UNIX_CMD:
-			verbose('making directory %s' % synctool.lib.prettypath(basedir))
+			verbose('making directory %s' % prettypath(basedir))
 			unix_out('mkdir -p %s' % basedir)
 
 		synctool.lib.mkdir_p(basedir)
@@ -280,8 +280,7 @@ class VNodeFile(VNode):
 				shutil.copy2(self.src_path, self.name)
 			except IOError, reason:
 				stderr('failed to copy %s to %s: %s' %
-						(synctool.lib.prettypath(self.src_path), self.name,
-						reason))
+						(prettypath(self.src_path), self.name, reason))
 				terse(synctool.lib.TERSE_FAIL, self.name)
 
 
@@ -610,15 +609,15 @@ class SyncObject(object):
 		'''pretty print my source path'''
 
 		if self.src_stat and self.src_stat.is_dir():
-			return synctool.lib.prettypath(self.src_path) + os.sep
+			return prettypath(self.src_path) + os.sep
 
-		return synctool.lib.prettypath(self.src_path)
+		return prettypath(self.src_path)
 
 	def __repr__(self):
 		return '[<SyncObject>: (%s) (%s)]' % (self.src_path, self.dest_path)
 
 	def print_src(self):
-		return synctool.lib.prettypath(self.src_path)
+		return prettypath(self.src_path)
 
 	def check(self):
 		'''check differences between src and dest,

@@ -40,7 +40,7 @@ import fnmatch
 import subprocess
 
 import synctool.lib
-from synctool.lib import verbose, stderr, unix_out, terse
+from synctool.lib import verbose, stderr, unix_out, terse, prettypath
 import synctool.object
 from synctool.object import SyncObject
 import synctool.param
@@ -71,7 +71,7 @@ def _toplevel(overlay):
 			importance = synctool.param.MY_GROUPS.index(entry)
 		except ValueError:
 			verbose('%s/ is not one of my groups, skipping' %
-					synctool.lib.prettypath(fullpath))
+					prettypath(fullpath))
 			continue
 
 		arr.append((fullpath, importance))
@@ -121,13 +121,12 @@ def _split_extension(filename, src_dir):
 				terse(synctool.lib.TERSE_ERROR, 'invalid group on %s' %
 												src_path)
 			else:
-				stderr('unknown group on %s, skipped' %
-						synctool.lib.prettypath(src_path))
+				stderr('unknown group on %s, skipped' % prettypath(src_path))
 			return None, -1
 
 		# it is not one of my groups
 		verbose('skipping %s, it is not one of my groups' %
-				synctool.lib.prettypath(os.path.join(src_dir, filename)))
+				prettypath(os.path.join(src_dir, filename)))
 		return None, -1
 
 	(name2, ext) = os.path.splitext(name)
@@ -143,7 +142,7 @@ def _split_extension(filename, src_dir):
 
 	elif ext == '._template':
 		stderr('warning: template %s can not have a group extension' %
-				synctool.lib.prettypath(os.path.join(src_dir, filename)))
+				prettypath(os.path.join(src_dir, filename)))
 		return None, -1
 
 	return SyncObject(filename, name), importance
@@ -190,8 +189,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
 	arr = []
 	for entry in os.listdir(src_dir):
 		if entry in synctool.param.IGNORE_FILES:
-			verbose('ignoring %s' %
-					synctool.lib.prettypath(os.path.join(src_dir, entry)))
+			verbose('ignoring %s' % prettypath(os.path.join(src_dir, entry)))
 			continue
 
 		# check any ignored files with wildcards
@@ -201,7 +199,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
 			if fnmatch.fnmatchcase(entry, wildcard_entry):
 				wildcard_match = True
 				verbose('ignoring %s (pattern match)' %
-						synctool.lib.prettypath(os.path.join(src_dir, entry)))
+						prettypath(os.path.join(src_dir, entry)))
 				break
 
 		if wildcard_match:
