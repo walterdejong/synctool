@@ -213,10 +213,6 @@ def rsync_include_filter(nodename):
 			delete_groups = os.listdir(synctool.param.DELETE_DIR)
 			purge_groups = os.listdir(synctool.param.PURGE_DIR)
 
-			print 'TD MY_GROUPS', synctool.param.MY_GROUPS
-			print 'TD overlay_groups', overlay_groups
-			print 'TD purge_groups', purge_groups
-
 			f.write('+ /var/overlay/\n')
 
 			# add only the group dirs that apply
@@ -225,8 +221,8 @@ def rsync_include_filter(nodename):
 				if g in overlay_groups:
 					d = os.path.join(synctool.param.OVERLAY_DIR, g)
 					if os.path.isdir(d):
-						print 'TD + /var/overlay/%s/' % g
 						f.write('+ /var/overlay/%s/\n' % g)
+
 			f.write('- /var/overlay/*\n'
 					'+ /var/delete/\n')
 
@@ -235,6 +231,7 @@ def rsync_include_filter(nodename):
 					d = os.path.join(synctool.param.DELETE_DIR, g)
 					if os.path.isdir(d):
 						f.write('+ /var/delete/%s/\n' % g)
+
 			f.write('- /var/delete/*\n'
 					'+ /var/purge/\n')
 
@@ -266,7 +263,6 @@ def rsync_include_filter(nodename):
 
 								sys.exit(-1)
 						else:
-							print 'TD + /var/purge/%s/' % g
 							f.write('+ /var/purge/%s/' % g)
 							break
 
