@@ -20,6 +20,7 @@ import subprocess
 import synctool.config
 import synctool.lib
 from synctool.lib import verbose, stdout, stderr, terse, unix_out, dryrun_msg
+from synctool.lib import prettypath
 import synctool.overlay
 import synctool.param
 import synctool.syncstat
@@ -74,8 +75,8 @@ def generate_template(obj):
 	# run the script
 	# pass template and newname as "$1" and "$2"
 	cmd_arr = [obj.src_path, template, newname]
-	verbose('  os.system(%s, %s, %s)' % (synctool.lib.prettypath(cmd_arr[0]),
-				cmd_arr[1], cmd_arr[2]))
+	verbose('  os.system(%s, %s, %s)' % (prettypath(cmd_arr[0]),
+			cmd_arr[1], cmd_arr[2]))
 	unix_out('# run command %s' % os.path.basename(cmd_arr[0]))
 	unix_out('%s "%s" "%s"' % (cmd_arr[0], cmd_arr[1], cmd_arr[2]))
 
@@ -119,13 +120,11 @@ def run_command(cmd):
 
 	statbuf = synctool.syncstat.SyncStat(cmdfile)
 	if not statbuf.exists():
-		stderr('error: command %s not found' %
-				synctool.lib.prettypath(cmdfile))
+		stderr('error: command %s not found' % prettypath(cmdfile))
 		return
 
 	if not statbuf.is_exec():
-		stderr("warning: file '%s' is not executable" %
-				synctool.lib.prettypath(cmdfile))
+		stderr("warning: file '%s' is not executable" % prettypath(cmdfile))
 		return
 
 	# run the shell command
@@ -215,7 +214,7 @@ def purge_files():
 					# rsync --delete would destroy the whole filesystem
 					stderr('cowardly refusing to purge the root directory')
 					stderr('please remove any files directly under %s/' %
-							synctool.lib.prettypath(purge_root))
+							prettypath(purge_root))
 					return
 
 				# paths has (src_dir, dest_dir)
@@ -238,39 +237,58 @@ def purge_files():
 		# it is displayed when --verbose is active
 		opts = ' '
 		if synctool.lib.DRY_RUN:
+			# add rsync option -n (dry run)
 			cmd_arr.append('-n')
 			opts += '-n '
 
-		if synctool.lib.VERBOSE:
-			# if verbose, remove --quiet option from rsync
-			try:
-				cmd_arr.remove('-q')
-			except ValueError:
-				pass
+		# remove --quiet option from rsync and add -v (verbose)
+		try:
+			cmd_arr.remove('-q')
+		except ValueError:
+			pass
 
-			try:
-				cmd_arr.remove('--quiet')
-			except ValueError:
-				pass
+		try:
+			cmd_arr.remove('--quiet')
+		except ValueError:
+			pass
 
-			cmd_arr.append('-v')
-			opts += '-v '
+		cmd_arr.append('-v')
+		opts += '-v '
 
 		cmd_arr.append(src)
 		cmd_arr.append(dest)
 
-		verbose('running rsync%s%s %s' %
-				(opts, synctool.lib.prettypath(src), dest))
+		verbose('running rsync%s%s %s' % (opts, prettypath(src), dest))
 		unix_out(' '.join(cmd_arr))
 
-		err = synctool.lib.exec_command(cmd_arr)
-		# FIXME rsync error code == 0 even when there are updates
-		# FIXME it's awful but we have to parse rsync output
-		if err == -1:
-			# error running rsync; message already printed
-			pass
-		elif err > 0:
-			stdout('updating %s (purge)' % dest)
+		# run rsync
+		sys.stdout.flush()
+		sys.stderr.flush()
+
+		try:
+			proc = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
+									stdout=subprocess.PIPE)
+		except OSError, reason:
+			stderr('failed to run command %s: %s' % (cmd_arr[0], reason))
+			return
+
+		out, err = proc.communicate()
+
+		if len(out) > 4:
+			# remove irrelevant lines from rsync output
+			out.pop(0)
+			out.pop()
+			out.pop()
+			out.pop()
+
+			for line in out:
+				line = line.strip()
+				if line[:9] == 'deleting ':
+					path = os.path.join(dest, line[9:])
+					stdout('deleting %s (purge)' % prettypath(path))
+				else:
+					path = os.path.join(dest, line)
+					stdout('updating %s (purge)' % prettypath(path))
 
 
 def _overlay_callback(obj, post_dict, dir_changed=False):
@@ -613,8 +631,7 @@ def reference_files():
 def _exec_diff(src, dest):
 	'''execute diff_cmd to display diff between dest and src'''
 
-	verbose('%s %s %s' % (synctool.param.DIFF_CMD, dest,
-							synctool.lib.prettypath(src)))
+	verbose('%s %s %s' % (synctool.param.DIFF_CMD, dest, prettypath(src)))
 	unix_out('%s %s %s' % (synctool.param.DIFF_CMD, dest, src))
 
 	cmd_arr = shlex.split(synctool.param.DIFF_CMD)
