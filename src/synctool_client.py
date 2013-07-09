@@ -242,6 +242,17 @@ def purge_files():
 			opts += '-n '
 
 		if synctool.lib.VERBOSE:
+			# if verbose, remove --quiet option from rsync
+			try:
+				cmd_arr.remove('-q')
+			except ValueError:
+				pass
+
+			try:
+				cmd_arr.remove('--quiet')
+			except ValueError:
+				pass
+
 			cmd_arr.append('-v')
 			opts += '-v '
 
