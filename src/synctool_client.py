@@ -79,7 +79,7 @@ def generate_template(obj):
 	unix_out('# run command %s' % os.path.basename(cmd_arr[0]))
 	unix_out('%s "%s" "%s"' % (cmd_arr[0], cmd_arr[1], cmd_arr[2]))
 
-	if not synctool.lib.exec_command(cmd_arr):
+	if synctool.lib.exec_command(cmd_arr) == -1:
 		err = True
 
 	if not os.path.exists(newname):
@@ -263,7 +263,14 @@ def purge_files():
 				(opts, synctool.lib.prettypath(src), dest))
 		unix_out(' '.join(cmd_arr))
 
-		synctool.lib.exec_command(cmd_arr)
+		err = synctool.lib.exec_command(cmd_arr)
+		# FIXME rsync error code == 0 even when there are updates
+		# FIXME it's awful but we have to parse rsync output
+		if err == -1:
+			# error running rsync; message already printed
+			pass
+		elif err > 0:
+			stdout('updating %s (purge)' % dest)
 
 
 def _overlay_callback(obj, post_dict, dir_changed=False):

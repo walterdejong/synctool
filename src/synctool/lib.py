@@ -360,7 +360,7 @@ def shell_command(cmd):
 
 def exec_command(cmd_arr):
 	'''run a command given in cmd_arr, regardless of DRY_RUN
-	Returns: True on success, False on error'''
+	Returns: return code of execute command or -1 on error'''
 
 	if not cmd_arr:
 		raise RuntimeError, 'cmd_arr is not set'
@@ -368,20 +368,16 @@ def exec_command(cmd_arr):
 	sys.stdout.flush()
 	sys.stderr.flush()
 
-	err = False
+	err = 0
 	try:
-		subprocess.call(cmd_arr, shell=False)
+		err = subprocess.call(cmd_arr, shell=False)
 	except OSError, reason:
 		stderr('error: failed to exec %s: %s' % (cmd_arr[0], reason))
-		err = True
+		err = -1
 
 	sys.stdout.flush()
 	sys.stderr.flush()
-
-	if err:
-		return False
-
-	return True
+	return err
 
 
 def search_path(cmd):
