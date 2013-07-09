@@ -219,7 +219,7 @@ def purge_files():
 					return
 
 				# paths has (src_dir, dest_dir)
-				paths.append((path, path[len(d):]))
+				paths.append((path, path[len(purge_root):]))
 
 				# do not recurse into this dir any deeper
 				del subdirs[:]
