@@ -304,7 +304,7 @@ def upload_purge():
 		stdout('would be uploaded as %s' % verbose_path)
 
 	verbose('running rsync%s%s:%s to %s' % (opts, up.address, up.filename,
-									synctool.lib.prettypath(up.repos_path)))
+									verbose_path))
 	unix_out(' '.join(cmd_arr))
 	synctool.lib.run_with_nodename(cmd_arr, up.node)
 
