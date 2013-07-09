@@ -303,6 +303,10 @@ def upload_purge():
 	if synctool.lib.DRY_RUN:
 		stdout('would be uploaded as %s' % verbose_path)
 
+	if not synctool.lib.DRY_RUN:
+		unix_out('mkdir -p %s' % up.repos_path)
+		synctool.lib.mkdir_p(up.repos_path)
+
 	verbose('running rsync%s%s:%s to %s' % (opts, up.node, up.filename,
 									verbose_path))
 	unix_out(' '.join(cmd_arr))
