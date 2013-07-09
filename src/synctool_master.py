@@ -20,7 +20,7 @@ import errno
 import synctool.aggr
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose, stdout, stderr, terse, unix_out
+from synctool.lib import verbose, stdout, stderr, terse, unix_out, prettypath
 import synctool.nodeset
 import synctool.overlay
 import synctool.param
@@ -250,8 +250,7 @@ def rsync_include_filter(nodename):
 								stderr('cowardly refusing to purge the root '
 										'directory')
 								stderr('please remove any files directly '
-										'under %s/' %
-										synctool.lib.prettypath(purge_root))
+										'under %s/' % prettypath(purge_root))
 
 								# delete temp file and exit
 								f.close()
@@ -301,7 +300,7 @@ def upload_purge():
 	cmd_arr.append(up.address + ':' + up.filename)
 	cmd_arr.append(up.repos_path)
 
-	verbose_path = os.path.join(synctool.lib.prettypath(up.repos_path),
+	verbose_path = os.path.join(prettypath(up.repos_path),
 								os.path.basename(up.filename))
 	if synctool.lib.DRY_RUN:
 		stdout('would be uploaded as %s' % verbose_path)
@@ -390,8 +389,7 @@ def upload():
 								up.filename, up.repos_path))
 
 	if synctool.lib.DRY_RUN:
-		stdout('would be uploaded as %s' %
-				synctool.lib.prettypath(up.repos_path))
+		stdout('would be uploaded as %s' % prettypath(up.repos_path))
 	else:
 		# mkdir in the repos (just in case it didn't exist yet)
 		# note: it may well make the dir with wrong ownership, mode
@@ -409,7 +407,7 @@ def upload():
 		synctool.lib.run_with_nodename(scp_cmd_arr, up.node)
 
 		if os.path.isfile(up.repos_path):
-			stdout('uploaded %s' % synctool.lib.prettypath(up.repos_path))
+			stdout('uploaded %s' % prettypath(up.repos_path))
 
 
 def make_tempdir():
