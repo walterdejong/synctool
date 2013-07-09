@@ -353,6 +353,7 @@ remove_overlay() {
 		rmdir "$INSTALL_ROOT/var/overlay" 2>/dev/null
 		rmdir "$INSTALL_ROOT/var/delete/all" 2>/dev/null
 		rmdir "$INSTALL_ROOT/var/delete" 2>/dev/null
+		rmdir "$INSTALL_ROOT/var/purge" 2>/dev/null
 		rmdir "$INSTALL_ROOT/var" 2>/dev/null
 		rmdir "$INSTALL_ROOT/scripts" 2>/dev/null
 	fi
@@ -364,6 +365,10 @@ remove_overlay() {
 	if test -d "$INSTALL_ROOT/var/delete"
 	then
 		echo "leaving behind $INSTALL_ROOT/var/delete/"
+	fi
+	if test -d "$INSTALL_ROOT/var/purge"
+	then
+		echo "leaving behind $INSTALL_ROOT/var/purge/"
 	fi
 	if test -d "$INSTALL_ROOT/scripts"
 	then
