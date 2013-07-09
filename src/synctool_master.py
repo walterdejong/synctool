@@ -203,14 +203,7 @@ def rsync_include_filter(nodename):
 		# include $SYNCTOOL/var/ but exclude
 		# the top overlay/ and delete/ dir
 		with f:
-			f.write('''# synctool rsync filter
-+ /var/overlay/
-+ /var/overlay/all/
-+ /var/delete/
-+ /var/delete/all/
-+ /var/purge/
-''')
-			f.write('+ /%s\n' % synctool.param.CONF_FILE)
+			f.write('# synctool rsync filter')
 
 			# set mygroups for this nodename
 			synctool.param.NODENAME = nodename
@@ -220,18 +213,32 @@ def rsync_include_filter(nodename):
 			delete_groups = os.listdir(synctool.param.DELETE_DIR)
 			purge_groups = os.listdir(synctool.param.PURGE_DIR)
 
+			print 'TD MY_GROUPS', synctool.param.MY_GROUPS
+			print 'TD overlay_groups', overlay_groups
+			print 'TD purge_groups', purge_groups
+
+			f.write('+ /var/overlay/\n')
+
 			# add only the group dirs that apply
+			# use three loops; (workaround rsync bug?)
 			for g in synctool.param.MY_GROUPS:
 				if g in overlay_groups:
 					d = os.path.join(synctool.param.OVERLAY_DIR, g)
 					if os.path.isdir(d):
+						print 'TD + /var/overlay/%s/' % g
 						f.write('+ /var/overlay/%s/\n' % g)
+			f.write('- /var/overlay/*\n'
+					'+ /var/delete/\n')
 
+			for g in synctool.param.MY_GROUPS:
 				if g in delete_groups:
 					d = os.path.join(synctool.param.DELETE_DIR, g)
 					if os.path.isdir(d):
 						f.write('+ /var/delete/%s/\n' % g)
+			f.write('- /var/delete/*\n'
+					'+ /var/purge/\n')
 
+			for g in synctool.param.MY_GROUPS:
 				if g in purge_groups:
 					purge_root = os.path.join(synctool.param.PURGE_DIR, g)
 					if not os.path.isdir(purge_root):
@@ -259,16 +266,16 @@ def rsync_include_filter(nodename):
 
 								sys.exit(-1)
 						else:
+							print 'TD + /var/purge/%s/' % g
 							f.write('+ /var/purge/%s/' % g)
 							break
 
 			# Note: sbin/*.pyc is excluded to keep major differences in
 			# Python versions (on master vs. client node) from clashing
-			f.write('''- /sbin/*.pyc
-- /var/overlay/*
-- /var/delete/*
-- /var/purge/*
-''')
+			f.write('-/var/purge/*\n'
+					'- /sbin/*.pyc\n'
+					'- /lib/synctool/*.pyc\n'
+					'- /lib/synctool/pkg/*.pyc\n')
 
 	# Note: remind to delete the temp file later
 
