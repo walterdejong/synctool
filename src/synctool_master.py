@@ -267,7 +267,7 @@ def rsync_include_filter(nodename):
 
 			# Note: sbin/*.pyc is excluded to keep major differences in
 			# Python versions (on master vs. client node) from clashing
-			f.write('-/var/purge/*\n'
+			f.write('- /var/purge/*\n'
 					'- /sbin/*.pyc\n'
 					'- /lib/synctool/*.pyc\n'
 					'- /lib/synctool/pkg/*.pyc\n')
