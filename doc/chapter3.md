@@ -375,16 +375,18 @@ mechanism by running `synctool -f`.
 
 > Purging is a blunt but effective means to synchronise directory trees.
 > Mind that it will delete data that is not supposed to be there, so be
-> extra careful with this feature. For safety, synctool will not allow you
+> careful with this feature. For added safety, synctool will not allow you
 > to purge the root directory of a system.
 
-Under the hood, synctool employs `rsync` to purge files. Run synctool in
-verbose mode to see `rsync`'s output and review what files would be deleted
-by the purge run.
+Under the hood, synctool employs `rsync` to purge files. Hence, you can not
+trigger actions through `.post` scripts in the purge directory, but it is
+possible to use `synctool --diff`, `--ref`, and even `--single` with files
+that reside under `purge/`.
 
-You can not trigger actions through `.post` scripts in the purge directory,
-but it is possible to use `synctool --diff`, `--ref`, and even `--single`
-with files that reside under `purge/`.
+Remember that purging is for making perfect mirrors. It is like sharing a
+directory across nodes. Once you start differentiating directory content
+between nodes, "purge" will no longer work in a satisfying way; in such a
+case, you should really use `overlay/` rather than `purge/`.
 
 
 3.6 synctool-pkg, the synctool package manager
