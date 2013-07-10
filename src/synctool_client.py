@@ -301,6 +301,11 @@ def purge_files():
 			code = line[:12]
 			filename = line[12:]
 
+			if code[:6] == 'ERROR:' or code[:8] == 'WARNING:':
+				# output rsync errors and warnings
+				stderr(line)
+				continue
+
 			if filename == './':
 				# rsync has a habit of displaying ugly "./" path
 				path = dest
