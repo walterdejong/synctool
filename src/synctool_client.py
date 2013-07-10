@@ -241,7 +241,7 @@ def purge_files():
 			cmd_arr.append('-n')
 			opts += '-n '
 
-		# remove --quiet option from rsync and add -v (verbose)
+		# remove --quiet option from rsync
 		try:
 			cmd_arr.remove('-q')
 		except ValueError:
@@ -252,8 +252,23 @@ def purge_files():
 		except ValueError:
 			pass
 
-		cmd_arr.append('-v')
-		opts += '-v '
+		# remove --verbose option from rsync
+		try:
+			cmd_arr.remove('-v')
+		except ValueError:
+			pass
+
+		try:
+			cmd_arr.remove('--verbose')
+		except ValueError:
+			pass
+
+		# add rsync option -i : itemized output
+		if not '-i' in cmd_arr and not '--itemize' in cmd_arr:
+			cmd_arr.append('-i')
+
+		# show the -i option (in verbose mode)
+		opts += '-i '
 
 		cmd_arr.append(src)
 		cmd_arr.append(dest)
@@ -274,21 +289,33 @@ def purge_files():
 
 		out, err = proc.communicate()
 
-		if len(out) > 4:
-			# remove irrelevant lines from rsync output
-			out.pop(0)
-			out.pop()
-			out.pop()
-			out.pop()
+		if synctool.lib.VERBOSE:
+			print out
 
-			for line in out:
-				line = line.strip()
-				if line[:9] == 'deleting ':
-					path = os.path.join(dest, line[9:])
-					stdout('deleting %s (purge)' % prettypath(path))
-				else:
-					path = os.path.join(dest, line)
-					stdout('updating %s (purge)' % prettypath(path))
+		out = out.split('\n')
+		for line in out:
+			line = line.strip()
+			if not line:
+				continue
+
+			code = line[:12]
+			filename = line[12:]
+
+			if filename == './':
+				# rsync has a habit of displaying ugly "./" path
+				path = dest
+			else:
+				path = os.path.join(dest, filename)
+
+			if code[0] == '*':
+				# rsync has a message for us
+				# most likely "deleting"
+				msg = code[1:]
+				msg = msg.strip()
+			else:
+				msg = 'updating'
+
+			stdout('%s %s (purge)' % (msg, prettypath(path)))
 
 
 def _overlay_callback(obj, post_dict, dir_changed=False):
