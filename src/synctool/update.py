@@ -1,5 +1,5 @@
 #
-#	synctool.update.py	WJ110
+#   synctool.update.py    WJ110
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #
@@ -7,6 +7,8 @@
 #   synctool is distributed under terms described in the GNU General Public
 #   License.
 #
+
+'''download the latest synctool.tar.gz'''
 
 import os
 import sys
@@ -22,182 +24,182 @@ DOWNLOAD_URL = 'http://www.heiho.net/synctool/'
 
 
 def get_latest_version():
-	'''get latest version by downloading the LATEST.txt versioning file'''
+    '''get latest version by downloading the LATEST.txt versioning file'''
 
-	tup = get_latest_version_and_checksum()
-	if not tup:
-		return None
+    tup = get_latest_version_and_checksum()
+    if not tup:
+        return None
 
-	return tup[0]
+    return tup[0]
 
 
 def get_latest_version_and_checksum():
-	'''get latest version and checksum by downloading
-	the LATEST.txt versioning file'''
+    '''get latest version and checksum by downloading
+    the LATEST.txt versioning file'''
 
-	verbose('accessing URL %s' % VERSION_CHECKING_URL)
+    verbose('accessing URL %s' % VERSION_CHECKING_URL)
 
-	try:
-		# can not use 'with' statement with urlopen()..?
-		web = urllib2.urlopen(VERSION_CHECKING_URL)
-	except urllib2.HTTPError, reason:
-		stderr('error from webserver at %s: %s' % (VERSION_CHECKING_URL,
-													reason))
-		return None
+    try:
+        # can not use 'with' statement with urlopen()..?
+        web = urllib2.urlopen(VERSION_CHECKING_URL)
+    except urllib2.HTTPError, reason:
+        stderr('error from webserver at %s: %s' % (VERSION_CHECKING_URL,
+                                                   reason))
+        return None
 
-	except urllib2.URLError, reason:
-		stderr('error accessing URL %s: %s' % (VERSION_CHECKING_URL, reason))
-		return None
+    except urllib2.URLError, reason:
+        stderr('error accessing URL %s: %s' % (VERSION_CHECKING_URL, reason))
+        return None
 
-	except IOError, reason:
-		stderr('error accessing the file at %s: %s' % (VERSION_CHECKING_URL,
-														reason))
-		return None
+    except IOError, reason:
+        stderr('error accessing the file at %s: %s' % (VERSION_CHECKING_URL,
+                                                       reason))
+        return None
 
-	data = web.read(1024)
-	web.close()
+    data = web.read(1024)
+    web.close()
 
-	if not data or len(data) < 10:
-		stderr('error accessing the file at %s' % VERSION_CHECKING_URL)
-		return None
+    if not data or len(data) < 10:
+        stderr('error accessing the file at %s' % VERSION_CHECKING_URL)
+        return None
 
-	data = data.strip()
+    data = data.strip()
 
-	# format of the data in LATEST.txt is:
-	# <version> <MD5 checksum>
-	arr = data.split()
-	if len(arr) < 2:
-		return None
+    # format of the data in LATEST.txt is:
+    # <version> <MD5 checksum>
+    arr = data.split()
+    if len(arr) < 2:
+        return None
 
-	return (arr[0], arr[1])
+    return (arr[0], arr[1])
 
 
 def check():
-	'''check for newer version on the website'''
-	'''it does this by downloading the LATEST.txt versioning file
-	Returns True if newer available, else False'''
+    '''check for newer version on the website'''
+    '''it does this by downloading the LATEST.txt versioning file
+    Returns True if newer available, else False'''
 
-	latest_version = get_latest_version()
+    latest_version = get_latest_version()
 
-	if latest_version == synctool.param.VERSION:
-		stdout('You are running the latest version of synctool')
-		return False
-	else:
-		stdout('A newer version of synctool is available: '
-			'version %s' % latest_version)
+    if latest_version == synctool.param.VERSION:
+        stdout('You are running the latest version of synctool')
+        return False
+    else:
+        stdout('A newer version of synctool is available: '
+            'version %s' % latest_version)
 
-	return True
+    return True
 
 
 def make_local_filename_for_version(version):
-	'''make filename for the downloaded synctool-x.y.tar.gz'''
+    '''make filename for the downloaded synctool-x.y.tar.gz'''
 
-	filename = 'synctool-%s.tar.gz' % version
+    filename = 'synctool-%s.tar.gz' % version
 
-	if not os.path.isfile(filename):
-		return filename
+    if not os.path.isfile(filename):
+        return filename
 
-	# file already exists, add sequence number
-	n = 2
-	while True:
-		filename = 'synctool-%s(%d).tar.gz' % (version, n)
+    # file already exists, add sequence number
+    n = 2
+    while True:
+        filename = 'synctool-%s(%d).tar.gz' % (version, n)
 
-		if not os.path.isfile(filename):
-			return filename
+        if not os.path.isfile(filename):
+            return filename
 
-		n += 1
+        n += 1
 
 
 def print_progress(filename, totalsize, current_size):
-	'''print the download progress'''
+    '''print the download progress'''
 
-	percent = 100 * current_size / totalsize
-	if percent > 100:
-		percent = 100
+    percent = 100 * current_size / totalsize
+    if percent > 100:
+        percent = 100
 
-	print '\rdownloading %s ... %d%% ' % (filename, percent),
-	sys.stdout.flush()
+    print '\rdownloading %s ... %d%% ' % (filename, percent),
+    sys.stdout.flush()
 
 
 def download():
-	'''download latest version
-	Returns True on success, False on error'''
+    '''download latest version
+    Returns True on success, False on error'''
 
-	tup = get_latest_version_and_checksum()
-	if not tup:
-		return False
+    tup = get_latest_version_and_checksum()
+    if not tup:
+        return False
 
-	(version, checksum) = tup
+    (version, checksum) = tup
 
-	filename = 'synctool-%s.tar.gz' % version
-	download_url = DOWNLOAD_URL + filename
+    filename = 'synctool-%s.tar.gz' % version
+    download_url = DOWNLOAD_URL + filename
 
-	download_filename = make_local_filename_for_version(version)
-	download_bytes = 0
+    download_filename = make_local_filename_for_version(version)
+    download_bytes = 0
 
-	try:
-		web = urllib2.urlopen(download_url)
-	except urllib2.URLError, reason:
-		stderr('error accessing URL %s: %s' % (download_url, reason))
-		return False
+    try:
+        web = urllib2.urlopen(download_url)
+    except urllib2.URLError, reason:
+        stderr('error accessing URL %s: %s' % (download_url, reason))
+        return False
 
-	except urllib2.HTTPError, reason:
-		stderr('error from webserver at %s: %s' % (download_url, reason))
-		return False
+    except urllib2.HTTPError, reason:
+        stderr('error from webserver at %s: %s' % (download_url, reason))
+        return False
 
-	except IOError, reason:
-		stderr('error accessing the file at %s: %s' % (download_url, reason))
-		return False
+    except IOError, reason:
+        stderr('error accessing the file at %s: %s' % (download_url, reason))
+        return False
 
-	# get file size: Content-Length
-	try:
-		totalsize = int(web.info().getheaders("Content-Length")[0])
-	except (ValueError, KeyError):
-		stderr('invalid response from webserver at %s' % download_url)
-		web.close()
-		return False
+    # get file size: Content-Length
+    try:
+        totalsize = int(web.info().getheaders("Content-Length")[0])
+    except (ValueError, KeyError):
+        stderr('invalid response from webserver at %s' % download_url)
+        web.close()
+        return False
 
-	# create download_filename
-	try:
-		f = open(download_filename, 'w+b')
-	except IOError, reason:
-		stderr('failed to create file %s: %s' % (download_filename, reason))
-		web.close()
-		return False
+    # create download_filename
+    try:
+        f = open(download_filename, 'w+b')
+    except IOError, reason:
+        stderr('failed to create file %s: %s' % (download_filename, reason))
+        web.close()
+        return False
 
-	with f:
-		print_progress(download_filename, totalsize, 0)
-		download_bytes = 0
+    with f:
+        print_progress(download_filename, totalsize, 0)
+        download_bytes = 0
 
-		# compute checksum of downloaded file data
-		sum1 = hashlib.md5()
+        # compute checksum of downloaded file data
+        sum1 = hashlib.md5()
 
-		while True:
-			data = web.read(4096)
-			if not data:
-				break
+        while True:
+            data = web.read(4096)
+            if not data:
+                break
 
-			download_bytes += len(data)
-			print_progress(download_filename, totalsize, download_bytes)
+            download_bytes += len(data)
+            print_progress(download_filename, totalsize, download_bytes)
 
-			f.write(data)
-			sum1.update(data)
+            f.write(data)
+            sum1.update(data)
 
-	web.close()
+    web.close()
 
-	if download_bytes < totalsize:
-		print
-		stderr('failed to download file %s' % download_url)
-		return False
+    if download_bytes < totalsize:
+        print
+        stderr('failed to download file %s' % download_url)
+        return False
 
-	download_bytes += 100	# force 100% in the progress counter
-	print_progress(download_filename, totalsize, download_bytes)
+    download_bytes += 100    # force 100% in the progress counter
+    print_progress(download_filename, totalsize, download_bytes)
 
-	if sum1.hexdigest() != checksum:
-		stderr('ERROR: checksum failed for %s' % download_filename)
-		return False
+    if sum1.hexdigest() != checksum:
+        stderr('ERROR: checksum failed for %s' % download_filename)
+        return False
 
-	return True
+    return True
 
 
 # EOB

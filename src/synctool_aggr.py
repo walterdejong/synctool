@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#	synctool_aggr.py	WJ109
+#   synctool_aggr.py    WJ109
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #
@@ -8,8 +8,8 @@
 #   synctool is distributed under terms described in the GNU General Public
 #   License.
 #
-#	- aggregate: group together output that is the same
-#
+
+'''aggregate: group together output that is the same'''
 
 import os
 import sys
@@ -19,45 +19,45 @@ import synctool.aggr
 
 
 def usage():
-	print 'Typical use of synctool-aggr is:'
-	print
-	print '  command | synctool-aggr'
-	print
-	print 'synctool-aggr is built in to synctool-master and synctool-ssh'
-	print "and activated by the '-a' option"
-	print
+    print '''Typical use of synctool-aggr is:
+
+  command | synctool-aggr
+
+synctool-aggr is built in to synctool-master and synctool-ssh
+and activated by the '-a' option
+'''
 
 
 def get_options():
-	if len(sys.argv) <= 1:
-		return
+    if len(sys.argv) <= 1:
+        return
 
-	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'h', ['help'])
-	except getopt.error, (reason):
-		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
-#		usage()
-		sys.exit(1)
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'h', ['help'])
+    except getopt.error, (reason):
+        print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
+#       usage()
+        sys.exit(1)
 
-	except getopt.GetoptError, (reason):
-		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
-#		usage()
-		sys.exit(1)
+    except getopt.GetoptError, (reason):
+        print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
+#       usage()
+        sys.exit(1)
 
-	except:
-		usage()
-		sys.exit(1)
+    except:
+        usage()
+        sys.exit(1)
 
-	for opt, arg in opts:
-		if opt in ('-h', '--help', '-?'):
-			usage()
-			sys.exit(1)
+    for opt, arg in opts:
+        if opt in ('-h', '--help', '-?'):
+            usage()
+            sys.exit(1)
 
 
 if __name__ == '__main__':
-	get_options()
+    get_options()
 
-	synctool.aggr.aggregate(sys.stdin)
+    synctool.aggr.aggregate(sys.stdin)
 
 
 # EOB

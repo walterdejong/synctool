@@ -1,5 +1,5 @@
 #
-#	synctool	WJ113
+#   synctool    WJ113
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #

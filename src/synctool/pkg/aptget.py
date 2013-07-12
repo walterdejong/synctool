@@ -1,5 +1,5 @@
 #
-#	synctool.pkg.aptget.py		WJ111
+#   synctool.pkg.aptget.py        WJ111
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #
@@ -8,6 +8,8 @@
 #   License.
 #
 
+'''apt-get package manager (debian Linux)'''
+
 import os
 
 import synctool.lib
@@ -15,69 +17,69 @@ import synctool.pkgclass
 
 
 class SyncPkgAptget(synctool.pkgclass.SyncPkg):
-	'''package installer class for apt-get + dpkg'''
+    '''package installer class for apt-get + dpkg'''
 
-	def __init__(self):
-		super(SyncPkgAptget, self).__init__()
-
-
-	def list(self, pkgs = None):
-		super(SyncPkgAptget, self).list(pkgs)
-
-		cmd = 'dpkg -l'
-
-		if pkgs:
-			cmd = cmd + ' ' + ' '.join(pkgs)
-
-		synctool.lib.shell_command(cmd)
+    def __init__(self):
+        super(SyncPkgAptget, self).__init__()
 
 
-	def install(self, pkgs):
-		super(SyncPkgAptget, self).install(pkgs)
+    def list(self, pkgs = None):
+        super(SyncPkgAptget, self).list(pkgs)
 
-		os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
+        cmd = 'dpkg -l'
 
-		cmd = 'apt-get -y install ' + ' '.join(pkgs)
+        if pkgs:
+            cmd = cmd + ' ' + ' '.join(pkgs)
 
-		synctool.lib.shell_command(cmd)
-
-
-	def remove(self, pkgs):
-		super(SyncPkgAptget, self).remove(pkgs)
-
-		os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
-
-		cmd = 'apt-get -y remove ' + ' '.join(pkgs)
-
-		synctool.lib.shell_command(cmd)
+        synctool.lib.shell_command(cmd)
 
 
-	def update(self):
-		super(SyncPkgAptget, self).update()
+    def install(self, pkgs):
+        super(SyncPkgAptget, self).install(pkgs)
 
-		os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
-		synctool.lib.shell_command('apt-get update')
+        os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
 
+        cmd = 'apt-get -y install ' + ' '.join(pkgs)
 
-	def upgrade(self):
-		super(SyncPkgAptget, self).upgrade()
-
-		os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
-
-		if synctool.lib.DRY_RUN:
-			cmd = 'apt-get -s upgrade'		# --simulate
-		else:
-			cmd = 'apt-get -y upgrade'
-
-		tmp = synctool.lib.DRY_RUN
-		synctool.lib.DRY_RUN = False
-		synctool.lib.shell_command(cmd)
-		synctool.lib.DRY_RUN = tmp
+        synctool.lib.shell_command(cmd)
 
 
-	def clean(self):
-		super(SyncPkgAptget, self).clean()
+    def remove(self, pkgs):
+        super(SyncPkgAptget, self).remove(pkgs)
 
-		synctool.lib.shell_command('apt-get clean')
+        os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
+
+        cmd = 'apt-get -y remove ' + ' '.join(pkgs)
+
+        synctool.lib.shell_command(cmd)
+
+
+    def update(self):
+        super(SyncPkgAptget, self).update()
+
+        os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
+        synctool.lib.shell_command('apt-get update')
+
+
+    def upgrade(self):
+        super(SyncPkgAptget, self).upgrade()
+
+        os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
+
+        if synctool.lib.DRY_RUN:
+            cmd = 'apt-get -s upgrade'        # --simulate
+        else:
+            cmd = 'apt-get -y upgrade'
+
+        tmp = synctool.lib.DRY_RUN
+        synctool.lib.DRY_RUN = False
+        synctool.lib.shell_command(cmd)
+        synctool.lib.DRY_RUN = tmp
+
+
+    def clean(self):
+        super(SyncPkgAptget, self).clean()
+
+        synctool.lib.shell_command('apt-get clean')
 
 # EOB

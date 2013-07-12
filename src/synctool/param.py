@@ -1,5 +1,5 @@
 #
-#	synctool.param.py	WJ111
+#   synctool.param.py    WJ111
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #
@@ -7,6 +7,8 @@
 #   synctool is distributed under terms described in the GNU General Public
 #   License.
 #
+
+'''parameters and global vars'''
 
 import os
 import sys
@@ -43,13 +45,13 @@ PING_CMD = 'ping -q -c 1 -t 1'
 SSH_CMD = 'ssh -o ConnectTimeout=10 -x -q'
 SCP_CMD = 'scp -o ConnectTimeout=10 -p'
 RSYNC_CMD = ("rsync -ar --numeric-ids --delete --delete-excluded "
-			"-e 'ssh -o ConnectTimeout=10 -x -q' -q")
+             "-e 'ssh -o ConnectTimeout=10 -x -q' -q")
 SYNCTOOL_CMD = None
 PKG_CMD = None
 
 PACKAGE_MANAGER = None
 
-NUM_PROC = 16				# use sensible default
+NUM_PROC = 16                # use sensible default
 SLEEP_TIME = 0
 
 REQUIRE_EXTENSION = True
@@ -114,80 +116,80 @@ COLORIZE_FULL_LINE = False
 COLORIZE_BRIGHT = True
 
 TERSE_COLORS = {
-	'info'   : 'default',
-	'warn'   : 'magenta',
-	'error'  : 'red',
-	'fail'   : 'red',
-	'sync'   : 'default',
-	'link'   : 'cyan',
-	'mkdir'  : 'blue',		# I'd use yellow on a black background,
-							# blue on white
-	'rm'     : 'yellow',
-	'chown'  : 'cyan',
-	'chmod'  : 'cyan',
-	'exec'   : 'green',
-	'upload' : 'magenta',
-	'new'    : 'default',
-	'type'   : 'magenta',
-	'dryrun' : 'default',
-	'fixing' : 'default',
-	'ok'     : 'default',
+    'info'   : 'default',
+    'warn'   : 'magenta',
+    'error'  : 'red',
+    'fail'   : 'red',
+    'sync'   : 'default',
+    'link'   : 'cyan',
+    'mkdir'  : 'blue',      # I'd use yellow on a black background,
+                            # blue on white
+    'rm'     : 'yellow',
+    'chown'  : 'cyan',
+    'chmod'  : 'cyan',
+    'exec'   : 'green',
+    'upload' : 'magenta',
+    'new'    : 'default',
+    'type'   : 'magenta',
+    'dryrun' : 'default',
+    'fixing' : 'default',
+    'ok'     : 'default',
 }
 
 # list of supported package managers
 KNOWN_PACKAGE_MANAGERS = (
-	'apt-get', 'yum', 'zypper', 'brew', 'pacman', 'bsdpkg',
-#	'urpmi', 'portage', 'port', 'swaret',
+    'apt-get', 'yum', 'zypper', 'brew', 'pacman', 'bsdpkg',
+#   'urpmi', 'portage', 'port', 'swaret',
 )
 
 ORIG_UMASK = 022
 
 
 def init():
-	'''detect my rootdir and set default symlink mode'''
+    '''detect my rootdir and set default symlink mode'''
 
-	global ROOTDIR, CONF_FILE
-	global VAR_DIR, VAR_LEN, OVERLAY_DIR, OVERLAY_LEN, DELETE_DIR, DELETE_LEN
-	global PURGE_DIR, PURGE_LEN, SCRIPT_DIR, ORIG_UMASK
+    global ROOTDIR, CONF_FILE
+    global VAR_DIR, VAR_LEN, OVERLAY_DIR, OVERLAY_LEN, DELETE_DIR, DELETE_LEN
+    global PURGE_DIR, PURGE_LEN, SCRIPT_DIR, ORIG_UMASK
 
-	base = os.path.abspath(os.path.dirname(sys.argv[0]))
-	if not base:
-		raise RuntimeError, 'unable to determine base dir'
+    base = os.path.abspath(os.path.dirname(sys.argv[0]))
+    if not base:
+        raise RuntimeError, 'unable to determine base dir'
 
-	(ROOTDIR, bindir) = os.path.split(base)
+    (ROOTDIR, bindir) = os.path.split(base)
 
-	CONF_FILE = os.path.join(ROOTDIR, 'etc/synctool.conf')
+    CONF_FILE = os.path.join(ROOTDIR, 'etc/synctool.conf')
 
-	VAR_DIR = os.path.join(ROOTDIR, 'var')
-	VAR_LEN = len(VAR_DIR) + 1
-	OVERLAY_DIR = os.path.join(VAR_DIR, 'overlay')
-	OVERLAY_LEN = len(OVERLAY_DIR) + 1
-	DELETE_DIR = os.path.join(VAR_DIR, 'delete')
-	DELETE_LEN = len(DELETE_DIR) + 1
-	PURGE_DIR = os.path.join(VAR_DIR, 'purge')
-	PURGE_LEN = len(PURGE_DIR) + 1
-	SCRIPT_DIR = os.path.join(ROOTDIR, 'scripts')
+    VAR_DIR = os.path.join(ROOTDIR, 'var')
+    VAR_LEN = len(VAR_DIR) + 1
+    OVERLAY_DIR = os.path.join(VAR_DIR, 'overlay')
+    OVERLAY_LEN = len(OVERLAY_DIR) + 1
+    DELETE_DIR = os.path.join(VAR_DIR, 'delete')
+    DELETE_LEN = len(DELETE_DIR) + 1
+    PURGE_DIR = os.path.join(VAR_DIR, 'purge')
+    PURGE_LEN = len(PURGE_DIR) + 1
+    SCRIPT_DIR = os.path.join(ROOTDIR, 'scripts')
 
-	# the following only makes sense for synctool-client, but OK
+    # the following only makes sense for synctool-client, but OK
 
-	# add base dir (which is the bin/ dir) to PATH
-	path = os.environ['PATH']
-	if not path:
-		# no path, set a sensible default
-		path_arr = ['/bin', '/sbin', '/usr/bin', '/usr/sbin',
-			'/usr/local/bin', '/usr/local/sbin']
-	else:
-		path_arr = path.split(os.pathsep)
+    # add base dir (which is the bin/ dir) to PATH
+    path = os.environ['PATH']
+    if not path:
+        # no path, set a sensible default
+        path_arr = ['/bin', '/sbin', '/usr/bin', '/usr/sbin',
+                    '/usr/local/bin', '/usr/local/sbin']
+    else:
+        path_arr = path.split(os.pathsep)
 
-	# add the synctool/bin/ dir
-	bindir = os.path.join(ROOTDIR, 'bin')
-	if not bindir in path_arr:
-		path_arr.append(bindir)
-		os.environ['PATH'] = os.pathsep.join(path_arr)
+    # add the synctool/bin/ dir
+    bindir = os.path.join(ROOTDIR, 'bin')
+    if not bindir in path_arr:
+        path_arr.append(bindir)
+        os.environ['PATH'] = os.pathsep.join(path_arr)
 
-	# save original umask (and restore it)
-	ORIG_UMASK = os.umask(077)
-	os.umask(ORIG_UMASK)
+    # save original umask (and restore it)
+    ORIG_UMASK = os.umask(077)
+    os.umask(ORIG_UMASK)
 
 
 # EOB

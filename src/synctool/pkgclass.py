@@ -1,5 +1,5 @@
 #
-#	synctool_pkgclass.py	WJ111
+#   synctool_pkgclass.py    WJ111
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #
@@ -8,69 +8,71 @@
 #   License.
 #
 
+'''base class for synctool package managers'''
+
 import synctool.lib
 from synctool.lib import verbose, log, dryrun_msg
 
 
 class SyncPkg(object):
-	'''generic package installer class'''
+    '''generic package installer class'''
 
-	# You may create a new class that has this interface
-	# to make a plug-in for synctool-pkg
-	# And/or you may use this class as a superclass
+    # You may create a new class that has this interface
+    # to make a plug-in for synctool-pkg
+    # And/or you may use this class as a superclass
 
-	def __init__(self):
-		pass
-
-
-	def list(self, pkgs=None):
-		if pkgs:
-			if len(pkgs) > 1:
-				plural = 's'
-			else:
-				plural = ''
-
-			verbose('list package%s: %s' % (plural, ' '.join(pkgs)))
-		else:
-			verbose('list all packages')
+    def __init__(self):
+        pass
 
 
-	def install(self, pkgs):
-		if len(pkgs) > 1:
-			plural = 's'
-		else:
-			plural = ''
+    def list(self, pkgs=None):
+        if pkgs:
+            if len(pkgs) > 1:
+                plural = 's'
+            else:
+                plural = ''
 
-		msg = 'installing package%s: %s' % (plural, ' '.join(pkgs))
-		verbose(msg)
-		log(msg)
-
-
-	def remove(self, pkgs):
-		if len(pkgs) > 1:
-			plural = 's'
-		else:
-			plural = ''
-
-		msg = 'removing package%s: %s' % (plural, ' '.join(pkgs))
-		verbose(msg)
-		log(msg)
+            verbose('list package%s: %s' % (plural, ' '.join(pkgs)))
+        else:
+            verbose('list all packages')
 
 
-	def update(self):
-		verbose('updating package database')
+    def install(self, pkgs):
+        if len(pkgs) > 1:
+            plural = 's'
+        else:
+            plural = ''
+
+        msg = 'installing package%s: %s' % (plural, ' '.join(pkgs))
+        verbose(msg)
+        log(msg)
 
 
-	def upgrade(self):
-		msg = 'upgrading packages'
-		verbose(dryrun_msg(msg))
+    def remove(self, pkgs):
+        if len(pkgs) > 1:
+            plural = 's'
+        else:
+            plural = ''
 
-		# log the upgrade action ...
-		# don't know which packages are upgraded here, sorry
-		log(msg)
+        msg = 'removing package%s: %s' % (plural, ' '.join(pkgs))
+        verbose(msg)
+        log(msg)
 
 
-	def clean(self):
-		verbose('cleaning up caches')
+    def update(self):
+        verbose('updating package database')
+
+
+    def upgrade(self):
+        msg = 'upgrading packages'
+        verbose(dryrun_msg(msg))
+
+        # log the upgrade action ...
+        # don't know which packages are upgraded here, sorry
+        log(msg)
+
+
+    def clean(self):
+        verbose('cleaning up caches')
 
 # EOB
