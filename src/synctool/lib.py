@@ -14,9 +14,6 @@ import os
 import sys
 import subprocess
 import shlex
-import stat
-import time
-import errno
 import time
 import syslog
 import signal
@@ -88,11 +85,16 @@ def verbose(msg):
 
 
 def stdout(msg):
+    '''print message to stdout (unless special output mode was selected)'''
+
     if not (UNIX_CMD or synctool.param.TERSE):
         print msg
 
 
 def stderr(msg):
+    '''print message to stderr
+    I don't like stderr much, so it really prints to stdout'''
+
     print msg
 
 
@@ -129,11 +131,11 @@ def terse(code, msg):
             print TERSE_TXT[code], msg
 
 
-def unix_out(str):
+def unix_out(msg):
     '''output as unix shell command'''
 
     if UNIX_CMD:
-        print str
+        print msg
 
 
 def prettypath(path):
@@ -252,6 +254,8 @@ def dryrun_msg(msg):
 
 
 def openlog():
+    '''start logging'''
+
     if DRY_RUN or not synctool.param.SYSLOGGING:
         return
 
@@ -259,6 +263,8 @@ def openlog():
 
 
 def closelog():
+    '''stop logging'''
+
     if DRY_RUN or not synctool.param.SYSLOGGING:
         return
 
@@ -422,9 +428,14 @@ def mkdir_p(path):
 
 
 #
-#    functions for straightening out paths that were given by the user
+#   functions for straightening out paths that were given by the user
 #
+
 def strip_multiple_slashes(path):
+    '''remove double slashes from path'''
+
+    # like os.path.normpath(), but do not change symlinked paths
+
     if not path:
         return path
 
@@ -445,6 +456,8 @@ def strip_multiple_slashes(path):
 
 
 def strip_trailing_slash(path):
+    '''remove trailing slash from path'''
+
     if not path:
         return path
 
@@ -455,6 +468,8 @@ def strip_trailing_slash(path):
 
 
 def strip_path(path):
+    '''remove trailing and multiple slashes from path'''
+
     if not path:
         return path
 
@@ -465,6 +480,8 @@ def strip_path(path):
 
 
 def strip_terse_path(path):
+    '''strip a terse path'''
+
     if not path:
         return path
 
@@ -488,6 +505,8 @@ def strip_terse_path(path):
 
 
 def prepare_path(path):
+    '''strip path, and replace $SYNCTOOL by the installdir'''
+
     if not path:
         return path
 
