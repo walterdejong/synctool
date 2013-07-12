@@ -148,7 +148,7 @@ cluster with synctool, a different approach is needed.
 
 The solution is to make a tiered setup. In such a setup, the master node syncs
 to other master nodes (for example, the first node in a rack), which in turn
-sync to subsets of nodes. Script it something along these lines:
+sync to subsets of nodes. Script it along these lines:
 
     #! /bin/bash
 
@@ -157,16 +157,16 @@ sync to subsets of nodes. Script it something along these lines:
         # give rackmasters a full copy of the repos
         rsync -a --delete /opt/synctool/ ${rack}-n1:/opt/synctool/
 
-        # run synctool on rackmaster with its rack config
+        # run synctool on rackmaster
         dsh -n ${rack}-n1 --no-nodename \
-          /opt/synctool/bin/synctool \
-            -c /opt/synctool/etc/${rack}.conf "$@"
+          /opt/synctool/bin/synctool -g $rack "$@"
     done &
     wait
 
-So, the master node syncs to 'rack masters', and then it runs synctool on
-the masters, which will sync the nodes. The option `--no-nodename` is used
-with `dsh` to make the output come out right.
+So, the master node syncs to 'rack masters', and the rack masters in turn
+run synctool on their subset of nodes. In the config, the nodes are
+grouped by rack. The option `--no-nodename` is used with `dsh` to make the
+output come out right.
 You also still need to manage the rack masters -- with synctool, from the
 master node.
 
