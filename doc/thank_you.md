@@ -12,6 +12,6 @@ If you also want to contribute to synctool, drop me an e-mail. If you are a
 programmer who likes to contribute to the development of synctool, please
 fork the [github project][1] and issue pull requests. If you don't know how
 `git` works, patches in `diff -u` format are always welcome too. However,
-I highly recommend using `git` and [github][1].
+I highly recommend `git` and [github][1].
 
 [1]: https://github.com/walterdejong/synctool
