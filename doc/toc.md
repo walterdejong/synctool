@@ -3,12 +3,13 @@ Table of contents
 1. [What is synctool](chapter1.html)
 
 2. [Installation](chapter2.html)                         <br />
-  2.1 Passwordless SSH                                   <br />
-  2.2 Installing the software                            <br />
-  2.3 synctool configuration: nodes and groups           <br />
-  2.4 Testing with dsh                                   <br />
-  2.5 Your first synctool run                            <br />
-  2.6 Client installation
+  2.1 Installation dependencies                          <br />
+  2.2 Passwordless SSH                                   <br />
+  2.3 Installing the software                            <br />
+  2.4 synctool configuration: nodes and groups           <br />
+  2.5 Testing with dsh                                   <br />
+  2.6 Your first synctool run                            <br />
+  2.7 Client installation
 
 3. [Using synctool](chapter3.html)                       <br />
   3.1 Populating the repository                          <br />

@@ -4,12 +4,32 @@
 > of computers. A group of computers is called a _cluster_.
 
 
-2.1 Passwordless SSH
+2.1 Installation dependencies
+-----------------------------
+synctool depends on a number of (fairly standard) programs:
+
+* [python][1] version 2.x
+* [ssh][2]
+* [rsync][3]
+* `ping`, or you can configure [fping][4] later
+* [markdown][5] and [smartypants][6] -- but only if you want to install this
+documentation as HTML pages
+
+[1]: http://www.python.org/download/
+[2]: http://openssh.org/portable.html
+[3]: http://rsync.samba.org/
+[4]: http://fping.org/
+[5]: http://daringfireball.net/projects/markdown/
+[6]: http://daringfireball.net/projects/smartypants/
+
+If you got all that, it's on to the next section.
+
+
+2.2 Passwordless SSH
 --------------------
-First of all, synctool requires passwordless SSH from the master node to
-each cluster node as root. Exactly how to do this is beyond the scope
-of this document (see the SSH documentation or just google around), but
-I'd like to say this about it:
+synctool requires passwordless SSH from the master node to each cluster node
+as root. If you need more information on how to set this up, please see the
+SSH documentation or just google around. I like to give you these tips:
 
 * use an SSH keypair
 * or use hostbased authentication, also for root
@@ -30,17 +50,17 @@ one that does suit your security needs.
 When passwordless SSH as root works, proceed to installing the software.
 
 
-2.2 Installing the software
+2.3 Installing the software
 ---------------------------
 To install synctool on the master node, run `setup.sh` like so:
 
-    # ./setup.sh --installroot=/opt/synctool
+    # ./setup.sh --installdir=/opt/synctool
 
-The default location is `/opt/synctool`, a good place to put it.
-Note that synctool requires an 'installroot' directory of its own. The
-installroot is not the same as a prefix; whatever you do, do *not* install
+The default location is `/opt/synctool`, which is a good place to put it.
+Note that synctool requires an 'installdir' directory of its own. The
+installdir is not the same as a prefix; whatever you do, do *not* install
 synctool directly under `/usr` or `/usr/local`. Use `/usr/synctool` or
-`/usr/local/synctool` instead.
+`/usr/local/synctool` instead, or better, stick with the default location.
 The rest of the documentation assumes the default `/opt/synctool`.
 
 `setup.sh` creates the following directory structure:
@@ -82,7 +102,7 @@ The following synctool commands will be made available in
     synctool-template      Useful command for .post scripts
 
 
-2.3 synctool configuration: nodes and groups
+2.4 synctool configuration: nodes and groups
 --------------------------------------------
 Copy the `synctool.conf.example` file to `/opt/synctool/etc/synctool.conf`.
 Edit `synctool.conf`, adjusting it as needed.
@@ -144,7 +164,7 @@ You may also leave the master node out of the configuration altogether.
 > the synctool root, under `/opt/synctool/var/`.
 
 
-2.4 Testing with dsh
+2.5 Testing with dsh
 --------------------
 After filling in a couple of nodes in `synctool.conf`, try the command
 `dsh-ping` to see if the nodes are 'up'. If they are, try running the
@@ -160,7 +180,7 @@ that this works before proceeding.
 Tip: Add `/opt/synctool/bin` to your `PATH`.
 
 
-2.5 Your first synctool run
+2.6 Your first synctool run
 ---------------------------
 Now that you have a rough setup on the master node, try running `synctool`
 to a single node:
@@ -179,7 +199,7 @@ When synctool to every node works, the basic setup is done and you can start
 filling your repository with useful files.
 
 
-2.6 Client installation
+2.7 Client installation
 -----------------------
 As you may have noticed, we never installed any client software on the nodes.
 There is no client installation step; the master node automatically
