@@ -404,53 +404,20 @@ def mkdir_p(path):
     '''like mkdir -p; make directory and subdirectories
     Returns False on error, else True'''
 
+    if os.path.exists(path):
+        return True
+
     # temporarily restore admin's umask
     mask = os.umask(synctool.param.ORIG_UMASK)
 
-    ok = _mkdir_p(path)
-    if not ok:
-        stderr('error: failed to create directory %s' % path)
+    try:
+        os.makedirs(path)
+    except OSError, reason:
+        stderr('error: failed to create directory %s: %s' % (path, reason))
+        os.umask(mask)
+        return False
 
     os.umask(mask)
-    return ok
-
-
-def _mkdir_p(path):
-    '''recursively make directory + leading directories'''
-
-    # recursive function; do not print error messages here
-
-    if not path:
-        # this happens at the root of a relative path
-        return True
-
-    try:
-        statbuf = os.stat(path)
-    except OSError, reason:
-        if reason.errno == errno.ENOENT:
-            # path does not exist
-            pass
-        else:
-            # stat() error
-            return False
-    else:
-        # path already exists
-        # check it's a directory, just to be sure
-        if not stat.S_ISDIR(statbuf.st_mode):
-            return False
-
-        return True
-
-    # recurse: make sure the parent directory exists
-    if not _mkdir_p(os.path.dirname(path)):
-        # there was an error
-        return False
-
-    try:
-        os.mkdir(path)
-    except OSError:
-        return False
-
     return True
 
 
