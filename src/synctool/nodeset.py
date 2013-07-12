@@ -11,12 +11,13 @@
 '''The nodeset helps making a set of nodes from command-line arguments
 It is used by synctool-master, dsh, dcp, dsh-ping
 
-usage: first make an instance of NodeSet
-       then add nodes, groups, excluded nodes/groups
-       call synctool.config.read_config()
-       call nodeset.addresses(), which will return a list of addresses
-       use the address list to contact the nodes
-       use nodeset.get_nodename_from_address() to get a nodename
+usage:
+  first make an instance of NodeSet
+  then add nodes, groups, excluded nodes/groups
+  call synctool.config.read_config()
+  call nodeset.addresses(), which will return a list of addresses
+  use the address list to contact the nodes
+  use nodeset.get_nodename_from_address() to get a nodename
 '''
 
 import synctool.config
@@ -113,10 +114,10 @@ class NodeSet(object):
             not synctool.lib.UNIX_CMD):
             if synctool.param.TERSE:
                 synctool.lib.terse(synctool.lib.TERSE_WARNING,
-                                    'ignored nodes')
+                                   'ignored nodes')
             else:
                 ignored_str = ('warning: ignored nodes: ' +
-                                ','.join(list(ignored_nodes)))
+                               ','.join(list(ignored_nodes)))
                 if len(ignored_str) < 80:
                     print ignored_str
                 else:
