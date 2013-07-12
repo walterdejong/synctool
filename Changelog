@@ -44,6 +44,7 @@ June/July 2013
 - symlink_mode is obsolete
 - new documentation in markdown format
 - run setup.sh to install synctool
+- code now conforms to PEP 8 Python Coding Style (for the most part)
 
 Aug 2012
 - added dsh --numproc, patch by Werner Maier
