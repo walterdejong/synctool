@@ -10,10 +10,7 @@
 
 '''aggregate: group together output that is the same'''
 
-import os
-import sys
 import subprocess
-import getopt
 
 from synctool.lib import stderr
 

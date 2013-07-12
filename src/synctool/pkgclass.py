@@ -10,7 +10,6 @@
 
 '''base class for synctool package managers'''
 
-import synctool.lib
 from synctool.lib import verbose, log, dryrun_msg
 
 

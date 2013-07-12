@@ -15,8 +15,6 @@ It's not the config parser ... that code is in module configparser
 import os
 import sys
 import socket
-import getopt
-import errno
 
 import synctool.configparser
 from synctool.configparser import stderr

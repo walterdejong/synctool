@@ -35,12 +35,10 @@
 '''
 
 import os
-import sys
 import fnmatch
-import subprocess
 
 import synctool.lib
-from synctool.lib import verbose, stderr, unix_out, terse, prettypath
+from synctool.lib import verbose, stderr, terse, prettypath
 import synctool.object
 from synctool.object import SyncObject
 import synctool.param
