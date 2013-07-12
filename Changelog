@@ -35,13 +35,13 @@ June/July 2013
 - use new tempdir setting as location for temp files
 - interface: specifier is obsolete; use "ipaddress:"
 - ignore_host is obsolete; use "ignore_node"
-- host is obsolete; use node
+- host is obsolete; use "node"
 - ignore_file is obsolete; use "ignore"
 - ignore_files is obsolete; use "ignore"
 - ignore_dir is obsolete; use "ignore"
 - ignore_dirs is obsolete; use "ignore"
-- masterdir is obsolete
-- symlink_mode is obsolete
+- masterdir is obsolete; synctool finds it by itself
+- symlink_mode is obsolete; synctool now treats symlink mode correctly
 - new documentation in markdown format
 - run setup.sh to install synctool
 - code now conforms to PEP 8 Python Coding Style (for the most part)
