@@ -305,7 +305,7 @@ def config_package_manager(arr, configfile, lineno):
 
     if not arr[1] in synctool.param.KNOWN_PACKAGE_MANAGERS:
         stderr("%s:%d: unknown or unsupported package manager '%s'" %
-                (configfile, lineno))
+                (configfile, lineno, arr[1]))
         return 1
 
     synctool.param.PACKAGE_MANAGER = arr[1]
