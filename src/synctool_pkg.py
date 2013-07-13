@@ -168,6 +168,8 @@ def detect_installer():
 
 
 def there_can_be_only_one():
+    '''print usage information about actions'''
+
     print '''Specify only one of these options:
   -l, --list   [PACKAGE ...]     List installed packages
   -i, --install PACKAGE [..]     Install package
@@ -180,6 +182,8 @@ def there_can_be_only_one():
 
 
 def usage():
+    '''print usage information'''
+
     print 'usage: %s [options] [package [..]]' % os.path.basename(sys.argv[0])
     print 'options:'
     print '  -h, --help                     Display this information'
@@ -221,6 +225,8 @@ Note that --upgrade does a dry run unless you specify --fix
 
 
 def get_options():
+    '''parse command-line options'''
+
     global ACTION, PKG_LIST
 
     if len(sys.argv) <= 1:
@@ -367,6 +373,8 @@ def get_options():
 
 
 def main():
+    '''run the program'''
+
     synctool.param.init()
 
     get_options()

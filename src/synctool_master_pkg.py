@@ -36,6 +36,8 @@ MASTER_OPTS = None
 
 
 def run_remote_pkg(address_list):
+    '''run synctool-pkg on the target nodes'''
+
     synctool.lib.multiprocess(worker_pkg, address_list)
 
 
@@ -61,6 +63,8 @@ def worker_pkg(addr):
 
 
 def run_local_pkg():
+    '''run synctool-pkg locally on the master node'''
+
     cmd_arr = shlex.split(synctool.param.PKG_CMD) + PASS_ARGS
 
     verbose('running synctool-pkg on node %s' % synctool.param.NODENAME)
@@ -131,6 +135,8 @@ def check_cmd_config():
 
 
 def there_can_be_only_one():
+    '''print usage information about actions'''
+
     print '''Specify only one of these options:
   -l, --list   [PACKAGE ...]     List installed packages
   -i, --install PACKAGE [..]     Install package
@@ -142,6 +148,8 @@ def there_can_be_only_one():
 
 
 def usage():
+    '''print usage information'''
+
     print 'usage: %s [options] [package [..]]' % os.path.basename(sys.argv[0])
     print 'options:'
     print '  -h, --help                     Display this information'
@@ -192,6 +200,8 @@ Note that --upgrade does a dry run unless you specify --fix
 
 
 def get_options():
+    '''parse command-line options'''
+
     global MASTER_OPTS, PASS_ARGS, OPT_AGGREGATE
 
     if len(sys.argv) <= 1:
@@ -386,6 +396,8 @@ def get_options():
 
 
 def main():
+    '''run the program'''
+
     synctool.param.init()
 
     sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)

@@ -52,6 +52,8 @@ def subst(line):
 
 
 def template(filename):
+    '''generate the output from template file'''
+
     if not filename:
         print '%s: error: invalid filename' % PROGNAM
         sys.exit(-1)
@@ -71,6 +73,8 @@ def template(filename):
 
 
 def usage():
+    '''print usage information'''
+
     print '''%s [-v VAR=VALUE] <input filename>
 options:
   -h, --help               Display this information
@@ -83,6 +87,8 @@ command-line, but may also be an existing environment variable
 
 
 def get_options():
+    '''parse command-line options'''
+
     if len(sys.argv) <= 1:
         usage()
         sys.exit(1)

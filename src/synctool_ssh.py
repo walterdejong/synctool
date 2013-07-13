@@ -77,6 +77,8 @@ def run_dsh(address_list, remote_cmd_arr):
 
 
 def worker_ssh(addr):
+    '''worker process: sync script and run ssh+command to the node'''
+
     nodename = NODESET.get_nodename_from_address(addr)
 
     if (SYNC_IT and
@@ -138,6 +140,8 @@ def check_cmd_config():
 
 
 def usage():
+    '''print usage information'''
+
     print ('usage: %s [options] <remote command>' %
         os.path.basename(sys.argv[0]))
     print 'options:'
@@ -163,6 +167,8 @@ def usage():
 
 
 def get_options():
+    '''parse command-line options'''
+
     global MASTER_OPTS, OPT_SKIP_RSYNC, OPT_AGGREGATE, SSH_OPTIONS
 
     if len(sys.argv) <= 1:
@@ -304,6 +310,8 @@ def get_options():
 
 
 def main():
+    '''run the program'''
+
     synctool.param.init()
 
     sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)

@@ -88,7 +88,7 @@ class UploadFile(object):
         if self.suffix:
             # remove the current group suffix
             # and add the specified suffix to the filename
-            (self.repos_path, ext) = os.path.splitext(self.repos_path)
+            self.repos_path, _ = os.path.splitext(self.repos_path)
             self.repos_path += '._' + self.suffix
 
         if self.overlay:
@@ -244,7 +244,7 @@ def rsync_include_filter(nodename):
                     if not os.path.isdir(purge_root):
                         continue
 
-                    for path, subdirs, files in os.walk(purge_root):
+                    for path, _, files in os.walk(purge_root):
                         if path == purge_root:
                             # guard against user mistakes;
                             # danger of destroying the entire filesystem
@@ -520,6 +520,8 @@ def    option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
 
 
 def usage():
+    '''print usage information'''
+
     print 'usage: %s [options]' % os.path.basename(sys.argv[0])
     print 'options:'
     print '  -h, --help                  Display this information'
@@ -562,6 +564,8 @@ Written by Walter de Jong <walter@heiho.net> (c) 2003-2013'''
 
 
 def get_options():
+    '''parse command-line options'''
+
     global PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE
     global OPT_CHECK_UPDATE, OPT_DOWNLOAD, MASTER_OPTS
     global UPLOAD_FILE
@@ -806,6 +810,8 @@ def get_options():
 
 
 def main():
+    '''run the program'''
+
     synctool.param.init()
 
     sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)

@@ -183,43 +183,43 @@ def list_commands(cmds):
 
     for cmd in cmds:
         if cmd == 'diff':
-            (ok, a) = synctool.config.check_cmd_config('diff_cmd',
+            ok, _ = synctool.config.check_cmd_config('diff_cmd',
                         synctool.param.DIFF_CMD)
             if ok:
                 print synctool.param.DIFF_CMD
 
         if cmd == 'ping':
-            (ok, a) = synctool.config.check_cmd_config('ping_cmd',
+            ok, _ = synctool.config.check_cmd_config('ping_cmd',
                         synctool.param.PING_CMD)
             if ok:
                 print synctool.param.PING_CMD
 
         elif cmd == 'ssh':
-            (ok, a) = synctool.config.check_cmd_config('ssh_cmd',
+            ok, _ = synctool.config.check_cmd_config('ssh_cmd',
                         synctool.param.SSH_CMD)
             if ok:
                 print synctool.param.SSH_CMD
 
         elif cmd == 'scp':
-            (ok, a) = synctool.config.check_cmd_config('scp_cmd',
+            ok, _ = synctool.config.check_cmd_config('scp_cmd',
                         synctool.param.SCP_CMD)
             if ok:
                 print synctool.param.SCP_CMD
 
         elif cmd == 'rsync':
-            (ok, a) = synctool.config.check_cmd_config('rsync_cmd',
+            ok, _ = synctool.config.check_cmd_config('rsync_cmd',
                         synctool.param.RSYNC_CMD)
             if ok:
                 print synctool.param.RSYNC_CMD
 
         elif cmd == 'synctool':
-            (ok, a) = synctool.config.check_cmd_config('synctool_cmd',
+            ok, _ = synctool.config.check_cmd_config('synctool_cmd',
                         synctool.param.SYNCTOOL_CMD)
             if ok:
                 print synctool.param.SYNCTOOL_CMD
 
         elif cmd == 'pkg':
-            (ok, a) = synctool.config.check_cmd_config('pkg_cmd',
+            ok, _ = synctool.config.check_cmd_config('pkg_cmd',
                         synctool.param.PKG_CMD)
             if ok:
                 print synctool.param.PKG_CMD
@@ -250,6 +250,8 @@ def set_action(a, opt):
 
 
 def usage():
+    '''print usage information'''
+
     print 'usage: %s [options]' % os.path.basename(sys.argv[0])
     print 'options:'
     print '  -h, --help               Display this information'
@@ -280,6 +282,8 @@ A command is a list of these: diff,ping,ssh,scp,rsync,synctool,pkg
 
 
 def get_options():
+    '''parse command-line options'''
+
     global ARG_NODENAMES, ARG_GROUPS, ARG_CMDS
     global OPT_FILTER_IGNORED, OPT_IPADDRESS, OPT_HOSTNAME, OPT_RSYNC
 

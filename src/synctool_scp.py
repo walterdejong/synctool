@@ -100,6 +100,8 @@ def check_cmd_config():
 
 
 def usage():
+    '''print usage information'''
+
     print ('usage: %s [options] FILE [..]' %
         os.path.basename(sys.argv[0]))
     print 'options:'
@@ -124,6 +126,8 @@ def usage():
 
 
 def get_options():
+    '''parse command-line options'''
+
     global DESTDIR, MASTER_OPTS, OPT_AGGREGATE, SCP_OPTIONS
 
     if len(sys.argv) <= 1:
@@ -268,6 +272,8 @@ def get_options():
 
 
 def main():
+    '''run the program'''
+
     synctool.param.init()
 
     sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)

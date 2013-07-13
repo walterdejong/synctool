@@ -21,8 +21,7 @@ import subprocess
 
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose, stdout, stderr, terse, unix_out, dryrun_msg
-from synctool.lib import prettypath
+from synctool.lib import verbose, stdout, stderr, terse, unix_out, prettypath
 import synctool.overlay
 import synctool.param
 import synctool.syncstat
@@ -290,7 +289,7 @@ def purge_files():
             stderr('failed to run command %s: %s' % (cmd_arr[0], reason))
             return
 
-        out, err = proc.communicate()
+        out, _ = proc.communicate()
 
         if synctool.lib.VERBOSE:
             print out
@@ -477,7 +476,7 @@ def _single_overlay_callback(obj, post_dict, updated=False):
     go_on = True
 
     if _match_single(obj.dest_path):
-        ok, updated = _overlay_callback(obj, post_dict)
+        _, updated = _overlay_callback(obj, post_dict)
         if not updated:
             stdout('%s is up to date' % obj.dest_path)
             terse(synctool.lib.TERSE_OK, obj.dest_path)
@@ -505,7 +504,7 @@ def _single_delete_callback(obj, post_dict, updated=False):
     go_on = True
 
     if _match_single(obj.dest_path):
-        ok, updated = _delete_callback(obj, post_dict)
+        _, updated = _delete_callback(obj, post_dict)
         if updated:
             # register .post on the parent dir, if it has a .post script
             obj.dest_path = os.path.dirname(obj.dest_path)
@@ -579,7 +578,7 @@ def _single_erase_saved_callback(obj, post_dict, updated=False):
         is_saved = False
 
     if is_dest or is_saved:
-        ok, updated = _erase_saved_callback(obj, post_dict)
+        _, updated = _erase_saved_callback(obj, post_dict)
         if updated:
             # register .post on the parent dir, if it has a .post script
             obj.dest_path = os.path.dirname(obj.dest_path)
@@ -596,11 +595,6 @@ def _single_erase_saved_callback(obj, post_dict, updated=False):
 
 def single_erase_saved():
     '''erase single backup files'''
-
-    # maybe the user supplied a '.saved' filename
-    (name, ext) = os.path.splitext(filename)
-    if ext == '.saved':
-        filename = name
 
     global DIR_CHANGED
 
@@ -762,6 +756,8 @@ def check_cmd_config():
 
 
 def usage():
+    '''print usage information'''
+
     print 'usage: %s [options]' % os.path.basename(sys.argv[0])
     print 'options:'
     print '  -h, --help            Display this information'
@@ -788,6 +784,8 @@ Note that synctool does a dry run unless you specify --fix
 
 
 def get_options():
+    '''parse command-line options'''
+
     global SINGLE_FILES
 
     progname = os.path.basename(sys.argv[0])
@@ -974,6 +972,8 @@ def get_options():
 
 
 def main():
+    '''run the program'''
+
     synctool.param.init()
 
     action = get_options()

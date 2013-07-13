@@ -32,6 +32,9 @@ LAUNCH = {
 
 
 def stderr(msg):
+    '''print error message to stderr'''
+
+    sys.stdout.flush()
     sys.stderr.write(msg + '\n')
     sys.stderr.flush()
 

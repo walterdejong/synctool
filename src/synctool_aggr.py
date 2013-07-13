@@ -19,6 +19,8 @@ import synctool.aggr
 
 
 def usage():
+    '''print usage information'''
+
     print '''Typical use of synctool-aggr is:
 
   command | synctool-aggr
@@ -29,11 +31,13 @@ and activated by the '-a' option
 
 
 def get_options():
+    '''parse command-line options'''
+
     if len(sys.argv) <= 1:
         return
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'h', ['help'])
+        opts, _ = getopt.getopt(sys.argv[1:], 'h', ['help'])
     except getopt.error, (reason):
         print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #       usage()
@@ -48,7 +52,7 @@ def get_options():
         usage()
         sys.exit(1)
 
-    for opt, arg in opts:
+    for opt, _ in opts:
         if opt in ('-h', '--help', '-?'):
             usage()
             sys.exit(1)
