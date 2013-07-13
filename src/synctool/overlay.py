@@ -233,7 +233,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
 
         if obj.ov_type == OV_TEMPLATE_POST:
             # it's a template generator. So generate it in the callback
-            ok, changed = callback(obj, post_dict, dir_changed)
+            ok, _ = callback(obj, post_dict, dir_changed)
             if not ok:
                 # either failed or skipped
                 continue
@@ -268,7 +268,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
             duplicates.add(obj.dest_path)
 
             # run callback on the directory itself
-            ok, changed = callback(obj, post_dict, dir_changed)
+            ok, _ = callback(obj, post_dict, dir_changed)
             if not ok:
                 # quick exit
                 return False
