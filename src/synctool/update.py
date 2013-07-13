@@ -75,8 +75,8 @@ def get_latest_version_and_checksum():
 
 
 def check():
-    '''check for newer version on the website'''
-    '''it does this by downloading the LATEST.txt versioning file
+    '''check for newer version on the website
+    It does this by downloading the LATEST.txt versioning file
     Returns True if newer available, else False'''
 
     latest_version = get_latest_version()
@@ -139,12 +139,12 @@ def download():
 
     try:
         web = urllib2.urlopen(download_url)
-    except urllib2.URLError, reason:
-        stderr('error accessing URL %s: %s' % (download_url, reason))
-        return False
-
     except urllib2.HTTPError, reason:
         stderr('error from webserver at %s: %s' % (download_url, reason))
+        return False
+
+    except urllib2.URLError, reason:
+        stderr('error accessing URL %s: %s' % (download_url, reason))
         return False
 
     except IOError, reason:
