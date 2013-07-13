@@ -597,7 +597,7 @@ class SyncObject(object):
         self.src_path = src_name
         self.dest_path = dest_name
         self.ov_type = ov_type
-        self.src_stat = self.dest_state = None
+        self.src_stat = self.dest_stat = None
 
     def make(self, src_dir, dest_dir):
         '''make() fills in the full paths and stat structures'''
@@ -617,9 +617,6 @@ class SyncObject(object):
 
     def __repr__(self):
         return '[<SyncObject>: (%s) (%s)]' % (self.src_path, self.dest_path)
-
-    def print_src(self):
-        return prettypath(self.src_path)
 
     def check(self):
         '''check differences between src and dest,
