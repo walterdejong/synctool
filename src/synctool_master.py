@@ -202,78 +202,78 @@ def rsync_include_filter(nodename):
     except OSError, reason:
         stderr('failed to open temp file: %s' % reason)
         sys.exit(-1)
-    else:
-        # include $SYNCTOOL/var/ but exclude
-        # the top overlay/ and delete/ dir
-        with f:
-            f.write('# synctool rsync filter')
 
-            # set mygroups for this nodename
-            synctool.param.NODENAME = nodename
-            synctool.param.MY_GROUPS = synctool.config.get_my_groups()
+    # include $SYNCTOOL/var/ but exclude
+    # the top overlay/ and delete/ dir
+    with f:
+        f.write('# synctool rsync filter')
 
-            overlay_groups = os.listdir(synctool.param.OVERLAY_DIR)
-            delete_groups = os.listdir(synctool.param.DELETE_DIR)
-            purge_groups = os.listdir(synctool.param.PURGE_DIR)
+        # set mygroups for this nodename
+        synctool.param.NODENAME = nodename
+        synctool.param.MY_GROUPS = synctool.config.get_my_groups()
 
-            f.write('+ /var/overlay/\n')
+        overlay_groups = os.listdir(synctool.param.OVERLAY_DIR)
+        delete_groups = os.listdir(synctool.param.DELETE_DIR)
+        purge_groups = os.listdir(synctool.param.PURGE_DIR)
 
-            # add only the group dirs that apply
-            # use three loops; (workaround rsync bug?)
-            for g in synctool.param.MY_GROUPS:
-                if g in overlay_groups:
-                    d = os.path.join(synctool.param.OVERLAY_DIR, g)
-                    if os.path.isdir(d):
-                        f.write('+ /var/overlay/%s/\n' % g)
+        f.write('+ /var/overlay/\n')
 
-            f.write('- /var/overlay/*\n'
-                    '+ /var/delete/\n')
+        # add only the group dirs that apply
+        # use three loops; (workaround rsync bug?)
+        for g in synctool.param.MY_GROUPS:
+            if g in overlay_groups:
+                d = os.path.join(synctool.param.OVERLAY_DIR, g)
+                if os.path.isdir(d):
+                    f.write('+ /var/overlay/%s/\n' % g)
 
-            for g in synctool.param.MY_GROUPS:
-                if g in delete_groups:
-                    d = os.path.join(synctool.param.DELETE_DIR, g)
-                    if os.path.isdir(d):
-                        f.write('+ /var/delete/%s/\n' % g)
+        f.write('- /var/overlay/*\n'
+                '+ /var/delete/\n')
 
-            f.write('- /var/delete/*\n'
-                    '+ /var/purge/\n')
+        for g in synctool.param.MY_GROUPS:
+            if g in delete_groups:
+                d = os.path.join(synctool.param.DELETE_DIR, g)
+                if os.path.isdir(d):
+                    f.write('+ /var/delete/%s/\n' % g)
 
-            for g in synctool.param.MY_GROUPS:
-                if g in purge_groups:
-                    purge_root = os.path.join(synctool.param.PURGE_DIR, g)
-                    if not os.path.isdir(purge_root):
-                        continue
+        f.write('- /var/delete/*\n'
+                '+ /var/purge/\n')
 
-                    for path, _, files in os.walk(purge_root):
-                        if path == purge_root:
-                            # guard against user mistakes;
-                            # danger of destroying the entire filesystem
-                            # if it would rsync --delete the root
-                            if len(files) > 0:
-                                stderr('cowardly refusing to purge the root '
-                                       'directory')
-                                stderr('please remove any files directly '
-                                       'under %s/' % prettypath(purge_root))
+        for g in synctool.param.MY_GROUPS:
+            if g in purge_groups:
+                purge_root = os.path.join(synctool.param.PURGE_DIR, g)
+                if not os.path.isdir(purge_root):
+                    continue
 
-                                # delete temp file and exit
-                                f.close()
-                                try:
-                                    os.unlink(filename)
-                                except OSError:
-                                    # silently ignore unlink error
-                                    pass
+                for path, _, files in os.walk(purge_root):
+                    if path == purge_root:
+                        # guard against user mistakes;
+                        # danger of destroying the entire filesystem
+                        # if it would rsync --delete the root
+                        if len(files) > 0:
+                            stderr('cowardly refusing to purge the root '
+                                   'directory')
+                            stderr('please remove any files directly '
+                                   'under %s/' % prettypath(purge_root))
 
-                                sys.exit(-1)
-                        else:
-                            f.write('+ /var/purge/%s/' % g)
-                            break
+                            # delete temp file and exit
+                            f.close()
+                            try:
+                                os.unlink(filename)
+                            except OSError:
+                                # silently ignore unlink error
+                                pass
 
-            # Note: sbin/*.pyc is excluded to keep major differences in
-            # Python versions (on master vs. client node) from clashing
-            f.write('- /var/purge/*\n'
-                    '- /sbin/*.pyc\n'
-                    '- /lib/synctool/*.pyc\n'
-                    '- /lib/synctool/pkg/*.pyc\n')
+                            sys.exit(-1)
+                    else:
+                        f.write('+ /var/purge/%s/' % g)
+                        break
+
+        # Note: sbin/*.pyc is excluded to keep major differences in
+        # Python versions (on master vs. client node) from clashing
+        f.write('- /var/purge/*\n'
+                '- /sbin/*.pyc\n'
+                '- /lib/synctool/*.pyc\n'
+                '- /lib/synctool/pkg/*.pyc\n')
 
     # Note: remind to delete the temp file later
 
