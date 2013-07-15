@@ -11,6 +11,7 @@
 '''a SyncObject is a source file + matching destination path and attributes'''
 
 import os
+import stat
 import shutil
 import hashlib
 
@@ -307,7 +308,7 @@ class VNodeDir(VNode):
 
         if not synctool.lib.DRY_RUN:
             try:
-                os.mkdir(self.name)
+                os.mkdir(self.name, self.stat.mode & 07777)
             except OSError, reason:
                 stderr('failed to make directory %s : %s' % (self.name,
                                                              reason))
@@ -450,7 +451,7 @@ class VNodeFifo(VNode):
 
         if not synctool.lib.DRY_RUN:
             try:
-                os.mkfifo(self.name)
+                os.mkfifo(self.name, self.stat.mode & 0777)
             except OSError, reason:
                 stderr('failed to create fifo %s : %s' % (self.name,
                                                           reason))
@@ -511,8 +512,9 @@ class VNodeChrDev(VNode):
 
         if not synctool.lib.DRY_RUN:
             try:
-                os.mknod(self.name, self.src_stat.st_mode,
-                        os.makedev(major, minor))
+                os.mknod(self.name,
+                         (self.src_stat.st_mode & 0777) | stat.S_IFCHR,
+                         os.makedev(major, minor))
             except OSError, reason:
                 stderr('failed to create device %s : %s' % (self.name,
                                                             reason))
@@ -573,8 +575,9 @@ class VNodeBlkDev(VNode):
 
         if not synctool.lib.DRY_RUN:
             try:
-                os.mknod(self.name, self.src_stat.st_mode,
-                        os.makedev(major, minor))
+                os.mknod(self.name,
+                         (self.src_stat.st_mode & 0777) | stat.S_IFBLK,
+                         os.makedev(major, minor))
             except OSError, reason:
                 stderr('failed to create device %s : %s' % (self.name,
                                                             reason))
