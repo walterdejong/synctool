@@ -342,8 +342,9 @@ def _overlay_callback(obj, post_dict, dir_changed=False):
 
         return True, dir_changed
 
-    if not obj.check() and post_dict.has_key(obj.dest_path):
-        _run_post(obj, post_dict[obj.dest_path])
+    if not obj.check():
+        if post_dict.has_key(obj.dest_path):
+            _run_post(obj, post_dict[obj.dest_path])
         return True, True
 
     return True, False
