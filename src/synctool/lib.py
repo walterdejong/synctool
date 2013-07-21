@@ -389,19 +389,24 @@ def exec_command(cmd_arr):
 def search_path(cmd):
     '''search the PATH for the location of cmd'''
 
-    if cmd.find(os.sep) >= 0 or (os.altsep != None and
-                                 cmd.find(os.altsep) >= 0):
+    # maybe a full path was given
+    path, _ = os.path.split(cmd)
+    if path and os.path.isfile(cmd) and os.access(cmd, os.X_OK):
         return cmd
 
-    path = os.environ['PATH']
-    if not path:
-        path = os.pathsep.join(['/bin', '/sbin', '/usr/bin', '/usr/sbin',
-                                '/usr/local/bin', '/usr/local/sbin'])
+    # search the PATH environment variable
+    if not os.environ.has_key('PATH'):
+        return None
 
-    for d in path.split(os.pathsep):
-        full_path = os.path.join(d, cmd)
-        if os.access(full_path, os.X_OK):
-            return full_path
+    env_path = os.environ['PATH']
+    if not env_path:
+        return None
+
+    for path in env_path.split(os.pathsep):
+        fullpath = os.path.join(path, cmd)
+        # check that the command is an executable file
+        if os.path.isfile(fullpath) and os.access(fullpath, os.X_OK):
+            return fullpath
 
     return None
 
