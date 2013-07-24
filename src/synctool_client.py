@@ -81,13 +81,13 @@ def generate_template(obj):
     unix_out('# run command %s' % os.path.basename(cmd_arr[0]))
     unix_out('%s "%s" "%s"' % (cmd_arr[0], cmd_arr[1], cmd_arr[2]))
 
-    err = False
+    have_error = False
     if synctool.lib.exec_command(cmd_arr) == -1:
-        err = True
+        have_error = True
 
     if not os.path.exists(newname):
         verbose('warning: expected output %s was not generated' % newname)
-        err = True
+        have_error = True
     else:
         verbose('found generated output %s' % newname)
 
@@ -103,7 +103,7 @@ def generate_template(obj):
         stderr('error changing directory to %s: %s' % (cwd, reason))
         return False
 
-    if err:
+    if have_error:
         return False
 
     # modify the object; set new src and dest filenames
