@@ -248,24 +248,6 @@ class VNodeFile(VNode):
         return True
 
 
-    def fix(self):
-        '''repair the existing entry
-        set owner and permissions equal to source'''
-
-        if self.exists:
-            if synctool.param.BACKUP_COPIES:
-                self.move_saved()
-            else:
-                self.harddelete()
-
-        self.mkdir_basepath()
-        self.create()
-        # shutil.copy() does not copy metadata (correctly)
-        # nor does shutil.copy2()
-        self.set_owner()
-        self.set_permissions()
-
-
     def create(self):
         '''copy file'''
 
