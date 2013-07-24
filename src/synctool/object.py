@@ -260,12 +260,10 @@ class VNodeFile(VNode):
 
         self.mkdir_basepath()
         self.create()
-
-        # no need to set owner/permissions;
-        # shutil.copy2() also copies stats
-
-#        self.set_owner()
-#        self.set_permissions()
+        # shutil.copy() does not copy metadata (correctly)
+        # nor does shutil.copy2()
+        self.set_owner()
+        self.set_permissions()
 
 
     def create(self):
@@ -279,8 +277,8 @@ class VNodeFile(VNode):
 
         if not synctool.lib.DRY_RUN:
             try:
-                # copy file and stats
-                shutil.copy2(self.src_path, self.name)
+                # copy file
+                shutil.copy(self.src_path, self.name)
             except IOError, reason:
                 stderr('failed to copy %s to %s: %s' %
                        (prettypath(self.src_path), self.name, reason))
