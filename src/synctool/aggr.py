@@ -16,6 +16,8 @@ from synctool.lib import stderr
 
 
 def aggregate(f):
+    '''group together input lines that are the same'''
+
     lines = f.readlines()
     if not lines:
         return
@@ -78,8 +80,8 @@ def run(cmd_arr):
     try:
         f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
-    except OSError, reason:
-        stderr('failed to run command %s: %s' % (cmd_arr[0], reason))
+    except OSError, err:
+        stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return False
 
     with f:

@@ -61,8 +61,9 @@ def read_config_file(configfile):
 
     try:
         f = open(configfile, 'r')
-    except IOError, reason:
-        stderr("failed to read config file '%s' : %s" % (configfile, reason))
+    except IOError, err:
+        stderr("failed to read config file '%s' : %s" % (configfile,
+                                                         err.strerror))
         return 1
 
     this_module = sys.modules['synctool.configparser']
