@@ -305,7 +305,7 @@ def run_with_nodename(cmd_arr, nodename):
     try:
         f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
-    except OSError, err:
+    except OSError as err:
         stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return
 
@@ -356,7 +356,7 @@ def shell_command(cmd):
 
         try:
             subprocess.call(cmd, shell=True)
-        except OSError, err:
+        except OSError as err:
             stderr("failed to run shell command '%s' : %s" % (prettypath(cmd),
                                                               err.strerror))
         sys.stdout.flush()
@@ -376,7 +376,7 @@ def exec_command(cmd_arr):
     err = 0
     try:
         err = subprocess.call(cmd_arr, shell=False)
-    except OSError, err:
+    except OSError as err:
         stderr('error: failed to exec %s: %s' % (cmd_arr[0], err.strerror))
         err = -1
 
@@ -422,7 +422,7 @@ def mkdir_p(path):
 
     try:
         os.makedirs(path)
-    except OSError, err:
+    except OSError as err:
         stderr('error: failed to create directory %s: %s' % (path,
                                                              err.strerror))
         os.umask(mask)

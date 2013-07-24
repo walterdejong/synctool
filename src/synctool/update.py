@@ -42,17 +42,17 @@ def get_latest_version_and_checksum():
     try:
         # can not use 'with' statement with urlopen()..?
         web = urllib2.urlopen(VERSION_CHECKING_URL)
-    except urllib2.HTTPError, err:
+    except urllib2.HTTPError as err:
         stderr('error from webserver at %s: %s' % (VERSION_CHECKING_URL,
                                                    err.reason))
         return None
 
-    except urllib2.URLError, err:
+    except urllib2.URLError as err:
         stderr('error accessing URL %s: %s' % (VERSION_CHECKING_URL,
                                                err.reason))
         return None
 
-    except IOError, err:
+    except IOError as err:
         stderr('error accessing the file at %s: %s' % (VERSION_CHECKING_URL,
                                                        err.strerror))
         return None
@@ -140,15 +140,15 @@ def download():
 
     try:
         web = urllib2.urlopen(download_url)
-    except urllib2.HTTPError, err:
+    except urllib2.HTTPError as err:
         stderr('error from webserver at %s: %s' % (download_url, err.reason))
         return False
 
-    except urllib2.URLError, err:
+    except urllib2.URLError as err:
         stderr('error accessing URL %s: %s' % (download_url, err.reason))
         return False
 
-    except IOError, err:
+    except IOError as err:
         stderr('error accessing the file at %s: %s' % (download_url,
                                                        err.strerror))
         return False
@@ -164,7 +164,7 @@ def download():
     # create download_filename
     try:
         f = open(download_filename, 'w+b')
-    except IOError, err:
+    except IOError as err:
         stderr('failed to create file %s: %s' % (download_filename,
                                                  err.strerror))
         web.close()

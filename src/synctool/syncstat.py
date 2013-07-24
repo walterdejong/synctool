@@ -55,7 +55,7 @@ class SyncStat(object):
 
         try:
             statbuf = os.lstat(path)
-        except OSError, err:
+        except OSError as err:
             # could be something stupid like "Permission denied" ...
             # although synctool should be run as root
 

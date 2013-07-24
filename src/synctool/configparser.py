@@ -61,7 +61,7 @@ def read_config_file(configfile):
 
     try:
         f = open(configfile, 'r')
-    except IOError, err:
+    except IOError as err:
         stderr("failed to read config file '%s' : %s" % (configfile,
                                                          err.strerror))
         return 1
