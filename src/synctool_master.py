@@ -193,14 +193,14 @@ def rsync_include_filter(nodename):
     try:
         (fd, filename) = tempfile.mkstemp(prefix='synctool-',
                                           dir=synctool.param.TEMP_DIR)
-    except OSError, reason:
-        stderr('failed to create temp file: %s' % reason)
+    except OSError, err:
+        stderr('failed to create temp file: %s' % err.strerror)
         sys.exit(-1)
 
     try:
         f = os.fdopen(fd, 'w')
-    except OSError, reason:
-        stderr('failed to open temp file: %s' % reason)
+    except OSError, err:
+        stderr('failed to open temp file: %s' % err.strerror)
         sys.exit(-1)
 
     # include $SYNCTOOL/var/ but exclude
@@ -419,9 +419,9 @@ def make_tempdir():
     if not os.path.isdir(synctool.param.TEMP_DIR):
         try:
             os.mkdir(synctool.param.TEMP_DIR, 0750)
-        except OSError, reason:
+        except OSError, err:
             stderr('failed to create tempdir %s: %s' %
-                   (synctool.param.TEMP_DIR, reason))
+                   (synctool.param.TEMP_DIR, err.strerror))
             sys.exit(-1)
 
 

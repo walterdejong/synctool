@@ -65,8 +65,8 @@ def generate_template(obj):
 
     try:
         os.chdir(src_dir)
-    except OSError, reason:
-        stderr('error changing directory to %s: %s' % (src_dir, reason))
+    except OSError, err:
+        stderr('error changing directory to %s: %s' % (src_dir, err.strerror))
         return False
 
     # temporarily restore original umask
@@ -99,8 +99,8 @@ def generate_template(obj):
     unix_out('cd %s' % cwd)
     try:
         os.chdir(cwd)
-    except OSError, reason:
-        stderr('error changing directory to %s: %s' % (cwd, reason))
+    except OSError, err:
+        stderr('error changing directory to %s: %s' % (cwd, err.strerror))
         return False
 
     if have_error:
@@ -153,8 +153,9 @@ def run_command_in_dir(dest_dir, cmd):
 
     try:
         os.chdir(dest_dir)
-    except OSError, reason:
-        stderr('error changing directory to %s: %s' % (dest_dir, reason))
+    except OSError, err:
+        stderr('error changing directory to %s: %s' % (dest_dir,
+                                                       err.strerror))
     else:
         run_command(cmd)
 
@@ -164,8 +165,8 @@ def run_command_in_dir(dest_dir, cmd):
 
         try:
             os.chdir(cwd)
-        except OSError, reason:
-            stderr('error changing directory to %s: %s' % (cwd, reason))
+        except OSError, err:
+            stderr('error changing directory to %s: %s' % (cwd, err.strerror))
 
 
 def _run_post(obj, post_script):
@@ -285,8 +286,9 @@ def purge_files():
         try:
             proc = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
                                     stdout=subprocess.PIPE)
-        except OSError, reason:
-            stderr('failed to run command %s: %s' % (cmd_arr[0], reason))
+        except OSError, err:
+            stderr('failed to run command %s: %s' % (cmd_arr[0],
+                                                     err.strerror))
             return
 
         out, _ = proc.communicate()
