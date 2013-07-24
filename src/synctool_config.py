@@ -299,22 +299,10 @@ def get_options():
             'ipaddress', 'hostname', 'rsync', 'filter-ignored',
             'command', 'package-manager', 'numproc', 'list-dirs',
             'prefix', 'nodename', 'version'])
-
-    except getopt.error, (reason):
+    except getopt.GetoptError, reason:
         print
         print '%s: %s' % (progname, reason)
         print
-        usage()
-        sys.exit(1)
-
-    except getopt.GetoptError, (reason):
-        print
-        print '%s: %s' % (progname, reason)
-        print
-        usage()
-        sys.exit(1)
-
-    except:
         usage()
         sys.exit(1)
 

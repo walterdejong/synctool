@@ -142,18 +142,9 @@ def get_options():
             ['help', 'conf=', 'verbose', 'dest=', 'options=',
             'node=', 'group=', 'exclude=', 'exclude-group=',
             'no-nodename', 'numproc=', 'zzz=', 'unix', 'quiet'])
-    except getopt.error, (reason):
+    except getopt.GetoptError, reason:
         print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #        usage()
-        sys.exit(1)
-
-    except getopt.GetoptError, (reason):
-        print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
-#        usage()
-        sys.exit(1)
-
-    except:
-        usage()
         sys.exit(1)
 
     # first read the config file

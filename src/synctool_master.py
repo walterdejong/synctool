@@ -583,18 +583,9 @@ def get_options():
             'no-post', 'numproc=', 'fullpath', 'terse', 'color', 'no-color',
             'quiet', 'aggregate', 'unix', 'skip-rsync',
             'version', 'check-update', 'download'])
-    except getopt.error, (reason):
+    except getopt.GetoptError, reason:
         print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #        usage()
-        sys.exit(1)
-
-    except getopt.GetoptError, (reason):
-        print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
-#        usage()
-        sys.exit(1)
-
-    except:
-        usage()
         sys.exit(1)
 
     if args != None and len(args) > 0:

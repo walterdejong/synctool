@@ -239,18 +239,9 @@ def get_options():
             'list', 'install', 'remove', 'update', 'upgrade', 'clean',
             'cleanup', 'manager=', 'masterlog',
             'fix', 'verbose', 'unix', 'quiet'])
-    except getopt.error, (reason):
+    except getopt.GetoptError, reason:
         print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #        usage()
-        sys.exit(1)
-
-    except getopt.GetoptError, (reason):
-        print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
-#        usage()
-        sys.exit(1)
-
-    except:
-        usage()
         sys.exit(1)
 
     # first read the config file

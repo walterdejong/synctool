@@ -800,17 +800,8 @@ def get_options():
             'erase-saved', 'fix', 'no-post', 'fullpath',
             'terse', 'color', 'no-color', 'masterlog', 'nodename=',
             'verbose', 'quiet', 'unix', 'version'])
-    except getopt.error, (reason):
+    except getopt.GetoptError, reason:
         print '%s: %s' % (progname, reason)
-        usage()
-        sys.exit(1)
-
-    except getopt.GetoptError, (reason):
-        print '%s: %s' % (progname, reason)
-        usage()
-        sys.exit(1)
-
-    except:
         usage()
         sys.exit(1)
 
