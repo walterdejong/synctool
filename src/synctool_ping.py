@@ -59,7 +59,7 @@ def ping_node(addr):
     try:
         f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
-    except OSError, err:
+    except OSError as err:
         stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return False
 
@@ -143,7 +143,7 @@ def get_options():
             ['help', 'conf=', 'verbose', 'node=', 'group=',
             'exclude=', 'exclude-group=', 'aggregate', 'unix', 'quiet',
             'numproc=', 'zzz='])
-    except getopt.GetoptError, reason:
+    except getopt.GetoptError as reason:
         print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #        usage()
         sys.exit(1)
@@ -276,7 +276,7 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except IOError, ioerr:
+    except IOError as ioerr:
         if ioerr.errno == errno.EPIPE:        # Broken pipe
             pass
         else:

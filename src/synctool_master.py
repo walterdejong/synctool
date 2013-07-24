@@ -193,13 +193,13 @@ def rsync_include_filter(nodename):
     try:
         (fd, filename) = tempfile.mkstemp(prefix='synctool-',
                                           dir=synctool.param.TEMP_DIR)
-    except OSError, err:
+    except OSError as err:
         stderr('failed to create temp file: %s' % err.strerror)
         sys.exit(-1)
 
     try:
         f = os.fdopen(fd, 'w')
-    except OSError, err:
+    except OSError as err:
         stderr('failed to open temp file: %s' % err.strerror)
         sys.exit(-1)
 
@@ -419,7 +419,7 @@ def make_tempdir():
     if not os.path.isdir(synctool.param.TEMP_DIR):
         try:
             os.mkdir(synctool.param.TEMP_DIR, 0750)
-        except OSError, err:
+        except OSError as err:
             stderr('failed to create tempdir %s: %s' %
                    (synctool.param.TEMP_DIR, err.strerror))
             sys.exit(-1)
@@ -583,7 +583,7 @@ def get_options():
             'no-post', 'numproc=', 'fullpath', 'terse', 'color', 'no-color',
             'quiet', 'aggregate', 'unix', 'skip-rsync',
             'version', 'check-update', 'download'])
-    except getopt.GetoptError, reason:
+    except getopt.GetoptError as reason:
         print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #        usage()
         sys.exit(1)
@@ -879,7 +879,7 @@ if __name__ == '__main__':
         # workaround exception in QueueFeederThread at exit
         # which is a Python bug, really
         time.sleep(0.01)
-    except IOError, ioerr:
+    except IOError as ioerr:
         if ioerr.errno == errno.EPIPE:        # Broken pipe
             pass
         else:

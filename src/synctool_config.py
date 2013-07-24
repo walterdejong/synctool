@@ -299,7 +299,7 @@ def get_options():
             'ipaddress', 'hostname', 'rsync', 'filter-ignored',
             'command', 'package-manager', 'numproc', 'list-dirs',
             'prefix', 'nodename', 'version'])
-    except getopt.GetoptError, reason:
+    except getopt.GetoptError as reason:
         print
         print '%s: %s' % (progname, reason)
         print
@@ -461,7 +461,7 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except IOError, ioerr:
+    except IOError as ioerr:
         if ioerr.errno == errno.EPIPE:        # Broken pipe
             pass
         else:

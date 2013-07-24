@@ -222,7 +222,7 @@ def get_options():
             'list', 'install', 'remove', 'update', 'upgrade', 'clean',
             'cleanup', 'manager=', 'numproc=', 'zzz=',
             'fix', 'verbose', 'quiet', 'unix', 'aggregate'])
-    except getopt.GetoptError, reason:
+    except getopt.GetoptError as reason:
         print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #        usage()
         sys.exit(1)
@@ -422,7 +422,7 @@ if __name__ == '__main__':
         # workaround exception in QueueFeederThread at exit
         # which is a Python bug, really
         time.sleep(0.01)
-    except IOError, ioerr:
+    except IOError as ioerr:
         if ioerr.errno == errno.EPIPE:        # Broken pipe
             pass
         else:

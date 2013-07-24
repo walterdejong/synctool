@@ -63,7 +63,7 @@ def template(filename):
     else:
         try:
             f = open(filename)
-        except IOError, err:
+        except IOError as err:
             print "%s: failed to open '%s': %s" % (PROGNAM, filename,
                                                    err.strerror)
             sys.exit(-1)
@@ -97,7 +97,7 @@ def get_options():
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hv:',
             ['help', 'var='])
-    except getopt.GetoptError, reason:
+    except getopt.GetoptError as reason:
         print '%s: %s' % (PROGNAM, reason)
         usage()
         sys.exit(1)

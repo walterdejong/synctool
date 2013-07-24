@@ -180,7 +180,7 @@ def get_options():
             ['help', 'conf=', 'verbose', 'node=', 'group=', 'exclude=',
             'exclude-group=', 'aggregate', 'options=', 'no-nodename',
             'unix', 'skip-rsync', 'quiet', 'numproc=', 'zzz='])
-    except getopt.GetoptError, reason:
+    except getopt.GetoptError as reason:
         print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #        usage()
         sys.exit(1)
@@ -329,7 +329,7 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except IOError, ioerr:
+    except IOError as ioerr:
         if ioerr.errno == errno.EPIPE:        # Broken pipe
             pass
         else:

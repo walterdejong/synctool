@@ -38,7 +38,7 @@ def get_options():
 
     try:
         opts, _ = getopt.getopt(sys.argv[1:], 'h', ['help'])
-    except getopt.GetoptError, reason:
+    except getopt.GetoptError as reason:
         print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #       usage()
         sys.exit(1)

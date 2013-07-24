@@ -65,7 +65,7 @@ def generate_template(obj):
 
     try:
         os.chdir(src_dir)
-    except OSError, err:
+    except OSError as err:
         stderr('error changing directory to %s: %s' % (src_dir, err.strerror))
         return False
 
@@ -99,7 +99,7 @@ def generate_template(obj):
     unix_out('cd %s' % cwd)
     try:
         os.chdir(cwd)
-    except OSError, err:
+    except OSError as err:
         stderr('error changing directory to %s: %s' % (cwd, err.strerror))
         return False
 
@@ -153,7 +153,7 @@ def run_command_in_dir(dest_dir, cmd):
 
     try:
         os.chdir(dest_dir)
-    except OSError, err:
+    except OSError as err:
         stderr('error changing directory to %s: %s' % (dest_dir,
                                                        err.strerror))
     else:
@@ -165,7 +165,7 @@ def run_command_in_dir(dest_dir, cmd):
 
         try:
             os.chdir(cwd)
-        except OSError, err:
+        except OSError as err:
             stderr('error changing directory to %s: %s' % (cwd, err.strerror))
 
 
@@ -286,7 +286,7 @@ def purge_files():
         try:
             proc = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
                                     stdout=subprocess.PIPE)
-        except OSError, err:
+        except OSError as err:
             stderr('failed to run command %s: %s' % (cmd_arr[0],
                                                      err.strerror))
             return
@@ -802,7 +802,7 @@ def get_options():
             'erase-saved', 'fix', 'no-post', 'fullpath',
             'terse', 'color', 'no-color', 'masterlog', 'nodename=',
             'verbose', 'quiet', 'unix', 'version'])
-    except getopt.GetoptError, reason:
+    except getopt.GetoptError as reason:
         print '%s: %s' % (progname, reason)
         usage()
         sys.exit(1)
@@ -1063,7 +1063,7 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except IOError, ioerr:
+    except IOError as ioerr:
         if ioerr.errno == errno.EPIPE:        # Broken pipe
             pass
         else:
