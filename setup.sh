@@ -11,7 +11,8 @@
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
-INSTALL_ROOT=/opt/synctool
+DEFAULT_INSTALL_ROOT="/opt/synctool"
+INSTALL_ROOT="$DEFAULT_INSTALL_ROOT"
 
 DRY_RUN="yes"
 UNINSTALL="no"
@@ -96,7 +97,7 @@ options:
                      This requires 'markdown' and 'smartypants'
   --uninstall        Remove synctool from system
 
-The default installdir is $INSTALL_ROOT
+The default installdir is $DEFAULT_INSTALL_ROOT
 Whatever you do, do NOT put synctool directly under /usr or /usr/local
 Use a _dedicated_ installdir like /opt/synctool or /home/synctool
 
@@ -420,7 +421,22 @@ do_uninstall() {
 	fi
 }
 
-# FIXME check that INSTALL_ROOT is an absolute path
+### main part ###
+
+# check that INSTALL_ROOT is set
+if test "x$INSTALL_ROOT" = "x"
+then
+    echo "setup.sh: invalid installdir"
+    exit 1
+fi
+
+# check that INSTALL_ROOT is an absolute path
+SLASH=`echo $INSTALL_ROOT | cut -b1`
+if test "x$SLASH" != "x/"
+then
+    echo "setup.sh: installdir must be an absolute path"
+    exit 1
+fi
 
 if test "x$UNINSTALL" = "xyes"
 then
