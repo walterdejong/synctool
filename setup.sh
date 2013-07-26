@@ -420,6 +420,8 @@ do_uninstall() {
 	fi
 }
 
+# FIXME check that INSTALL_ROOT is an absolute path
+
 if test "x$UNINSTALL" = "xyes"
 then
 	do_uninstall
