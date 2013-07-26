@@ -107,7 +107,7 @@ def read_config_file(configfile):
 
             if len(arr) <= 1:
                 stderr('%s:%d: syntax error ; expected key/value pair' %
-                    (configfile, lineno))
+                       (configfile, lineno))
                 errors += 1
                 continue
 
@@ -117,8 +117,8 @@ def read_config_file(configfile):
             try:
                 func = getattr(this_module, 'config_%s' % keyword)
             except AttributeError:
-                stderr("%s:%d: unknown keyword '%s'" %
-                    (configfile, lineno, keyword))
+                stderr("%s:%d: unknown keyword '%s'" % (configfile, lineno,
+                                                        keyword))
                 errors += 1
                 continue
 
@@ -148,7 +148,7 @@ def check_node_definition(node, configfile, lineno):
 
     if SYMBOLS.has_key(key):
         stderr("%s:%d: redefinition of node '%s'" % (configfile, lineno,
-                                                    node))
+                                                     node))
         stderr("%s: previous definition was here" % SYMBOLS[key].origin())
         return False
 
@@ -164,7 +164,7 @@ def check_group_definition(group, configfile, lineno):
 
     if SYMBOLS.has_key(key):
         stderr("%s:%d: redefinition of group '%s'" % (configfile, lineno,
-                                                        group))
+                                                      group))
         stderr("%s: previous definition was here" % SYMBOLS[key].origin())
         return False
 
@@ -228,8 +228,8 @@ def _config_command(param, arr, short_cmd, configfile, lineno):
 
     if len(arr) < 2:
         stderr("%s:%d: '%s' requires an argument: "
-                "the '%s' command, and any appropriate switches" %
-                (configfile, lineno, param, short_cmd))
+               "the '%s' command, and any appropriate switches" %
+               (configfile, lineno, param, short_cmd))
         return (1, None)
 
     # This function does not check the existence of the command
@@ -286,8 +286,8 @@ def config_tempdir(arr, configfile, lineno):
     d = synctool.lib.prepare_path(d)
 
     if not os.path.isabs(d):
-        stderr("%s:%d: tempdir must be an absolute path" %
-                (configfile, lineno))
+        stderr("%s:%d: tempdir must be an absolute path" % (configfile,
+                                                            lineno))
         return 1
 
     synctool.param.TEMP_DIR = d
@@ -298,7 +298,7 @@ def config_tempdir(arr, configfile, lineno):
 def config_package_manager(arr, configfile, lineno):
     if len(arr) < 2:
         stderr("%s:%d: 'package_manager' requires an argument" %
-                (configfile, lineno))
+               (configfile, lineno))
         return 1
 
     if not check_definition(arr[0], configfile, lineno):
@@ -306,7 +306,7 @@ def config_package_manager(arr, configfile, lineno):
 
     if not arr[1] in synctool.param.KNOWN_PACKAGE_MANAGERS:
         stderr("%s:%d: unknown or unsupported package manager '%s'" %
-                (configfile, lineno, arr[1]))
+               (configfile, lineno, arr[1]))
         return 1
 
     synctool.param.PACKAGE_MANAGER = arr[1]
@@ -323,7 +323,7 @@ def config_require_extension(arr, configfile, lineno):
 # keyword: full_path
 def config_full_path(arr, configfile, lineno):
     (err, synctool.param.FULL_PATH) = _config_boolean('full_path', arr[1],
-                                                        configfile, lineno)
+                                                      configfile, lineno)
     return err
 
 
@@ -337,7 +337,7 @@ def config_backup_copies(arr, configfile, lineno):
 # keyword: syslogging
 def config_syslogging(arr, configfile, lineno):
     (err, synctool.param.SYSLOGGING) = _config_boolean('syslogging', arr[1],
-                                                        configfile, lineno)
+                                                       configfile, lineno)
     return err
 
 
@@ -359,7 +359,7 @@ def config_ignore_dotdirs(arr, configfile, lineno):
 def config_ignore(arr, configfile, lineno):
     if len(arr) < 2:
         stderr("%s:%d: 'ignore' requires at least 1 argument: "
-                "the file or directory to ignore" %    (configfile, lineno))
+               "the file or directory to ignore" % (configfile, lineno))
         return 1
 
     for fn in arr[1:]:
@@ -377,15 +377,15 @@ def config_ignore(arr, configfile, lineno):
 
 # keyword: terse
 def config_terse(arr, configfile, lineno):
-    (err, synctool.param.TERSE) = _config_boolean('terse', arr[1],
-                                                    configfile, lineno)
+    (err, synctool.param.TERSE) = _config_boolean('terse', arr[1], configfile,
+                                                  lineno)
     return err
 
 
 # keyword: colorize
 def config_colorize(arr, configfile, lineno):
     (err, synctool.param.COLORIZE) = _config_boolean('colorize', arr[1],
-                                                        configfile, lineno)
+                                                     configfile, lineno)
     return err
 
 
@@ -510,7 +510,7 @@ def config_default_nodeset(arr, configfile, lineno):
 
     if len(arr) < 2:
         stderr("%s:%d: 'default_nodeset' requires an argument" %
-                (configfile, lineno))
+               (configfile, lineno))
         return 1
 
     synctool.param.DEFAULT_NODESET = set()
@@ -535,20 +535,20 @@ def config_default_nodeset(arr, configfile, lineno):
 def config_group(arr, configfile, lineno):
     if len(arr) < 3:
         stderr("%s:%d: 'group' requires at least 2 arguments: "
-                "the compound group name and at least 1 member group" %
-                (configfile, lineno))
+               "the compound group name and at least 1 member group" %
+               (configfile, lineno))
         return 1
 
     group = arr[1]
 
     if not spellcheck(group):
         stderr("%s:%d: invalid group name '%s'" %
-                (configfile, lineno, group))
+               (configfile, lineno, group))
         return 1
 
     if group in ('all', 'none', 'template'):
         stderr("%s:%d: implicit group '%s' can not be redefined" %
-                (configfile, lineno, group))
+               (configfile, lineno, group))
         return 1
 
     if not check_group_definition(group, configfile, lineno):
@@ -556,8 +556,8 @@ def config_group(arr, configfile, lineno):
 
     key = 'node %s' % group
     if SYMBOLS.has_key(key):
-        stderr('%s:%d: %s was previously defined as a node' %
-                (configfile, lineno, group))
+        stderr('%s:%d: %s was previously defined as a node' % (configfile,
+                                                               lineno, group))
         stderr('%s: previous definition was here' % SYMBOLS[key].origin())
         return 1
 
@@ -565,7 +565,7 @@ def config_group(arr, configfile, lineno):
         synctool.param.GROUP_DEFS[group] = expand_grouplist(arr[2:])
     except RuntimeError:
         stderr('%s:%d: compound groups can not contain node names' %
-                (configfile, lineno))
+               (configfile, lineno))
         return 1
 
     return 0
@@ -575,14 +575,14 @@ def config_group(arr, configfile, lineno):
 def config_node(arr, configfile, lineno):
     if len(arr) < 2:
         stderr("%s:%d: 'node' requires at least 1 argument: the nodename" %
-                (configfile, lineno))
+               (configfile, lineno))
         return 1
 
     node = arr[1]
 
     if not spellcheck(node):
         stderr("%s:%d: invalid node name '%s'" %
-                (configfile, lineno, node))
+               (configfile, lineno, node))
         return 1
 
     groups = arr[2:]
@@ -593,35 +593,35 @@ def config_node(arr, configfile, lineno):
     key = 'group %s' % node
     if SYMBOLS.has_key(key):
         stderr('%s:%d: %s was previously defined as a group' %
-                (configfile, lineno, node))
+               (configfile, lineno, node))
         stderr('%s: previous definition was here' % SYMBOLS[key].origin())
         return 1
 
     for g in groups:
         if g == 'all':
             stderr("%s:%d: illegal to use group 'all' in node definition" %
-                    (configfile, lineno))
+                   (configfile, lineno))
             stderr("%s:%d: group 'all' automatically applies to all nodes" %
-                    (configfile, lineno))
+                   (configfile, lineno))
             return 1
 
         if g == 'none':
             stderr("%s:%d: illegal to use group 'none' in node definition" %
-                    (configfile, lineno))
+                   (configfile, lineno))
             stderr("%s:%d: use 'ignore_node' to disable a node" %
-                    (configfile, lineno))
+                   (configfile, lineno))
             return 1
 
         if g == 'template':
             stderr("%s:%d: illegal to use group 'template' "
-                    "in node definition" % (configfile, lineno))
+                   "in node definition" % (configfile, lineno))
             stderr("%s:%d: file extension _template is reserved for "
-                    "template files" % (configfile, lineno))
+                   "template files" % (configfile, lineno))
             return 1
 
     if node in groups:
         stderr("%s:%d: illegal to list '%s' as group for node %s" %
-                (configfile, lineno, node, node))
+               (configfile, lineno, node, node))
         return 1
 
     # node lines may end with special optional specifiers like
@@ -634,7 +634,7 @@ def config_node(arr, configfile, lineno):
 
         if n == 0:
             stderr("%s:%d: syntax error in node specifier '%s'" %
-                    (configfile, lineno, groups[-1]))
+                   (configfile, lineno, groups[-1]))
             return 1
 
         if n > 0:
@@ -645,12 +645,12 @@ def config_node(arr, configfile, lineno):
             if specifier == 'ipaddress':
                 if synctool.param.IPADDRESSES.has_key(node):
                     stderr('%s:%d: redefinition of IP address for node %s' %
-                            (configfile, lineno, node))
+                           (configfile, lineno, node))
                     return 1
 
                 if not arg:
                     stderr("%s:%d: missing argument to node specifier '%s'" %
-                            (configfile, lineno, specifier))
+                           (configfile, lineno, specifier))
                     return 1
 
                 synctool.param.IPADDRESSES[node] = arg
@@ -658,13 +658,13 @@ def config_node(arr, configfile, lineno):
             elif specifier == 'hostname':
                 if synctool.param.HOSTNAMES.has_key(arg):
                     stderr('%s:%d: hostname %s already in use for node %s' %
-                            (configfile, lineno, arg,
+                           (configfile, lineno, arg,
                             synctool.param.HOSTNAMES[arg]))
                     return 1
 
                 if not arg:
                     stderr("%s:%d: missing argument to node specifier "
-                            "'hostname'" % (configfile, lineno))
+                           "'hostname'" % (configfile, lineno))
                     return 1
 
                 synctool.param.HOSTNAMES[arg] = node
@@ -695,7 +695,7 @@ def config_node(arr, configfile, lineno):
             elif specifier == 'rsync':
                 if not arg:
                     stderr("%s:%d: missing argument to node specifier "
-                            "'rsync'" % (configfile, lineno))
+                           "'rsync'" % (configfile, lineno))
                     return 1
 
                 if arg == 'yes':
@@ -704,19 +704,19 @@ def config_node(arr, configfile, lineno):
                     synctool.param.NO_RSYNC.add(node)
                 else:
                     stderr("%s:%d: node specifier 'rsync' can have value "
-                            "'yes' or 'no'" % (configfile, lineno))
+                           "'yes' or 'no'" % (configfile, lineno))
                     return 1
 
             else:
                 stderr('%s:%d: unknown node specifier %s' %
-                        (configfile, lineno, specifier))
+                       (configfile, lineno, specifier))
                 return 1
 
     try:
         synctool.param.NODES[node] = expand_grouplist(groups)
     except RuntimeError:
         stderr('%s:%d: a group list can not contain node names' %
-                (configfile, lineno))
+               (configfile, lineno))
         return 1
 
     return 0
@@ -726,7 +726,7 @@ def config_node(arr, configfile, lineno):
 def config_ignore_node(arr, configfile, lineno):
     if len(arr) < 2:
         stderr("%s:%d: 'ignore_node' requires 1 argument: "
-                "the nodename to ignore" % (configfile, lineno))
+               "the nodename to ignore" % (configfile, lineno))
         return 1
 
     errors = 0
@@ -734,7 +734,7 @@ def config_ignore_node(arr, configfile, lineno):
     for node in arr[1:]:
         if not spellcheck(node):
             stderr("%s:%d: invalid node name '%s'" % (configfile, lineno,
-                                                        node))
+                                                      node))
             errors += 1
             continue
 
@@ -743,7 +743,7 @@ def config_ignore_node(arr, configfile, lineno):
 
         if node in ('all', 'template'):
             stderr("%s:%d: illegal to ignore '%s'" % (configfile, lineno,
-                                                        node))
+                                                      node))
             errors += 1
             continue
 
@@ -756,7 +756,7 @@ def config_ignore_node(arr, configfile, lineno):
 def config_ignore_group(arr, configfile, lineno):
     if len(arr) < 2:
         stderr("%s:%d: '%s' requires 1 argument: the groupname to ignore" %
-                (configfile, lineno, arr[0]))
+               (configfile, lineno, arr[0]))
         return 1
 
     errors = 0
@@ -764,7 +764,7 @@ def config_ignore_group(arr, configfile, lineno):
     for group in arr[1:]:
         if not spellcheck(group):
             stderr("%s:%d: invalid group name '%s'" % (configfile, lineno,
-                                                        group))
+                                                       group))
             errors += 1
             continue
 
@@ -773,7 +773,7 @@ def config_ignore_group(arr, configfile, lineno):
 
         if group in ('all', 'template'):
             stderr("%s:%d: illegal to ignore '%s'" % (configfile, lineno,
-                                                        group))
+                                                      group))
             errors += 1
             continue
 
@@ -788,29 +788,29 @@ def config_ignore_group(arr, configfile, lineno):
 
 # keyword: diff_cmd
 def config_diff_cmd(arr, configfile, lineno):
-    (err, synctool.param.DIFF_CMD) = _config_command('diff_cmd', arr,
-        'diff', configfile, lineno)
+    (err, synctool.param.DIFF_CMD) = _config_command('diff_cmd', arr, 'diff',
+                                                     configfile, lineno)
     return err
 
 
 # keyword: ping_cmd
 def config_ping_cmd(arr, configfile, lineno):
-    (err, synctool.param.PING_CMD) = _config_command('ping_cmd', arr,
-        'ping', configfile, lineno)
+    (err, synctool.param.PING_CMD) = _config_command('ping_cmd', arr, 'ping',
+                                                     configfile, lineno)
     return err
 
 
 # keyword: ssh_cmd
 def config_ssh_cmd(arr, configfile, lineno):
-    (err, synctool.param.SSH_CMD) = _config_command('ssh_cmd', arr,
-        'ssh', configfile, lineno)
+    (err, synctool.param.SSH_CMD) = _config_command('ssh_cmd', arr, 'ssh',
+                                                    configfile, lineno)
     return err
 
 
 # keyword: scp_cmd
 def config_scp_cmd(arr, configfile, lineno):
-    (err, synctool.param.SCP_CMD) = _config_command('scp_cmd', arr,
-        'scp', configfile, lineno)
+    (err, synctool.param.SCP_CMD) = _config_command('scp_cmd', arr, 'scp',
+                                                    configfile, lineno)
     return err
 
 
@@ -822,28 +822,31 @@ def config_rsync_cmd(arr, configfile, lineno):
     # but these are usually not used in rsync_cmd
 
     (err, synctool.param.RSYNC_CMD) = _config_command('rsync_cmd', arr,
-        'rsync', configfile, lineno)
+                                                      'rsync', configfile,
+                                                      lineno)
     return err
 
 
 # keyword: synctool_cmd
 def config_synctool_cmd(arr, configfile, lineno):
     (err, synctool.param.SYNCTOOL_CMD) = _config_command('synctool_cmd', arr,
-                                            'synctool.py', configfile, lineno)
+                                                         'synctool.py',
+                                                         configfile, lineno)
     return err
 
 
 # keyword: pkg_cmd
 def config_pkg_cmd(arr, configfile, lineno):
     (err, synctool.param.PKG_CMD) = _config_command('pkg_cmd', arr,
-                                        'synctool_pkg.py', configfile, lineno)
+                                                    'synctool_pkg.py',
+                                                    configfile, lineno)
     return err
 
 
 # keyword: num_proc
 def config_num_proc(arr, configfile, lineno):
     (err, synctool.param.NUM_PROC) = _config_integer('num_proc', arr[1],
-        configfile, lineno)
+                                                     configfile, lineno)
 
     if not err and synctool.param.NUM_PROC < 1:
         stderr("%s:%d: invalid argument for num_proc" % (configfile, lineno))
@@ -874,13 +877,13 @@ def expand_grouplist(grouplist):
             # just to prevent odd things from happening
             if synctool.param.NODES.has_key(elem):
                 raise RuntimeError, ('node %s can not be part of '
-                                        'compound group list' % elem)
+                                     'compound group list' % elem)
 
             synctool.param.GROUP_DEFS[elem] = None
 
     # remove duplicates
     # this looks pretty lame ... but Python sets are not usable here;
-    # sets mess around with the order and Python sets changed in Python 2.6
+    # sets have no order and order is important here
 
     expanded_grouplist = []
     for elem in groups:
