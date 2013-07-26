@@ -244,30 +244,14 @@ def purge_files():
             cmd_arr.append('-n')
             opts += '-n '
 
-        # remove --quiet option from rsync
-        try:
-            cmd_arr.remove('-q')
-        except ValueError:
-            pass
-
-        try:
-            cmd_arr.remove('--quiet')
-        except ValueError:
-            pass
-
-        # remove --verbose option from rsync
-        try:
-            cmd_arr.remove('-v')
-        except ValueError:
-            pass
-
-        try:
-            cmd_arr.remove('--verbose')
-        except ValueError:
-            pass
+        # remove certain options from rsync
+        for opt in ('-q', '--quiet', '-v', '--verbose', '--human-readable',
+                    '--progress', '--daemon'):
+            if opt in cmd_arr:
+                cmd_arr.remove(opt)
 
         # add rsync option -i : itemized output
-        if not '-i' in cmd_arr and not '--itemize' in cmd_arr:
+        if not '-i' in cmd_arr and not '--itemize-changes' in cmd_arr:
             cmd_arr.append('-i')
 
         # show the -i option (in verbose mode)
