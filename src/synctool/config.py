@@ -72,6 +72,7 @@ def read_config():
         synctool.param.GROUP_DEFS['all'] = None
 
     # implicitly add 'nodename' as first group
+    # implicitly add 'all' as last group
     for node in get_all_nodes():
         insert_group(node, node)
         synctool.param.NODES[node].append('all')
@@ -234,7 +235,6 @@ def make_all_groups():
 
     s = set(synctool.param.GROUP_DEFS.keys())
     s |= set(synctool.param.NODES.keys())
-
     return s
 
 
