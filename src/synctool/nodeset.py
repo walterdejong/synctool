@@ -37,15 +37,23 @@ class NodeSet(object):
         self.namemap = {}
 
     def add_node(self, nodelist):
+        '''add a node to the nodeset'''
+
         self.nodelist = set(nodelist.split(','))
 
     def add_group(self, grouplist):
+        '''add a group to the nodeset'''
+
         self.grouplist = set(grouplist.split(','))
 
     def exclude_node(self, nodelist):
+        '''remove a node from the nodeset'''
+
         self.exclude_nodes = set(nodelist.split(','))
 
     def exclude_group(self, grouplist):
+        '''remove a group from the nodeset'''
+
         self.exclude_groups = set(grouplist.split(','))
 
     def addresses(self):
@@ -57,23 +65,23 @@ class NodeSet(object):
                 return []
 
             self.nodelist = synctool.param.DEFAULT_NODESET
-        else:
-            # check if the nodes exist at all
-            # the user may have given bogus names
-            all_nodes = set(synctool.config.get_all_nodes())
-            unknown = self.nodelist - all_nodes
-            for node in unknown:
-                stderr("no such node '%s'" % node)
-                return None
 
-            # check if the groups exist at all
-            unknown = self.grouplist - synctool.param.ALL_GROUPS
-            for group in unknown:
-                stderr("no such group '%s'" % group)
-                return None
+        # check if the nodes exist at all
+        # the user may have given bogus names
+        all_nodes = set(synctool.config.get_all_nodes())
+        unknown = (self.nodelist | self.exclude_nodes) - all_nodes
+        for node in unknown:
+            stderr("no such node '%s'" % node)
+            return None
 
-            self.nodelist |= synctool.config.get_nodes_in_groups(
-                                self.grouplist)
+        # check if the groups exist at all
+        unknown = ((self.grouplist | self.exclude_groups) -
+                   synctool.param.ALL_GROUPS)
+        for group in unknown:
+            stderr("no such group '%s'" % group)
+            return None
+
+        self.nodelist |= synctool.config.get_nodes_in_groups(self.grouplist)
 
         self.exclude_nodes |= synctool.config.get_nodes_in_groups(
                                 self.exclude_groups)
