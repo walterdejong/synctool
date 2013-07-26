@@ -82,6 +82,8 @@ ignore .*.swp
 # so that you can do things like:
 #
 #  rsync_cmd rsync -ar --dry-run -vv
+# or
+#  rsync_cmd rsync -ar --delete --delete-excluded -e 'ssh -c arcfour'
 #
 # synctool-master automatically appends another option:
 #  --filter=/tmp/synctool/synctool-tempfile
