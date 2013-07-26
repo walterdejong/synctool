@@ -65,7 +65,7 @@ def read_config():
 
     if not synctool.param.PKG_CMD:
         synctool.param.PKG_CMD = os.path.join(synctool.param.ROOTDIR,
-                                                'bin', 'synctool-client-pkg')
+                                              'bin', 'synctool-client-pkg')
 
     # implicitly add group 'all'
     if not synctool.param.GROUP_DEFS.has_key('all'):
