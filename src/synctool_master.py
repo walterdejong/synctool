@@ -604,6 +604,7 @@ def get_options():
     opt_overlay = False
     opt_purge = False
     opt_fix = False
+    opt_group = False
 
     PASS_ARGS = []
     MASTER_OPTS = [ sys.argv[0] ]
@@ -656,6 +657,7 @@ def get_options():
 
         if opt in ('-g', '--group'):
             NODESET.add_group(arg)
+            opt_group = True
             continue
 
         if opt in ('-x', '--exclude'):
@@ -788,6 +790,12 @@ def get_options():
             print ('%s: option --suffix and --purge can not be combined' %
                    os.path.basename(sys.argv[0]))
             sys.exit(1)
+
+    # catch common mistake of using -g instead of -s
+    if opt_upload and opt_group:
+        print ('%s: option --upload and --group can not be combined' %
+               os.path.basename(sys.argv[0]))
+        sys.exit(1)
 
     # enable logging at the master node
     PASS_ARGS.append('--masterlog')
