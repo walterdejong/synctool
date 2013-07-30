@@ -496,8 +496,8 @@ def be_careful_with_getopt():
             sys.exit(1)
 
 
-def    option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
-    opt_upload, opt_fix):
+def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
+    opt_upload, opt_fix, opt_group):
 
     '''some combinations of command-line options don't make sense;
     alert the user and abort'''
@@ -508,6 +508,10 @@ def    option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
 
     if opt_upload and (opt_diff or opt_single or opt_reference):
         stderr("option --upload can not be combined with other actions")
+        sys.exit(1)
+
+    if opt_upload and opt_group:
+        print 'option --upload and --group can not be combined'
         sys.exit(1)
 
     if opt_diff and (opt_single or opt_reference or opt_fix):
@@ -714,13 +718,11 @@ def get_options():
             try:
                 synctool.param.NUM_PROC = int(arg)
             except ValueError:
-                print ("%s: option '%s' requires a numeric value" %
-                       (os.path.basename(sys.argv[0]), opt))
+                print "option '%s' requires a numeric value" % opt
                 sys.exit(1)
 
             if synctool.param.NUM_PROC < 1:
-                print ('%s: invalid value for numproc' %
-                       os.path.basename(sys.argv[0]))
+                print 'invalid value for numproc'
                 sys.exit(1)
 
             continue
@@ -766,36 +768,25 @@ def get_options():
 
     # do basic checks for uploading and sub options
     if opt_suffix and not opt_upload:
-        print ('%s: option --suffix must be used in conjunction with '
-               '--upload' % os.path.basename(sys.argv[0]))
+        print 'option --suffix must be used in conjunction with --upload'
         sys.exit(1)
 
     if opt_overlay and not opt_upload:
-        print ('%s: option --overlay must be used in conjunction with '
-               '--upload' % os.path.basename(sys.argv[0]))
+        print 'option --overlay must be used in conjunction with --upload'
         sys.exit(1)
 
     if opt_purge:
         if not opt_upload:
-            print ('%s: option --purge must be used in conjunction with '
-                   '--upload' % os.path.basename(sys.argv[0]))
+            print 'option --purge must be used in conjunction with --upload'
             sys.exit(1)
 
         if opt_overlay:
-            print ('%s: option --overlay and --purge can not be combined' %
-                   os.path.basename(sys.argv[0]))
+            print 'option --overlay and --purge can not be combined'
             sys.exit(1)
 
         if opt_suffix:
-            print ('%s: option --suffix and --purge can not be combined' %
-                   os.path.basename(sys.argv[0]))
+            print 'option --suffix and --purge can not be combined'
             sys.exit(1)
-
-    # catch common mistake of using -g instead of -s
-    if opt_upload and opt_group:
-        print ('%s: option --upload and --group can not be combined' %
-               os.path.basename(sys.argv[0]))
-        sys.exit(1)
 
     # enable logging at the master node
     PASS_ARGS.append('--masterlog')
@@ -805,7 +796,7 @@ def get_options():
         PASS_ARGS.extend(args)
 
     option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
-        opt_upload, opt_fix)
+        opt_upload, opt_fix, opt_group)
 
 
 def main():
