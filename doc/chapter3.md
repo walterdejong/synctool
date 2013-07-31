@@ -315,7 +315,7 @@ And the accompanying `fiction.conf._template.post` script:
     #! /bin/sh
     IPADDR=`ifconfig en0 | awk '/inet / { print $2 }'`
     export IPADDR
-    synctool-template "$1" >"$2"
+    /opt/synctool/bin/synctool-template "$1" >"$2"
 
 This example uses `ifconfig` to get the IP address of the node. You may also
 use the `ip addr` command, consult DNS or you might be able to use
