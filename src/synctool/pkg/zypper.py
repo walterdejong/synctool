@@ -59,7 +59,7 @@ class SyncPkgZypper(synctool.pkgclass.SyncPkg):
         super(SyncPkgZypper, self).upgrade()
 
         if synctool.lib.DRY_RUN:
-            cmd = 'zypper list-updates'
+            cmd = 'zypper --non-interactive list-updates'
         else:
             cmd = ('zypper --non-interactive update '
                    '--auto-agree-with-licenses')
