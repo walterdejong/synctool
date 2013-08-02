@@ -139,6 +139,7 @@ def _split_extension(filename, src_dir):
         return SyncObject(filename, name2, OV_POST), importance
 
     elif ext == '._template':
+        # FIXME allow groups on templates
         stderr('warning: template %s can not have a group extension' %
                prettypath(os.path.join(src_dir, filename)))
         return None, -1
@@ -232,6 +233,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
             continue
 
         if obj.ov_type == OV_TEMPLATE_POST:
+            # FIXME how about ... register post script and continue?
             # it's a template generator. So generate it in the callback
             ok, _ = callback(obj, post_dict, dir_changed)
             if not ok:
@@ -299,6 +301,8 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
         if not ok:
             # quick exit
             return False
+
+        # FIXME add code for when obj is OV_TEMPLATE
 
         dir_changed |= updated
 

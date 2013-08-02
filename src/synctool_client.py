@@ -37,6 +37,8 @@ DIR_CHANGED = None
 
 
 def generate_template(obj):
+    # FIXME obj used to be a template post script itself;
+    # FIXME now let obj be the template, and pass post_dict as 2nd argument
     '''run template .post script, generating a new file
     The script will run in the source dir (overlay tree) and
     it will run even in dry-run mode
@@ -51,11 +53,15 @@ def generate_template(obj):
 
     verbose('generating template %s' % obj.print_src())
 
+    # FIXME change this filenaming business
     src_dir = os.path.dirname(obj.src_path)
     newname = os.path.basename(obj.dest_path)
     template = newname + '._template'
     # add most important extension
     newname += '._' + synctool.param.NODENAME
+
+    # FIXME if file exists, do not overwrite
+    # FIXME if file exists, issue a verbose message
 
     # chdir to source directory
     verbose('  os.chdir(%s)' % src_dir)
@@ -315,6 +321,7 @@ def _overlay_callback(obj, post_dict, dir_changed=False):
     '''compare files and run post-script if needed'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
+        # FIXME pass post_dict, too
         return generate_template(obj), False
 
     verbose('checking %s' % obj.print_src())
