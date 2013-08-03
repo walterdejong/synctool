@@ -139,10 +139,7 @@ def _split_extension(filename, src_dir):
         return SyncObject(filename, name2, OV_POST), importance
 
     elif ext == '._template':
-        # FIXME allow groups on templates
-        stderr('warning: template %s can not have a group extension' %
-               prettypath(os.path.join(src_dir, filename)))
-        return None, -1
+        return SyncObject(filename, name2, OV_TEMPLATE), importance
 
     return SyncObject(filename, name), importance
 
