@@ -51,7 +51,6 @@ def generate_template(obj, post_dict):
 
     verbose('generating template %s' % obj.print_src())
 
-    # FIXME change this filenaming business
     src_dir = os.path.dirname(obj.src_path)
     newname = os.path.join(src_dir, os.path.basename(obj.dest_path))
     template = newname + '._template'
