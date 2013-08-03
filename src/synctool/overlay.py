@@ -130,7 +130,7 @@ def _split_extension(filename, src_dir):
     (name2, ext) = os.path.splitext(name)
 
     if ext == '.post':
-        (name3, ext) = os.path.splitext(name2)
+        _, ext = os.path.splitext(name2)
         if ext == '._template':
             # it's a group-specific template generator
             return (SyncObject(filename, name, OV_TEMPLATE_POST), importance)
