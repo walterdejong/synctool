@@ -225,8 +225,19 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
     for obj, importance in arr:
         obj.make(src_dir, dest_dir)
 
-        if obj.ov_type == OV_POST or obj.ov_type == OV_TEMPLATE_POST:
+        if obj.ov_type == OV_POST:
             # register the .post script and continue
+            if post_dict.has_key(obj.dest_path):
+                continue
+
+            post_dict[obj.dest_path] = obj.src_path
+            continue
+
+        if obj.ov_type == OV_TEMPLATE_POST:
+            # register the template generator and continue
+            # put the dest for the template in the overlay (source) dir
+            obj.dest_path = os.path.join(os.path.dirname(obj.src_path),
+                                         os.path.basename(obj.dest_path))
             if post_dict.has_key(obj.dest_path):
                 continue
 
