@@ -322,8 +322,7 @@ def purge_files():
 def _overlay_callback(obj, post_dict, dir_changed=False):
     '''compare files and run post-script if needed'''
 
-    if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
-        # FIXME pass post_dict, too
+    if obj.ov_type == synctool.overlay.OV_TEMPLATE:
         return generate_template(obj), False
 
     verbose('checking %s' % obj.print_src())
