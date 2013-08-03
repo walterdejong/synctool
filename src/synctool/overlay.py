@@ -95,7 +95,7 @@ def _split_extension(filename, src_dir):
         (name2, ext) = os.path.splitext(name)
         if ext == '._template':
             # it's a generic template generator
-            return (SyncObject(filename, name2, OV_TEMPLATE_POST), GROUP_ALL)
+            return (SyncObject(filename, name, OV_TEMPLATE_POST), GROUP_ALL)
 
         # it's a generic .post script
         return SyncObject(filename, name, OV_POST), GROUP_ALL
@@ -130,10 +130,10 @@ def _split_extension(filename, src_dir):
     (name2, ext) = os.path.splitext(name)
 
     if ext == '.post':
-        (name3, ext) = os.path.splitext(name)
+        (name3, ext) = os.path.splitext(name2)
         if ext == '._template':
             # it's a group-specific template generator
-            return (SyncObject(filename, name3, OV_TEMPLATE_POST), importance)
+            return (SyncObject(filename, name, OV_TEMPLATE_POST), importance)
 
         # register group-specific .post script
         return SyncObject(filename, name2, OV_POST), importance
