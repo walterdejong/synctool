@@ -51,17 +51,23 @@ def generate_template(obj, post_dict):
 
     verbose('generating template %s' % obj.print_src())
 
-    # FIXME post_dict should have template source path as key
-
     # FIXME change this filenaming business
     src_dir = os.path.dirname(obj.src_path)
-    newname = os.path.basename(obj.dest_path)
+    newname = os.path.join(src_dir, os.path.basename(obj.dest_path))
     template = newname + '._template'
     # add most important extension
     newname += '._' + synctool.param.NODENAME
 
-    # FIXME if file exists, do not overwrite
-    # FIXME if file exists, issue a verbose message
+    # get the .post script for the template file
+    if not post_dict.has_key(template):
+        verbose('template generator for %s not found' % key)
+        return False
+
+    generator = post_dict[template]
+
+    if os.path.exists(newname):
+        verbose('template destination %s already exists' % newname)
+        return False
 
     # chdir to source directory
     verbose('  os.chdir(%s)' % src_dir)
@@ -81,7 +87,7 @@ def generate_template(obj, post_dict):
 
     # run the script
     # pass template and newname as "$1" and "$2"
-    cmd_arr = [obj.src_path, template, newname]
+    cmd_arr = [generator, obj.src_path, newname]
     verbose('  os.system(%s, %s, %s)' % (prettypath(cmd_arr[0]),
             cmd_arr[1], cmd_arr[2]))
     unix_out('# run command %s' % os.path.basename(cmd_arr[0]))
