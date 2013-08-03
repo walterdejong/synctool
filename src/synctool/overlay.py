@@ -214,11 +214,6 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
         if not obj:
             continue
 
-        if obj.ov_type == OV_TEMPLATE:
-            # completely ignore templates
-            verbose('skimming over template %s' % obj.print_src())
-            continue
-
         arr.append((obj, importance))
 
     # sort with .post scripts first
