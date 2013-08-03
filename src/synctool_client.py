@@ -60,7 +60,7 @@ def generate_template(obj, post_dict):
 
     # get the .post script for the template file
     if not post_dict.has_key(template):
-        verbose('template generator for %s not found' % key)
+        verbose('template generator for %s not found' % obj.src_path)
         return False
 
     generator = post_dict[template]
