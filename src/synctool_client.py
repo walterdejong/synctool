@@ -69,11 +69,12 @@ def generate_template(obj, post_dict):
     generator = post_dict[template]
 
     # chdir to source directory
+    # Note: the change dir is not really needed
+    # but the documentation promises that .post scripts run in
+    # the dir where the new file will be put
     verbose('  os.chdir(%s)' % src_dir)
     unix_out('cd %s' % src_dir)
-
     cwd = os.getcwd()
-
     try:
         os.chdir(src_dir)
     except OSError as err:
