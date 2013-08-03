@@ -172,6 +172,15 @@ def _sort_by_importance_post_first(item1, item2):
     if obj2.ov_type == OV_TEMPLATE_POST:
         return 1
 
+    if obj1.ov_type == OV_TEMPLATE:
+        if obj2.ov_type == OV_TEMPLATE:
+            return cmp(importance1, importance2)
+
+        return -1
+
+    if obj2.ov_type == OV_TEMPLATE:
+        return 1
+
     return cmp(importance1, importance2)
 
 
