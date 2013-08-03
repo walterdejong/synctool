@@ -221,27 +221,13 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
     for obj, importance in arr:
         obj.make(src_dir, dest_dir)
 
-        if obj.ov_type == OV_POST:
+        if obj.ov_type == OV_POST or obj.ov_type == OV_TEMPLATE_POST:
             # register the .post script and continue
             if post_dict.has_key(obj.dest_path):
                 continue
 
             post_dict[obj.dest_path] = obj.src_path
             continue
-
-        if obj.ov_type == OV_TEMPLATE_POST:
-            # FIXME how about ... register post script and continue?
-            # it's a template generator. So generate it in the callback
-            ok, _ = callback(obj, post_dict, dir_changed)
-            if not ok:
-                # either failed or skipped
-                continue
-
-            # we generated a new file, represented by obj
-            # so continue
-            obj.ov_type = OV_REG
-            importance = 0
-            obj.make(src_dir, dest_dir)
 
         if obj.src_stat.is_dir():
             if synctool.param.IGNORE_DOTDIRS:
