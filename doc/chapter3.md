@@ -346,6 +346,9 @@ Now, when you want to change the configuration, edit the template file.
 synctool will fill in the template and see the difference with the target
 file.
 
+Template files and template post scripts can have group extensions to
+select different templates for certain groups of nodes.
+
 If you want to automatically reload or restart a service after updating
 `fiction.conf`, you'll also have to implement a regular `.post` script for
 that: `fiction.conf.post`.
