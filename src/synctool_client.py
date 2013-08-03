@@ -240,6 +240,7 @@ def purge_files():
         src += os.sep
         dest += os.sep
 
+        # FIXME take stuff out of the loop
         cmd_arr = cmd_rsync[:]
 
         # opts is just for the 'visual aspect';
@@ -266,6 +267,7 @@ def purge_files():
         cmd_arr.append(src)
         cmd_arr.append(dest)
 
+        # FIXME move this code in a separate function
         verbose('running rsync%s%s %s' % (opts, prettypath(src), dest))
         unix_out(' '.join(cmd_arr))
 
