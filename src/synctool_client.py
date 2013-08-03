@@ -58,16 +58,16 @@ def generate_template(obj, post_dict):
     # add most important extension
     newname += '._' + synctool.param.NODENAME
 
+    if os.path.exists(newname):
+        verbose('template destination %s already exists' % newname)
+        return True
+
     # get the .post script for the template file
     if not post_dict.has_key(template):
         verbose('template generator for %s not found' % obj.src_path)
         return False
 
     generator = post_dict[template]
-
-    if os.path.exists(newname):
-        verbose('template destination %s already exists' % newname)
-        return True
 
     # chdir to source directory
     verbose('  os.chdir(%s)' % src_dir)
