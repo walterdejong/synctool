@@ -67,7 +67,7 @@ def generate_template(obj, post_dict):
 
     if os.path.exists(newname):
         verbose('template destination %s already exists' % newname)
-        return False
+        return True
 
     # chdir to source directory
     verbose('  os.chdir(%s)' % src_dir)
