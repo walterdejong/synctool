@@ -36,7 +36,7 @@ SINGLE_FILES = []
 DIR_CHANGED = None
 
 
-def generate_template(obj):
+def generate_template(obj, post_dict):
     '''run template .post script, generating a new file
     The script will run in the source dir (overlay tree) and
     it will run even in dry-run mode
@@ -52,17 +52,29 @@ def generate_template(obj):
     verbose('generating template %s' % obj.print_src())
 
     src_dir = os.path.dirname(obj.src_path)
-    newname = os.path.basename(obj.dest_path)
+    newname = os.path.join(src_dir, os.path.basename(obj.dest_path))
     template = newname + '._template'
     # add most important extension
     newname += '._' + synctool.param.NODENAME
 
+    if os.path.exists(newname):
+        verbose('template destination %s already exists' % newname)
+        return True
+
+    # get the .post script for the template file
+    if not post_dict.has_key(template):
+        verbose('template generator for %s not found' % obj.src_path)
+        return False
+
+    generator = post_dict[template]
+
     # chdir to source directory
+    # Note: the change dir is not really needed
+    # but the documentation promises that .post scripts run in
+    # the dir where the new file will be put
     verbose('  os.chdir(%s)' % src_dir)
     unix_out('cd %s' % src_dir)
-
     cwd = os.getcwd()
-
     try:
         os.chdir(src_dir)
     except OSError as err:
@@ -75,7 +87,7 @@ def generate_template(obj):
 
     # run the script
     # pass template and newname as "$1" and "$2"
-    cmd_arr = [obj.src_path, template, newname]
+    cmd_arr = [generator, obj.src_path, newname]
     verbose('  os.system(%s, %s, %s)' % (prettypath(cmd_arr[0]),
             cmd_arr[1], cmd_arr[2]))
     unix_out('# run command %s' % os.path.basename(cmd_arr[0]))
@@ -316,8 +328,8 @@ def purge_files():
 def _overlay_callback(obj, post_dict, dir_changed=False):
     '''compare files and run post-script if needed'''
 
-    if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
-        return generate_template(obj), False
+    if obj.ov_type == synctool.overlay.OV_TEMPLATE:
+        return generate_template(obj, post_dict), False
 
     verbose('checking %s' % obj.print_src())
 
@@ -346,6 +358,9 @@ def overlay_files():
 
 def _delete_callback(obj, post_dict, dir_changed=False):
     '''delete files'''
+
+    if obj.ov_type == synctool.overlay.OV_TEMPLATE:
+        return generate_template(obj, post_dict), False
 
     # don't delete directories
     if obj.src_stat.is_dir():
@@ -381,8 +396,8 @@ def delete_files():
 def _erase_saved_callback(obj, post_dict, dir_changed=False):
     '''erase *.saved backup files'''
 
-    if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
-        return generate_template(obj), False
+    if obj.ov_type == synctool.overlay.OV_TEMPLATE:
+        return generate_template(obj, post_dict), False
 
     if obj.src_stat.is_dir():
         # run .post script on changed directory
@@ -459,8 +474,8 @@ def _match_single(path):
 def _single_overlay_callback(obj, post_dict, updated=False):
     '''do overlay function for single files'''
 
-    if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
-        return generate_template(obj), False
+    if obj.ov_type == synctool.overlay.OV_TEMPLATE:
+        return generate_template(obj, post_dict), False
 
     go_on = True
 
@@ -487,8 +502,8 @@ def _single_overlay_callback(obj, post_dict, updated=False):
 def _single_delete_callback(obj, post_dict, updated=False):
     '''do delete function for single files'''
 
-    if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
-        return generate_template(obj), False
+    if obj.ov_type == synctool.overlay.OV_TEMPLATE:
+        return generate_template(obj, post_dict), False
 
     go_on = True
 
@@ -548,8 +563,8 @@ def single_files():
 def _single_erase_saved_callback(obj, post_dict, updated=False):
     '''do 'erase saved' function for single files'''
 
-    if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
-        return generate_template(obj), False
+    if obj.ov_type == synctool.overlay.OV_TEMPLATE:
+        return generate_template(obj, post_dict), False
 
     go_on = True
 
@@ -617,9 +632,9 @@ def single_erase_saved():
 def _reference_callback(obj, post_dict, dir_changed=False):
     '''callback for reference_files()'''
 
-    if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
+    if obj.ov_type == synctool.overlay.OV_TEMPLATE:
         if obj.dest_path in SINGLE_FILES:
-            # this template .post script generates the file
+            # this template generates the file
             SINGLE_FILES.remove(obj.dest_path)
             print obj.print_src()
 
@@ -662,8 +677,8 @@ def _exec_diff(src, dest):
 def _diff_callback(obj, post_dict, dir_changed=False):
     '''callback function for doing a diff on overlay/ files'''
 
-    if obj.ov_type == synctool.overlay.OV_TEMPLATE_POST:
-        return generate_template(obj), False
+    if obj.ov_type == synctool.overlay.OV_TEMPLATE:
+        return generate_template(obj, post_dict), False
 
     if _match_single(obj.dest_path):
         _exec_diff(obj.src_path, obj.dest_path)

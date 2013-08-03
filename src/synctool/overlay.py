@@ -95,7 +95,7 @@ def _split_extension(filename, src_dir):
         (name2, ext) = os.path.splitext(name)
         if ext == '._template':
             # it's a generic template generator
-            return (SyncObject(filename, name2, OV_TEMPLATE_POST), GROUP_ALL)
+            return (SyncObject(filename, name, OV_TEMPLATE_POST), GROUP_ALL)
 
         # it's a generic .post script
         return SyncObject(filename, name, OV_POST), GROUP_ALL
@@ -130,18 +130,16 @@ def _split_extension(filename, src_dir):
     (name2, ext) = os.path.splitext(name)
 
     if ext == '.post':
-        (name3, ext) = os.path.splitext(name)
+        _, ext = os.path.splitext(name2)
         if ext == '._template':
             # it's a group-specific template generator
-            return (SyncObject(filename, name3, OV_TEMPLATE_POST), importance)
+            return (SyncObject(filename, name2, OV_TEMPLATE_POST), importance)
 
         # register group-specific .post script
         return SyncObject(filename, name2, OV_POST), importance
 
     elif ext == '._template':
-        stderr('warning: template %s can not have a group extension' %
-               prettypath(os.path.join(src_dir, filename)))
-        return None, -1
+        return SyncObject(filename, name2, OV_TEMPLATE), importance
 
     return SyncObject(filename, name), importance
 
@@ -172,6 +170,15 @@ def _sort_by_importance_post_first(item1, item2):
         return -1
 
     if obj2.ov_type == OV_TEMPLATE_POST:
+        return 1
+
+    if obj1.ov_type == OV_TEMPLATE:
+        if obj2.ov_type == OV_TEMPLATE:
+            return cmp(importance1, importance2)
+
+        return -1
+
+    if obj2.ov_type == OV_TEMPLATE:
         return 1
 
     return cmp(importance1, importance2)
@@ -207,11 +214,6 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
         if not obj:
             continue
 
-        if obj.ov_type == OV_TEMPLATE:
-            # completely ignore templates
-            verbose('skimming over template %s' % obj.print_src())
-            continue
-
         arr.append((obj, importance))
 
     # sort with .post scripts first
@@ -232,17 +234,15 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
             continue
 
         if obj.ov_type == OV_TEMPLATE_POST:
-            # it's a template generator. So generate it in the callback
-            ok, _ = callback(obj, post_dict, dir_changed)
-            if not ok:
-                # either failed or skipped
+            # register the template generator and continue
+            # put the dest for the template in the overlay (source) dir
+            obj.dest_path = os.path.join(os.path.dirname(obj.src_path),
+                                         os.path.basename(obj.dest_path))
+            if post_dict.has_key(obj.dest_path):
                 continue
 
-            # we generated a new file, represented by obj
-            # so continue
-            obj.ov_type = OV_REG
-            importance = 0
-            obj.make(src_dir, dest_dir)
+            post_dict[obj.dest_path] = obj.src_path
+            continue
 
         if obj.src_stat.is_dir():
             if synctool.param.IGNORE_DOTDIRS:
@@ -299,6 +299,17 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
         if not ok:
             # quick exit
             return False
+
+        if obj.ov_type == OV_TEMPLATE:
+            # a new file was generated
+            # call callback on the generated file
+            obj.ov_type = OV_REG
+            obj.make(src_dir, dest_dir)
+
+            ok, updated = callback(obj, post_dict)
+            if not ok:
+                # quick exit
+                return False
 
         dir_changed |= updated
 
