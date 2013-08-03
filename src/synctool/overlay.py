@@ -294,7 +294,16 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
             # quick exit
             return False
 
-        # FIXME add code for when obj is OV_TEMPLATE
+        if obj.ov_type == OV_TEMPLATE:
+            # a new file was generated
+            # call callback on the generated file
+            obj.ov_type = OV_REG
+            obj.make(src_dir, dest_dir)
+
+            ok, updated = callback(obj, post_dict)
+            if not ok:
+                # quick exit
+                return False
 
         dir_changed |= updated
 
