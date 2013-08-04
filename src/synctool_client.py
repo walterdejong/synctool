@@ -238,6 +238,29 @@ def purge_files():
                 # do not recurse into this dir any deeper
                 del subdirs[:]
 
+    cmd_rsync, opts_string = _make_rsync_purge_cmd()
+
+    # call rsync to copy the purge dirs
+    for src, dest in paths:
+        # trailing slash on source path is important for rsync
+        src += os.sep
+        dest += os.sep
+
+        cmd_arr = cmd_rsync[:]
+        cmd_arr.append(src)
+        cmd_arr.append(dest)
+
+        verbose('running rsync%s%s %s' % (opts_string, prettypath(src), dest))
+        unix_out(' '.join(cmd_arr))
+        _run_rsync_purge(cmd_arr)
+
+
+def _make_rsync_purge_cmd():
+    '''make command array for running rsync purge
+    Returns pair: cmd_arr, options_string
+    cmd_arr is the rsync command + arguments
+    options_string is what options you show in verbose mode'''
+
     # make rsync command array with command line arguments
     cmd_rsync = shlex.split(synctool.param.RSYNC_CMD)
     # opts is just for the 'visual aspect';
@@ -259,22 +282,13 @@ def purge_files():
     if not '-i' in cmd_rsync and not '--itemize-changes' in cmd_rsync:
         cmd_rsync.append('-i')
 
-    # show the -i option (in verbose mode)
-    opts += '-i '
+    # it's purge; must have --delete
+    if not '--delete' in cmd_rsync:
+        cmd_rsync.append('--delete')
 
-    # call rsync to copy the purge dirs
-    for src, dest in paths:
-        # trailing slash on source path is important for rsync
-        src += os.sep
-        dest += os.sep
-
-        cmd_arr = cmd_rsync[:]
-        cmd_arr.append(src)
-        cmd_arr.append(dest)
-
-        verbose('running rsync%s%s %s' % (opts, prettypath(src), dest))
-        unix_out(' '.join(cmd_arr))
-        _run_rsync_purge(cmd_arr)
+    # show the -i and --delete option (in verbose mode)
+    opts += '-i --delete '
+    return cmd_rsync, opts
 
 
 def _run_rsync_purge(cmd_arr):
