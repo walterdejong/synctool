@@ -242,6 +242,7 @@ def purge_files():
     cmd_rsync = shlex.split(synctool.param.RSYNC_CMD)
     # opts is just for the 'visual aspect';
     # it is displayed when --verbose is active
+    # They aren't all options, just a couple I want to show
     opts = ' '
     if synctool.lib.DRY_RUN:
         # add rsync option -n (dry run)
@@ -271,56 +272,62 @@ def purge_files():
         cmd_arr.append(src)
         cmd_arr.append(dest)
 
-        # FIXME move this code in a separate function
         verbose('running rsync%s%s %s' % (opts, prettypath(src), dest))
         unix_out(' '.join(cmd_arr))
+        _run_rsync_purge(cmd_arr)
 
+
+def _run_rsync_purge(cmd_arr):
+    '''run rsync for purging
+    cmd_arr holds already prepared rsync command + arguments
+    Returns: None'''
+
+    sys.stdout.flush()
+    sys.stderr.flush()
+    try:
         # run rsync
-        sys.stdout.flush()
-        sys.stderr.flush()
+        proc = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
+                                stdout=subprocess.PIPE)
+    except OSError as err:
+        stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
+        return
 
-        try:
-            proc = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
-                                    stdout=subprocess.PIPE)
-        except OSError as err:
-            stderr('failed to run command %s: %s' % (cmd_arr[0],
-                                                     err.strerror))
-            return
+    out, _ = proc.communicate()
 
-        out, _ = proc.communicate()
+    if synctool.lib.VERBOSE:
+        print out
 
-        if synctool.lib.VERBOSE:
-            print out
+    out = out.split('\n')
+    for line in out:
+        line = line.strip()
+        if not line:
+            continue
 
-        out = out.split('\n')
-        for line in out:
-            line = line.strip()
-            if not line:
-                continue
+        code = line[:12]
+        filename = line[12:]
 
-            code = line[:12]
-            filename = line[12:]
+        if code[:6] == 'ERROR:' or code[:8] == 'WARNING:':
+            # output rsync errors and warnings
+            stderr(line)
+            continue
 
-            if code[:6] == 'ERROR:' or code[:8] == 'WARNING:':
-                # output rsync errors and warnings
-                stderr(line)
-                continue
+        if filename == './':
+            # rsync has a habit of displaying ugly "./" path
+            # cmd_arr[-1] is the destination path
+            path = cmd_arr[-1]
+        else:
+            # cmd_arr[-1] is the destination path
+            path = os.path.join(cmd_arr[-1], filename)
 
-            if filename == './':
-                # rsync has a habit of displaying ugly "./" path
-                path = dest
-            else:
-                path = os.path.join(dest, filename)
+        if code[0] == '*':
+            # rsync has a message for us
+            # most likely "deleting"
+            msg = code[1:]
+            msg = msg.strip()
+        else:
+            msg = 'updating'
 
-            if code[0] == '*':
-                # rsync has a message for us
-                # most likely "deleting"
-                msg = code[1:]
-                msg = msg.strip()
-            else:
-                msg = 'updating'
-
-            stdout('%s %s (purge)' % (msg, prettypath(path)))
+        stdout('%s %s (purge)' % (msg, prettypath(path)))
 
 
 def _overlay_callback(obj, post_dict, dir_changed=False):
