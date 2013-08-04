@@ -238,7 +238,28 @@ def purge_files():
                 # do not recurse into this dir any deeper
                 del subdirs[:]
 
+    # make rsync command array with command line arguments
     cmd_rsync = shlex.split(synctool.param.RSYNC_CMD)
+    # opts is just for the 'visual aspect';
+    # it is displayed when --verbose is active
+    opts = ' '
+    if synctool.lib.DRY_RUN:
+        # add rsync option -n (dry run)
+        cmd_rsync.append('-n')
+        opts += '-n '
+
+    # remove certain options from rsync
+    for opt in ('-q', '--quiet', '-v', '--verbose', '--human-readable',
+                '--progress', '--daemon'):
+        if opt in cmd_rsync:
+            cmd_rsync.remove(opt)
+
+    # add rsync option -i : itemized output
+    if not '-i' in cmd_rsync and not '--itemize-changes' in cmd_rsync:
+        cmd_rsync.append('-i')
+
+    # show the -i option (in verbose mode)
+    opts += '-i '
 
     # call rsync to copy the purge dirs
     for src, dest in paths:
@@ -246,30 +267,7 @@ def purge_files():
         src += os.sep
         dest += os.sep
 
-        # FIXME take stuff out of the loop
         cmd_arr = cmd_rsync[:]
-
-        # opts is just for the 'visual aspect';
-        # it is displayed when --verbose is active
-        opts = ' '
-        if synctool.lib.DRY_RUN:
-            # add rsync option -n (dry run)
-            cmd_arr.append('-n')
-            opts += '-n '
-
-        # remove certain options from rsync
-        for opt in ('-q', '--quiet', '-v', '--verbose', '--human-readable',
-                    '--progress', '--daemon'):
-            if opt in cmd_arr:
-                cmd_arr.remove(opt)
-
-        # add rsync option -i : itemized output
-        if not '-i' in cmd_arr and not '--itemize-changes' in cmd_arr:
-            cmd_arr.append('-i')
-
-        # show the -i option (in verbose mode)
-        opts += '-i '
-
         cmd_arr.append(src)
         cmd_arr.append(dest)
 
