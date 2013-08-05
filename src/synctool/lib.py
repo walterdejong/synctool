@@ -21,6 +21,7 @@ import multiprocessing
 import Queue
 
 import synctool.param
+from synctool.param import OVERLAY_LEN, DELETE_LEN, PURGE_LEN, VAR_LEN
 
 # options (mostly) set by command-line arguments
 DRY_RUN = True
@@ -147,17 +148,14 @@ def prettypath(path):
     if synctool.param.TERSE:
         return terse_path(path)
 
-    if path[:synctool.param.OVERLAY_LEN] == (synctool.param.OVERLAY_DIR +
-                                             os.sep):
-        return os.path.join('$overlay', path[synctool.param.OVERLAY_LEN:])
+    if path[:OVERLAY_LEN] == (synctool.param.OVERLAY_DIR + os.sep):
+        return os.path.join('$overlay', path[OVERLAY_LEN:])
 
-    if path[:synctool.param.DELETE_LEN] == (synctool.param.DELETE_DIR +
-                                            os.sep):
-        return os.path.join('$delete', path[synctool.param.DELETE_LEN:])
+    if path[:DELETE_LEN] == (synctool.param.DELETE_DIR + os.sep):
+        return os.path.join('$delete', path[DELETE_LEN:])
 
-    if path[:synctool.param.PURGE_LEN] == (synctool.param.PURGE_DIR +
-                                           os.sep):
-        return os.path.join('$purge', path[synctool.param.PURGE_LEN:])
+    if path[:PURGE_LEN] == (synctool.param.PURGE_DIR + os.sep):
+        return os.path.join('$purge', path[PURGE_LEN:])
 
     return path
 
@@ -173,9 +171,8 @@ def terse_path(path, maxlen = 55):
     # because this function doesn't know whether it is working with
     # a source or a destination path and it treats them both in the same way
 
-    if path[:synctool.param.VAR_LEN] == (synctool.param.VAR_DIR +
-                                         os.sep):
-        path = os.sep + os.sep + path[synctool.param.VAR_LEN:]
+    if path[:VAR_LEN] == (synctool.param.VAR_DIR + os.sep):
+        path = os.sep + os.sep + path[VAR_LEN:]
 
     if len(path) > maxlen:
         arr = path.split(os.sep)
