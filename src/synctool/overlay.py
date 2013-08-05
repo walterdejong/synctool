@@ -190,7 +190,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
     duplicates is a set that keeps us from selecting any duplicate matches
     post_dict holds .post scripts with destination as key'''
 
-#   verbose('_walk_subtree(%s)' % src_dir)
+#    verbose('_walk_subtree(%s)' % src_dir)
 
     arr = []
     for entry in os.listdir(src_dir):
