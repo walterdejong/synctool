@@ -40,14 +40,14 @@ def generate_template(obj, post_dict):
     '''run template .post script, generating a new file
     The script will run in the source dir (overlay tree) and
     it will run even in dry-run mode
-    Returns: True or False on error or skipped'''
+    Returns: True or False on error'''
 
     if synctool.lib.NO_POST:
         return False
 
     if len(SINGLE_FILES) > 0 and obj.dest_path not in SINGLE_FILES:
         verbose('skipping template generation of %s' % obj.src_path)
-        return False
+        return True
 
     verbose('generating template %s' % obj.print_src())
 
@@ -650,10 +650,12 @@ def _reference_callback(obj, post_dict, dir_changed=False):
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
         if obj.dest_path in SINGLE_FILES:
             # this template generates the file
-            SINGLE_FILES.remove(obj.dest_path)
             print obj.print_src()
+            SINGLE_FILES.remove(obj.dest_path)
+            if not SINGLE_FILES:
+                return False, False
 
-        return False, False
+        return True, False
 
     if _match_single(obj.dest_path):
         print obj.print_src()
