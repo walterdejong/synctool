@@ -77,12 +77,12 @@ class UploadFile(object):
 
             if not self.suffix:
                 self.repos_path = os.path.join(synctool.param.OVERLAY_DIR,
-                                                overlay_dir, fn)
+                                               overlay_dir, fn)
                 return
 
             self.repos_path = os.path.join(synctool.param.OVERLAY_DIR,
-                                            overlay_dir,
-                                            fn + '._' + self.suffix)
+                                           overlay_dir,
+                                           fn + '._' + self.suffix)
             return
 
         if self.suffix:
@@ -111,7 +111,7 @@ class UploadFile(object):
             self.filename = self.filename[:-1]
 
         self.repos_path = (os.path.join(synctool.param.PURGE_DIR,
-                            self.purge) + os.path.dirname(self.filename))
+                           self.purge) + os.path.dirname(self.filename))
 
 
 def run_remote_synctool(address_list):
@@ -134,7 +134,8 @@ def worker_synctool(addr):
     if not (OPT_SKIP_RSYNC or nodename in synctool.param.NO_RSYNC):
         verbose('running rsync $SYNCTOOL/ to node %s' % nodename)
         unix_out('%s %s %s:%s/' % (synctool.param.RSYNC_CMD,
-            synctool.param.ROOTDIR, addr, synctool.param.ROOTDIR))
+                                   synctool.param.ROOTDIR, addr,
+                                   synctool.param.ROOTDIR))
 
         # make rsync filter to include the correct dirs
         tmp_filename = rsync_include_filter(nodename)
@@ -796,7 +797,7 @@ def get_options():
         PASS_ARGS.extend(args)
 
     option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
-        opt_upload, opt_fix, opt_group)
+                        opt_upload, opt_fix, opt_group)
 
 
 def main():
