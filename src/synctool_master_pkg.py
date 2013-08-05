@@ -155,7 +155,7 @@ def usage():
     print '  -h, --help                     Display this information'
     print '  -c, --conf=FILE                Use this config file'
     print ('                                 (default: %s)' %
-        synctool.param.DEFAULT_CONF)
+           synctool.param.DEFAULT_CONF)
 
     print '''  -n, --node=LIST                Execute only on these nodes
   -g, --group=LIST               Execute only on these groups of nodes
@@ -303,7 +303,7 @@ def get_options():
         if opt in ('-m', '--manager'):
             if not arg in synctool.param.KNOWN_PACKAGE_MANAGERS:
                 stderr("error: unknown or unsupported package manager '%s'" %
-                    arg)
+                       arg)
                 sys.exit(1)
 
             synctool.param.PACKAGE_MANAGER = arg
@@ -316,12 +316,12 @@ def get_options():
                 synctool.param.NUM_PROC = int(arg)
             except ValueError:
                 print ("%s: option '%s' requires a numeric value" %
-                    (os.path.basename(sys.argv[0]), opt))
+                       (os.path.basename(sys.argv[0]), opt))
                 sys.exit(1)
 
             if synctool.param.NUM_PROC < 1:
                 print ('%s: invalid value for numproc' %
-                    os.path.basename(sys.argv[0]))
+                       os.path.basename(sys.argv[0]))
                 sys.exit(1)
 
             continue
@@ -331,12 +331,12 @@ def get_options():
                 synctool.param.SLEEP_TIME = int(arg)
             except ValueError:
                 print ("%s: option '%s' requires a numeric value" %
-                    (os.path.basename(sys.argv[0]), opt))
+                       (os.path.basename(sys.argv[0]), opt))
                 sys.exit(1)
 
             if synctool.param.SLEEP_TIME < 0:
                 print ('%s: invalid value for sleep time' %
-                    os.path.basename(sys.argv[0]))
+                       os.path.basename(sys.argv[0]))
                 sys.exit(1)
 
             if not synctool.param.SLEEP_TIME:
