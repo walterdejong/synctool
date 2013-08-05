@@ -185,7 +185,7 @@ def _sort_by_importance_post_first(item1, item2):
     return cmp(importance1, importance2)
 
 
-def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
+def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback, *args):
     '''walk subtree under overlay/group/
     duplicates is a set that keeps us from selecting any duplicate matches
     post_dict holds .post scripts with destination as key'''
@@ -258,7 +258,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
                 subdir_post_dict[obj.dest_path] = post_dict[obj.dest_path]
 
             if not _walk_subtree(obj.src_path, obj.dest_path, duplicates,
-                                 subdir_post_dict, callback):
+                                 subdir_post_dict, callback, *args):
                 # quick exit
                 return False
 
@@ -269,7 +269,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
             duplicates.add(obj.dest_path)
 
             # run callback on the directory itself
-            ok, _ = callback(obj, post_dict, dir_changed)
+            ok, _ = callback(obj, post_dict, dir_changed, *args)
             if not ok:
                 # quick exit
                 return False
@@ -296,7 +296,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
 
         duplicates.add(obj.dest_path)
 
-        ok, updated = callback(obj, post_dict)
+        ok, updated = callback(obj, post_dict, False, *args)
         if not ok:
             # quick exit
             return False
@@ -307,7 +307,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
             obj.ov_type = OV_REG
             obj.make(src_dir, dest_dir)
 
-            ok, updated = callback(obj, post_dict)
+            ok, updated = callback(obj, post_dict, False, *args)
             if not ok:
                 # quick exit
                 return False
@@ -317,7 +317,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback):
     return True
 
 
-def visit(overlay, callback):
+def visit(overlay, callback, *args):
     '''visit all entries in the overlay tree
     overlay is either synctool.param.OVERLAY_DIR or synctool.param.DELETE_DIR
     callback will called with arguments: (SyncObject, post_dict)
@@ -326,7 +326,7 @@ def visit(overlay, callback):
     duplicates = set()
 
     for d in _toplevel(overlay):
-        if not _walk_subtree(d, os.sep, duplicates, {}, callback):
+        if not _walk_subtree(d, os.sep, duplicates, {}, callback, *args):
             # quick exit
             break
 
