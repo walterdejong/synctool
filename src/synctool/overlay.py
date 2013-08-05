@@ -43,9 +43,6 @@ import synctool.object
 from synctool.object import SyncObject
 import synctool.param
 
-# last index of MY_GROUPS
-GROUP_ALL = 1000
-
 # const enum object types
 OV_REG = 0
 OV_POST = 1
@@ -80,35 +77,39 @@ def _toplevel(overlay):
     return [x[0] for x in arr]
 
 
+def _group_all():
+    '''Return the importance level of group 'all' '''
+    # it is the final group in MY_GROUPS
+    return len(synctool.param.MY_GROUPS) - 1
+
+
 def _split_extension(filename, src_dir):
     '''filename in the overlay tree, without leading path
     src_dir is passed for the purpose of printing error messages
-    Returns tuple: SyncObject, importance
-
-    Prereq: GROUP_ALL must be set to len(MY_GROUPS)-1'''
+    Returns tuple: SyncObject, importance'''
 
     (name, ext) = os.path.splitext(filename)
     if not ext:
-        return SyncObject(filename, name, OV_NO_EXT), GROUP_ALL
+        return SyncObject(filename, name, OV_NO_EXT), _group_all()
 
     if ext == '.post':
         (name2, ext) = os.path.splitext(name)
         if ext == '._template':
             # it's a generic template generator
-            return (SyncObject(filename, name, OV_TEMPLATE_POST), GROUP_ALL)
+            return SyncObject(filename, name, OV_TEMPLATE_POST), _group_all()
 
         # it's a generic .post script
-        return SyncObject(filename, name, OV_POST), GROUP_ALL
+        return SyncObject(filename, name, OV_POST), _group_all()
 
     if ext[:2] != '._':
-        return SyncObject(filename, filename, OV_NO_EXT), GROUP_ALL
+        return SyncObject(filename, filename, OV_NO_EXT), _group_all()
 
     ext = ext[2:]
     if not ext:
-        return SyncObject(filename, filename, OV_NO_EXT), GROUP_ALL
+        return SyncObject(filename, filename, OV_NO_EXT), _group_all()
 
     if ext == 'template':
-        return SyncObject(filename, name, OV_TEMPLATE), GROUP_ALL
+        return SyncObject(filename, name, OV_TEMPLATE), _group_all()
 
     try:
         importance = synctool.param.MY_GROUPS.index(ext)
@@ -321,10 +322,6 @@ def visit(overlay, callback):
     overlay is either synctool.param.OVERLAY_DIR or synctool.param.DELETE_DIR
     callback will called with arguments: (SyncObject, post_dict)
     callback must return a two booleans: ok, updated'''
-
-    global GROUP_ALL
-
-    GROUP_ALL = len(synctool.param.MY_GROUPS) - 1
 
     duplicates = set()
 
