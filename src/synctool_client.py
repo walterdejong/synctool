@@ -118,10 +118,6 @@ def generate_template(obj, post_dict):
     if have_error:
         return False
 
-    # modify the object; set new src and dest filenames
-    # later, visit() will call obj.make(), which will make full paths
-    obj.src_path = newname
-    obj.dest_path = os.path.basename(obj.dest_path)
     return True
 
 
