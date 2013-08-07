@@ -73,7 +73,7 @@ class UploadFile(object):
                 overlay_dir = 'all'
 
             if not self.suffix and synctool.param.REQUIRE_EXTENSION:
-                self.suffix = 'all'
+                self.suffix = self.node
 
             if not self.suffix:
                 self.repos_path = os.path.join(synctool.param.OVERLAY_DIR,
