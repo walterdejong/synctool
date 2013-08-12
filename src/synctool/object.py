@@ -613,8 +613,7 @@ class SyncObject(object):
     def check(self):
         '''check differences between src and dest,
         and fix it when not a dry run
-        Return True on OK, False on update'''
-        # note: returning False will trigger .post scripts
+        Return pair: updated, metadata_updated'''
 
         # src_path is under $overlay/
         # dest_path is in the filesystem
@@ -626,7 +625,7 @@ class SyncObject(object):
             log('creating %s' % self.dest_path)
             vnode = self.vnode_obj()
             vnode.fix()
-            return False
+            return True, False
 
         src_type = self.src_stat.filetype()
         dest_type = self.dest_stat.filetype()
@@ -638,17 +637,18 @@ class SyncObject(object):
                                                self.dest_path)
             log('fix type %s' % self.dest_path)
             vnode.fix()
-            return False
+            return True, False
 
         vnode = self.vnode_obj()
         if not vnode.compare(self.src_path, self.dest_stat):
             # content is different; change the entire object
             log('updating %s' % self.dest_path)
             vnode.fix()
-            return False
+            return True, False
 
         # check ownership and permissions
         # rectify if needed
+        meta_updated = False
         if ((self.src_stat.uid != self.dest_stat.uid) or
             (self.src_stat.gid != self.dest_stat.gid)):
             stdout('%s should have owner %s.%s (%d.%d), '
@@ -668,6 +668,7 @@ class SyncObject(object):
                  self.src_stat.uid, self.src_stat.gid,
                  self.dest_path))
             vnode.set_owner()
+            meta_updated = True
 
         if self.src_stat.mode != self.dest_stat.mode:
             stdout('%s should have mode %04o, but has %04o' %
@@ -679,9 +680,10 @@ class SyncObject(object):
             log('set mode %04o %s' % (self.src_stat.mode & 07777,
                                       self.dest_path))
             vnode.set_permissions()
+            meta_updated = True
 
         # set owner/permissions do not trigger .post scripts
-        return True
+        return False, meta_updated
 
     def vnode_obj(self):
         '''create vnode object for this SyncObject'''

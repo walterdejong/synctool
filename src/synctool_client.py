@@ -344,7 +344,8 @@ def _run_rsync_purge(cmd_arr):
 
 
 def _overlay_callback(obj, post_dict, dir_changed, *args):
-    '''compare files and run post-script if needed'''
+    '''compare files and run post-script if needed
+    Returns pair: True (continue), updated (data or metadata)'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
         return generate_template(obj, post_dict), False
@@ -355,17 +356,18 @@ def _overlay_callback(obj, post_dict, dir_changed, *args):
         if not obj.check():
             dir_changed = True
 
-        if dir_changed and post_dict.has_key(obj.dest_path):
+        updated, meta_updated = obj.check()
+        if updated and post_dict.has_key(obj.dest_path):
             _run_post(obj, post_dict[obj.dest_path])
 
-        return True, dir_changed
+        return True, updated | meta_updated
 
-    if not obj.check():
-        if post_dict.has_key(obj.dest_path):
-            _run_post(obj, post_dict[obj.dest_path])
+    updated, meta_updated = obj.check()
+    if updated and post_dict.has_key(obj.dest_path):
+        _run_post(obj, post_dict[obj.dest_path])
         return True, True
 
-    return True, False
+    return True, updated | meta_updated
 
 
 def overlay_files():
