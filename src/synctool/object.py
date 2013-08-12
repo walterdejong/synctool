@@ -614,6 +614,7 @@ class SyncObject(object):
         '''check differences between src and dest,
         and fix it when not a dry run
         Return True on OK, False on update'''
+        # note: returning False will trigger .post scripts
 
         # src_path is under $overlay/
         # dest_path is in the filesystem
@@ -646,8 +647,6 @@ class SyncObject(object):
             vnode.fix()
             return False
 
-        updated = False
-
         # check ownership and permissions
         # rectify if needed
         if ((self.src_stat.uid != self.dest_stat.uid) or
@@ -669,7 +668,6 @@ class SyncObject(object):
                  self.src_stat.uid, self.src_stat.gid,
                  self.dest_path))
             vnode.set_owner()
-            updated = True
 
         if self.src_stat.mode != self.dest_stat.mode:
             stdout('%s should have mode %04o, but has %04o' %
@@ -681,11 +679,8 @@ class SyncObject(object):
             log('set mode %04o %s' % (self.src_stat.mode & 07777,
                                       self.dest_path))
             vnode.set_permissions()
-            updated = True
 
-        if updated:
-            return False
-
+        # set owner/permissions do not trigger .post scripts
         return True
 
     def vnode_obj(self):
