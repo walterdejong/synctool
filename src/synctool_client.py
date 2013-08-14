@@ -353,7 +353,8 @@ def _overlay_callback(obj, post_dict, dir_changed, *args):
     verbose('checking %s' % obj.print_src())
 
     if obj.src_stat.is_dir():
-        if not obj.check():
+        updated, meta_updated = obj.check()
+        if updated:
             dir_changed = True
 
         updated, meta_updated = obj.check()
