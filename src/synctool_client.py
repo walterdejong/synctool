@@ -354,11 +354,7 @@ def _overlay_callback(obj, post_dict, dir_changed, *args):
 
     if obj.src_stat.is_dir():
         updated, meta_updated = obj.check()
-        if updated:
-            dir_changed = True
-
-        updated, meta_updated = obj.check()
-        if updated and post_dict.has_key(obj.dest_path):
+        if (dir_changed or updated) and post_dict.has_key(obj.dest_path):
             _run_post(obj, post_dict[obj.dest_path])
 
         return True, updated | meta_updated

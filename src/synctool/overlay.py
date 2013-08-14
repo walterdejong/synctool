@@ -188,7 +188,8 @@ def _sort_by_importance_post_first(item1, item2):
 def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback, *args):
     '''walk subtree under overlay/group/
     duplicates is a set that keeps us from selecting any duplicate matches
-    post_dict holds .post scripts with destination as key'''
+    post_dict holds .post scripts with destination as key
+    Returns pair of booleans: ok, dir was updated'''
 
 #    verbose('_walk_subtree(%s)' % src_dir)
 
@@ -257,10 +258,12 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback, *args):
             if post_dict.has_key(obj.dest_path):
                 subdir_post_dict[obj.dest_path] = post_dict[obj.dest_path]
 
-            if not _walk_subtree(obj.src_path, obj.dest_path, duplicates,
-                                 subdir_post_dict, callback, *args):
+            ok, updated = _walk_subtree(obj.src_path, obj.dest_path,
+                                        duplicates, subdir_post_dict,
+                                        callback, *args)
+            if not ok:
                 # quick exit
-                return False
+                return False, dir_changed
 
             if obj.dest_path in duplicates:
                 # there already was a more important source for this dir
@@ -269,10 +272,10 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback, *args):
             duplicates.add(obj.dest_path)
 
             # run callback on the directory itself
-            ok, _ = callback(obj, post_dict, dir_changed, *args)
+            ok, _ = callback(obj, post_dict, updated, *args)
             if not ok:
                 # quick exit
-                return False
+                return False, dir_changed
 
             continue
 
@@ -299,7 +302,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback, *args):
         ok, updated = callback(obj, post_dict, False, *args)
         if not ok:
             # quick exit
-            return False
+            return False, dir_changed
 
         if obj.ov_type == OV_TEMPLATE:
             # a new file was generated
@@ -310,11 +313,11 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback, *args):
             ok, updated = callback(obj, post_dict, False, *args)
             if not ok:
                 # quick exit
-                return False
+                return False, dir_changed
 
         dir_changed |= updated
 
-    return True
+    return True, dir_changed
 
 
 def visit(overlay, callback, *args):
@@ -326,7 +329,8 @@ def visit(overlay, callback, *args):
     duplicates = set()
 
     for d in _toplevel(overlay):
-        if not _walk_subtree(d, os.sep, duplicates, {}, callback, *args):
+        ok, _ = _walk_subtree(d, os.sep, duplicates, {}, callback, *args)
+        if not ok:
             # quick exit
             break
 
