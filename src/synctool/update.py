@@ -54,7 +54,7 @@ def get_latest_version_and_checksum():
 
     except IOError as err:
         stderr('error accessing the file at %s: %s' % (VERSION_CHECKING_URL,
-                                                       err.strerror))
+                                                       err))
         return None
 
     data = web.read(1024)
@@ -149,8 +149,7 @@ def download():
         return False
 
     except IOError as err:
-        stderr('error accessing the file at %s: %s' % (download_url,
-                                                       err.strerror))
+        stderr('error accessing the file at %s: %s' % (download_url, err))
         return False
 
     # get file size: Content-Length
@@ -165,8 +164,7 @@ def download():
     try:
         f = open(download_filename, 'w+b')
     except IOError as err:
-        stderr('failed to create file %s: %s' % (download_filename,
-                                                 err.strerror))
+        stderr('failed to create file %s: %s' % (download_filename, err))
         web.close()
         return False
 
