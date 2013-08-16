@@ -64,7 +64,8 @@ def template(filename):
         try:
             f = open(filename)
         except IOError as err:
-            print "%s: failed to open '%s': %s" % (PROGNAM, filename, err)
+            print "%s: failed to open '%s': %s" % (PROGNAM, filename,
+                                                   err.strerror)
             sys.exit(-1)
 
     with f:

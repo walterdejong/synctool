@@ -195,7 +195,7 @@ class VNodeFile(VNode):
         try:
             f1 = open(src_path, 'rb')
         except IOError as err:
-            stderr('error: failed to open %s : %s' % (src_path, err))
+            stderr('error: failed to open %s : %s' % (src_path, err.strerror))
             # return True because we can't fix an error in src_path
             return True
 
@@ -206,7 +206,8 @@ class VNodeFile(VNode):
             try:
                 f2 = open(self.name, 'rb')
             except IOError as err:
-                stderr('error: failed to open %s : %s' % (self.name, err))
+                stderr('error: failed to open %s : %s' % (self.name,
+                                                          err.strerror))
                 return False
 
             with f2:
@@ -215,7 +216,8 @@ class VNodeFile(VNode):
                     try:
                         data1 = f1.read(IO_SIZE)
                     except IOError as err:
-                        stderr('error reading file %s: %s' % (src_path, err))
+                        stderr('error reading file %s: %s' % (src_path,
+                                                              err.strerror))
                         return False
 
                     if not data1:
@@ -226,7 +228,8 @@ class VNodeFile(VNode):
                     try:
                         data2 = f2.read(IO_SIZE)
                     except IOError as err:
-                        stderr('error reading file %s: %s' % (self.name, err))
+                        stderr('error reading file %s: %s' % (self.name,
+                                                              err.strerror))
                         return False
 
                     if not data2:
@@ -262,7 +265,7 @@ class VNodeFile(VNode):
                 shutil.copy(self.src_path, self.name)
             except IOError as err:
                 stderr('failed to copy %s to %s: %s' %
-                       (prettypath(self.src_path), self.name, err))
+                       (prettypath(self.src_path), self.name, err.strerror))
                 terse(synctool.lib.TERSE_FAIL, self.name)
 
 
