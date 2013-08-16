@@ -297,10 +297,10 @@ if __name__ == '__main__':
         # which is a Python bug, really
         time.sleep(0.01)
     except IOError as ioerr:
-        if ioerr.errno == errno.EPIPE:        # Broken pipe
+        if ioerr.errno == errno.EPIPE:  # Broken pipe
             pass
         else:
-            print ioerr
+            print ioerr.strerror
 
     except KeyboardInterrupt:        # user pressed Ctrl-C
         print

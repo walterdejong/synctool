@@ -277,10 +277,10 @@ if __name__ == '__main__':
     try:
         main()
     except IOError as ioerr:
-        if ioerr.errno == errno.EPIPE:        # Broken pipe
+        if ioerr.errno == errno.EPIPE:  # Broken pipe
             pass
         else:
-            print ioerr
+            print ioerr.strerror
 
     except KeyboardInterrupt:        # user pressed Ctrl-C
         print
