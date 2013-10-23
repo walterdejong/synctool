@@ -56,7 +56,8 @@ def generate_template(obj, post_dict):
     # add most important extension
     newname += '._' + synctool.param.NODENAME
 
-    if os.path.exists(newname):
+    statbuf = synctool.syncstat.SyncStat(newname)
+    if statbuf.exists():
         verbose('template destination %s already exists' % newname)
         return True
 
