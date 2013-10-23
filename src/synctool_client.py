@@ -553,7 +553,7 @@ def single_files():
 
     changed_dict = {}
     synctool.overlay.visit(synctool.param.OVERLAY_DIR,
-                            _single_overlay_callback, changed_dict)
+                           _single_overlay_callback, changed_dict)
 
     # For files that were not found, look in the purge/ tree
     # Any overlay-ed files have already been removed from SINGLE_FILES
@@ -570,7 +570,7 @@ def single_files():
         # maybe they are in the delete tree?
         changed_dict = {}
         synctool.overlay.visit(synctool.param.DELETE_DIR,
-                                _single_delete_callback, changed_dict)
+                               _single_delete_callback, changed_dict)
 
         # run any .post scripts on updated directories
         # (it's really correct to do this twice; once overlay/, once delete/)
@@ -625,7 +625,7 @@ def single_erase_saved():
 
     changed_dict = {}
     synctool.overlay.visit(synctool.param.OVERLAY_DIR,
-                            _single_erase_saved_callback, changed_dict)
+                           _single_erase_saved_callback, changed_dict)
 
     # run any .post scripts on updated directories
     for path in changed_dict:
@@ -637,7 +637,7 @@ def single_erase_saved():
         # maybe they are in the delete tree?
         changed_dict = {}
         synctool.overlay.visit(synctool.param.DELETE_DIR,
-                                _single_erase_saved_callback, changed_dict)
+                               _single_erase_saved_callback, changed_dict)
 
         # run any .post scripts on updated directories
         # (it's really correct to do this twice; once overlay/, once delete/)
