@@ -931,48 +931,48 @@ def get_options():
         if opt in ('-d', '--diff'):
             opt_diff = True
             action = ACTION_DIFF
-            f = synctool.lib.strip_path(arg)
-            if not f:
+            filename = synctool.lib.strip_path(arg)
+            if not filename:
                 stderr('missing filename')
                 sys.exit(1)
 
-            if f[0] != '/':
+            if filename[0] != '/':
                 stderr('please supply a full destination path')
                 sys.exit(1)
 
-            if not f in SINGLE_FILES:
-                SINGLE_FILES.append(f)
+            if not filename in SINGLE_FILES:
+                SINGLE_FILES.append(filename)
             continue
 
         if opt in ('-1', '--single'):
             opt_single = True
-            f = synctool.lib.strip_path(arg)
-            if not f:
+            filename = synctool.lib.strip_path(arg)
+            if not filename:
                 stderr('missing filename')
                 sys.exit(1)
 
-            if f[0] != '/':
+            if filename[0] != '/':
                 stderr('please supply a full destination path')
                 sys.exit(1)
 
-            if not f in SINGLE_FILES:
-                SINGLE_FILES.append(f)
+            if not filename in SINGLE_FILES:
+                SINGLE_FILES.append(filename)
             continue
 
         if opt in ('-r', '--ref', '--reference'):
             opt_reference = True
             action = ACTION_REFERENCE
-            f = synctool.lib.strip_path(arg)
-            if not f:
+            filename = synctool.lib.strip_path(arg)
+            if not filename:
                 stderr('missing filename')
                 sys.exit(1)
 
-            if f[0] != '/':
+            if filename[0] != '/':
                 stderr('please supply a full destination path')
                 sys.exit(1)
 
-            if not f in SINGLE_FILES:
-                SINGLE_FILES.append(f)
+            if not filename in SINGLE_FILES:
+                SINGLE_FILES.append(filename)
             continue
 
         if opt in ('-e', '--erase-saved'):
