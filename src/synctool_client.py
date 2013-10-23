@@ -558,6 +558,10 @@ def single_files():
     # For files that were not found, look in the purge/ tree
     # Any overlay-ed files have already been removed from SINGLE_FILES
     # So purge/ won't overrule overlay/
+    # FIXME overlay_callback does not see/report changed timestamps,
+    # FIXME while pure rsync (purge function) does
+    # FIXME so ideally there should be a _single_purge_callback that
+    # FIXME invokes _run_rsync_purge() to detect the change in $purge/
     visit_purge_single(_single_overlay_callback)
 
     # run any .post scripts on updated directories
