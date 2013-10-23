@@ -289,6 +289,7 @@ def upload_purge():
     # make command: rsync [-n] [-v] node:/path/ $purge/group/path/
     # FIXME upload purge currently works OK when uploading a directory
     # FIXME but should not use rsync --delete when uploading a single file
+    # FIXME maybe use rsync --list-only to determine it's a file or directory
     cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
 
     # opts is just for the 'visual aspect'; it is displayed when --verbose
