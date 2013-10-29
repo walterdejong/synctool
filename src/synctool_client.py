@@ -105,7 +105,8 @@ def generate_template(obj, post_dict):
     if synctool.lib.exec_command(cmd_arr) == -1:
         have_error = True
 
-    if not os.path.exists(newname):
+    statbuf = synctool.syncstat.SyncStat(newname)
+    if not statbuf.exists():
         verbose('warning: expected output %s was not generated' % newname)
         have_error = True
     else:
