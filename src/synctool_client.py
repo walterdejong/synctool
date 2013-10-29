@@ -41,8 +41,9 @@ def generate_template(obj, post_dict):
     it will run even in dry-run mode
     Returns: True or False on error'''
 
-    # FIXME func generate_template() may modify input parameter 'obj'
-    # FIXME and I don't like it, it's bad programming style
+    # Note: this func may modify input parameter 'obj'
+    # when it succesfully generates output, it will change obj's paths
+    # and it will be picked up again in overlay._walk_subtree()
 
     if synctool.lib.NO_POST:
         return False
