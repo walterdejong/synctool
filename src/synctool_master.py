@@ -16,6 +16,7 @@ import os
 import sys
 import getopt
 import shlex
+import subprocess
 import time
 import tempfile
 import errno
@@ -287,9 +288,6 @@ def upload_purge():
     up = UPLOAD_FILE
 
     # make command: rsync [-n] [-v] node:/path/ $purge/group/path/
-    # FIXME upload purge currently works OK when uploading a directory
-    # FIXME but should not use rsync --delete when uploading a single file
-    # FIXME maybe use rsync --list-only to determine it's a file or directory
     cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
 
     # opts is just for the 'visual aspect'; it is displayed when --verbose
@@ -316,6 +314,17 @@ def upload_purge():
         unix_out('mkdir -p %s' % up.repos_path)
         synctool.lib.mkdir_p(up.repos_path)
 
+    # check whether the remote entry exists
+    ok, isdir = _remote_isdir(up)
+    if not ok:
+        return
+
+    # when uploading a single file to purge/, do not use rsync --delete
+    # because it would (inadvertently) delete all existing files in the repos
+    if not isdir:
+        cmd_arr.remove('--delete')
+        cmd_arr.remove('--delete-excluded')
+
     verbose('running rsync%s%s:%s to %s' % (opts, up.node, up.filename,
                                             verbose_path))
     unix_out(' '.join(cmd_arr))
@@ -323,6 +332,58 @@ def upload_purge():
 
     if not synctool.lib.DRY_RUN and os.path.exists(up.repos_path):
         stdout('uploaded as %s' % verbose_path)
+
+
+def _remote_isdir(up):
+    '''See if the remote is a directory or a file
+    Parameter 'up' is an instance of UploadFile
+    Returns: tuple of booleans: (exists, isdir)'''
+
+    cmd_arr = shlex.split(synctool.param.RSYNC_CMD)[1:]
+    cmd_arr.append('--list-only')
+    cmd_arr.append(up.address + ':' + up.filename)
+
+    verbose('running rsync --list-only %s:%s' % (up.node, up.filename))
+    unix_out(' '.join(cmd_arr))
+
+    try:
+        proc = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+    except OSError as err:
+        stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
+        return False, False
+
+    out, err = proc.communicate()
+
+    if proc.returncode != 0:
+        if proc.returncode == 255:
+            stderr('failed to connect to %s' % up.node)
+        elif proc.returncode == 23:
+            stderr('no such file or directory')
+        else:
+            stderr('failed rsync %s:%s' % (up.node, up.filename))
+
+        return False, False
+
+    # output should be an 'ls -l' like line, with first a mode string
+    for line in out:
+        arr = line.split()
+        mode = arr[0]
+        if len(mode) == 10:     # crude test
+            if mode[0] == 'd':
+                # it's a directory
+                return True, True
+
+            if mode[0] in '-lpcbs':
+                # accept it as a file entry
+                return True, False
+
+        # some other line on stdout; just ignore it
+
+    # got no good output
+    stderr('failed to parse rsync --list-only output')
+    return False, False
 
 
 def _upload_callback(obj, post_dict, dir_changed=False):
