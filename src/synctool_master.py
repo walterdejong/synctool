@@ -339,7 +339,7 @@ def _remote_isdir(up):
     Parameter 'up' is an instance of UploadFile
     Returns: tuple of booleans: (exists, isdir)'''
 
-    cmd_arr = shlex.split(synctool.param.RSYNC_CMD)[1:]
+    cmd_arr = shlex.split(synctool.param.RSYNC_CMD)[:1]
     cmd_arr.append('--list-only')
     cmd_arr.append(up.address + ':' + up.filename)
 
@@ -360,14 +360,14 @@ def _remote_isdir(up):
         if proc.returncode == 255:
             stderr('failed to connect to %s' % up.node)
         elif proc.returncode == 23:
-            stderr('no such file or directory')
+            stderr('error: no such file or directory')
         else:
             stderr('failed rsync %s:%s' % (up.node, up.filename))
 
         return False, False
 
     # output should be an 'ls -l' like line, with first a mode string
-    for line in out:
+    for line in out.split('\n'):
         arr = line.split()
         mode = arr[0]
         if len(mode) == 10:     # crude test
