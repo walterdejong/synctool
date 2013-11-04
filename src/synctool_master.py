@@ -335,7 +335,8 @@ def upload_purge():
 
 
 def _remote_isdir(up):
-    '''See if the remote is a directory or a file
+    '''Helper function for upload_purge()
+    See if the remote rsync source is a directory or a file
     Parameter 'up' is an instance of UploadFile
     Returns: tuple of booleans: (exists, isdir)'''
 
