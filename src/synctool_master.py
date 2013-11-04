@@ -611,7 +611,7 @@ def usage():
   -u, --upload=PATH           Pull a remote file into the overlay tree
   -s, --suffix=GROUP          Give group suffix for the uploaded file
   -o, --overlay=GROUP         Upload file to $overlay/group/
-  -p, --purge=GROUP           Upload directory to $purge/group/
+  -p, --purge=GROUP           Upload file or directory to $purge/group/
   -e, --erase-saved           Erase *.saved backup files
   -f, --fix                   Perform updates (otherwise, do dry-run)
       --no-post               Do not run any .post scripts
