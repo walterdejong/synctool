@@ -328,9 +328,9 @@ def upload_purge():
     verbose('running rsync%s%s:%s to %s' % (opts, up.node, up.filename,
                                             verbose_path))
     unix_out(' '.join(cmd_arr))
-    synctool.lib.run_with_nodename(cmd_arr, up.node)
 
     if not synctool.lib.DRY_RUN and os.path.exists(up.repos_path):
+        synctool.lib.run_with_nodename(cmd_arr, up.node)
         stdout('uploaded as %s' % verbose_path)
 
 
@@ -373,10 +373,12 @@ def _remote_isdir(up):
         if len(mode) == 10:     # crude test
             if mode[0] == 'd':
                 # it's a directory
+                verbose('remote rsync source is a directory')
                 return True, True
 
             if mode[0] in '-lpcbs':
                 # accept it as a file entry
+                verbose('remote rsync source is a file entry')
                 return True, False
 
         # some other line on stdout; just ignore it
