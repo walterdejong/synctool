@@ -51,7 +51,7 @@ if __name__ == '__main__':
         print 'This program is used as a launcher for synctool'
         sys.exit(0)
 
-    if not LAUNCH.has_key(prognam):
+    if not prognam in LAUNCH:
         stderr("launch: error: unknown program '%s'" % prognam)
         sys.exit(1)
 

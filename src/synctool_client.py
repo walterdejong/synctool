@@ -71,7 +71,7 @@ def generate_template(obj, post_dict):
         return True
 
     # get the .post script for the template file
-    if not post_dict.has_key(template):
+    if not template in post_dict:
         verbose('template generator for %s not found' % obj.src_path)
         return False
 
@@ -365,13 +365,13 @@ def _overlay_callback(obj, post_dict, dir_changed, *args):
 
     if obj.src_stat.is_dir():
         updated, meta_updated = obj.check()
-        if (dir_changed or updated) and post_dict.has_key(obj.dest_path):
+        if (dir_changed or updated) and obj.dest_path in post_dict:
             _run_post(obj, post_dict[obj.dest_path])
 
         return True, updated | meta_updated
 
     updated, meta_updated = obj.check()
-    if updated and post_dict.has_key(obj.dest_path):
+    if updated and obj.dest_path in post_dict:
         _run_post(obj, post_dict[obj.dest_path])
         return True, True
 
@@ -393,7 +393,7 @@ def _delete_callback(obj, post_dict, dir_changed, *args):
     # don't delete directories
     if obj.src_stat.is_dir():
 #       verbose('refusing to delete directory %s' % (obj.dest_path + os.sep))
-        if dir_changed and post_dict.has_key(obj.dest_path):
+        if dir_changed and obj.dest_path in post_dict:
             _run_post(obj, post_dict[obj.dest_path])
 
         return True, dir_changed
@@ -408,7 +408,7 @@ def _delete_callback(obj, post_dict, dir_changed, *args):
         vnode = obj.vnode_dest_obj()
         vnode.harddelete()
 
-        if post_dict.has_key(obj.dest_path):
+        if obj.dest_path in post_dict:
             _run_post(obj, post_dict[obj.dest_path])
         return True, True
 
@@ -429,7 +429,7 @@ def _erase_saved_callback(obj, post_dict, dir_changed, *args):
 
     if obj.src_stat.is_dir():
         # run .post script on changed directory
-        if dir_changed and post_dict.has_key(obj.dest_path):
+        if dir_changed and obj.dest_path in post_dict:
             _run_post(obj, post_dict[obj.dest_path])
 
         return True, dir_changed
@@ -518,7 +518,7 @@ def _single_overlay_callback(obj, post_dict, updated, *args):
             obj.dest_path = os.path.dirname(obj.dest_path)
             obj.dest_stat = synctool.syncstat.SyncStat(obj.dest_path)
 
-            if post_dict.has_key(obj.dest_path):
+            if obj.dest_path in post_dict:
                 changed_dict = args[0]
                 changed_dict[obj.dest_path] = (obj, post_dict[obj.dest_path])
 
@@ -543,7 +543,7 @@ def _single_delete_callback(obj, post_dict, updated, *args):
             obj.dest_path = os.path.dirname(obj.dest_path)
             obj.dest_stat = synctool.syncstat.SyncStat(obj.dest_path)
 
-            if post_dict.has_key(obj.dest_path):
+            if obj.dest_path in post_dict:
                 changed_dict = args[0]
                 changed_dict[obj.dest_path] = (obj, post_dict[obj.dest_path])
 
@@ -619,7 +619,7 @@ def _single_erase_saved_callback(obj, post_dict, updated, *args):
             obj.dest_path = os.path.dirname(obj.dest_path)
             obj.dest_stat = synctool.syncstat.SyncStat(obj.dest_path)
 
-            if post_dict.has_key(obj.dest_path):
+            if obj.dest_path in post_dict:
                 changed_dict = args[0]
                 changed_dict[obj.dest_path] = (obj, post_dict[obj.dest_path])
 
@@ -1012,7 +1012,7 @@ def main():
         stderr('please check %s' % synctool.param.CONF_FILE)
         sys.exit(-1)
 
-    if not synctool.param.NODES.has_key(synctool.param.NODENAME):
+    if not synctool.param.NODENAME in synctool.param.NODES:
         stderr("unknown node '%s'" % synctool.param.NODENAME)
         stderr('please check %s' % synctool.param.CONF_FILE)
         sys.exit(-1)

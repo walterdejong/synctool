@@ -45,7 +45,7 @@ def subst(line):
     Returns the resulting line of text'''
 
     for var in PATTERN.findall(line):
-        if os.environ.has_key(var):
+        if var in os.environ:
             line = line.replace('@' + var + '@', os.environ[var])
 
     return line

@@ -98,7 +98,7 @@ def list_nodes(nodenames):
     groups = []
 
     for node in nodenames:
-        if not synctool.param.NODES.has_key(node):
+        if not node in synctool.param.NODES:
             stderr("no such node '%s' defined" % node)
             sys.exit(1)
 

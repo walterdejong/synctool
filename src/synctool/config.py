@@ -68,7 +68,7 @@ def read_config():
                                               'bin', 'synctool-client-pkg')
 
     # implicitly add group 'all'
-    if not synctool.param.GROUP_DEFS.has_key('all'):
+    if not 'all' in synctool.param.GROUP_DEFS:
         synctool.param.GROUP_DEFS['all'] = None
 
     # implicitly add 'nodename' as first group
@@ -78,7 +78,7 @@ def read_config():
         synctool.param.NODES[node].append('all')
 
     # implicitly add group 'none'
-    if not synctool.param.GROUP_DEFS.has_key('none'):
+    if not 'none' in synctool.param.GROUP_DEFS:
         synctool.param.GROUP_DEFS['none'] = None
 
     synctool.param.IGNORE_GROUPS.add('none')
@@ -165,10 +165,10 @@ def init_mynodename():
         arr = synctool.param.HOST_ID.split('.')
         nodename = arr[0]
 
-    elif synctool.param.HOSTNAMES.has_key(hostname):
+    elif hostname in synctool.param.HOSTNAMES:
         nodename = synctool.param.HOSTNAMES[hostname]
 
-    elif synctool.param.HOSTNAMES.has_key(short_hostname):
+    elif short_hostname in synctool.param.HOSTNAMES:
         nodename = synctool.param.HOSTNAMES[short_hostname]
 
     elif short_hostname in all_nodes:
@@ -201,7 +201,7 @@ def init_mynodename():
 def insert_group(node, group):
     '''add group to node definition'''
 
-    if synctool.param.NODES.has_key(node):
+    if node in synctool.param.NODES:
         if group in synctool.param.NODES[node]:
             # remove the group and reinsert it to make sure it comes first
             synctool.param.NODES[node].remove(group)
@@ -216,14 +216,14 @@ def get_all_nodes():
 
 
 def get_node_ipaddress(node):
-    if synctool.param.IPADDRESSES.has_key(node):
+    if node in synctool.param.IPADDRESSES:
         return synctool.param.IPADDRESSES[node]
 
     return node
 
 
 def get_node_hostname(node):
-    if synctool.param.HOSTNAMES_BY_NODE.has_key(node):
+    if node in synctool.param.HOSTNAMES_BY_NODE:
         return synctool.param.HOSTNAMES_BY_NODE[node]
 
     return node
@@ -241,7 +241,7 @@ def make_all_groups():
 def get_groups(nodename):
     '''returns the groups for the node'''
 
-    if synctool.param.NODES.has_key(nodename):
+    if nodename in synctool.param.NODES:
         return synctool.param.NODES[nodename]
 
     return []
@@ -250,7 +250,7 @@ def get_groups(nodename):
 def get_my_groups():
     '''returns the groups for this node'''
 
-    if synctool.param.NODES.has_key(synctool.param.NODENAME):
+    if synctool.param.NODENAME in synctool.param.NODES:
         return synctool.param.NODES[synctool.param.NODENAME]
 
     return []

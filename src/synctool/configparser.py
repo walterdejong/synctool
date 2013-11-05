@@ -131,7 +131,7 @@ def check_definition(keyword, configfile, lineno):
     '''check whether a param was not defined earlier
     Returns False on error, True if OK'''
 
-    if SYMBOLS.has_key(keyword):
+    if keyword in SYMBOLS:
         stderr("%s:%d: redefinition of '%s'" % (configfile, lineno, keyword))
         stderr("%s: previous definition was here" % SYMBOLS[keyword].origin())
         return False
@@ -146,7 +146,7 @@ def check_node_definition(node, configfile, lineno):
 
     key = 'node %s' % node
 
-    if SYMBOLS.has_key(key):
+    if key in SYMBOLS:
         stderr("%s:%d: redefinition of node '%s'" % (configfile, lineno,
                                                      node))
         stderr("%s: previous definition was here" % SYMBOLS[key].origin())
@@ -162,7 +162,7 @@ def check_group_definition(group, configfile, lineno):
 
     key = 'group %s' % group
 
-    if SYMBOLS.has_key(key):
+    if key in SYMBOLS:
         stderr("%s:%d: redefinition of group '%s'" % (configfile, lineno,
                                                       group))
         stderr("%s: previous definition was here" % SYMBOLS[key].origin())
@@ -555,7 +555,7 @@ def config_group(arr, configfile, lineno):
         return 1
 
     key = 'node %s' % group
-    if SYMBOLS.has_key(key):
+    if key in SYMBOLS:
         stderr('%s:%d: %s was previously defined as a node' % (configfile,
                                                                lineno, group))
         stderr('%s: previous definition was here' % SYMBOLS[key].origin())
@@ -591,7 +591,7 @@ def config_node(arr, configfile, lineno):
         return 1
 
     key = 'group %s' % node
-    if SYMBOLS.has_key(key):
+    if key in SYMBOLS:
         stderr('%s:%d: %s was previously defined as a group' %
                (configfile, lineno, node))
         stderr('%s: previous definition was here' % SYMBOLS[key].origin())
@@ -643,7 +643,7 @@ def config_node(arr, configfile, lineno):
             arg = option[n+1:]
 
             if specifier == 'ipaddress':
-                if synctool.param.IPADDRESSES.has_key(node):
+                if node in synctool.param.IPADDRESSES:
                     stderr('%s:%d: redefinition of IP address for node %s' %
                            (configfile, lineno, node))
                     return 1
@@ -656,7 +656,7 @@ def config_node(arr, configfile, lineno):
                 synctool.param.IPADDRESSES[node] = arg
 
             elif specifier == 'hostname':
-                if synctool.param.HOSTNAMES.has_key(arg):
+                if arg in synctool.param.HOSTNAMES:
                     stderr('%s:%d: hostname %s already in use for node %s' %
                            (configfile, lineno, arg,
                             synctool.param.HOSTNAMES[arg]))
@@ -780,7 +780,7 @@ def config_ignore_group(arr, configfile, lineno):
         synctool.param.IGNORE_GROUPS.add(group)
 
         # add any (yet) unknown group names to the group_defs dict
-        if not synctool.param.GROUP_DEFS.has_key(group):
+        if not group in synctool.param.GROUP_DEFS:
             synctool.param.GROUP_DEFS[group] = None
 
     return errors
@@ -864,7 +864,7 @@ def expand_grouplist(grouplist):
     for elem in grouplist:
         groups.append(elem)
 
-        if synctool.param.GROUP_DEFS.has_key(elem):
+        if elem in synctool.param.GROUP_DEFS:
             compound_groups = synctool.param.GROUP_DEFS[elem]
 
             # mind that GROUP_DEFS[group] can be None
@@ -875,7 +875,7 @@ def expand_grouplist(grouplist):
             # node names are treated as groups too ...
             # but they are special groups, and can not be in a compound group
             # just to prevent odd things from happening
-            if synctool.param.NODES.has_key(elem):
+            if elem in synctool.param.NODES:
                 raise RuntimeError, ('node %s can not be part of '
                                      'compound group list' % elem)
 

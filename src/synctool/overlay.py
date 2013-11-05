@@ -229,7 +229,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback, *args):
 
         if obj.ov_type == OV_POST:
             # register the .post script and continue
-            if post_dict.has_key(obj.dest_path):
+            if obj.dest_path in post_dict:
                 continue
 
             post_dict[obj.dest_path] = obj.src_path
@@ -240,7 +240,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback, *args):
             # put the dest for the template in the overlay (source) dir
             obj.dest_path = os.path.join(os.path.dirname(obj.src_path),
                                          os.path.basename(obj.dest_path))
-            if post_dict.has_key(obj.dest_path):
+            if obj.dest_path in post_dict:
                 continue
 
             post_dict[obj.dest_path] = obj.src_path
@@ -255,7 +255,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback, *args):
 
             # if there is a .post script on this dir, pass it on
             subdir_post_dict = {}
-            if post_dict.has_key(obj.dest_path):
+            if obj.dest_path in post_dict:
                 subdir_post_dict[obj.dest_path] = post_dict[obj.dest_path]
 
             ok, updated = _walk_subtree(obj.src_path, obj.dest_path,

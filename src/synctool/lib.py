@@ -392,7 +392,7 @@ def search_path(cmd):
         return cmd
 
     # search the PATH environment variable
-    if not os.environ.has_key('PATH'):
+    if not 'PATH' in os.environ:
         return None
 
     env_path = os.environ['PATH']

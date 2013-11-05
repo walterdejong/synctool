@@ -136,7 +136,7 @@ class NodeSet(object):
     def get_nodename_from_address(self, addr):
         '''map the address back to a nodename'''
 
-        if self.namemap.has_key(addr):
+        if addr in self.namemap:
             return self.namemap[addr]
 
         return addr

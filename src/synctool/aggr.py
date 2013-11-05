@@ -36,7 +36,7 @@ def aggregate(f):
         node = arr[0]
         output = ':'.join(arr[1:])
 
-        if not output_per_node.has_key(node):
+        if not node in output_per_node:
             output_per_node[node] = [output]
         else:
             output_per_node[node].append(output)
