@@ -322,8 +322,10 @@ def upload_purge():
     # when uploading a single file to purge/, do not use rsync --delete
     # because it would (inadvertently) delete all existing files in the repos
     if not isdir:
-        cmd_arr.remove('--delete')
-        cmd_arr.remove('--delete-excluded')
+        if '--delete' in cmd_arr:
+            cmd_arr.remove('--delete')
+        if '--delete-excluded' in cmd_arr:
+            cmd_arr.remove('--delete-excluded')
 
     verbose('running rsync%s%s:%s to %s' % (opts, up.node, up.filename,
                                             verbose_path))
