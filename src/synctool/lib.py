@@ -366,7 +366,7 @@ def exec_command(cmd_arr):
     Returns: return code of execute command or -1 on error'''
 
     if not cmd_arr:
-        raise RuntimeError, 'cmd_arr is not set'
+        raise RuntimeError('cmd_arr is not set')
 
     sys.stdout.flush()
     sys.stderr.flush()

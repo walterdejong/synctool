@@ -455,7 +455,7 @@ def main():
         print synctool.param.PACKAGE_MANAGER
 
     else:
-        raise RuntimeError, 'bug: unknown ACTION code %d' % ACTION
+        raise RuntimeError('bug: unknown ACTION code %d' % ACTION)
 
 
 if __name__ == '__main__':

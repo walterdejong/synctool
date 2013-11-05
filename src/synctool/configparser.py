@@ -876,8 +876,8 @@ def expand_grouplist(grouplist):
             # but they are special groups, and can not be in a compound group
             # just to prevent odd things from happening
             if elem in synctool.param.NODES:
-                raise RuntimeError, ('node %s can not be part of '
-                                     'compound group list' % elem)
+                raise RuntimeError('node %s can not be part of '
+                                   'compound group list' % elem)
 
             synctool.param.GROUP_DEFS[elem] = None
 

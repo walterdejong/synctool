@@ -399,7 +399,7 @@ def main():
         pkg.clean()
 
     else:
-        raise RuntimeError, 'BUG: unknown ACTION code %d' % ACTION
+        raise RuntimeError('BUG: unknown ACTION code %d' % ACTION)
 
 
 if __name__ == '__main__':

@@ -154,7 +154,7 @@ def init():
 
     base = os.path.abspath(os.path.dirname(sys.argv[0]))
     if not base:
-        raise RuntimeError, 'unable to determine base dir'
+        raise RuntimeError('unable to determine base dir')
 
     (ROOTDIR, bindir) = os.path.split(base)
 
