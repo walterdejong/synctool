@@ -836,8 +836,6 @@ def get_options():
         if arg:
             PASS_ARGS.append(arg)
 
-    # TODO if upload: add defaults for up.overlay and up.suffix
-
     # do basic checks for uploading and sub options
     if opt_suffix and not opt_upload:
         print 'option --suffix must be used in conjunction with --upload'
