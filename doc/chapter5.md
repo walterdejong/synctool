@@ -170,6 +170,18 @@ output come out right.
 You also still need to manage the rack masters -- with synctool, from the
 master node.
 
+A slightly different solution is to make use of slave nodes; the master
+syncs full copies only to slaves; next, the slaves manage the nodes.
+This requires having multiple config files (eg, one per rack) and scripting
+it so that it uses the correct config file for each rack.
+
+    synctool -c slaves.conf "$@"
+    for rack in $RACKS
+    do
+        dsh -n ${rack}-n1  --no-nodename \
+          synctool -c confs/${rack}.conf "$@"
+    done
+
 This tip is mentioned here mostly for completeness; I recommend running with
 a setup like this only if you are truly experiencing problems due to the
 scale of your cluster. There are security implications to consider when
