@@ -404,14 +404,15 @@ def main():
 
     synctool.config.init_mynodename()
 
-    if synctool.param.MASTER != None:
-        if not synctool.param.NODENAME:
-            stderr('error: unable to determine my nodename')
-            sys.exit(-1)
+    if not synctool.param.NODENAME:
+        stderr('error: unable to determine my nodename')
+        sys.exit(-1)
 
-        if synctool.param.MASTER != synctool.param.NODENAME:
-            stderr('error: not running on the master node')
-            sys.exit(-1)
+    if synctool.param.MASTER != synctool.param.NODENAME:
+        verbose('master %s != my nodename %s' % (synctool.param.MASTER,
+                                                 synctool.param.NODENAME))
+        stderr('error: not running on the master node')
+        sys.exit(-1)
 
     synctool.lib.openlog()
 
