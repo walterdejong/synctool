@@ -151,20 +151,29 @@ uses `nmap ping` with which you can scan your management network and quickly
 turn it into a synctool configuration. This makes life a bit easier.
 
 Next, you have to tell synctool which node is the master management node.
-Some people like managing the master node itself with synctool. While it
-_is_ possible to do this, it's often better to exclude the master node:
+This is done by taking the output of the UNIX `hostname` command:
 
-    master n1
-    # slave n2
-    node n1                hostname:n1.mycluster.org
+    master n1.mycluster.org
+
+Note that `hostname` is often only the short hostname, which is fine. In this
+particular example, `hostname` produced a longer name.
+
+If you want to manage the master node itself with synctool, you should also
+define it as a node. It is a matter of taste, but it is maybe better _not_
+to do so. If you choose not to manage the master node, it may be omitted
+from the configuration. Otherwise, you may also explicitly exclude it:
+
+    node n1 master           hostname:n1.mycluster.org
     ignore_node n1
 
 You may also define slave nodes. Slaves are cold standby's that get full
 copies of the synctool repository. A slave may be used as a failback
-in case your management workstation breaks down.
+in case your management workstation breaks down. Since there can be only
+one master node in a synctool cluster, slaves must be enabled 'by hand'
+by editing the config file and changing the master definition.
 
 > Previous versions of synctool had a `masterdir` setting.
-> It no longer exists; the overlay directory must reside under
+> It no longer exists; the overlay directory now must reside under
 > the synctool root, under `/opt/synctool/var/`.
 
 

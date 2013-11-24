@@ -230,11 +230,11 @@ synctool's configuration file.
 
     default_nodeset test1 test2
 
-* `master <nodename>`
+* `master <hostname>`
 
   Indicates which node is the master, the management node from where you
-  will run synctool to control the cluster. The node must have a node
-  definition line (see below).
+  will run synctool to control the cluster. The master should be set to
+  the output of the `hostname` command on the management node.
 
 * `slave <nodename> [..]`
 

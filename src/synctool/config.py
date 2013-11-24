@@ -68,10 +68,9 @@ def read_config():
                                               'bin', 'synctool-client-pkg')
 
     # check master node
-    if synctool.param.MASTER != None:
-        if not synctool.param.MASTER in synctool.param.NODES:
-            stderr("error: master '%s': no such node" % synctool.param.MASTER)
-            errors += 1
+    if not synctool.param.MASTER:
+        stderr("error: 'master' is not configured")
+        errors += 1
 
     for node in synctool.param.SLAVES:
         if not node in synctool.param.NODES:

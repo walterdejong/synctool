@@ -574,20 +574,11 @@ def config_group(arr, configfile, lineno):
 # keyword: master
 def config_master(arr, configfile, lineno):
     if len(arr) != 2:
-        stderr("%s:%d: 'master' requires one argument: a nodename " %
+        stderr("%s:%d: 'master' requires one argument: the hostname" %
                (configfile, lineno))
         return 1
 
-    node = arr[1]
-
-    if not spellcheck(node):
-        stderr("%s:%d: invalid node name '%s'" %
-               (configfile, lineno, node))
-        return 1
-
-    SYMBOLS['node %s'] = node
-    synctool.param.MASTER = node
-    # check for valid node is made later
+    synctool.param.MASTER = arr[1]
     return 0
 
 
