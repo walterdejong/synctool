@@ -1,3 +1,7 @@
+November 2013
+- 'master' node must be explicitly defined in config file
+- slaves may be defined; they get full copies of the repository
+
 June/July/August 2013
 - overlay dirs are grouped; default overlay dir is overlay/all/
 - rsync only relevant directories to the target nodes
