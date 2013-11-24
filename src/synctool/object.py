@@ -80,6 +80,7 @@ class VNode(object):
                 stderr('failed to delete %s : %s' % (self.name, err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'delete %s' % self.name)
             else:
+                # FIXME 'backup_copies no' logs 'deleted <filename>'
                 log('deleted %s' % self.name)
 
 
