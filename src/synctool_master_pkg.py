@@ -403,6 +403,13 @@ def main():
         sys.exit(0)
 
     synctool.config.init_mynodename()
+
+    if synctool.param.MASTER != synctool.param.HOSTNAME:
+        verbose('master %s != hostname %s' % (synctool.param.MASTER,
+                                              synctool.param.HOSTNAME))
+        stderr('error: not running on the master node')
+        sys.exit(-1)
+
     synctool.lib.openlog()
 
     address_list = NODESET.addresses()

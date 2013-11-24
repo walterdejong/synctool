@@ -67,6 +67,16 @@ def read_config():
         synctool.param.PKG_CMD = os.path.join(synctool.param.ROOTDIR,
                                               'bin', 'synctool-client-pkg')
 
+    # check master node
+    if not synctool.param.MASTER:
+        stderr("error: 'master' is not configured")
+        errors += 1
+
+    for node in synctool.param.SLAVES:
+        if not node in synctool.param.NODES:
+            stderr("error: slave '%s': no such node" % node)
+            errors += 1
+
     # implicitly add group 'all'
     if not 'all' in synctool.param.GROUP_DEFS:
         synctool.param.GROUP_DEFS['all'] = None

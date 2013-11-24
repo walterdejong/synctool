@@ -66,6 +66,12 @@ IGNORE_FILES_WITH_WILDCARDS = []
 
 DEFAULT_NODESET = set(['all'])
 
+# the master's nodename
+MASTER = None
+
+# set of slaves by nodename
+SLAVES = set()
+
 # NODES is a dict of nodes
 # each node is a list of groups, ordered by importance;
 # first listed group is most important, last group is least important

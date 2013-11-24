@@ -214,72 +214,104 @@ def rsync_include_filter(nodename):
         synctool.param.NODENAME = nodename
         synctool.param.MY_GROUPS = synctool.config.get_my_groups()
 
-        overlay_groups = os.listdir(synctool.param.OVERLAY_DIR)
-        delete_groups = os.listdir(synctool.param.DELETE_DIR)
-        purge_groups = os.listdir(synctool.param.PURGE_DIR)
+        # slave nodes get a copy of the entire tree
+        # all other nodes use a specific rsync filter
+        if not nodename in synctool.param.SLAVES:
+            if not (_write_overlay_filter(f) and
+                    _write_delete_filter(f) and
+                    _write_purge_filter(f)):
+                # an error occurred;
+                # delete temp file and exit
+                f.close()
+                try:
+                    os.unlink(filename)
+                except OSError:
+                    # silently ignore unlink error
+                    pass
 
-        f.write('+ /var/overlay/\n')
-
-        # add only the group dirs that apply
-        # use three loops; (workaround rsync bug?)
-        for g in synctool.param.MY_GROUPS:
-            if g in overlay_groups:
-                d = os.path.join(synctool.param.OVERLAY_DIR, g)
-                if os.path.isdir(d):
-                    f.write('+ /var/overlay/%s/\n' % g)
-
-        f.write('- /var/overlay/*\n'
-                '+ /var/delete/\n')
-
-        for g in synctool.param.MY_GROUPS:
-            if g in delete_groups:
-                d = os.path.join(synctool.param.DELETE_DIR, g)
-                if os.path.isdir(d):
-                    f.write('+ /var/delete/%s/\n' % g)
-
-        f.write('- /var/delete/*\n'
-                '+ /var/purge/\n')
-
-        for g in synctool.param.MY_GROUPS:
-            if g in purge_groups:
-                purge_root = os.path.join(synctool.param.PURGE_DIR, g)
-                if not os.path.isdir(purge_root):
-                    continue
-
-                for path, _, files in os.walk(purge_root):
-                    if path == purge_root:
-                        # guard against user mistakes;
-                        # danger of destroying the entire filesystem
-                        # if it would rsync --delete the root
-                        if len(files) > 0:
-                            stderr('cowardly refusing to purge the root '
-                                   'directory')
-                            stderr('please remove any files directly '
-                                   'under %s/' % prettypath(purge_root))
-
-                            # delete temp file and exit
-                            f.close()
-                            try:
-                                os.unlink(filename)
-                            except OSError:
-                                # silently ignore unlink error
-                                pass
-
-                            sys.exit(-1)
-                    else:
-                        f.write('+ /var/purge/%s/' % g)
-                        break
+                sys.exit(-1)
 
         # Note: sbin/*.pyc is excluded to keep major differences in
         # Python versions (on master vs. client node) from clashing
-        f.write('- /var/purge/*\n'
-                '- /sbin/*.pyc\n'
+        f.write('- /sbin/*.pyc\n'
                 '- /lib/synctool/*.pyc\n'
                 '- /lib/synctool/pkg/*.pyc\n')
 
     # Note: remind to delete the temp file later
 
     return filename
+
+
+def _write_overlay_filter(f):
+    '''write rsync filter rules for overlay/ tree
+    Returns False on error'''
+
+    f.write('+ /var/overlay/\n')
+
+    overlay_groups = os.listdir(synctool.param.OVERLAY_DIR)
+
+    # add only the group dirs that apply
+    for g in synctool.param.MY_GROUPS:
+        if g in overlay_groups:
+            d = os.path.join(synctool.param.OVERLAY_DIR, g)
+            if os.path.isdir(d):
+                f.write('+ /var/overlay/%s/\n' % g)
+
+    f.write('- /var/overlay/*\n')
+    return True
+
+
+def _write_delete_filter(f):
+    '''write rsync filter rules for delete/ tree
+    Returns False on error'''
+
+    f.write('+ /var/delete/\n')
+
+    delete_groups = os.listdir(synctool.param.DELETE_DIR)
+
+    # add only the group dirs that apply
+    for g in synctool.param.MY_GROUPS:
+        if g in delete_groups:
+            d = os.path.join(synctool.param.DELETE_DIR, g)
+            if os.path.isdir(d):
+                f.write('+ /var/delete/%s/\n' % g)
+
+    f.write('- /var/delete/*\n')
+    return True
+
+
+def _write_purge_filter(f):
+    '''write rsync filter rules for purge/ tree
+    Returns False on error'''
+
+    f.write('+ /var/purge/\n')
+
+    purge_groups = os.listdir(synctool.param.PURGE_DIR)
+
+    # add only the group dirs that apply
+    for g in synctool.param.MY_GROUPS:
+        if g in purge_groups:
+            purge_root = os.path.join(synctool.param.PURGE_DIR, g)
+            if not os.path.isdir(purge_root):
+                continue
+
+            for path, _, files in os.walk(purge_root):
+                if path == purge_root:
+                    # guard against user mistakes;
+                    # danger of destroying the entire filesystem
+                    # if it would rsync --delete the root
+                    if len(files) > 0:
+                        stderr('cowardly refusing to purge the root '
+                               'directory')
+                        stderr('please remove any files directly '
+                               'under %s/' % prettypath(purge_root))
+                        return False
+                else:
+                    f.write('+ /var/purge/%s/' % g)
+                    break
+
+    f.write('- /var/purge/*\n')
+    return True
 
 
 def upload_purge():
@@ -900,6 +932,13 @@ def main():
         sys.exit(0)
 
     synctool.config.init_mynodename()
+
+    if synctool.param.MASTER != synctool.param.HOSTNAME:
+        verbose('master %s != hostname %s' % (synctool.param.MASTER,
+                                              synctool.param.HOSTNAME))
+        stderr('error: not running on the master node')
+        sys.exit(-1)
+
     synctool.lib.openlog()
 
     address_list = NODESET.addresses()
