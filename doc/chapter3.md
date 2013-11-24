@@ -30,7 +30,7 @@ and deleting any files on the target node that are unmanaged -- files that
 should not be there.
 
 synctool uses `rsync` to copy these trees to the node, and afterwards it
-runs the `synctool-client` command on the node. Note that it is perfectly
+runs the `synctool-client` command on that node. Note that it is perfectly
 possible to run `synctool-client` on a node by hand, in which case it will
 check its local copy of the repository. It will not synchronize with the
 master repository, synctool works with _server push_ and not client pull.
@@ -94,6 +94,7 @@ overlay directory specific to the group `wn`.
 > still consider all overlay directories no matter what name the subdirectory
 > had. In synctool 6, the group is strictly enforced and the subtree is
 > synced to only those nodes that are in the group.
+> Slave nodes are special; they get a full copy of the repository.
 
 To populate the repository, you can `scp` files from nodes, or you can use
 synctool's super convenient upload feature:

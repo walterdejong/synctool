@@ -150,14 +150,18 @@ definition list. In the `contrib/` directory, there is a script that
 uses `nmap ping` with which you can scan your management network and quickly
 turn it into a synctool configuration. This makes life a bit easier.
 
-Some people like managing the master node itself with synctool.
-While it _is_ possible to do this, it's often better to exclude the master
-node:
+Next, you have to tell synctool which node is the master management node.
+Some people like managing the master node itself with synctool. While it
+_is_ possible to do this, it's often better to exclude the master node:
 
-    node n1 master     hostname:n1.mycluster.org
+    master n1
+    # slave n2
+    node n1                hostname:n1.mycluster.org
     ignore_node n1
 
-You may also leave the master node out of the configuration altogether.
+You may also define slave nodes. Slaves are cold standby's that get full
+copies of the synctool repository. A slave may be used as a failback
+in case your management workstation breaks down.
 
 > Previous versions of synctool had a `masterdir` setting.
 > It no longer exists; the overlay directory must reside under

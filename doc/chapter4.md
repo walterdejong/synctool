@@ -230,6 +230,18 @@ synctool's configuration file.
 
     default_nodeset test1 test2
 
+* `master <nodename>`
+
+  Indicates which node is the master, the management node from where you
+  will run synctool to control the cluster. The node must have a node
+  definition line (see below).
+
+* `slave <nodename> [..]`
+
+  Slave nodes get a full copy of the synctool repository. Slaves have no
+  other function than that. You can not run `synctool` from a slave until you
+  change it into a master node in the config file.
+
 * `group <groupname> <subgroup> [..]`
 
   The `group` keyword defines _compound_ groups. It is a means to group
