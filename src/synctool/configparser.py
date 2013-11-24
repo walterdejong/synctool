@@ -571,6 +571,46 @@ def config_group(arr, configfile, lineno):
     return 0
 
 
+# keyword: master
+def config_master(arr, configfile, lineno):
+    if len(arr) != 2:
+        stderr("%s:%d: 'master' requires one argument: a nodename " %
+               (configfile, lineno))
+        return 1
+
+    node = arr[1]
+
+    if not spellcheck(node):
+        stderr("%s:%d: invalid node name '%s'" %
+               (configfile, lineno, node))
+        return 1
+
+    SYMBOLS['node %s'] = node
+    synctool.param.MASTER = node
+    # check for valid node is made later
+    return 0
+
+
+# keyword: slave
+def config_slave(arr, configfile, lineno):
+    if len(arr) < 2:
+        stderr("%s:%d: 'slave' requires at least one argument: a nodename" %
+               (configfile, lineno))
+        return 1
+
+    for node in arr[1:]:
+        if not spellcheck(node):
+            stderr("%s:%d: invalid node name '%s'" %
+                   (configfile, lineno, node))
+            return 1
+
+        SYMBOLS['node %s'] = node
+        synctool.param.SLAVES.add(node)
+
+    # check for valid nodes is made later
+    return 0
+
+
 # keyword: node
 def config_node(arr, configfile, lineno):
     if len(arr) < 2:

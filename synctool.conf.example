@@ -12,6 +12,11 @@
 # This setting can be overridden by passing the nodes on the command-line
 #default_nodeset all
 
+# designate node0 as master node
+master node0
+# slave nodes get a full copy of the synctool repository
+#slave node8 node9
+
 # compound groups may be specified like this
 group wn workernode batch
 group test wn
