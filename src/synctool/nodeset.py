@@ -117,10 +117,6 @@ class NodeSet(object):
             if not addr in addrs:    # make sure we do not have duplicates
                 addrs.append(addr)
 
-        # don't care if master node is ignored
-        if synctool.param.MASTER in ignored_nodes:
-            ignored_nodes.remove(synctool.param.MASTER)
-
         # print message about ignored nodes
         if (len(ignored_nodes) > 0 and not synctool.lib.QUIET and
             not synctool.lib.UNIX_CMD):
