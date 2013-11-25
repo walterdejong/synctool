@@ -41,17 +41,22 @@ class Symbol(object):
     '''structure that says where a symbol was first defined'''
 
     def __init__(self, name=None, filename=None, lineno=0):
+        '''initialize instance'''
+
         self.name = name                    # not really used ...
         self.filename = filename
         self.lineno = lineno
 
     def origin(self):
-        '''return string "filename:lineno" where the symbol was
+        '''Returns string "filename:lineno" where the symbol was
         first defined'''
+
         return '%s:%d' % (self.filename, self.lineno)
 
 
 def stderr(msg):
+    '''write message to stderr'''
+
     sys.stderr.write(msg + '\n')
 
 
@@ -178,6 +183,8 @@ def check_group_definition(group, configfile, lineno):
 #
 
 def _config_boolean(param, value, configfile, lineno):
+    '''a boolean parameter can be "true|false|yes|no|on|off|1|0"'''
+
     if not check_definition(param, configfile, lineno):
         return (1, False)
 
@@ -192,7 +199,9 @@ def _config_boolean(param, value, configfile, lineno):
     return (1, False)
 
 
-def _config_integer(param, value, configfile, lineno, radix = 10):
+def _config_integer(param, value, configfile, lineno, radix=10):
+    '''get numeric integer value'''
+
     if not check_definition(param, configfile, lineno):
         return (1, 0)
 
@@ -253,14 +262,16 @@ def spellcheck(name):
     return True
 
 
-# keyword: include
 def config_include(arr, configfile, lineno):
+    '''parse keyword: include'''
+
     # recursively read the given config file
     return read_config_file(synctool.lib.prepare_path(arr[1]))
 
 
-# keyword: prefix
 def config_prefix(arr, configfile, lineno):
+    '''parse keyword: prefix'''
+
     if not check_definition(arr[0], configfile, lineno):
         return 1
 
@@ -277,8 +288,9 @@ def config_prefix(arr, configfile, lineno):
     return 0
 
 
-# keyword: tempdir
 def config_tempdir(arr, configfile, lineno):
+    '''parse keyword: tempdir'''
+
     if not check_definition(arr[0], configfile, lineno):
         return 1
 
@@ -294,8 +306,9 @@ def config_tempdir(arr, configfile, lineno):
     return 0
 
 
-# keyword: package_manager
 def config_package_manager(arr, configfile, lineno):
+    '''parse keyword: package_manager'''
+
     if len(arr) < 2:
         stderr("%s:%d: 'package_manager' requires an argument" %
                (configfile, lineno))
@@ -313,50 +326,57 @@ def config_package_manager(arr, configfile, lineno):
     return 0
 
 
-# keyword: require_extension
 def config_require_extension(arr, configfile, lineno):
+    '''parse keyword: require_extension'''
+
     (err, synctool.param.REQUIRE_EXTENSION) = _config_boolean(
                             'require_extension', arr[1], configfile, lineno)
     return err
 
 
-# keyword: full_path
 def config_full_path(arr, configfile, lineno):
+    '''parse keyword: full_path'''
+
     (err, synctool.param.FULL_PATH) = _config_boolean('full_path', arr[1],
                                                       configfile, lineno)
     return err
 
 
-# keyword: backup_copies
 def config_backup_copies(arr, configfile, lineno):
+    '''parse keyword: backup_copies'''
+
     (err, synctool.param.BACKUP_COPIES) = _config_boolean('backup_copies',
                                                 arr[1], configfile, lineno)
     return err
 
 
-# keyword: syslogging
 def config_syslogging(arr, configfile, lineno):
+    '''parse keyword: syslogging'''
+
     (err, synctool.param.SYSLOGGING) = _config_boolean('syslogging', arr[1],
                                                        configfile, lineno)
     return err
 
 
-# keyword: ignore_dotfiles
 def config_ignore_dotfiles(arr, configfile, lineno):
+    '''parse keyword: ignore_dotfiles'''
+
     (err, synctool.param.IGNORE_DOTFILES) = _config_boolean('ignore_dotfiles',
                                                 arr[1], configfile, lineno)
     return err
 
 
-# keyword: ignore_dotdirs
 def config_ignore_dotdirs(arr, configfile, lineno):
+    '''parse keyword: ignore_dotdirs'''
+
     (err, synctool.param.IGNORE_DOTDIRS) = _config_boolean('ignore_dotdirs',
                                                 arr[1], configfile, lineno)
     return err
 
 
-# keyword: ignore
 def config_ignore(arr, configfile, lineno):
+    '''parse keyword: ignore'''
+
     if len(arr) < 2:
         stderr("%s:%d: 'ignore' requires at least 1 argument: "
                "the file or directory to ignore" % (configfile, lineno))
@@ -375,136 +395,160 @@ def config_ignore(arr, configfile, lineno):
     return 0
 
 
-# keyword: terse
 def config_terse(arr, configfile, lineno):
+    '''parse keyword: terse'''
+
     (err, synctool.param.TERSE) = _config_boolean('terse', arr[1], configfile,
                                                   lineno)
     return err
 
 
-# keyword: colorize
 def config_colorize(arr, configfile, lineno):
+    '''parse keyword: colorize'''
+
     (err, synctool.param.COLORIZE) = _config_boolean('colorize', arr[1],
                                                      configfile, lineno)
     return err
 
 
-# keyword: colorize_full_line
 def config_colorize_full_line(arr, configfile, lineno):
+    '''parse keyword: colorize_full_line'''
+
     (err, synctool.param.COLORIZE_FULL_LINE) = _config_boolean(
                             'colorize_full_line', arr[1], configfile, lineno)
     return err
 
 
-# keyword: colorize_full_lines
 # nice for typo's
 def config_colorize_full_lines(arr, configfile, lineno):
+    '''parse keyword: colorize_full_lines'''
+
     (err, synctool.param.COLORIZE_FULL_LINE) = _config_boolean(
                             'colorize_full_line', arr[1], configfile, lineno)
     return err
 
 
-# keyword: colorize_bright
 def config_colorize_bright(arr, configfile, lineno):
+    '''parse keyword: colorize_bright'''
+
     (err, synctool.param.COLORIZE_BRIGHT) = _config_boolean(
                                 'colorize_bright', arr[1], configfile, lineno)
     return err
 
 
-# keyword: colorize_bold
 def config_colorize_bold(arr, configfile, lineno):
+    '''parse keyword: colorize_bold'''
+
     (err, synctool.param.COLORIZE_BRIGHT) = _config_boolean('colorize_bold',
                                                 arr[1], configfile, lineno)
     return err
 
 
-# keyword: config_color_info
 def config_color_info(arr, configfile, lineno):
+    '''parse keyword: color_info'''
+
     return _config_color_variant('color_info', arr[1], configfile, lineno)
 
 
-# keyword: config_color_warn
 def config_color_warn(arr, configfile, lineno):
+    '''parse keyword: color_warn'''
+
     return _config_color_variant('color_warn', arr[1], configfile, lineno)
 
 
-# keyword: config_color_error
 def config_color_error(arr, configfile, lineno):
+    '''parse keyword: color_error'''
+
     return _config_color_variant('color_error', arr[1], configfile, lineno)
 
 
-# keyword: config_color_fail
 def config_color_fail(arr, configfile, lineno):
+    '''parse keyword: color_fail'''
+
     return _config_color_variant('color_fail', arr[1], configfile, lineno)
 
 
-# keyword: config_color_sync
 def config_color_sync(arr, configfile, lineno):
+    '''parse keyword: color_sync'''
+
     return _config_color_variant('color_sync', arr[1], configfile, lineno)
 
 
-# keyword: config_color_link
 def config_color_link(arr, configfile, lineno):
+    '''parse keyword: color_link'''
+
     return _config_color_variant('color_link', arr[1], configfile, lineno)
 
 
-# keyword: config_color_mkdir
 def config_color_mkdir(arr, configfile, lineno):
+    '''parse keyword: color_mkdir'''
+
     return _config_color_variant('color_mkdir', arr[1], configfile, lineno)
 
 
-# keyword: config_color_rm
 def config_color_rm(arr, configfile, lineno):
+    '''parse keyword: color_rm'''
+
     return _config_color_variant('color_rm', arr[1], configfile, lineno)
 
 
-# keyword: config_color_chown
 def config_color_chown(arr, configfile, lineno):
+    '''parse keyword: color_chown'''
+
     return _config_color_variant('color_chown', arr[1], configfile, lineno)
 
 
-# keyword: config_color_chmod
 def config_color_chmod(arr, configfile, lineno):
+    '''parse keyword: color_chmod'''
+
     return _config_color_variant('color_chmod', arr[1], configfile, lineno)
 
 
-# keyword: config_color_exec
 def config_color_exec(arr, configfile, lineno):
+    '''parse keyword: color_exec'''
+
     return _config_color_variant('color_exec', arr[1], configfile, lineno)
 
 
-# keyword: config_color_upload
 def config_color_upload(arr, configfile, lineno):
+    '''parse keyword: color_upload'''
+
     return _config_color_variant('color_upload', arr[1], configfile, lineno)
 
 
-# keyword: config_color_new
 def config_color_new(arr, configfile, lineno):
+    '''parse keyword: color_new'''
+
     return _config_color_variant('color_new', arr[1], configfile, lineno)
 
 
-# keyword: config_color_type
 def config_color_type(arr, configfile, lineno):
+    '''parse keyword: color_type'''
+
     return _config_color_variant('color_type', arr[1], configfile, lineno)
 
 
-# keyword: config_color_dryrun
 def config_color_dryrun(arr, configfile, lineno):
+    '''parse keyword: color_dryrun'''
+
     return _config_color_variant('color_dryrun', arr[1], configfile, lineno)
 
 
-# keyword: config_color_fixing
 def config_color_fixing(arr, configfile, lineno):
+    '''parse keyword: color_fixing'''
+
     return _config_color_variant('color_fixing', arr[1], configfile, lineno)
 
 
-# keyword: config_color_ok
 def config_color_ok(arr, configfile, lineno):
+    '''parse keyword: color_ok'''
+
     return _config_color_variant('color_ok', arr[1], configfile, lineno)
 
 
-# keyword: default_nodeset
 def config_default_nodeset(arr, configfile, lineno):
+    '''parse keyword: default_nodeset'''
+
     if not check_definition(arr[0], configfile, lineno):
         return 1
 
@@ -531,8 +575,9 @@ def config_default_nodeset(arr, configfile, lineno):
     return 0
 
 
-# keyword: group
 def config_group(arr, configfile, lineno):
+    '''parse keyword: group'''
+
     if len(arr) < 3:
         stderr("%s:%d: 'group' requires at least 2 arguments: "
                "the compound group name and at least 1 member group" %
@@ -571,8 +616,9 @@ def config_group(arr, configfile, lineno):
     return 0
 
 
-# keyword: master
 def config_master(arr, configfile, lineno):
+    '''parse keyword: master'''
+
     if len(arr) != 2:
         stderr("%s:%d: 'master' requires one argument: the hostname" %
                (configfile, lineno))
@@ -582,8 +628,9 @@ def config_master(arr, configfile, lineno):
     return 0
 
 
-# keyword: slave
 def config_slave(arr, configfile, lineno):
+    '''parse keyword: slave'''
+
     if len(arr) < 2:
         stderr("%s:%d: 'slave' requires at least one argument: a nodename" %
                (configfile, lineno))
@@ -602,8 +649,9 @@ def config_slave(arr, configfile, lineno):
     return 0
 
 
-# keyword: node
 def config_node(arr, configfile, lineno):
+    '''parse keyword: node'''
+
     if len(arr) < 2:
         stderr("%s:%d: 'node' requires at least 1 argument: the nodename" %
                (configfile, lineno))
@@ -753,8 +801,9 @@ def config_node(arr, configfile, lineno):
     return 0
 
 
-# keyword: ignore_node
 def config_ignore_node(arr, configfile, lineno):
+    '''parse keyword: ignore_node'''
+
     if len(arr) < 2:
         stderr("%s:%d: 'ignore_node' requires 1 argument: "
                "the nodename to ignore" % (configfile, lineno))
@@ -783,8 +832,9 @@ def config_ignore_node(arr, configfile, lineno):
     return errors
 
 
-# keyword: ignore_group
 def config_ignore_group(arr, configfile, lineno):
+    '''parse keyword: ignore_group'''
+
     if len(arr) < 2:
         stderr("%s:%d: '%s' requires 1 argument: the groupname to ignore" %
                (configfile, lineno, arr[0]))
@@ -817,36 +867,40 @@ def config_ignore_group(arr, configfile, lineno):
     return errors
 
 
-# keyword: diff_cmd
 def config_diff_cmd(arr, configfile, lineno):
+    '''parse keyword: diff_cmd'''
+
     (err, synctool.param.DIFF_CMD) = _config_command('diff_cmd', arr, 'diff',
                                                      configfile, lineno)
     return err
 
 
-# keyword: ping_cmd
 def config_ping_cmd(arr, configfile, lineno):
+    '''parse keyword: ping_cmd'''
+
     (err, synctool.param.PING_CMD) = _config_command('ping_cmd', arr, 'ping',
                                                      configfile, lineno)
     return err
 
 
-# keyword: ssh_cmd
 def config_ssh_cmd(arr, configfile, lineno):
+    '''parse keyword: ssh_cmd'''
+
     (err, synctool.param.SSH_CMD) = _config_command('ssh_cmd', arr, 'ssh',
                                                     configfile, lineno)
     return err
 
 
-# keyword: scp_cmd
 def config_scp_cmd(arr, configfile, lineno):
+    '''parse keyword: scp_cmd'''
+
     (err, synctool.param.SCP_CMD) = _config_command('scp_cmd', arr, 'scp',
                                                     configfile, lineno)
     return err
 
 
-# keyword: rsync_cmd
 def config_rsync_cmd(arr, configfile, lineno):
+    '''parse keyword: rsync_cmd'''
 
     # Note! strip_multiple_slashes() will break "rsync://" paths
     # and strip_trailing_slashes() may break rsync paths
@@ -858,24 +912,27 @@ def config_rsync_cmd(arr, configfile, lineno):
     return err
 
 
-# keyword: synctool_cmd
 def config_synctool_cmd(arr, configfile, lineno):
+    '''parse keyword: synctool_cmd'''
+
     (err, synctool.param.SYNCTOOL_CMD) = _config_command('synctool_cmd', arr,
                                                          'synctool.py',
                                                          configfile, lineno)
     return err
 
 
-# keyword: pkg_cmd
 def config_pkg_cmd(arr, configfile, lineno):
+    '''parse keyword: pkg_cmd'''
+
     (err, synctool.param.PKG_CMD) = _config_command('pkg_cmd', arr,
                                                     'synctool_pkg.py',
                                                     configfile, lineno)
     return err
 
 
-# keyword: num_proc
 def config_num_proc(arr, configfile, lineno):
+    '''parse keyword: num_proc'''
+
     (err, synctool.param.NUM_PROC) = _config_integer('num_proc', arr[1],
                                                      configfile, lineno)
 
