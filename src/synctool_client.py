@@ -327,8 +327,7 @@ def _run_rsync_purge(cmd_arr):
         if not line:
             continue
 
-        code = line[:12]
-        filename = line[12:]
+        code, filename = line.split(' ', 1)
 
         if code[:6] == 'ERROR:' or code[:8] == 'WARNING:':
             # output rsync errors and warnings
@@ -348,10 +347,9 @@ def _run_rsync_purge(cmd_arr):
             # most likely "deleting"
             msg = code[1:]
             msg = msg.strip()
+            stdout('%s %s (purge)' % (msg, prettypath(path)))
         else:
-            msg = 'updating'
-
-        stdout('%s %s (purge)' % (msg, prettypath(path)))
+            stdout('%s mismatch (purge)' % prettypath(path))
 
 
 def _overlay_callback(obj, post_dict, dir_changed, *args):
