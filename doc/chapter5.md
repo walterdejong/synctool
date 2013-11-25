@@ -48,8 +48,6 @@ The lesson here is that `overlay/all/` is a nice catch-all directory, but
 it's maybe best left unused. It's perfectly OK for files to be tagged as
 `._all`, but they really should be placed in a group-specific overlay
 directory.
-synctool requires the `overlay/all` directory to exist, but we actually have
-this file in place: `overlay/all/DO_NOT_USE` and: `ignore DO_NOT_USE`.
 
 
 5.3 Use group extensions on directories sparingly
@@ -96,6 +94,8 @@ the master node as _master_, and to simply ignore it:
     ignore_group master
 
 It's also OK to leave the master node out of the configuration altogether.
+(Here, 'master' is a group, not to be confused with the `master` keyword that
+defines the master node. Are you still with me?)
 
 If you still want to manage the master with synctool, do as you must. Just be
 sure to call `dsh -X master reboot` when you want to reboot your cluster.
