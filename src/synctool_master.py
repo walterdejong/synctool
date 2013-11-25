@@ -527,6 +527,47 @@ def make_tempdir():
             sys.exit(-1)
 
 
+def _check_valid_overlaydirs():
+    '''check that the group specific dirs are valid groups
+    Returns True on OK, False on error'''
+
+    def _check_valid_groupdir(dirname, label):
+        '''local helper function for _check_valid_overlaydirs()'''
+
+        errs = 0
+        groups = os.listdir(dirname)
+        for group in groups:
+            fullpath = os.path.join(dirname, group)
+            if not os.path.isdir(fullpath):
+                stderr('error: $%s/%s: not a directory' % (label, group))
+                errs += 1
+                continue
+
+            if not group in synctool.param.ALL_GROUPS:
+                stderr("error: $%s/%s/ exists, but there is "
+                       "no such group '%s'" % (label, group, group))
+                errs += 1
+                continue
+
+        return errs == 0
+
+    errs = 0
+
+    # check group dirs under overlay/
+    if not _check_valid_groupdir(synctool.param.OVERLAY_DIR, 'overlay'):
+        errs += 1
+
+    # check group dirs under delete/
+    if not _check_valid_groupdir(synctool.param.DELETE_DIR, 'delete'):
+        errs += 1
+
+    # check group dirs under purge/
+    if not _check_valid_groupdir(synctool.param.PURGE_DIR, 'purge'):
+        errs += 1
+
+    return errs == 0
+
+
 def check_cmd_config():
     '''check whether the commands as given in synctool.conf actually exist'''
 
@@ -936,6 +977,10 @@ def main():
         verbose('master %s != hostname %s' % (synctool.param.MASTER,
                                               synctool.param.HOSTNAME))
         stderr('error: not running on the master node')
+        sys.exit(-1)
+
+    if not _check_valid_overlaydirs():
+        # error message already printed
         sys.exit(-1)
 
     synctool.lib.openlog()
