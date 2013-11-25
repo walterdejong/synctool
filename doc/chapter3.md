@@ -32,13 +32,9 @@ should not be there.
 synctool uses `rsync` to copy these trees to the node, and afterwards it
 runs the `synctool-client` command on that node. Note that it is perfectly
 possible to run `synctool-client` on a node by hand, in which case it will
-check its local copy of the repository. It will not synchronize with the
-master repository, synctool works with _server push_ and not client pull.
-
-If you do have the luxury of a high performance shared filesystem on your
-cluster, you may put synctool on there and use the option `--skip-rsync` to
-skip the mirroring of the repository. You may also use `rsync:no` in a node
-definition in the config file to tell synctool not to run `rsync`.
+check its local copy of the repository. The client by itself will not
+synchronize with the master repository; synctool works with _server push_
+and not client pull.
 
 > Previously, synctool was located under `/var/lib/synctool/`.
 > It worked for me (tm), except that the Filesystem Hierarchy Standard (FHS)
@@ -280,13 +276,11 @@ synctool will report this and present a list of possibilities for you to
 consider.
 
 The option `--skip-rsync` skips the `rsync` run that copies the repository
-from the master server to the client node. You should only specify this
-option when your repository resides on a shared filesystem. Sharing the
-repository between your master server and client nodes has certain security
-implications, so be mindful of what you are doing in such a setup.
-If you have a fast shared filesystem between all client nodes, but it is
-not shared with the master server, you can specify `rsync:no` in the config
-file.
+from the master to the client node. You may use this option when you are
+absolutely certain that the master and client are already in sync, for example
+if you just ran synctool to examine any changes. In general, this option is
+unnecessary, but it may be efficient if you are working with slow network
+links or a large synctool repository.
 
 
 3.4 Templates

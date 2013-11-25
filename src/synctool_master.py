@@ -655,8 +655,7 @@ def usage():
       --color                 Use colored output (only for terse mode)
       --no-color              Do not color output
       --unix                  Output actions as unix shell commands
-      --skip-rsync            Do not sync the repository
-                              (eg. when it is on a shared filesystem)
+  -S, --skip-rsync            Do not sync the repository
       --version               Show current version number
       --check-update          Check for availibility of newer version
       --download              Download latest version
@@ -682,7 +681,7 @@ def get_options():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:],
-            'hc:vn:g:x:X:d:1:r:u:s:o:p:efN:FTqa',
+            'hc:vn:g:x:X:d:1:r:u:s:o:p:efN:FTqaS',
             ['help', 'conf=', 'verbose', 'node=', 'group=',
             'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=',
             'upload=', 'suffix=', 'overlay=', 'purge=', 'erase-saved', 'fix',
@@ -850,7 +849,7 @@ def get_options():
         if opt == '--unix':
             synctool.lib.UNIX_CMD = True
 
-        if opt == '--skip-rsync':
+        if opt in ('-S', '--skip-rsync'):
             OPT_SKIP_RSYNC = True
             continue
 

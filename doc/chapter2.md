@@ -8,12 +8,12 @@
 -----------------------------
 synctool depends on a number of (fairly standard) programs:
 
-* [python][1] version 2.x
+* [python][1] version 2.6 or better
 * [ssh][2]
 * [rsync][3]
 * `ping`, or you can configure [fping][4] later
-* [markdown][5] and [smartypants][6] -- but only if you want to install this
-documentation as HTML pages
+* [markdown][5] and [smartypants][6] -- but only if you want to install
+this documentation as HTML pages
 
 [1]: http://www.python.org/download/
 [2]: http://openssh.org/portable.html
@@ -151,6 +151,12 @@ If your cluster is large, you may want to script the generation of a node
 definition list. In the `contrib/` directory, there is a script that
 uses `nmap ping` with which you can scan your management network and quickly
 turn it into a synctool configuration. This makes life a bit easier.
+
+If you do have the luxury of a high performance shared filesystem on your
+cluster, you may put `/opt/synctool/` on there and add `rsync:no` to the node
+definition lines in the config file to tell synctool not to run `rsync`.
+Mind that there are certain security implications with having a shared
+filesystem between management and production nodes.
 
 Next, you have to tell synctool which node is the master management node.
 This is done by taking the output of the UNIX `hostname` command:
