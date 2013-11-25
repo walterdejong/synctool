@@ -531,21 +531,26 @@ def _check_valid_overlaydirs():
     '''check that the group specific dirs are valid groups
     Returns True on OK, False on error'''
 
-    def _check_valid_groupdir(dirname, label):
+    def _check_valid_groupdir(overlaydir, label):
         '''local helper function for _check_valid_overlaydirs()'''
 
         errs = 0
-        groups = os.listdir(dirname)
-        for group in groups:
-            fullpath = os.path.join(dirname, group)
+        entries = os.listdir(overlaydir)
+        for entry in entries:
+            fullpath = os.path.join(overlaydir, entry)
             if not os.path.isdir(fullpath):
-                stderr('error: $%s/%s: not a directory' % (label, group))
+                if not entry in synctool.param.ALL_GROUPS:
+                    stderr("error: $%s/%s exists, but there is "
+                           "no such group '%s'" % (label, entry, entry))
+                    errs += 1
+
+                stderr('error: $%s/%s: not a directory' % (label, entry))
                 errs += 1
                 continue
 
-            if not group in synctool.param.ALL_GROUPS:
+            if not entry in synctool.param.ALL_GROUPS:
                 stderr("error: $%s/%s/ exists, but there is "
-                       "no such group '%s'" % (label, group, group))
+                       "no such group '%s'" % (label, entry, entry))
                 errs += 1
                 continue
 
