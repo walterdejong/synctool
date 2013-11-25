@@ -533,17 +533,8 @@ def _check_valid_overlaydirs():
         entries = os.listdir(overlaydir)
         for entry in entries:
             fullpath = os.path.join(overlaydir, entry)
-            if not os.path.isdir(fullpath):
-                if not entry in synctool.param.ALL_GROUPS:
-                    stderr("error: $%s/%s exists, but there is "
-                           "no such group '%s'" % (label, entry, entry))
-                    errs += 1
-
-                stderr('error: $%s/%s: not a directory' % (label, entry))
-                errs += 1
-                continue
-
-            if not entry in synctool.param.ALL_GROUPS:
+            if (os.path.isdir(fullpath) and
+                not entry in synctool.param.ALL_GROUPS):
                 stderr("error: $%s/%s/ exists, but there is "
                        "no such group '%s'" % (label, entry, entry))
                 errs += 1
