@@ -101,6 +101,8 @@ The following synctool commands will be made available in
     synctool-client-pkg    Only run on target nodes
     synctool-template      Useful command for .post scripts
 
+> Tip: Add `/opt/synctool/bin` to your `PATH`.
+
 
 2.4 synctool configuration: nodes and groups
 --------------------------------------------
@@ -189,8 +191,6 @@ that this works before proceeding.
 > Some (mostly IBM) systems already have a `dsh` command.
 > Be mindful to start the correct `dsh` command. synctool's `dsh`
 > is another name for `synctool-ssh`.
-
-Tip: Add `/opt/synctool/bin` to your `PATH`.
 
 
 2.6 Your first synctool run
