@@ -242,22 +242,28 @@ def rsync_include_filter(nodename):
     return filename
 
 
+def _write_rsync_filter(f, overlaydir, label):
+    '''helper function for writing rsync filter'''
+
+    f.write('+ /var/%s/\n' % label)
+
+    groups = os.listdir(overlaydir)
+
+    # add only the group dirs that apply
+    for g in synctool.param.MY_GROUPS:
+        if g in groups:
+            d = os.path.join(overlaydir, g)
+            if os.path.isdir(d):
+                f.write('+ /var/%s/%s/\n' % (label, g))
+
+    f.write('- /var/%s/*\n' % label)
+
+
 def _write_overlay_filter(f):
     '''write rsync filter rules for overlay/ tree
     Returns False on error'''
 
-    f.write('+ /var/overlay/\n')
-
-    overlay_groups = os.listdir(synctool.param.OVERLAY_DIR)
-
-    # add only the group dirs that apply
-    for g in synctool.param.MY_GROUPS:
-        if g in overlay_groups:
-            d = os.path.join(synctool.param.OVERLAY_DIR, g)
-            if os.path.isdir(d):
-                f.write('+ /var/overlay/%s/\n' % g)
-
-    f.write('- /var/overlay/*\n')
+    _write_rsync_filter(f, synctool.param.OVERLAY_DIR, 'overlay')
     return True
 
 
@@ -265,18 +271,7 @@ def _write_delete_filter(f):
     '''write rsync filter rules for delete/ tree
     Returns False on error'''
 
-    f.write('+ /var/delete/\n')
-
-    delete_groups = os.listdir(synctool.param.DELETE_DIR)
-
-    # add only the group dirs that apply
-    for g in synctool.param.MY_GROUPS:
-        if g in delete_groups:
-            d = os.path.join(synctool.param.DELETE_DIR, g)
-            if os.path.isdir(d):
-                f.write('+ /var/delete/%s/\n' % g)
-
-    f.write('- /var/delete/*\n')
+    _write_rsync_filter(f, synctool.param.DELETE_DIR, 'delete')
     return True
 
 
