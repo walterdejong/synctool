@@ -13,7 +13,9 @@
 #default_nodeset all
 
 # designate node0 as master node
-master node0
+# the fqdn (fully qualified domain name) is given as argument
+master node0.mycluster.org
+
 # slave nodes get a full copy of the synctool repository
 #slave node8 node9
 

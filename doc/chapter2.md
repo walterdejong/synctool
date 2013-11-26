@@ -159,26 +159,30 @@ Mind that there are certain security implications with having a shared
 filesystem between management and production nodes.
 
 Next, you have to tell synctool which node is the master management node.
-This is done by taking the output of the UNIX `hostname` command:
+This is done by setting `master` to the fqdn (fully qualified domain name)
+of the management host.
 
     master n1.mycluster.org
 
-Note that `hostname` is often only the short hostname, which is fine. In this
-particular example, `hostname` produced a longer name.
+If you don't know what the fqdn is, you can get it by running this UNIX
+shell command:
+
+    python -c "import socket; print socket.getfqdn()"
 
 If you want to manage the master node itself with synctool, you should also
 define it as a node. It is a matter of taste, but it is maybe better _not_
 to do so. If you choose not to manage the master node, it may be omitted
-from the configuration. Otherwise, you may also explicitly exclude it:
+from the configuration. You may also explicitly exclude it:
 
     node n1 master           hostname:n1.mycluster.org
     ignore_node n1
 
-You may also define slave nodes. Slaves are cold standby's that get full
-copies of the synctool repository. A slave may be used as a failback
-in case your management workstation breaks down. Since there can be only
-one master node in a synctool cluster, slaves must be enabled 'by hand'
-by editing the config file and changing the master definition.
+Beside a master node, you may also define slave nodes.
+Slaves are cold standby's that get full copies of the synctool repository.
+A slave may be used as a failback in case your management host breaks down.
+Since there can be only one master node in a synctool cluster, slaves must
+be enabled 'by hand' by editing the config file and changing the master
+definition.
 
 > Previous versions of synctool had a `masterdir` setting.
 > It no longer exists; the overlay directory now must reside under

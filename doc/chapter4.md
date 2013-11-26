@@ -230,11 +230,14 @@ synctool's configuration file.
 
     default_nodeset test1 test2
 
-* `master <hostname>`
+* `master <fqdn>`
 
   Indicates which node is the master, the management node from where you
-  will run synctool to control the cluster. The master should be set to
-  the output of the `hostname` command on the management node.
+  will run synctool to control the cluster. It should be set to the fully
+  qualified domain name of the management host. You can get the fqdn with
+  this command:
+
+    python -c "import socket; print socket.getfqdn()"
 
 * `slave <nodename> [..]`
 
