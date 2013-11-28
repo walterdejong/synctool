@@ -164,10 +164,9 @@ of the management host.
 
     master n1.mycluster.org
 
-If you don't know what the fqdn is, you can get it by running this UNIX
-shell command:
+If you don't know what the fqdn is, you can get it by running the command:
 
-    python -c "import socket; print socket.getfqdn()"
+    synctool-config --fqdn
 
 If you want to manage the master node itself with synctool, you should also
 define it as a node. It is a matter of taste, but it is maybe better _not_

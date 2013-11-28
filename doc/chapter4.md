@@ -234,10 +234,9 @@ synctool's configuration file.
 
   Indicates which node is the master, the management node from where you
   will run synctool to control the cluster. It should be set to the fully
-  qualified domain name of the management host. You can get the fqdn with
-  this command:
+  qualified domain name of the management host. You can get the fqdn with:
 
-    python -c "import socket; print socket.getfqdn()"
+    synctool-config --fqdn
 
 * `slave <nodename> [..]`
 
