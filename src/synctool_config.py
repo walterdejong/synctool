@@ -16,6 +16,7 @@ import os
 import sys
 import getopt
 import errno
+import socket
 
 import synctool.config
 import synctool.configparser
@@ -34,12 +35,15 @@ ACTION_LIST_GROUPS = 2
 ACTION_NODES = 3
 ACTION_GROUPS = 4
 ACTION_CMDS = 5
-ACTION_NUMPROC = 6
-ACTION_VERSION = 7
-ACTION_PREFIX = 8
-ACTION_NODENAME = 9
-ACTION_LIST_DIRS = 10
-ACTION_PKGMGR = 11
+ACTION_PKGMGR = 6
+ACTION_NUMPROC = 7
+ACTION_LIST_DIRS = 8
+ACTION_PREFIX = 9
+ACTION_MASTER = 10
+ACTION_SLAVE = 11
+ACTION_NODENAME = 12
+ACTION_FQDN = 13
+ACTION_VERSION = 14
 
 # optional: do not list hosts/groups that are ignored
 OPT_FILTER_IGNORED = False
@@ -52,6 +56,8 @@ OPT_RSYNC = False
 
 
 def list_all_nodes():
+    '''display a list of all nodes'''
+
     nodes = synctool.config.get_all_nodes()
     nodes.sort()
 
@@ -81,6 +87,8 @@ def list_all_nodes():
 
 
 def list_all_groups():
+    '''display a list of all groups'''
+
     groups = synctool.param.GROUP_DEFS.keys()
     groups.sort()
 
@@ -95,6 +103,8 @@ def list_all_groups():
 
 
 def list_nodes(nodenames):
+    '''display node definition'''
+
     groups = []
 
     for node in nodenames:
@@ -143,6 +153,8 @@ def list_nodes(nodenames):
 
 
 def list_nodegroups(groups):
+    '''display list of nodes that are member of group'''
+
     groups = set(groups)
 
     unknown = groups - synctool.param.ALL_GROUPS
@@ -239,6 +251,10 @@ def list_dirs():
 
 
 def set_action(a, opt):
+    '''set the action to perform'''
+
+    # this is a helper function for the command-line parser
+
     global ACTION, ACTION_OPTION
 
     if ACTION > 0:
@@ -273,7 +289,10 @@ def usage():
   -N, --numproc            Display numproc setting
   -d, --list-dirs          Display directory settings
       --prefix             Display installation prefix
+      --master             Display configured master fqdn
+      --slave              Display configured slave nodes
       --nodename           Display my nodename
+      --fqdn               Display my FQDN
   -v, --version            Display synctool version
 
 A node/group list can be a single value, or a comma-separated list
@@ -298,7 +317,7 @@ def get_options():
             ['help', 'conf=', 'list-nodes', 'list-groups', 'node=', 'group=',
             'ipaddress', 'hostname', 'rsync', 'filter-ignored',
             'command', 'package-manager', 'numproc', 'list-dirs',
-            'prefix', 'nodename', 'version'])
+            'prefix', 'master', 'slave', 'nodename', 'fqdn', 'version'])
     except getopt.GetoptError as reason:
         print
         print '%s: %s' % (progname, reason)
@@ -376,8 +395,20 @@ def get_options():
             set_action(ACTION_PREFIX, '--prefix')
             continue
 
+        if opt == '--master':
+            set_action(ACTION_MASTER, '--master')
+            continue
+
+        if opt == '--slave':
+            set_action(ACTION_SLAVE, '--slave')
+            continue
+
         if opt == '--nodename':
             set_action(ACTION_NODENAME, '--nodename')
+            continue
+
+        if opt == '--fqdn':
+            set_action(ACTION_FQDN, '--fqdn')
             continue
 
         if opt in ('-v', '--version'):
@@ -397,12 +428,18 @@ def get_options():
 
 
 def main():
+    '''do your thing'''
+
     synctool.param.init()
 
     get_options()
 
     if ACTION == ACTION_VERSION:
         print synctool.param.VERSION
+        sys.exit(0)
+
+    if ACTION == ACTION_FQDN:
+        print socket.getfqdn()
         sys.exit(0)
 
     synctool.config.read_config()
@@ -431,8 +468,14 @@ def main():
     elif ACTION == ACTION_CMDS:
         list_commands(ARG_CMDS)
 
+    elif ACTION == ACTION_PKGMGR:
+        print synctool.param.PACKAGE_MANAGER
+
     elif ACTION == ACTION_NUMPROC:
         print synctool.param.NUM_PROC
+
+    elif ACTION == ACTION_LIST_DIRS:
+        list_dirs()
 
     elif ACTION == ACTION_PREFIX:
         print synctool.param.PREFIX
@@ -448,11 +491,16 @@ def main():
 
         print synctool.param.NODENAME
 
-    elif ACTION == ACTION_LIST_DIRS:
-        list_dirs()
+    elif ACTION == ACTION_MASTER:
+        print synctool.param.MASTER
 
-    elif ACTION == ACTION_PKGMGR:
-        print synctool.param.PACKAGE_MANAGER
+    elif ACTION == ACTION_SLAVE:
+        if not len(synctool.param.SLAVES):
+            print '(none)'
+        else:
+            for node in synctool.param.SLAVES:
+                print node,
+            print
 
     else:
         raise RuntimeError('bug: unknown ACTION code %d' % ACTION)
