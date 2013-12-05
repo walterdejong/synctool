@@ -227,6 +227,7 @@ def _upload_callback(obj, post_dict, dir_changed=False):
 def upload(up):
     '''copy a file from a node into the overlay/ tree'''
 
+    # Note: this global is only needed because of callback fn ...
     global GLOBAL_UPLOAD_FILE
 
     if up.filename[0] != os.sep:
