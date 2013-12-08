@@ -12,6 +12,7 @@
 
 import os
 import stat
+import time
 import shutil
 import hashlib
 
@@ -157,6 +158,20 @@ class VNode(object):
                 stderr('failed to chmod %04o %s : %s' %
                        (self.stat.mode & 07777, self.name, err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'mode %s' % self.name)
+
+
+    def set_times(self, atime, mtime):
+        '''set access and mod times'''
+
+        # only used for purge --single
+
+        if not synctool.lib.DRY_RUN:
+            try:
+                os.utime(self.name, (atime, mtime))
+            except OSError as err:
+                stderr('failed to set utime on %s : %s' % (self.name,
+                                                           err.strerror))
+                terse(synctool.lib.TERSE_FAIL, 'utime %s' % self.name)
 
 
 class VNodeFile(VNode):
@@ -789,6 +804,20 @@ class SyncObject(object):
                                                    err.strerror))
             return False
 
-        return src_stat.st_mtime == dest_stat.st_mtime
+        if src_stat.st_mtime != dest_stat.st_mtime:
+            stdout('%s mismatch (only timestamp)' % self.dest_path)
+            terse(synctool.lib.TERSE_WARNING,
+                  '%s (only timestamp)' % self.dest_path)
+
+            verbose(dryrun_msg('  os.utime(%s, %s)'
+                               '' % (self.dest_path,
+                                     time.ctime(src_stat.st_mtime))))
+            unix_out('touch -r %s %s' % (self.src_path, self.dest_path))
+
+            vnode = self.vnode_obj()
+            vnode.set_times(src_stat.st_atime, src_stat.st_mtime)
+            return False
+
+        return True
 
 # EOB

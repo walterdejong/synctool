@@ -571,15 +571,11 @@ def _single_purge_callback(obj, post_dict, updated, *args):
     if _match_single(obj.dest_path):
         _, updated = _overlay_callback(obj, post_dict, False, *args)
         if not updated:
-            if not obj.check_purge_timestamp():
-                stdout('%s mismatch (only timestamp)' % obj.dest_path)
-                terse(synctool.lib.TERSE_WARNING,
-                      '%s (only timestamp)' % obj.dest_path)
-                unix_out('# %s # only timestamp mismatch\n' % obj.dest_path)
-            else:
+            if obj.check_purge_timestamp():
                 stdout('%s is up to date' % obj.dest_path)
                 terse(synctool.lib.TERSE_OK, obj.dest_path)
                 unix_out('# %s is up to date\n' % obj.dest_path)
+            # else: pass
         else:
             # register .post on the parent dir, if it has a .post script
             obj.dest_path = os.path.dirname(obj.dest_path)
