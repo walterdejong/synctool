@@ -804,7 +804,7 @@ class SyncObject(object):
                                                    err.strerror))
             return False
 
-        if src_stat.st_mtime != dest_stat.st_mtime:
+        if src_stat.st_mtime > dest_stat.st_mtime:
             stdout('%s mismatch (only timestamp)' % self.dest_path)
             terse(synctool.lib.TERSE_WARNING,
                   '%s (only timestamp)' % self.dest_path)
