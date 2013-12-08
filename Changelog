@@ -1,3 +1,8 @@
+December 2013
+- purge --single may complain about timestamps (because rsync will also)
+  synctool can fix these, but only for purge --single. Otherwise synctool
+  doesn't care about timestamps
+
 November 2013
 - 'master' node must be explicitly defined in config file
 - slaves may be defined; they get full copies of the repository
