@@ -1,258 +1,306 @@
 #! /usr/bin/env python
 #
-#	synctool-ping	WJ111
+#   synctool-ping    WJ111
 #
-#   synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
+#   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
 #   License.
 #
 
-import synctool_unbuffered
-import synctool_nodeset
-import synctool_config
-import synctool_param
-import synctool_aggr
-import synctool_lib
-
-from synctool_lib import verbose,stderr,unix_out
+'''ping the synctool nodes'''
 
 import os
 import sys
-import string
+import subprocess
 import getopt
 import shlex
 import errno
 
-NODESET = synctool_nodeset.NodeSet()
+import synctool.aggr
+import synctool.config
+import synctool.lib
+from synctool.lib import verbose, stderr, unix_out
+import synctool.nodeset
+import synctool.param
+import synctool.unbuffered
+
+NODESET = synctool.nodeset.NodeSet()
 
 OPT_AGGREGATE = False
 
+MASTER_OPTS = []
 
-def ping_nodes(nodes):
-	'''ping nodes in parallel'''
-	'''nodes is a list of interfaces, really'''
-
-	if not synctool_param.PING_CMD:
-		stderr('%s: error: ping_cmd has not been defined in %s' % (os.path.basename(sys.argv[0]), synctool_param.CONF_FILE))
-		sys.exit(-1)
-
-	synctool_lib.run_parallel(master_ping, worker_ping, nodes, len(nodes))
+MAX_DISPLAY_LEN = 1
 
 
-def master_ping(rank, nodes):
-	nodename = NODESET.get_nodename_from_interface(nodes[rank])
-	if nodename == synctool_param.NODENAME:
-		print '%s: up' % nodename
-		return
+def ping_nodes(address_list):
+    '''ping nodes in parallel'''
 
-	verbose('pinging %s' % nodename)
-	unix_out('%s %s' % (synctool_param.PING_CMD, nodes[rank]))
+    global MAX_DISPLAY_LEN
+
+    MAX_DISPLAY_LEN = _max_nodename_len(address_list)
+
+    synctool.lib.multiprocess(ping_node, address_list)
 
 
-def worker_ping(rank, nodes):
-	'''ping a single node'''
+def _max_nodename_len(address_list):
+    '''Returs maximum length of nodename to display'''
 
-	node = nodes[rank]
-	nodename = NODESET.get_nodename_from_interface(node)
+    max_len = 1
+    for addr in address_list:
+        node = NODESET.get_nodename_from_address(addr)
+        if len(node) > max_len:
+            max_len = len(node)
 
-	packets_received = 0
+    return max_len
 
-	# execute ping command and show output with the nodename
-	cmd = '%s %s' % (synctool_param.PING_CMD, node)
-	cmd_arr = shlex.split(cmd)
-	f = synctool_lib.popen(cmd_arr)
-	if not f:
-		stderr('failed to run command %s' % cmd_arr[0])
-		return
 
-	while True:
-		line = f.readline()
-		if not line:
-			break
+def ping_node(addr):
+    '''ping a single node'''
 
-		line = string.strip(line)
+    node = NODESET.get_nodename_from_address(addr)
+    if node == synctool.param.NODENAME:
+        print '%-*s  up' % (MAX_DISPLAY_LEN, node)
+        return
 
-		#
-		#	argh, we have to parse output here
-		#	ping says something like:
-		#	"2 packets transmitted, 0 packets received, 100.0% packet loss" on BSD
-		#	"2 packets transmitted, 0 received, 100.0% packet loss, time 1001ms" on Linux
-		#
-		arr = string.split(line)
-		if len(arr) > 3 and arr[1] == 'packets' and arr[2] == 'transmitted,':
-			try:
-				packets_received = int(arr[3])
-			except ValueError:
-				pass
+    verbose('pinging %s' % node)
+    unix_out('%s %s' % (synctool.param.PING_CMD, addr))
 
-			break
+    packets_received = 0
 
-		# some ping implementations say "hostname is alive" or "hostname is unreachable"
-		elif len(arr) == 3 and arr[1] == 'is':
-			if arr[2] == 'alive':
-				packets_received = 100
+    # execute ping command and show output with the nodename
+    cmd = '%s %s' % (synctool.param.PING_CMD, addr)
+    cmd_arr = shlex.split(cmd)
 
-			elif arr[2] == 'unreachable':
-				packets_received = -1
+    try:
+        f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
+    except OSError as err:
+        stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
+        return False
 
-	f.close()
+    with f:
+        for line in f:
+            line = line.strip()
 
-	if packets_received > 0:
-		print '%s: up' % nodename
-	else:
-		print '%s: not responding' % nodename
+            # argh, we have to parse output here
+            #
+            # on BSD, ping says something like:
+            # "2 packets transmitted, 0 packets received, 100.0% packet loss"
+            #
+            # on Linux, ping says something like:
+            # "2 packets transmitted, 0 received, 100.0% packet loss, " \
+            # "time 1001ms"
+
+            arr = line.split()
+            if len(arr) > 3 and (arr[1] == 'packets' and
+                                 arr[2] == 'transmitted,'):
+                try:
+                    packets_received = int(arr[3])
+                except ValueError:
+                    pass
+
+                break
+
+            # some ping implementations say "hostname is alive"
+            # or "hostname is unreachable"
+            elif len(arr) == 3 and arr[1] == 'is':
+                if arr[2] == 'alive':
+                    packets_received = 100
+
+                elif arr[2] == 'unreachable':
+                    packets_received = -1
+
+    if packets_received > 0:
+        print '%-*s  up' % (MAX_DISPLAY_LEN, node)
+    else:
+        print '%-*s  not responding' % (MAX_DISPLAY_LEN, node)
 
 
 def check_cmd_config():
-	'''check whether the commands as given in synctool.conf actually exist'''
+    '''check whether the commands as given in synctool.conf actually exist'''
 
-	(ok, synctool_param.PING_CMD) = synctool_config.check_cmd_config('ping_cmd', synctool_param.PING_CMD)
-	if not ok:
-		sys.exit(-1)
+    (ok, synctool.param.PING_CMD) = synctool.config.check_cmd_config(
+                                        'ping_cmd', synctool.param.PING_CMD)
+    if not ok:
+        sys.exit(-1)
 
 
 def usage():
-	print 'usage: %s [options]' % os.path.basename(sys.argv[0])
-	print 'options:'
-	print '  -h, --help                     Display this information'
-	print '  -c, --conf=dir/file            Use this config file'
-	print '                                 (default: %s)' % synctool_param.DEFAULT_CONF
-	print '  -n, --node=nodelist            Execute only on these nodes'
-	print '  -g, --group=grouplist          Execute only on these groups of nodes'
-	print '  -x, --exclude=nodelist         Exclude these nodes from the selected group'
-	print '  -X, --exclude-group=grouplist  Exclude these groups from the selection'
-	print '  -a, --aggregate                Condense output'
-	print
-	print '  -v, --verbose                  Be verbose'
-	print '      --unix                     Output actions as unix shell commands'
-	print '      --version                  Print current version number'
-	print
-	print 'A nodelist or grouplist is a comma-separated list'
-	print
-	print 'synctool-ping by Walter de Jong <walter@heiho.net> (c) 2013'
+    '''print usage information'''
+
+    print 'usage: %s [options]' % os.path.basename(sys.argv[0])
+    print 'options:'
+    print '  -h, --help                     Display this information'
+    print '  -c, --conf=FILE                Use this config file'
+    print ('                                 (default: %s)' %
+        synctool.param.DEFAULT_CONF)
+
+    print '''  -n, --node=LIST                Execute only on these nodes
+  -g, --group=LIST               Execute only on these groups of nodes
+  -x, --exclude=LIST             Exclude these nodes from the selected group
+  -X, --exclude-group=LIST       Exclude these groups from the selection
+  -a, --aggregate                Condense output
+
+  -N, --numproc=NUM              Set number of concurrent procs
+  -z, --zzz=NUM                  Sleep NUM seconds between each run
+  -v, --verbose                  Be verbose
+      --unix                     Output actions as unix shell commands
+'''
 
 
 def get_options():
-	global NODESET, REMOTE_CMD, MASTER_OPTS, OPT_AGGREGATE
+    '''parse command-line options'''
 
-	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:aNq', ['help', 'conf=', 'verbose',
-			'node=', 'group=', 'exclude=', 'exclude-group=', 'aggregate', 'unix', 'quiet'])
-	except getopt.error, (reason):
-		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
-#		usage()
-		sys.exit(1)
+    global MASTER_OPTS, OPT_AGGREGATE
 
-	except getopt.GetoptError, (reason):
-		print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
-#		usage()
-		sys.exit(1)
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:aNqp:z:',
+            ['help', 'conf=', 'verbose', 'node=', 'group=',
+            'exclude=', 'exclude-group=', 'aggregate', 'unix', 'quiet',
+            'numproc=', 'zzz='])
+    except getopt.GetoptError as reason:
+        print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
+#        usage()
+        sys.exit(1)
 
-	except:
-		usage()
-		sys.exit(1)
+    # first read the config file
+    for opt, arg in opts:
+        if opt in ('-h', '--help', '-?'):
+            usage()
+            sys.exit(1)
 
-	# first read the config file
-	for opt, arg in opts:
-		if opt in ('-h', '--help', '-?'):
-			usage()
-			sys.exit(1)
+        if opt in ('-c', '--conf'):
+            synctool.param.CONF_FILE = arg
+            continue
 
-		if opt in ('-c', '--conf'):
-			synctool_param.CONF_FILE = arg
-			continue
+    synctool.config.read_config()
+    check_cmd_config()
 
-		if opt == '--version':
-			print synctool_param.VERSION
-			sys.exit(0)
+    # then process the other options
+    MASTER_OPTS = [ sys.argv[0] ]
 
-	synctool_config.read_config()
-	check_cmd_config()
+    for opt, arg in opts:
+        if opt:
+            MASTER_OPTS.append(opt)
+        if arg:
+            MASTER_OPTS.append(arg)
 
-	# then process the other options
-	MASTER_OPTS = [ sys.argv[0] ]
+        if opt in ('-h', '--help', '-?', '-c', '--conf'):
+            # already done
+            continue
 
-	for opt, arg in opts:
-		if opt:
-			MASTER_OPTS.append(opt)
-		if arg:
-			MASTER_OPTS.append(arg)
+        if opt in ('-v', '--verbose'):
+            synctool.lib.VERBOSE = True
+            continue
 
-		if opt in ('-h', '--help', '-?', '-c', '--conf', '--version'):
-			# already done
-			continue
+        if opt in ('-n', '--node'):
+            NODESET.add_node(arg)
+            continue
 
-		if opt in ('-v', '--verbose'):
-			synctool_lib.VERBOSE = True
-			continue
+        if opt in ('-g', '--group'):
+            NODESET.add_group(arg)
+            continue
 
-		if opt in ('-n', '--node'):
-			NODESET.add_node(arg)
-			continue
+        if opt in ('-x', '--exclude'):
+            NODESET.exclude_node(arg)
+            continue
 
-		if opt in ('-g', '--group'):
-			NODESET.add_group(arg)
-			continue
+        if opt in ('-X', '--exclude-group'):
+            NODESET.exclude_group(arg)
+            continue
 
-		if opt in ('-x', '--exclude'):
-			NODESET.exclude_node(arg)
-			continue
+        if opt in ('-a', '--aggregate'):
+            OPT_AGGREGATE = True
+            continue
 
-		if opt in ('-X', '--exclude-group'):
-			NODESET.exclude_group(arg)
-			continue
+        if opt == '--unix':
+            synctool.lib.UNIX_CMD = True
+            continue
 
-		if opt in ('-a', '--aggregate'):
-			OPT_AGGREGATE = True
-			continue
+        if opt in ('-q', '--quiet'):
+            # silently ignore this option
+            continue
 
-		if opt == '--unix':
-			synctool_lib.UNIX_CMD = True
-			continue
+        if opt in ('-N', '--numproc'):
+            try:
+                synctool.param.NUM_PROC = int(arg)
+            except ValueError:
+                print ("%s: option '%s' requires a numeric value" %
+                       (os.path.basename(sys.argv[0]), opt))
+                sys.exit(1)
 
-		if opt in ('-q', '--quiet'):
-			# silently ignore this option
-			continue
+            if synctool.param.NUM_PROC < 1:
+                print ('%s: invalid value for numproc' %
+                       os.path.basename(sys.argv[0]))
+                sys.exit(1)
 
-	if args != None:
-		MASTER_OPTS.extend(args)
+            continue
 
-	return args
+        if opt in ('-z', '--zzz'):
+            try:
+                synctool.param.SLEEP_TIME = int(arg)
+            except ValueError:
+                print ("%s: option '%s' requires a numeric value" %
+                       (os.path.basename(sys.argv[0]), opt))
+                sys.exit(1)
+
+            if synctool.param.SLEEP_TIME < 0:
+                print ('%s: invalid value for sleep time' %
+                       os.path.basename(sys.argv[0]))
+                sys.exit(1)
+
+            if not synctool.param.SLEEP_TIME:
+                # (temporarily) set to -1 to indicate we want
+                # to run serialized
+                # synctool.lib.multiprocess() will use this
+                synctool.param.SLEEP_TIME = -1
+
+            continue
+
+    if args != None and len(args) > 0:
+        print '%s: too many arguments' % os.path.basename(sys.argv[0])
+        sys.exit(1)
 
 
 def main():
-	sys.stdout = synctool_unbuffered.Unbuffered(sys.stdout)
-	sys.stderr = synctool_unbuffered.Unbuffered(sys.stderr)
+    '''run the program'''
 
-	cmd_args = get_options()
+    synctool.param.init()
 
-	if OPT_AGGREGATE:
-		synctool_aggr.run(MASTER_OPTS)
-		sys.exit(0)
+    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)
+    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)
 
-	synctool_config.add_myhostname()
+    get_options()
 
-	nodes = NODESET.interfaces()
-	if nodes == None or len(nodes) <= 0:
-		print 'no valid nodes specified'
-		sys.exit(1)
+    if OPT_AGGREGATE:
+        if not synctool.aggr.run(MASTER_OPTS):
+            sys.exit(-1)
 
-	ping_nodes(nodes)
+        sys.exit(0)
+
+    synctool.config.init_mynodename()
+
+    address_list = NODESET.addresses()
+    if not address_list:
+        print 'no valid nodes specified'
+        sys.exit(1)
+
+    ping_nodes(address_list)
 
 
 if __name__ == '__main__':
-	try:
-		main()
-	except IOError, ioerr:
-		if ioerr.errno == errno.EPIPE:		# Broken pipe
-			pass
-		else:
-			print ioerr
+    try:
+        main()
+    except IOError as ioerr:
+        if ioerr.errno == errno.EPIPE:  # Broken pipe
+            pass
+        else:
+            print ioerr.strerror
 
-	except KeyboardInterrupt:		# user pressed Ctrl-C
-		pass
-
+    except KeyboardInterrupt:        # user pressed Ctrl-C
+        print
 
 # EOB

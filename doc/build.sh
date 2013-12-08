@@ -1,11 +1,29 @@
-#! /bin/bash
+#! /bin/sh
+#
+#	build.sh    WJ113
+#
+#	- build HTML documentation from markdown
+#
 
-FILES="toc.m4 chapter1.m4 chapter2.m4 chapter3.m4 chapter4.m4 chapter5.m4 thank_you.m4 single.m4"
+FILES="toc chapter1 chapter2 chapter3 chapter4 chapter5 thank_you"
 
 for file in $FILES
 do
-	html="${file%%.m4}.html"
-	echo "$file -> $html"
-	m4 $file >$html
+	echo "${file}.md -> ${file}.html"
+	( cat header.html ;
+	cat ${file}.md | markdown | smartypants ;
+	cat footer.html ) > ${file}.html
 done
 
+# generate single page document
+echo "writing single.html"
+
+( cat header.html ;
+for file in $FILES ;
+do
+	cat ${file}.md | markdown | smartypants ;
+	cat line.html ;
+done ;
+cat footer.html ) > single.html
+
+# EOB

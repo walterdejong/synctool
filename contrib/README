@@ -9,6 +9,12 @@ for any damage done by these scripts.
 
 Files in this directory:
 
+syslog-ng-synctool.conf
+  syslog-ng configuration for filtering synctool syslog messages.
+
+logrotate.conf
+  logrotate configuration for rotating synctool.log log files.
+
 synctool-structure
   A script that neatly displays the node configuration in formatted columns.
   Contributed by Onno Zweers
@@ -52,28 +58,13 @@ nmap_config.sh
 synctool_csmcompat.py
   checks for differences in node configuration between synctool-config
   and IBM's CSM nodes
-  Contributed by Huub Stoffers
+  Contributed by Huub Stoffers (written by Walter)
 
 checkconfig
   IRIX-like chkconfig command
   (and note how its functionality is really entirely different from
    RedHat/SuSE's chkconfig command)
   Contributed by Walter
-
-crc32.py
-  checksum replacement for synctool.py.
-  CRC-32 is fast, but regularly gives false positives
-  Contributed by Walter
-
-md5sum.py
-  checksum replacement for synctool.py (MD5 already is default)
-  Contributed by Walter
-
-sha1sum.py
-  checksum replacement for synctool.py
-  SHA-1 is slow ... but highly reliable when it comes to collisions
-  Contributed by Walter
-
 
 ATTIC
 In the attic/ are old, obsoleted, deprecated scripts.
@@ -111,4 +102,18 @@ rsynctool-upload
   copies files from nodes into the repository
   (obsoleted by synctool -u)
   Contributed by Huub Stoffers
+
+crc32.py
+  checksum replacement for synctool.py.
+  CRC-32 is fast, but regularly gives false positives
+  Contributed by Walter
+
+md5sum.py
+  checksum replacement for synctool.py (MD5 already is default)
+  Contributed by Walter
+
+sha1sum.py
+  checksum replacement for synctool.py
+  SHA-1 is slow ... but highly reliable when it comes to collisions
+  Contributed by Walter
 

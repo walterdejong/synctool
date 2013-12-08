@@ -1,7 +1,7 @@
 /*
 	synctool_doc.css	WJ111
 
-	synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
+	synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 
 	synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 	synctool is distributed under terms described in the GNU General Public
@@ -39,7 +39,7 @@ h1 {
 	font-size: 2em;
 	font-weight: bold;
 /*	text-transform: capitalize;	*/
-	margin: 0 0 .5em 0;
+	margin: 2em 0 .5em 0;
 }
 
 h2 {
@@ -105,11 +105,11 @@ dd {
 div#page {
 	position: relative;
     width: 80%;
-    
+
 	height: auto !important;	/* real browsers */
 	height: 100%;				/* IE6: treated as min-height*/
 	min-height: 100%;			/* real browsers */
-	
+
 	margin: 0 auto;
 	padding: 0;
 	background-color: #fff;
@@ -136,13 +136,13 @@ div#footer {
 	width: 100%;
 	bottom: 0;				/* stick to bottom */
 	padding: 0em 0em .5em;
-	
+
 	font-family: georgia, times, serif;
 	font-style: italic;
 	font-size: .8em;
 }
 
-.example {
+pre {
 	border: solid 1px #000;
 	background-color: #eee;
 	font-family: menlo, courier, monospace;
@@ -152,28 +152,17 @@ div#footer {
 	padding-left: 1.5em;
 }
 
-.note {
+blockquote {
 	border: dashed 1px #aaa;
 	background-color: #eee;
 	margin: 1em auto 1em auto;
-	padding: 1em;
+	padding: 0 1em 1em 1em;
 }
 
-.system {
+code {
 	font-family: menlo, courier, monospace;
 	font-size: .95em;
 	word-break: keep-all;
-}
-
-.cmd {
-	font-family: menlo, courier, monospace;
-	font-size: .95em;
-	word-break: keep-all;
-}
-
-.path {
-	font-family: menlo, courier, monospace;
-	font-size: .95em;
 }
 
 .vtab {
@@ -184,11 +173,6 @@ div#footer {
 
 .line {
 	border: dashed 2px #eee;
-}
-
-.smallcaps {
-	text-transform: uppercase;
-	font-size: 80%;
 }
 
 /* EOB */

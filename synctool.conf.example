@@ -1,27 +1,73 @@
 #
 #	synctool.conf
 #
+# This is an example file; adjust your synctool.conf as needed
+# commented parameters resemble built-in defaults
 
-masterdir /var/lib/synctool
+# specify groups and nodes
 
-#overlaydir $masterdir/overlay
+# by default, synctool will run on these nodes
+# You can specify a certain group or a list of groups/nodes
+# 'none' will result in synctool not running at all
+# This setting can be overridden by passing the nodes on the command-line
+#default_nodeset all
 
-# Note that multiple overlay dirs are supported, so you can do things like
-#overlaydir $masterdir/overlay-common
-#overlaydir $masterdir/overlay-subcluster1
-#overlaydir $masterdir/overlay-all
+# designate node0 as master node
+# the fqdn (fully qualified domain name) is given as argument
+master node0.mycluster.org
+
+# slave nodes get a full copy of the synctool repository
+#slave node8 node9
+
+# compound groups may be specified like this
+group wn workernode batch
+group test wn
+group g1 batch test wn
+
+# list all nodes and their groups
+# the nodename is a logical name known only to synctool
+# "ipaddress:" specifies the IP address where synctool connects to
 #
-# Same goes for deletedir and tasksdir, but not for scriptdir ...
+# The optional 'hostname:' keyword may be used to tell synctool
+# the hostname of the node. This is generally not needed, unless
+# you ever decide to run synctool.py manually on the target node,
+# in stand-alone mode.
 #
-# these are defaults:
-#deletedir $masterdir/delete
-#tasksdir $masterdir/tasks
-#scriptdir $masterdir/scripts
+# Optionally, 'rsync:no' may be given to keep synctool from rsync-ing
+# the repository to that node. This is only useful when the node has access
+# to the repository via shared storage (like an NFS share)
 
-# use mode 0777 on Linux
-#symlink_mode 0777
-# use mode 0755 on most other Unix platforms
-symlink_mode 0755
+# managing the masternode also with synctool is generally not a great idea
+#node node0 master
+
+node node1 fs sched aix    ipaddress:node1-mgmt hostname:myhost1.mydomain.com
+node node2 login    debian ipaddress:node2-mgmt hostname:myhost2.mydomain.com
+node node3 wn       debian ipaddress:node3-mgmt
+node node4 wn       debian ipaddress:node4-mgmt rsync:no
+node node5 wn       centos ipaddress:node5-mgmt rsync:no
+node node6 wn       centos ipaddress:node6-mgmt
+node node7 wn       centos ipaddress:node7-mgmt
+node node8 test     sunos  ipaddress:node8-mgmt hostid:/etc/hostname.bnx0
+node node9 batch    sunos  ipaddress:node9-mgmt hostid:/etc/hostname.bnx0
+
+# ignore one or more nodes
+ignore_node node0 node9
+
+# ignore a number of groups
+ignore_group test test2
+
+# ignore all files beginning with a dot (like .profile, .bashrc, ...)
+#ignore_dotfiles no
+
+# ignore all directories beginning with a dot (like .git, .svn, ...)
+#ignore_dotdirs no
+
+# ignore certain files/directories
+ignore .svn
+ignore .gitignore
+ignore .*.swp
+
+#tempdir	 /tmp/synctool
 
 # all files in the repository must have a group extension
 #require_extension yes
@@ -29,36 +75,45 @@ symlink_mode 0755
 # make backup copies named *.saved
 #backup_copies yes
 
-# ignore all files beginning with a dot (like .profile, .bashrc, ...)
-#ignore_dotfiles no
-
-# ignore all directories beginning with a dot (like .git, .svn, ...)
-ignore_dotdirs yes
-
-# ignore specific files/directories
-ignore .svn
-ignore .gitignore
-
-# log to file
-logfile /var/log/synctool.log
+# log to syslog
+#syslogging yes
 
 # configure external commands that synctool uses
-diff_cmd diff -u
-ping_cmd ping -q -c 1 -t 1
+#diff_cmd diff -u
 #ping_cmd fping -t 500
-ssh_cmd ssh -o ConnectTimeout=10 -x -q
-scp_cmd scp -o ConnectTimeout=10 -p
-rsync_cmd rsync -ar --exclude='*.pyc' --delete -e 'ssh -o ConnectTimeout=10 -q'
-synctool_cmd $masterdir/sbin/synctool.py -c $masterdir/synctool.conf
-pkg_cmd $masterdir/sbin/synctool_pkg.py -c $masterdir/synctool.conf
+#ping_cmd ping -q -c 1 -t 1
+#ssh_cmd ssh -o ConnectTimeout=10 -x -q
+#scp_cmd scp -o ConnectTimeout=10 -p
 
+# synctool depends on rsync, but this command is configurable
+# so that you can do things like:
 #
-# configure a package manager for synctool-pkg / dsh-pkg to use
-# If you don't configure one, synctool-pkg will try to detect one
+#  rsync_cmd rsync -ar --dry-run -vv
+# or
+#  rsync_cmd rsync -ar --delete --delete-excluded -e 'ssh -c arcfour'
+#
+# synctool-master automatically appends another option:
+#  --filter=/tmp/synctool/synctool-tempfile
+#
+#rsync_cmd rsync -ar --numeric-ids --delete --delete-excluded -e 'ssh -o ConnectTimeout=10 -x -q' -q
+
+#synctool_cmd $SYNCTOOL/bin/synctool-client
+#pkg_cmd $SYNCTOOL/bin/synctool-client-pkg
+
+# Force the package manager for synctool-pkg / dsh-pkg to use
+# If you don't configure one, synctool-pkg will detect one
 # (this is usually OK)
 #
 # If you do not want to detect it, choose one of the supported
-# package managers:
+# package managers.
+#
+# Note: Multi-platform setups
+# It makes no sense to force a single package manager onto a heterogeneous
+# cluster. If you run a multi-platform setup and need to force
+# the package_manager, solve it with a local include, like:
+#  include /etc/synctool_local.conf
+# You can still override this setting from the command-line when invoking
+# synctool-pkg.
 #
 #package_manager apt-get
 #package_manager yum
@@ -70,7 +125,7 @@ pkg_cmd $masterdir/sbin/synctool_pkg.py -c $masterdir/synctool.conf
 # max amount of parallel processes that synctool uses on the master node
 #num_proc 16
 
-# display full paths or just '$masterdir/overlay/...'
+# display full paths or just '$overlay/...'
 #full_path no
 
 # show terse output with shortened paths?
@@ -107,65 +162,6 @@ pkg_cmd $masterdir/sbin/synctool_pkg.py -c $masterdir/synctool.conf
 #color_dryrun default
 #color_fixing default
 #color_ok     default
-
-# specify groups and nodes
-
-# compound groups may be specified like this
-group wn workernode batch
-group test wn
-group g1 batch test wn
-
-#
-# list all nodes and their groups
-# the nodename is a logical name known only to synctool
-# "ipaddress:" specifies the IP address where synctool connects to
-# Instead of "ipaddress:", also the older "interface:" keyword
-# may be used to specify the IP address of a node
-#
-# The optional 'hostname:' keyword may be used to tell synctool
-# the hostname of the node. This is in particular needed for specific
-# cases of multi-homed setups in which synctool can not find out what
-# node it is running on.
-#
-node node0 master
-
-node node1 fs sched ipaddress:node1-mgmt  hostname:myhost1.mydomain.com
-node node2 login    ipaddress:node2-mgmt  hostname:myhost2.mydomain.com
-node node3 wn       ipaddress:node3-mgmt
-node node4 wn       ipaddress:node4-mgmt
-node node5 wn       ipaddress:node5-mgmt
-node node6 wn       ipaddress:node6-mgmt
-node node7 wn       ipaddress:node7-mgmt
-node node8 test     ipaddress:node8-mgmt  hostid:/etc/hostname.bnx0
-node node9 batch    ipaddress:node9-mgmt  hostid:/etc/hostname.bnx0
-
-# ignore one or more nodes
-ignore_node node0 node9
-
-# ignore a number of groups
-ignore_group test test2
-
-#
-# run command when file or directory is updated
-# This is an alternative method to using .post scripts
-# Note that the command on the right hand side must be a full path, or
-# else the command will be looked for under scriptdir ($masterdir/scripts)
-#
-# The exact commands to reload system daemons are operating system dependant
-# so adapt these to fit your situation
-#
-on_update	/etc/aliases					/usr/bin/newaliases
-on_update	/etc/ssh/sshd_config			/etc/init.d/ssh reload
-on_update	/etc/syslog-ng/syslog-ng.conf	/etc/init.d/syslog-ng reload
-on_update	/etc/ntp.conf					/sbin/service ntp reload
-
-on_update	/etc/logrotate.d				/bin/rm -f /etc/logrotate.d/*.saved
-on_update	/etc/cron.d						/bin/rm -f /etc/cron.d/*.saved
-on_update	/etc/cron.daily					/bin/rm -f /etc/cron.daily/*.saved
-on_update	/etc/init.d						/bin/rm -f /etc/init.d/*.saved
-
-# always run this command
-#always_run /bin/date
 
 # include a local synctool config file on the target node
 #include /etc/synctool_local.conf

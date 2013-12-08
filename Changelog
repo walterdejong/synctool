@@ -1,9 +1,60 @@
-June 2013
+December 2013
+- purge --single may complain about timestamps (because rsync will also)
+  synctool can fix these, but only for purge --single. Otherwise synctool
+  doesn't care about timestamps
+
+November 2013
+- 'master' node must be explicitly defined in config file
+- slaves may be defined; they get full copies of the repository
+
+June/July/August 2013
+- overlay dirs are grouped; default overlay dir is overlay/all/
+- rsync only relevant directories to the target nodes
+- templates allow you to generate config files on the fly
+- templates and template post scripts can have group extensions
+- new command synctool-template helps with 'templating' config files
+- add purge directories, they are mirrored to the target nodes
+- when uploading, use option --overlay to change the suggested overlay dir
+- when uploading, use option --purge to upload to purge dir
+- when dsh runs a script from the scripts/ dir, it will first sync it
+  to the nodes to make sure it runs the latest version of the script
+- default_nodeset: by default run only on these nodes
+- added support for fifo's and device files
+- node and group names are checked against a character set;
+  'strange' symbols are no longer allowed
 - master passes nodename to the client; "hostid:" no longer needed
+- new node specifier 'rsync:no' may be given if the synctool repository is
+  on a shared filesystem
+- option --numproc now works on synctool, dsh and friends
+- synctool now logs updates to syslog on the master node
+- dsh-pkg now logs package installs/removals/upgrades
+- config parser shows better error messages
+- synctool-config output has changed ... check your scripts
 - fix issue with multi-OS; do not check all paths of configured commands
   like ping_cmd, ssh_cmd, etc.
 - fix issue; --erase-saved -f would also apply changes
+- fix issues with ownership and mode of symbolic links
 - fix; groups "all" and "none" can not be redefined
+- option --tasks is obsolete; use dsh and dsh-pkg
+- on_update is obsolete; use .post scripts
+- always_run is obsolete; use dsh or a wrapper script if you really need it
+- overlaydir is obsolete; hardcoded as ROOT/var/overlay
+- deletedir is obsolete; hardcoded as ROOT/var/delete
+- scriptdir is obsolete; hardcoded as ROOT/scripts
+- tasksdir is obsolete; tasks are obsolete
+- use new tempdir setting as location for temp files
+- interface: specifier is obsolete; use "ipaddress:"
+- ignore_host is obsolete; use "ignore_node"
+- host is obsolete; use "node"
+- ignore_file is obsolete; use "ignore"
+- ignore_files is obsolete; use "ignore"
+- ignore_dir is obsolete; use "ignore"
+- ignore_dirs is obsolete; use "ignore"
+- masterdir is obsolete; synctool finds it by itself
+- symlink_mode is obsolete; synctool now treats symlink mode correctly
+- new documentation in markdown format
+- run setup.sh to install synctool
+- code now conforms to PEP 8 Python Coding Style (for the most part)
 
 Aug 2012
 - added dsh --numproc, patch by Werner Maier
