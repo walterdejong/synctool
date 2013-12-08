@@ -551,6 +551,50 @@ def _single_delete_callback(obj, post_dict, updated, *args):
     return go_on, updated
 
 
+def _single_purge_callback(obj, post_dict, updated, *args):
+    '''do purge function for single files'''
+
+    # The same as _single_overlay_callback(), except that
+    # purge entries may differ in timestamp. synctool has to report
+    # this because pure rsync will as well (which is bloody annoying)
+    #
+    # For normal synctool overlay/, it's regarded as not important
+    # and synctool will not complain about it
+    #
+    # This actually leaves a final wart; synctool --single may create
+    # purge entries that rsync will complain about and sync again
+    # Anyway, I don't think it's a big deal, and that's what you get
+    # when you mix up synctool and rsync
+
+    go_on = True
+
+    if _match_single(obj.dest_path):
+        _, updated = _overlay_callback(obj, post_dict, False, *args)
+        if not updated:
+            if not obj.check_purge_timestamp():
+                stdout('%s mismatch (only timestamp)' % obj.dest_path)
+                terse(synctool.lib.TERSE_WARNING,
+                      '%s (only timestamp)' % obj.dest_path)
+                unix_out('# %s # only timestamp mismatch\n' % obj.dest_path)
+            else:
+                stdout('%s is up to date' % obj.dest_path)
+                terse(synctool.lib.TERSE_OK, obj.dest_path)
+                unix_out('# %s is up to date\n' % obj.dest_path)
+        else:
+            # register .post on the parent dir, if it has a .post script
+            obj.dest_path = os.path.dirname(obj.dest_path)
+            obj.dest_stat = synctool.syncstat.SyncStat(obj.dest_path)
+
+            if obj.dest_path in post_dict:
+                changed_dict = args[0]
+                changed_dict[obj.dest_path] = (obj, post_dict[obj.dest_path])
+
+        if not SINGLE_FILES:
+            return False, updated
+
+    return go_on, updated
+
+
 def single_files():
     '''check/update a list of single files'''
 
@@ -561,11 +605,7 @@ def single_files():
     # For files that were not found, look in the purge/ tree
     # Any overlay-ed files have already been removed from SINGLE_FILES
     # So purge/ won't overrule overlay/
-    # FIXME overlay_callback does not see/report changed timestamps,
-    # FIXME while pure rsync (purge function) does
-    # FIXME so ideally there should be a _single_purge_callback that
-    # FIXME invokes _run_rsync_purge() to detect the change in $purge/
-    visit_purge_single(_single_overlay_callback)
+    visit_purge_single(_single_purge_callback)
 
     # run any .post scripts on updated directories
     for path in changed_dict:

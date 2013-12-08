@@ -760,4 +760,35 @@ class SyncObject(object):
         # error, can not handle file type of src_path
         return None
 
+    def check_purge_timestamp(self):
+        '''check timestamp between src and dest
+        Returns True if same, False if not'''
+
+        # This is only used for purge/
+        # check() has already determined that the files are the same
+        # Now only check the timestamp ...
+        # Note that SyncStat objects do not know the timestamps;
+        # they are not cached only to save memory
+        # So now we have to os.stat() again to get the times; it is
+        # not a big problem because this func is used for purge_single only
+
+        # src_path is under $purge/
+        # dest_path is in the filesystem
+
+        try:
+            src_stat = os.lstat(self.src_path)
+        except OSError as err:
+            stderr('error: stat(%s) failed: %s' % (self.src_path,
+                                                   err.strerror))
+            return False
+
+        try:
+            dest_stat = os.lstat(self.dest_path)
+        except OSError as err:
+            stderr('error: stat(%s) failed: %s' % (self.dest_path,
+                                                   err.strerror))
+            return False
+
+        return src_stat.st_mtime == dest_stat.st_mtime
+
 # EOB
