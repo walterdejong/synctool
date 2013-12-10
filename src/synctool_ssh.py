@@ -80,6 +80,11 @@ def run_dsh(address_list, remote_cmd_arr):
 def worker_ssh(addr):
     '''worker process: sync script and run ssh+command to the node'''
 
+    # Note that this func even runs ssh to the local node if
+    # the master is also managed by synctool
+    # This is completely intentional, and it resolves certain
+    # issues with shell quoted commands on the dsh cmd line
+
     nodename = NODESET.get_nodename_from_address(addr)
 
     if (SYNC_IT and
@@ -102,16 +107,9 @@ def worker_ssh(addr):
     # or else parallelism may screw things up
     ssh_cmd_arr = SSH_CMD_ARR[:]
 
-    if nodename == synctool.param.NODENAME:
-        verbose('running %s' % cmd_str)
-
-        # is this node the local node? Then do not use ssh
-        ssh_cmd_arr = []
-    else:
-        verbose('running %s to %s %s' % (os.path.basename(SSH_CMD_ARR[0]),
-                                         nodename, cmd_str))
-        ssh_cmd_arr.append(addr)
-
+    verbose('running %s to %s %s' % (os.path.basename(SSH_CMD_ARR[0]),
+                                     nodename, cmd_str))
+    ssh_cmd_arr.append(addr)
     ssh_cmd_arr.extend(REMOTE_CMD_ARR)
 
     unix_out(' '.join(ssh_cmd_arr))
