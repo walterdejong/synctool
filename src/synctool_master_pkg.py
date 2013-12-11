@@ -46,10 +46,6 @@ def worker_pkg(addr):
 
     nodename = NODESET.get_nodename_from_address(addr)
 
-    if nodename == synctool.param.NODENAME:
-        run_local_pkg()
-        return
-
     # run 'ssh node pkg_cmd'
     cmd_arr = shlex.split(synctool.param.SSH_CMD)
     cmd_arr.append(addr)
@@ -60,17 +56,6 @@ def worker_pkg(addr):
     unix_out(' '.join(cmd_arr))
 
     synctool.lib.run_with_nodename(cmd_arr, nodename)
-
-
-def run_local_pkg():
-    '''run synctool-pkg locally on the master node'''
-
-    cmd_arr = shlex.split(synctool.param.PKG_CMD) + PASS_ARGS
-
-    verbose('running synctool-pkg on node %s' % synctool.param.NODENAME)
-    unix_out(' '.join(cmd_arr))
-
-    synctool.lib.run_with_nodename(cmd_arr, synctool.param.NODENAME)
 
 
 def rearrange_options():
