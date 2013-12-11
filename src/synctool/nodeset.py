@@ -232,7 +232,7 @@ def expand_expression(expr):
 
         if '-' in elem:
             start, end = elem.split('-')
-            width = len(start)
+            width = len(end)
 
             try:
                 start = int(start)
