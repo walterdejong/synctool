@@ -30,7 +30,7 @@ import synctool.param
 # So valid names are: node1 node1-10 node_10_0_0_2 node1+node2
 #
 SPELLCHECK = re.compile(
-    r'[a-zA-Z0-9]+(\_[a-zA-Z0-9]+|\-[a-zA-Z0-9]+|\+[a-zA-Z0-9]+)*')
+    r'[a-zA-Z]+([a-zA-Z0-9]+|\_[a-zA-Z0-9]+|\-[a-zA-Z0-9]+|\+[a-zA-Z0-9]+)*')
 
 # dict of defined Symbols
 # to see if a parameter is being redefined
