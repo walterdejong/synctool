@@ -61,10 +61,6 @@ def ping_node(addr):
     '''ping a single node'''
 
     node = NODESET.get_nodename_from_address(addr)
-    if node == synctool.param.NODENAME:
-        print '%-*s  up' % (MAX_DISPLAY_LEN, node)
-        return
-
     verbose('pinging %s' % node)
     unix_out('%s %s' % (synctool.param.PING_CMD, addr))
 
