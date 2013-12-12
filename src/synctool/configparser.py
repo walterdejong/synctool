@@ -657,8 +657,20 @@ def config_group(arr, configfile, lineno):
         stderr('%s: previous definition was here' % SYMBOLS[key].origin())
         return 1
 
+    grouplist = []
+    for grp in arr[2:]:
+        # range expression syntax: 'group generator'
+        if '[' in grp:
+            try:
+                grouplist.extend(synctool.range.expand(grp))
+            except synctool.range.RangeSyntaxError as err:
+                stderr("%s:%d: %s" % (configfile, lineno, err))
+                return 1
+        else:
+            grouplist.append(grp)
+
     try:
-        synctool.param.GROUP_DEFS[group] = expand_grouplist(arr[2:])
+        synctool.param.GROUP_DEFS[group] = expand_grouplist(grouplist)
     except RuntimeError:
         stderr('%s:%d: compound groups can not contain node names' %
                (configfile, lineno))
