@@ -97,17 +97,29 @@ def read_config():
 
 
 def make_default_nodeset():
-    synctool.param.DEFAULT_NODESET = get_nodes_in_groups(
-                                        synctool.param.DEFAULT_NODESET)
+    '''take the (temporary) DEFAULT_NODESET and expand it to
+    the definitive DEFAULT_NODESET'''
 
-    # unknowns are not in ALL_GROUPS
-    unknown = synctool.param.DEFAULT_NODESET - synctool.param.ALL_GROUPS
-
+    temp_set = synctool.param.DEFAULT_NODESET
+    synctool.param.DEFAULT_NODESET = set()
+    nodeset = synctool.nodeset.NodeSet()
     errors = 0
-    for g in unknown:
-        stderr("config error: unknown node or group '%s' "
-               "in default_nodeset" % g)
-        errors += 1
+    for elem in temp_set:
+        if elem in synctool.param.NODES:
+            nodeset.add_node(elem)
+        elif elem in synctool.param.ALL_GROUPS:
+            nodeset.add_group(elem)
+        else:
+            stderr("config error: unknown node or group '%s' "
+                   "in default_nodeset" % elem)
+            errors += 1
+
+    if not errors:
+        if not nodeset.addresses():
+            # error message already printed
+            errors += 1
+        else:
+            synctool.param.DEFAULT_NODESET = nodeset.nodelist
 
     return errors
 
@@ -213,10 +225,14 @@ def insert_group(node, group):
 
 
 def get_all_nodes():
+    '''Returns array with all node names'''
+
     return synctool.param.NODES.keys()
 
 
 def get_node_ipaddress(node):
+    '''Return IPaddress of node, or node name if unknown'''
+
     if node in synctool.param.IPADDRESSES:
         return synctool.param.IPADDRESSES[node]
 
@@ -224,6 +240,8 @@ def get_node_ipaddress(node):
 
 
 def get_node_hostname(node):
+    '''Return hostname of node, or node name if unknown'''
+
     if node in synctool.param.HOSTNAMES_BY_NODE:
         return synctool.param.HOSTNAMES_BY_NODE[node]
 

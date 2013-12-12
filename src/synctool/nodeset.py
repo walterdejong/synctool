@@ -44,7 +44,7 @@ class NodeSet(object):
     def add_node(self, nodelist):
         '''add a node to the nodeset'''
 
-        self.nodelist = set()
+#        self.nodelist = set()
         for node in synctool.range.split_nodelist(nodelist):
             if '[' in node:
                 self.nodelist |= set(synctool.range.expand(node))
@@ -54,7 +54,7 @@ class NodeSet(object):
     def add_group(self, grouplist):
         '''add a group to the nodeset'''
 
-        self.grouplist = set()
+#        self.grouplist = set()
         for group in synctool.range.split_nodelist(grouplist):
             if '[' in group:
                 self.grouplist |= set(synctool.range.expand(group))
@@ -64,7 +64,7 @@ class NodeSet(object):
     def exclude_node(self, nodelist):
         '''remove a node from the nodeset'''
 
-        self.exclude_nodes = set()
+#        self.exclude_nodes = set()
         for node in synctool.range.split_nodelist(nodelist):
             if '[' in node:
                 self.exclude_nodes |= set(synctool.range.expand(node))
@@ -74,7 +74,7 @@ class NodeSet(object):
     def exclude_group(self, grouplist):
         '''remove a group from the nodeset'''
 
-        self.exclude_groups = set()
+#        self.exclude_groups = set()
         for group in synctool.range.split_nodelist(grouplist):
             if '[' in group:
                 self.exclude_groups |= set(synctool.range.expand(group))

@@ -559,15 +559,29 @@ def config_default_nodeset(arr, configfile, lineno):
 
     synctool.param.DEFAULT_NODESET = set()
 
-    for g in arr[1:]:
-        if not spellcheck(g):
-            stderr("%s:%d: invalid name '%s'" % (configfile, lineno, g))
-            return 1
+    for elem in arr[1:]:
+        if '[' in elem:
+            try:
+                for expanded in synctool.range.expand(elem):
+                    if '[' in expanded:
+                        raise RuntimeError("bug: expanded range contains "
+                                           "'[' character")
 
-        if g == 'none':
-            synctool.param.DEFAULT_NODESET = set()
+                    synctool.param.DEFAULT_NODESET.add(expanded)
+            except synctool.range.RangeSyntaxError as err:
+                stderr("%s:%d: %s" % (configfile, lineno, err))
+                return 1
+
         else:
-            synctool.param.DEFAULT_NODESET.add(g)
+            if not spellcheck(elem):
+                stderr("%s:%d: invalid name '%s'" % (configfile, lineno,
+                                                     elem))
+                return 1
+
+            if elem == 'none':
+                synctool.param.DEFAULT_NODESET = set()
+            else:
+                synctool.param.DEFAULT_NODESET.add(elem)
 
     # for now, accept this as the default nodeset
     # There can be compound groups in it, so
