@@ -50,6 +50,9 @@ node node7 wn       centos ipaddress:node7-mgmt
 node node8 test     sunos  ipaddress:node8-mgmt hostid:/etc/hostname.bnx0
 node node9 batch    sunos  ipaddress:node9-mgmt hostid:/etc/hostname.bnx0
 
+# node10 to node25 are all the same
+node node[10-25]    wn  debian
+
 # ignore one or more nodes
 ignore_node node0 node9
 
