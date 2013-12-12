@@ -95,8 +95,12 @@ class NodeSet(object):
         # the user may have given bogus names
         all_nodes = set(synctool.config.get_all_nodes())
         unknown = (self.nodelist | self.exclude_nodes) - all_nodes
-        for node in unknown:
-            stderr("no such node '%s'" % node)
+        if len(unknown) > 0:
+            # it's nice to display "the first" unknown node
+            # (at least, for numbered nodes)
+            arr = list(unknown)
+            arr.sort()
+            stderr("no such node '%s'" % arr[0])
             return None
 
         # check if the groups exist at all
