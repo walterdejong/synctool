@@ -21,6 +21,7 @@ import socket
 import synctool.config
 import synctool.configparser
 from synctool.configparser import stderr
+import synctool.nodeset
 import synctool.param
 
 ACTION = 0
@@ -102,16 +103,23 @@ def list_all_groups():
         print group
 
 
-def list_nodes(nodenames):
+def list_nodes(nodelist):
     '''display node definition'''
+
+    nodeset = synctool.nodeset.NodeSet()
+    try:
+        nodeset.add_node(nodelist)
+    except synctool.range.RangeSyntaxError as err:
+        print 'error:', err
+        sys.exit(1)
+
+    if nodeset.addresses() == None:
+        # error message already printed
+        sys.exit(1)
 
     groups = []
 
-    for node in nodenames:
-        if not node in synctool.param.NODES:
-            stderr("no such node '%s' defined" % node)
-            sys.exit(1)
-
+    for node in nodeset.nodelist:
         if OPT_IPADDRESS or OPT_HOSTNAME or OPT_RSYNC:
             out = ''
 
@@ -152,17 +160,21 @@ def list_nodes(nodenames):
         print group
 
 
-def list_nodegroups(groups):
+def list_nodegroups(grouplist):
     '''display list of nodes that are member of group'''
 
-    groups = set(groups)
-
-    unknown = groups - synctool.param.ALL_GROUPS
-    for g in unknown:
-        stderr("no such group '%s' defined" % g)
+    nodeset = synctool.nodeset.NodeSet()
+    try:
+        nodeset.add_group(grouplist)
+    except synctool.range.RangeSyntaxError as err:
+        print 'error:', err
         sys.exit(1)
 
-    arr = list(synctool.config.get_nodes_in_groups(groups))
+    if nodeset.addresses() == None:
+        # error message already printed
+        sys.exit(1)
+
+    arr = list(nodeset.nodelist)
     arr.sort()
 
     for node in arr:
@@ -350,12 +362,12 @@ def get_options():
 
         if opt in ('-n', '--node'):
             set_action(ACTION_NODES, '--node')
-            ARG_NODENAMES = arg.split(',')
+            ARG_NODENAMES = arg
             continue
 
         if opt in ('-g', '--group'):
             set_action(ACTION_GROUPS, '--group')
-            ARG_GROUPS = arg.split(',')
+            ARG_GROUPS = arg
             continue
 
         if opt in ('-i', 'ipaddress'):
