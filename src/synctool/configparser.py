@@ -559,19 +559,84 @@ def config_default_nodeset(arr, configfile, lineno):
 
     synctool.param.DEFAULT_NODESET = set()
 
-    for g in arr[1:]:
-        if not spellcheck(g):
-            stderr("%s:%d: invalid name '%s'" % (configfile, lineno, g))
-            return 1
+    for elem in arr[1:]:
+        if '[' in elem:
+            try:
+                for expanded in synctool.range.expand(elem):
+                    if '[' in expanded:
+                        raise RuntimeError("bug: expanded range contains "
+                                           "'[' character")
 
-        if g == 'none':
-            synctool.param.DEFAULT_NODESET = set()
+                    synctool.param.DEFAULT_NODESET.add(expanded)
+            except synctool.range.RangeSyntaxError as err:
+                stderr("%s:%d: %s" % (configfile, lineno, err))
+                return 1
+
         else:
-            synctool.param.DEFAULT_NODESET.add(g)
+            if not spellcheck(elem):
+                stderr("%s:%d: invalid name '%s'" % (configfile, lineno,
+                                                     elem))
+                return 1
+
+            if elem == 'none':
+                synctool.param.DEFAULT_NODESET = set()
+            else:
+                synctool.param.DEFAULT_NODESET.add(elem)
 
     # for now, accept this as the default nodeset
     # There can be compound groups in it, so
     # synctool_config.read_config() will expand it to a list of nodes
+    return 0
+
+
+def config_master(arr, configfile, lineno):
+    '''parse keyword: master'''
+
+    if len(arr) != 2:
+        stderr("%s:%d: 'master' requires one argument: the hostname" %
+               (configfile, lineno))
+        return 1
+
+    synctool.param.MASTER = arr[1]
+    return 0
+
+
+def config_slave(arr, configfile, lineno):
+    '''parse keyword: slave'''
+
+    if len(arr) < 2:
+        stderr("%s:%d: 'slave' requires at least one argument: a nodename" %
+               (configfile, lineno))
+        return 1
+
+    for node in arr[1:]:
+        # range expression syntax: 'node generator'
+        if '[' in node:
+            try:
+                for expanded_node in synctool.range.expand(node):
+                    if '[' in expanded_node:
+                        raise RuntimeError("bug: expanded range contains "
+                                           "'[' character")
+
+                    expanded_arr = ['slave', expanded_node]
+                    # recurse
+                    if config_slave(expanded_arr, configfile, lineno) != 0:
+                        return 1
+            except synctool.range.RangeSyntaxError as err:
+                stderr("%s:%d: %s" % (configfile, lineno, err))
+                return 1
+
+            return 0
+
+        if not spellcheck(node):
+            stderr("%s:%d: invalid node name '%s'" %
+                   (configfile, lineno, node))
+            return 1
+
+        SYMBOLS['node %s'] = node
+        synctool.param.SLAVES.add(node)
+
+    # check for valid nodes is made later
     return 0
 
 
@@ -606,46 +671,25 @@ def config_group(arr, configfile, lineno):
         stderr('%s: previous definition was here' % SYMBOLS[key].origin())
         return 1
 
+    grouplist = []
+    for grp in arr[2:]:
+        # range expression syntax: 'group generator'
+        if '[' in grp:
+            try:
+                grouplist.extend(synctool.range.expand(grp))
+            except synctool.range.RangeSyntaxError as err:
+                stderr("%s:%d: %s" % (configfile, lineno, err))
+                return 1
+        else:
+            grouplist.append(grp)
+
     try:
-        synctool.param.GROUP_DEFS[group] = expand_grouplist(arr[2:])
+        synctool.param.GROUP_DEFS[group] = expand_grouplist(grouplist)
     except RuntimeError:
         stderr('%s:%d: compound groups can not contain node names' %
                (configfile, lineno))
         return 1
 
-    return 0
-
-
-def config_master(arr, configfile, lineno):
-    '''parse keyword: master'''
-
-    if len(arr) != 2:
-        stderr("%s:%d: 'master' requires one argument: the hostname" %
-               (configfile, lineno))
-        return 1
-
-    synctool.param.MASTER = arr[1]
-    return 0
-
-
-def config_slave(arr, configfile, lineno):
-    '''parse keyword: slave'''
-
-    if len(arr) < 2:
-        stderr("%s:%d: 'slave' requires at least one argument: a nodename" %
-               (configfile, lineno))
-        return 1
-
-    for node in arr[1:]:
-        if not spellcheck(node):
-            stderr("%s:%d: invalid node name '%s'" %
-                   (configfile, lineno, node))
-            return 1
-
-        SYMBOLS['node %s'] = node
-        synctool.param.SLAVES.add(node)
-
-    # check for valid nodes is made later
     return 0
 
 
@@ -659,9 +703,27 @@ def config_node(arr, configfile, lineno):
 
     node = arr[1]
 
+    # range expression syntax: 'node generator'
+    if '[' in node:
+        try:
+            for expanded_node in synctool.range.expand(node):
+                if '[' in expanded_node:
+                    raise RuntimeError("bug: expanded range contains "
+                                       "'[' character")
+
+                expanded_arr = arr[:]
+                expanded_arr[1] = expanded_node
+                # recurse
+                if config_node(expanded_arr, configfile, lineno) != 0:
+                    return 1
+        except synctool.range.RangeSyntaxError as err:
+            stderr("%s:%d: %s" % (configfile, lineno, err))
+            return 1
+
+        return 0
+
     if not spellcheck(node):
-        stderr("%s:%d: invalid node name '%s'" %
-               (configfile, lineno, node))
+        stderr("%s:%d: invalid node name '%s'" % (configfile, lineno, node))
         return 1
 
     groups = arr[2:]
@@ -812,6 +874,25 @@ def config_ignore_node(arr, configfile, lineno):
     errors = 0
 
     for node in arr[1:]:
+        # range expression syntax: 'node generator'
+        if '[' in node:
+            try:
+                for expanded_node in synctool.range.expand(node):
+                    if '[' in expanded_node:
+                        raise RuntimeError("bug: expanded range contains "
+                                           "'[' character")
+
+                    expanded_arr = ['ignore_node', expanded_node]
+                    # recurse
+                    if config_ignore_node(expanded_arr, configfile,
+                                          lineno) != 0:
+                        return 1
+            except synctool.range.RangeSyntaxError as err:
+                stderr("%s:%d: %s" % (configfile, lineno, err))
+                return 1
+
+            return 0
+
         if not spellcheck(node):
             stderr("%s:%d: invalid node name '%s'" % (configfile, lineno,
                                                       node))
@@ -843,6 +924,25 @@ def config_ignore_group(arr, configfile, lineno):
     errors = 0
 
     for group in arr[1:]:
+        # range expression syntax: 'group generator'
+        if '[' in group:
+            try:
+                for expanded_group in synctool.range.expand(group):
+                    if '[' in expanded_group:
+                        raise RuntimeError("bug: expanded range contains "
+                                           "'[' character")
+
+                    expanded_arr = ['ignore_group', expanded_group]
+                    # recurse
+                    if config_ignore_group(expanded_arr, configfile,
+                                           lineno) != 0:
+                        return 1
+            except synctool.range.RangeSyntaxError as err:
+                stderr("%s:%d: %s" % (configfile, lineno, err))
+                return 1
+
+            return 0
+
         if not spellcheck(group):
             stderr("%s:%d: invalid group name '%s'" % (configfile, lineno,
                                                        group))

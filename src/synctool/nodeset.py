@@ -9,7 +9,8 @@
 #
 
 '''The nodeset helps making a set of nodes from command-line arguments
-It is used by synctool-master, dsh, dcp, dsh-ping
+It is used by synctool-master, dsh, dcp, dsh-ping and fully supports
+node range expressions
 
 usage:
   first make an instance of NodeSet
@@ -20,30 +21,20 @@ usage:
   use nodeset.get_nodename_from_address() to get a nodename
 '''
 
-import re
-
 import synctool.config
 import synctool.lib
 from synctool.lib import verbose, stderr
 import synctool.param
-
-# a node expression may look like 'node1-[1,2,8-10/2]-mgmt'
-# or something somewhat resembling that
-# Take make matters worse, a line may have multiple of these
-# separated by comma's
-# The regex here is not super strict, but it suffices to split a line
-SPLIT_EXPR = re.compile(
-    r'([a-zA-Z0-9_+-]+\[\d+[0-9,/-]*\][a-zA-Z0-9_+-]*|[a-zA-Z0-9_+-]+)')
-
-# This regex is used to take apart a single node range expression
-NODE_EXPR = re.compile(
-    r'([a-zA-Z]+[a-zA-Z0-9_+-]*)\[(\d+[0-9,/-]*)\]([a-zA-Z0-9_+-]*)$')
+import synctool.range
 
 
 class NodeSet(object):
-    '''class representing a set of nodes'''
+    '''class representing a set of nodes
+    Some methods may throw RangeSyntaxError when parsing range expressions'''
 
     def __init__(self):
+        '''initialize instance'''
+
         self.nodelist = set()
         self.grouplist = set()
         self.exclude_nodes = set()
@@ -53,40 +44,40 @@ class NodeSet(object):
     def add_node(self, nodelist):
         '''add a node to the nodeset'''
 
-        self.nodelist = set()
-        for node in split_nodelist(nodelist):
+#        self.nodelist = set()
+        for node in synctool.range.split_nodelist(nodelist):
             if '[' in node:
-                self.nodelist |= set(expand_expression(node))
+                self.nodelist |= set(synctool.range.expand(node))
             else:
                 self.nodelist.add(node)
 
     def add_group(self, grouplist):
         '''add a group to the nodeset'''
 
-        self.grouplist = set()
-        for group in split_nodelist(grouplist):
+#        self.grouplist = set()
+        for group in synctool.range.split_nodelist(grouplist):
             if '[' in group:
-                self.grouplist |= set(expand_expression(group))
+                self.grouplist |= set(synctool.range.expand(group))
             else:
                 self.grouplist.add(group)
 
     def exclude_node(self, nodelist):
         '''remove a node from the nodeset'''
 
-        self.exclude_nodes = set()
-        for node in split_nodelist(nodelist):
+#        self.exclude_nodes = set()
+        for node in synctool.range.split_nodelist(nodelist):
             if '[' in node:
-                self.exclude_nodes |= set(expand_expression(node))
+                self.exclude_nodes |= set(synctool.range.expand(node))
             else:
                 self.exclude_nodes.add(node)
 
     def exclude_group(self, grouplist):
         '''remove a group from the nodeset'''
 
-        self.exclude_groups = set()
-        for group in split_nodelist(grouplist):
+#        self.exclude_groups = set()
+        for group in synctool.range.split_nodelist(grouplist):
             if '[' in group:
-                self.exclude_groups |= set(expand_expression(group))
+                self.exclude_groups |= set(synctool.range.expand(group))
             else:
                 self.exclude_groups.add(group)
 
@@ -174,91 +165,5 @@ class NodeSet(object):
             return self.namemap[addr]
 
         return addr
-
-
-def split_nodelist(expr):
-    '''split a string like 'node1,node2,node[3-6,8,10],node-x'
-    Returns the array of elements'''
-
-    arr = []
-
-    # SPLIT_EXPR is a global compiled regex for splitting node expr lines
-    for elem in SPLIT_EXPR.split(expr):
-        if not elem:
-            continue
-
-        if elem == ',':
-            continue
-
-        if not SPLIT_EXPR.match(elem):
-            # FIXME raise SyntaxError
-            raise RuntimeError('syntax error')
-
-        arr.append(elem)
-
-    return arr
-
-
-def expand_expression(expr):
-    '''expand a node expression like 'node[1-10,20]-mgmt'
-    Returns array of nodenames'''
-
-    m = NODE_EXPR.match(expr)
-    if not m:
-        # FIXME raise SyntaxError
-        # FIXME catch all these SyntaxErrors nicely
-        raise RuntimeError('syntax error')
-
-    (prefix, range_expr, postfix) = m.groups()
-
-    # first split range expression by comma
-    # then process each element
-
-    arr = []
-    for elem in range_expr.split(','):
-        if '/' in elem:
-            elem, step = elem.split('/')
-
-            try:
-                step = int(step)
-            except ValueError:
-                raise RuntimeError('syntax error in step')
-
-            if step <= 0:
-                raise RuntimeError('invalid step value')
-
-        else:
-            step = 1
-
-        if '-' in elem:
-            start, end = elem.split('-')
-            width = len(start)
-
-            try:
-                start = int(start)
-            except ValueError:
-                raise RuntimeError('syntax error in range')
-
-            try:
-                end = int(end)
-            except ValueError:
-                raise RuntimeError('syntax error in range')
-
-            if start > end:
-                raise RuntimeError('invalid range')
-
-            arr.extend(['%s%.*d%s' % (prefix, width, num, postfix)
-                        for num in range(start, end + 1, step)])
-
-        else:
-            width = len(elem)
-            try:
-                num = int(elem)
-            except ValueError:
-                raise RuntimeError('syntax error')
-
-            arr.append('%s%.*d%s' % (prefix, width, num, postfix))
-
-    return arr
 
 # EOB

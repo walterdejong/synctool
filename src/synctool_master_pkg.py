@@ -379,7 +379,11 @@ def main():
     sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)
     sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)
 
-    get_options()
+    try:
+        get_options()
+    except synctool.range.RangeSyntaxError as err:
+        print 'error:', err
+        sys.exit(1)
 
     if OPT_AGGREGATE:
         if not synctool.aggr.run(MASTER_OPTS):
