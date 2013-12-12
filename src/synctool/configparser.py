@@ -661,17 +661,20 @@ def config_node(arr, configfile, lineno):
 
     # range expression syntax: 'node generator'
     if '[' in node:
-        for node in synctool.range.expand(arr[1]):
-            if '[' in node:
-                raise RuntimeError("bug: expanded range contains '[' "
-                                   "character")
+        try:
+            for expanded_node in synctool.range.expand(node):
+                if '[' in expanded_node:
+                    raise RuntimeError("bug: expanded range contains "
+                                       "'[' character")
 
-            expanded_arr = arr[:]
-            expanded_arr[1] = node
-
-            # recurse
-            if config_node(expanded_arr, configfile, lineno) != 0:
-                return 1
+                expanded_arr = arr[:]
+                expanded_arr[1] = expanded_node
+                # recurse
+                if config_node(expanded_arr, configfile, lineno) != 0:
+                    return 1
+        except synctool.range.RangeSyntaxError as err:
+            stderr("%s:%d: %s" % (configfile, lineno, err))
+            return 1
 
         return 0
 
@@ -827,6 +830,25 @@ def config_ignore_node(arr, configfile, lineno):
     errors = 0
 
     for node in arr[1:]:
+        # range expression syntax: 'node generator'
+        if '[' in node:
+            try:
+                for expanded_node in synctool.range.expand(node):
+                    if '[' in expanded_node:
+                        raise RuntimeError("bug: expanded range contains "
+                                           "'[' character")
+
+                    expanded_arr = ['ignore_node', expanded_node]
+                    # recurse
+                    if config_ignore_node(expanded_arr, configfile,
+                                          lineno) != 0:
+                        return 1
+            except synctool.range.RangeSyntaxError as err:
+                stderr("%s:%d: %s" % (configfile, lineno, err))
+                return 1
+
+            return 0
+
         if not spellcheck(node):
             stderr("%s:%d: invalid node name '%s'" % (configfile, lineno,
                                                       node))
