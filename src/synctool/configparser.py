@@ -659,6 +659,22 @@ def config_node(arr, configfile, lineno):
 
     node = arr[1]
 
+    # range expression syntax: 'node generator'
+    if '[' in node:
+        for node in synctool.range.expand(arr[1]):
+            if '[' in node:
+                raise RuntimeError("bug: expanded range contains '[' "
+                                   "character")
+
+            expanded_arr = arr[:]
+            expanded_arr[1] = node
+
+            # recurse
+            if config_node(expanded_arr, configfile, lineno) != 0:
+                return 1
+
+        return 0
+
     if not spellcheck(node):
         stderr("%s:%d: invalid node name '%s'" % (configfile, lineno, node))
         return 1
