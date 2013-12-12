@@ -107,6 +107,9 @@ def expand(expr):
             if start > end:
                 raise RangeSyntaxError('invalid range in range expression')
 
+            if end - start > 100000:
+                raise RangeSyntaxError('ignoring ridiculously large range')
+
             arr.extend(['%s%.*d%s' % (prefix, width, num, postfix)
                         for num in range(start, end + 1, step)])
         else:
