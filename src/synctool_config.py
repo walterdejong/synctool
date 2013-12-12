@@ -307,7 +307,6 @@ def usage():
       --fqdn               Display my FQDN
   -v, --version            Display synctool version
 
-A node/group list can be a single value, or a comma-separated list
 A command is a list of these: diff,ping,ssh,scp,rsync,synctool,pkg
 '''
 
