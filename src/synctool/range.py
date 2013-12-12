@@ -50,7 +50,7 @@ def split_nodelist(expr):
             continue
 
         if not SPLIT_EXPR.match(elem):
-            raise RangeSyntaxError('syntax error in node range expression')
+            raise RangeSyntaxError('syntax error in range expression')
 
         arr.append(elem)
 
@@ -65,7 +65,7 @@ def expand(expr):
     # NODE_EXPR is a global compiled regex for recognising expression
     m = NODE_EXPR.match(expr)
     if not m:
-        raise RangeSyntaxError('syntax error in node range expression')
+        raise RangeSyntaxError('syntax error in range expression')
 
     (prefix, range_expr, postfix) = m.groups()
 
@@ -80,11 +80,11 @@ def expand(expr):
             try:
                 step = int(step)
             except ValueError:
-                raise RangeSyntaxError('syntax error in node range expression')
+                raise RangeSyntaxError('syntax error in range expression')
 
             if step <= 0:
-                raise RangeSyntaxError('invalid step value in '
-                                  'node range expression')
+                raise RangeSyntaxError('invalid step value in range '
+                                       'expression')
             # else: pass
         else:
             step = 1
@@ -97,15 +97,15 @@ def expand(expr):
             try:
                 start = int(start)
             except ValueError:
-                raise RangeSyntaxError('syntax error in node range expression')
+                raise RangeSyntaxError('syntax error in range expression')
 
             try:
                 end = int(end)
             except ValueError:
-                raise RangeSyntaxError('syntax error in node range expression')
+                raise RangeSyntaxError('syntax error in range expression')
 
             if start > end:
-                raise RuntimeError('invalid range in node range expression')
+                raise RangeSyntaxError('invalid range in range expression')
 
             arr.extend(['%s%.*d%s' % (prefix, width, num, postfix)
                         for num in range(start, end + 1, step)])
@@ -114,7 +114,7 @@ def expand(expr):
             try:
                 num = int(elem)
             except ValueError:
-                raise RangeSyntaxError('syntax error in node range expression')
+                raise RangeSyntaxError('syntax error in range expression')
 
             arr.append('%s%.*d%s' % (prefix, width, num, postfix))
 
