@@ -660,8 +660,7 @@ def config_node(arr, configfile, lineno):
     node = arr[1]
 
     if not spellcheck(node):
-        stderr("%s:%d: invalid node name '%s'" %
-               (configfile, lineno, node))
+        stderr("%s:%d: invalid node name '%s'" % (configfile, lineno, node))
         return 1
 
     groups = arr[2:]
