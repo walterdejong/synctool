@@ -637,6 +637,24 @@ def config_slave(arr, configfile, lineno):
         return 1
 
     for node in arr[1:]:
+        # range expression syntax: 'node generator'
+        if '[' in node:
+            try:
+                for expanded_node in synctool.range.expand(node):
+                    if '[' in expanded_node:
+                        raise RuntimeError("bug: expanded range contains "
+                                           "'[' character")
+
+                    expanded_arr = ['slave', expanded_node]
+                    # recurse
+                    if config_slave(expanded_arr, configfile, lineno) != 0:
+                        return 1
+            except synctool.range.RangeSyntaxError as err:
+                stderr("%s:%d: %s" % (configfile, lineno, err))
+                return 1
+
+            return 0
+
         if not spellcheck(node):
             stderr("%s:%d: invalid node name '%s'" %
                    (configfile, lineno, node))
