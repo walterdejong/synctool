@@ -575,47 +575,6 @@ def config_default_nodeset(arr, configfile, lineno):
     return 0
 
 
-def config_group(arr, configfile, lineno):
-    '''parse keyword: group'''
-
-    if len(arr) < 3:
-        stderr("%s:%d: 'group' requires at least 2 arguments: "
-               "the compound group name and at least 1 member group" %
-               (configfile, lineno))
-        return 1
-
-    group = arr[1]
-
-    if not spellcheck(group):
-        stderr("%s:%d: invalid group name '%s'" %
-               (configfile, lineno, group))
-        return 1
-
-    if group in ('all', 'none', 'template'):
-        stderr("%s:%d: implicit group '%s' can not be redefined" %
-               (configfile, lineno, group))
-        return 1
-
-    if not check_group_definition(group, configfile, lineno):
-        return 1
-
-    key = 'node %s' % group
-    if key in SYMBOLS:
-        stderr('%s:%d: %s was previously defined as a node' % (configfile,
-                                                               lineno, group))
-        stderr('%s: previous definition was here' % SYMBOLS[key].origin())
-        return 1
-
-    try:
-        synctool.param.GROUP_DEFS[group] = expand_grouplist(arr[2:])
-    except RuntimeError:
-        stderr('%s:%d: compound groups can not contain node names' %
-               (configfile, lineno))
-        return 1
-
-    return 0
-
-
 def config_master(arr, configfile, lineno):
     '''parse keyword: master'''
 
@@ -664,6 +623,47 @@ def config_slave(arr, configfile, lineno):
         synctool.param.SLAVES.add(node)
 
     # check for valid nodes is made later
+    return 0
+
+
+def config_group(arr, configfile, lineno):
+    '''parse keyword: group'''
+
+    if len(arr) < 3:
+        stderr("%s:%d: 'group' requires at least 2 arguments: "
+               "the compound group name and at least 1 member group" %
+               (configfile, lineno))
+        return 1
+
+    group = arr[1]
+
+    if not spellcheck(group):
+        stderr("%s:%d: invalid group name '%s'" %
+               (configfile, lineno, group))
+        return 1
+
+    if group in ('all', 'none', 'template'):
+        stderr("%s:%d: implicit group '%s' can not be redefined" %
+               (configfile, lineno, group))
+        return 1
+
+    if not check_group_definition(group, configfile, lineno):
+        return 1
+
+    key = 'node %s' % group
+    if key in SYMBOLS:
+        stderr('%s:%d: %s was previously defined as a node' % (configfile,
+                                                               lineno, group))
+        stderr('%s: previous definition was here' % SYMBOLS[key].origin())
+        return 1
+
+    try:
+        synctool.param.GROUP_DEFS[group] = expand_grouplist(arr[2:])
+    except RuntimeError:
+        stderr('%s:%d: compound groups can not contain node names' %
+               (configfile, lineno))
+        return 1
+
     return 0
 
 
