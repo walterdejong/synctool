@@ -880,6 +880,25 @@ def config_ignore_group(arr, configfile, lineno):
     errors = 0
 
     for group in arr[1:]:
+        # range expression syntax: 'group generator'
+        if '[' in group:
+            try:
+                for expanded_group in synctool.range.expand(group):
+                    if '[' in expanded_group:
+                        raise RuntimeError("bug: expanded range contains "
+                                           "'[' character")
+
+                    expanded_arr = ['ignore_group', expanded_group]
+                    # recurse
+                    if config_ignore_group(expanded_arr, configfile,
+                                           lineno) != 0:
+                        return 1
+            except synctool.range.RangeSyntaxError as err:
+                stderr("%s:%d: %s" % (configfile, lineno, err))
+                return 1
+
+            return 0
+
         if not spellcheck(group):
             stderr("%s:%d: invalid group name '%s'" % (configfile, lineno,
                                                        group))
