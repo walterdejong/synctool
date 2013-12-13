@@ -19,6 +19,7 @@ import socket
 import synctool.configparser
 from synctool.configparser import stderr
 import synctool.lib
+import synctool.nodeset
 import synctool.param
 
 
