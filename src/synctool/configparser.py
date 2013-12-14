@@ -743,136 +743,134 @@ def config_node(arr, configfile, lineno):
         stderr('%s: previous definition was here' % SYMBOLS[key].origin())
         return 1
 
-    for g in groups:
-        if g == 'all':
+    # grouplist will be the list of groups for this node
+    grouplist = []
+
+    # examine groups and list of node specifiers
+    for group in groups:
+        if ':' in group:
+            # it's a node specifier
+            if not _node_specifier(configfile, lineno, node, group):
+                return 1
+
+            continue
+
+        if group == 'all':
             stderr("%s:%d: illegal to use group 'all' in node definition" %
                    (configfile, lineno))
             stderr("%s:%d: group 'all' automatically applies to all nodes" %
                    (configfile, lineno))
             return 1
 
-        if g == 'none':
+        if group == 'none':
             stderr("%s:%d: illegal to use group 'none' in node definition" %
                    (configfile, lineno))
             stderr("%s:%d: use 'ignore_node' to disable a node" %
                    (configfile, lineno))
             return 1
 
-        if g == 'template':
+        if group == 'template':
             stderr("%s:%d: illegal to use group 'template' "
                    "in node definition" % (configfile, lineno))
             stderr("%s:%d: file extension _template is reserved for "
                    "template files" % (configfile, lineno))
             return 1
 
-    if node in groups:
-        stderr("%s:%d: illegal to list '%s' as group for node %s" %
-               (configfile, lineno, node, node))
-        return 1
-
-    # node lines may end with special optional specifiers like
-    # 'ipaddress:', 'hostname:', 'hostid:', 'rsync:'
-
-    while len(groups) >= 1:
-        n = groups[-1].find(':')
-        if n < 0:
-            # FIXME it won't complain when you make this error:
-            # 'node a1 ipaddress: <space> 192.168.1.2
-            # no spellcheck is done for groups in the node def line
-            break
-
-        if n == 0:
-            stderr("%s:%d: syntax error in node specifier '%s'" %
-                   (configfile, lineno, groups[-1]))
+        if group == node:
+            stderr("%s:%d: illegal to list '%s' as group for node %s" %
+                   (configfile, lineno, node, node))
             return 1
 
-        if n > 0:
-            option = groups.pop()
-            specifier = option[:n]
-            arg = option[n+1:]
+        if not spellcheck(group):
+            stderr("%s:%d: invalid group name '%s'" % (configfile, lineno,
+                                                       group))
+            return 1
 
-            if specifier == 'ipaddress':
-                if node in synctool.param.IPADDRESSES:
-                    stderr('%s:%d: redefinition of IP address for node %s' %
-                           (configfile, lineno, node))
-                    return 1
-
-                if not arg:
-                    stderr("%s:%d: missing argument to node specifier '%s'" %
-                           (configfile, lineno, specifier))
-                    return 1
-
-                # supports IP address sequence syntax
-                try:
-                    synctool.param.IPADDRESSES[node] = \
-                        synctool.range.expand_sequence(arg)
-                except synctool.range.RangeSyntaxError as err:
-                    stderr('%s:%d: %s' % (configfile, lineno, err))
-                    return 1
-
-            elif specifier == 'hostname':
-                if arg in synctool.param.HOSTNAMES:
-                    stderr('%s:%d: hostname %s already in use for node %s' %
-                           (configfile, lineno, arg,
-                            synctool.param.HOSTNAMES[arg]))
-                    return 1
-
-                if not arg:
-                    stderr("%s:%d: missing argument to node specifier "
-                           "'hostname'" % (configfile, lineno))
-                    return 1
-
-                synctool.param.HOSTNAMES[arg] = node
-                synctool.param.HOSTNAMES_BY_NODE[node] = arg
-
-            elif specifier == 'hostid':
-                try:
-                    f = open(arg, 'r')
-                except IOError:
-                    # this is a real error ... but it doesn't matter on
-                    # the master node
-                    # So how to handle this?
-                    continue
-
-                hostid = f.readline()
-                f.close()
-                if not hostid:
-                    continue
-
-                hostid = hostid.strip()
-                if not hostid:
-                    continue
-
-                synctool.param.HOST_ID = hostid
-
-            elif specifier == 'rsync':
-                if not arg:
-                    stderr("%s:%d: missing argument to node specifier "
-                           "'rsync'" % (configfile, lineno))
-                    return 1
-
-                if arg == 'yes':
-                    pass
-                elif arg == 'no':
-                    synctool.param.NO_RSYNC.add(node)
-                else:
-                    stderr("%s:%d: node specifier 'rsync' can have value "
-                           "'yes' or 'no'" % (configfile, lineno))
-                    return 1
-
-            else:
-                stderr('%s:%d: unknown node specifier %s' %
-                       (configfile, lineno, specifier))
-                return 1
+        # it looks like a good group
+        grouplist.append(group)
 
     try:
-        synctool.param.NODES[node] = expand_grouplist(groups)
+        synctool.param.NODES[node] = expand_grouplist(grouplist)
     except RuntimeError:
         stderr('%s:%d: a group list can not contain node names' %
                (configfile, lineno))
         return 1
 
     return 0
+
+
+def _node_specifier(configfile, lineno, node, spec):
+    '''parse optional node specifiers like 'ipaddress:', 'hostname:',
+    'hostid:', 'rsync:' etc.
+    Returns True if OK, False on error'''
+
+    specifier, arg = spec.split(':', 1)
+    if not specifier or not arg:
+        stderr("%s:%d: syntax error in node specifier '%s'" %
+               (configfile, lineno, spec))
+        return False
+
+    # got specifier, arg
+
+    if specifier == 'ipaddress':
+        if node in synctool.param.IPADDRESSES:
+            stderr('%s:%d: redefinition of IP address for node %s' %
+                   (configfile, lineno, node))
+            return False
+
+        # support IP address sequence syntax
+        try:
+            synctool.param.IPADDRESSES[node] = \
+                synctool.range.expand_sequence(arg)
+        except synctool.range.RangeSyntaxError as err:
+            stderr('%s:%d: %s' % (configfile, lineno, err))
+            return False
+
+    elif specifier == 'hostname':
+        if arg in synctool.param.HOSTNAMES:
+            stderr('%s:%d: hostname %s already in use for node %s' %
+                   (configfile, lineno, arg,
+                    synctool.param.HOSTNAMES[arg]))
+            return False
+
+        synctool.param.HOSTNAMES[arg] = node
+        synctool.param.HOSTNAMES_BY_NODE[node] = arg
+
+    elif specifier == 'hostid':
+        try:
+            f = open(arg, 'r')
+        except IOError:
+            # this is a real error ... but it doesn't matter on
+            # the master node
+            # So how to handle this?
+            return True
+
+        hostid = f.readline()
+        f.close()
+        if not hostid:
+            return True
+
+        hostid = hostid.strip()
+        if not hostid:
+            return True
+
+        synctool.param.HOST_ID = hostid
+
+    elif specifier == 'rsync':
+        if arg == 'yes':
+            pass
+        elif arg == 'no':
+            synctool.param.NO_RSYNC.add(node)
+        else:
+            stderr("%s:%d: node specifier 'rsync' can have value "
+                   "'yes' or 'no'" % (configfile, lineno))
+            return False
+    else:
+        stderr('%s:%d: unknown node specifier %s' %
+               (configfile, lineno, specifier))
+        return False
+
+    return True
 
 
 def config_ignore_node(arr, configfile, lineno):
