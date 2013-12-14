@@ -26,9 +26,7 @@ import synctool.param
 
 # this allows alphanumeric concatenated by underscore, minus, or plus symbol
 # and no other characters
-#
-# So valid names are: node1 node1-10 node_10_0_0_2 node1+node2
-#
+# Valid names are: node1 node1-10 node_10_0_0_2 node1+node2
 SPELLCHECK = re.compile(r'[a-zA-Z]+([a-zA-Z0-9]+|'
                         r'\_[a-zA-Z0-9]+|'
                         r'\-[a-zA-Z0-9]+|'
