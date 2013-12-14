@@ -36,6 +36,13 @@ SPELLCHECK = re.compile(
 # to see if a parameter is being redefined
 SYMBOLS = {}
 
+# IPv4 address range
+IP_ADDR_RANGE = re.compile(r'([0-9\.]*)\[(\d+)\]([0-9\.]*)')
+
+# state used for automatic numbering of IP ranges
+EXPAND_IP = False
+EXPAND_IP_SEQ = 0
+
 
 class Symbol(object):
     '''structure that says where a symbol was first defined'''
@@ -696,6 +703,8 @@ def config_group(arr, configfile, lineno):
 def config_node(arr, configfile, lineno):
     '''parse keyword: node'''
 
+    global EXPAND_IP, EXPAND_IP_SEQ
+
     if len(arr) < 2:
         stderr("%s:%d: 'node' requires at least 1 argument: the nodename" %
                (configfile, lineno))
@@ -705,6 +714,10 @@ def config_node(arr, configfile, lineno):
 
     # range expression syntax: 'node generator'
     if '[' in node:
+        # setup automatic numbering of IP adresses
+        EXPAND_IP = True
+        EXPAND_IP_SEQ = 0
+
         try:
             for expanded_node in synctool.range.expand(node):
                 if '[' in expanded_node:
@@ -713,13 +726,20 @@ def config_node(arr, configfile, lineno):
 
                 expanded_arr = arr[:]
                 expanded_arr[1] = expanded_node
+
                 # recurse
                 if config_node(expanded_arr, configfile, lineno) != 0:
+                    EXPAND_IP = False
+                    EXPAND_IP_SEQ = 0
                     return 1
         except synctool.range.RangeSyntaxError as err:
             stderr("%s:%d: %s" % (configfile, lineno, err))
+            EXPAND_IP = False
+            EXPAND_IP_SEQ = 0
             return 1
 
+        EXPAND_IP = False
+        EXPAND_IP_SEQ = 0
         return 0
 
     if not spellcheck(node):
@@ -729,6 +749,7 @@ def config_node(arr, configfile, lineno):
     groups = arr[2:]
 
     if not check_node_definition(node, configfile, lineno):
+        # error message already printed
         return 1
 
     key = 'group %s' % node
@@ -771,6 +792,9 @@ def config_node(arr, configfile, lineno):
     while len(groups) >= 1:
         n = groups[-1].find(':')
         if n < 0:
+            # FIXME it won't complain when you make this error:
+            # 'node a1 ipaddress: <space> 192.168.1.2
+            # no spellcheck is done for groups in the node def line
             break
 
         if n == 0:
@@ -793,6 +817,14 @@ def config_node(arr, configfile, lineno):
                     stderr("%s:%d: missing argument to node specifier '%s'" %
                            (configfile, lineno, specifier))
                     return 1
+
+                # IP address range syntax
+                if '[' in arg:
+                    try:
+                        arg = expand_ipaddress(arg)
+                    except synctool.range.RangeSyntaxError as err:
+                        stderr('%s:%d: %s' % (configfile, lineno, err))
+                        return 1
 
                 synctool.param.IPADDRESSES[node] = arg
 
@@ -821,9 +853,7 @@ def config_node(arr, configfile, lineno):
                     continue
 
                 hostid = f.readline()
-
                 f.close()
-
                 if not hostid:
                     continue
 
@@ -1080,5 +1110,27 @@ def expand_grouplist(grouplist):
 
     return expanded_grouplist
 
+
+def expand_ipaddress(arg):
+    '''expand an IP address that looks like '192.168.1.[100]'
+    to a valid, automatically numbered IP address'''
+
+    global EXPAND_IP_SEQ
+
+    # FIXME auto-expand IPv6
+
+    m = IP_ADDR_RANGE.match(arg)
+    if not m:
+        raise synctool.range.RangeSyntaxError('syntax error in '
+                                              'IP address range')
+    (prefix, base, postfix) = m.groups()
+    try:
+        base = int(base)
+    except ValueError:
+        raise synctool.range.RangeSyntaxError('invalid value in '
+                                              'IP address range')
+    addr = '%s%d%s' % (prefix, base + EXPAND_IP_SEQ, postfix)
+    EXPAND_IP_SEQ += 1
+    return addr
 
 # EOB
