@@ -29,6 +29,7 @@ ACTION_OPTION = None
 ARG_NODENAMES = None
 ARG_GROUPS = None
 ARG_CMDS = None
+ARG_EXPAND = None
 
 # these are enums for the "list" command-line options
 ACTION_LIST_NODES = 1
@@ -44,7 +45,8 @@ ACTION_MASTER = 10
 ACTION_SLAVE = 11
 ACTION_NODENAME = 12
 ACTION_FQDN = 13
-ACTION_VERSION = 14
+ACTION_EXPAND = 14
+ACTION_VERSION = 15
 
 # optional: do not list hosts/groups that are ignored
 OPT_FILTER_IGNORED = False
@@ -262,6 +264,26 @@ def list_dirs():
     print 'tempdir', synctool.param.TEMP_DIR
 
 
+def expand(nodelist):
+    '''display expanded argument'''
+
+    nodeset = synctool.nodeset.NodeSet()
+    try:
+        nodeset.add_node(nodelist)
+    except synctool.range.RangeSyntaxError as err:
+        print 'error:', err
+        sys.exit(1)
+
+    # don't care if the nodes do not exist
+
+    arr = list(nodeset.nodelist)
+    arr.sort()
+
+    for elem in arr:
+        print elem,
+    print
+
+
 def set_action(a, opt):
     '''set the action to perform'''
 
@@ -305,6 +327,7 @@ def usage():
       --slave              Display configured slave nodes
       --nodename           Display my nodename
       --fqdn               Display my FQDN
+  -x, --expand=LIST        Expand given node list
   -v, --version            Display synctool version
 
 A command is a list of these: diff,ping,ssh,scp,rsync,synctool,pkg
@@ -314,7 +337,7 @@ A command is a list of these: diff,ping,ssh,scp,rsync,synctool,pkg
 def get_options():
     '''parse command-line options'''
 
-    global ARG_NODENAMES, ARG_GROUPS, ARG_CMDS
+    global ARG_NODENAMES, ARG_GROUPS, ARG_CMDS, ARG_EXPAND
     global OPT_FILTER_IGNORED, OPT_IPADDRESS, OPT_HOSTNAME, OPT_RSYNC
 
     progname = os.path.basename(sys.argv[0])
@@ -324,11 +347,12 @@ def get_options():
         sys.exit(1)
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hc:lLn:g:iHrfC:PNdv',
+        opts, args = getopt.getopt(sys.argv[1:], 'hc:lLn:g:iHrfC:PNdx:v',
             ['help', 'conf=', 'list-nodes', 'list-groups', 'node=', 'group=',
             'ipaddress', 'hostname', 'rsync', 'filter-ignored',
             'command', 'package-manager', 'numproc', 'list-dirs',
-            'prefix', 'master', 'slave', 'nodename', 'fqdn', 'version'])
+            'prefix', 'master', 'slave', 'nodename', 'fqdn', 'expand',
+            'version'])
     except getopt.GetoptError as reason:
         print
         print '%s: %s' % (progname, reason)
@@ -422,6 +446,11 @@ def get_options():
             set_action(ACTION_FQDN, '--fqdn')
             continue
 
+        if opt in ('-x', '--expand'):
+            set_action(ACTION_EXPAND, '--expand')
+            ARG_EXPAND = arg
+            continue
+
         if opt in ('-v', '--version'):
             set_action(ACTION_VERSION, '--version')
             continue
@@ -512,6 +541,12 @@ def main():
             for node in synctool.param.SLAVES:
                 print node,
             print
+
+    elif ACTION == ACTION_EXPAND:
+        if not ARG_EXPAND:
+            print 'none'
+        else:
+            expand(ARG_EXPAND)
 
     else:
         raise RuntimeError('bug: unknown ACTION code %d' % ACTION)
