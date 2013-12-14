@@ -2,6 +2,9 @@ December 2013
 - purge --single may complain about timestamps (because rsync will also)
   synctool can fix these, but only for purge --single. Otherwise synctool
   doesn't care about timestamps
+- added node range syntax for command-line
+- added node range syntax to synctool.conf
+- added IP address sequence numbering for in synctool.conf
 
 November 2013
 - 'master' node must be explicitly defined in config file
