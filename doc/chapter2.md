@@ -152,7 +152,7 @@ If your nodes are neatly numbered (and for large clusters, they often are),
 you can make use of node ranges and IP address sequences, like so:
 
     node n[001-100]  wn  debian  ipaddress:if0-n[001]
-    node n[101-200]  wn  debian  ipaddress:192.168.1.[101]
+    node n[101-200]  wn  debian  ipaddress:192.168.1.[20]
 
 If you do have the luxury of a high performance shared filesystem on your
 cluster, you may put `/opt/synctool/` on there and add `rsync:no` to the node

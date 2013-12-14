@@ -53,6 +53,10 @@ node node9 batch    sunos  ipaddress:node9-mgmt hostid:/etc/hostname.bnx0
 # node10 to node25 are all the same
 node node[10-25]    wn  debian
 
+# other examples of ranges of nodes
+node node[001-100]  wn  debian    ipaddress:node[001]-mgmt
+node node[101-200]  wn  debian    ipaddress:192.168.1.[20]
+
 # ignore one or more nodes
 ignore_node node0 node9
 
