@@ -226,9 +226,9 @@ synctool's configuration file.
   hardware installation.
 
   The default is `all`. You may set it to `none` to make synctool not run
-  on a default set of nodes at all.
+  on a default set of nodes at all. Example:
 
-    default_nodeset test1 test2
+    default_nodeset test1 test2 testnodes xtest[1-10]
 
 * `master <fqdn>`
 
@@ -274,6 +274,11 @@ synctool's configuration file.
   Groups can be defined 'on the fly', there is no need for a group to exist
   before it can be used in a node definition.
 
+  Node names are alphanumeric, but can have an underscore, minus, or plus
+  symbol in between. The following are valid node names:
+
+    node node1 node-1 node_1 node+1 10_0_0_2 10 node1+node2
+
   The `ipaddress` specifier tells synctool how to contact the node. This is
   optional; when omitted, synctool assumes the nodename can be found in DNS.
   Note that synctool nodenames need not be same as DNS names.
@@ -310,18 +315,17 @@ synctool's configuration file.
     node node1 fs sched rack1 ipaddress:node1-mgmt
     node node2 login    rack1 ipaddress:node2-mgmt \
                                 hostname:login.mydomain.com
-    node node3 wn       rack1 ipaddress:node3-mgmt
-    node node4 wn       rack1 ipaddress:node4-mgmt
+    node node3 test     rack1 ipaddress:node8-mgmt
+    node node4 batch    rack1 ipaddress:node9-mgmt rsync:no
     node node5 wn       rack1 ipaddress:node5-mgmt
     node node6 wn       rack1 ipaddress:node6-mgmt
     node node7 wn       rack1 ipaddress:node7-mgmt
-    node node8 test     rack1 ipaddress:node8-mgmt
-    node node9 batch    rack1 ipaddress:node9-mgmt rsync:no
+    node node[20-29] wn rack2 ipaddress:node[20]-mgmt
+    node node[30-39] wn rack3 ipaddress:192.168.3.[130]
 
-  Node names are alphanumeric, but can have an underscore, minus, or plus
-  symbol in between. The following are valid node names:
-
-    node node1 node-1 node_1 node+1 10_0_0_2 10 node1+node2
+  As shown in this example, a node range may be given to define a number
+  of nodes using a single definition line. The (optional) IP address may
+  use the sequence notation, that numbers the IP addresses in sequence.
 
 * `ignore_node <nodename> [..]`
 

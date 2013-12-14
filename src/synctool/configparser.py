@@ -29,8 +29,10 @@ import synctool.param
 #
 # So valid names are: node1 node1-10 node_10_0_0_2 node1+node2
 #
-SPELLCHECK = re.compile(
-    r'[a-zA-Z]+([a-zA-Z0-9]+|\_[a-zA-Z0-9]+|\-[a-zA-Z0-9]+|\+[a-zA-Z0-9]+)*')
+SPELLCHECK = re.compile(r'[a-zA-Z]+([a-zA-Z0-9]+|'
+                        r'\_[a-zA-Z0-9]+|'
+                        r'\-[a-zA-Z0-9]+|'
+                        r'\+[a-zA-Z0-9]+)*')
 
 # dict of defined Symbols
 # to see if a parameter is being redefined
@@ -705,21 +707,25 @@ def config_node(arr, configfile, lineno):
 
     # range expression syntax: 'node generator'
     if '[' in node:
+        # setup automatic numbering of IP adresses
+        synctool.range.reset_sequence()
         try:
             for expanded_node in synctool.range.expand(node):
                 if '[' in expanded_node:
                     raise RuntimeError("bug: expanded range contains "
                                        "'[' character")
-
                 expanded_arr = arr[:]
                 expanded_arr[1] = expanded_node
                 # recurse
                 if config_node(expanded_arr, configfile, lineno) != 0:
+                    synctool.range.reset_sequence()
                     return 1
         except synctool.range.RangeSyntaxError as err:
             stderr("%s:%d: %s" % (configfile, lineno, err))
+            synctool.range.reset_sequence()
             return 1
 
+        synctool.range.reset_sequence()
         return 0
 
     if not spellcheck(node):
@@ -729,6 +735,7 @@ def config_node(arr, configfile, lineno):
     groups = arr[2:]
 
     if not check_node_definition(node, configfile, lineno):
+        # error message already printed
         return 1
 
     key = 'group %s' % node
@@ -771,6 +778,9 @@ def config_node(arr, configfile, lineno):
     while len(groups) >= 1:
         n = groups[-1].find(':')
         if n < 0:
+            # FIXME it won't complain when you make this error:
+            # 'node a1 ipaddress: <space> 192.168.1.2
+            # no spellcheck is done for groups in the node def line
             break
 
         if n == 0:
@@ -794,7 +804,13 @@ def config_node(arr, configfile, lineno):
                            (configfile, lineno, specifier))
                     return 1
 
-                synctool.param.IPADDRESSES[node] = arg
+                # supports IP address sequence syntax
+                try:
+                    synctool.param.IPADDRESSES[node] = \
+                        synctool.range.expand_sequence(arg)
+                except synctool.range.RangeSyntaxError as err:
+                    stderr('%s:%d: %s' % (configfile, lineno, err))
+                    return 1
 
             elif specifier == 'hostname':
                 if arg in synctool.param.HOSTNAMES:
@@ -821,9 +837,7 @@ def config_node(arr, configfile, lineno):
                     continue
 
                 hostid = f.readline()
-
                 f.close()
-
                 if not hostid:
                     continue
 
@@ -1079,6 +1093,5 @@ def expand_grouplist(grouplist):
             expanded_grouplist.append(elem)
 
     return expanded_grouplist
-
 
 # EOB
