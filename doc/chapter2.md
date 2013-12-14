@@ -122,7 +122,8 @@ The nodename has nothing to do with hostnames or DNS entries.
 The `ipaddress` specifier tells synctool how to contact the node; this can be
 an IP address or a DNS name of the host you wish to contact. In clusters,
 there is often a management network interface -- configure its IP address
-here.
+here. The `ipaddress` specifier is _optional_ and only needed if the nodename
+does not exactly match the DNS name for contacting the remote host.
 
 Directly following the node name, you can list groups. synctool uses the
 term 'group', but you can also think of them as node properties. You can make
@@ -147,10 +148,11 @@ group must be defined before defining the nodes:
     node n101  wn  debian  ipaddress:if0-n101
 
 You have to add a node definition for each and every node in your cluster.
-If your cluster is large, you may want to script the generation of a node
-definition list. In the `contrib/` directory, there is a script that
-uses `nmap ping` with which you can scan your management network and quickly
-turn it into a synctool configuration. This makes life a bit easier.
+If your nodes are neatly numbered (and for large clusters, they often are),
+you can make use of node ranges and IP address sequences, like so:
+
+    node n[001-100]  wn  debian  ipaddress:if0-n[001]
+    node n[101-200]  wn  debian  ipaddress:192.168.1.[101]
 
 If you do have the luxury of a high performance shared filesystem on your
 cluster, you may put `/opt/synctool/` on there and add `rsync:no` to the node

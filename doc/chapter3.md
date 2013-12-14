@@ -210,19 +210,23 @@ file, use option `-ref` or `-r`:
     node1: /etc/resolv.conf._somegroup
 
 synctool can be run on a subset of nodes, a group, or even on individual
-nodes using the options `--group` or `-g`, `--node` or `-n`, `--exclude`
-or `-x`, and `--exclude-group` or `-X`. This also works for `dsh` and friends.
+nodes using the options `--node` or `-n`, `--group` or `-g`, `--exclude`
+or `-x`, and `--exclude-group` or `-X`. This also works for `dsh` and friends,
+and you may use the range syntax to select a range of nodes.
 For example:
 
     # synctool -g batch,sched -X rack8
 
-Another example:
+More examples:
 
     # dsh -n node1,node2,node3 date
+    # dsh -n node[1-3] date
+    # dsh -n node[01-10] -x node[05-07] hostname
+    # dsh -n node[02-10/2,05,07] hostname
 
-or copy a file to these three nodes:
+Copy a file to three nodes:
 
-    # dcp -n node1,node2,node3 -d /tmp patchfile-1.0.tar.gz
+    # dcp -n node[1-3] -d /tmp patchfile-1.0.tar.gz
 
 After rebooting a cluster, use `dsh-ping` to see if the nodes respond to ping
 yet. You may also do this on a group of nodes:
