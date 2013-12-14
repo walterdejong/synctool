@@ -29,19 +29,14 @@ import synctool.param
 #
 # So valid names are: node1 node1-10 node_10_0_0_2 node1+node2
 #
-SPELLCHECK = re.compile(
-    r'[a-zA-Z]+([a-zA-Z0-9]+|\_[a-zA-Z0-9]+|\-[a-zA-Z0-9]+|\+[a-zA-Z0-9]+)*')
+SPELLCHECK = re.compile(r'[a-zA-Z]+([a-zA-Z0-9]+|'
+                        r'\_[a-zA-Z0-9]+|'
+                        r'\-[a-zA-Z0-9]+|'
+                        r'\+[a-zA-Z0-9]+)*')
 
 # dict of defined Symbols
 # to see if a parameter is being redefined
 SYMBOLS = {}
-
-# IPv4 address range
-IP_ADDR_RANGE = re.compile(r'([0-9\.]*)\[(\d+)\]([0-9\.]*)')
-
-# state used for automatic numbering of IP ranges
-EXPAND_IP = False
-EXPAND_IP_SEQ = 0
 
 
 class Symbol(object):
@@ -703,8 +698,6 @@ def config_group(arr, configfile, lineno):
 def config_node(arr, configfile, lineno):
     '''parse keyword: node'''
 
-    global EXPAND_IP, EXPAND_IP_SEQ
-
     if len(arr) < 2:
         stderr("%s:%d: 'node' requires at least 1 argument: the nodename" %
                (configfile, lineno))
@@ -715,31 +708,24 @@ def config_node(arr, configfile, lineno):
     # range expression syntax: 'node generator'
     if '[' in node:
         # setup automatic numbering of IP adresses
-        EXPAND_IP = True
-        EXPAND_IP_SEQ = 0
-
+        synctool.range.reset_sequence()
         try:
             for expanded_node in synctool.range.expand(node):
                 if '[' in expanded_node:
                     raise RuntimeError("bug: expanded range contains "
                                        "'[' character")
-
                 expanded_arr = arr[:]
                 expanded_arr[1] = expanded_node
-
                 # recurse
                 if config_node(expanded_arr, configfile, lineno) != 0:
-                    EXPAND_IP = False
-                    EXPAND_IP_SEQ = 0
+                    synctool.range.reset_sequence()
                     return 1
         except synctool.range.RangeSyntaxError as err:
             stderr("%s:%d: %s" % (configfile, lineno, err))
-            EXPAND_IP = False
-            EXPAND_IP_SEQ = 0
+            synctool.range.reset_sequence()
             return 1
 
-        EXPAND_IP = False
-        EXPAND_IP_SEQ = 0
+        synctool.range.reset_sequence()
         return 0
 
     if not spellcheck(node):
@@ -818,15 +804,13 @@ def config_node(arr, configfile, lineno):
                            (configfile, lineno, specifier))
                     return 1
 
-                # IP address range syntax
-                if '[' in arg:
-                    try:
-                        arg = expand_ipaddress(arg)
-                    except synctool.range.RangeSyntaxError as err:
-                        stderr('%s:%d: %s' % (configfile, lineno, err))
-                        return 1
-
-                synctool.param.IPADDRESSES[node] = arg
+                # supports IP address sequence syntax
+                try:
+                    synctool.param.IPADDRESSES[node] = \
+                        synctool.range.expand_sequence(arg)
+                except synctool.range.RangeSyntaxError as err:
+                    stderr('%s:%d: %s' % (configfile, lineno, err))
+                    return 1
 
             elif specifier == 'hostname':
                 if arg in synctool.param.HOSTNAMES:
@@ -1109,28 +1093,5 @@ def expand_grouplist(grouplist):
             expanded_grouplist.append(elem)
 
     return expanded_grouplist
-
-
-def expand_ipaddress(arg):
-    '''expand an IP address that looks like '192.168.1.[100]'
-    to a valid, automatically numbered IP address'''
-
-    global EXPAND_IP_SEQ
-
-    # FIXME auto-expand IPv6
-
-    m = IP_ADDR_RANGE.match(arg)
-    if not m:
-        raise synctool.range.RangeSyntaxError('syntax error in '
-                                              'IP address range')
-    (prefix, base, postfix) = m.groups()
-    try:
-        base = int(base)
-    except ValueError:
-        raise synctool.range.RangeSyntaxError('invalid value in '
-                                              'IP address range')
-    addr = '%s%d%s' % (prefix, base + EXPAND_IP_SEQ, postfix)
-    EXPAND_IP_SEQ += 1
-    return addr
 
 # EOB

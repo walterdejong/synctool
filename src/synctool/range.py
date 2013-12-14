@@ -1,5 +1,5 @@
 #
-#    synctool.range.py        WJ113
+#   synctool.range.py        WJ113
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #
@@ -10,9 +10,12 @@
 
 '''The node range expression parser can expand expressions like
 "node[1-10,15]" to a list of nodes. A check for existing nodes
-is not made here; just the string expansion'''
+is not made here; just the string expansion
 
-# this code is in its own small module because of circular imports
+The automatic number sequencer can convert strings that look like
+IPv4 "192.168.1.[100]" or hexidecimal IPv6 "64:b9:e8:ff:fe:c2:fd:[20]"
+or IPv6:v4 notation "64:b9:e8:[0a]:10.0.0.[100]"
+or just a string "node-[10].sub[20].domain.org"'''
 
 import re
 
@@ -21,12 +24,28 @@ import re
 # Take make matters worse, a line may have multiple of these
 # separated by comma's
 # The regex here is not super strict, but it suffices to split a line
-SPLIT_EXPR = re.compile(
-    r'([a-zA-Z0-9_+-]+\[\d+[0-9,/-]*\][a-zA-Z0-9_+-]*|[a-zA-Z0-9_+-]+)')
+SPLIT_EXPR = re.compile(r'([a-zA-Z0-9_+-]+\[\d+[0-9,/-]*\][a-zA-Z0-9_+-]*|'
+                        r'[a-zA-Z0-9_+-]+)')
 
 # This regex is used to take apart a single node range expression
-NODE_EXPR = re.compile(
-    r'([a-zA-Z]+[a-zA-Z0-9_+-]*)\[(\d+[0-9,/-]*)\]([a-zA-Z0-9_+-]*)$')
+NODE_EXPR = re.compile(r'([a-zA-Z]+[a-zA-Z0-9_+-]*)'
+                       r'\[(\d+[0-9,/-]*)\]'
+                       r'([a-zA-Z0-9_+-]*)$')
+
+# match sequence notation "192.168.1.[200]" or "node[10].domain.org"
+# supports hex for IPv6
+MATCH_SEQ = re.compile(r'([^[]*)\[([0-9a-f]+)\](.*)')
+
+# these look pretty naive, but note that they include brackets for
+# sequence notation: automated numbering of sequences
+# It's for recognising a pattern, not for checking validity of IP addresses
+MATCH_IPv4 = re.compile(r'^[0-9\.\[\]]+$')
+MATCH_IPv6 = re.compile(r'^[0-9a-f:\[\]]+$')
+MATCH_IPv6_v4 = re.compile(r'^[0-9a-f:\[\]]+:[0-9\.\[\]]+$')
+SPLIT_IPv6_v4 = re.compile(r'(?=[0-9a-f:\[\]]+):(?=[0-9\.\[\]]+)')
+
+# state used for automatic numbering of IP ranges
+_EXPAND_SEQ = 0
 
 
 class RangeSyntaxError(Exception):
@@ -122,5 +141,87 @@ def expand(expr):
             arr.append('%s%.*d%s' % (prefix, width, num, postfix))
 
     return arr
+
+
+def reset_sequence():
+    '''reset a sequence to zero'''
+
+    global _EXPAND_SEQ
+
+    _EXPAND_SEQ = 0
+
+
+def expand_sequence(arg):
+    '''expand a sequence that looks like '192.168.1.[100]'
+    or hexidecimal IPv6 "64:b9:e8:ff:fe:c2:fd:[20]"
+    or IPv6:v4 notation "64:b9:e8:[0a]:10.0.0.[100]"
+    or just a string "node-[10].sub[20].domain.org"'''
+
+    global _EXPAND_SEQ
+
+    if not '[' in arg:
+        return arg
+
+    if MATCH_IPv4.match(arg):
+        # looks like IPv4 address
+        result = expand_seq(arg)
+        _EXPAND_SEQ += 1
+        return result
+
+    elif MATCH_IPv6.match(arg):
+        # looks like IPv6 address
+        result = expand_seq(arg, 16)
+        _EXPAND_SEQ += 1
+        return result
+
+    elif MATCH_IPv6_v4.match(arg):
+        # looks like IPv6:v4 address
+        part_v6, part_v4 = SPLIT_IPv6_v4.split(arg)
+        part_v6 = expand_seq(part_v6, 16)
+        part_v4 = expand_seq(part_v4)
+        _EXPAND_SEQ += 1
+        return part_v6 + ':' + part_v4
+
+    # else: regular string
+    result = expand_seq(arg, overflow=True)
+    _EXPAND_SEQ += 1
+    return result
+
+
+def expand_seq(arg, radix=10, overflow=False):
+    '''expand an automatic numbering sequence like "192.168.1.[200]"
+    or IPv6 "64:b9:e8:ff:fe:c2:fd:[0a]" or "64:b9:e8:[0a]:10.0.0.[100]"
+    or just a string "node[10].sub[20].domain.org"'''
+
+    if not '[' in arg:
+        return arg
+
+    m = MATCH_SEQ.match(arg)
+    if not m:
+        raise RangeSyntaxError('syntax error in numbering sequence')
+
+    (prefix, num, postfix) = m.groups()
+    width = len(num)
+    try:
+        num = int(num, radix)
+    except ValueError:
+        raise RangeSyntaxError('invalid value in numbering sequence')
+
+    num += _EXPAND_SEQ
+    if num > 255 and not overflow:
+        raise RangeSyntaxError('IP address extends beyond 255')
+
+    if radix == 10:
+        result = '%s%.*d%s' % (prefix, width, num, postfix)
+    elif radix == 16:
+        result = '%s%.*x%s' % (prefix, width, num, postfix)
+    else:
+        raise RuntimeError("bug: radix == %d" % radix)
+
+    if '[' in result:
+        # recurse to replace all occurrences
+        return expand_seq(result, radix, overflow)
+
+    return result
 
 # EOB
