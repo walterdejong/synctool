@@ -81,8 +81,18 @@ class VNode(object):
                 stderr('failed to delete %s : %s' % (self.name, err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'delete %s' % self.name)
             else:
-                # FIXME 'backup_copies no' logs 'deleted <filename>'
                 log('deleted %s' % self.name)
+
+
+    def quiet_delete(self):
+        '''silently delete existing entry; only called by fix()'''
+
+        if not synctool.lib.DRY_RUN and not synctool.param.BACKUP_COPIES:
+            verbose('  os.unlink(%s)' % self.name)
+            try:
+                os.unlink(self.name)
+            except OSError:
+                pass
 
 
     def mkdir_basepath(self):
@@ -120,7 +130,7 @@ class VNode(object):
             if synctool.param.BACKUP_COPIES:
                 self.move_saved()
             else:
-                self.harddelete()
+                self.quiet_delete()
 
         self.mkdir_basepath()
         self.create()
@@ -330,6 +340,20 @@ class VNodeDir(VNode):
         stdout('%sremoving %s' % (not_str, self.name + os.sep))
         unix_out('rmdir %s' % self.name)
         terse(synctool.lib.TERSE_DELETE, self.name + os.sep)
+
+        if not synctool.lib.DRY_RUN and not synctool.param.BACKUP_COPIES:
+            verbose('  os.rmdir(%s)' % self.name)
+            try:
+                os.rmdir(self.name)
+            except OSError:
+                # probably directory not empty
+                # refuse to delete dir, just move it aside
+                verbose('refusing to delete directory %s' % self.name)
+                self.move_saved()
+
+
+    def quiet_delete(self):
+        '''silently delete directory; only called by fix()'''
 
         if not synctool.lib.DRY_RUN and not synctool.param.BACKUP_COPIES:
             verbose('  os.rmdir(%s)' % self.name)
