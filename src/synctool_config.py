@@ -74,10 +74,10 @@ def list_all_nodes():
         if OPT_IPADDRESS:
             node += ' ' + synctool.config.get_node_ipaddress(node)
 
-        elif OPT_HOSTNAME:
+        if OPT_HOSTNAME:
             node += ' ' + synctool.config.get_node_hostname(node)
 
-        elif OPT_RSYNC:
+        if OPT_RSYNC:
             if node in synctool.param.NO_RSYNC:
                 node += ' no'
             else:
@@ -189,10 +189,10 @@ def list_nodegroups(grouplist):
         if OPT_IPADDRESS:
             node += ' ' + synctool.config.get_node_ipaddress(node)
 
-        elif OPT_HOSTNAME:
+        if OPT_HOSTNAME:
             node += ' ' + synctool.config.get_node_hostname(node)
 
-        elif OPT_RSYNC:
+        if OPT_RSYNC:
             if node in synctool.param.NO_RSYNC:
                 node += ' no'
             else:
