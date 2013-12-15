@@ -97,12 +97,13 @@ ignore .*.swp
 #
 #  rsync_cmd rsync -ar --dry-run -vv
 # or
-#  rsync_cmd rsync -ar --delete --delete-excluded -e 'ssh -c arcfour'
+#  rsync_cmd rsync -ar --delete --delete-excluded -e 'ssh -T -c arcfour'
 #
 # synctool-master automatically appends another option:
 #  --filter=/tmp/synctool/synctool-tempfile
 #
-#rsync_cmd rsync -ar --numeric-ids --delete --delete-excluded -e 'ssh -o ConnectTimeout=10 -x -q' -q
+##rsync_cmd rsync -ar --numeric-ids --delete --delete-excluded -e 'ssh -o ConnectTimeout=10 -x -q' -q
+#rsync_cmd rsync -ar --delete --delete-excluded -e 'ssh -o ConnectTimeout=10 -x -q' -q
 
 #synctool_cmd $SYNCTOOL/bin/synctool-client
 #pkg_cmd $SYNCTOOL/bin/synctool-client-pkg

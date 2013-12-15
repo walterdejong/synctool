@@ -154,8 +154,8 @@ synctool's configuration file.
   the PATH environment variable will be searched for the command if you do
   not supply a full path.
 
-  The default is: `rsync -ar --numeric-ids --delete --delete-excluded
-  -e 'ssh -o ConnectTimeout=10 -x -q' -q`
+  The default is: `rsync -ar --delete --delete-excluded -e 'ssh
+  -o ConnectTimeout=10 -x -q' -q`
 
   synctool will automatically add another option `--filter` to this command,
   which it uses to ensure that the correct overlay directories are synced

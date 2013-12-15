@@ -44,14 +44,15 @@ DIFF_CMD = 'diff -u'
 PING_CMD = 'ping -q -c 1 -t 1'
 SSH_CMD = 'ssh -o ConnectTimeout=10 -x -q'
 SCP_CMD = 'scp -o ConnectTimeout=10 -p'
-RSYNC_CMD = ("rsync -ar --numeric-ids --delete --delete-excluded "
+# older versions also had --numeric-ids
+RSYNC_CMD = ("rsync -ar --delete --delete-excluded "
              "-e 'ssh -o ConnectTimeout=10 -x -q' -q")
 SYNCTOOL_CMD = None
 PKG_CMD = None
 
 PACKAGE_MANAGER = None
 
-NUM_PROC = 16                # use sensible default
+NUM_PROC = 16       # use sensible default
 SLEEP_TIME = 0
 
 REQUIRE_EXTENSION = True
