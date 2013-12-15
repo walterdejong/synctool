@@ -90,7 +90,6 @@ ignore .*.swp
 #ping_cmd fping -t 500
 #ping_cmd ping -q -c 1 -t 1
 #ssh_cmd ssh -o ConnectTimeout=10 -x -q
-#scp_cmd scp -o ConnectTimeout=10 -p
 
 # synctool depends on rsync, but this command is configurable
 # so that you can do things like:

@@ -136,14 +136,7 @@ synctool's configuration file.
 
 * `scp_cmd <scp UNIX command>`
 
-  Give the command and arguments to execute `scp`.
-  `dcp` uses this command to do a remote copy of files to the target nodes.
-
-  The exact location of the `scp` command is operating system specific;
-  the PATH environment variable will be searched for the command if you do
-  not supply a full path.
-
-  The default is: `scp -o ConnectTimeout=10 -p`
+  **obsolete** synctool-scp uses `rsync` under the hood nowadays.
 
 * `rsync_cmd <rsync UNIX command>`
 

@@ -23,7 +23,6 @@ import re
 import synctool.lib
 import synctool.param
 
-
 # this allows alphanumeric concatenated by underscore, minus, or plus symbol
 # and no other characters
 # Valid names are: node1 node1-10 node_10_0_0_2 node1+node2
@@ -997,14 +996,6 @@ def config_ssh_cmd(arr, configfile, lineno):
     '''parse keyword: ssh_cmd'''
 
     (err, synctool.param.SSH_CMD) = _config_command('ssh_cmd', arr, 'ssh',
-                                                    configfile, lineno)
-    return err
-
-
-def config_scp_cmd(arr, configfile, lineno):
-    '''parse keyword: scp_cmd'''
-
-    (err, synctool.param.SCP_CMD) = _config_command('scp_cmd', arr, 'scp',
                                                     configfile, lineno)
     return err
 
