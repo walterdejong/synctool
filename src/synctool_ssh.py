@@ -144,24 +144,24 @@ def usage():
     print ('usage: %s [options] <remote command>' %
         os.path.basename(sys.argv[0]))
     print 'options:'
-    print '  -h, --help                     Display this information'
-    print '  -c, --conf=FILE                Use this config file'
-    print ('                                 (default: %s)' %
+    print '  -h, --help                  Display this information'
+    print '  -c, --conf=FILE             Use this config file'
+    print ('                              (default: %s)' %
         synctool.param.DEFAULT_CONF)
-    print '''  -n, --node=LIST                Execute only on these nodes
-  -g, --group=LIST               Execute only on these groups of nodes
-  -x, --exclude=LIST             Exclude these nodes from the selected group
-  -X, --exclude-group=LIST       Exclude these groups from the selection
-  -a, --aggregate                Condense output
-  -o, --options=SSH_OPTIONS      Set additional options for ssh
-  -N, --numproc=NUM              Set number of concurrent procs
-  -z, --zzz=NUM                  Sleep NUM seconds between each run
-
-      --no-nodename              Do not prepend nodename to output
-  -v, --verbose                  Be verbose
-      --unix                     Output actions as unix shell commands
-      --skip-rsync               Do not sync commands from the scripts/ dir
-                                 (eg. when it is on a shared filesystem)
+    print '''  -n, --node=LIST             Execute only on these nodes
+  -g, --group=LIST            Execute only on these groups of nodes
+  -x, --exclude=LIST          Exclude these nodes from the selected group
+  -X, --exclude-group=LIST    Exclude these groups from the selection
+  -a, --aggregate             Condense output
+  -o, --options=SSH_OPTIONS   Set additional options for ssh
+  -N, --numproc=NUM           Set number of concurrent procs
+  -z, --zzz=NUM               Sleep NUM seconds between each run
+      --no-nodename           Do not prepend nodename to output
+      --unix                  Output actions as unix shell commands
+  -v, --verbose               Be verbose
+  -a, --aggregate             Condense output; list nodes per change
+      --skip-rsync            Do not sync commands from the scripts/ dir
+                              (eg. when it is on a shared filesystem)
 '''
 
 

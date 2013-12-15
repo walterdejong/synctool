@@ -298,33 +298,32 @@ def usage():
 
     print 'usage: %s [options]' % os.path.basename(sys.argv[0])
     print 'options:'
-    print '  -h, --help               Display this information'
-    print '  -c, --conf=FILE          Use this config file'
-    print ('                           (default: %s)' %
+    print '  -h, --help                  Display this information'
+    print '  -c, --conf=FILE             Use this config file'
+    print ('                              (default: %s)' %
         synctool.param.DEFAULT_CONF)
 
-    print '''  -l, --list-nodes         List all configured nodes
-  -L, --list-groups        List all configured groups
-  -n, --node=LIST          List all groups this node is in
-  -g, --group=LIST         List all nodes in this group
-  -i, --ipaddress          List selected nodes' IP address
-  -H, --hostname           List selected nodes' hostname
-  -r, --rsync              List selected nodes' rsync qualifier
-  -f, --filter-ignored     Do not list ignored nodes and groups
+    print '''  -l, --list-nodes            List all configured nodes
+  -L, --list-groups           List all configured groups
+  -n, --node=LIST             List all groups this node is in
+  -g, --group=LIST            List all nodes in this group
+  -i, --ipaddress             List selected nodes' IP address
+  -H, --hostname              List selected nodes' hostname
+  -r, --rsync                 List selected nodes' rsync qualifier
+  -f, --filter-ignored        Do not list ignored nodes and groups
+  -C, --command=COMMAND       Display setting for command
+  -P, --package-manager       Display configured package manager
+  -N, --numproc               Display numproc setting
+  -d, --list-dirs             Display directory settings
+      --prefix                Display installation prefix
+      --master                Display configured master fqdn
+      --slave                 Display configured slave nodes
+      --nodename              Display my nodename
+      --fqdn                  Display my FQDN (fully qualified domain name)
+  -x, --expand=LIST           Expand given node list
+  -v, --version               Display synctool version
 
-  -C, --command=COMMAND    Display setting for command
-  -P, --package-manager    Display configured package manager
-  -N, --numproc            Display numproc setting
-  -d, --list-dirs          Display directory settings
-      --prefix             Display installation prefix
-      --master             Display configured master fqdn
-      --slave              Display configured slave nodes
-      --nodename           Display my nodename
-      --fqdn               Display my FQDN
-  -x, --expand=LIST        Expand given node list
-  -v, --version            Display synctool version
-
-A command is a list of these: diff,ping,ssh,rsync,synctool,pkg
+COMMAND is a list of these: diff,ping,ssh,rsync,synctool,pkg
 '''
 
 

@@ -394,7 +394,6 @@ def usage():
   -g, --group=LIST            Execute only on these groups of nodes
   -x, --exclude=LIST          Exclude these nodes from the selected group
   -X, --exclude-group=LIST    Exclude these groups from the selection
-
   -d, --diff=FILE             Show diff for file
   -1, --single=PATH           Update a single file
   -r, --ref=PATH              Show which source file synctool chooses
@@ -403,21 +402,21 @@ def usage():
   -o, --overlay=GROUP         Upload file to $overlay/group/
   -p, --purge=GROUP           Upload file or directory to $purge/group/
   -e, --erase-saved           Erase *.saved backup files
-  -f, --fix                   Perform updates (otherwise, do dry-run)
       --no-post               Do not run any .post scripts
   -N, --numproc=NUM           Number of concurrent procs
   -F, --fullpath              Show full paths instead of shortened ones
   -T, --terse                 Show terse, shortened paths
       --color                 Use colored output (only for terse mode)
       --no-color              Do not color output
-      --unix                  Output actions as unix shell commands
   -S, --skip-rsync            Do not sync the repository
       --version               Show current version number
       --check-update          Check for availibility of newer version
       --download              Download latest version
+      --unix                  Output actions as unix shell commands
   -v, --verbose               Be verbose
   -q, --quiet                 Suppress informational startup messages
   -a, --aggregate             Condense output; list nodes per change
+  -f, --fix                   Perform updates (otherwise, do dry-run)
 
 Note that synctool does a dry run unless you specify --fix
 

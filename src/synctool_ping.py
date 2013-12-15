@@ -139,11 +139,10 @@ def usage():
   -x, --exclude=LIST             Exclude these nodes from the selected group
   -X, --exclude-group=LIST       Exclude these groups from the selection
   -a, --aggregate                Condense output
-
   -N, --numproc=NUM              Set number of concurrent procs
   -z, --zzz=NUM                  Sleep NUM seconds between each run
-  -v, --verbose                  Be verbose
       --unix                     Output actions as unix shell commands
+  -v, --verbose                  Be verbose
 '''
 
 

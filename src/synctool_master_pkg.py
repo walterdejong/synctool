@@ -146,20 +146,18 @@ def usage():
   -g, --group=LIST               Execute only on these groups of nodes
   -x, --exclude=LIST             Exclude these nodes from the selected group
   -X, --exclude-group=LIST       Exclude these groups from the selection
-
   -l, --list   [PACKAGE ...]     List installed packages
   -i, --install PACKAGE [..]     Install package
   -R, --remove  PACKAGE [..]     Uninstall package
   -u, --update                   Update the database of available packages
   -U, --upgrade                  Upgrade all outdated packages
   -C, --clean                    Cleanup caches of downloaded packages
-
-  -f, --fix                      Perform upgrade (otherwise, do dry-run)
   -N, --numproc=NUM              Set number of concurrent procs
   -z, --zzz=NUM                  Sleep NUM seconds between each run
-  -v, --verbose                  Be verbose
       --unix                     Output actions as unix shell commands
+  -v, --verbose                  Be verbose
   -a, --aggregate                Condense output
+  -f, --fix                      Perform upgrade (otherwise, do dry-run)
   -m, --manager PACKAGE_MANAGER  (Force) select this package manager
 
 Supported package managers are:'''
