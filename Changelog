@@ -8,6 +8,7 @@ December 2013
 - fix issue with logging deletes when backup_copies is no
 - upload uses rsync, now copies along ownership and mode
 - scp_cmd is obsolete; dcp uses rsync
+- dcp can do purge copies with --purge
 
 November 2013
 - 'master' node must be explicitly defined in config file
