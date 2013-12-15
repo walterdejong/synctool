@@ -18,9 +18,10 @@ import shlex
 import time
 import errno
 
+import synctool.aggr
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose, unix_out
+from synctool.lib import stdout, stderr, unix_out
 import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
@@ -30,72 +31,101 @@ NODESET = synctool.nodeset.NodeSet()
 DESTDIR = None
 OPT_AGGREGATE = False
 MASTER_OPTS = None
-SCP_OPTIONS = None
+DCP_OPTIONS = None
+OPT_PURGE = False
 
 # ugly globals help parallelism
-SCP_CMD_ARR = None
+DCP_CMD_ARR = None
 FILES_STR = None
 
 
 def run_remote_copy(address_list, files):
     '''copy files[] to nodes[]'''
 
-    global SCP_CMD_ARR, FILES_STR
+    global DCP_CMD_ARR, FILES_STR
 
-    SCP_CMD_ARR = shlex.split(synctool.param.SCP_CMD)
+    errs = 0
+    sourcelist = []
+    for filename in files:
+        if not filename:
+            continue
 
-    if SCP_OPTIONS:
-        SCP_CMD_ARR.extend(shlex.split(SCP_OPTIONS))
+        if not os.path.exists(filename):
+            stderr('error: no such file or directory: %s' % filename)
+            errs += 1
+            continue
 
-    SCP_CMD_ARR.extend(files)
+        # for directories, append a '/' slash
+        if os.path.isdir(filename) and not filename[-1] == os.sep:
+            sourcelist.append(filename + os.sep)
+        else:
+            sourcelist.append(filename)
 
-    FILES_STR = ' '.join(files)        # only used for printing
+    if errs > 0:
+        sys.exit(-1)
 
-    synctool.lib.multiprocess(worker_scp, address_list)
+    DCP_CMD_ARR = shlex.split(synctool.param.RSYNC_CMD)
+
+    if not OPT_PURGE:
+        if '--delete' in DCP_CMD_ARR:
+            DCP_CMD_ARR.remove('--delete')
+        if '--delete-excluded' in DCP_CMD_ARR:
+            DCP_CMD_ARR.remove('--delete-excluded')
+
+    if synctool.lib.VERBOSE:
+        if '-q' in DCP_CMD_ARR:
+            DCP_CMD_ARR.remove('-q')
+        if '--quiet' in DCP_CMD_ARR:
+            DCP_CMD_ARR.remove('--quiet')
+
+    if synctool.lib.QUIET:
+        if not '-q' in DCP_CMD_ARR and not '--quiet' in DCP_CMD_ARR:
+            DCP_CMD_ARR.append('-q')
+
+    if DCP_OPTIONS:
+        DCP_CMD_ARR.extend(shlex.split(DCP_OPTIONS))
+
+    DCP_CMD_ARR.append('--')
+    DCP_CMD_ARR.extend(sourcelist)
+
+    FILES_STR = ' '.join(sourcelist)    # only used for printing
+
+    synctool.lib.multiprocess(worker_dcp, address_list)
 
 
-def worker_scp(addr):
-    '''runs scp (remote copy) to node'''
+def worker_dcp(addr):
+    '''do remote copy to node'''
 
     nodename = NODESET.get_nodename_from_address(addr)
     if nodename == synctool.param.NODENAME:
+        # do not copy to local node; files are already here
         return
 
-    # note that the fileset already had been added to SCP_CMD_ARR
+    # the fileset already has been added to DCP_CMD_ARR
 
-    # create local copy
+    # create local copy of DCP_CMD_ARR
     # or parallelism may screw things up
-    scp_cmd_arr = SCP_CMD_ARR[:]
+    dcp_cmd_arr = DCP_CMD_ARR[:]
+    dcp_cmd_arr.append('%s:%s' % (addr, DESTDIR))
 
-    if DESTDIR:
-        verbose('copying %s to %s:%s' % (FILES_STR, nodename, DESTDIR))
+    msg = 'copy %s to %s' % (FILES_STR, DESTDIR)
+    if synctool.lib.DRY_RUN:
+        msg += ' (dry run)'
+    if synctool.lib.OPT_NODENAME:
+        msg = ('%s: ' % nodename) + msg
+    stdout(msg)
 
-        if SCP_OPTIONS:
-            unix_out('%s %s %s %s:%s' % (synctool.param.SCP_CMD, SCP_OPTIONS,
-                                         FILES_STR, addr, DESTDIR))
-        else:
-            unix_out('%s %s %s:%s' % (synctool.param.SCP_CMD, FILES_STR,
-                                      addr, DESTDIR))
-        scp_cmd_arr.append('%s:%s' % (addr, DESTDIR))
-    else:
-        verbose('copying %s to %s' % (FILES_STR, nodename))
+    unix_out(' '.join(dcp_cmd_arr))
 
-        if SCP_OPTIONS:
-            unix_out('%s %s %s %s:' % (synctool.param.SCP_CMD, SCP_OPTIONS,
-                                       FILES_STR, addr))
-        else:
-            unix_out('%s %s %s:' % (synctool.param.SCP_CMD, FILES_STR, addr))
-
-        scp_cmd_arr.append('%s:' % addr)
-
-    synctool.lib.run_with_nodename(scp_cmd_arr, nodename)
+    if not synctool.lib.DRY_RUN:
+        synctool.lib.run_with_nodename(dcp_cmd_arr, nodename)
 
 
 def check_cmd_config():
     '''check whether the commands as given in synctool.conf actually exist'''
 
-    (ok, synctool.param.SCP_CMD) = synctool.config.check_cmd_config(
-                                        'scp_cmd', synctool.param.SCP_CMD)
+    (ok, synctool.param.RSYNC_CMD) = synctool.config.check_cmd_config(
+                                        'rsync_cmd', synctool.param.RSYNC_CMD)
     if not ok:
         sys.exit(-1)
 
@@ -103,46 +133,48 @@ def check_cmd_config():
 def usage():
     '''print usage information'''
 
-    print ('usage: %s [options] FILE [..]' %
-        os.path.basename(sys.argv[0]))
-    print 'options:'
-    print '  -h, --help                     Display this information'
-    print '  -c, --conf=FILE                Use this config file'
-    print ('                                 (default: %s)' %
-        synctool.param.DEFAULT_CONF)
-    print '''  -n, --node=LIST                Execute only on these nodes
-  -g, --group=LIST               Execute only on these groups of nodes
-  -x, --exclude=LIST             Exclude these nodes from the selected group
-  -X, --exclude-group=LIST       Exclude these groups from the selection
-  -a, --aggregate                Condense output
-  -o, --options=options          Set additional scp options
-  -d, --dest=PATH                Set destination name to copy to
+    print ('usage: %s [options] FILE [..] DESTDIR|:' %
+           os.path.basename(sys.argv[0]))
+    print ('''options:
+  -h, --help                  Display this information
+  -c, --conf=FILE             Use this config file
+                              (default: %s)''' %
+           synctool.param.DEFAULT_CONF)
+    print '''  -n, --node=LIST             Execute only on these nodes
+  -g, --group=LIST            Execute only on these groups of nodes
+  -x, --exclude=LIST          Exclude these nodes from the selected group
+  -X, --exclude-group=LIST    Exclude these groups from the selection
+  -o, --options=options       Add options to rsync
+  -p, --purge                 Delete extraneous files from dest dir
+      --no-nodename           Do not prepend nodename to output
+  -N, --numproc=NUM           Set number of concurrent procs
+  -z, --zzz=NUM               Sleep NUM seconds between each run
+      --unix                  Output actions as unix shell commands
+  -v, --verbose               Be verbose
+  -a, --aggregate             Condense output; list nodes per change
+  -f, --fix                   Perform copy (otherwise, do dry-run)
 
-      --no-nodename              Do not prepend nodename to output
-  -N, --numproc=NUM              Set number of concurrent procs
-  -z, --zzz=NUM                  Sleep NUM seconds between each run
-  -v, --verbose                  Be verbose
-      --unix                     Output actions as unix shell commands
+DESTDIR may be ':' (colon) meaning the directory of the first source file
 '''
 
 
 def get_options():
     '''parse command-line options'''
 
-    global DESTDIR, MASTER_OPTS, OPT_AGGREGATE, SCP_OPTIONS
+    global DESTDIR, MASTER_OPTS, OPT_AGGREGATE, DCP_OPTIONS, OPT_PURGE
 
     if len(sys.argv) <= 1:
         usage()
         sys.exit(1)
 
     DESTDIR = None
-    SCP_OPTIONS = None
+    DCP_OPTIONS = None
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hc:vd:o:n:g:x:X:qN:z:',
-            ['help', 'conf=', 'verbose', 'dest=', 'options=',
-            'node=', 'group=', 'exclude=', 'exclude-group=',
-            'no-nodename', 'numproc=', 'zzz=', 'unix', 'quiet'])
+        opts, args = getopt.getopt(sys.argv[1:], 'hc:n:g:x:X:o:pN:z:vqaf',
+            ['help', 'conf=', 'node=', 'group=', 'exclude=', 'exclude-group=',
+             'options=', 'purge', 'no-nodename', 'numproc=', 'zzz=',
+             'unix', 'verbose', 'quiet', 'aggregate', 'fix'])
     except getopt.GetoptError as reason:
         print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
 #        usage()
@@ -174,10 +206,6 @@ def get_options():
             # already done
             continue
 
-        if opt in ('-v', '--verbose'):
-            synctool.lib.VERBOSE = True
-            continue
-
         if opt in ('-n', '--node'):
             NODESET.add_node(arg)
             continue
@@ -194,28 +222,16 @@ def get_options():
             NODESET.exclude_group(arg)
             continue
 
-        if opt in ('-a', '--aggregate'):
-            OPT_AGGREGATE = True
-            continue
-
         if opt in ('-o', '--options'):
-            SCP_OPTIONS = arg
+            DCP_OPTIONS = arg
             continue
 
-        if opt in ('-d', '--dest'):
-            DESTDIR = arg
+        if opt in ('-p', '--purge'):
+            OPT_PURGE = True
             continue
 
         if opt == '--no-nodename':
             synctool.lib.OPT_NODENAME = False
-            continue
-
-        if opt == '--unix':
-            synctool.lib.UNIX_CMD = True
-            continue
-
-        if opt in ('-q', '--quiet'):
-            # silently ignore this option
             continue
 
         if opt in ('-N', '--numproc'):
@@ -254,11 +270,54 @@ def get_options():
 
             continue
 
+        if opt == '--unix':
+            synctool.lib.UNIX_CMD = True
+            continue
+
+        if opt in ('-v', '--verbose'):
+            synctool.lib.VERBOSE = True
+            continue
+
+        if opt in ('-q', '--quiet'):
+            synctool.lib.QUIET = True
+            continue
+
+        if opt in ('-a', '--aggregate'):
+            OPT_AGGREGATE = True
+            continue
+
+        if opt in ('-f', '--fix'):
+            synctool.lib.DRY_RUN = False
+            continue
+
     if not args:
         print '%s: missing file to copy' % os.path.basename(sys.argv[0])
         sys.exit(1)
 
+    if len(args) < 2:
+        print '%s: missing destination' % os.path.basename(sys.argv[0])
+        sys.exit(1)
+
     MASTER_OPTS.extend(args)
+
+    DESTDIR = args.pop(-1)
+
+    # dest may be ':' meaning that we want to copy the source dirname
+    if DESTDIR == ':':
+        if os.path.isdir(args[0]):
+            DESTDIR = args[0]
+        else:
+            DESTDIR = os.path.dirname(args[0])
+
+    # DESTDIR[0] == ':' would create "rsync to node::module"
+    # which is something we don't want
+    if not DESTDIR or DESTDIR[0] == ':':
+        print '%s: invalid destination' % os.path.basename(sys.argv[0])
+        sys.exit(1)
+
+    # ensure trailing slash
+    if DESTDIR[-1] != os.sep:
+        DESTDIR += os.sep
 
     return args
 
