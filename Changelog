@@ -6,6 +6,7 @@ December 2013
 - added node range syntax to synctool.conf
 - added IP address sequence numbering for in synctool.conf
 - fix issue with logging deletes when backup_copies is no
+- upload uses rsync, now copies along ownership and mode
 
 November 2013
 - 'master' node must be explicitly defined in config file

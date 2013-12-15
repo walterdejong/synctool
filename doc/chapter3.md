@@ -107,21 +107,23 @@ disagree and want a different suffix, choose one:
 synctool will suggest the overlay directory where to put the file in
 the repository. If you disagree, use:
 
-    synctool -n node1 --overlay mycluster --upload /etc/ntp.conf
-    synctool -n node1 -o mycluster -u /etc/ntp.conf
+    synctool -n node1 --upload /etc/ntp.conf --overlay mycluster
+    synctool -n node1 -u /etc/ntp.conf -o mycluster
 
-Now edit the file, make changes to the `ntp.conf` and run synctool:
+By default synctool does a _dry run_. It will not do anything but show
+what would happen if this would not be a dry run. Add `-f` or `--fix` to
+really upload the file.
+
+Now edit the the uploaded `ntp.conf`, make some changes and run synctool:
 
     root@masternode:/# synctool
     node1: DRY RUN, not doing any updates
     node1: /etc/ntp.conf updated (file size mismatch)
 
-The file is being updated because there is a mismatch in the file size.
-Should the file size be the same, synctool will calculate an MD5 checksum to
-see whether the file was changed or not.
-
-By default synctool does a _dry run_. It will not do anything but show
-what would happen if this would not be a dry run.
+Again, synctool does a _dry run_. It shows the file is going to be updated
+because there is a mismatch in the file size. Should the file size be the
+same, synctool will calculate an MD5 checksum to see whether the file was
+changed or not.
 
 You may want to review your changes before applying them, or inspect the
 difference between the version in the repository with what's currently

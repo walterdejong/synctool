@@ -41,6 +41,10 @@ class UploadFile(object):
     def make_repos_path(self):
         '''make $overlay repository path from elements'''
 
+        if len(self.filename) > 1 and self.filename[-1] == '/':
+            # strip trailing slash
+            self.filename = self.filename[:-1]
+
         if self.purge:
             self._make_purge_path()
             return
@@ -55,7 +59,10 @@ class UploadFile(object):
                 overlay_dir = 'all'
 
             if not self.suffix and synctool.param.REQUIRE_EXTENSION:
-                self.suffix = self.node
+                if self.overlay:
+                    self.suffix = 'all'
+                else:
+                    self.suffix = self.node
 
             if not self.suffix:
                 self.repos_path = os.path.join(synctool.param.OVERLAY_DIR,
@@ -88,69 +95,12 @@ class UploadFile(object):
     def _make_purge_path(self):
         '''make $purge repository path from elements'''
 
-        if len(self.filename) > 1 and self.filename[-1] == '/':
-            # strip trailing slash
-            self.filename = self.filename[:-1]
-
-        self.repos_path = (os.path.join(synctool.param.PURGE_DIR,
-                           self.purge) + os.path.dirname(self.filename))
-
-
-def upload_purge(up):
-    '''upload a file/dir to $purge/group/'''
-
-    # make command: rsync [-n] [-v] node:/path/ $purge/group/path/
-    cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
-
-    # opts is just for the 'visual aspect'; it is displayed when --verbose
-    opts = ' '
-    if synctool.lib.DRY_RUN:
-        cmd_arr.append('-n')
-        opts += '-n '
-
-    if synctool.lib.VERBOSE:
-        cmd_arr.append('-v')
-        opts += '-v '
-
-    up.make_repos_path()
-
-    cmd_arr.append(up.address + ':' + up.filename)
-    cmd_arr.append(up.repos_path)
-
-    verbose_path = os.path.join(prettypath(up.repos_path),
-                                os.path.basename(up.filename))
-    if synctool.lib.DRY_RUN:
-        stdout('would be uploaded as %s' % verbose_path)
-
-    if not synctool.lib.DRY_RUN:
-        unix_out('mkdir -p %s' % up.repos_path)
-        synctool.lib.mkdir_p(up.repos_path)
-
-    # check whether the remote entry exists
-    ok, isdir = _remote_isdir(up)
-    if not ok:
-        return
-
-    # when uploading a single file to purge/, do not use rsync --delete
-    # because it would (inadvertently) delete all existing files in the repos
-    if not isdir:
-        if '--delete' in cmd_arr:
-            cmd_arr.remove('--delete')
-        if '--delete-excluded' in cmd_arr:
-            cmd_arr.remove('--delete-excluded')
-
-    verbose('running rsync%s%s:%s to %s' % (opts, up.node, up.filename,
-                                            verbose_path))
-    unix_out(' '.join(cmd_arr))
-
-    if not synctool.lib.DRY_RUN and os.path.exists(up.repos_path):
-        synctool.lib.run_with_nodename(cmd_arr, up.node)
-        stdout('uploaded as %s' % verbose_path)
+        self.repos_path = os.path.join(synctool.param.PURGE_DIR,
+                                       self.purge) + self.filename
 
 
 def _remote_isdir(up):
-    '''Helper function for upload_purge()
-    See if the remote rsync source is a directory or a file
+    '''See if the remote rsync source is a directory or a file
     Parameter 'up' is an instance of UploadFile
     Returns: tuple of booleans: (exists, isdir)'''
 
@@ -251,7 +201,7 @@ def upload(up):
         terse(synctool.lib.TERSE_DRYRUN, 'not uploading any files')
 
     if up.purge != None:
-        upload_purge(up)
+        rsync_upload(up)
         return
 
     # pretend that the current node is now the given node;
@@ -268,36 +218,84 @@ def upload(up):
     GLOBAL_UPLOAD_FILE = up
     synctool.overlay.visit(synctool.param.OVERLAY_DIR, _upload_callback)
     up = GLOBAL_UPLOAD_FILE
-    up.make_repos_path()
 
     synctool.param.NODENAME = orig_nodename
     synctool.param.MY_GROUPS = orig_my_groups
 
-    verbose('%s:%s uploaded as %s' % (up.node, up.filename, up.repos_path))
-    terse(synctool.lib.TERSE_UPLOAD, up.repos_path)
-    unix_out('%s %s:%s %s' % (synctool.param.SCP_CMD, up.address,
-                              up.filename, up.repos_path))
+    rsync_upload(up)
 
+
+def rsync_upload(up):
+    '''upload a file/dir to $overlay/group/ or $purge/group/'''
+
+    up.make_repos_path()
+
+    # check whether the remote entry exists
+    ok, isdir = _remote_isdir(up)
+    if not ok:
+        # error message was already printed
+        return
+
+    if isdir and synctool.param.REQUIRE_EXTENSION and not up.purge:
+        stderr('error: remote is a directory')
+        stderr('synctool can not upload directories to $overlay '
+               'when require_extension is set')
+        return
+
+    if isdir:
+        up.filename += os.sep
+        up.repos_path += os.sep
+
+    # make command: rsync [-n] [-v] node:/path/ $overlay/group/path/
+    cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
+
+    # opts is just for the 'visual aspect'; it is displayed when --verbose
+    opts = ' '
     if synctool.lib.DRY_RUN:
-        stdout('would be uploaded as %s' % prettypath(up.repos_path))
+        cmd_arr.append('-n')
+        opts += '-n '
+
+    if synctool.lib.VERBOSE:
+        cmd_arr.append('-v')
+        opts += '-v '
+        if '-q' in cmd_arr:
+            cmd_arr.remove('-q')
+        if '--quiet' in cmd_arr:
+            cmd_arr.remove('--quiet')
+
+    cmd_arr.append(up.address + ':' + up.filename)
+    cmd_arr.append(up.repos_path)
+
+    verbose_path = prettypath(up.repos_path)
+    if synctool.lib.DRY_RUN:
+        stdout('would be uploaded as %s' % verbose_path)
     else:
-        # mkdir in the repos (just in case it didn't exist yet)
-        # note: it may well make the dir with wrong ownership, mode
-        # but rsync-ing the dest to here is rather dangerous if the dest
-        # is a directory or something other than a regular file
-        repos_dir = os.path.dirname(up.repos_path)
-        unix_out('mkdir -p %s' % repos_dir)
-        synctool.lib.mkdir_p(repos_dir)
+        dest_dir = os.path.dirname(up.repos_path)
+        unix_out('mkdir -p %s' % dest_dir)
+        synctool.lib.mkdir_p(dest_dir)
+        if not os.path.exists(dest_dir):
+            stderr('error: failed to create %s/' % dest_dir)
+            return
 
-        # make scp command array
-        scp_cmd_arr = shlex.split(synctool.param.SCP_CMD)
-        scp_cmd_arr.append('%s:%s' % (up.address, up.filename))
-        scp_cmd_arr.append(up.repos_path)
+    # for $overlay, never do rsync --delete / --delete-excluded
+    # for $purge, don't use rsync --delete on single files
+    # because it would (inadvertently) delete all existing files in the repos
+    if not up.purge or not isdir:
+        if '--delete' in cmd_arr:
+            cmd_arr.remove('--delete')
+        if '--delete-excluded' in cmd_arr:
+            cmd_arr.remove('--delete-excluded')
 
-        synctool.lib.run_with_nodename(scp_cmd_arr, up.node)
+    verbose('running rsync%s%s:%s to %s' % (opts, up.node, up.filename,
+                                            verbose_path))
+    unix_out(' '.join(cmd_arr))
 
-        if os.path.isfile(up.repos_path):
-            stdout('uploaded %s' % prettypath(up.repos_path))
+    if not synctool.lib.DRY_RUN:
+        synctool.lib.run_with_nodename(cmd_arr, up.node)
+        if not os.path.exists(up.repos_path):
+            stderr('error: upload failed')
+        else:
+            stdout('uploaded %s' % verbose_path)
 
 
 # EOB
