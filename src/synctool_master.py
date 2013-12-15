@@ -311,11 +311,6 @@ def check_cmd_config():
     if not ok:
         errors += 1
 
-#    (ok, synctool.param.SCP_CMD) = synctool.config.check_cmd_config(
-#                                       'scp_cmd', synctool.param.SCP_CMD)
-#    if not ok:
-#        errors += 1
-
     if not OPT_SKIP_RSYNC:
         (ok, synctool.param.RSYNC_CMD) = synctool.config.check_cmd_config(
                                         'rsync_cmd', synctool.param.RSYNC_CMD)

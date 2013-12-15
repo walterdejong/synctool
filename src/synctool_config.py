@@ -226,12 +226,6 @@ def list_commands(cmds):
             if ok:
                 print synctool.param.SSH_CMD
 
-        elif cmd == 'scp':
-            ok, _ = synctool.config.check_cmd_config('scp_cmd',
-                        synctool.param.SCP_CMD)
-            if ok:
-                print synctool.param.SCP_CMD
-
         elif cmd == 'rsync':
             ok, _ = synctool.config.check_cmd_config('rsync_cmd',
                         synctool.param.RSYNC_CMD)
@@ -330,7 +324,7 @@ def usage():
   -x, --expand=LIST        Expand given node list
   -v, --version            Display synctool version
 
-A command is a list of these: diff,ping,ssh,scp,rsync,synctool,pkg
+A command is a list of these: diff,ping,ssh,rsync,synctool,pkg
 '''
 
 
