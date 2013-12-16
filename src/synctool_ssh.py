@@ -97,6 +97,7 @@ def worker_ssh(addr):
                                   addr, REMOTE_CMD_ARR[0]))
 
         cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
+        cmd_arr.append('--')
         cmd_arr.append('%s' % REMOTE_CMD_ARR[0])
         cmd_arr.append('%s:%s' % (addr, REMOTE_CMD_ARR[0]))
         synctool.lib.run_with_nodename(cmd_arr, nodename)
@@ -109,6 +110,7 @@ def worker_ssh(addr):
 
     verbose('running %s to %s %s' % (os.path.basename(SSH_CMD_ARR[0]),
                                      nodename, cmd_str))
+    ssh_cmd_arr.append('--')
     ssh_cmd_arr.append(addr)
     ssh_cmd_arr.extend(REMOTE_CMD_ARR)
 

@@ -48,6 +48,7 @@ def worker_pkg(addr):
 
     # run 'ssh node pkg_cmd'
     cmd_arr = shlex.split(synctool.param.SSH_CMD)
+    cmd_arr.append('--')
     cmd_arr.append(addr)
     cmd_arr.extend(shlex.split(synctool.param.PKG_CMD))
     cmd_arr.extend(PASS_ARGS)

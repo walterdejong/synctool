@@ -73,6 +73,7 @@ def worker_synctool(addr):
 
         cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
         cmd_arr.append('--filter=. %s' % tmp_filename)
+        cmd_arr.append('--')
         cmd_arr.append('%s/' % synctool.param.ROOTDIR)
         cmd_arr.append('%s:%s/' % (addr, synctool.param.ROOTDIR))
 
@@ -95,6 +96,7 @@ def worker_synctool(addr):
 
     # run 'ssh node synctool_cmd'
     cmd_arr = shlex.split(synctool.param.SSH_CMD)
+    cmd_arr.append('--')
     cmd_arr.append(addr)
     cmd_arr.extend(shlex.split(synctool.param.SYNCTOOL_CMD))
     cmd_arr.append('--nodename=%s' % nodename)
