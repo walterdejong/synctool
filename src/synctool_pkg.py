@@ -334,7 +334,7 @@ def get_options():
             continue
 
         if opt in ('-q', '--quiet'):
-            # silently ignore this option
+            synctool.lib.QUIET = True
             continue
 
     if not ACTION:
