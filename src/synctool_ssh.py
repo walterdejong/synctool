@@ -196,6 +196,20 @@ def get_options():
             synctool.param.CONF_FILE = arg
             continue
 
+        # these options influence program output, so process them
+        # as soon as possible, even before reading the config file
+        if opt in ('-v', '--verbose'):
+            synctool.lib.VERBOSE = True
+            continue
+
+        if opt in ('-q', '--quiet'):
+            synctool.lib.QUIET = True
+            continue
+
+        if opt == '--unix':
+            synctool.lib.UNIX_CMD = True
+            continue
+
     synctool.config.read_config()
     check_cmd_config()
 

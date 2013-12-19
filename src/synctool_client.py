@@ -886,6 +886,29 @@ def get_options():
             synctool.param.CONF_FILE = arg
             continue
 
+        # these options influence program output, so process them
+        # as soon as possible, even before reading the config file
+        if opt in ('-v', '--verbose'):
+            synctool.lib.VERBOSE = True
+            continue
+
+        if opt in ('-q', '--quiet'):
+            synctool.lib.QUIET = True
+            continue
+
+        if opt == '--unix':
+            synctool.lib.UNIX_CMD = True
+            continue
+
+        if opt in ('-T', '--terse'):
+            synctool.param.TERSE = True
+            synctool.param.FULL_PATH = False
+            continue
+
+        if opt in ('-F', '--fullpath'):
+            synctool.param.FULL_PATH = True
+            continue
+
         if opt == '--version':
             print synctool.param.VERSION
             sys.exit(0)
@@ -894,20 +917,6 @@ def get_options():
     synctool.config.read_config()
     check_cmd_config()
 
-    if not synctool.param.TERSE:
-        # giving --terse changes program behavior as early as
-        # in the get_options() loop itself, so set it here already
-        for opt, args in opts:
-            if opt in ('-T', '--terse'):
-                synctool.param.TERSE = True
-                synctool.param.FULL_PATH = False
-                continue
-
-            if opt in ('-F', '--fullpath'):
-                synctool.param.FULL_PATH = True
-                continue
-
-    # then go process all the other options
     errors = 0
 
     action = ACTION_DEFAULT

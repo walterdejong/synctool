@@ -483,6 +483,29 @@ def get_options():
             PASS_ARGS.append(arg)
             continue
 
+        # these options influence program output, so process them
+        # as soon as possible, even before reading the config file
+        if opt in ('-v', '--verbose'):
+            synctool.lib.VERBOSE = True
+            continue
+
+        if opt in ('-q', '--quiet'):
+            synctool.lib.QUIET = True
+            continue
+
+        if opt == '--unix':
+            synctool.lib.UNIX_CMD = True
+            continue
+
+        if opt in ('-T', '--terse'):
+            synctool.param.TERSE = True
+            synctool.param.FULL_PATH = False
+            continue
+
+        if opt in ('-F', '--fullpath'):
+            synctool.param.FULL_PATH = True
+            continue
+
         if opt == '--version':
             print synctool.param.VERSION
             sys.exit(0)
