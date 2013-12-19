@@ -511,6 +511,7 @@ def get_options():
             sys.exit(0)
 
     synctool.config.read_config()
+    synctool.config.make_default_nodeset()
     check_cmd_config()
 
     # then process all the other options

@@ -64,6 +64,10 @@ IGNORE_DOTDIRS = False
 IGNORE_FILES = set()
 IGNORE_FILES_WITH_WILDCARDS = []
 
+# default_nodeset parameter in the config file
+# warning: config.make_default_nodeset() is only called by commands that are
+# supposed to run on the master node
+# The client commands do not expand/set DEFAULT_NODESET
 DEFAULT_NODESET = set(['all'])
 
 # the master's nodename

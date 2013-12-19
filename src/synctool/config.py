@@ -24,7 +24,8 @@ import synctool.param
 
 
 def read_config():
-    '''read the config file and set a bunch of globals'''
+    '''read the config file and set a bunch of globals
+    Return value: none, exit the program on error'''
 
     if not os.path.isfile(synctool.param.CONF_FILE):
         stderr("no such config file '%s'" % synctool.param.CONF_FILE)
@@ -88,18 +89,14 @@ def read_config():
     # initialize ALL_GROUPS
     synctool.param.ALL_GROUPS = make_all_groups()
 
-    # make the default nodeset
-    # note that it may still contain ignored nodes
-    # the NodeSet will print warnings about ignored nodes
-    errors += make_default_nodeset()
-
     if errors > 0:
         sys.exit(-1)
 
 
 def make_default_nodeset():
     '''take the (temporary) DEFAULT_NODESET and expand it to
-    the definitive DEFAULT_NODESET'''
+    the definitive DEFAULT_NODESET
+    Return value: none, exit the program on error'''
 
     temp_set = synctool.param.DEFAULT_NODESET
     synctool.param.DEFAULT_NODESET = set()
@@ -122,7 +119,8 @@ def make_default_nodeset():
         else:
             synctool.param.DEFAULT_NODESET = nodeset.nodelist
 
-    return errors
+    if errors > 0:
+        sys.exit(-1)
 
 
 def check_cmd_config(param_name, cmd):

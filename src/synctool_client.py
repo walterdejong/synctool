@@ -915,6 +915,7 @@ def get_options():
 
     # first read the config file
     synctool.config.read_config()
+#    synctool.config.make_default_nodeset()
     check_cmd_config()
 
     errors = 0
