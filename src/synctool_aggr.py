@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   synctool_aggr.py    WJ109
+#   synctool-aggr   WJ109
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #

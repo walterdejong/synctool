@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   synctool_template    WJ113
+#   synctool-template    WJ113
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #

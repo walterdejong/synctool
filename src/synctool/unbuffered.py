@@ -1,5 +1,5 @@
 #
-#   synctool_unbuffered.py    WJ110
+#   synctool.unbuffered.py    WJ110
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #

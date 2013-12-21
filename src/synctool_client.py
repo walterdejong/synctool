@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   synctool    WJ103
+#   synctool-client     WJ103
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #

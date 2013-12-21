@@ -1,5 +1,5 @@
 #
-#   synctool_pkgclass.py    WJ111
+#   synctool.pkgclass.py    WJ111
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #

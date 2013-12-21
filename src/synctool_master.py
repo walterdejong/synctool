@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   synctool_master.py    WJ109
+#   synctool_master.py  WJ109
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #

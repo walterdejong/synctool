@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   synctool_pkg.py        WJ111
+#   synctool-pkg.py        WJ111
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #
