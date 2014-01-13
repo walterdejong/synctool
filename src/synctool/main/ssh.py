@@ -1,5 +1,5 @@
 #
-#   synctool-ssh    WJ109
+#   synctool.main.ssh   WJ109
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #

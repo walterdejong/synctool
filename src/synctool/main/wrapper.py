@@ -1,5 +1,5 @@
 #
-#   synctool.main.wrapper WJ114
+#   synctool.main.wrapper.py    WJ114
 #
 #   synctool Copyright 2014 Walter de Jong <walter@heiho.net>
 #

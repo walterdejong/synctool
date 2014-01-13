@@ -1,5 +1,5 @@
 #
-#   synctool_master.py  WJ109
+#   synctool.main.master.py WJ109
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #

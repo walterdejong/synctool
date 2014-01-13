@@ -1,5 +1,5 @@
 #
-#   synctool-template    WJ113
+#   synctool.main.template.py   WJ113
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #

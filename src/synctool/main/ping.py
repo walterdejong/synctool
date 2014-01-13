@@ -1,5 +1,5 @@
 #
-#   synctool-ping    WJ111
+#   synctool.main.ping  WJ111
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #

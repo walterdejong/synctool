@@ -1,5 +1,5 @@
 #
-#   synctool-aggr   WJ109
+#   synctool.main.aggr.py   WJ109
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #

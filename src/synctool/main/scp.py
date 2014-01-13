@@ -1,5 +1,5 @@
 #
-#   synctool-scp    WJ109
+#   synctool.main.scp.py    WJ109
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #
