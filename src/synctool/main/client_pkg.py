@@ -110,7 +110,7 @@ def detect_installer():
     # - SuSE has three (!) package managers that are all in use
     #   and it seems to be by design (!?)
     # - I've seen apt-get work with dpkg, and/or with rpm
-    # - MacOS X has no 'standard' software packaging (the App store??)
+    # - OS X has no 'standard' software packaging (the App store??)
     #   There are ports, fink, brew. I prefer 'brew'
     # - The *BSDs have both pkg_add and ports
     # - FreeBSD has freebsd-update to upgrade packages
@@ -135,8 +135,8 @@ def detect_installer():
 
         stderr('unknown Linux distribution')
 
-    elif platform == 'Darwin':            # assume MacOS X
-        verbose('detected platform MacOS X')
+    elif platform == 'Darwin':            # assume OS X
+        verbose('detected platform OS X')
         # some people like port
         # some people like fink
         # I like homebrew
