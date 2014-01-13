@@ -70,6 +70,7 @@ The rest of the documentation assumes the default `/opt/synctool`.
     /opt/synctool/etc/                  configuration files
     /opt/synctool/lib/                  libraries, modules
     /opt/synctool/lib/synctool/
+    /opt/synctool/lib/synctool/main/
     /opt/synctool/lib/synctool/pkg/
     /opt/synctool/doc/                  documentation
     /opt/synctool/scripts/              place to store your scripts
@@ -87,11 +88,9 @@ The following synctool commands will be made available in
 
     synctool               Main command
     dsh                    Run remote commands
-    synctool-pkg           Upgrade or install packages
+    dsh-pkg                Upgrade or install packages
     dsh-ping               Check whether nodes are up
     dsh-cp                 Copy files to nodes
-
-    dsh-pkg                Short name for synctool-pkg
 
     synctool-client        Only run on target nodes
     synctool-client-pkg    Only run on target nodes

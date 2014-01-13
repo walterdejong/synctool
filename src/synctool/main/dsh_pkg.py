@@ -1,5 +1,5 @@
 #
-#   synctool.main.master_pkg.py WJ111
+#   synctool.main.dsh_pkg.py    WJ111
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #
@@ -24,8 +24,8 @@ import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
 
-# hardcoded name because otherwise we get "synctool_master_pkg.py"
-PROGNAME = 'synctool-pkg'
+# hardcoded name because otherwise we get "dsh_pkg.py"
+PROGNAME = 'dsh-pkg'
 
 NODESET = synctool.nodeset.NodeSet()
 

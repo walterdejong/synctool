@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   synctool_master_pkg.py    WJ114
+#   dsh_pkg.py  WJ114
 #
 #   synctool Copyright 2014 Walter de Jong <walter@heiho.net>
 #
@@ -12,9 +12,9 @@
 '''This program is dsh-pkg on the master node. It calls synctool-pkg on
 the target nodes'''
 
-import synctool.main.master_pkg
+import synctool.main.dsh_pkg
 
 if __name__ == '__main__':
-    synctool.main.master_pkg.main()
+    synctool.main.dsh_pkg.main()
 
 # EOB

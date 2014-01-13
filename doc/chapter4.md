@@ -166,23 +166,23 @@ synctool's configuration file.
 
   The default is: `$SYNCTOOL/bin/synctool-client`
 
-* `pkg_cmd <synctool-pkg UNIX command>`
+* `pkg_cmd <synctool-client-pkg UNIX command>`
 
   Give the command and arguments to execute `synctool-client-pkg`.
-  synctool-pkg uses this command to do package management on the target nodes.
+  dsh-pkg uses this command to do package management on the target nodes.
 
   The exact location of the `synctool-client-pkg` is installation
-  dependent. However, synctool-pkg looks for it under the synctool root.
+  dependent. However, dsh-pkg looks for it under the synctool root.
 
   The default is: `$SYNCTOOL/bin/synctool-client-pkg`
 
 * `package_manager <package management system>`
 
-  Specify the package management system that synctool-pkg must use.
-  If left out, synctool-pkg will detect what package manager it should use,
+  Specify the package management system that dsh-pkg must use.
+  If left out, dsh-pkg will detect what package manager it should use,
   but using this parameter you can force it if detection fails.
   This setting can be overridden from the command-line when invoking
-  `synctool-pkg`.
+  `dsh-pkg`.
 
   Valid values for `package_manager` are:
 

@@ -17,7 +17,7 @@ Table of contents
   3.3 Other useful options                               <br />
   3.4 Templates                                          <br />
   3.5 Purge directories                                  <br />
-  3.6 synctool-pkg, the synctool package manager         <br />
+  3.6 dsh-pkg, the synctool package manager              <br />
   3.7 Ignoring them: I'm not touching you                <br />
   3.8 Backup copies                                      <br />
   3.9 Logging                                            <br />
