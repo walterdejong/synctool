@@ -28,6 +28,9 @@ LIBS="__init__.py aggr.py config.py configparser.py lib.py nodeset.py
 object.py overlay.py param.py pkgclass.py range.py syncstat.py unbuffered.py
 update.py upload.py"
 
+MAIN_LIBS="__init__.py aggr.py client.py config.py master.py
+master_pkg.py pkg.py ping.py scp.py ssh.py template.py"
+
 PKG_LIBS="__init__.py aptget.py brew.py bsdpkg.py pacman.py yum.py zypper.py"
 
 DOCS="chapter1.md chapter2.md chapter3.md chapter4.md chapter5.md
@@ -182,7 +185,9 @@ install_libs() {
 	if test "x$DRY_RUN" = "xno"
 	then
 		makedir 755 "$INSTALL_ROOT/lib/synctool/pkg"
+		makedir 755 "$INSTALL_ROOT/lib/synctool/main"
 		( cd src/synctool && install -m 644 $LIBS "$INSTALL_ROOT/lib/synctool" )
+		( cd src/synctool/main && install -m 644 $MAIN_LIBS "$INSTALL_ROOT/lib/synctool/main" )
 		( cd src/synctool/pkg && install -m 644 $PKG_LIBS "$INSTALL_ROOT/lib/synctool/pkg" )
 	fi
 }
@@ -321,6 +326,12 @@ remove_libs() {
 			rm -f "$INSTALL_ROOT/lib/synctool/pkg/$lib" "$INSTALL_ROOT/lib/synctool/pkg/${lib}c" "$INSTALL_ROOT/lib/synctool/pkg/${lib}o"
 		done
 		rmdir "$INSTALL_ROOT/lib/synctool/pkg" 2>/dev/null
+
+		for lib in $MAIN_LIBS
+		do
+			rm -f "$INSTALL_ROOT/lib/synctool/main/$lib" "$INSTALL_ROOT/lib/synctool/main/${lib}c" "$INSTALL_ROOT/lib/synctool/main/${lib}o"
+		done
+		rmdir "$INSTALL_ROOT/lib/synctool/main" 2>/dev/null
 
 		for lib in $LIBS
 		do

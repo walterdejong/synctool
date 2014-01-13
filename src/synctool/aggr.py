@@ -79,7 +79,8 @@ def run(cmd_arr):
 
     try:
         f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT).stdout
     except OSError as err:
         stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return False
