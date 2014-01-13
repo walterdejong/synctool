@@ -1,5 +1,5 @@
 #
-#   synctool.main.scp.py    WJ109
+#   synctool.main.dsh_cp.py    WJ109
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #
@@ -24,26 +24,26 @@ import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
 
-# hardcoded name because otherwise we get "synctool_scp.py"
-PROGNAME = 'synctool-scp'
+# hardcoded name because otherwise we get "dsh_cp.py"
+PROGNAME = 'dsh-cp'
 
 NODESET = synctool.nodeset.NodeSet()
 
 DESTDIR = None
 OPT_AGGREGATE = False
 MASTER_OPTS = None
-DCP_OPTIONS = None
+DSH_CP_OPTIONS = None
 OPT_PURGE = False
 
 # ugly globals help parallelism
-DCP_CMD_ARR = None
+DSH_CP_CMD_ARR = None
 FILES_STR = None
 
 
 def run_remote_copy(address_list, files):
     '''copy files[] to nodes[]'''
 
-    global DCP_CMD_ARR, FILES_STR
+    global DSH_CP_CMD_ARR, FILES_STR
 
     errs = 0
     sourcelist = []
@@ -65,36 +65,36 @@ def run_remote_copy(address_list, files):
     if errs > 0:
         sys.exit(-1)
 
-    DCP_CMD_ARR = shlex.split(synctool.param.RSYNC_CMD)
+    DSH_CP_CMD_ARR = shlex.split(synctool.param.RSYNC_CMD)
 
     if not OPT_PURGE:
-        if '--delete' in DCP_CMD_ARR:
-            DCP_CMD_ARR.remove('--delete')
-        if '--delete-excluded' in DCP_CMD_ARR:
-            DCP_CMD_ARR.remove('--delete-excluded')
+        if '--delete' in DSH_CP_CMD_ARR:
+            DSH_CP_CMD_ARR.remove('--delete')
+        if '--delete-excluded' in DSH_CP_CMD_ARR:
+            DSH_CP_CMD_ARR.remove('--delete-excluded')
 
     if synctool.lib.VERBOSE:
-        if '-q' in DCP_CMD_ARR:
-            DCP_CMD_ARR.remove('-q')
-        if '--quiet' in DCP_CMD_ARR:
-            DCP_CMD_ARR.remove('--quiet')
+        if '-q' in DSH_CP_CMD_ARR:
+            DSH_CP_CMD_ARR.remove('-q')
+        if '--quiet' in DSH_CP_CMD_ARR:
+            DSH_CP_CMD_ARR.remove('--quiet')
 
     if synctool.lib.QUIET:
-        if not '-q' in DCP_CMD_ARR and not '--quiet' in DCP_CMD_ARR:
-            DCP_CMD_ARR.append('-q')
+        if not '-q' in DSH_CP_CMD_ARR and not '--quiet' in DSH_CP_CMD_ARR:
+            DSH_CP_CMD_ARR.append('-q')
 
-    if DCP_OPTIONS:
-        DCP_CMD_ARR.extend(shlex.split(DCP_OPTIONS))
+    if DSH_CP_OPTIONS:
+        DSH_CP_CMD_ARR.extend(shlex.split(DSH_CP_OPTIONS))
 
-    DCP_CMD_ARR.append('--')
-    DCP_CMD_ARR.extend(sourcelist)
+    DSH_CP_CMD_ARR.append('--')
+    DSH_CP_CMD_ARR.extend(sourcelist)
 
     FILES_STR = ' '.join(sourcelist)    # only used for printing
 
-    synctool.lib.multiprocess(worker_dcp, address_list)
+    synctool.lib.multiprocess(worker_dsh_cp, address_list)
 
 
-def worker_dcp(addr):
+def worker_dsh_cp(addr):
     '''do remote copy to node'''
 
     nodename = NODESET.get_nodename_from_address(addr)
@@ -102,12 +102,12 @@ def worker_dcp(addr):
         # do not copy to local node; files are already here
         return
 
-    # the fileset already has been added to DCP_CMD_ARR
+    # the fileset already has been added to DSH_CP_CMD_ARR
 
-    # create local copy of DCP_CMD_ARR
+    # create local copy of DSH_CP_CMD_ARR
     # or parallelism may screw things up
-    dcp_cmd_arr = DCP_CMD_ARR[:]
-    dcp_cmd_arr.append('%s:%s' % (addr, DESTDIR))
+    dsh_cp_cmd_arr = DSH_CP_CMD_ARR[:]
+    dsh_cp_cmd_arr.append('%s:%s' % (addr, DESTDIR))
 
     msg = 'copy %s to %s' % (FILES_STR, DESTDIR)
     if synctool.lib.DRY_RUN:
@@ -116,10 +116,10 @@ def worker_dcp(addr):
         msg = ('%s: ' % nodename) + msg
     stdout(msg)
 
-    unix_out(' '.join(dcp_cmd_arr))
+    unix_out(' '.join(dsh_cp_cmd_arr))
 
     if not synctool.lib.DRY_RUN:
-        synctool.lib.run_with_nodename(dcp_cmd_arr, nodename)
+        synctool.lib.run_with_nodename(dsh_cp_cmd_arr, nodename)
 
 
 def check_cmd_config():
@@ -138,8 +138,7 @@ def usage():
     print ('''options:
   -h, --help                  Display this information
   -c, --conf=FILE             Use this config file
-                              (default: %s)''' %
-           synctool.param.DEFAULT_CONF)
+                              (default: %s)''' % synctool.param.DEFAULT_CONF)
     print '''  -n, --node=LIST             Execute only on these nodes
   -g, --group=LIST            Execute only on these groups of nodes
   -x, --exclude=LIST          Exclude these nodes from the selected group
@@ -161,14 +160,14 @@ DESTDIR may be ':' (colon) meaning the directory of the first source file
 def get_options():
     '''parse command-line options'''
 
-    global DESTDIR, MASTER_OPTS, OPT_AGGREGATE, DCP_OPTIONS, OPT_PURGE
+    global DESTDIR, MASTER_OPTS, OPT_AGGREGATE, DSH_CP_OPTIONS, OPT_PURGE
 
     if len(sys.argv) <= 1:
         usage()
         sys.exit(1)
 
     DESTDIR = None
-    DCP_OPTIONS = None
+    DSH_CP_OPTIONS = None
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hc:n:g:x:X:o:pN:z:vqaf',
@@ -238,7 +237,7 @@ def get_options():
             continue
 
         if opt in ('-o', '--options'):
-            DCP_OPTIONS = arg
+            DSH_CP_OPTIONS = arg
             continue
 
         if opt in ('-p', '--purge'):

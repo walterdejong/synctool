@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   synctool-scp    WJ114
+#   dsh-cp  WJ114
 #
 #   synctool Copyright 2014 Walter de Jong <walter@heiho.net>
 #
@@ -11,9 +11,9 @@
 
 '''A command for copying files from master node to target nodes'''
 
-import synctool.main.scp
+import synctool.main.dsh_cp
 
 if __name__ == '__main__':
-    synctool.main.scp.main()
+    synctool.main.dsh_cp.main()
 
 # EOB

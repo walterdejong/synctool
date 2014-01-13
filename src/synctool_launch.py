@@ -16,11 +16,10 @@ import sys
 
 LAUNCH = {
     'synctool' : 'synctool_master.py',
-    'synctool-scp' : 'synctool_scp.py',
     'synctool-pkg' : 'synctool_master_pkg.py',
     'synctool-ping' : 'synctool_ping.py',
     'dsh' : 'dsh.py',
-    'dcp' : 'synctool_scp.py',
+    'dsh-cp' : 'dsh_cp.py',
     'dsh-pkg' : 'synctool_master_pkg.py',
     'dsh-ping' : 'synctool_ping.py',
     'synctool-config' : 'synctool_config.py',
@@ -65,6 +64,7 @@ if __name__ == '__main__':
         stderr('launch: error: no such directory: %s' % libdir)
         sys.exit(-1)
 
+    # FIXME use os.path.join()
     os.environ['PYTHONPATH'] = '%s/lib' % prefix
 
     argv = sys.argv[1:]

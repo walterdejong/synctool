@@ -228,7 +228,7 @@ More examples:
 
 Copy a file to three nodes:
 
-    # dcp -n node[1-3] patchfile-1.0.tar.gz /tmp
+    # dsh-cp -n node[1-3] patchfile-1.0.tar.gz /tmp
 
 After rebooting a cluster, use `dsh-ping` to see if the nodes respond to ping
 yet. You may also do this on a group of nodes:
@@ -392,8 +392,8 @@ directory across nodes. Once you start differentiating directory content
 between nodes, "purge" will no longer work in a satisfying way; in such a
 case, you should really use `overlay/` rather than `purge/`.
 
-`synctool-scp` or `dcp` also has an option `--purge` to quickly mirror
-directories across nodes. Use with care.
+`dsh-cp` also has an option `--purge` to quickly mirror directories across
+nodes. Use with care.
 
 
 3.6 synctool-pkg, the synctool package manager
