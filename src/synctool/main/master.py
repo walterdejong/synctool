@@ -32,6 +32,9 @@ import synctool.unbuffered
 import synctool.update
 import synctool.upload
 
+# hardcoded name because otherwise we get "synctool_master.py"
+PROGNAME = 'synctool'
+
 NODESET = synctool.nodeset.NodeSet()
 
 OPT_SKIP_RSYNC = False
@@ -386,7 +389,7 @@ def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
 def usage():
     '''print usage information'''
 
-    print 'usage: %s [options]' % os.path.basename(sys.argv[0])
+    print 'usage: %s [options]' % PROGNAME
     print 'options:'
     print '  -h, --help                  Display this information'
     print '  -c, --conf=FILE             Use this config file'
@@ -446,7 +449,7 @@ def get_options():
             'quiet', 'aggregate', 'unix', 'skip-rsync',
             'version', 'check-update', 'download'])
     except getopt.GetoptError as reason:
-        print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
+        print '%s: %s' % (PROGNAME, reason)
 #        usage()
         sys.exit(1)
 

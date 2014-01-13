@@ -22,6 +22,9 @@ from synctool.lib import verbose, stderr
 import synctool.param
 import synctool.syncstat
 
+# hardcoded name because otherwise we get "synctool_pkg.py"
+PROGNAME = 'synctool-client-pkg'
+
 # enums for command-line options
 ACTION_INSTALL = 1
 ACTION_REMOVE = 2
@@ -184,7 +187,7 @@ def there_can_be_only_one():
 def usage():
     '''print usage information'''
 
-    print 'usage: %s [options] [package [..]]' % os.path.basename(sys.argv[0])
+    print 'usage: %s [options] [package [..]]' % PROGNAME
     print 'options:'
     print '  -h, --help                     Display this information'
     print '  -c, --conf=FILE                Use this config file'
@@ -240,7 +243,7 @@ def get_options():
             'cleanup', 'manager=', 'masterlog',
             'fix', 'verbose', 'unix', 'quiet'])
     except getopt.GetoptError as reason:
-        print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
+        print '%s: %s' % (PROGNAME, reason)
 #        usage()
         sys.exit(1)
 

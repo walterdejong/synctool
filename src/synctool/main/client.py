@@ -26,6 +26,9 @@ import synctool.overlay
 import synctool.param
 import synctool.syncstat
 
+# hardcoded name because otherwise we get "synctool_client.py"
+PROGNAME = 'synctool-client'
+
 # get_options() returns these action codes
 ACTION_DEFAULT = 0
 ACTION_DIFF = 1
@@ -827,7 +830,7 @@ def check_cmd_config():
 def usage():
     '''print usage information'''
 
-    print 'usage: %s [options]' % os.path.basename(sys.argv[0])
+    print 'usage: %s [options]' % PROGNAME
     print 'options:'
     print '  -h, --help            Display this information'
     print '  -c, --conf=FILE       Use this config file'
@@ -857,8 +860,6 @@ def get_options():
 
     global SINGLE_FILES
 
-    progname = os.path.basename(sys.argv[0])
-
     # check for dangerous common typo's on the command-line
     be_careful_with_getopt()
 
@@ -869,7 +870,7 @@ def get_options():
             'terse', 'color', 'no-color', 'masterlog', 'nodename=',
             'verbose', 'quiet', 'unix', 'version'])
     except getopt.GetoptError as reason:
-        print '%s: %s' % (progname, reason)
+        print '%s: %s' % (PROGNAME, reason)
         usage()
         sys.exit(1)
 

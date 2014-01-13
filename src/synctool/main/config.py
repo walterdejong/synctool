@@ -12,7 +12,6 @@
 '''show elements of the synctool.conf file
 This program is nice for shell scripting around synctool'''
 
-import os
 import sys
 import getopt
 import errno
@@ -23,6 +22,9 @@ import synctool.configparser
 from synctool.configparser import stderr
 import synctool.nodeset
 import synctool.param
+
+# hardcoded name because otherwise we get "synctool_config.py"
+PROGNAME = 'synctool-config'
 
 ACTION = 0
 ACTION_OPTION = None
@@ -296,7 +298,7 @@ def set_action(a, opt):
 def usage():
     '''print usage information'''
 
-    print 'usage: %s [options]' % os.path.basename(sys.argv[0])
+    print 'usage: %s [options]' % PROGNAME
     print 'options:'
     print '  -h, --help                  Display this information'
     print '  -c, --conf=FILE             Use this config file'
@@ -333,8 +335,6 @@ def get_options():
     global ARG_NODENAMES, ARG_GROUPS, ARG_CMDS, ARG_EXPAND
     global OPT_FILTER_IGNORED, OPT_IPADDRESS, OPT_HOSTNAME, OPT_RSYNC
 
-    progname = os.path.basename(sys.argv[0])
-
     if len(sys.argv) <= 1:
         usage()
         sys.exit(1)
@@ -348,7 +348,7 @@ def get_options():
             'version'])
     except getopt.GetoptError as reason:
         print
-        print '%s: %s' % (progname, reason)
+        print '%s: %s' % (PROGNAME, reason)
         print
         usage()
         sys.exit(1)

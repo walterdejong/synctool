@@ -26,6 +26,9 @@ import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
 
+# hardcoded name because otherwise we get "synctool_ssh.py"
+PROGNAME = 'synctool-ssh'
+
 NODESET = synctool.nodeset.NodeSet()
 
 OPT_SKIP_RSYNC = False
@@ -143,8 +146,7 @@ def check_cmd_config():
 def usage():
     '''print usage information'''
 
-    print ('usage: %s [options] <remote command>' %
-        os.path.basename(sys.argv[0]))
+    print 'usage: %s [options] <remote command>' % PROGNAME
     print 'options:'
     print '  -h, --help                  Display this information'
     print '  -c, --conf=FILE             Use this config file'
@@ -182,7 +184,7 @@ def get_options():
             'exclude-group=', 'aggregate', 'options=', 'no-nodename',
             'unix', 'skip-rsync', 'quiet', 'numproc=', 'zzz='])
     except getopt.GetoptError as reason:
-        print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
+        print '%s: %s' % (PROGNAME, reason)
 #        usage()
         sys.exit(1)
 
@@ -251,12 +253,11 @@ def get_options():
                 synctool.param.NUM_PROC = int(arg)
             except ValueError:
                 print ("%s: option '%s' requires a numeric value" %
-                       (os.path.basename(sys.argv[0]), opt))
+                       (PROGNAME, opt))
                 sys.exit(1)
 
             if synctool.param.NUM_PROC < 1:
-                print ('%s: invalid value for numproc' %
-                       os.path.basename(sys.argv[0]))
+                print '%s: invalid value for numproc' % PROGNAME
                 sys.exit(1)
 
             continue
@@ -266,12 +267,11 @@ def get_options():
                 synctool.param.SLEEP_TIME = int(arg)
             except ValueError:
                 print ("%s: option '%s' requires a numeric value" %
-                       (os.path.basename(sys.argv[0]), opt))
+                       (PROGNAME, opt))
                 sys.exit(1)
 
             if synctool.param.SLEEP_TIME < 0:
-                print ('%s: invalid value for sleep time' %
-                       os.path.basename(sys.argv[0]))
+                print '%s: invalid value for sleep time' % PROGNAME
                 sys.exit(1)
 
             if not synctool.param.SLEEP_TIME:
@@ -307,7 +307,7 @@ def get_options():
             continue
 
     if not args:
-        print '%s: missing remote command' % os.path.basename(sys.argv[0])
+        print '%s: missing remote command' % PROGNAME
         sys.exit(1)
 
     if args != None:

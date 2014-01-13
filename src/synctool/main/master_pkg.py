@@ -12,7 +12,6 @@
 '''This program is dsh-pkg on the master node. It calls synctool-pkg on
 the target nodes'''
 
-import os
 import sys
 import getopt
 import shlex
@@ -26,6 +25,9 @@ from synctool.lib import verbose, stderr, unix_out
 import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
+
+# hardcoded name because otherwise we get "synctool_master_pkg.py"
+PROGNAME = 'synctool-pkg'
 
 NODESET = synctool.nodeset.NodeSet()
 
@@ -136,7 +138,7 @@ def there_can_be_only_one():
 def usage():
     '''print usage information'''
 
-    print 'usage: %s [options] [package [..]]' % os.path.basename(sys.argv[0])
+    print 'usage: %s [options] [package [..]]' % PROGNAME
     print 'options:'
     print '  -h, --help                     Display this information'
     print '  -c, --conf=FILE                Use this config file'
@@ -207,7 +209,7 @@ def get_options():
             'cleanup', 'manager=', 'numproc=', 'zzz=',
             'fix', 'verbose', 'quiet', 'unix', 'aggregate'])
     except getopt.GetoptError as reason:
-        print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
+        print '%s: %s' % (PROGNAME, reason)
 #        usage()
         sys.exit(1)
 
@@ -315,12 +317,11 @@ def get_options():
                 synctool.param.NUM_PROC = int(arg)
             except ValueError:
                 print ("%s: option '%s' requires a numeric value" %
-                       (os.path.basename(sys.argv[0]), opt))
+                       (PROGNAME, opt))
                 sys.exit(1)
 
             if synctool.param.NUM_PROC < 1:
-                print ('%s: invalid value for numproc' %
-                       os.path.basename(sys.argv[0]))
+                print '%s: invalid value for numproc' % PROGNAME
                 sys.exit(1)
 
             continue
@@ -330,12 +331,11 @@ def get_options():
                 synctool.param.SLEEP_TIME = int(arg)
             except ValueError:
                 print ("%s: option '%s' requires a numeric value" %
-                       (os.path.basename(sys.argv[0]), opt))
+                       (PROGNAME, opt))
                 sys.exit(1)
 
             if synctool.param.SLEEP_TIME < 0:
-                print ('%s: invalid value for sleep time' %
-                       os.path.basename(sys.argv[0]))
+                print '%s: invalid value for sleep time' % PROGNAME
                 sys.exit(1)
 
             if not synctool.param.SLEEP_TIME:
