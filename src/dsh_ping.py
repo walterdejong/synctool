@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   synctool-ping    WJ114
+#   dsh-ping    WJ114
 #
 #   synctool Copyright 2014 Walter de Jong <walter@heiho.net>
 #
@@ -11,9 +11,9 @@
 
 '''ping the synctool nodes'''
 
-import synctool.main.ping
+import synctool.main.dsh_ping
 
 if __name__ == '__main__':
-    synctool.main.ping.main()
+    synctool.main.dsh_ping.main()
 
 # EOB
