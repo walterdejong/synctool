@@ -1,8 +1,7 @@
-#! /usr/bin/env python
 #
-#   synctool-ping    WJ111
+#   synctool.main.dsh_ping.py   WJ111
 #
-#   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
+#   synctool Copyright 2014 Walter de Jong <walter@heiho.net>
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -11,20 +10,22 @@
 
 '''ping the synctool nodes'''
 
-import os
 import sys
 import subprocess
 import getopt
 import shlex
-import errno
 
 import synctool.aggr
 import synctool.config
 import synctool.lib
 from synctool.lib import verbose, stderr, unix_out
+from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
+
+# hardcoded name because otherwise we get "dsh_ping.py"
+PROGNAME = 'dsh-ping'
 
 NODESET = synctool.nodeset.NodeSet()
 
@@ -127,7 +128,7 @@ def check_cmd_config():
 def usage():
     '''print usage information'''
 
-    print 'usage: %s [options]' % os.path.basename(sys.argv[0])
+    print 'usage: %s [options]' % PROGNAME
     print 'options:'
     print '  -h, --help                     Display this information'
     print '  -c, --conf=FILE                Use this config file'
@@ -157,7 +158,7 @@ def get_options():
             'exclude=', 'exclude-group=', 'aggregate', 'unix', 'quiet',
             'numproc=', 'zzz='])
     except getopt.GetoptError as reason:
-        print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
+        print '%s: %s' % (PROGNAME, reason)
 #        usage()
         sys.exit(1)
 
@@ -239,12 +240,11 @@ def get_options():
                 synctool.param.NUM_PROC = int(arg)
             except ValueError:
                 print ("%s: option '%s' requires a numeric value" %
-                       (os.path.basename(sys.argv[0]), opt))
+                       (PROGNAME, opt))
                 sys.exit(1)
 
             if synctool.param.NUM_PROC < 1:
-                print ('%s: invalid value for numproc' %
-                       os.path.basename(sys.argv[0]))
+                print '%s: invalid value for numproc' % PROGNAME
                 sys.exit(1)
 
             continue
@@ -254,12 +254,11 @@ def get_options():
                 synctool.param.SLEEP_TIME = int(arg)
             except ValueError:
                 print ("%s: option '%s' requires a numeric value" %
-                       (os.path.basename(sys.argv[0]), opt))
+                       (PROGNAME, opt))
                 sys.exit(1)
 
             if synctool.param.SLEEP_TIME < 0:
-                print ('%s: invalid value for sleep time' %
-                       os.path.basename(sys.argv[0]))
+                print '%s: invalid value for sleep time' % PROGNAME
                 sys.exit(1)
 
             if not synctool.param.SLEEP_TIME:
@@ -271,10 +270,11 @@ def get_options():
             continue
 
     if args != None and len(args) > 0:
-        print '%s: too many arguments' % os.path.basename(sys.argv[0])
+        print '%s: too many arguments' % PROGNAME
         sys.exit(1)
 
 
+@catch_signals
 def main():
     '''run the program'''
 
@@ -303,18 +303,5 @@ def main():
         sys.exit(1)
 
     ping_nodes(address_list)
-
-
-if __name__ == '__main__':
-    try:
-        main()
-    except IOError as ioerr:
-        if ioerr.errno == errno.EPIPE:  # Broken pipe
-            pass
-        else:
-            print ioerr.strerror
-
-    except KeyboardInterrupt:        # user pressed Ctrl-C
-        print
 
 # EOB

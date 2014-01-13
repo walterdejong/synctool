@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   synctool-aggr   WJ114
+#   synctool_client_pkg.py  WJ114
 #
 #   synctool Copyright 2014 Walter de Jong <walter@heiho.net>
 #
@@ -9,12 +9,11 @@
 #   License.
 #
 
-'''aggregate: group together output that is the same'''
+'''synctool package manager. It runs on the client node'''
 
-import synctool.main.aggr
+import synctool.main.client_pkg
 
 if __name__ == '__main__':
-    synctool.main.aggr.main()
-
+    synctool.main.client_pkg.main()
 
 # EOB

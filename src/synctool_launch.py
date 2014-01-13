@@ -2,7 +2,7 @@
 #
 #   synctool-launch    WJ113
 #
-#   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
+#   synctool Copyright 2014 Walter de Jong <walter@heiho.net>
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -16,17 +16,13 @@ import sys
 
 LAUNCH = {
     'synctool' : 'synctool_master.py',
-    'synctool-ssh' : 'synctool_ssh.py',
-    'synctool-scp' : 'synctool_scp.py',
-    'synctool-pkg' : 'synctool_master_pkg.py',
-    'synctool-ping' : 'synctool_ping.py',
-    'dsh' : 'synctool_ssh.py',
-    'dcp' : 'synctool_scp.py',
-    'dsh-pkg' : 'synctool_master_pkg.py',
-    'dsh-ping' : 'synctool_ping.py',
+    'dsh' : 'dsh.py',
+    'dsh-cp' : 'dsh_cp.py',
+    'dsh-pkg' : 'dsh_pkg.py',
+    'dsh-ping' : 'dsh_ping.py',
     'synctool-config' : 'synctool_config.py',
     'synctool-client' : 'synctool_client.py',
-    'synctool-client-pkg' : 'synctool_pkg.py',
+    'synctool-client-pkg' : 'synctool_client_pkg.py',
     'synctool-template' : 'synctool_template.py'
 }
 
@@ -66,7 +62,7 @@ if __name__ == '__main__':
         stderr('launch: error: no such directory: %s' % libdir)
         sys.exit(-1)
 
-    os.environ['PYTHONPATH'] = '%s/lib' % prefix
+    os.environ['PYTHONPATH'] = os.path.join(prefix, 'lib')
 
     argv = sys.argv[1:]
     argv.insert(0, launch)

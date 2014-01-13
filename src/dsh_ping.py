@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   synctool-aggr   WJ114
+#   dsh-ping    WJ114
 #
 #   synctool Copyright 2014 Walter de Jong <walter@heiho.net>
 #
@@ -9,12 +9,11 @@
 #   License.
 #
 
-'''aggregate: group together output that is the same'''
+'''ping the synctool nodes'''
 
-import synctool.main.aggr
+import synctool.main.dsh_ping
 
 if __name__ == '__main__':
-    synctool.main.aggr.main()
-
+    synctool.main.dsh_ping.main()
 
 # EOB

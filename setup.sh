@@ -2,7 +2,7 @@
 #
 #	setup.sh	WJ113
 #
-#   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
+#   synctool Copyright 2014 Walter de Jong <walter@heiho.net>
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -18,9 +18,10 @@ DRY_RUN="yes"
 UNINSTALL="no"
 BUILD_DOCS="no"
 
-PROGS="synctool_master.py synctool_master_pkg.py synctool_launch.py
-synctool_ssh.py synctool_scp.py synctool_ping.py synctool_config.py
-synctool_aggr.py synctool_client.py synctool_pkg.py synctool_template.py"
+PROGS="synctool_master.py synctool_launch.py
+dsh.py dsh_cp.py dsh_ping.py dsh_pkg.py synctool_config.py
+synctool_aggr.py synctool_client.py synctool_client_pkg.py
+synctool_template.py"
 
 LAUNCHER="synctool_launch.py"
 
@@ -28,15 +29,17 @@ LIBS="__init__.py aggr.py config.py configparser.py lib.py nodeset.py
 object.py overlay.py param.py pkgclass.py range.py syncstat.py unbuffered.py
 update.py upload.py"
 
+MAIN_LIBS="__init__.py aggr.py client.py config.py master.py dsh_pkg.py
+client_pkg.py dsh_ping.py dsh_cp.py dsh.py template.py wrapper.py"
+
 PKG_LIBS="__init__.py aptget.py brew.py bsdpkg.py pacman.py yum.py zypper.py"
 
 DOCS="chapter1.md chapter2.md chapter3.md chapter4.md chapter5.md
 thank_you.md footer.html header.html toc.md synctool_doc.css
 synctool_logo.jpg synctool_logo_large.jpg build.sh"
 
-SYMLINKS="synctool synctool-pkg dsh-pkg synctool-ssh dsh synctool-scp dcp
-synctool-ping dsh-ping synctool-config synctool-client synctool-client-pkg
-synctool-template"
+SYMLINKS="synctool dsh-pkg dsh dsh-cp dsh-ping synctool-config
+synctool-client synctool-client-pkg synctool-template"
 
 
 if test "x$1" = x
@@ -105,7 +108,7 @@ Use a _dedicated_ installdir like /opt/synctool or /home/synctool
 By default setup.sh does a DRY RUN, use -f or --fix to
 really setup synctool on the master node
 
-synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
+synctool by Walter de Jong <walter@heiho.net> (c) 2003-2014
 EOF
 			exit 1
 			;;
@@ -182,7 +185,9 @@ install_libs() {
 	if test "x$DRY_RUN" = "xno"
 	then
 		makedir 755 "$INSTALL_ROOT/lib/synctool/pkg"
+		makedir 755 "$INSTALL_ROOT/lib/synctool/main"
 		( cd src/synctool && install -m 644 $LIBS "$INSTALL_ROOT/lib/synctool" )
+		( cd src/synctool/main && install -m 644 $MAIN_LIBS "$INSTALL_ROOT/lib/synctool/main" )
 		( cd src/synctool/pkg && install -m 644 $PKG_LIBS "$INSTALL_ROOT/lib/synctool/pkg" )
 	fi
 }
@@ -321,6 +326,12 @@ remove_libs() {
 			rm -f "$INSTALL_ROOT/lib/synctool/pkg/$lib" "$INSTALL_ROOT/lib/synctool/pkg/${lib}c" "$INSTALL_ROOT/lib/synctool/pkg/${lib}o"
 		done
 		rmdir "$INSTALL_ROOT/lib/synctool/pkg" 2>/dev/null
+
+		for lib in $MAIN_LIBS
+		do
+			rm -f "$INSTALL_ROOT/lib/synctool/main/$lib" "$INSTALL_ROOT/lib/synctool/main/${lib}c" "$INSTALL_ROOT/lib/synctool/main/${lib}o"
+		done
+		rmdir "$INSTALL_ROOT/lib/synctool/main" 2>/dev/null
 
 		for lib in $LIBS
 		do

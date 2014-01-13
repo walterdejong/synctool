@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   synctool-aggr   WJ114
+#   dsh    WJ114
 #
 #   synctool Copyright 2014 Walter de Jong <walter@heiho.net>
 #
@@ -9,12 +9,11 @@
 #   License.
 #
 
-'''aggregate: group together output that is the same'''
+'''A command for invoking remote commands on the synctool nodes'''
 
-import synctool.main.aggr
+import synctool.main.dsh
 
 if __name__ == '__main__':
-    synctool.main.aggr.main()
-
+    synctool.main.dsh.main()
 
 # EOB

@@ -1,8 +1,7 @@
-#! /usr/bin/env python
 #
-#   synctool-pkg.py        WJ111
+#   synctool.main.client_pkg.py WJ111
 #
-#   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
+#   synctool Copyright 2014 Walter de Jong <walter@heiho.net>
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -14,13 +13,16 @@
 import os
 import sys
 import getopt
-import errno
 
 import synctool.config
 import synctool.lib
 from synctool.lib import verbose, stderr
+from synctool.main.wrapper import catch_signals
 import synctool.param
 import synctool.syncstat
+
+# hardcoded name because otherwise we get "synctool_pkg.py"
+PROGNAME = 'synctool-client-pkg'
 
 # enums for command-line options
 ACTION_INSTALL = 1
@@ -108,7 +110,7 @@ def detect_installer():
     # - SuSE has three (!) package managers that are all in use
     #   and it seems to be by design (!?)
     # - I've seen apt-get work with dpkg, and/or with rpm
-    # - MacOS X has no 'standard' software packaging (the App store??)
+    # - OS X has no 'standard' software packaging (the App store??)
     #   There are ports, fink, brew. I prefer 'brew'
     # - The *BSDs have both pkg_add and ports
     # - FreeBSD has freebsd-update to upgrade packages
@@ -133,8 +135,8 @@ def detect_installer():
 
         stderr('unknown Linux distribution')
 
-    elif platform == 'Darwin':            # assume MacOS X
-        verbose('detected platform MacOS X')
+    elif platform == 'Darwin':            # assume OS X
+        verbose('detected platform OS X')
         # some people like port
         # some people like fink
         # I like homebrew
@@ -184,7 +186,7 @@ def there_can_be_only_one():
 def usage():
     '''print usage information'''
 
-    print 'usage: %s [options] [package [..]]' % os.path.basename(sys.argv[0])
+    print 'usage: %s [options] [package [..]]' % PROGNAME
     print 'options:'
     print '  -h, --help                     Display this information'
     print '  -c, --conf=FILE                Use this config file'
@@ -240,7 +242,7 @@ def get_options():
             'cleanup', 'manager=', 'masterlog',
             'fix', 'verbose', 'unix', 'quiet'])
     except getopt.GetoptError as reason:
-        print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
+        print '%s: %s' % (PROGNAME, reason)
 #        usage()
         sys.exit(1)
 
@@ -364,6 +366,7 @@ def get_options():
         synctool.lib.DRY_RUN = False
 
 
+@catch_signals
 def main():
     '''run the program'''
 
@@ -401,18 +404,5 @@ def main():
 
     else:
         raise RuntimeError('BUG: unknown ACTION code %d' % ACTION)
-
-
-if __name__ == '__main__':
-    try:
-        main()
-    except IOError as ioerr:
-        if ioerr.errno == errno.EPIPE:  # Broken pipe
-            pass
-        else:
-            print ioerr.strerror
-
-    except KeyboardInterrupt:        # user pressed Ctrl-C
-        print
 
 # EOB

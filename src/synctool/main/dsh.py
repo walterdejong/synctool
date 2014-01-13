@@ -1,8 +1,7 @@
-#! /usr/bin/env python
 #
-#   synctool-ssh    WJ109
+#   synctool.main.dsh.py    WJ109
 #
-#   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
+#   synctool Copyright 2014 Walter de Jong <walter@heiho.net>
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -15,16 +14,18 @@ import os
 import sys
 import getopt
 import shlex
-import time
-import errno
 
 import synctool.aggr
 import synctool.config
 import synctool.lib
 from synctool.lib import verbose, unix_out
+from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
+
+# hardcoded name because otherwise we get "dsh.py"
+PROGNAME = 'dsh'
 
 NODESET = synctool.nodeset.NodeSet()
 
@@ -40,7 +41,7 @@ REMOTE_CMD_ARR = None
 # boolean saying whether we should sync the script to the nodes
 # before running it
 # It allows you to edit a script on the master node, and then
-# immediately run it using 'dsh' / 'synctool-ssh'
+# immediately run it using 'dsh'
 SYNC_IT = False
 
 
@@ -143,8 +144,7 @@ def check_cmd_config():
 def usage():
     '''print usage information'''
 
-    print ('usage: %s [options] <remote command>' %
-        os.path.basename(sys.argv[0]))
+    print 'usage: %s [options] <remote command>' % PROGNAME
     print 'options:'
     print '  -h, --help                  Display this information'
     print '  -c, --conf=FILE             Use this config file'
@@ -182,7 +182,7 @@ def get_options():
             'exclude-group=', 'aggregate', 'options=', 'no-nodename',
             'unix', 'skip-rsync', 'quiet', 'numproc=', 'zzz='])
     except getopt.GetoptError as reason:
-        print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
+        print '%s: %s' % (PROGNAME, reason)
 #        usage()
         sys.exit(1)
 
@@ -251,12 +251,11 @@ def get_options():
                 synctool.param.NUM_PROC = int(arg)
             except ValueError:
                 print ("%s: option '%s' requires a numeric value" %
-                       (os.path.basename(sys.argv[0]), opt))
+                       (PROGNAME, opt))
                 sys.exit(1)
 
             if synctool.param.NUM_PROC < 1:
-                print ('%s: invalid value for numproc' %
-                       os.path.basename(sys.argv[0]))
+                print '%s: invalid value for numproc' % PROGNAME
                 sys.exit(1)
 
             continue
@@ -266,12 +265,11 @@ def get_options():
                 synctool.param.SLEEP_TIME = int(arg)
             except ValueError:
                 print ("%s: option '%s' requires a numeric value" %
-                       (os.path.basename(sys.argv[0]), opt))
+                       (PROGNAME, opt))
                 sys.exit(1)
 
             if synctool.param.SLEEP_TIME < 0:
-                print ('%s: invalid value for sleep time' %
-                       os.path.basename(sys.argv[0]))
+                print '%s: invalid value for sleep time' % PROGNAME
                 sys.exit(1)
 
             if not synctool.param.SLEEP_TIME:
@@ -307,7 +305,7 @@ def get_options():
             continue
 
     if not args:
-        print '%s: missing remote command' % os.path.basename(sys.argv[0])
+        print '%s: missing remote command' % PROGNAME
         sys.exit(1)
 
     if args != None:
@@ -316,6 +314,7 @@ def get_options():
     return args
 
 
+@catch_signals
 def main():
     '''run the program'''
 
@@ -344,22 +343,5 @@ def main():
         sys.exit(1)
 
     run_dsh(address_list, cmd_args)
-
-
-if __name__ == '__main__':
-    try:
-        main()
-
-        # workaround exception in QueueFeederThread at exit
-        # which is a Python bug, really
-        time.sleep(0.01)
-    except IOError as ioerr:
-        if ioerr.errno == errno.EPIPE:  # Broken pipe
-            pass
-        else:
-            print ioerr.strerror
-
-    except KeyboardInterrupt:        # user pressed Ctrl-C
-        print
 
 # EOB

@@ -228,7 +228,7 @@ More examples:
 
 Copy a file to three nodes:
 
-    # dcp -n node[1-3] patchfile-1.0.tar.gz /tmp
+    # dsh-cp -n node[1-3] patchfile-1.0.tar.gz /tmp
 
 After rebooting a cluster, use `dsh-ping` to see if the nodes respond to ping
 yet. You may also do this on a group of nodes:
@@ -392,27 +392,24 @@ directory across nodes. Once you start differentiating directory content
 between nodes, "purge" will no longer work in a satisfying way; in such a
 case, you should really use `overlay/` rather than `purge/`.
 
-`synctool-scp` or `dcp` also has an option `--purge` to quickly mirror
-directories across nodes. Use with care.
+`dsh-cp` also has an option `--purge` to quickly mirror directories across
+nodes. Use with care.
 
 
-3.6 synctool-pkg, the synctool package manager
-----------------------------------------------
-synctool comes with a package manager named `synctool-pkg`.
+3.6 dsh-pkg, the synctool package manager
+-----------------------------------------
+synctool comes with a package manager named `dsh-pkg`.
 Rather than being yet another package manager with its own format of packages,
-synctool-pkg is a wrapper around existing package management software.
-synctool-pkg unifies all the different package managers out there so you can
+dsh-pkg is a wrapper around existing package management software.
+dsh-pkg unifies all the different package managers out there so you can
 operate any of them using just one command and the same set of command-line
 arguments. This is particularly useful in heterogeneous clusters or when
 you are working with multiple platforms or distributions.
 
-synctool-pkg may also be invoked as `dsh-pkg` and works a lot like regular
-`dsh`.
-
-synctool-pkg supports a number of different package management systems.
-Unless explicitly defined in `synctool.conf`, synctool-pkg will detect the
-system's operating system and its package manager. If detection fails, you
-may force the package manager on the command-line or in `synctool.conf`:
+dsh-pkg supports a number of different package management systems and will
+detect the appropriate package manager for the operating system of the node.
+If detection fails, you may force the package manager on the command-line or
+in `synctool.conf`:
 
     package_manager apt-get
     #package_manager yum
@@ -421,12 +418,12 @@ may force the package manager on the command-line or in `synctool.conf`:
     #package_manager brew
     #package_manager bsdpkg
 
-synctool-pkg knows about more platforms and package managers, but currently
+dsh-pkg knows about more platforms and package managers, but currently
 only the ones listed above are implemented and supported.
 
-> synctool-pkg is pluggable. Adding support for other package management
-> systems is rather easy. If your platform and/or favorite package manager
-> is not yet supported, feel free to develop your own plug-in for synctool-pkg
+> dsh-pkg is pluggable. Adding support for other package management systems
+> is rather easy. If your platform and/or favorite package manager is not yet
+> supported, feel free to develop your own plug-in for dsh-pkg
 > or contact the author of synctool.
 
 The `bsdpkg` module uses `freebsd-update` on FreeBSD and `pkg_add -u` on
@@ -434,9 +431,9 @@ other BSDs for upgrading packages.
 
 Following are examples of how to use synctool-pkg.
 
-    synctool-pkg -n node1 --list
-    synctool-pkg -n node1 --list wget
-    synctool-pkg -g batch --install lynx wget curl
+    dsh-pkg -n node1 --list
+    dsh-pkg -n node1 --list wget
+    dsh-pkg -g batch --install lynx wget curl
     dsh-pkg -g batch -x node3 --remove somepackage
 
 Sometimes you need to refresh the contents of the local package database.
@@ -461,7 +458,7 @@ A specific package manager may be selected from the command-line.
 
     dsh-pkg -m yum -i somepackage   # force it to use yum
 
-If you want to further examine what synctool-pkg is doing, you may specify
+If you want to further examine what dsh-pkg is doing, you may specify
 `--verbose` or `--unix` to display more information about what is going on
 under the hood.
 

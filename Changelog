@@ -1,3 +1,7 @@
+January 2014
+- dropped names "synctool-ssh", "synctool-ping", etc. in favor of "dsh",
+  "dsh-ping" and the like
+
 December 2013
 - purge --single may complain about timestamps (because rsync will also)
   synctool can fix these, but only for purge --single. Otherwise synctool

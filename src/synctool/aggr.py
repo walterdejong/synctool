@@ -1,7 +1,7 @@
 #
 #   synctool.aggr.py    WJ109
 #
-#   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
+#   synctool Copyright 2014 Walter de Jong <walter@heiho.net>
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -79,7 +79,8 @@ def run(cmd_arr):
 
     try:
         f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT).stdout
     except OSError as err:
         stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return False
