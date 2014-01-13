@@ -1,5 +1,5 @@
 #
-#   synctool.main.ping  WJ111
+#   synctool.main.dsh_ping.py   WJ111
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #
@@ -24,8 +24,8 @@ import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
 
-# hardcoded name because otherwise we get "synctool_ping.py"
-PROGNAME = 'synctool-ping'
+# hardcoded name because otherwise we get "dsh_ping.py"
+PROGNAME = 'dsh-ping'
 
 NODESET = synctool.nodeset.NodeSet()
 

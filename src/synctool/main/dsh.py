@@ -1,5 +1,5 @@
 #
-#   synctool.main.dsh   WJ109
+#   synctool.main.dsh.py    WJ109
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #

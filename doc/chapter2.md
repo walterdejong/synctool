@@ -88,11 +88,10 @@ The following synctool commands will be made available in
     synctool               Main command
     dsh                    Run remote commands
     synctool-pkg           Upgrade or install packages
-    synctool-ping          Check whether nodes are up
+    dsh-ping               Check whether nodes are up
     dsh-cp                 Copy files to nodes
 
     dsh-pkg                Short name for synctool-pkg
-    dsh-ping               Short name for synctool-ping
 
     synctool-client        Only run on target nodes
     synctool-client-pkg    Only run on target nodes

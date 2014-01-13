@@ -17,11 +17,10 @@ import sys
 LAUNCH = {
     'synctool' : 'synctool_master.py',
     'synctool-pkg' : 'synctool_master_pkg.py',
-    'synctool-ping' : 'synctool_ping.py',
     'dsh' : 'dsh.py',
     'dsh-cp' : 'dsh_cp.py',
     'dsh-pkg' : 'synctool_master_pkg.py',
-    'dsh-ping' : 'synctool_ping.py',
+    'dsh-ping' : 'dsh_ping.py',
     'synctool-config' : 'synctool_config.py',
     'synctool-client' : 'synctool_client.py',
     'synctool-client-pkg' : 'synctool_client_pkg.py',
