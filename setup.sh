@@ -2,7 +2,7 @@
 #
 #	setup.sh	WJ113
 #
-#   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
+#   synctool Copyright 2014 Walter de Jong <walter@heiho.net>
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -108,7 +108,7 @@ Use a _dedicated_ installdir like /opt/synctool or /home/synctool
 By default setup.sh does a DRY RUN, use -f or --fix to
 really setup synctool on the master node
 
-synctool by Walter de Jong <walter@heiho.net> (c) 2003-2013
+synctool by Walter de Jong <walter@heiho.net> (c) 2003-2014
 EOF
 			exit 1
 			;;

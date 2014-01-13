@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   synctool-client     WJ114
+#   synctool-client WJ114
 #
 #   synctool Copyright 2014 Walter de Jong <walter@heiho.net>
 #

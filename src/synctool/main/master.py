@@ -1,7 +1,7 @@
 #
 #   synctool.main.master.py WJ109
 #
-#   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
+#   synctool Copyright 2014 Walter de Jong <walter@heiho.net>
 #
 #   synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
 #   synctool is distributed under terms described in the GNU General Public
@@ -423,7 +423,7 @@ def usage():
 
 Note that synctool does a dry run unless you specify --fix
 
-Written by Walter de Jong <walter@heiho.net> (c) 2003-2013'''
+Written by Walter de Jong <walter@heiho.net> (c) 2003-2014'''
 
 
 def get_options():
