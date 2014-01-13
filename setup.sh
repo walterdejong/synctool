@@ -20,7 +20,8 @@ BUILD_DOCS="no"
 
 PROGS="synctool_master.py synctool_master_pkg.py synctool_launch.py
 synctool_ssh.py synctool_scp.py synctool_ping.py synctool_config.py
-synctool_aggr.py synctool_client.py synctool_pkg.py synctool_template.py"
+synctool_aggr.py synctool_client.py synctool_client_pkg.py
+synctool_template.py"
 
 LAUNCHER="synctool_launch.py"
 
@@ -29,7 +30,7 @@ object.py overlay.py param.py pkgclass.py range.py syncstat.py unbuffered.py
 update.py upload.py"
 
 MAIN_LIBS="__init__.py aggr.py client.py config.py master.py
-master_pkg.py pkg.py ping.py scp.py ssh.py template.py wrapper.py"
+master_pkg.py client_pkg.py ping.py scp.py ssh.py template.py wrapper.py"
 
 PKG_LIBS="__init__.py aptget.py brew.py bsdpkg.py pacman.py yum.py zypper.py"
 

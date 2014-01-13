@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   synctool-pkg.py     WJ114
+#   synctool_client_pkg.py  WJ114
 #
 #   synctool Copyright 2014 Walter de Jong <walter@heiho.net>
 #
@@ -11,9 +11,9 @@
 
 '''synctool package manager. It runs on the client node'''
 
-import synctool.main.pkg
+import synctool.main.client_pkg
 
 if __name__ == '__main__':
-    synctool.main.pkg.main()
+    synctool.main.client_pkg.main()
 
 # EOB
