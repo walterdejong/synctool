@@ -64,8 +64,7 @@ if __name__ == '__main__':
         stderr('launch: error: no such directory: %s' % libdir)
         sys.exit(-1)
 
-    # FIXME use os.path.join()
-    os.environ['PYTHONPATH'] = '%s/lib' % prefix
+    os.environ['PYTHONPATH'] = os.path.join(prefix, 'lib')
 
     argv = sys.argv[1:]
     argv.insert(0, launch)
