@@ -9,8 +9,8 @@
 #   License.
 #
 
-'''This program is dsh-pkg on the master node. It calls synctool-pkg on
-the target nodes'''
+'''This program is dsh-pkg on the master node. It calls synctool-client-pkg
+on the target nodes'''
 
 import synctool.main.dsh_pkg
 
