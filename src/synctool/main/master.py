@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 #
 #   synctool_master.py  WJ109
 #
@@ -16,14 +15,13 @@ import os
 import sys
 import getopt
 import shlex
-import time
 import tempfile
-import errno
 
 import synctool.aggr
 import synctool.config
 import synctool.lib
 from synctool.lib import verbose, stdout, stderr, terse, unix_out, prettypath
+from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.overlay
 import synctool.param
@@ -684,7 +682,8 @@ def get_options():
                         opt_upload, opt_fix, opt_group)
 
 
-def _run():
+@catch_signals
+def main():
     '''run the program'''
 
     synctool.param.init()
@@ -769,22 +768,5 @@ def _run():
         run_remote_synctool(address_list)
 
     synctool.lib.closelog()
-
-
-def main():
-    try:
-        _run()
-
-        # workaround exception in QueueFeederThread at exit
-        # which is a Python bug, really
-        time.sleep(0.01)
-    except IOError as ioerr:
-        if ioerr.errno == errno.EPIPE:  # Broken pipe
-            pass
-        else:
-            print ioerr.strerror
-
-    except KeyboardInterrupt:        # user pressed Ctrl-C
-        print
 
 # EOB

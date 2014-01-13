@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 #
 #   synctool_master_pkg.py    WJ111
 #
@@ -15,13 +14,12 @@ the target nodes'''
 import sys
 import getopt
 import shlex
-import time
-import errno
 
 import synctool.aggr
 import synctool.config
 import synctool.lib
 from synctool.lib import verbose, stderr, unix_out
+from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
@@ -385,7 +383,8 @@ def get_options():
         there_can_be_only_one()
 
 
-def _run():
+@catch_signals
+def main():
     '''run the program'''
 
     synctool.param.init()
@@ -423,22 +422,5 @@ def _run():
     run_remote_pkg(address_list)
 
     synctool.lib.closelog()
-
-
-def main():
-    try:
-        _run()
-
-        # workaround exception in QueueFeederThread at exit
-        # which is a Python bug, really
-        time.sleep(0.01)
-    except IOError as ioerr:
-        if ioerr.errno == errno.EPIPE:  # Broken pipe
-            pass
-        else:
-            print ioerr.strerror
-
-    except KeyboardInterrupt:        # user pressed Ctrl-C
-        print
 
 # EOB

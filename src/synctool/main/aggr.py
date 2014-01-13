@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 #
 #   synctool-aggr   WJ109
 #
@@ -16,6 +15,7 @@ import sys
 import getopt
 
 import synctool.aggr
+from synctool.main.wrapper import catch_signals
 
 
 def usage():
@@ -49,7 +49,10 @@ def get_options():
             sys.exit(1)
 
 
+@catch_signals
 def main():
+    '''run the program'''
+
     get_options()
     synctool.aggr.aggregate(sys.stdin)
 

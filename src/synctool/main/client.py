@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 #
 #   synctool-client     WJ103
 #
@@ -16,12 +15,12 @@ import sys
 import time
 import shlex
 import getopt
-import errno
 import subprocess
 
 import synctool.config
 import synctool.lib
 from synctool.lib import verbose, stdout, stderr, terse, unix_out, prettypath
+from synctool.main.wrapper import catch_signals
 import synctool.overlay
 import synctool.param
 import synctool.syncstat
@@ -1042,7 +1041,8 @@ def get_options():
     return action
 
 
-def _run():
+@catch_signals
+def main():
     '''run the program'''
 
     synctool.param.init()
@@ -1135,18 +1135,5 @@ def _run():
         delete_files()
 
     unix_out('# EOB')
-
-
-def main():
-    try:
-        _run()
-    except IOError as ioerr:
-        if ioerr.errno == errno.EPIPE:  # Broken pipe
-            pass
-        else:
-            print ioerr.strerror
-
-    except KeyboardInterrupt:        # user pressed Ctrl-C
-        print
 
 # EOB

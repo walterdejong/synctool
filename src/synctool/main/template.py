@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 #
 #   synctool-template    WJ113
 #
@@ -18,6 +17,8 @@ import os
 import sys
 import re
 import getopt
+
+from synctool.main.wrapper import catch_signals
 
 # hardcoded name because otherwise we get "synctool_template.py"
 PROGNAME = 'synctool-template'
@@ -144,6 +145,7 @@ def get_options():
     return args[0]
 
 
+@catch_signals
 def main():
     INPUT_FILE = get_options()
 

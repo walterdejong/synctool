@@ -29,7 +29,7 @@ object.py overlay.py param.py pkgclass.py range.py syncstat.py unbuffered.py
 update.py upload.py"
 
 MAIN_LIBS="__init__.py aggr.py client.py config.py master.py
-master_pkg.py pkg.py ping.py scp.py ssh.py template.py"
+master_pkg.py pkg.py ping.py scp.py ssh.py template.py wrapper.py"
 
 PKG_LIBS="__init__.py aptget.py brew.py bsdpkg.py pacman.py yum.py zypper.py"
 

@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 #
 #   synctool-config    WJ109
 #
@@ -14,12 +13,12 @@ This program is nice for shell scripting around synctool'''
 
 import sys
 import getopt
-import errno
 import socket
 
 import synctool.config
 import synctool.configparser
 from synctool.configparser import stderr
+from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.param
 
@@ -460,7 +459,8 @@ def get_options():
         sys.exit(1)
 
 
-def _run():
+@catch_signals
+def main():
     '''do your thing'''
 
     synctool.param.init()
@@ -545,17 +545,5 @@ def _run():
     else:
         raise RuntimeError('bug: unknown ACTION code %d' % ACTION)
 
-
-def main():
-    try:
-        _run()
-    except IOError as ioerr:
-        if ioerr.errno == errno.EPIPE:  # Broken pipe
-            pass
-        else:
-            print ioerr.strerror
-
-    except KeyboardInterrupt:        # user pressed Ctrl-C
-        print
 
 # EOB

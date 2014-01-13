@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 #
 #   synctool-pkg.py     WJ111
 #
@@ -14,11 +13,11 @@
 import os
 import sys
 import getopt
-import errno
 
 import synctool.config
 import synctool.lib
 from synctool.lib import verbose, stderr
+from synctool.main.wrapper import catch_signals
 import synctool.param
 import synctool.syncstat
 
@@ -367,7 +366,8 @@ def get_options():
         synctool.lib.DRY_RUN = False
 
 
-def _run():
+@catch_signals
+def main():
     '''run the program'''
 
     synctool.param.init()
@@ -404,18 +404,5 @@ def _run():
 
     else:
         raise RuntimeError('BUG: unknown ACTION code %d' % ACTION)
-
-
-def main():
-    try:
-        _run()
-    except IOError as ioerr:
-        if ioerr.errno == errno.EPIPE:  # Broken pipe
-            pass
-        else:
-            print ioerr.strerror
-
-    except KeyboardInterrupt:        # user pressed Ctrl-C
-        print
 
 # EOB

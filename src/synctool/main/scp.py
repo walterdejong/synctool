@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 #
 #   synctool-scp    WJ109
 #
@@ -15,13 +14,12 @@ import os
 import sys
 import getopt
 import shlex
-import time
-import errno
 
 import synctool.aggr
 import synctool.config
 import synctool.lib
 from synctool.lib import stdout, stderr, unix_out
+from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
@@ -337,7 +335,8 @@ def get_options():
     return args
 
 
-def _run():
+@catch_signals
+def main():
     '''run the program'''
 
     synctool.param.init()
@@ -365,22 +364,5 @@ def _run():
         sys.exit(1)
 
     run_remote_copy(address_list, files)
-
-
-def main():
-    try:
-        _run()
-
-        # workaround exception in QueueFeederThread at exit
-        # which is a Python bug, really
-        time.sleep(0.01)
-    except IOError as ioerr:
-        if ioerr.errno == errno.EPIPE:  # Broken pipe
-            pass
-        else:
-            print ioerr.strerror
-
-    except KeyboardInterrupt:        # user pressed Ctrl-C
-        print
 
 # EOB

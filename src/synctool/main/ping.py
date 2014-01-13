@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 #
 #   synctool-ping    WJ111
 #
@@ -15,12 +14,12 @@ import sys
 import subprocess
 import getopt
 import shlex
-import errno
 
 import synctool.aggr
 import synctool.config
 import synctool.lib
 from synctool.lib import verbose, stderr, unix_out
+from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
@@ -275,7 +274,8 @@ def get_options():
         sys.exit(1)
 
 
-def _run():
+@catch_signals
+def main():
     '''run the program'''
 
     synctool.param.init()
@@ -303,18 +303,5 @@ def _run():
         sys.exit(1)
 
     ping_nodes(address_list)
-
-
-def main():
-    try:
-        _run()
-    except IOError as ioerr:
-        if ioerr.errno == errno.EPIPE:  # Broken pipe
-            pass
-        else:
-            print ioerr.strerror
-
-    except KeyboardInterrupt:        # user pressed Ctrl-C
-        print
 
 # EOB
