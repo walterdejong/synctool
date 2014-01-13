@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-#   synctool-ssh    WJ114
+#   dsh    WJ114
 #
 #   synctool Copyright 2014 Walter de Jong <walter@heiho.net>
 #
@@ -11,9 +11,9 @@
 
 '''A command for invoking remote commands on the synctool nodes'''
 
-import synctool.main.ssh
+import synctool.main.dsh
 
 if __name__ == '__main__':
-    synctool.main.ssh.main()
+    synctool.main.dsh.main()
 
 # EOB

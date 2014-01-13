@@ -86,19 +86,18 @@ The following synctool commands will be made available in
 `/opt/synctool/bin/`:
 
     synctool               Main command
+    dsh                    Run remote commands
     synctool-pkg           Upgrade or install packages
-    synctool-ssh           Run remote commands
     synctool-scp           Copy files to nodes
     synctool-ping          Check whether nodes are up
-    synctool-config        Inspect the configuration
 
     dsh-pkg                Short name for synctool-pkg
-    dsh                    Short name for synctool-ssh
     dcp                    Short name for synctool-scp
     dsh-ping               Short name for synctool-ping
 
     synctool-client        Only run on target nodes
     synctool-client-pkg    Only run on target nodes
+    synctool-config        Inspect the configuration
     synctool-template      Useful command for .post scripts
 
 > Tip: Add `/opt/synctool/bin` to your `PATH`.
@@ -200,8 +199,7 @@ every node without problems or needed manual intervention. It is important
 that this works before proceeding.
 
 > Some (mostly IBM) systems already have a `dsh` command.
-> Be mindful to start the correct `dsh` command. synctool's `dsh`
-> is another name for `synctool-ssh`.
+> Be mindful to start the correct `dsh` command.
 
 
 2.6 Your first synctool run

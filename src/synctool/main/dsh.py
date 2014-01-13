@@ -1,5 +1,5 @@
 #
-#   synctool.main.ssh   WJ109
+#   synctool.main.dsh   WJ109
 #
 #   synctool Copyright 2013 Walter de Jong <walter@heiho.net>
 #
@@ -24,8 +24,8 @@ import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
 
-# hardcoded name because otherwise we get "synctool_ssh.py"
-PROGNAME = 'synctool-ssh'
+# hardcoded name because otherwise we get "dsh.py"
+PROGNAME = 'dsh'
 
 NODESET = synctool.nodeset.NodeSet()
 
@@ -41,7 +41,7 @@ REMOTE_CMD_ARR = None
 # boolean saying whether we should sync the script to the nodes
 # before running it
 # It allows you to edit a script on the master node, and then
-# immediately run it using 'dsh' / 'synctool-ssh'
+# immediately run it using 'dsh'
 SYNC_IT = False
 
 

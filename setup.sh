@@ -19,7 +19,7 @@ UNINSTALL="no"
 BUILD_DOCS="no"
 
 PROGS="synctool_master.py synctool_master_pkg.py synctool_launch.py
-synctool_ssh.py synctool_scp.py synctool_ping.py synctool_config.py
+dsh.py synctool_scp.py synctool_ping.py synctool_config.py
 synctool_aggr.py synctool_client.py synctool_client_pkg.py
 synctool_template.py"
 
@@ -30,7 +30,7 @@ object.py overlay.py param.py pkgclass.py range.py syncstat.py unbuffered.py
 update.py upload.py"
 
 MAIN_LIBS="__init__.py aggr.py client.py config.py master.py
-master_pkg.py client_pkg.py ping.py scp.py ssh.py template.py wrapper.py"
+master_pkg.py client_pkg.py ping.py scp.py dsh.py template.py wrapper.py"
 
 PKG_LIBS="__init__.py aptget.py brew.py bsdpkg.py pacman.py yum.py zypper.py"
 
@@ -38,7 +38,7 @@ DOCS="chapter1.md chapter2.md chapter3.md chapter4.md chapter5.md
 thank_you.md footer.html header.html toc.md synctool_doc.css
 synctool_logo.jpg synctool_logo_large.jpg build.sh"
 
-SYMLINKS="synctool synctool-pkg dsh-pkg synctool-ssh dsh synctool-scp dcp
+SYMLINKS="synctool synctool-pkg dsh-pkg dsh synctool-scp dcp
 synctool-ping dsh-ping synctool-config synctool-client synctool-client-pkg
 synctool-template"
 
