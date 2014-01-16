@@ -49,6 +49,7 @@ OV_POST = 1
 OV_TEMPLATE = 2
 OV_TEMPLATE_POST = 3
 OV_NO_EXT = 4
+OV_IGNORE = 5
 
 
 def _sort_by_importance(item1, item2):
@@ -303,6 +304,10 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback, *args):
         if not ok:
             # quick exit
             return False, dir_changed
+
+        if obj.ov_type == OV_IGNORE:
+            # OV_IGNORE may be set by templates that didn't finish
+            continue
 
         if obj.ov_type == OV_TEMPLATE:
             # a new file was generated

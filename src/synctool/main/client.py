@@ -43,16 +43,18 @@ def generate_template(obj, post_dict):
     it will run even in dry-run mode
     Returns: True or False on error'''
 
-    # Note: this func may modify input parameter 'obj'
+    # Note: this func modifies input parameter 'obj'
     # when it succesfully generates output, it will change obj's paths
     # and it will be picked up again in overlay._walk_subtree()
 
     if synctool.lib.NO_POST:
-        # FIXME this causes visit() to terminate
-        return False
+        verbose('skipping template generation of %s' % obj.src_path)
+        obj.ov_type = synctool.overlay.OV_IGNORE
+        return True
 
     if len(SINGLE_FILES) > 0 and obj.dest_path not in SINGLE_FILES:
         verbose('skipping template generation of %s' % obj.src_path)
+        obj.ov_type = synctool.overlay.OV_IGNORE
         return True
 
     verbose('generating template %s' % obj.print_src())
@@ -112,12 +114,11 @@ def generate_template(obj, post_dict):
     statbuf = synctool.syncstat.SyncStat(newname)
     if not statbuf.exists():
         if not have_error:
-            # no error message was printed yet
-            # so print one now
-            stderr('error: expected output %s was not generated' % newname)
-            have_error = True
+            stderr('warning: expected output %s was not generated' % newname)
+            obj.ov_type = synctool.overlay.OV_IGNORE
         else:
-            # only when --verbose is used
+            # an error message was already printed when exec() failed earlier
+            # so, only when --verbose is used, print additional debug info
             verbose('error: expected output %s was not generated' % newname)
     else:
         verbose('found generated output %s' % newname)
