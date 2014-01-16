@@ -48,6 +48,7 @@ def generate_template(obj, post_dict):
     # and it will be picked up again in overlay._walk_subtree()
 
     if synctool.lib.NO_POST:
+        # FIXME this causes visit() to terminate
         return False
 
     if len(SINGLE_FILES) > 0 and obj.dest_path not in SINGLE_FILES:
@@ -74,7 +75,7 @@ def generate_template(obj, post_dict):
 
     # get the .post script for the template file
     if not template in post_dict:
-        verbose('template generator for %s not found' % obj.src_path)
+        stderr('error: template generator for %s not found' % obj.src_path)
         return False
 
     generator = post_dict[template]
@@ -110,8 +111,14 @@ def generate_template(obj, post_dict):
 
     statbuf = synctool.syncstat.SyncStat(newname)
     if not statbuf.exists():
-        verbose('warning: expected output %s was not generated' % newname)
-        have_error = True
+        if not have_error:
+            # no error message was printed yet
+            # so print one now
+            stderr('error: expected output %s was not generated' % newname)
+            have_error = True
+        else:
+            # only when --verbose is used
+            verbose('error: expected output %s was not generated' % newname)
     else:
         verbose('found generated output %s' % newname)
 
