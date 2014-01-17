@@ -311,7 +311,7 @@ def run_with_nodename(cmd_arr, nodename):
 
     with f:
         for line in f:
-            line = line.strip()
+            line = line.rstrip()
 
             # if output is a log line, pass it to the master's syslog
             if line[:15] == '%synctool-log% ':
