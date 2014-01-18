@@ -36,4 +36,11 @@ Table of contents
   5.5 Managing multiple clusters with one synctool       <br />
   5.6 Use a tiered setup for large clusters
 
-6. [Thank you](thank_you.html)
+6. [Migrating to synctool 6](chapter6.html)              <br />
+  6.1 Installing synctool 6                              <br />
+  6.2 Configuring synctool 6                             <br />
+  6.3 Updating the repository                            <br />
+  6.4 Updating templates                                 <br />
+  6.5 Wrapping up
+
+7. [Thank you](thank_you.html)

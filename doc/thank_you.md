@@ -1,4 +1,4 @@
-6. Thank you
+7. Thank you
 ============
 A big thanks goes out to all synctool users. You know who you are (!)
 Special thanks go to those whom I've had e-mail conversations with about

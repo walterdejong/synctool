@@ -5,7 +5,7 @@
 #	- build HTML documentation from markdown
 #
 
-FILES="toc chapter1 chapter2 chapter3 chapter4 chapter5 thank_you"
+FILES="toc chapter1 chapter2 chapter3 chapter4 chapter5 chapter6 thank_you"
 
 for file in $FILES
 do
