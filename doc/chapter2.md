@@ -185,6 +185,10 @@ definition.
 > It no longer exists; the overlay directory now must reside under
 > the synctool root, under `/opt/synctool/var/`.
 
+You can test your `synctool.conf` with the command `synctool-config`.
+It's more exciting however to test with `dsh` and actually run commands
+on the cluster.
+
 
 2.5 Testing with dsh
 --------------------
