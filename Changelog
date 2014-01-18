@@ -1,6 +1,7 @@
 January 2014
 - dropped names "synctool-ssh", "synctool-ping", etc. in favor of "dsh",
   "dsh-ping" and the like
+- added migration guide chapter to documentation
 
 December 2013
 - purge --single may complain about timestamps (because rsync will also)
