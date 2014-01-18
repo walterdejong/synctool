@@ -43,4 +43,5 @@ Table of contents
   6.4 Updating templates                                 <br />
   6.5 Wrapping up
 
-7. [Thank you](thank_you.html)
+7. [Thank you](thank_you.html)                           <br />
+  7.1 Fun facts
