@@ -9,8 +9,6 @@
 #   License.
 #
 
-PATH=/bin:/sbin:/usr/bin:/usr/sbin
-
 DEFAULT_INSTALL_ROOT="/opt/synctool"
 INSTALL_ROOT="$DEFAULT_INSTALL_ROOT"
 
