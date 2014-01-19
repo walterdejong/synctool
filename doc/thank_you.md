@@ -19,6 +19,8 @@ I highly recommend `git` and [github][1].
 
 7.1 Fun facts
 =============
+Some fun facts about synctool 6:
+
 * synctool 6 is the 6th major release of synctool
 * synctool 6 took over 6 months to develop and test
 * synctool 6 has more than 600 commits over the last synctool 5
