@@ -77,7 +77,11 @@ def generate_template(obj, post_dict):
 
     # get the .post script for the template file
     if not template in post_dict:
-        stderr('error: template generator for %s not found' % obj.src_path)
+        if synctool.param.TERSE:
+            terse(synctool.lib.TERSE_ERROR, 'no .post %s' % obj.src_path)
+        else:
+            stderr('error: template generator for %s not found' %
+                   obj.src_path)
         return False
 
     generator = post_dict[template]
@@ -92,7 +96,11 @@ def generate_template(obj, post_dict):
     try:
         os.chdir(src_dir)
     except OSError as err:
-        stderr('error changing directory to %s: %s' % (src_dir, err.strerror))
+        if synctool.param.TERSE:
+            terse(synctool.lib.TERSE_ERROR, 'chdir %s' % src_dir)
+        else:
+            stderr('error changing directory to %s: %s' % (src_dir,
+                                                           err.strerror))
         return False
 
     # temporarily restore original umask
@@ -114,7 +122,11 @@ def generate_template(obj, post_dict):
     statbuf = synctool.syncstat.SyncStat(newname)
     if not statbuf.exists():
         if not have_error:
-            stderr('warning: expected output %s was not generated' % newname)
+            if synctool.param.TERSE:
+                terse(synctool.lib.TERSE_WARNING, 'no output %s' % newname)
+            else:
+                stderr('warning: expected output %s was not generated' %
+                       newname)
             obj.ov_type = synctool.overlay.OV_IGNORE
         else:
             # an error message was already printed when exec() failed earlier
@@ -132,7 +144,10 @@ def generate_template(obj, post_dict):
     try:
         os.chdir(cwd)
     except OSError as err:
-        stderr('error changing directory to %s: %s' % (cwd, err.strerror))
+        if synctool.param.TERSE:
+            terse(synctool.lib.TERSE_ERROR, 'chdir %s' % src_dir)
+        else:
+            stderr('error changing directory to %s: %s' % (cwd, err.strerror))
         return False
 
     if have_error:
