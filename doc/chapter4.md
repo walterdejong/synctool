@@ -106,7 +106,7 @@ synctool's configuration file.
   synctool runs this command when you use the option `--diff` to see the
   differences between the file in the repository and on the target node.
 
-  The exact location and arguments of the `diff` command are operating
+  The exact location and arguments of the `diff` program are operating
   system specific; the PATH environment variable will be searched for the
   command if you do not supply a full path.
 
@@ -117,7 +117,7 @@ synctool's configuration file.
   Give the command and arguments to execute `ping`.
   `dsh-ping` uses this command to check what nodes are up and running.
 
-  The exact location and arguments of the `ping` command are operating
+  The exact location and arguments of the `ping` program are operating
   system specific; the PATH environment variable will be searched for the
   command if you do not supply a full path.
 
@@ -128,7 +128,7 @@ synctool's configuration file.
   Give the command and arguments to execute `ssh`. synctool and `dsh` use
   this command to execute remote commands on the target nodes.
 
-  The exact location of the `ssh` command is operating system specific;
+  The exact location of the `ssh` program is operating system specific;
   the PATH environment variable will be searched for the command if you do
   not supply a full path.
 
@@ -143,7 +143,7 @@ synctool's configuration file.
   Give the command and arguments to execute `rsync`. synctool uses this
   command to distribute the repository to the target nodes.
 
-  The exact location of the `rsync` command is operating system specific;
+  The exact location of the `rsync` program is operating system specific;
   the PATH environment variable will be searched for the command if you do
   not supply a full path.
 
