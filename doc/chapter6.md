@@ -61,6 +61,10 @@ were in the old `synctool.conf`.
 The rest of the config file are reasonable defaults. Leave them be or change
 them to match the old `synctool.conf`.
 
+If you had any `on_update` lines in the old config, these must be converted
+to `.post` scripts; `.post` scripts are the only way to trigger actions on
+updates in synctool 6.
+
 You are now set to try out the new config with `synctool-config` and/or `dsh`.
 
 For more information on configuring synctool, see chapters 2 and 4.
