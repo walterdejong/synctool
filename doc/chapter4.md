@@ -161,7 +161,7 @@ synctool's configuration file.
   Give the command and arguments to execute `synctool-client`. synctool uses
   this command to execute synctool on the target nodes.
 
-  The exact location of the `synctool-client` command is installation
+  The exact location of the `synctool-client` program is installation
   dependent. However, synctool looks for it under the synctool root.
 
   The default is: `$SYNCTOOL/bin/synctool-client`
@@ -171,7 +171,7 @@ synctool's configuration file.
   Give the command and arguments to execute `synctool-client-pkg`.
   dsh-pkg uses this command to do package management on the target nodes.
 
-  The exact location of the `synctool-client-pkg` is installation
+  The exact location of the `synctool-client-pkg` program is installation
   dependent. However, dsh-pkg looks for it under the synctool root.
 
   The default is: `$SYNCTOOL/bin/synctool-client-pkg`
@@ -234,7 +234,7 @@ synctool's configuration file.
 * `slave <nodename> [..]`
 
   Slave nodes get a full copy of the synctool repository. Slaves have no
-  other function than that. You can not run `synctool` from a slave until you
+  other function than that. You can not run synctool from a slave until you
   change it into a master node in the config file.
 
 * `group <groupname> <subgroup> [..]`
@@ -280,12 +280,12 @@ synctool's configuration file.
   fully qualified hostname, must be this node. In general it is safe to omit
   this. This specifier is normally _not used_ by synctool. It is only used
   when you run `synctool-client` manually in 'stand alone' mode on a node.
-  Then there are cases in which synctool can fail to figure out its own
-  node name. You may put the hostname in the config file to help synctool
-  out in this situation. If this seems odd to you, then mind that synctool
-  can not magically know what node it is running on. In any case, the
-  property that uniquely identifies a host is its _hostname_.
-  Note that you can also pass the option `--nodename` to `synctool-client`
+  Then there are cases in which synctool-client can fail to figure out
+  its own node name. You may put the hostname in the config file to help
+  synctool-client out in this situation. If this seems odd to you, then mind
+  that synctool-client can not magically know what node it is running on.
+  In any case, the property that uniquely identifies a host is its _hostname_.
+  Note that you can also pass the option `--nodename` to synctool-client
   to tell it what its name is.
 
   > synctool-client uses the `socket.getfqdn()` function to determine the
@@ -303,7 +303,7 @@ synctool's configuration file.
   The optional `rsync:no` specifier may be used to tell synctool not
   to sync the repository to the target node. This is only convenient when
   the node has access to the repository via another way, such as a shared
-  network filesystem.
+  filesystem.
 
     node node1 fs sched rack1 ipaddress:node1-mgmt
     node node2 login    rack1 ipaddress:node2-mgmt \
