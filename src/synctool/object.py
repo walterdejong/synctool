@@ -106,7 +106,6 @@ class VNode(object):
         # be a bit quiet about it
         if synctool.lib.VERBOSE or synctool.lib.UNIX_CMD:
             verbose('making directory %s' % prettypath(basedir))
-            unix_out('mkdir -p %s' % basedir)
 
         synctool.lib.mkdir_p(basedir)
 

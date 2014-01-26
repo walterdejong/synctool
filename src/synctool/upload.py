@@ -271,7 +271,6 @@ def rsync_upload(up):
         stdout('would be uploaded as %s' % verbose_path)
     else:
         dest_dir = os.path.dirname(up.repos_path)
-        unix_out('mkdir -p %s' % dest_dir)
         synctool.lib.mkdir_p(dest_dir)
         if not os.path.exists(dest_dir):
             stderr('error: failed to create %s/' % dest_dir)

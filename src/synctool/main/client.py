@@ -113,7 +113,6 @@ def generate_template(obj, post_dict):
     verbose('  os.system(%s, %s, %s)' % (prettypath(cmd_arr[0]),
             cmd_arr[1], cmd_arr[2]))
     unix_out('# run command %s' % os.path.basename(cmd_arr[0]))
-    unix_out('%s "%s" "%s"' % (cmd_arr[0], cmd_arr[1], cmd_arr[2]))
 
     have_error = False
     if synctool.lib.exec_command(cmd_arr) == -1:
@@ -286,7 +285,6 @@ def purge_files():
         cmd_arr.append(dest)
 
         verbose('running rsync%s%s %s' % (opts_string, prettypath(src), dest))
-        unix_out(' '.join(cmd_arr))
         _run_rsync_purge(cmd_arr)
 
 
@@ -330,6 +328,8 @@ def _run_rsync_purge(cmd_arr):
     '''run rsync for purging
     cmd_arr holds already prepared rsync command + arguments
     Returns: None'''
+
+    unix_out(' '.join(cmd_arr))
 
     sys.stdout.flush()
     sys.stderr.flush()
@@ -755,7 +755,6 @@ def _exec_diff(src, dest):
     '''execute diff_cmd to display diff between dest and src'''
 
     verbose('%s %s %s' % (synctool.param.DIFF_CMD, dest, prettypath(src)))
-    unix_out('%s %s %s' % (synctool.param.DIFF_CMD, dest, src))
 
     cmd_arr = shlex.split(synctool.param.DIFF_CMD)
     cmd_arr.append(dest)
