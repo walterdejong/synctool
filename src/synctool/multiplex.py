@@ -14,7 +14,7 @@ import os
 import shlex
 
 import synctool.lib
-from synctool.lib import verbose, stderr, unix_out
+from synctool.lib import verbose, stderr
 import synctool.param
 import synctool.syncstat
 
@@ -77,36 +77,39 @@ def setup(nodename, remote_addr):
     cmd_arr.append('--')
     cmd_arr.append(remote_addr)
 
-    exitcode = synctool.lib.exec_command(cmd_arr)
-    if exitcode != 0:
-        stderr('error: got exitcode %d from ssh -M %s' % (exitcode, nodename))
-        return False
-
-    return True
+    exitcode = synctool.lib.exec_command(cmd_arr, silent=True)
+    return exitcode == 0
 
 
-def stop(nodename, remote_addr):
-    '''stop multiplexing to node
-    Tell the ssh mux process to exit
+def control(nodename, remote_addr, ctl_cmd):
+    '''Tell the ssh mux process the ctl_cmd
     Returns True on success, False otherwise
     '''
+
+    if not ctl_cmd in ('check', 'stop', 'exit'):
+        raise RuntimeError("unsupported control command '%s'" % ctl_cmd)
 
     control_path = _make_control_path(nodename)
     if not control_path:
         # error message already printed
         return False
 
-    verbose('stopping control path to %s' % nodename)
+    verbose('sending control command %s to %s' % (ctl_cmd, nodename))
 
     cmd_arr = shlex.split(synctool.param.SSH_CMD)
     cmd_arr.extend(['-N', '-n',
-                    '-O', 'exit',
-                    '-o', 'ControlPath=' + control_path,
-                    '-o', 'ControlPersist=yes' ])
+                    '-O', ctl_cmd,
+                    '-o', 'ControlPath=' + control_path])
 
     if synctool.lib.VERBOSE:
         if not '-v' in cmd_arr and not '--verbose' in cmd_arr:
             cmd_arr.append('-v')
+
+        if '-q' in cmd_arr:
+            cmd_arr.remove('-q')
+
+        if '--quiet' in cmd_arr:
+            cmd_arr.remove('--quiet')
     else:
         if not '-q' in cmd_arr and not '--quiet' in cmd_arr:
             cmd_arr.append('-q')
@@ -114,14 +117,8 @@ def stop(nodename, remote_addr):
     cmd_arr.append('--')
     cmd_arr.append(remote_addr)
 
-    unix_out(' '.join(cmd_arr))
-
-    exitcode = synctool.lib.exec_command(cmd_arr)
-    if exitcode != 0:
-        stderr('got exitcode %d from ssh -O exit %s' % (exitcode, nodename))
-        return False
-
-    return True
+    exitcode = synctool.lib.exec_command(cmd_arr, silent=True)
+    return exitcode == 0
 
 
 def ssh_args(ssh_cmd_arr, nodename):

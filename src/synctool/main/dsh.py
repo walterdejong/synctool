@@ -34,6 +34,8 @@ OPT_SKIP_RSYNC = False
 OPT_AGGREGATE = False
 MASTER_OPTS = None
 SSH_OPTIONS = None
+OPT_MULTIPLEX = False
+CTL_CMD = None
 
 # ugly globals help parallelism
 SSH_CMD_ARR = None
@@ -126,6 +128,71 @@ def worker_ssh(addr):
     synctool.lib.run_with_nodename(ssh_cmd_arr, nodename)
 
 
+def start_multiplex(address_list):
+    '''run ssh -M to each node in address_list'''
+
+    global SSH_CMD_ARR
+
+    SSH_CMD_ARR = shlex.split(synctool.param.SSH_CMD)
+
+    if SSH_OPTIONS:
+        SSH_CMD_ARR.extend(shlex.split(SSH_OPTIONS))
+
+    synctool.lib.multiprocess(_ssh_master, address_list)
+
+
+def _ssh_master(addr):
+    '''run ssh -M addr'''
+
+    nodename = NODESET.get_nodename_from_address(addr)
+    if synctool.multiplex.setup(nodename, addr):
+        if not synctool.lib.QUIET:
+            print '%s: ssh master running' % nodename
+    else:
+        print '%s: failed to start ssh master' % nodename
+
+
+def control_multiplex(address_list, ctl_cmd):
+    '''run ssh -O ctl_cmd to each node in address_list'''
+
+    global SSH_CMD_ARR
+
+    SSH_CMD_ARR = shlex.split(synctool.param.SSH_CMD)
+
+    if SSH_OPTIONS:
+        SSH_CMD_ARR.extend(shlex.split(SSH_OPTIONS))
+
+    synctool.lib.multiprocess(_ssh_control, address_list)
+
+
+def _ssh_control(addr):
+    '''run ssh -O CTL_CMD addr'''
+
+    nodename = NODESET.get_nodename_from_address(addr)
+    ok = synctool.multiplex.control(nodename, addr, CTL_CMD)
+
+    if CTL_CMD == 'check':
+        if ok:
+            if not synctool.lib.QUIET:
+                print '%s: ssh master running' % nodename
+        else:
+            print '%s: ssh master not running' % nodename
+
+    elif CTL_CMD == 'stop':
+        if not synctool.lib.QUIET:
+            if ok:
+                print '%s: ssh master stopped' % nodename
+            else:
+                print '%s: ssh master not running' % nodename
+
+    elif CTL_CMD == 'exit':
+        if not synctool.lib.QUIET:
+            if ok:
+                print '%s: ssh master exiting' % nodename
+            else:
+                print '%s: ssh master not running' % nodename
+
+
 def check_cmd_config():
     '''check whether the commands as given in synctool.conf actually exist'''
 
@@ -161,6 +228,8 @@ def usage():
   -X, --exclude-group=LIST    Exclude these groups from the selection
   -a, --aggregate             Condense output
   -o, --options=SSH_OPTIONS   Set additional options for ssh
+  -M, --master, --multiplex   Start ssh connection multiplexing
+  -O CTL_CMD                  Control ssh master processes
   -N, --numproc=NUM           Set number of concurrent procs
   -z, --zzz=NUM               Sleep NUM seconds between each run
       --no-nodename           Do not prepend nodename to output
@@ -169,6 +238,8 @@ def usage():
   -a, --aggregate             Condense output; list nodes per change
       --skip-rsync            Do not sync commands from the scripts/ dir
                               (eg. when it is on a shared filesystem)
+
+CTL_CMD can be: check, stop, exit
 '''
 
 
@@ -176,16 +247,17 @@ def get_options():
     '''parse command-line options'''
 
     global MASTER_OPTS, OPT_SKIP_RSYNC, OPT_AGGREGATE, SSH_OPTIONS
+    global OPT_MULTIPLEX, CTL_CMD
 
     if len(sys.argv) <= 1:
         usage()
         sys.exit(1)
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:ao:qN:z:',
+        opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:ao:MO:qN:z:',
             ['help', 'conf=', 'verbose', 'node=', 'group=', 'exclude=',
-            'exclude-group=', 'aggregate', 'options=', 'no-nodename',
-            'unix', 'skip-rsync', 'quiet', 'numproc=', 'zzz='])
+            'exclude-group=', 'aggregate', 'master', 'multiplex', 'options=',
+            'no-nodename', 'unix', 'skip-rsync', 'quiet', 'numproc=', 'zzz='])
     except getopt.GetoptError as reason:
         print '%s: %s' % (PROGNAME, reason)
 #        usage()
@@ -251,6 +323,22 @@ def get_options():
             NODESET.exclude_group(arg)
             continue
 
+        if opt in ('-M', '--master', '--multiplex'):
+            OPT_MULTIPLEX = True
+            continue
+
+        if opt == '-O':
+            if CTL_CMD != None:
+                print "%s: only a single '-O' option can be given" % PROGNAME
+                sys.exit(1)
+
+            if not arg in ('check', 'stop', 'exit'):
+                print "%s: unknown control command '%s'" % (PROGNAME, arg)
+                sys.exit(1)
+
+            CTL_CMD = arg
+            continue
+
         if opt in ('-N', '--numproc'):
             try:
                 synctool.param.NUM_PROC = int(arg)
@@ -309,11 +397,25 @@ def get_options():
             synctool.lib.QUIET = True
             continue
 
-    if not args:
+    if OPT_MULTIPLEX and CTL_CMD != None:
+        print '%s: options -M and -O can not be combined' % PROGNAME
+        sys.exit(1)
+
+    if (OPT_MULTIPLEX or CTL_CMD != None):
+        if len(args) > 0:
+            print '%s: excessive arguments on command-line' % PROGNAME
+            sys.exit(1)
+
+        if not synctool.param.MULTIPLEX:
+            print ('%s: %s: multiplex is disabled' %
+                   (PROGNAME, os.path.basename(synctool.param.CONF_FILE)))
+            sys.exit(1)
+
+    elif not args:
         print '%s: missing remote command' % PROGNAME
         sys.exit(1)
 
-    if args != None:
+    if len(args) > 0:
         MASTER_OPTS.extend(args)
 
     return args
@@ -347,6 +449,11 @@ def main():
         print 'no valid nodes specified'
         sys.exit(1)
 
-    run_dsh(address_list, cmd_args)
+    if OPT_MULTIPLEX:
+        start_multiplex(address_list)
+    elif CTL_CMD != None:
+        control_multiplex(address_list, CTL_CMD)
+    else:
+        run_dsh(address_list, cmd_args)
 
 # EOB
