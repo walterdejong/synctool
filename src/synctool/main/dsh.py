@@ -102,6 +102,13 @@ def worker_ssh(addr):
                 (os.path.basename(REMOTE_CMD_ARR[0]), nodename))
 
         cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
+
+        # add "-e ssh_cmd" to rsync command
+        ssh_cmd_arr = shlex.split(synctool.param.SSH_CMD)
+        if use_multiplex:
+            synctool.multiplex.ssh_args(ssh_cmd_arr, nodename)
+        cmd_arr.extend(['-e', ' '.join(ssh_cmd_arr)])
+
         cmd_arr.append('--')
         cmd_arr.append('%s' % REMOTE_CMD_ARR[0])
         cmd_arr.append('%s:%s' % (addr, REMOTE_CMD_ARR[0]))

@@ -43,9 +43,7 @@ HOST_ID = None
 DIFF_CMD = 'diff -u'
 PING_CMD = 'ping -q -c 1 -t 1'
 SSH_CMD = 'ssh -o ConnectTimeout=10 -x -q'
-# older versions also had --numeric-ids
-RSYNC_CMD = ("rsync -ar --delete --delete-excluded "
-             "-e 'ssh -o ConnectTimeout=10 -x -q' -q")
+RSYNC_CMD = "rsync -ar --delete --delete-excluded -q"
 SYNCTOOL_CMD = None
 PKG_CMD = None
 

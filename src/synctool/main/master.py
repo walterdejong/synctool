@@ -65,6 +65,10 @@ def worker_synctool(addr):
     # setup ssh connection multiplexing (if enabled)
     use_multiplex = synctool.multiplex.setup(nodename, addr)
 
+    ssh_cmd_arr = shlex.split(synctool.param.SSH_CMD)
+    if use_multiplex:
+        synctool.multiplex.ssh_args(ssh_cmd_arr, nodename)
+
     # rsync ROOTDIR/dirs/ to the node
     # if "it wants it"
     if not (OPT_SKIP_RSYNC or nodename in synctool.param.NO_RSYNC):
@@ -75,6 +79,10 @@ def worker_synctool(addr):
 
         cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
         cmd_arr.append('--filter=. %s' % tmp_filename)
+
+        # add "-e ssh_cmd" to rsync command
+        cmd_arr.extend(['-e', ' '.join(ssh_cmd_arr)])
+
         cmd_arr.append('--')
         cmd_arr.append('%s/' % synctool.param.ROOTDIR)
         cmd_arr.append('%s:%s/' % (addr, synctool.param.ROOTDIR))
@@ -97,12 +105,7 @@ def worker_synctool(addr):
             pass
 
     # run 'ssh node synctool_cmd'
-    cmd_arr = shlex.split(synctool.param.SSH_CMD)
-
-    # add extra arguments for ssh multiplexing (if OK to use)
-    if use_multiplex:
-        synctool.multiplex.ssh_args(cmd_arr, nodename)
-
+    cmd_arr = ssh_cmd_arr[:]
     cmd_arr.append('--')
     cmd_arr.append(addr)
     cmd_arr.extend(shlex.split(synctool.param.SYNCTOOL_CMD))

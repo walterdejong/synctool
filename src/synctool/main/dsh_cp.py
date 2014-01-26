@@ -19,6 +19,7 @@ import synctool.aggr
 import synctool.config
 import synctool.lib
 from synctool.lib import stdout, stderr, unix_out
+import synctool.multiplex
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.param
@@ -37,13 +38,14 @@ OPT_PURGE = False
 
 # ugly globals help parallelism
 DSH_CP_CMD_ARR = None
+SOURCE_LIST = None
 FILES_STR = None
 
 
 def run_remote_copy(address_list, files):
     '''copy files[] to nodes[]'''
 
-    global DSH_CP_CMD_ARR, FILES_STR
+    global DSH_CP_CMD_ARR, SOURCE_LIST, FILES_STR
 
     errs = 0
     sourcelist = []
@@ -64,6 +66,9 @@ def run_remote_copy(address_list, files):
 
     if errs > 0:
         sys.exit(-1)
+
+    SOURCE_LIST = sourcelist
+    FILES_STR = ' '.join(sourcelist)    # only used for printing
 
     DSH_CP_CMD_ARR = shlex.split(synctool.param.RSYNC_CMD)
 
@@ -86,11 +91,6 @@ def run_remote_copy(address_list, files):
     if DSH_CP_OPTIONS:
         DSH_CP_CMD_ARR.extend(shlex.split(DSH_CP_OPTIONS))
 
-    DSH_CP_CMD_ARR.append('--')
-    DSH_CP_CMD_ARR.extend(sourcelist)
-
-    FILES_STR = ' '.join(sourcelist)    # only used for printing
-
     synctool.lib.multiprocess(worker_dsh_cp, address_list)
 
 
@@ -104,9 +104,21 @@ def worker_dsh_cp(addr):
 
     # the fileset already has been added to DSH_CP_CMD_ARR
 
+    # setup ssh connection multiplexing (if enabled)
+    use_multiplex = synctool.multiplex.setup(nodename, addr)
+
     # create local copy of DSH_CP_CMD_ARR
     # or parallelism may screw things up
     dsh_cp_cmd_arr = DSH_CP_CMD_ARR[:]
+
+    # add ssh cmd
+    ssh_cmd_arr = shlex.split(synctool.param.SSH_CMD)
+    if use_multiplex:
+        synctool.multiplex.ssh_args(ssh_cmd_arr, nodename)
+
+    dsh_cp_cmd_arr.extend(['-e', ' '.join(ssh_cmd_arr)])
+    dsh_cp_cmd_arr.append('--')
+    dsh_cp_cmd_arr.extend(SOURCE_LIST)
     dsh_cp_cmd_arr.append('%s:%s' % (addr, DESTDIR))
 
     msg = 'copy %s to %s' % (FILES_STR, DESTDIR)
@@ -119,7 +131,7 @@ def worker_dsh_cp(addr):
     if not synctool.lib.DRY_RUN:
         synctool.lib.run_with_nodename(dsh_cp_cmd_arr, nodename)
     else:
-        unix_out(' '.join(dsh_cp_cmd_arr))
+        unix_out(' '.join(dsh_cp_cmd_arr) + '    # dry run')
 
 
 def check_cmd_config():

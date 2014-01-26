@@ -78,6 +78,7 @@ ignore .*.swp
 
 # use ssh multiplexing for making fast connections
 # this requires openssh version 4 or higher
+# synctool will automatically append options to ssh_cmd for this to work
 #multiplex yes
 
 # ssh multiplexing persistance timeout
@@ -97,20 +98,24 @@ ignore .*.swp
 #diff_cmd diff -u
 #ping_cmd fping -t 500
 #ping_cmd ping -q -c 1 -t 1
+
+# synctool depends on ssh, but this command is configurable
+# so that you can do things like:
+#    ssh -T -n
+# or ssh -c arcfour
+#
 #ssh_cmd ssh -o ConnectTimeout=10 -x -q
 
 # synctool depends on rsync, but this command is configurable
 # so that you can do things like:
+#     rsync_cmd rsync -ar --dry-run -vv
+#  or rsync_cmd rsync -ar --delete --delete-excluded --numeric-ids
 #
-#  rsync_cmd rsync -ar --dry-run -vv
-# or
-#  rsync_cmd rsync -ar --delete --delete-excluded -e 'ssh -T -c arcfour'
+# synctool automatically appends option: -e ssh_cmd
+# synctool automatically appends another option:
+#   --filter=/tmp/synctool/synctool-tempfile
 #
-# synctool-master automatically appends another option:
-#  --filter=/tmp/synctool/synctool-tempfile
-#
-##rsync_cmd rsync -ar --numeric-ids --delete --delete-excluded -e 'ssh -o ConnectTimeout=10 -x -q' -q
-#rsync_cmd rsync -ar --delete --delete-excluded -e 'ssh -o ConnectTimeout=10 -x -q' -q
+#rsync_cmd rsync -ar --delete --delete-excluded -q
 
 #synctool_cmd $SYNCTOOL/bin/synctool-client
 #pkg_cmd $SYNCTOOL/bin/synctool-client-pkg
