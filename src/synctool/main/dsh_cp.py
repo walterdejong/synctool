@@ -116,10 +116,10 @@ def worker_dsh_cp(addr):
         msg = ('%s: ' % nodename) + msg
     stdout(msg)
 
-    unix_out(' '.join(dsh_cp_cmd_arr))
-
     if not synctool.lib.DRY_RUN:
         synctool.lib.run_with_nodename(dsh_cp_cmd_arr, nodename)
+    else:
+        unix_out(' '.join(dsh_cp_cmd_arr))
 
 
 def check_cmd_config():
