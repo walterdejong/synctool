@@ -591,3 +591,32 @@ runs on the target node.
 > Previous versions had a `tasks/` directory under the repository and you
 > could invoke synctool with the `--tasks` option. This mechanism has been
 > obsoleted by `dsh` and the `scripts/` directory.
+
+
+3.14 Multiplexing connections
+-----------------------------
+synctool and dsh multiplex SSH connections over a 'master' connection.
+This feature greatly speeds up SSH connections because it allows skipping
+the costly SSL handshake. You don't have to do anything special to enable
+this feature (by default, `multiplex` is `yes` in synctool.conf. It requires
+OpenSSH version 4 or better).
+
+If multiplexing is giving you problems (like hanging sessions), you can
+disable it in synctool.conf.
+
+dsh has some special switches to control multiplexing. Normally you don't
+need this, but these commands may come in handy. For example, if you have
+`control_persist` set to "yes", and want to stop multiplexing.
+
+    dsh -M          # start master connections
+    dsh -O check    # check master connections
+    dsh -O stop     # stop master connections
+    dsh -O exit     # terminate master connections
+
+You may also do this for certain groups or nodes, like so:
+
+    dsh -g all -M
+    dsh -n node1 -O check
+
+The control paths (socket files) to each node are kept under synctool's temp
+directory (by default: `/tmp/synctool/sshmux/`).
