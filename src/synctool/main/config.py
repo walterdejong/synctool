@@ -512,7 +512,7 @@ def main():
         list_dirs()
 
     elif ACTION == ACTION_PREFIX:
-        print synctool.param.PREFIX
+        print synctool.param.ROOTDIR
 
     elif ACTION == ACTION_NODENAME:
         synctool.config.init_mynodename()
