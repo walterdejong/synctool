@@ -64,7 +64,7 @@ def setup(nodename, remote_addr):
     cmd_arr = shlex.split(synctool.param.SSH_CMD)
     cmd_arr.extend(['-M', '-N', '-n',
                     '-o', 'ControlPath=' + control_path,
-                    '-o', 'ControlPersist=yes' ])
+                    '-o', 'ControlPersist=' + synctool.param.CONTROL_PERSIST])
 
     # make sure ssh is quiet; otherwise the ssh mux process will
     # keep printing debug info
@@ -101,18 +101,7 @@ def control(nodename, remote_addr, ctl_cmd):
                     '-O', ctl_cmd,
                     '-o', 'ControlPath=' + control_path])
 
-    if synctool.lib.VERBOSE:
-        if not '-v' in cmd_arr and not '--verbose' in cmd_arr:
-            cmd_arr.append('-v')
-
-        if '-q' in cmd_arr:
-            cmd_arr.remove('-q')
-
-        if '--quiet' in cmd_arr:
-            cmd_arr.remove('--quiet')
-    else:
-        if not '-q' in cmd_arr and not '--quiet' in cmd_arr:
-            cmd_arr.append('-q')
+    # if VERBOSE: don't care about ssh -v options here
 
     cmd_arr.append('--')
     cmd_arr.append(remote_addr)

@@ -31,6 +31,11 @@ SPELLCHECK = re.compile(r'[a-zA-Z]+([a-zA-Z0-9]+|'
                         r'\-[a-zA-Z0-9]+|'
                         r'\+[a-zA-Z0-9]+)*')
 
+# this will match "60", "1h30m", "1w4d10h3m50s", "yes", etc.
+PERSIST_TIME = re.compile(r'^\d+$|'
+                          r'^(\d+[w])*(\d+[d])*(\d+[h])*(\d+[m])*(\d+[s])*$|'
+                          r'^yes$')
+
 # dict of defined Symbols
 # to see if a parameter is being redefined
 SYMBOLS = {}
@@ -322,6 +327,33 @@ def config_package_manager(arr, configfile, lineno):
         return 1
 
     synctool.param.PACKAGE_MANAGER = arr[1]
+    return 0
+
+
+def config_multiplex(arr, configfile, lineno):
+    '''parse keyword: multiplex'''
+
+    (err, synctool.param.MULTIPLEX) = _config_boolean('multiplex', arr[1],
+                                                      configfile, lineno)
+    return err
+
+
+def config_control_persist(arr, configfile, lineno):
+    '''parse keyword: control_persist'''
+
+    if len(arr) != 2:
+        stderr("%s:%d: 'control_persist' requires a single argument" %
+               (configfile, lineno))
+        return 1
+
+    persist = arr[1].lower()
+
+    m = PERSIST_TIME.match(persist)
+    if not m:
+        stderr("%s:%d: invalid value '%s'" % (configfile, lineno, persist))
+        return 1
+
+    synctool.param.CONTROL_PERSIST = persist
     return 0
 
 

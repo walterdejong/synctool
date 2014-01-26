@@ -80,6 +80,10 @@ ignore .*.swp
 # this requires openssh version 4 or higher
 #multiplex yes
 
+# ssh multiplexing persistance timeout
+# you may set this to 'yes' to keep it around indefinitely
+#control_persist 1h
+
 # all files in the repository must have a group extension
 #require_extension yes
 
