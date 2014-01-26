@@ -593,8 +593,8 @@ runs on the target node.
 > obsoleted by `dsh` and the `scripts/` directory.
 
 
-3.14 Multiplexing connections
------------------------------
+3.14 Multiplexed connections
+----------------------------
 synctool and dsh multiplex SSH connections over a 'master' connection.
 This feature greatly speeds up SSH connections because it allows skipping
 the costly SSL handshake. You don't have to do anything special to enable

@@ -25,7 +25,7 @@ Table of contents
   3.11 Slow updates                                      <br />
   3.12 Checking for updates                              <br />
   3.13 Running tasks with synctool                       <br />
-  3.14 Multiplexing connections
+  3.14 Multiplexed connections
 
 4. [All configuration parameters explained](chapter4.html)
 

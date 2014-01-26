@@ -48,7 +48,7 @@ synctool's configuration file.
 * `control_persist <time|yes>`
 
   This parameter maps directly to the OpenSSH `ControlPersist` option and
-  is only used when `multiplex` is set. It sets a timeout for the multiplexing
+  is only used when `multiplex` is set. It sets a timeout for the multiplex
   master connection.
   The time argument is a string like "1h" or "1h30m". When it is "yes",
   there is no timeout, and it will persist indefinitely until the master
