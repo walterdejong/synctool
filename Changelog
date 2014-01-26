@@ -3,6 +3,8 @@ January 2014
   "dsh-ping" and the like
 - added migration guide chapter to documentation
 - released as version 6.0rc1
+- added ssh multiplexing for fast SSH connections
+  Idea given by calind at github
 
 December 2013
 - purge --single may complain about timestamps (because rsync will also)
