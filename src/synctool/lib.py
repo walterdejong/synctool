@@ -297,6 +297,7 @@ def log(msg):
 def run_with_nodename(cmd_arr, nodename):
     '''run command and show output with nodename
     It will run regardless of what DRY_RUN is
+    Returns process return code or -1 on error
     '''
 
     unix_out(' '.join(cmd_arr))
@@ -305,13 +306,14 @@ def run_with_nodename(cmd_arr, nodename):
     sys.stderr.flush()
 
     try:
-        f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT).stdout
+        proc = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT)
     except OSError as err:
         stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
-        return
+        return -1
 
+    f = proc.stdout
     with f:
         for line in f:
             line = line.rstrip()
@@ -330,6 +332,12 @@ def run_with_nodename(cmd_arr, nodename):
                     # do not prepend the nodename of this node to the output
                     # if option --no-nodename was given
                     print line
+    proc.wait()
+
+    if proc.returncode != 0:
+        verbose('exit code %d' % proc.returncode)
+
+    return proc.returncode
 
 
 def shell_command(cmd):
@@ -374,7 +382,7 @@ def shell_command(cmd):
     return ret
 
 
-def exec_command(cmd_arr):
+def exec_command(cmd_arr, silent=False):
     '''run a command given in cmd_arr, regardless of DRY_RUN
     Returns: return code of execute command or -1 on error
     '''
@@ -384,8 +392,16 @@ def exec_command(cmd_arr):
     sys.stdout.flush()
     sys.stderr.flush()
 
+    fd_devnull = None
+    if silent and not VERBOSE:
+        fd_devnull = open(os.devnull, 'w')
+
     try:
-        ret = subprocess.call(cmd_arr, shell=False)
+        if fd_devnull != None:
+            ret = subprocess.call(cmd_arr, shell=False, stdout=fd_devnull,
+                                  stderr=fd_devnull)
+        else:
+            ret = subprocess.call(cmd_arr, shell=False)
     except OSError as err:
         stderr('error: failed to exec %s: %s' % (cmd_arr[0], err.strerror))
         ret = -1
@@ -394,6 +410,10 @@ def exec_command(cmd_arr):
 
     sys.stdout.flush()
     sys.stderr.flush()
+
+    if fd_devnull != None:
+        fd_devnull.close()
+
     return ret
 
 
