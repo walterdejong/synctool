@@ -20,7 +20,8 @@ import tempfile
 import synctool.aggr
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose, stdout, stderr, terse, unix_out, prettypath
+from synctool.lib import verbose, stdout, stderr, terse, prettypath
+import synctool.multiplex
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.overlay
@@ -61,13 +62,13 @@ def worker_synctool(addr):
         run_local_synctool()
         return
 
+    # setup ssh connection multiplexing (if enabled)
+    use_multiplex = synctool.multiplex.setup(nodename, addr)
+
     # rsync ROOTDIR/dirs/ to the node
     # if "it wants it"
     if not (OPT_SKIP_RSYNC or nodename in synctool.param.NO_RSYNC):
         verbose('running rsync $SYNCTOOL/ to node %s' % nodename)
-        unix_out('%s %s %s:%s/' % (synctool.param.RSYNC_CMD,
-                                   synctool.param.ROOTDIR, addr,
-                                   synctool.param.ROOTDIR))
 
         # make rsync filter to include the correct dirs
         tmp_filename = rsync_include_filter(nodename)
@@ -97,6 +98,11 @@ def worker_synctool(addr):
 
     # run 'ssh node synctool_cmd'
     cmd_arr = shlex.split(synctool.param.SSH_CMD)
+
+    # add extra arguments for ssh multiplexing (if OK to use)
+    if use_multiplex:
+        synctool.multiplex.ssh_args(cmd_arr, nodename)
+
     cmd_arr.append('--')
     cmd_arr.append(addr)
     cmd_arr.extend(shlex.split(synctool.param.SYNCTOOL_CMD))
@@ -104,8 +110,6 @@ def worker_synctool(addr):
     cmd_arr.extend(PASS_ARGS)
 
     verbose('running synctool on node %s' % nodename)
-    unix_out(' '.join(cmd_arr))
-
     synctool.lib.run_with_nodename(cmd_arr, nodename)
 
 
@@ -115,8 +119,6 @@ def run_local_synctool():
     cmd_arr = shlex.split(synctool.param.SYNCTOOL_CMD) + PASS_ARGS
 
     verbose('running synctool on node %s' % synctool.param.NODENAME)
-    unix_out(' '.join(cmd_arr))
-
     synctool.lib.run_with_nodename(cmd_arr, synctool.param.NODENAME)
 
 
