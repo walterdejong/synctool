@@ -18,7 +18,8 @@ import shlex
 import synctool.aggr
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose, stderr, unix_out
+from synctool.lib import verbose, stderr
+import synctool.multiplex
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.param
@@ -46,16 +47,22 @@ def worker_pkg(addr):
 
     nodename = NODESET.get_nodename_from_address(addr)
 
+    # setup ssh connection multiplexing (if enabled)
+    use_multiplex = synctool.multiplex.setup(nodename, addr)
+
     # run 'ssh node pkg_cmd'
     cmd_arr = shlex.split(synctool.param.SSH_CMD)
+
+    # add extra arguments for ssh multiplexing (if OK to use)
+    if use_multiplex:
+        synctool.multiplex.ssh_args(cmd_arr, nodename)
+
     cmd_arr.append('--')
     cmd_arr.append(addr)
     cmd_arr.extend(shlex.split(synctool.param.PKG_CMD))
     cmd_arr.extend(PASS_ARGS)
 
     verbose('running synctool-pkg on node %s' % nodename)
-    unix_out(' '.join(cmd_arr))
-
     synctool.lib.run_with_nodename(cmd_arr, nodename)
 
 
