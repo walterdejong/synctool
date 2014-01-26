@@ -30,7 +30,8 @@ import synctool.range
 
 class NodeSet(object):
     '''class representing a set of nodes
-    Some methods may throw RangeSyntaxError when parsing range expressions'''
+    Some methods may throw RangeSyntaxError when parsing range expressions
+    '''
 
     def __init__(self):
         '''initialize instance'''

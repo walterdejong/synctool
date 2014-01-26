@@ -23,7 +23,6 @@ class SyncPkg(object):
     def __init__(self):
         pass
 
-
     def list(self, pkgs=None):
         if pkgs:
             if len(pkgs) > 1:
@@ -35,7 +34,6 @@ class SyncPkg(object):
         else:
             verbose('list all packages')
 
-
     def install(self, pkgs):
         if len(pkgs) > 1:
             plural = 's'
@@ -45,7 +43,6 @@ class SyncPkg(object):
         msg = 'installing package%s: %s' % (plural, ' '.join(pkgs))
         verbose(msg)
         log(msg)
-
 
     def remove(self, pkgs):
         if len(pkgs) > 1:
@@ -57,10 +54,8 @@ class SyncPkg(object):
         verbose(msg)
         log(msg)
 
-
     def update(self):
         verbose('updating package database')
-
 
     def upgrade(self):
         msg = 'upgrading packages'
@@ -69,7 +64,6 @@ class SyncPkg(object):
         # log the upgrade action ...
         # don't know which packages are upgraded here, sorry
         log(msg)
-
 
     def clean(self):
         verbose('cleaning up caches')

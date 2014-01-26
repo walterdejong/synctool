@@ -17,7 +17,8 @@ import time
 # decorator
 def catch_signals(func):
     '''run main function
-    Ctrl-C and "Broken pipe" signal will gracefully terminate the program'''
+    Ctrl-C and "Broken pipe" signal will gracefully terminate the program
+    '''
 
     def wrap(*args, **kwargs):
         try:
@@ -40,6 +41,5 @@ def catch_signals(func):
         return ret
 
     return wrap
-
 
 # EOB

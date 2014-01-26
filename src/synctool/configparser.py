@@ -53,7 +53,8 @@ class Symbol(object):
 
     def origin(self):
         '''Returns string "filename:lineno" where the symbol was
-        first defined'''
+        first defined
+        '''
 
         return '%s:%d' % (self.filename, self.lineno)
 
@@ -66,7 +67,8 @@ def stderr(msg):
 
 def read_config_file(configfile):
     '''read a (included) config file
-    Returns 0 on success, or error count on errors'''
+    Returns 0 on success, or error count on errors
+    '''
 
     try:
         f = open(configfile, 'r')
@@ -138,7 +140,8 @@ def read_config_file(configfile):
 
 def check_definition(keyword, configfile, lineno):
     '''check whether a param was not defined earlier
-    Returns False on error, True if OK'''
+    Returns False on error, True if OK
+    '''
 
     if keyword in SYMBOLS:
         stderr("%s:%d: redefinition of '%s'" % (configfile, lineno, keyword))
@@ -151,7 +154,8 @@ def check_definition(keyword, configfile, lineno):
 
 def check_node_definition(node, configfile, lineno):
     '''check whether a node was not defined earlier
-    Returns False on error, True if OK'''
+    Returns False on error, True if OK
+    '''
 
     key = 'node %s' % node
 
@@ -167,7 +171,8 @@ def check_node_definition(node, configfile, lineno):
 
 def check_group_definition(group, configfile, lineno):
     '''check whether a group was not defined earlier
-    Returns False on error, True if OK'''
+    Returns False on error, True if OK
+    '''
 
     key = 'group %s' % group
 
@@ -254,7 +259,8 @@ def _config_command(param, arr, short_cmd, configfile, lineno):
 
 def spellcheck(name):
     '''Check for valid spelling of name
-    Returns True if OK, False if not OK'''
+    Returns True if OK, False if not OK
+    '''
 
     m = SPELLCHECK.match(name)
     if not m:
@@ -814,7 +820,8 @@ def config_node(arr, configfile, lineno):
 def _node_specifier(configfile, lineno, node, spec):
     '''parse optional node specifiers like 'ipaddress:', 'hostname:',
     'hostid:', 'rsync:' etc.
-    Returns True if OK, False on error'''
+    Returns True if OK, False on error
+    '''
 
     specifier, arg = spec.split(':', 1)
     if not specifier or not arg:
@@ -1059,7 +1066,8 @@ def config_num_proc(arr, configfile, lineno):
 
 def expand_grouplist(grouplist):
     '''expand a list of (compound) groups recursively
-    Returns the expanded group list'''
+    Returns the expanded group list
+    '''
 
     groups = []
 

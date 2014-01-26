@@ -10,7 +10,8 @@
 #
 
 '''This program is synctool on the master node. It calls synctool-client
-on the target nodes'''
+on the target nodes
+'''
 
 import synctool.main.master
 

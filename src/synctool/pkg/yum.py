@@ -20,33 +20,26 @@ class SyncPkgYum(synctool.pkgclass.SyncPkg):
     def __init__(self):
         super(SyncPkgYum, self).__init__()
 
-
     def list(self, pkgs = None):
         super(SyncPkgYum, self).list(pkgs)
 
         cmd = 'yum list installed'
-
         if pkgs:
             cmd = cmd + ' ' + ' '.join(pkgs)
 
         synctool.lib.shell_command(cmd)
 
-
     def install(self, pkgs):
         super(SyncPkgYum, self).install(pkgs)
 
         cmd = 'yum -y install ' + ' '.join(pkgs)
-
         synctool.lib.shell_command(cmd)
-
 
     def remove(self, pkgs):
         super(SyncPkgYum, self).remove(pkgs)
 
         cmd = 'yum -y remove ' + ' '.join(pkgs)
-
         synctool.lib.shell_command(cmd)
-
 
     def update(self):
         super(SyncPkgYum, self).update()
@@ -56,7 +49,6 @@ class SyncPkgYum(synctool.pkgclass.SyncPkg):
 
         synctool.lib.shell_command('yum -y clean headers')
         synctool.lib.shell_command('yum -y clean metadata')
-
 
     def upgrade(self):
         super(SyncPkgYum, self).upgrade()
@@ -70,7 +62,6 @@ class SyncPkgYum(synctool.pkgclass.SyncPkg):
         synctool.lib.DRY_RUN = False
         synctool.lib.shell_command(cmd)
         synctool.lib.DRY_RUN = tmp
-
 
     def clean(self):
         super(SyncPkgYum, self).clean()

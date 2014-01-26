@@ -96,7 +96,8 @@ def package_manager():
 
 def detect_installer():
     '''Attempt to detect the operating system and package system
-    Returns instance of a SyncPkg installer class'''
+    Returns instance of a SyncPkg installer class
+    '''
 
     # attempt a best effort at detecting OSes for the purpose of
     # choosing a package manager

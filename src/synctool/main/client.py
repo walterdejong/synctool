@@ -41,7 +41,8 @@ def generate_template(obj, post_dict):
     '''run template .post script, generating a new file
     The script will run in the source dir (overlay tree) and
     it will run even in dry-run mode
-    Returns: True or False on error'''
+    Returns: True or False on error
+    '''
 
     # Note: this func modifies input parameter 'obj'
     # when it succesfully generates output, it will change obj's paths
@@ -292,7 +293,8 @@ def _make_rsync_purge_cmd():
     '''make command array for running rsync purge
     Returns pair: cmd_arr, options_string
     cmd_arr is the rsync command + arguments
-    options_string is what options you show in verbose mode'''
+    options_string is what options you show in verbose mode
+    '''
 
     # make rsync command array with command line arguments
     cmd_rsync = shlex.split(synctool.param.RSYNC_CMD)
@@ -327,7 +329,8 @@ def _make_rsync_purge_cmd():
 def _run_rsync_purge(cmd_arr):
     '''run rsync for purging
     cmd_arr holds already prepared rsync command + arguments
-    Returns: None'''
+    Returns: None
+    '''
 
     unix_out(' '.join(cmd_arr))
 
@@ -379,7 +382,8 @@ def _run_rsync_purge(cmd_arr):
 
 def _overlay_callback(obj, post_dict, dir_changed, *args):
     '''compare files and run post-script if needed
-    Returns pair: True (continue), updated (data or metadata)'''
+    Returns pair: True (continue), updated (data or metadata)
+    '''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
         return generate_template(obj, post_dict), False
@@ -813,10 +817,10 @@ def be_careful_with_getopt():
 
 
 def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
-    opt_upload, opt_suffix, opt_fix):
-
+                        opt_upload, opt_suffix, opt_fix):
     '''some combinations of command-line options don't make sense;
-    alert the user and abort'''
+    alert the user and abort
+    '''
 
     if opt_erase_saved and (opt_diff or opt_reference or opt_upload):
         stderr("option --erase-saved can not be combined with other actions")

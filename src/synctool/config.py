@@ -25,7 +25,8 @@ import synctool.param
 
 def read_config():
     '''read the config file and set a bunch of globals
-    Return value: none, exit the program on error'''
+    Return value: none, exit the program on error
+    '''
 
     if not os.path.isfile(synctool.param.CONF_FILE):
         stderr("no such config file '%s'" % synctool.param.CONF_FILE)
@@ -96,7 +97,8 @@ def read_config():
 def make_default_nodeset():
     '''take the (temporary) DEFAULT_NODESET and expand it to
     the definitive DEFAULT_NODESET
-    Return value: none, exit the program on error'''
+    Return value: none, exit the program on error
+    '''
 
     temp_set = synctool.param.DEFAULT_NODESET
     synctool.param.DEFAULT_NODESET = set()
@@ -126,7 +128,8 @@ def make_default_nodeset():
 def check_cmd_config(param_name, cmd):
     '''check whether the command given in the config exists
     Returns (True, full pathed command) when OK,
-    and (False, None) on error'''
+    and (False, None) on error
+    '''
 
     if not cmd:
         stderr("%s: error: parameter '%s' is missing" %
@@ -148,7 +151,8 @@ def check_cmd_config(param_name, cmd):
 
 def init_mynodename():
     '''determine the nodename of the current host
-    and initialize MY_GROUPS'''
+    and initialize MY_GROUPS
+    '''
 
     # In practice, the nodename is determined by the master in synctool.conf
     # The master then tells the client what its nodename is
@@ -249,7 +253,8 @@ def get_node_hostname(node):
 
 def make_all_groups():
     '''make a set of all possible groups
-    This is a set of all group names plus all node names'''
+    This is a set of all group names plus all node names
+    '''
 
     s = set(synctool.param.GROUP_DEFS.keys())
     s |= set(synctool.param.NODES.keys())
@@ -287,6 +292,5 @@ def get_nodes_in_groups(groups):
                 s.add(node)
 
     return s
-
 
 # EOB

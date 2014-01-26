@@ -35,7 +35,8 @@ def get_latest_version():
 
 def get_latest_version_and_checksum():
     '''get latest version and checksum by downloading
-    the LATEST.txt versioning file'''
+    the LATEST.txt versioning file
+    '''
 
     verbose('accessing URL %s' % VERSION_CHECKING_URL)
 
@@ -78,7 +79,8 @@ def get_latest_version_and_checksum():
 def check():
     '''check for newer version on the website
     It does this by downloading the LATEST.txt versioning file
-    Returns True if newer available, else False'''
+    Returns True if newer available, else False
+    '''
 
     latest_version = get_latest_version()
 
@@ -124,7 +126,8 @@ def print_progress(filename, totalsize, current_size):
 
 def download():
     '''download latest version
-    Returns True on success, False on error'''
+    Returns True on success, False on error
+    '''
 
     tup = get_latest_version_and_checksum()
     if not tup:

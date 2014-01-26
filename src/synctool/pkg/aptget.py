@@ -22,44 +22,34 @@ class SyncPkgAptget(synctool.pkgclass.SyncPkg):
     def __init__(self):
         super(SyncPkgAptget, self).__init__()
 
-
     def list(self, pkgs = None):
         super(SyncPkgAptget, self).list(pkgs)
 
         cmd = 'dpkg -l'
-
         if pkgs:
             cmd = cmd + ' ' + ' '.join(pkgs)
 
         synctool.lib.shell_command(cmd)
 
-
     def install(self, pkgs):
         super(SyncPkgAptget, self).install(pkgs)
 
         os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
-
         cmd = 'apt-get -y install ' + ' '.join(pkgs)
-
         synctool.lib.shell_command(cmd)
-
 
     def remove(self, pkgs):
         super(SyncPkgAptget, self).remove(pkgs)
 
         os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
-
         cmd = 'apt-get -y remove ' + ' '.join(pkgs)
-
         synctool.lib.shell_command(cmd)
-
 
     def update(self):
         super(SyncPkgAptget, self).update()
 
         os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
         synctool.lib.shell_command('apt-get update')
-
 
     def upgrade(self):
         super(SyncPkgAptget, self).upgrade()
@@ -75,7 +65,6 @@ class SyncPkgAptget(synctool.pkgclass.SyncPkg):
         synctool.lib.DRY_RUN = False
         synctool.lib.shell_command(cmd)
         synctool.lib.DRY_RUN = tmp
-
 
     def clean(self):
         super(SyncPkgAptget, self).clean()

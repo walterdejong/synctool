@@ -9,10 +9,7 @@
 #   License.
 #
 
-'''synctool-template is a helper program for generating templates
-   - auto replace "@VAR@" in the input text
-   - You can do the same thing with m4 or sed, but this one is nice and easy
-'''
+'''synctool-template is a helper program for generating templates'''
 
 import synctool.main.template
 

@@ -102,7 +102,8 @@ class UploadFile(object):
 def _remote_isdir(up):
     '''See if the remote rsync source is a directory or a file
     Parameter 'up' is an instance of UploadFile
-    Returns: tuple of booleans: (exists, isdir)'''
+    Returns: tuple of booleans: (exists, isdir)
+    '''
 
     cmd_arr = shlex.split(synctool.param.RSYNC_CMD)[:1]
     cmd_arr.append('--list-only')
@@ -295,6 +296,5 @@ def rsync_upload(up):
             stderr('error: upload failed')
         else:
             stdout('uploaded %s' % verbose_path)
-
 
 # EOB

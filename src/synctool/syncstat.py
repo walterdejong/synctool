@@ -31,19 +31,20 @@ class SyncStat(object):
     # that they get special treatment in object.py
 
     def __init__(self, path = None):
+        '''initialize instance'''
+
         self.entry_exists = False
         self.mode = self.uid = self.gid = self.size = None
-
         self.stat(path)
 
-
     def __repr__(self):
+        '''return string representation'''
+
         if self.entry_exists:
             return '[<SyncStat>: %04o %d.%d %d]' % (self.mode, self.uid,
                                                     self.gid, self.size)
 
         return '[<SyncStat>: None]'
-
 
     def stat(self, path):
         '''get the stat() information for a pathname'''
@@ -75,46 +76,35 @@ class SyncStat(object):
             self.gid = statbuf.st_gid
             self.size = statbuf.st_size
 
-
     def is_dir(self):
         return (self.entry_exists and stat.S_ISDIR(self.mode))
-
 
     def is_file(self):
         return (self.entry_exists and stat.S_ISREG(self.mode))
 
-
     def is_link(self):
         return (self.entry_exists and stat.S_ISLNK(self.mode))
-
 
     def is_fifo(self):
         return (self.entry_exists and stat.S_ISFIFO(self.mode))
 
-
     def is_sock(self):
         return (self.entry_exists and stat.S_ISSOCK(self.mode))
-
 
     def is_chardev(self):
         return (self.entry_exists and stat.S_ISCHR(self.mode))
 
-
     def is_blockdev(self):
         return (self.entry_exists and stat.S_ISCHR(self.mode))
-
 
     def filetype(self):
         return stat.S_IFMT(self.mode)
 
-
     def exists(self):
         return self.entry_exists
 
-
     def is_exec(self):
         return (self.entry_exists and ((self.mode & 0111) != 0))
-
 
     def ascii_uid(self):
         '''get the name for this uid'''
@@ -130,7 +120,6 @@ class SyncStat(object):
             pass
 
         return '%d' % self.uid
-
 
     def ascii_gid(self):
         '''get the name for this gid'''

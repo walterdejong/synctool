@@ -32,17 +32,16 @@ class VNode(object):
     def __init__(self, filename, statbuf, exists):
         '''filename is typically destination path
         statbuf is source statbuf
-        exists is boolean whether dest path already exists'''
+        exists is boolean whether dest path already exists
+        '''
 
         self.name = filename
         self.stat = statbuf
         self.exists = exists
 
-
     def typename(self):
         '''return file type as human readable string'''
         return '(unknown file type)'
-
 
     def move_saved(self):
         '''move existing entry to .saved'''
@@ -59,7 +58,6 @@ class VNode(object):
                                                                self.name,
                                                                err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'save %s.saved' % self.name)
-
 
     def harddelete(self):
         '''delete existing entry'''
@@ -83,7 +81,6 @@ class VNode(object):
             else:
                 log('deleted %s' % self.name)
 
-
     def quiet_delete(self):
         '''silently delete existing entry; only called by fix()'''
 
@@ -93,7 +90,6 @@ class VNode(object):
                 os.unlink(self.name)
             except OSError:
                 pass
-
 
     def mkdir_basepath(self):
         '''call mkdir -p to create leading path'''
@@ -109,17 +105,14 @@ class VNode(object):
 
         synctool.lib.mkdir_p(basedir)
 
-
     def compare(self, src_path, dest_stat):
         '''compare content
         Return True when same, False when different'''
         return True
 
-
     def create(self):
         '''create a new entry'''
         pass
-
 
     def fix(self):
         '''repair the existing entry
@@ -135,7 +128,6 @@ class VNode(object):
         self.create()
         self.set_owner()
         self.set_permissions()
-
 
     def set_owner(self):
         '''set ownership equal to source'''
@@ -153,7 +145,6 @@ class VNode(object):
                         self.name, err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'owner %s' % self.name)
 
-
     def set_permissions(self):
         '''set access permission bits equal to source'''
 
@@ -167,7 +158,6 @@ class VNode(object):
                 stderr('failed to chmod %04o %s : %s' %
                        (self.stat.mode & 07777, self.name, err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'mode %s' % self.name)
-
 
     def set_times(self, atime, mtime):
         '''set access and mod times'''
@@ -187,19 +177,19 @@ class VNodeFile(VNode):
     '''vnode for a regular file'''
 
     def __init__(self, filename, statbuf, exists, src_path):
+        '''initialize instance'''
+
         super(VNodeFile, self).__init__(filename, statbuf, exists)
-
         self.src_path = src_path
-
 
     def typename(self):
         '''return file type as human readable string'''
         return 'regular file'
 
-
     def compare(self, src_path, dest_stat):
         '''see if files are the same
-        Return True if the same'''
+        Return True if the same
+        '''
 
         if self.stat.size != dest_stat.size:
             if synctool.lib.DRY_RUN:
@@ -211,7 +201,6 @@ class VNodeFile(VNode):
             return False
 
         return self._compare_checksums(src_path)
-
 
     def _compare_checksums(self, src_path):
         '''compare checksum of src_path and dest: self.name
@@ -274,7 +263,6 @@ class VNodeFile(VNode):
 
         return True
 
-
     def create(self):
         '''copy file'''
 
@@ -298,13 +286,14 @@ class VNodeDir(VNode):
     '''vnode for a directory'''
 
     def __init__(self, filename, statbuf, exists):
-        super(VNodeDir, self).__init__(filename, statbuf, exists)
+        '''initialize instance'''
 
+        super(VNodeDir, self).__init__(filename, statbuf, exists)
 
     def typename(self):
         '''return file type as human readable string'''
-        return 'directory'
 
+        return 'directory'
 
     def create(self):
         '''create directory'''
@@ -326,7 +315,6 @@ class VNodeDir(VNode):
                 stderr('failed to make directory %s : %s' % (self.name,
                                                              err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'mkdir %s' % self.name)
-
 
     def harddelete(self):
         '''delete directory'''
@@ -350,7 +338,6 @@ class VNodeDir(VNode):
                 verbose('refusing to delete directory %s' % self.name)
                 self.move_saved()
 
-
     def quiet_delete(self):
         '''silently delete directory; only called by fix()'''
 
@@ -369,14 +356,15 @@ class VNodeLink(VNode):
     '''vnode for a symbolic link'''
 
     def __init__(self, filename, statbuf, exists, oldpath):
+        '''initialize instance'''
+
         super(VNodeLink, self).__init__(filename, statbuf, exists)
         self.oldpath = oldpath
 
-
     def typename(self):
         '''return file type as human readable string'''
-        return 'symbolic link'
 
+        return 'symbolic link'
 
     def compare(self, src_path, dest_stat):
         '''compare symbolic links'''
@@ -399,7 +387,6 @@ class VNodeLink(VNode):
 
         return True
 
-
     def create(self):
         '''create symbolic link'''
 
@@ -415,7 +402,6 @@ class VNodeLink(VNode):
                 stderr('failed to create symlink %s -> %s : %s' %
                        (self.name, self.oldpath, err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'link %s' % self.name)
-
 
     def set_owner(self):
         '''set ownership of symlink'''
@@ -436,7 +422,6 @@ class VNodeLink(VNode):
                        (self.stat.ascii_uid(), self.stat.ascii_gid(),
                         self.name, err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'owner %s' % self.name)
-
 
     def set_permissions(self):
         '''set permissions of symlink (if possible)'''
@@ -462,13 +447,14 @@ class VNodeFifo(VNode):
     '''vnode for a fifo'''
 
     def __init__(self, filename, statbuf, exists):
-        super(VNodeFifo, self).__init__(filename, statbuf, exists)
+        '''initialize instance'''
 
+        super(VNodeFifo, self).__init__(filename, statbuf, exists)
 
     def typename(self):
         '''return file type as human readable string'''
-        return 'fifo'
 
+        return 'fifo'
 
     def create(self):
         '''make a fifo'''
@@ -490,14 +476,15 @@ class VNodeChrDev(VNode):
     '''vnode for a character device file'''
 
     def __init__(self, filename, syncstat_obj, exists, src_stat):
+        '''initialize instance'''
+
         super(VNodeChrDev, self).__init__(filename, syncstat_obj, exists)
         self.src_stat = src_stat
 
-
     def typename(self):
         '''return file type as human readable string'''
-        return 'character device file'
 
+        return 'character device file'
 
     def compare(self, src_path, dest_stat):
         '''see if devs are the same'''
@@ -526,7 +513,6 @@ class VNodeChrDev(VNode):
 
         return True
 
-
     def create(self):
         '''make a character device file'''
 
@@ -553,14 +539,15 @@ class VNodeBlkDev(VNode):
     '''vnode for a block device file'''
 
     def __init__(self, filename, syncstat_obj, exists, src_stat):
+        '''initialize instance'''
+
         super(VNodeBlkDev, self).__init__(filename, syncstat_obj, exists)
         self.src_stat = src_stat
 
-
     def typename(self):
         '''return file type as human readable string'''
-        return 'block device file'
 
+        return 'block device file'
 
     def compare(self, src_path, dest_stat):
         '''see if devs are the same'''
@@ -589,7 +576,6 @@ class VNodeBlkDev(VNode):
 
         return True
 
-
     def create(self):
         '''make a block device file'''
 
@@ -615,13 +601,15 @@ class VNodeBlkDev(VNode):
 class SyncObject(object):
     '''a class holding the source path (file in the repository)
     and the destination path (target file on the system).
-    The SyncObject caches any stat info'''
+    The SyncObject caches any stat info
+    '''
 
     def __init__(self, src_name, dest_name, ov_type=0):
         '''src_name is simple filename without leading path
         dest_name is the src_name without group extension
         ov_type describes what overlay type the object has:
-        OV_POST, OV_TEMPLATE, etc.'''
+        OV_POST, OV_TEMPLATE, etc.
+        '''
 
         # booleans is_post and no_ext are used by the overlay code
 
@@ -647,6 +635,8 @@ class SyncObject(object):
         return prettypath(self.src_path)
 
     def __repr__(self):
+        '''return string representation'''
+
         return '[<SyncObject>: (%s) (%s)]' % (self.src_path, self.dest_path)
 
     def check(self):
@@ -800,7 +790,8 @@ class SyncObject(object):
 
     def check_purge_timestamp(self):
         '''check timestamp between src and dest
-        Returns True if same, False if not'''
+        Returns True if same, False if not
+        '''
 
         # This is only used for purge/
         # check() has already determined that the files are the same

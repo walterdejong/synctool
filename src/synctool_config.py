@@ -10,7 +10,8 @@
 #
 
 '''show elements of the synctool.conf file
-This program is nice for shell scripting around synctool'''
+This program is nice for shell scripting around synctool
+'''
 
 import synctool.main.config
 

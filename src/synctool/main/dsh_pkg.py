@@ -8,8 +8,9 @@
 #   License.
 #
 
-'''This program is dsh-pkg on the master node. It calls synctool-pkg on
-the target nodes'''
+'''This program is dsh-pkg on the master node. It calls synctool-client-pkg
+on the target nodes
+'''
 
 import sys
 import getopt
@@ -68,7 +69,8 @@ def worker_pkg(addr):
 
 def rearrange_options():
     '''rearrange command-line options so that getopt() behaves
-    more logical for us'''
+    more logical for us
+    '''
 
     # what this function does is move any arguments given after --list,
     # --install, or --remove to the back so that getopt() will treat them

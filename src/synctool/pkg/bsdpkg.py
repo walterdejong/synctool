@@ -27,12 +27,10 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
     def __init__(self):
         super(SyncPkgBsdpkg, self).__init__()
 
-
     def list(self, pkgs = None):
         super(SyncPkgBsdpkg, self).list(pkgs)
 
         cmd = 'pkg_info'
-
         if pkgs:
             cmd = cmd + ' ' + ' '.join(pkgs)
         else:
@@ -40,20 +38,16 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
 
         synctool.lib.shell_command(cmd)
 
-
     def install(self, pkgs):
         super(SyncPkgBsdpkg, self).install(pkgs)
 
         cmd = 'pkg_add -v ' + ' '.join(pkgs)
-
         synctool.lib.shell_command(cmd)
-
 
     def remove(self, pkgs):
         super(SyncPkgBsdpkg, self).remove(pkgs)
 
         cmd = 'pkg_delete -v ' + ' '.join(pkgs)
-
         synctool.lib.shell_command(cmd)
 
 
@@ -63,21 +57,17 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
         # There is no update command
         # or is there?
 
-
     def upgrade(self):
         super(SyncPkgBsdpkg, self).upgrade()
 
         if os.uname()[0] == 'FreeBSD':
             # FreeBSD has no pkg_add -u, but freebsd-update instead
-
             if synctool.lib.DRY_RUN:
                 cmd = 'freebsd-update fetch'
             else:
                 cmd = 'freebsd-update fetch install'
-
         else:
             # OpenBSD/NetBSD/other BSD, use pkg_add -u
-
             if synctool.lib.DRY_RUN:
                 cmd = 'pkg_add -uvn'
             else:

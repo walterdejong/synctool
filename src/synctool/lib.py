@@ -93,7 +93,8 @@ def stdout(msg):
 
 def stderr(msg):
     '''print message to stderr
-    I don't like stderr much, so it really prints to stdout'''
+    I don't like stderr much, so it really prints to stdout
+    '''
 
     print msg
 
@@ -445,7 +446,8 @@ def search_path(cmd):
 
 def mkdir_p(path, mode=0700):
     '''like mkdir -p; make directory and subdirectories
-    Returns False on error, else True'''
+    Returns False on error, else True
+    '''
 
     if os.path.exists(path):
         return True
@@ -599,7 +601,8 @@ def _worker(fn, jobq):
     '''fn is the worker function to call
     jobq is a multiprocessing.Queue of function arguments
     If --zzz was given, sleep after finishing the work
-    No return value is passed back'''
+    No return value is passed back
+    '''
 
     # ignore interrupts, ignore Ctrl-C
     # the Ctrl-C will be caught by the parent process
@@ -621,6 +624,5 @@ def _worker(fn, jobq):
 if __name__ == '__main__':
     # __main__ is needed because of multiprocessing module
     pass
-
 
 # EOB

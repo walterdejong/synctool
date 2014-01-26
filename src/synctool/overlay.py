@@ -54,6 +54,7 @@ OV_IGNORE = 5
 
 def _sort_by_importance(item1, item2):
     '''item is a tuple (x, importance)'''
+
     return cmp(item1[1], item2[1])
 
 
@@ -80,6 +81,7 @@ def _toplevel(overlay):
 
 def _group_all():
     '''Return the importance level of group 'all' '''
+
     # it is the final group in MY_GROUPS
     return len(synctool.param.MY_GROUPS) - 1
 
@@ -87,7 +89,8 @@ def _group_all():
 def _split_extension(filename, src_dir):
     '''filename in the overlay tree, without leading path
     src_dir is passed for the purpose of printing error messages
-    Returns tuple: SyncObject, importance'''
+    Returns tuple: SyncObject, importance
+    '''
 
     (name, ext) = os.path.splitext(filename)
     if not ext:
@@ -190,7 +193,8 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback, *args):
     '''walk subtree under overlay/group/
     duplicates is a set that keeps us from selecting any duplicate matches
     post_dict holds .post scripts with destination as key
-    Returns pair of booleans: ok, dir was updated'''
+    Returns pair of booleans: ok, dir was updated
+    '''
 
 #    verbose('_walk_subtree(%s)' % src_dir)
 
@@ -329,7 +333,8 @@ def visit(overlay, callback, *args):
     '''visit all entries in the overlay tree
     overlay is either synctool.param.OVERLAY_DIR or synctool.param.DELETE_DIR
     callback will called with arguments: (SyncObject, post_dict)
-    callback must return a two booleans: ok, updated'''
+    callback must return a two booleans: ok, updated
+    '''
 
     duplicates = set()
 

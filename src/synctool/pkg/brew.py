@@ -20,39 +20,31 @@ class SyncPkgBrew(synctool.pkgclass.SyncPkg):
     def __init__(self):
         super(SyncPkgBrew, self).__init__()
 
-
     def list(self, pkgs = None):
         super(SyncPkgBrew, self).list(pkgs)
 
         cmd = 'brew list'
-
         if pkgs:
             cmd = cmd + ' ' + ' '.join(pkgs)
 
         synctool.lib.shell_command(cmd)
 
-
     def install(self, pkgs):
         super(SyncPkgBrew, self).install(pkgs)
 
         cmd = 'brew install ' + ' '.join(pkgs)
-
         synctool.lib.shell_command(cmd)
-
 
     def remove(self, pkgs):
         super(SyncPkgBrew, self).remove(pkgs)
 
         cmd = 'brew remove ' + ' '.join(pkgs)
-
         synctool.lib.shell_command(cmd)
-
 
     def update(self):
         super(SyncPkgBrew, self).update()
 
         synctool.lib.shell_command('brew update')
-
 
     def upgrade(self):
         super(SyncPkgBrew, self).upgrade()
@@ -66,7 +58,6 @@ class SyncPkgBrew(synctool.pkgclass.SyncPkg):
         synctool.lib.DRY_RUN = False
         synctool.lib.shell_command(cmd)
         synctool.lib.DRY_RUN = tmp
-
 
     def clean(self):
         super(SyncPkgBrew, self).clean()

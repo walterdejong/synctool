@@ -9,7 +9,8 @@
 #
 
 '''This program is synctool on the master node. It calls synctool-client
-on the target nodes'''
+on the target nodes
+'''
 
 import os
 import sys
@@ -128,7 +129,8 @@ def run_local_synctool():
 def rsync_include_filter(nodename):
     '''create temp file with rsync filter rules
     Include only those dirs that apply for this node
-    Returns filename of the filter file'''
+    Returns filename of the filter file
+    '''
 
     try:
         (fd, filename) = tempfile.mkstemp(prefix='synctool-',
@@ -199,7 +201,8 @@ def _write_rsync_filter(f, overlaydir, label):
 
 def _write_overlay_filter(f):
     '''write rsync filter rules for overlay/ tree
-    Returns False on error'''
+    Returns False on error
+    '''
 
     _write_rsync_filter(f, synctool.param.OVERLAY_DIR, 'overlay')
     return True
@@ -207,7 +210,8 @@ def _write_overlay_filter(f):
 
 def _write_delete_filter(f):
     '''write rsync filter rules for delete/ tree
-    Returns False on error'''
+    Returns False on error
+    '''
 
     _write_rsync_filter(f, synctool.param.DELETE_DIR, 'delete')
     return True
@@ -215,7 +219,8 @@ def _write_delete_filter(f):
 
 def _write_purge_filter(f):
     '''write rsync filter rules for purge/ tree
-    Returns False on error'''
+    Returns False on error
+    '''
 
     f.write('+ /var/purge/\n')
 
@@ -261,7 +266,8 @@ def make_tempdir():
 
 def _check_valid_overlaydirs():
     '''check that the group specific dirs are valid groups
-    Returns True on OK, False on error'''
+    Returns True on OK, False on error
+    '''
 
     def _check_valid_groupdir(overlaydir, label):
         '''local helper function for _check_valid_overlaydirs()'''
@@ -363,10 +369,10 @@ def be_careful_with_getopt():
 
 
 def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
-    opt_upload, opt_fix, opt_group):
-
+                        opt_upload, opt_fix, opt_group):
     '''some combinations of command-line options don't make sense;
-    alert the user and abort'''
+    alert the user and abort
+    '''
 
     if opt_erase_saved and (opt_diff or opt_reference or opt_upload):
         stderr("option --erase-saved can not be combined with other actions")

@@ -9,8 +9,8 @@
 #
 
 '''synctool-template is a helper program for generating templates
-   - auto replace "@VAR@" in the input text
-   - You can do the same thing with m4 or sed, but this one is nice and easy
+- auto replace "@VAR@" in the input text
+- You can do the same thing with m4 or sed, but this one is nice and easy
 '''
 
 import os
@@ -29,7 +29,8 @@ PATTERN = re.compile(r'\@([A-Z_][A-Z0-9_]*)\@')
 
 def spellcheck(name):
     '''Check for valid spelling of name
-    Returns True if OK, False if not OK'''
+    Returns True if OK, False if not OK
+    '''
 
     m = SPELLCHECK.match(name)
     if not m:
@@ -44,7 +45,8 @@ def spellcheck(name):
 def subst(line):
     '''replace all occurrences of "@VAR@" with the value,
     where VAR is any environment variable
-    Returns the resulting line of text'''
+    Returns the resulting line of text
+    '''
 
     for var in PATTERN.findall(line):
         if var in os.environ:
@@ -147,9 +149,9 @@ def get_options():
 
 @catch_signals
 def main():
+    '''do it'''
+
     INPUT_FILE = get_options()
-
     template(INPUT_FILE)
-
 
 # EOB

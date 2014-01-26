@@ -72,5 +72,4 @@ if __name__ == '__main__':
     stderr('launch: error: failed to execute: %s' % argv[0])
     sys.exit(-1)
 
-
 # EOB

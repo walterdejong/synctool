@@ -67,7 +67,8 @@ def aggregate(f):
 
 def run(cmd_arr):
     '''pipe the output through the aggregator
-    Returns False on error, else True'''
+    Returns False on error, else True
+    '''
 
     # simply re-run this command, but with a pipe
 
@@ -89,6 +90,5 @@ def run(cmd_arr):
         aggregate(f)
 
     return True
-
 
 # EOB

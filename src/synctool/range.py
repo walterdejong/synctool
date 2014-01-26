@@ -15,7 +15,8 @@ is not made here; just the string expansion
 The automatic number sequencer can convert strings that look like
 IPv4 "192.168.1.[100]" or hexidecimal IPv6 "64:b9:e8:ff:fe:c2:fd:[20]"
 or IPv6:v4 notation "64:b9:e8:[0a]:10.0.0.[100]"
-or just a string "node-[10].sub[20].domain.org"'''
+or just a string "node-[10].sub[20].domain.org"
+'''
 
 import re
 
@@ -56,7 +57,8 @@ class RangeSyntaxError(Exception):
 def split_nodelist(expr):
     '''split a string like 'node1,node2,node[3-6,8,10],node-x'
     May throw RangeSyntaxError if there is a syntax error
-    Returns the array of elements'''
+    Returns the array of elements
+    '''
 
     arr = []
 
@@ -79,7 +81,8 @@ def split_nodelist(expr):
 def expand(expr):
     '''expand a range expression like 'node[1-10,20]-mgmt'
     May throw RangeSyntaxError if there is a syntax error
-    Returns array of node names'''
+    Returns array of node names
+    '''
 
     # NODE_EXPR is a global compiled regex for recognising expression
     m = NODE_EXPR.match(expr)
@@ -155,7 +158,8 @@ def expand_sequence(arg):
     '''expand a sequence that looks like '192.168.1.[100]'
     or hexidecimal IPv6 "64:b9:e8:ff:fe:c2:fd:[20]"
     or IPv6:v4 notation "64:b9:e8:[0a]:10.0.0.[100]"
-    or just a string "node-[10].sub[20].domain.org"'''
+    or just a string "node-[10].sub[20].domain.org"
+    '''
 
     global _EXPAND_SEQ
 
@@ -191,7 +195,8 @@ def expand_sequence(arg):
 def expand_seq(arg, radix=10, overflow=False):
     '''expand an automatic numbering sequence like "192.168.1.[200]"
     or IPv6 "64:b9:e8:ff:fe:c2:fd:[0a]" or "64:b9:e8:[0a]:10.0.0.[100]"
-    or just a string "node[10].sub[20].domain.org"'''
+    or just a string "node[10].sub[20].domain.org"
+    '''
 
     if not '[' in arg:
         return arg
