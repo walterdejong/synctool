@@ -13,6 +13,8 @@
 '''make stdio unbuffered'''
 
 class Unbuffered(object):
+    '''class representing an unbuffered stream'''
+
     def __init__(self, stream):
         self.stream = stream
 
