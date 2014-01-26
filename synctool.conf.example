@@ -76,6 +76,10 @@ ignore .*.swp
 
 #tempdir	 /tmp/synctool
 
+# use ssh multiplexing for making fast connections
+# this requires openssh version 4 or higher
+#multiplex yes
+
 # all files in the repository must have a group extension
 #require_extension yes
 

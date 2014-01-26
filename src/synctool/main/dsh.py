@@ -18,8 +18,9 @@ import shlex
 import synctool.aggr
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose, unix_out
+from synctool.lib import verbose
 from synctool.main.wrapper import catch_signals
+import synctool.multiplex
 import synctool.nodeset
 import synctool.param
 import synctool.unbuffered
@@ -88,14 +89,15 @@ def worker_ssh(addr):
 
     nodename = NODESET.get_nodename_from_address(addr)
 
+    # setup ssh connection multiplexing (if enabled)
+    use_multiplex = synctool.multiplex.setup(nodename, addr)
+
     if (SYNC_IT and
         not (OPT_SKIP_RSYNC or nodename in synctool.param.NO_RSYNC)):
         # first, sync the script to the node using rsync
         # REMOTE_CMD_ARR[0] is the full path to the cmd in SCRIPT_DIR
         verbose('running rsync $SYNCTOOL/scripts/%s to node %s' %
                 (os.path.basename(REMOTE_CMD_ARR[0]), nodename))
-        unix_out('%s %s %s:%s' % (synctool.param.RSYNC_CMD, REMOTE_CMD_ARR[0],
-                                  addr, REMOTE_CMD_ARR[0]))
 
         cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
         cmd_arr.append('--')
@@ -111,11 +113,14 @@ def worker_ssh(addr):
 
     verbose('running %s to %s %s' % (os.path.basename(SSH_CMD_ARR[0]),
                                      nodename, cmd_str))
+
+    # add extra arguments for ssh multiplexing (if OK to use)
+    if use_multiplex:
+        synctool.multiplex.ssh_args(ssh_cmd_arr, nodename)
+
     ssh_cmd_arr.append('--')
     ssh_cmd_arr.append(addr)
     ssh_cmd_arr.extend(REMOTE_CMD_ARR)
-
-    unix_out(' '.join(ssh_cmd_arr))
 
     # execute ssh+remote command and show output with the nodename
     synctool.lib.run_with_nodename(ssh_cmd_arr, nodename)
