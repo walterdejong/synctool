@@ -52,7 +52,18 @@ def setup(nodename, remote_addr):
     statbuf = synctool.syncstat.SyncStat(control_path)
     if statbuf.exists():
         if not statbuf.is_sock():
-            stderr('warning: control path exists, but is not a socket file')
+            stderr('warning: control path %s: not a socket file' %
+                   control_path)
+            return False
+
+        if statbuf.uid != os.getuid():
+            stderr('warning: control path: %s: incorrect owner uid %u' %
+                   (control_path, statbuf.uid))
+            return False
+
+        if statbuf.mode & 077 != 0:
+            stderr('warning: control path %s: suspicious file mode %04o' %
+                   (control_path, statbuf.mode & 0777))
             return False
 
         verbose('control path %s already exists' % control_path)
