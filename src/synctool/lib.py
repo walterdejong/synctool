@@ -296,7 +296,10 @@ def log(msg):
 
 def run_with_nodename(cmd_arr, nodename):
     '''run command and show output with nodename
-    It will run regardless of what DRY_RUN is'''
+    It will run regardless of what DRY_RUN is
+    '''
+
+    unix_out(' '.join(cmd_arr))
 
     sys.stdout.flush()
     sys.stderr.flush()
@@ -331,7 +334,9 @@ def run_with_nodename(cmd_arr, nodename):
 
 def shell_command(cmd):
     '''run a shell command
-    Unless DRY_RUN is set'''
+    Unless DRY_RUN is set
+    Returns: return code of shell command
+    '''
 
     if DRY_RUN:
         not_str = 'not '
@@ -355,34 +360,41 @@ def shell_command(cmd):
         sys.stderr.flush()
 
         try:
-            subprocess.call(cmd, shell=True)
+            ret = subprocess.call(cmd, shell=True)
         except OSError as err:
             stderr("failed to run shell command '%s' : %s" % (prettypath(cmd),
                                                               err.strerror))
+            ret = -1
+        else:
+            verbose('exit code %d' % ret)
+
         sys.stdout.flush()
         sys.stderr.flush()
+
+    return ret
 
 
 def exec_command(cmd_arr):
     '''run a command given in cmd_arr, regardless of DRY_RUN
-    Returns: return code of execute command or -1 on error'''
+    Returns: return code of execute command or -1 on error
+    '''
 
-    if not cmd_arr:
-        raise RuntimeError('cmd_arr is not set')
+    unix_out(' '.join(cmd_arr))
 
     sys.stdout.flush()
     sys.stderr.flush()
 
-    err = 0
     try:
-        err = subprocess.call(cmd_arr, shell=False)
+        ret = subprocess.call(cmd_arr, shell=False)
     except OSError as err:
         stderr('error: failed to exec %s: %s' % (cmd_arr[0], err.strerror))
-        err = -1
+        ret = -1
+    else:
+        verbose('exit code %d' % ret)
 
     sys.stdout.flush()
     sys.stderr.flush()
-    return err
+    return ret
 
 
 def search_path(cmd):
@@ -410,7 +422,7 @@ def search_path(cmd):
     return None
 
 
-def mkdir_p(path):
+def mkdir_p(path, mode=0700):
     '''like mkdir -p; make directory and subdirectories
     Returns False on error, else True'''
 
@@ -421,12 +433,14 @@ def mkdir_p(path):
     mask = os.umask(synctool.param.ORIG_UMASK)
 
     try:
-        os.makedirs(path)
+        os.makedirs(path, mode)
     except OSError as err:
         stderr('error: failed to create directory %s: %s' % (path,
                                                              err.strerror))
         os.umask(mask)
         return False
+    else:
+        unix_out('mkdir -p -m %04o %s' % (mode, path))
 
     os.umask(mask)
     return True
