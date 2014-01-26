@@ -92,6 +92,10 @@ class SyncStat(object):
         return (self.entry_exists and stat.S_ISFIFO(self.mode))
 
 
+    def is_sock(self):
+        return (self.entry_exists and stat.S_ISSOCK(self.mode))
+
+
     def is_chardev(self):
         return (self.entry_exists and stat.S_ISCHR(self.mode))
 

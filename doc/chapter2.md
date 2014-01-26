@@ -9,7 +9,7 @@
 synctool depends on a number of (fairly standard) programs:
 
 * [python][1] version 2.6 or better
-* [ssh][2]
+* [ssh][2], preferably OpenSSH version 4 or better
 * [rsync][3]
 * `ping`, or you can configure [fping][4] later
 * [markdown][5] and [smartypants][6] -- but only if you want to install
