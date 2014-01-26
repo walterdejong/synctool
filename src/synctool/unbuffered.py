@@ -41,4 +41,3 @@ class Unbuffered(object):
         self.stream.close()
 
 # EOB
-
