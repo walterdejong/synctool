@@ -29,4 +29,5 @@ Some fun facts about synctool 6:
 * synctool's `dsh-pkg` supports 6 different package managers
 * synctool is now more than 10 years old
 * synctool encompasses more than 10,000 lines of code (including comments)
-* synctool is still fast and easy to use
+* synctool 6 is faster than ever
+* synctool 6 still is easy to use
