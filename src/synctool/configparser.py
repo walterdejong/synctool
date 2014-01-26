@@ -273,25 +273,6 @@ def config_include(arr, configfile, lineno):
     return read_config_file(synctool.lib.prepare_path(arr[1]))
 
 
-def config_prefix(arr, configfile, lineno):
-    '''parse keyword: prefix'''
-
-    if not check_definition(arr[0], configfile, lineno):
-        return 1
-
-    d = arr[1:].join()
-    d = synctool.lib.strip_multiple_slashes(d)
-    d = synctool.lib.strip_trailing_slash(d)
-
-    synctool.param.PREFIX = d
-
-    if not os.path.isdir(d):
-        stderr('%s:%d: no such directory for prefix' % (configfile, lineno))
-        return 1
-
-    return 0
-
-
 def config_tempdir(arr, configfile, lineno):
     '''parse keyword: tempdir'''
 
