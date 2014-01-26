@@ -332,8 +332,8 @@ def run_with_nodename(cmd_arr, nodename):
                     # do not prepend the nodename of this node to the output
                     # if option --no-nodename was given
                     print line
-    proc.wait()
 
+    proc.wait()
     if proc.returncode != 0:
         verbose('exit code %d' % proc.returncode)
 
@@ -363,6 +363,7 @@ def shell_command(cmd):
     unix_out(cmd)
     terse(TERSE_EXEC, cmdfile)
 
+    ret = 0
     if not DRY_RUN:
         sys.stdout.flush()
         sys.stderr.flush()
