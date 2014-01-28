@@ -598,8 +598,7 @@ runs on the target node.
 synctool and dsh multiplex SSH connections over a 'master' connection.
 This feature greatly speeds up SSH connections because it allows skipping
 the costly SSL handshake. You don't have to do anything special to enable
-this feature (by default, `multiplex` is `yes` in synctool.conf. It requires
-OpenSSH version 4 or better).
+this feature; synctool will use it if your ssh supports it.
 
 If multiplexing is giving you problems (like hanging sessions), you can
 disable it in synctool.conf.
@@ -620,3 +619,8 @@ You may also do this for certain groups or nodes, like so:
 
 The control paths (socket files) to each node are kept under synctool's temp
 directory (by default: `/tmp/synctool/sshmux/`).
+
+> The `ControlMaster` and `ControlPath` options of ssh first appeared in
+> OpenSSH version 4. However, synctool also uses `ControlPersist`, which is
+> present in OpenSSH version 5.6 and later.
+
