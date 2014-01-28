@@ -601,6 +601,10 @@ the costly SSL handshake. You don't have to do anything special to enable
 this feature; synctool will use it if your ssh supports it.
 
 If multiplexing is giving you problems, you can disable it in synctool.conf.
+If your cluster is very large, you might find the large number of ssh mux
+processes on the management node to be objectionable. These processes are
+mostly sleeping so it shouldn't pose a problem, but anyway, you can disable
+multiplexing in synctool.conf.
 
 dsh has some special switches to control multiplexing. Normally you don't
 need this, but these commands may come in handy. For example, if you have
