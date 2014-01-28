@@ -624,5 +624,5 @@ The control paths (socket files) to each node are kept under synctool's temp
 directory (by default: `/tmp/synctool/sshmux/`).
 
 > The `ControlMaster` and `ControlPath` options of ssh first appeared in
-> OpenSSH version 4. However, synctool also uses `ControlPersist`, which is
+> OpenSSH version 3.9. However, synctool also uses `ControlPersist`, which is
 > present in OpenSSH version 5.6 and later.
