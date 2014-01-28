@@ -600,8 +600,7 @@ This feature greatly speeds up SSH connections because it allows skipping
 the costly SSL handshake. You don't have to do anything special to enable
 this feature; synctool will use it if your ssh supports it.
 
-If multiplexing is giving you problems (like hanging sessions), you can
-disable it in synctool.conf.
+If multiplexing is giving you problems, you can disable it in synctool.conf.
 
 dsh has some special switches to control multiplexing. Normally you don't
 need this, but these commands may come in handy. For example, if you have
@@ -623,4 +622,3 @@ directory (by default: `/tmp/synctool/sshmux/`).
 > The `ControlMaster` and `ControlPath` options of ssh first appeared in
 > OpenSSH version 4. However, synctool also uses `ControlPersist`, which is
 > present in OpenSSH version 5.6 and later.
-
