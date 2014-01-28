@@ -73,6 +73,8 @@ def setup(nodename, remote_addr):
     verbose('creating master control path to %s' % nodename)
 
     cmd_arr = shlex.split(synctool.param.SSH_CMD)
+    # FIXME OpenSSH < 5.6 has no ControlPersist
+    # FIXME OpenSSH < 5.6 does not background master mux processes
     cmd_arr.extend(['-M', '-N', '-n',
                     '-o', 'ControlPath=' + control_path,
                     '-o', 'ControlPersist=' + synctool.param.CONTROL_PERSIST])
