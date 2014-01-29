@@ -142,6 +142,88 @@ def ssh_args(ssh_cmd_arr, nodename):
     ssh_cmd_arr.extend(['-o', 'ControlPath=' + control_path])
 
 
+def setup_master(node_list, background=True):
+    '''setup master connections to all nodes in node_list
+    node_list is a list of pairs: (addr, nodename)
+    argument background says whether to daemonize or not
+
+    Returns True on success, False on error
+    '''
+
+    _detect_ssh()
+    if SSH_VERSION < 39:
+        stderr('error: unsupported version of ssh')
+        return False
+
+# TODO implement daemonize()
+#    if background and SSH_VERSION < 56:
+#        daemonize()
+
+    procs = []
+
+    ssh_cmd_arr = shlex.split(synctool.param.SSH_CMD)
+    ssh_cmd_arr.extend(['-M', '-N', '-n'])
+
+    verbose('spawning ssh master connections')
+    errors = 0
+    for addr, nodename in node_list:
+        control_path = _make_control_path(nodename)
+        if not control_path:
+            # error message already printed
+            return False
+
+        # see if the control path already exists
+        statbuf = synctool.syncstat.SyncStat(control_path)
+        if statbuf.exists():
+            if not statbuf.is_sock():
+                stderr('warning: control path %s: not a socket file' %
+                       control_path)
+                errors += 1
+                continue
+
+            if statbuf.uid != os.getuid():
+                stderr('warning: control path: %s: incorrect owner uid %u' %
+                       (control_path, statbuf.uid))
+                errors += 1
+                continue
+
+            if statbuf.mode & 077 != 0:
+                stderr('warning: control path %s: suspicious file mode %04o' %
+                       (control_path, statbuf.mode & 0777))
+                errors += 1
+                continue
+
+            verbose('control path %s already exists' % control_path)
+            continue
+
+        # start ssh in master mode to create a new control path
+        verbose('creating master control path to %s' % nodename)
+
+        cmd_arr = ssh_cmd_arr[:]
+        cmd_arr.extend(['-o', 'ControlPath=' + control_path,
+                        '--', addr])
+
+        # start in background
+        try:
+            proc = subprocess.Popen(cmd_arr, shell=False)
+        except OSError as err:
+            stderr('error: failed to execute %s: %s' % (cmd_arr[0],
+                                                        err.strerror))
+            errors += 1
+            continue
+
+        procs.append(proc)
+
+    verbose('waiting for ssh master processes to terminate')
+    for proc in procs:
+        if errors > 0:
+            proc.terminate()
+
+        proc.wait()
+
+    return errors == 0
+
+
 def _detect_ssh():
     '''detect ssh version
     Set global SSH_VERSION to 2-digit int number:
@@ -176,6 +258,9 @@ def _detect_ssh():
         SSH_VERSION = -1
         return SSH_VERSION
 
+    data = data.strip()
+    verbose('ssh version string: ' + data)
+
     # data should be a single line matching "OpenSSH_... SSL ... date\n"
     m = MATCH_SSH_VERSION.match(data)
     if not m:
@@ -184,12 +269,14 @@ def _detect_ssh():
 
     groups = m.groups()
     SSH_VERSION = int(groups[0]) * 10 + int(groups[1])
+    verbose('SSH_VERSION: %d' % SSH_VERSION)
     return SSH_VERSION
 
 
 
 if __name__ == '__main__':
-    print 'ssh version:', _detect_ssh()
+    synctool.lib.VERBOSE = True
+    _detect_ssh()
 
 
 # EOB
