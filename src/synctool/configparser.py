@@ -34,7 +34,8 @@ SPELLCHECK = re.compile(r'[a-zA-Z]+([a-zA-Z0-9]+|'
 # this will match "60", "1h30m", "1w4d10h3m50s", "yes", etc.
 PERSIST_TIME = re.compile(r'^\d+$|'
                           r'^(\d+[w])*(\d+[d])*(\d+[h])*(\d+[m])*(\d+[s])*$|'
-                          r'^yes$')
+                          r'^yes$|'
+                          r'^none$')
 
 # dict of defined Symbols
 # to see if a parameter is being redefined
