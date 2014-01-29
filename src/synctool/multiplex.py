@@ -40,6 +40,7 @@ def _make_control_path(nodename):
     return os.path.join(control_dir, nodename)
 
 
+# FIXME scrap this function ... or something
 def setup(nodename, remote_addr):
     '''setup a master connection to node
     Returns True on success, False otherwise -> don't use multiplexing
@@ -200,8 +201,13 @@ def setup_master(node_list, background=True):
         verbose('creating master control path to %s' % nodename)
 
         cmd_arr = ssh_cmd_arr[:]
-        cmd_arr.extend(['-o', 'ControlPath=' + control_path,
-                        '--', addr])
+        cmd_arr.extend(['-o', 'ControlPath=' + control_path])
+
+        if SSH_VERSION >= 56 and synctool.param.CONTROL_PERSIST != 'none':
+            cmd_arr.extend(['-o', 'ControlPersist=' +
+                                  synctool.param.CONTROL_PERSIST])
+
+        cmd_arr.extend(['--', addr])
 
         # start in background
         unix_out(' '.join(cmd_arr))
@@ -215,6 +221,8 @@ def setup_master(node_list, background=True):
 
         procs.append(proc)
 
+    # FIXME this may hang or not, depending on background and ControlPersist
+    # FIXME print some info to the user about what's going on
     verbose('waiting for ssh master processes to terminate')
     for proc in procs:
         if errors > 0:
