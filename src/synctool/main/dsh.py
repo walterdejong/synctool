@@ -18,7 +18,7 @@ import shlex
 import synctool.aggr
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose
+from synctool.lib import verbose, stderr
 from synctool.main.wrapper import catch_signals
 import synctool.multiplex
 import synctool.nodeset
@@ -140,31 +140,23 @@ def worker_ssh(addr):
 def start_multiplex(address_list):
     '''run ssh -M to each node in address_list'''
 
-    global SSH_CMD_ARR
+    # make list of nodenames
+    nodes = [NODESET.get_nodename_from_address(x) for x in address_list]
 
-    SSH_CMD_ARR = shlex.split(synctool.param.SSH_CMD)
-
-    if SSH_OPTIONS:
-        SSH_CMD_ARR.extend(shlex.split(SSH_OPTIONS))
-
-    synctool.lib.multiprocess(_ssh_master, address_list)
-
-
-def _ssh_master(addr):
-    '''run ssh -M addr'''
-
-    nodename = NODESET.get_nodename_from_address(addr)
-    if synctool.multiplex.setup(nodename, addr):
-        if not synctool.lib.QUIET:
-            print '%s: ssh master running' % nodename
-    else:
-        print '%s: failed to start ssh master' % nodename
+    # make list of pairs: (addr, nodename)
+    pairs = zip(address_list, nodes)
+    synctool.multiplex.setup_master(pairs)
 
 
 def control_multiplex(address_list, ctl_cmd):
     '''run ssh -O ctl_cmd to each node in address_list'''
 
     global SSH_CMD_ARR
+
+    synctool.multiplex.detect_ssh()
+    if synctool.multiplex.SSH_VERSION < 39:
+        stderr('error: unsupported version of ssh')
+        sys.exit(-1)
 
     SSH_CMD_ARR = shlex.split(synctool.param.SSH_CMD)
 

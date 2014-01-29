@@ -16,7 +16,7 @@ import shlex
 import subprocess
 
 import synctool.lib
-from synctool.lib import verbose, stderr
+from synctool.lib import verbose, stderr, unix_out
 import synctool.param
 import synctool.syncstat
 
@@ -150,7 +150,7 @@ def setup_master(node_list, background=True):
     Returns True on success, False on error
     '''
 
-    _detect_ssh()
+    detect_ssh()
     if SSH_VERSION < 39:
         stderr('error: unsupported version of ssh')
         return False
@@ -204,6 +204,7 @@ def setup_master(node_list, background=True):
                         '--', addr])
 
         # start in background
+        unix_out(' '.join(cmd_arr))
         try:
             proc = subprocess.Popen(cmd_arr, shell=False)
         except OSError as err:
@@ -224,7 +225,7 @@ def setup_master(node_list, background=True):
     return errors == 0
 
 
-def _detect_ssh():
+def detect_ssh():
     '''detect ssh version
     Set global SSH_VERSION to 2-digit int number:
     eg. version "5.6p1" -> SSH_VERSION = 56
@@ -243,6 +244,7 @@ def _detect_ssh():
     cmd_arr = cmd_arr[:1]
     cmd_arr.append('-V')
 
+    unix_out(' '.join(cmd_arr))
     try:
         # OpenSSH may print version information on stderr
         proc = subprocess.Popen(cmd_arr, shell=False, stdout=subprocess.PIPE,
