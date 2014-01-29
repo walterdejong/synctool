@@ -92,6 +92,8 @@ def worker_ssh(addr):
     nodename = NODESET.get_nodename_from_address(addr)
 
     # setup ssh connection multiplexing (if enabled)
+    # FIXME this doesn't work because OpenSSH < 5.6 doesn't background
+    # FIXME Consequently, multiprocess() will hang its pool
     use_multiplex = synctool.multiplex.setup(nodename, addr)
 
     if (SYNC_IT and
