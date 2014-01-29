@@ -11,12 +11,17 @@
 '''multiplexing ssh connections'''
 
 import os
+import re
 import shlex
+import subprocess
 
 import synctool.lib
 from synctool.lib import verbose, stderr
 import synctool.param
 import synctool.syncstat
+
+SSH_VERSION = None
+MATCH_SSH_VERSION = re.compile(r'^OpenSSH\_(\d+)\.(\d+)')
 
 
 def _make_control_path(nodename):
@@ -135,5 +140,56 @@ def ssh_args(ssh_cmd_arr, nodename):
         return
 
     ssh_cmd_arr.extend(['-o', 'ControlPath=' + control_path])
+
+
+def _detect_ssh():
+    '''detect ssh version
+    Set global SSH_VERSION to 2-digit int number:
+    eg. version "5.6p1" -> SSH_VERSION = 56
+
+    Returns: SSH_VERSION
+    This routine only works for OpenSSH; otherwise return -1
+    '''
+
+    global SSH_VERSION
+
+    if not SSH_VERSION is None:
+        return SSH_VERSION
+
+    cmd_arr = shlex.split(synctool.param.SSH_CMD)
+    # only use first item: the path to the ssh command
+    cmd_arr = cmd_arr[:1]
+    cmd_arr.append('-V')
+
+    try:
+        # OpenSSH may print version information on stderr
+        proc = subprocess.Popen(cmd_arr, shell=False, stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT)
+    except OSError as err:
+        stderr('error: failed to execute %s: %s' % (cmd_arr[0], err.strerror))
+        SSH_VERSION = -1
+        return SSH_VERSION
+
+    # stderr was redirected to stdout
+    data, _ = proc.communicate()
+    if not data:
+        SSH_VERSION = -1
+        return SSH_VERSION
+
+    # data should be a single line matching "OpenSSH_... SSL ... date\n"
+    m = MATCH_SSH_VERSION.match(data)
+    if not m:
+        SSH_VERSION = -1
+        return SSH_VERSION
+
+    groups = m.groups()
+    SSH_VERSION = int(groups[0]) * 10 + int(groups[1])
+    return SSH_VERSION
+
+
+
+if __name__ == '__main__':
+    print 'ssh version:', _detect_ssh()
+
 
 # EOB
