@@ -41,6 +41,8 @@ def _make_control_path(nodename):
 
 
 # FIXME scrap this function ... or something
+# FIXME it should detect the ControlPath, but not create ...
+# FIXME unless SSH_VERSION >= 56, then it's alright to create (?)
 def setup(nodename, remote_addr):
     '''setup a master connection to node
     Returns True on success, False otherwise -> don't use multiplexing
@@ -221,9 +223,18 @@ def setup_master(node_list, background=True):
 
         procs.append(proc)
 
-    # FIXME this may hang or not, depending on background and ControlPersist
-    # FIXME print some info to the user about what's going on
-    verbose('waiting for ssh master processes to terminate')
+    # this may hang or not, depending on background and ControlPersist
+    # print some info to the user about what's going on
+    if (errors == 0 and len(procs) > 0 and
+        (not background or (SSH_VERSION >= 56 and
+                            synctool.param.CONTROL_PERSIST == 'none'))):
+        print '''waiting for ssh master processes to terminate
+Meanwhile, you may background this process or continue working
+in another terminal
+'''
+    else:
+        verbose('waiting for ssh master processes to terminate')
+
     for proc in procs:
         if errors > 0:
             proc.terminate()
