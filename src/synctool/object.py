@@ -642,7 +642,8 @@ class SyncObject(object):
     def check(self):
         '''check differences between src and dest,
         and fix it when not a dry run
-        Return pair: updated, metadata_updated'''
+        Return pair: updated, metadata_updated
+        '''
 
         # src_path is under $overlay/
         # dest_path is in the filesystem
