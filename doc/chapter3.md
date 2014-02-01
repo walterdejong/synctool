@@ -619,8 +619,11 @@ ssh mux processes on the management node to be objectionable. These processes
 are mostly sleeping so it shouldn't pose a problem.
 The control paths may be given a timeout by using the config parameter
 `ssh_control_persist`. Note that this parameter is only supported for
-OpenSSH 5.6 and later.
+OpenSSH 5.6 and later. The timeout may also be specified on the command-line:
+
+    dsh -M --persist 4h
 
 > The `ControlMaster` and `ControlPath` options of ssh first appeared in
 > OpenSSH version 3.9. synctool also supports `ControlPersist`, which is
 > present in OpenSSH version 5.6 and later.
+> See `man ssh_config` for more information on these OpenSSH options.

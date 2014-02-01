@@ -13,6 +13,7 @@
 import os
 import sys
 import getopt
+import re
 import shlex
 
 import synctool.aggr
@@ -36,6 +37,7 @@ MASTER_OPTS = None
 SSH_OPTIONS = None
 OPT_MULTIPLEX = False
 CTL_CMD = None
+PERSIST = None
 
 # ugly globals help parallelism
 SSH_CMD_ARR = None
@@ -138,12 +140,24 @@ def worker_ssh(addr):
 def start_multiplex(address_list):
     '''run ssh -M to each node in address_list'''
 
+    global PERSIST
+
+    if PERSIST is None:
+        # use default from synctool.conf
+        PERSIST = synctool.param.CONTROL_PERSIST
+    else:
+        # spellcheck the parameter
+        m = synctool.configparser.PERSIST_TIME.match(PERSIST)
+        if not m:
+            stderr("%s: invalid persist value '%s'" % (PROGNAME, PERSIST))
+            return
+
     # make list of nodenames
     nodes = [NODESET.get_nodename_from_address(x) for x in address_list]
 
     # make list of pairs: (addr, nodename)
     pairs = zip(address_list, nodes)
-    synctool.multiplex.setup_master(pairs)
+    synctool.multiplex.setup_master(pairs, PERSIST)
 
 
 def control_multiplex(address_list, ctl_cmd):
@@ -228,6 +242,7 @@ def usage():
   -a, --aggregate             Condense output
   -o, --options=SSH_OPTIONS   Set additional options for ssh
   -M, --master, --multiplex   Start ssh connection multiplexing
+  -P, --persist=TIME          Pass ssh ControlPersist timeout
   -O CTL_CMD                  Control ssh master processes
   -N, --numproc=NUM           Set number of concurrent procs
   -z, --zzz=NUM               Sleep NUM seconds between each run
@@ -246,17 +261,18 @@ def get_options():
     '''parse command-line options'''
 
     global MASTER_OPTS, OPT_SKIP_RSYNC, OPT_AGGREGATE, SSH_OPTIONS
-    global OPT_MULTIPLEX, CTL_CMD
+    global OPT_MULTIPLEX, CTL_CMD, PERSIST
 
     if len(sys.argv) <= 1:
         usage()
         sys.exit(1)
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:ao:MO:qN:z:',
-            ['help', 'conf=', 'verbose', 'node=', 'group=', 'exclude=',
-            'exclude-group=', 'aggregate', 'master', 'multiplex', 'options=',
-            'no-nodename', 'unix', 'skip-rsync', 'quiet', 'numproc=', 'zzz='])
+        opts, args = getopt.getopt(sys.argv[1:], 'hc:n:g:x:X:o:MP:O:N:z:vqa',
+            ['help', 'conf=', 'node=', 'group=', 'exclude=',
+            'exclude-group=', 'aggregate', 'options=', 'master', 'multiplex',
+            'persist=', 'numproc=', 'zzz=', 'no-nodename', 'unix', 'verbose',
+            'aggregate', 'skip-rsync', 'quiet'])
     except getopt.GetoptError as reason:
         print '%s: %s' % (PROGNAME, reason)
 #        usage()
@@ -302,10 +318,6 @@ def get_options():
         if opt in ('-h', '--help', '-?', '-c', '--conf'):
             continue
 
-        if opt in ('-v', '--verbose'):
-            synctool.lib.VERBOSE = True
-            continue
-
         if opt in ('-n', '--node'):
             NODESET.add_node(arg)
             continue
@@ -322,8 +334,17 @@ def get_options():
             NODESET.exclude_group(arg)
             continue
 
+        if opt in ('-o', '--options'):
+            SSH_OPTIONS = arg
+            continue
+
         if opt in ('-M', '--master', '--multiplex'):
             OPT_MULTIPLEX = True
+            continue
+
+        if opt in ('-P', '--persist'):
+            PERSIST = arg
+            # spellcheck it later
             continue
 
         if opt == '-O':
@@ -376,10 +397,6 @@ def get_options():
             OPT_AGGREGATE = True
             continue
 
-        if opt in ('-o', '--options'):
-            SSH_OPTIONS = arg
-            continue
-
         if opt == '--no-nodename':
             synctool.lib.OPT_NODENAME = False
             continue
@@ -392,12 +409,20 @@ def get_options():
             OPT_SKIP_RSYNC = True
             continue
 
+        if opt in ('-v', '--verbose'):
+            synctool.lib.VERBOSE = True
+            continue
+
         if opt in ('-q', '--quiet'):
             synctool.lib.QUIET = True
             continue
 
+    if not OPT_MULTIPLEX and not PERSIST is None:
+        print '%s: option --persist requires option --master' % PROGNAME
+        sys.exit(1)
+
     if OPT_MULTIPLEX and CTL_CMD != None:
-        print '%s: options -M and -O can not be combined' % PROGNAME
+        print '%s: options --master and -O can not be combined' % PROGNAME
         sys.exit(1)
 
     if (OPT_MULTIPLEX or CTL_CMD != None):

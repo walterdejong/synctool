@@ -41,8 +41,8 @@ def _make_control_path(nodename):
 
 
 def use_mux(nodename, remote_addr):
-    '''setup a master connection to node
-    Returns True on success, False otherwise -> don't use multiplexing
+    '''Returns True if it's OK to use a master connection to node
+    Otherwise returns False -> don't use multiplexing
     '''
 
     control_path = _make_control_path(nodename)
@@ -115,11 +115,10 @@ def ssh_args(ssh_cmd_arr, nodename):
     ssh_cmd_arr.extend(['-o', 'ControlPath=' + control_path])
 
 
-def setup_master(node_list, background=True):
+def setup_master(node_list, persist):
     '''setup master connections to all nodes in node_list
     node_list is a list of pairs: (addr, nodename)
-    argument background says whether to daemonize or not
-
+    Argument 'persist' is the SSH ControlPersist parameter
     Returns True on success, False on error
     '''
 
@@ -128,14 +127,15 @@ def setup_master(node_list, background=True):
         stderr('error: unsupported version of ssh')
         return False
 
-# TODO implement daemonize()
-#    if background and SSH_VERSION < 56:
-#        daemonize()
+    if persist == 'none':
+        persist = None
 
     procs = []
 
     ssh_cmd_arr = shlex.split(synctool.param.SSH_CMD)
     ssh_cmd_arr.extend(['-M', '-N', '-n'])
+    if SSH_VERSION >= 56 and not persist is None:
+        ssh_cmd_arr.extend(['-o', 'ControlPersist=' + persist])
 
     verbose('spawning ssh master connections')
     errors = 0
@@ -173,13 +173,7 @@ def setup_master(node_list, background=True):
         verbose('creating master control path to %s' % nodename)
 
         cmd_arr = ssh_cmd_arr[:]
-        cmd_arr.extend(['-o', 'ControlPath=' + control_path])
-
-        if SSH_VERSION >= 56 and synctool.param.CONTROL_PERSIST != 'none':
-            cmd_arr.extend(['-o', 'ControlPersist=' +
-                                  synctool.param.CONTROL_PERSIST])
-
-        cmd_arr.extend(['--', addr])
+        cmd_arr.extend(['-o', 'ControlPath=' + control_path, '--', addr])
 
         # start in background
         unix_out(' '.join(cmd_arr))
@@ -193,17 +187,15 @@ def setup_master(node_list, background=True):
 
         procs.append(proc)
 
-    # this may hang or not, depending on background and ControlPersist
     # print some info to the user about what's going on
-    if (errors == 0 and len(procs) > 0 and
-        (not background or (SSH_VERSION >= 56 and
-                            synctool.param.CONTROL_PERSIST == 'none'))):
-        print '''waiting for ssh master processes to terminate
+    if errors == 0 and len(procs) > 0:
+        if SSH_VERSION < 56 or persist is None:
+            print '''waiting for ssh master processes to terminate
 Meanwhile, you may background this process or continue working
 in another terminal
 '''
-    else:
-        verbose('waiting for ssh master processes to terminate')
+        else:
+            print 'ssh master processes started'
 
     for proc in procs:
         if errors > 0:

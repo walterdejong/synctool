@@ -37,17 +37,18 @@ synctool's configuration file.
 
   **obsolete** synctool now handles symbolic links in the correct way.
 
-* `ssh_control_persist <time|yes>`
+* `ssh_control_persist <time|yes|none>`
 
-  This parameter maps directly to the OpenSSH `ControlPersist`. It is only
-  used when SSH multiplexing was started, using `dsh -M`. It sets a timeout
-  for the multiplex master connection.
+  This parameter maps directly to the OpenSSH `ControlPersist`.
+  It sets the default timeout for multiplexed connections, using `dsh -M`.
+  This parameter may be overridden on the command-line with `dsh --persist`.
   The time argument is a string like "1h" or "1h30m". When it is "yes",
   there is no timeout, and it will persist indefinitely until the master
   is stopped or terminated with `dsh -O stop` or `dsh -O exit`.
   Note that OpenSSH supports "`ControlPersist=no`", but synctool does not.
   It can be set to `none` to call `ssh` without `-o ControlPersist` option.
-  The default timeout is 1 hour.
+  The default timeout is 1 hour. This parameter only has effect for OpenSSH
+  version 5.6 and later.
 
 * `require_extension <yes/no>`
 
