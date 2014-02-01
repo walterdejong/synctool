@@ -188,7 +188,7 @@ def setup_master(node_list, persist):
         procs.append(proc)
 
     # print some info to the user about what's going on
-    if errors == 0 and len(procs) > 0:
+    if len(procs) > 0:
         if SSH_VERSION < 56 or persist is None:
             print '''waiting for ssh master processes to terminate
 Meanwhile, you may background this process or continue working
@@ -197,11 +197,14 @@ in another terminal
         else:
             print 'ssh master processes started'
 
-    for proc in procs:
-        if errors > 0:
-            proc.terminate()
+        for proc in procs:
+            if errors > 0:
+                proc.terminate()
 
-        proc.wait()
+            proc.wait()
+    else:
+        if errors == 0:
+            print 'ssh master processes already running'
 
     return errors == 0
 
