@@ -588,9 +588,19 @@ script to the target node prior to running the command on the remote side.
 This is done to make sure that always the 'current' version of the script
 runs on the target node.
 
+For example, if you have a script `/opt/synctool/scripts/admin_example.sh`
+then you might run:
+
+    dsh -n node1 admin_example.sh
+
+No path to the script is required; dsh will find it.
+
 > Previous versions had a `tasks/` directory under the repository and you
 > could invoke synctool with the `--tasks` option. This mechanism has been
 > obsoleted by `dsh` and the `scripts/` directory.
+
+Note that you can write scripts to do software package installations,
+but you may also use the `dsh-pkg` command.
 
 
 3.14 Multiplexed connections
