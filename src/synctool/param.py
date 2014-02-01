@@ -52,7 +52,6 @@ PACKAGE_MANAGER = None
 NUM_PROC = 16       # use sensible default
 SLEEP_TIME = 0
 
-MULTIPLEX = True
 CONTROL_PERSIST = '1h'
 REQUIRE_EXTENSION = True
 BACKUP_COPIES = True

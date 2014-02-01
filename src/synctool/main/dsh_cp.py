@@ -104,8 +104,8 @@ def worker_dsh_cp(addr):
 
     # the fileset already has been added to DSH_CP_CMD_ARR
 
-    # setup ssh connection multiplexing (if enabled)
-    use_multiplex = synctool.multiplex.setup(nodename, addr)
+    # use ssh connection multiplexing (if possible)
+    use_multiplex = synctool.multiplex.use_mux(nodename, addr)
 
     # create local copy of DSH_CP_CMD_ARR
     # or parallelism may screw things up

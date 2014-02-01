@@ -202,6 +202,9 @@ that this works before proceeding.
 > Some (mostly IBM) systems already have a `dsh` command.
 > Be mindful to start the correct `dsh` command.
 
+See section 3.14 for a trick that greatly speeds up synctool and dsh using
+OpenSSH's multiplexed connections capability.
+
 
 2.6 Your first synctool run
 ---------------------------

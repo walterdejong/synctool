@@ -11,12 +11,17 @@
 '''multiplexing ssh connections'''
 
 import os
+import re
 import shlex
+import subprocess
 
 import synctool.lib
-from synctool.lib import verbose, stderr
+from synctool.lib import verbose, stderr, unix_out
 import synctool.param
 import synctool.syncstat
+
+SSH_VERSION = None
+MATCH_SSH_VERSION = re.compile(r'^OpenSSH\_(\d+)\.(\d+)')
 
 
 def _make_control_path(nodename):
@@ -35,13 +40,10 @@ def _make_control_path(nodename):
     return os.path.join(control_dir, nodename)
 
 
-def setup(nodename, remote_addr):
-    '''setup a master connection to node
-    Returns True on success, False otherwise -> don't use multiplexing
+def use_mux(nodename, remote_addr):
+    '''Returns True if it's OK to use a master connection to node
+    Otherwise returns False -> don't use multiplexing
     '''
-
-    if not synctool.param.MULTIPLEX:
-        return False
 
     control_path = _make_control_path(nodename)
     if not control_path:
@@ -69,29 +71,8 @@ def setup(nodename, remote_addr):
         verbose('control path %s already exists' % control_path)
         return True
 
-    # start ssh in master mode to create a new control path
-    verbose('creating master control path to %s' % nodename)
-
-    cmd_arr = shlex.split(synctool.param.SSH_CMD)
-    # FIXME OpenSSH < 5.6 has no ControlPersist
-    # FIXME OpenSSH < 5.6 does not background master mux processes
-    cmd_arr.extend(['-M', '-N', '-n',
-                    '-o', 'ControlPath=' + control_path,
-                    '-o', 'ControlPersist=' + synctool.param.CONTROL_PERSIST])
-
-    # make sure ssh is quiet; otherwise the ssh mux process will
-    # keep printing debug info
-    if '-v' in cmd_arr or '--verbose' in cmd_arr:
-        cmd_arr.remove('-v')
-
-    if not '-q' in cmd_arr and not '--quiet' in cmd_arr:
-        cmd_arr.append('-q')
-
-    cmd_arr.append('--')
-    cmd_arr.append(remote_addr)
-
-    exitcode = synctool.lib.exec_command(cmd_arr, silent=True)
-    return exitcode == 0
+    verbose('there is no ssh control path')
+    return False
 
 
 def control(nodename, remote_addr, ctl_cmd):
@@ -126,14 +107,161 @@ def control(nodename, remote_addr, ctl_cmd):
 def ssh_args(ssh_cmd_arr, nodename):
     '''add multiplexing arguments to ssh_cmd_arr'''
 
-    if not synctool.param.MULTIPLEX:
-        return
-
     control_path = _make_control_path(nodename)
     if not control_path:
         # error message already printed
         return
 
     ssh_cmd_arr.extend(['-o', 'ControlPath=' + control_path])
+
+
+def setup_master(node_list, persist):
+    '''setup master connections to all nodes in node_list
+    node_list is a list of pairs: (addr, nodename)
+    Argument 'persist' is the SSH ControlPersist parameter
+    Returns True on success, False on error
+    '''
+
+    detect_ssh()
+    if SSH_VERSION < 39:
+        stderr('error: unsupported version of ssh')
+        return False
+
+    if persist == 'none':
+        persist = None
+
+    procs = []
+
+    ssh_cmd_arr = shlex.split(synctool.param.SSH_CMD)
+    ssh_cmd_arr.extend(['-M', '-N', '-n'])
+    if SSH_VERSION >= 56 and not persist is None:
+        ssh_cmd_arr.extend(['-o', 'ControlPersist=' + persist])
+
+    verbose('spawning ssh master connections')
+    errors = 0
+    for addr, nodename in node_list:
+        control_path = _make_control_path(nodename)
+        if not control_path:
+            # error message already printed
+            return False
+
+        # see if the control path already exists
+        statbuf = synctool.syncstat.SyncStat(control_path)
+        if statbuf.exists():
+            if not statbuf.is_sock():
+                stderr('warning: control path %s: not a socket file' %
+                       control_path)
+                errors += 1
+                continue
+
+            if statbuf.uid != os.getuid():
+                stderr('warning: control path: %s: incorrect owner uid %u' %
+                       (control_path, statbuf.uid))
+                errors += 1
+                continue
+
+            if statbuf.mode & 077 != 0:
+                stderr('warning: control path %s: suspicious file mode %04o' %
+                       (control_path, statbuf.mode & 0777))
+                errors += 1
+                continue
+
+            verbose('control path %s already exists' % control_path)
+            continue
+
+        # start ssh in master mode to create a new control path
+        verbose('creating master control path to %s' % nodename)
+
+        cmd_arr = ssh_cmd_arr[:]
+        cmd_arr.extend(['-o', 'ControlPath=' + control_path, '--', addr])
+
+        # start in background
+        unix_out(' '.join(cmd_arr))
+        try:
+            proc = subprocess.Popen(cmd_arr, shell=False)
+        except OSError as err:
+            stderr('error: failed to execute %s: %s' % (cmd_arr[0],
+                                                        err.strerror))
+            errors += 1
+            continue
+
+        procs.append(proc)
+
+    # print some info to the user about what's going on
+    if len(procs) > 0:
+        if SSH_VERSION < 56 or persist is None:
+            print '''waiting for ssh master processes to terminate
+Meanwhile, you may background this process or continue working
+in another terminal
+'''
+        else:
+            print 'ssh master processes started'
+
+        for proc in procs:
+            if errors > 0:
+                proc.terminate()
+
+            proc.wait()
+    else:
+        if errors == 0:
+            print 'ssh master processes already running'
+
+    return errors == 0
+
+
+def detect_ssh():
+    '''detect ssh version
+    Set global SSH_VERSION to 2-digit int number:
+    eg. version "5.6p1" -> SSH_VERSION = 56
+
+    Returns: SSH_VERSION
+    This routine only works for OpenSSH; otherwise return -1
+    '''
+
+    global SSH_VERSION
+
+    if not SSH_VERSION is None:
+        return SSH_VERSION
+
+    cmd_arr = shlex.split(synctool.param.SSH_CMD)
+    # only use first item: the path to the ssh command
+    cmd_arr = cmd_arr[:1]
+    cmd_arr.append('-V')
+
+    unix_out(' '.join(cmd_arr))
+    try:
+        # OpenSSH may print version information on stderr
+        proc = subprocess.Popen(cmd_arr, shell=False, stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT)
+    except OSError as err:
+        stderr('error: failed to execute %s: %s' % (cmd_arr[0], err.strerror))
+        SSH_VERSION = -1
+        return SSH_VERSION
+
+    # stderr was redirected to stdout
+    data, _ = proc.communicate()
+    if not data:
+        SSH_VERSION = -1
+        return SSH_VERSION
+
+    data = data.strip()
+    verbose('ssh version string: ' + data)
+
+    # data should be a single line matching "OpenSSH_... SSL ... date\n"
+    m = MATCH_SSH_VERSION.match(data)
+    if not m:
+        SSH_VERSION = -1
+        return SSH_VERSION
+
+    groups = m.groups()
+    SSH_VERSION = int(groups[0]) * 10 + int(groups[1])
+    verbose('SSH_VERSION: %d' % SSH_VERSION)
+    return SSH_VERSION
+
+
+
+if __name__ == '__main__':
+    synctool.lib.VERBOSE = True
+    detect_ssh()
 
 # EOB

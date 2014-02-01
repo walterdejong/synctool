@@ -595,20 +595,10 @@ runs on the target node.
 
 3.14 Multiplexed connections
 ----------------------------
-synctool and dsh multiplex SSH connections over a 'master' connection.
-This feature greatly speeds up SSH connections because it allows skipping
-the costly SSL handshake. You don't have to do anything special to enable
-this feature; synctool will use it if your ssh supports it.
-
-If multiplexing is giving you problems, you can disable it in synctool.conf.
-If your cluster is very large, you might find the large number of ssh mux
-processes on the management node to be objectionable. These processes are
-mostly sleeping so it shouldn't pose a problem, but anyway, you can disable
-multiplexing in synctool.conf.
-
-dsh has some special switches to control multiplexing. Normally you don't
-need this, but these commands may come in handy. For example, if you have
-`control_persist` set to "yes", and want to stop multiplexing.
+synctool and dsh can multiplex SSH connections over a 'master' connection.
+This feature greatly speeds up synctool and dsh because it allows skipping
+the costly SSL handshake.
+Multiplexing is started through dsh:
 
     dsh -M          # start master connections
     dsh -O check    # check master connections
@@ -620,9 +610,20 @@ You may also do this for certain groups or nodes, like so:
     dsh -g all -M
     dsh -n node1 -O check
 
+synctool will detect any open control paths and use them if they are present.
 The control paths (socket files) to each node are kept under synctool's temp
 directory (by default: `/tmp/synctool/sshmux/`).
+These control paths are managed by ssh mux processes that are running in the
+background. If your cluster is very large, you might find the large number of
+ssh mux processes on the management node to be objectionable. These processes
+are mostly sleeping so it shouldn't pose a problem.
+The control paths may be given a timeout by using the config parameter
+`ssh_control_persist`. Note that this parameter is only supported for
+OpenSSH 5.6 and later. The timeout may also be specified on the command-line:
+
+    dsh -M --persist 4h
 
 > The `ControlMaster` and `ControlPath` options of ssh first appeared in
-> OpenSSH version 3.9. However, synctool also uses `ControlPersist`, which is
+> OpenSSH version 3.9. synctool also supports `ControlPersist`, which is
 > present in OpenSSH version 5.6 and later.
+> See `man ssh_config` for more information on these OpenSSH options.

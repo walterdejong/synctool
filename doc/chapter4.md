@@ -37,24 +37,18 @@ synctool's configuration file.
 
   **obsolete** synctool now handles symbolic links in the correct way.
 
-* `multiplex <yes/no>`
+* `ssh_control_persist <time|yes|none>`
 
-  When set to 'yes', synctool and dsh will use SSH `ControlMaster` to
-  multiplex connections over a master connection. This greatly speeds up
-  SSH connections because the SSL handshake can be skipped. This feature
-  requires OpenSSH version 4 or greater.
-  The default is `yes`.
-
-* `control_persist <time|yes>`
-
-  This parameter maps directly to the OpenSSH `ControlPersist` option and
-  is only used when `multiplex` is set. It sets a timeout for the multiplex
-  master connection.
+  This parameter maps directly to the OpenSSH `ControlPersist`.
+  It sets the default timeout for multiplexed connections, using `dsh -M`.
+  This parameter may be overridden on the command-line with `dsh --persist`.
   The time argument is a string like "1h" or "1h30m". When it is "yes",
   there is no timeout, and it will persist indefinitely until the master
   is stopped or terminated with `dsh -O stop` or `dsh -O exit`.
   Note that OpenSSH supports "`ControlPersist=no`", but synctool does not.
-  The default timeout is 1 hour.
+  It can be set to `none` to call `ssh` without `-o ControlPersist` option.
+  The default timeout is 1 hour. This parameter only has effect for OpenSSH
+  version 5.6 and later.
 
 * `require_extension <yes/no>`
 
