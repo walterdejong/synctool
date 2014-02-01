@@ -396,7 +396,36 @@ case, you should really use `overlay/` rather than `purge/`.
 nodes. Use with care.
 
 
-3.6 dsh-pkg, the synctool package manager
+3.6 The order of operations
+---------------------------
+The previous sections described a lot of operations that synctool performs
+when it runs. This section summarises what we have seen so far.
+For a normal synctool run, the order of operations is roughly as follows.
+
+1. synchronise the synctool installdir to each node. This synchronises
+the repository as well as the main program and config file.
+Any subtrees under `overlay`, `delete`, and `purge` that do not apply for
+the target node, are excluded.
+2. run synctool-client on the nodes
+3. synctool-client mirrors the `purge` directory
+4. synctool-client processes the `overlay` directory;
+ * generate templates by running `.template.post` scripts
+ * compare files
+      - check filetype
+      - check file size
+      - check MD5 checksum
+      - check file ownership
+      - check file mode
+ * make backup copies
+ * update files as needed
+ * run `.post script` for any updated files
+ * run `.post script` (if any) for changed directories
+5. synctool-client deletes files listed in the `delete` directory
+ * run `.post script` (if any) for deleted files
+ * run `.post script` (if any) for changed directories
+
+
+3.7 dsh-pkg, the synctool package manager
 -----------------------------------------
 synctool comes with a package manager named `dsh-pkg`.
 Rather than being yet another package manager with its own format of packages,
@@ -463,7 +492,7 @@ If you want to further examine what dsh-pkg is doing, you may specify
 under the hood.
 
 
-3.7 Ignoring them: I'm not touching you
+3.8 Ignoring them: I'm not touching you
 ---------------------------------------
 By using directives in the `synctool.conf` file, synctool can be told to
 ignore certain files, nodes, or groups. These will be excluded, skipped.
@@ -482,7 +511,7 @@ is ignored:
     ignore_group broken
 
 
-3.8 Backup copies
+3.9 Backup copies
 -----------------
 For any file synctool updates, it keeps a backup copy around on the target
 node with the extension `.saved`. If you don't like this, you can tell
@@ -511,8 +540,8 @@ a `.post` script that removes the backup copies, like so:
 Alternatively, you may want to move the backup copies to a safe location.
 
 
-3.9 Logging
------------
+3.10 Logging
+------------
 When using option `--fix` to apply changes, synctool logs the made changes
 to syslog on the master node. It provides a trace of what was changed on the
 systems. On large clusters, this may produce a lot of log records. If you
@@ -526,7 +555,7 @@ manual on how to do this. In the `contrib/` directory in the synctool source,
 you will find config files for use with `syslog-ng` and `logrotate`.
 
 
-3.10 About symbolic links
+3.11 About symbolic links
 -------------------------
 synctool requires all files in the repository to have an extension (well ...
 unless you changed the default configuration), and symbolic links must have
@@ -543,7 +572,7 @@ In the repository, `motd._red` is a red & dead symlink to `file`. On the
 target node, `/etc/motd` is going to be fine.
 
 
-3.11 Slow updates
+3.12 Slow updates
 -----------------
 By default, synctool addresses the nodes in parallel, and they are running
 updates concurrently. In some cases, like when doing rolling upgrades,
@@ -567,7 +596,7 @@ The options `--numproc` and `--zzz` work for both `synctool` and `dsh`
 programs.
 
 
-3.12 Checking for updates
+3.13 Checking for updates
 -------------------------
 synctool can check whether a new version of synctool itself is available by
 using the option `--check-update` on the master node. You can check
@@ -578,7 +607,7 @@ These functions connect to the main website at [www.heiho.net/synctool][1].
 [1]: http://www.heiho.net/synctool/
 
 
-3.13 Running tasks with synctool
+3.14 Running tasks with synctool
 --------------------------------
 synctool's `dsh` command is ideal for running commands on groups of nodes.
 On occasion, you will also want to run custom scripts with `dsh`.
@@ -603,7 +632,7 @@ Note that you can write scripts to do software package installations,
 but you may also use the `dsh-pkg` command.
 
 
-3.14 Multiplexed connections
+3.15 Multiplexed connections
 ----------------------------
 synctool and dsh can multiplex SSH connections over a 'master' connection.
 This feature greatly speeds up synctool and dsh because it allows skipping

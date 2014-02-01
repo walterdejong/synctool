@@ -17,15 +17,16 @@ Table of contents
   3.3 Other useful options                               <br />
   3.4 Templates                                          <br />
   3.5 Purge directories                                  <br />
-  3.6 dsh-pkg, the synctool package manager              <br />
-  3.7 Ignoring them: I'm not touching you                <br />
-  3.8 Backup copies                                      <br />
-  3.9 Logging                                            <br />
-  3.10 About symbolic links                              <br />
-  3.11 Slow updates                                      <br />
-  3.12 Checking for updates                              <br />
-  3.13 Running tasks with synctool                       <br />
-  3.14 Multiplexed connections
+  3.6 The order of operations                            <br />
+  3.7 dsh-pkg, the synctool package manager              <br />
+  3.8 Ignoring them: I'm not touching you                <br />
+  3.9 Backup copies                                      <br />
+  3.10 Logging                                           <br />
+  3.11 About symbolic links                              <br />
+  3.12 Slow updates                                      <br />
+  3.13 Checking for updates                              <br />
+  3.14 Running tasks with synctool                       <br />
+  3.15 Multiplexed connections
 
 4. [All configuration parameters explained](chapter4.html)
 
