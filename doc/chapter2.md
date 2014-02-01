@@ -49,6 +49,9 @@ one that does suit your security needs.
 
 When passwordless SSH as root works, proceed to installing the software.
 
+> See section 3.14 for a trick that greatly speeds up synctool, using
+> OpenSSH's multiplexed connections capability.
+
 
 2.3 Installing the software
 ---------------------------
