@@ -156,5 +156,6 @@ synctool 6 does not use it. The quickest way to dispose of it is:
 There is more to synctool 6 than this; you might want to make use of the
 new 'purge' feature, or use the new options for uploading files, or use
 `dsh-pkg` to upgrade software packages, or configure slave nodes, or go
-multi-cluster with synctool, or configure syslogging, or ...
+multi-cluster with synctool, or configure syslogging, or try out multiplexed
+connections, or ...
 Read all about it in this manual.
