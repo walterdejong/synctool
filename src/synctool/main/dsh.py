@@ -142,6 +142,13 @@ def start_multiplex(address_list):
 
     global PERSIST
 
+    # allow this only on the master node because of security considerations
+    if synctool.param.MASTER != synctool.param.HOSTNAME:
+        verbose('master %s != hostname %s' % (synctool.param.MASTER,
+                                              synctool.param.HOSTNAME))
+        stderr('error: not running on the master node')
+        sys.exit(-1)
+
     if PERSIST is None:
         # use default from synctool.conf
         PERSIST = synctool.param.CONTROL_PERSIST
