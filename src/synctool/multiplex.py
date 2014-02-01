@@ -40,16 +40,10 @@ def _make_control_path(nodename):
     return os.path.join(control_dir, nodename)
 
 
-# FIXME scrap this function ... or something
-# FIXME it should detect the ControlPath, but not create ...
-# FIXME unless SSH_VERSION >= 56, then it's alright to create (?)
-def setup(nodename, remote_addr):
+def use_mux(nodename, remote_addr):
     '''setup a master connection to node
     Returns True on success, False otherwise -> don't use multiplexing
     '''
-
-    if not synctool.param.MULTIPLEX:
-        return False
 
     control_path = _make_control_path(nodename)
     if not control_path:
@@ -77,29 +71,8 @@ def setup(nodename, remote_addr):
         verbose('control path %s already exists' % control_path)
         return True
 
-    # start ssh in master mode to create a new control path
-    verbose('creating master control path to %s' % nodename)
-
-    cmd_arr = shlex.split(synctool.param.SSH_CMD)
-    # FIXME OpenSSH < 5.6 has no ControlPersist
-    # FIXME OpenSSH < 5.6 does not background master mux processes
-    cmd_arr.extend(['-M', '-N', '-n',
-                    '-o', 'ControlPath=' + control_path,
-                    '-o', 'ControlPersist=' + synctool.param.CONTROL_PERSIST])
-
-    # make sure ssh is quiet; otherwise the ssh mux process will
-    # keep printing debug info
-    if '-v' in cmd_arr or '--verbose' in cmd_arr:
-        cmd_arr.remove('-v')
-
-    if not '-q' in cmd_arr and not '--quiet' in cmd_arr:
-        cmd_arr.append('-q')
-
-    cmd_arr.append('--')
-    cmd_arr.append(remote_addr)
-
-    exitcode = synctool.lib.exec_command(cmd_arr, silent=True)
-    return exitcode == 0
+    verbose('there is no ssh control path')
+    return False
 
 
 def control(nodename, remote_addr, ctl_cmd):
@@ -133,9 +106,6 @@ def control(nodename, remote_addr, ctl_cmd):
 
 def ssh_args(ssh_cmd_arr, nodename):
     '''add multiplexing arguments to ssh_cmd_arr'''
-
-    if not synctool.param.MULTIPLEX:
-        return
 
     control_path = _make_control_path(nodename)
     if not control_path:
@@ -297,7 +267,6 @@ def detect_ssh():
 
 if __name__ == '__main__':
     synctool.lib.VERBOSE = True
-    _detect_ssh()
-
+    detect_ssh()
 
 # EOB

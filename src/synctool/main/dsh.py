@@ -91,10 +91,8 @@ def worker_ssh(addr):
 
     nodename = NODESET.get_nodename_from_address(addr)
 
-    # setup ssh connection multiplexing (if enabled)
-    # FIXME this doesn't work because OpenSSH < 5.6 doesn't background
-    # FIXME Consequently, multiprocess() will hang its pool
-    use_multiplex = synctool.multiplex.setup(nodename, addr)
+    # use ssh connection multiplexing (if possible)
+    use_multiplex = synctool.multiplex.use_mux(nodename, addr)
 
     if (SYNC_IT and
         not (OPT_SKIP_RSYNC or nodename in synctool.param.NO_RSYNC)):
@@ -405,11 +403,6 @@ def get_options():
     if (OPT_MULTIPLEX or CTL_CMD != None):
         if len(args) > 0:
             print '%s: excessive arguments on command-line' % PROGNAME
-            sys.exit(1)
-
-        if not synctool.param.MULTIPLEX:
-            print ('%s: %s: multiplex is disabled' %
-                   (PROGNAME, os.path.basename(synctool.param.CONF_FILE)))
             sys.exit(1)
 
     elif not args:

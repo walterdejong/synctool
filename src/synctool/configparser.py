@@ -318,19 +318,11 @@ def config_package_manager(arr, configfile, lineno):
     return 0
 
 
-def config_multiplex(arr, configfile, lineno):
-    '''parse keyword: multiplex'''
-
-    (err, synctool.param.MULTIPLEX) = _config_boolean('multiplex', arr[1],
-                                                      configfile, lineno)
-    return err
-
-
-def config_control_persist(arr, configfile, lineno):
-    '''parse keyword: control_persist'''
+def config_ssh_control_persist(arr, configfile, lineno):
+    '''parse keyword: ssh_control_persist'''
 
     if len(arr) != 2:
-        stderr("%s:%d: 'control_persist' requires a single argument" %
+        stderr("%s:%d: 'ssh_control_persist' requires a single argument" %
                (configfile, lineno))
         return 1
 

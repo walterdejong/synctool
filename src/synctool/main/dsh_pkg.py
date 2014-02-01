@@ -48,8 +48,8 @@ def worker_pkg(addr):
 
     nodename = NODESET.get_nodename_from_address(addr)
 
-    # setup ssh connection multiplexing (if enabled)
-    use_multiplex = synctool.multiplex.setup(nodename, addr)
+    # use ssh connection multiplexing (if possible)
+    use_multiplex = synctool.multiplex.use_mux(nodename, addr)
 
     # run 'ssh node pkg_cmd'
     cmd_arr = shlex.split(synctool.param.SSH_CMD)
