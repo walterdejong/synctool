@@ -19,6 +19,7 @@ import subprocess
 import synctool.config
 import synctool.lib
 from synctool.lib import verbose, stdout, stderr, terse, unix_out, prettypath
+import synctool.multiplex
 import synctool.overlay
 import synctool.param
 
@@ -107,7 +108,13 @@ def _remote_isdir(up):
 
     cmd_arr = shlex.split(synctool.param.RSYNC_CMD)[:1]
     cmd_arr.append('--list-only')
-    cmd_arr.append(up.address + ':' + up.filename)
+    # use ssh connection multiplexing (if possible)
+    ssh_cmd_arr = shlex.split(synctool.param.SSH_CMD)
+    use_multiplex = synctool.multiplex.use_mux(up.node, up.address)
+    if use_multiplex:
+        synctool.multiplex.ssh_args(ssh_cmd_arr, up.node)
+    cmd_arr.extend(['-e', ' '.join(ssh_cmd_arr)])
+    cmd_arr.extend(['--', up.address + ':' + up.filename])
 
     verbose('running rsync --list-only %s:%s' % (up.node, up.filename))
     unix_out(' '.join(cmd_arr))
@@ -264,8 +271,13 @@ def rsync_upload(up):
         if '--quiet' in cmd_arr:
             cmd_arr.remove('--quiet')
 
-    cmd_arr.append(up.address + ':' + up.filename)
-    cmd_arr.append(up.repos_path)
+    # use ssh connection multiplexing (if possible)
+    ssh_cmd_arr = shlex.split(synctool.param.SSH_CMD)
+    use_multiplex = synctool.multiplex.use_mux(up.node, up.address)
+    if use_multiplex:
+        synctool.multiplex.ssh_args(ssh_cmd_arr, up.node)
+    cmd_arr.extend(['-e', ' '.join(ssh_cmd_arr)])
+    cmd_arr.extend(['--', up.address + ':' + up.filename, up.repos_path])
 
     verbose_path = prettypath(up.repos_path)
     if synctool.lib.DRY_RUN:
