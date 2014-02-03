@@ -45,6 +45,12 @@ MATCH_IPv6 = re.compile(r'^[0-9a-f:\[\]]+$')
 MATCH_IPv6_v4 = re.compile(r'^[0-9a-f:\[\]]+:[0-9\.\[\]]+$')
 SPLIT_IPv6_v4 = re.compile(r'(?=[0-9a-f:\[\]]+):(?=[0-9\.\[\]]+)')
 
+# this matches nodenames like "n8", "r1n8", "r1n8-mgmt"
+# and is used by compress()
+COMPRESSOR = re.compile(r'^([a-zA-Z]+[a-zA-Z0-9_+-]*)'
+                        r'([a-zA-Z_+-]+)(\d+)'
+                        r'([a-zA-Z_+-]*)$')
+
 # state used for automatic numbering of IP ranges
 _EXPAND_SEQ = 0
 
@@ -228,5 +234,73 @@ def expand_seq(arg, radix=10, overflow=False):
         return expand_seq(result, radix, overflow)
 
     return result
+
+
+def compress(nodelist):
+    '''Return comma-separated list of nodes, using range syntax
+
+    This is the opposite of function expand()
+    It can not do step-notation however or group like "n[1-5,6,8]"
+    but it's good at finding sequences like "n[1-8]"
+    '''
+
+    nodes = nodelist[:] # do not modify the 'input' nodes list
+
+    arr = []    # prepare output list in arr
+
+    while len(nodes) > 0:
+        node = nodes.pop(0)
+
+        # try to match a number in the node name
+        m = COMPRESSOR.match(node)
+        if not m:
+            arr.append(node)
+            continue
+
+        # take the matched string parts
+        node_a, node_b, node_c, node_d = m.groups()
+        # this number is (maybe) start of a sequence
+        start = int(node_c)
+
+        # it's not a sequence if the list is too small
+        if len(nodes) <= 1:
+            arr.append(node)
+            continue
+
+        # it's only a sequence if the next N are in sequence
+        # outcome should be N >= 2
+        seq = start
+        seqnodes = nodes[:]
+        while len(seqnodes) > 0:
+            nextnode = seqnodes[0]
+            m = COMPRESSOR.match(nextnode)
+            if not m:
+                break
+            else:
+                a, b, c, d = m.groups()
+                if (a != node_a or b != node_b or len(c) != len(node_c) or
+                    d != node_d):
+                    break
+
+                num = int(c)
+                if num != seq + 1:
+                    break
+
+                seq = num
+                seqnodes.pop(0)
+
+        if seq - start >= 2:
+            # we have a sequence!
+            seq_str = '%s%s[%.*d-%.*d]%s' % (node_a, node_b,
+                                             len(node_c), start,
+                                             len(node_c), seq, node_d)
+            arr.append(seq_str)
+            nodes = seqnodes
+        else:
+            # not a sequence
+            arr.append(node)
+
+    # return comma-separated string of node ranges
+    return ','.join(arr)
 
 # EOB
