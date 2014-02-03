@@ -1,10 +1,13 @@
+February 2014
+- added ssh multiplexing for fast SSH connections
+  Idea given by calind at github
+- synctool,dsh -a print list of nodes using range syntax
+
 January 2014
 - dropped names "synctool-ssh", "synctool-ping", etc. in favor of "dsh",
   "dsh-ping" and the like
 - added migration guide chapter to documentation
 - released as version 6.0rc1
-- added ssh multiplexing for fast SSH connections
-  Idea given by calind at github
 
 December 2013
 - purge --single may complain about timestamps (because rsync will also)
