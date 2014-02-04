@@ -47,7 +47,7 @@ SPLIT_IPv6_v4 = re.compile(r'(?=[0-9a-f:\[\]]+):(?=[0-9\.\[\]]+)')
 
 # this matches nodenames like "n8", "r1n8", "r1n8-mgmt"
 # and is used by compress()
-COMPRESSOR = re.compile(r'^([a-zA-Z]+[a-zA-Z0-9_+-]*)'
+COMPRESSOR = re.compile(r'^([a-zA-Z0-9_+-]*)'
                         r'([a-zA-Z_+-]+)(\d+)'
                         r'([a-zA-Z_+-]*)$')
 
