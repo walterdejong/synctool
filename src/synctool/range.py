@@ -282,6 +282,10 @@ def compress(nodelist):
                     d != node_d):
                     break
 
+                # FIXME nodes list should be sorted numerically
+                # FIXME because of lame order "n19", "n2", "n20", "n21"
+                # FIXME (for badly numbered nodes -- no leading zeroes)
+                # FIXME how: run all through COMPRESSOR beforehand and sort
                 num = int(c)
                 if num != seq + 1:
                     break
