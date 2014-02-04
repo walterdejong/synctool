@@ -76,6 +76,7 @@ COLORMAP = {
     'default' : 0,
 }
 
+# FIXME add error(), warning()
 
 def verbose(msg):
     '''do conditional output based on the verbose command line parameter'''
