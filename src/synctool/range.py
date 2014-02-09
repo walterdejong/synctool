@@ -47,8 +47,9 @@ SPLIT_IPv6_v4 = re.compile(r'(?=[0-9a-f:\[\]]+):(?=[0-9\.\[\]]+)')
 
 # this matches nodenames like "n8", "r1n8", "r1n8-mgmt"
 # and is used by compress()
-COMPRESSOR = re.compile(r'^([a-zA-Z0-9_+-]*)'
-                        r'([a-zA-Z_+-]+)(\d+)'
+# It works like: "head,number,tail" or "prefix-number-postfix"
+COMPRESSOR = re.compile(r'^([a-zA-Z0-9_+-]*[a-zA-Z_+-]+)'
+                        r'(\d+)'
                         r'([a-zA-Z_+-]*)$')
 
 # state used for automatic numbering of IP ranges
@@ -236,75 +237,129 @@ def expand_seq(arg, radix=10, overflow=False):
     return result
 
 
+def _sort_compress(a, b):
+    '''sorting function
+    a and b are tuples: (nodename, prefix, number_str, number, postfix)
+    '''
+
+    if a[1] != b[1]:
+        # sort by prefix
+        return cmp(a[1], b[1])
+
+    if a[3] != b[3]:
+        # sort by postfix
+        return cmp(a[3], b[3])
+
+    if len(a[2]) != len(b[2]):
+        # sort by length number_str
+        return cmp(len(a[2]), len(b[2]))
+
+    if a[3] != b[3]:
+        # sort by number
+        return cmp(a[3], b[3])
+
+    # lastly, sort by node name
+    return cmp(a[0], b[0])
+
+
 def compress(nodelist):
     '''Return comma-separated list of nodes, using range syntax
 
     This is the opposite of function expand()
-    It can not do step-notation however or group like "n[1-5,6,8]"
-    but it's good at finding sequences like "n[1-8]"
+    It can not do step-notation but it's good at finding sequences
+    like "n[1-5,7,8]"
     '''
 
-    nodes = nodelist[:] # do not modify the 'input' nodes list
-
-    arr = []    # prepare output list in arr
-
-    while len(nodes) > 0:
-        node = nodes.pop(0)
-
-        # try to match a number in the node name
+    # make all_grouped a list of lists, of grouped splitted nodenames
+    all_grouped = []
+    grouped = []
+    prev_prefix = prev_postfix = None
+    for node in nodelist:
+        # try to match a number in the nodename
         m = COMPRESSOR.match(node)
         if not m:
-            arr.append(node)
-            continue
+            # no number in node name
+            if len(grouped) > 0:
+                grouped.sort(_sort_compress)
+                all_grouped.append(grouped[:],)
+                grouped = []
 
-        # take the matched string parts
-        node_a, node_b, node_c, node_d = m.groups()
-        # this number is (maybe) start of a sequence
-        start = int(node_c)
-
-        # it's not a sequence if the list is too small
-        if len(nodes) <= 1:
-            arr.append(node)
-            continue
-
-        # it's only a sequence if the next N are in sequence
-        # outcome should be N >= 2
-        seq = start
-        seqnodes = nodes[:]
-        while len(seqnodes) > 0:
-            nextnode = seqnodes[0]
-            m = COMPRESSOR.match(nextnode)
-            if not m:
-                break
-            else:
-                a, b, c, d = m.groups()
-                if (a != node_a or b != node_b or len(c) != len(node_c) or
-                    d != node_d):
-                    break
-
-                # FIXME nodes list should be sorted numerically
-                # FIXME because of lame order "n19", "n2", "n20", "n21"
-                # FIXME (for badly numbered nodes -- no leading zeroes)
-                # FIXME how: run all through COMPRESSOR beforehand and sort
-                num = int(c)
-                if num != seq + 1:
-                    break
-
-                seq = num
-                seqnodes.pop(0)
-
-        if seq - start >= 2:
-            # we have a sequence!
-            seq_str = '%s%s[%.*d-%.*d]%s' % (node_a, node_b,
-                                             len(node_c), start,
-                                             len(node_c), seq, node_d)
-            arr.append(seq_str)
-            nodes = seqnodes
+            grouped = [(node, '', '0', 0, ''),]
+            all_grouped.append(grouped[:],)
+            grouped = []
+            prev_prefix = prev_postfix = None
         else:
-            # not a sequence
-            arr.append(node)
+            # group nodes with the same prefix and postfix together
+            prefix, number, postfix = m.groups()
+            if prefix == prev_prefix and postfix == prev_postfix:
+                grouped.append((node, prefix, number, int(number), postfix),)
+            else:
+                if len(grouped) > 0:
+                    grouped.sort(_sort_compress)
+                    all_grouped.append(grouped[:],)
+                    grouped = []
+
+                grouped.append((node, prefix, number, int(number), postfix),)
+                prev_prefix = prefix
+                prev_postfix = postfix
+
+    if len(grouped) > 0:
+        grouped.sort(_sort_compress)
+        all_grouped.append(grouped[:],)
+        grouped = []
+
+    # make out, a list of strings (with range-based node syntax)
+    out = []
+    for arr in all_grouped:
+        (node, prefix, number_str, num, postfix) = arr[0]
+        if len(arr) == 1:
+            # add single node name
+            out.append(node)
+            continue
+
+        # make range syntax
+        range_str = prefix + '[' + number_str
+
+        if len(arr) == 2:
+            (node, prefix, number_str, num, postfix) = arr[1]
+            range_str += ',' + number_str
+        else:
+            start = num
+            prev_number_str = None
+            prev_len = len(number_str)
+            in_seq = 0
+            for (node, prefix, number_str, num, postfix) in arr[1:]:
+                if num == start + 1 and 0 <= len(number_str) - prev_len <= 1:
+                    # it's in sequence
+                    in_seq += 1
+                else:
+                    # not in sequence
+                    if in_seq == 0:
+                        pass
+                    elif in_seq == 1:
+                        range_str += ',' + prev_number_str
+                        range_str += ',' + number_str
+                    else:
+                        range_str += '-' + prev_number_str
+
+                    range_str += ',' + number_str
+                    in_seq = 0
+
+                start = num
+                prev_number_str = number_str
+                prev_len = len(number_str)
+
+            if in_seq == 0:
+                pass
+            elif in_seq == 1:
+                range_str += ',' + prev_number_str
+            else:
+                range_str += '-' + prev_number_str
+
+        range_str += ']' + postfix
+        out.append(range_str)
 
     # return comma-separated string of node ranges
-    return ','.join(arr)
+    return ','.join(out)
 
 # EOB
