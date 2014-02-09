@@ -18,7 +18,8 @@ import subprocess
 
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose, stdout, stderr, terse, unix_out, prettypath
+from synctool.lib import verbose, stdout, stderr, error, terse, unix_out
+from synctool.lib import prettypath
 import synctool.multiplex
 import synctool.overlay
 import synctool.param
@@ -124,18 +125,18 @@ def _remote_isdir(up):
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
     except OSError as err:
-        stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
+        error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return False, False
 
     out, err = proc.communicate()
 
     if proc.returncode != 0:
         if proc.returncode == 255:
-            stderr('failed to connect to %s' % up.node)
+            error('failed to connect to %s' % up.node)
         elif proc.returncode == 23:
-            stderr('error: no such file or directory')
+            error('no such file or directory')
         else:
-            stderr('failed rsync %s:%s' % (up.node, up.filename))
+            error('failed rsync %s:%s' % (up.node, up.filename))
 
         return False, False
 
@@ -157,7 +158,7 @@ def _remote_isdir(up):
         # some other line on stdout; just ignore it
 
     # got no good output
-    stderr('failed to parse rsync --list-only output')
+    error('failed to parse rsync --list-only output')
     return False, False
 
 
@@ -189,19 +190,19 @@ def upload(up):
     global GLOBAL_UPLOAD_FILE
 
     if up.filename[0] != os.sep:
-        stderr('error: the filename to upload must be an absolute path')
+        error('the filename to upload must be an absolute path')
         sys.exit(-1)
 
     if up.suffix and not up.suffix in synctool.param.ALL_GROUPS:
-        stderr("no such group '%s'" % up.suffix)
+        error("no such group '%s'" % up.suffix)
         sys.exit(-1)
 
     if up.overlay and not up.overlay in synctool.param.ALL_GROUPS:
-        stderr("no such group '%s'" % up.overlay)
+        error("no such group '%s'" % up.overlay)
         sys.exit(-1)
 
     if up.purge and not up.purge in synctool.param.ALL_GROUPS:
-        stderr("no such group '%s'" % up.purge)
+        error("no such group '%s'" % up.purge)
         sys.exit(-1)
 
     if synctool.lib.DRY_RUN and not synctool.lib.QUIET:
@@ -245,7 +246,7 @@ def rsync_upload(up):
         return
 
     if isdir and synctool.param.REQUIRE_EXTENSION and not up.purge:
-        stderr('error: remote is a directory')
+        error('remote is a directory')
         stderr('synctool can not upload directories to $overlay '
                'when require_extension is set')
         return
@@ -286,7 +287,7 @@ def rsync_upload(up):
         dest_dir = os.path.dirname(up.repos_path)
         synctool.lib.mkdir_p(dest_dir)
         if not os.path.exists(dest_dir):
-            stderr('error: failed to create %s/' % dest_dir)
+            error('failed to create %s/' % dest_dir)
             return
 
     # for $overlay, never do rsync --delete / --delete-excluded
@@ -305,7 +306,7 @@ def rsync_upload(up):
     if not synctool.lib.DRY_RUN:
         synctool.lib.run_with_nodename(cmd_arr, up.node)
         if not os.path.exists(up.repos_path):
-            stderr('error: upload failed')
+            error('upload failed')
         else:
             stdout('uploaded %s' % verbose_path)
 

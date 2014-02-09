@@ -21,7 +21,8 @@ import tempfile
 import synctool.aggr
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose, stdout, stderr, terse, prettypath
+from synctool.lib import verbose, stdout, stderr, error, warning, terse
+from synctool.lib import prettypath
 import synctool.multiplex
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
@@ -92,8 +93,8 @@ def worker_synctool(addr):
         # our filters are like playing with fire
         if not synctool.param.ROOTDIR or (
             synctool.param.ROOTDIR == os.sep):
-            stderr('cowardly refusing to rsync with rootdir == %s' %
-                   synctool.param.ROOTDIR)
+            warning('cowardly refusing to rsync with rootdir == %s' %
+                    synctool.param.ROOTDIR)
             sys.exit(-1)
 
         synctool.lib.run_with_nodename(cmd_arr, nodename)
@@ -136,13 +137,13 @@ def rsync_include_filter(nodename):
         (fd, filename) = tempfile.mkstemp(prefix='synctool-',
                                           dir=synctool.param.TEMP_DIR)
     except OSError as err:
-        stderr('failed to create temp file: %s' % err.strerror)
+        error('failed to create temp file: %s' % err.strerror)
         sys.exit(-1)
 
     try:
         f = os.fdopen(fd, 'w')
     except OSError as err:
-        stderr('failed to open temp file: %s' % err.strerror)
+        error('failed to open temp file: %s' % err.strerror)
         sys.exit(-1)
 
     # include $SYNCTOOL/var/ but exclude
@@ -239,8 +240,8 @@ def _write_purge_filter(f):
                     # danger of destroying the entire filesystem
                     # if it would rsync --delete the root
                     if len(files) > 0:
-                        stderr('cowardly refusing to purge the root '
-                               'directory')
+                        warning('cowardly refusing to purge the root '
+                                'directory')
                         stderr('please remove any files directly '
                                'under %s/' % prettypath(purge_root))
                         return False
@@ -259,8 +260,8 @@ def make_tempdir():
         try:
             os.mkdir(synctool.param.TEMP_DIR, 0750)
         except OSError as err:
-            stderr('failed to create tempdir %s: %s' %
-                   (synctool.param.TEMP_DIR, err.strerror))
+            error('failed to create tempdir %s: %s' %
+                  (synctool.param.TEMP_DIR, err.strerror))
             sys.exit(-1)
 
 
@@ -278,8 +279,8 @@ def _check_valid_overlaydirs():
             fullpath = os.path.join(overlaydir, entry)
             if (os.path.isdir(fullpath) and
                 not entry in synctool.param.ALL_GROUPS):
-                stderr("error: $%s/%s/ exists, but there is "
-                       "no such group '%s'" % (label, entry, entry))
+                error("$%s/%s/ exists, but there is no such group '%s'" %
+                      (label, entry, entry))
                 errs += 1
                 continue
 
@@ -375,11 +376,11 @@ def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
     '''
 
     if opt_erase_saved and (opt_diff or opt_reference or opt_upload):
-        stderr("option --erase-saved can not be combined with other actions")
+        error("option --erase-saved can not be combined with other actions")
         sys.exit(1)
 
     if opt_upload and (opt_diff or opt_single or opt_reference):
-        stderr("option --upload can not be combined with other actions")
+        error("option --upload can not be combined with other actions")
         sys.exit(1)
 
     if opt_upload and opt_group:
@@ -387,11 +388,11 @@ def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
         sys.exit(1)
 
     if opt_diff and (opt_single or opt_reference or opt_fix):
-        stderr("option --diff can not be combined with other actions")
+        error("option --diff can not be combined with other actions")
         sys.exit(1)
 
     if opt_reference and (opt_single or opt_fix):
-        stderr("option --reference can not be combined with other actions")
+        error("option --reference can not be combined with other actions")
         sys.exit(1)
 
 
@@ -463,7 +464,7 @@ def get_options():
         sys.exit(1)
 
     if args != None and len(args) > 0:
-        stderr('error: excessive arguments on command line')
+        error('excessive arguments on command line')
         sys.exit(1)
 
     UPLOAD_FILE = synctool.upload.UploadFile()
@@ -705,7 +706,7 @@ def main():
     try:
         get_options()
     except synctool.range.RangeSyntaxError as err:
-        print 'error:', err
+        error(str(err))
         sys.exit(1)
 
     if OPT_CHECK_UPDATE:
@@ -733,7 +734,7 @@ def main():
     if synctool.param.MASTER != synctool.param.HOSTNAME:
         verbose('master %s != hostname %s' % (synctool.param.MASTER,
                                               synctool.param.HOSTNAME))
-        stderr('error: not running on the master node')
+        error('not running on the master node')
         sys.exit(-1)
 
     if not _check_valid_overlaydirs():
@@ -750,8 +751,8 @@ def main():
     if UPLOAD_FILE.filename:
         # upload a file
         if len(address_list) != 1:
-            print 'The option --upload can only be run on just one node'
-            print ('Please use --node=nodename to specify the node '
+            error('option --upload can only be run on just one node')
+            stderr('Please use --node=nodename to specify the node '
                    'to upload from')
             sys.exit(1)
 
@@ -768,7 +769,6 @@ def main():
             else:
                 stdout('--fix specified, applying changes')
                 terse(synctool.lib.TERSE_FIXING, ' applying changes')
-
         else:
             if synctool.lib.DRY_RUN:
                 verbose('DRY RUN, not doing any updates')

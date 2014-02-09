@@ -15,7 +15,7 @@ import sys
 import urllib2
 import hashlib
 
-from synctool.lib import verbose, stderr, stdout
+from synctool.lib import verbose, error, stdout
 import synctool.param
 
 
@@ -44,25 +44,23 @@ def get_latest_version_and_checksum():
         # can not use 'with' statement with urlopen()..?
         web = urllib2.urlopen(VERSION_CHECKING_URL)
     except urllib2.HTTPError as err:
-        stderr('error from webserver at %s: %s' % (VERSION_CHECKING_URL,
-                                                   err.reason))
+        error('webserver at %s: %s' % (VERSION_CHECKING_URL, err.reason))
         return None
 
     except urllib2.URLError as err:
-        stderr('error accessing URL %s: %s' % (VERSION_CHECKING_URL,
-                                               err.reason))
+        error('failed to access %s: %s' % (VERSION_CHECKING_URL, err.reason))
         return None
 
     except IOError as err:
-        stderr('error accessing the file at %s: %s' % (VERSION_CHECKING_URL,
-                                                       err.strerror))
+        error('failed to access %s: %s' % (VERSION_CHECKING_URL,
+                                           err.strerror))
         return None
 
     data = web.read(1024)
     web.close()
 
     if not data or len(data) < 10:
-        stderr('error accessing the file at %s' % VERSION_CHECKING_URL)
+        error('failed to access %s' % VERSION_CHECKING_URL)
         return None
 
     data = data.strip()
@@ -144,23 +142,22 @@ def download():
     try:
         web = urllib2.urlopen(download_url)
     except urllib2.HTTPError as err:
-        stderr('error from webserver at %s: %s' % (download_url, err.reason))
+        error('webserver at %s: %s' % (download_url, err.reason))
         return False
 
     except urllib2.URLError as err:
-        stderr('error accessing URL %s: %s' % (download_url, err.reason))
+        error('failed to access %s: %s' % (download_url, err.reason))
         return False
 
     except IOError as err:
-        stderr('error accessing the file at %s: %s' % (download_url,
-                                                       err.strerror))
+        error('failed to access %s: %s' % (download_url, err.strerror))
         return False
 
     # get file size: Content-Length
     try:
         totalsize = int(web.info().getheaders("Content-Length")[0])
     except (ValueError, KeyError):
-        stderr('invalid response from webserver at %s' % download_url)
+        error('invalid response from webserver at %s' % download_url)
         web.close()
         return False
 
@@ -168,8 +165,8 @@ def download():
     try:
         f = open(download_filename, 'w+b')
     except IOError as err:
-        stderr('failed to create file %s: %s' % (download_filename,
-                                                 err.strerror))
+        error('failed to create file %s: %s' % (download_filename,
+                                                err.strerror))
         web.close()
         return False
 
@@ -195,17 +192,16 @@ def download():
 
     if download_bytes < totalsize:
         print
-        stderr('failed to download file %s' % download_url)
+        error('failed to download file %s' % download_url)
         return False
 
     download_bytes += 100    # force 100% in the progress counter
     print_progress(download_filename, totalsize, download_bytes)
 
     if sum1.hexdigest() != checksum:
-        stderr('ERROR: checksum failed for %s' % download_filename)
+        error('checksum failed for %s' % download_filename)
         return False
 
     return True
-
 
 # EOB

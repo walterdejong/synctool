@@ -17,8 +17,8 @@ import sys
 import socket
 
 import synctool.configparser
-from synctool.configparser import stderr
 import synctool.lib
+from synctool.lib import stderr, error
 import synctool.nodeset
 import synctool.param
 
@@ -36,15 +36,15 @@ def read_config():
 
     # overlay/ and delete/ must be under ROOTDIR
     if not os.path.isdir(synctool.param.OVERLAY_DIR):
-        stderr('error: no such directory: %s' % synctool.param.OVERLAY_DIR)
+        error('no such directory: %s' % synctool.param.OVERLAY_DIR)
         errors += 1
 
     if not os.path.isdir(synctool.param.DELETE_DIR):
-        stderr('error: no such directory: %s' % synctool.param.DELETE_DIR)
+        error('no such directory: %s' % synctool.param.DELETE_DIR)
         errors += 1
 
     if not os.path.isdir(synctool.param.PURGE_DIR):
-        stderr('error: no such directory: %s' % synctool.param.PURGE_DIR)
+        error('no such directory: %s' % synctool.param.PURGE_DIR)
         errors += 1
 
     if not synctool.param.TEMP_DIR:
@@ -63,12 +63,12 @@ def read_config():
 
     # check master node
     if not synctool.param.MASTER:
-        stderr("error: 'master' is not configured")
+        error("'master' is not configured")
         errors += 1
 
     for node in synctool.param.SLAVES:
         if not node in synctool.param.NODES:
-            stderr("error: slave '%s': no such node" % node)
+            error("slave '%s': no such node" % node)
             errors += 1
 
     # implicitly add group 'all'

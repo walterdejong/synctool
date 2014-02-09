@@ -16,7 +16,7 @@ import getopt
 
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose, stderr
+from synctool.lib import verbose, stderr, error, warning
 from synctool.main.wrapper import catch_signals
 import synctool.param
 import synctool.syncstat
@@ -61,7 +61,7 @@ def package_manager():
         detect_installer()
 
         if not synctool.param.PACKAGE_MANAGER:
-            stderr('failed to detect package management system')
+            error('failed to detect package management system')
             stderr('please configure it in synctool.conf')
             sys.exit(1)
 
@@ -85,11 +85,11 @@ def package_manager():
             return pkgclass()
 
     if detected:
-        stderr('package manager %s is not supported yet' %
-            synctool.param.PACKAGE_MANAGER)
+        error('package manager %s is not supported yet' %
+              synctool.param.PACKAGE_MANAGER)
     else:
-        stderr("unknown package manager defined: '%s'" %
-            synctool.param.PACKAGE_MANAGER)
+        error("unknown package manager defined: '%s'" %
+              synctool.param.PACKAGE_MANAGER)
 
     sys.exit(1)
 
@@ -134,7 +134,7 @@ def detect_installer():
                 synctool.param.PACKAGE_MANAGER = pkgmgr
                 return
 
-        stderr('unknown Linux distribution')
+        warning('unknown Linux distribution')
 
     elif platform == 'Darwin':            # assume OS X
         verbose('detected platform OS X')
@@ -163,11 +163,11 @@ def detect_installer():
         'Windows_95', 'Windows_NT', 'CYGWIN', 'MinGW',
         'LynxOS', 'UNIX_System_V', 'BeOS', 'TOPS-10', 'TOPS-20'):
         verbose('detected platform %s' % platform)
-        stderr('synctool package management under %s is not yet supported' %
-            platform)
+        warning('synctool package management under %s is not yet supported' %
+                platform)
 
     else:
-        stderr("unknown platform '%s'" % platform)
+        warning("unknown platform '%s'" % platform)
 
 
 def there_can_be_only_one():
@@ -313,8 +313,7 @@ def get_options():
 
         if opt in ('-m', '--manager'):
             if not arg in synctool.param.KNOWN_PACKAGE_MANAGERS:
-                stderr("error: unknown or unsupported package manager "
-                       "'%s'" % arg)
+                error("unknown or unsupported package manager '%s'" % arg)
                 sys.exit(1)
 
             synctool.param.PACKAGE_MANAGER = arg
@@ -349,12 +348,11 @@ def get_options():
         PKG_LIST = args
 
         if ACTION in (ACTION_INSTALL, ACTION_REMOVE) and not args:
-            stderr('error: options --install and --remove require '
-                   'a package name')
+            error('options --install and --remove require a package name')
             sys.exit(1)
 
     elif args != None and len(args) > 0:
-        stderr('error: excessive arguments on command line')
+        error('excessive arguments on command line')
         sys.exit(1)
 
     # disable dry-run unless --upgrade was given
@@ -380,8 +378,8 @@ def main():
     if synctool.param.NODENAME in synctool.param.IGNORE_GROUPS:
         # this is only a warning ...
         # you can still run synctool-pkg on the client by hand
-        stderr('%s: warning: node %s is disabled in the config file' %
-               (synctool.param.CONF_FILE, synctool.param.NODENAME))
+        warning('warning: node %s is disabled in the config file' %
+                synctool.param.NODENAME)
 
     pkg = package_manager()
 

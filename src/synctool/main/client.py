@@ -19,7 +19,8 @@ import subprocess
 
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose, stdout, stderr, terse, unix_out, prettypath
+from synctool.lib import verbose, stdout, stderr, error, warning, terse
+from synctool.lib import unix_out, prettypath
 from synctool.main.wrapper import catch_signals
 import synctool.overlay
 import synctool.param
@@ -81,8 +82,7 @@ def generate_template(obj, post_dict):
         if synctool.param.TERSE:
             terse(synctool.lib.TERSE_ERROR, 'no .post %s' % obj.src_path)
         else:
-            stderr('error: template generator for %s not found' %
-                   obj.src_path)
+            error('template generator for %s not found' % obj.src_path)
         return False
 
     generator = post_dict[template]
@@ -100,8 +100,8 @@ def generate_template(obj, post_dict):
         if synctool.param.TERSE:
             terse(synctool.lib.TERSE_ERROR, 'chdir %s' % src_dir)
         else:
-            stderr('error changing directory to %s: %s' % (src_dir,
-                                                           err.strerror))
+            error('failed to change directory to %s: %s' % (src_dir,
+                                                            err.strerror))
         return False
 
     # temporarily restore original umask
@@ -125,8 +125,7 @@ def generate_template(obj, post_dict):
             if synctool.param.TERSE:
                 terse(synctool.lib.TERSE_WARNING, 'no output %s' % newname)
             else:
-                stderr('warning: expected output %s was not generated' %
-                       newname)
+                warning('expected output %s was not generated' % newname)
             obj.ov_type = synctool.overlay.OV_IGNORE
         else:
             # an error message was already printed when exec() failed earlier
@@ -147,7 +146,8 @@ def generate_template(obj, post_dict):
         if synctool.param.TERSE:
             terse(synctool.lib.TERSE_ERROR, 'chdir %s' % src_dir)
         else:
-            stderr('error changing directory to %s: %s' % (cwd, err.strerror))
+            error('failed to change directory to %s: %s' % (cwd,
+                                                            err.strerror))
         return False
 
     if have_error:
@@ -169,11 +169,11 @@ def run_command(cmd):
 
     statbuf = synctool.syncstat.SyncStat(cmdfile)
     if not statbuf.exists():
-        stderr('error: command %s not found' % prettypath(cmdfile))
+        error('command %s not found' % prettypath(cmdfile))
         return
 
     if not statbuf.is_exec():
-        stderr("warning: file '%s' is not executable" % prettypath(cmdfile))
+        error("file '%s' is not executable" % prettypath(cmdfile))
         return
 
     # run the shell command
@@ -201,8 +201,8 @@ def run_command_in_dir(dest_dir, cmd):
     try:
         os.chdir(dest_dir)
     except OSError as err:
-        stderr('error changing directory to %s: %s' % (dest_dir,
-                                                       err.strerror))
+        error('failed to change directory to %s: %s' % (dest_dir,
+                                                        err.strerror))
     else:
         run_command(cmd)
 
@@ -213,7 +213,8 @@ def run_command_in_dir(dest_dir, cmd):
         try:
             os.chdir(cwd)
         except OSError as err:
-            stderr('error changing directory to %s: %s' % (cwd, err.strerror))
+            error('failed to change directory to %s: %s' % (cwd,
+                                                            err.strerror))
 
 
 def _run_post(obj, post_script):
@@ -262,7 +263,7 @@ def purge_files():
                 if path == purge_root:
                     # root contains files; guard against user mistakes
                     # rsync --delete would destroy the whole filesystem
-                    stderr('cowardly refusing to purge the root directory')
+                    warning('cowardly refusing to purge the root directory')
                     stderr('please remove any files directly under %s/' %
                             prettypath(purge_root))
                     return
@@ -341,7 +342,7 @@ def _run_rsync_purge(cmd_arr):
         proc = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
                                 stdout=subprocess.PIPE)
     except OSError as err:
-        stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
+        error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return
 
     out, _ = proc.communicate()
@@ -426,7 +427,7 @@ def _delete_callback(obj, post_dict, dir_changed, *args):
         return True, dir_changed
 
     if obj.dest_stat.is_dir():
-        stderr('destination is a directory: %s, skipped' % obj.print_src())
+        warning('destination is a directory: %s, skipped' % obj.print_src())
         return True, False
 
     verbose('checking %s' % obj.print_src())
@@ -823,23 +824,23 @@ def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
     '''
 
     if opt_erase_saved and (opt_diff or opt_reference or opt_upload):
-        stderr("option --erase-saved can not be combined with other actions")
+        error("option --erase-saved can not be combined with other actions")
         sys.exit(1)
 
     if opt_upload and (opt_diff or opt_single or opt_reference):
-        stderr("option --upload can not be combined with other actions")
+        error("option --upload can not be combined with other actions")
         sys.exit(1)
 
     if opt_suffix and not opt_upload:
-        stderr("option --suffix can only be used together with --upload")
+        error("option --suffix can only be used together with --upload")
         sys.exit(1)
 
     if opt_diff and (opt_single or opt_reference or opt_fix):
-        stderr("option --diff can not be combined with other actions")
+        error("option --diff can not be combined with other actions")
         sys.exit(1)
 
     if opt_reference and (opt_single or opt_fix):
-        stderr("option --reference can not be combined with other actions")
+        error("option --reference can not be combined with other actions")
         sys.exit(1)
 
 
@@ -900,7 +901,7 @@ def get_options():
         sys.exit(1)
 
     if args != None and len(args) > 0:
-        stderr('error: excessive arguments on command line')
+        error('excessive arguments on command line')
         sys.exit(1)
 
     for opt, arg in opts:
@@ -1008,11 +1009,11 @@ def get_options():
             action = ACTION_DIFF
             filename = synctool.lib.strip_path(arg)
             if not filename:
-                stderr('missing filename')
+                error('missing filename')
                 sys.exit(1)
 
             if filename[0] != '/':
-                stderr('please supply a full destination path')
+                error('filename must be a full path, starting with a slash')
                 sys.exit(1)
 
             if not filename in SINGLE_FILES:
@@ -1023,11 +1024,11 @@ def get_options():
             opt_single = True
             filename = synctool.lib.strip_path(arg)
             if not filename:
-                stderr('missing filename')
+                error('missing filename')
                 sys.exit(1)
 
             if filename[0] != '/':
-                stderr('please supply a full destination path')
+                error('filename must be a full path, starting with a slash')
                 sys.exit(1)
 
             if not filename in SINGLE_FILES:
@@ -1039,11 +1040,11 @@ def get_options():
             action = ACTION_REFERENCE
             filename = synctool.lib.strip_path(arg)
             if not filename:
-                stderr('missing filename')
+                error('missing filename')
                 sys.exit(1)
 
             if filename[0] != '/':
-                stderr('please supply a full destination path')
+                error('filename must be a full path, starting with a slash')
                 sys.exit(1)
 
             if not filename in SINGLE_FILES:
@@ -1055,7 +1056,7 @@ def get_options():
             action = ACTION_ERASE_SAVED
             continue
 
-        stderr("unknown command line option '%s'" % opt)
+        error("unknown command line option '%s'" % opt)
         errors += 1
 
     if errors:
@@ -1078,21 +1079,21 @@ def main():
     synctool.config.init_mynodename()
 
     if not synctool.param.NODENAME:
-        stderr('unable to determine my nodename (%s)' %
-               synctool.param.HOSTNAME)
+        error('unable to determine my nodename (%s)' %
+              synctool.param.HOSTNAME)
         stderr('please check %s' % synctool.param.CONF_FILE)
         sys.exit(-1)
 
     if not synctool.param.NODENAME in synctool.param.NODES:
-        stderr("unknown node '%s'" % synctool.param.NODENAME)
+        error("unknown node '%s'" % synctool.param.NODENAME)
         stderr('please check %s' % synctool.param.CONF_FILE)
         sys.exit(-1)
 
     if synctool.param.NODENAME in synctool.param.IGNORE_GROUPS:
         # this is only a warning ...
         # you can still run synctool-pkg on the client by hand
-        stderr('warning: node %s is disabled in %s' %
-               (synctool.param.NODENAME, synctool.param.CONF_FILE))
+        warning('node %s is disabled in %s' %
+                (synctool.param.NODENAME, synctool.param.CONF_FILE))
 
     if synctool.lib.UNIX_CMD:
         t = time.localtime(time.time())

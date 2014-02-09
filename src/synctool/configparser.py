@@ -21,6 +21,7 @@ import sys
 import re
 
 import synctool.lib
+from synctool.lib import stderr
 import synctool.param
 
 # this allows alphanumeric concatenated by underscore, minus, or plus symbol
@@ -60,12 +61,6 @@ class Symbol(object):
         return '%s:%d' % (self.filename, self.lineno)
 
 
-def stderr(msg):
-    '''write message to stderr'''
-
-    sys.stderr.write(msg + '\n')
-
-
 def read_config_file(configfile):
     '''read a (included) config file
     Returns 0 on success, or error count on errors
@@ -74,8 +69,8 @@ def read_config_file(configfile):
     try:
         f = open(configfile, 'r')
     except IOError as err:
-        stderr("failed to read config file '%s' : %s" % (configfile,
-                                                         err.strerror))
+        stderr("error: failed to read config file '%s' : %s" % (configfile,
+                                                                err.strerror))
         return 1
 
     this_module = sys.modules['synctool.configparser']

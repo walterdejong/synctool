@@ -19,7 +19,7 @@ import shlex
 import synctool.aggr
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose, stderr
+from synctool.lib import verbose, error
 from synctool.main.wrapper import catch_signals
 import synctool.multiplex
 import synctool.nodeset
@@ -146,7 +146,7 @@ def start_multiplex(address_list):
     if synctool.param.MASTER != synctool.param.HOSTNAME:
         verbose('master %s != hostname %s' % (synctool.param.MASTER,
                                               synctool.param.HOSTNAME))
-        stderr('error: not running on the master node')
+        error('not running on the master node')
         sys.exit(-1)
 
     if PERSIST is None:
@@ -156,7 +156,7 @@ def start_multiplex(address_list):
         # spellcheck the parameter
         m = synctool.configparser.PERSIST_TIME.match(PERSIST)
         if not m:
-            stderr("%s: invalid persist value '%s'" % (PROGNAME, PERSIST))
+            error("invalid persist value '%s'" % PERSIST)
             return
 
     # make list of nodenames
@@ -174,7 +174,7 @@ def control_multiplex(address_list, ctl_cmd):
 
     synctool.multiplex.detect_ssh()
     if synctool.multiplex.SSH_VERSION < 39:
-        stderr('error: unsupported version of ssh')
+        error('unsupported version of ssh')
         sys.exit(-1)
 
     SSH_CMD_ARR = shlex.split(synctool.param.SSH_CMD)
@@ -459,7 +459,7 @@ def main():
     try:
         cmd_args = get_options()
     except synctool.range.RangeSyntaxError as err:
-        print 'error:', err
+        error(str(err))
         sys.exit(1)
 
     if OPT_AGGREGATE:
@@ -472,7 +472,7 @@ def main():
 
     address_list = NODESET.addresses()
     if not address_list:
-        print 'no valid nodes specified'
+        error('no valid nodes specified')
         sys.exit(1)
 
     if OPT_MULTIPLEX:

@@ -18,7 +18,7 @@ import shlex
 import synctool.aggr
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose, stderr, unix_out
+from synctool.lib import verbose, error, unix_out
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.param
@@ -75,7 +75,7 @@ def ping_node(addr):
         f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
     except OSError as err:
-        stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
+        error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return False
 
     with f:
@@ -286,7 +286,7 @@ def main():
     try:
         get_options()
     except synctool.range.RangeSyntaxError as err:
-        print 'error:', err
+        error(str(err))
         sys.exit(1)
 
     if OPT_AGGREGATE:

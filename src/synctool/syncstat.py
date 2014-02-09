@@ -16,7 +16,7 @@ import pwd
 import grp
 import errno
 
-from synctool.lib import stderr
+from synctool.lib import error
 
 
 class SyncStat(object):
@@ -63,7 +63,7 @@ class SyncStat(object):
             if err.errno != errno.ENOENT:
                 # "No such file or directory" is a valid error
                 # when the destination is missing
-                stderr('error: stat(%s) failed: %s' % (path, err.strerror))
+                error('stat(%s) failed: %s' % (path, err.strerror))
 
             self.entry_exists = False
             self.mode = self.uid = self.gid = self.size = None

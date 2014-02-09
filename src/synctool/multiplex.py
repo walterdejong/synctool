@@ -16,7 +16,7 @@ import shlex
 import subprocess
 
 import synctool.lib
-from synctool.lib import verbose, stderr, unix_out
+from synctool.lib import verbose, error, warning, unix_out
 import synctool.param
 import synctool.syncstat
 
@@ -54,18 +54,18 @@ def use_mux(nodename, remote_addr):
     statbuf = synctool.syncstat.SyncStat(control_path)
     if statbuf.exists():
         if not statbuf.is_sock():
-            stderr('warning: control path %s: not a socket file' %
-                   control_path)
+            warning('control path %s: not a socket file' %
+                    control_path)
             return False
 
         if statbuf.uid != os.getuid():
-            stderr('warning: control path: %s: incorrect owner uid %u' %
-                   (control_path, statbuf.uid))
+            warning('control path: %s: incorrect owner uid %u' %
+                    (control_path, statbuf.uid))
             return False
 
         if statbuf.mode & 077 != 0:
-            stderr('warning: control path %s: suspicious file mode %04o' %
-                   (control_path, statbuf.mode & 0777))
+            warning('control path %s: suspicious file mode %04o' %
+                    (control_path, statbuf.mode & 0777))
             return False
 
         verbose('control path %s already exists' % control_path)
@@ -124,7 +124,7 @@ def setup_master(node_list, persist):
 
     detect_ssh()
     if SSH_VERSION < 39:
-        stderr('error: unsupported version of ssh')
+        error('unsupported version of ssh')
         return False
 
     if persist == 'none':
@@ -149,20 +149,19 @@ def setup_master(node_list, persist):
         statbuf = synctool.syncstat.SyncStat(control_path)
         if statbuf.exists():
             if not statbuf.is_sock():
-                stderr('warning: control path %s: not a socket file' %
-                       control_path)
+                warning('control path %s: not a socket file' % control_path)
                 errors += 1
                 continue
 
             if statbuf.uid != os.getuid():
-                stderr('warning: control path: %s: incorrect owner uid %u' %
-                       (control_path, statbuf.uid))
+                warning('control path: %s: incorrect owner uid %u' %
+                        (control_path, statbuf.uid))
                 errors += 1
                 continue
 
             if statbuf.mode & 077 != 0:
-                stderr('warning: control path %s: suspicious file mode %04o' %
-                       (control_path, statbuf.mode & 0777))
+                warning('control path %s: suspicious file mode %04o' %
+                        (control_path, statbuf.mode & 0777))
                 errors += 1
                 continue
 
@@ -180,8 +179,7 @@ def setup_master(node_list, persist):
         try:
             proc = subprocess.Popen(cmd_arr, shell=False)
         except OSError as err:
-            stderr('error: failed to execute %s: %s' % (cmd_arr[0],
-                                                        err.strerror))
+            error('failed to execute %s: %s' % (cmd_arr[0], err.strerror))
             errors += 1
             continue
 
@@ -234,7 +232,7 @@ def detect_ssh():
         proc = subprocess.Popen(cmd_arr, shell=False, stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT)
     except OSError as err:
-        stderr('error: failed to execute %s: %s' % (cmd_arr[0], err.strerror))
+        error('failed to execute %s: %s' % (cmd_arr[0], err.strerror))
         SSH_VERSION = -1
         return SSH_VERSION
 

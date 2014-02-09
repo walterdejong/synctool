@@ -19,7 +19,7 @@ import shlex
 import synctool.aggr
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose, stderr
+from synctool.lib import verbose, error
 import synctool.multiplex
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
@@ -310,8 +310,7 @@ def get_options():
 
         if opt in ('-m', '--manager'):
             if not arg in synctool.param.KNOWN_PACKAGE_MANAGERS:
-                stderr("error: unknown or unsupported package manager '%s'" %
-                       arg)
+                error("unknown or unsupported package manager '%s'" % arg)
                 sys.exit(1)
 
             synctool.param.PACKAGE_MANAGER = arg
@@ -380,8 +379,7 @@ def get_options():
         PASS_ARGS.extend(args)
     else:
         if needs_package_list:
-            stderr('error: options --install and --remove require '
-                   'a package name')
+            error('options --install and --remove require a package name')
             sys.exit(1)
 
     if not action:
@@ -404,7 +402,7 @@ def main():
     try:
         get_options()
     except synctool.range.RangeSyntaxError as err:
-        print 'error:', err
+        error(str(err))
         sys.exit(1)
 
     if OPT_AGGREGATE:
@@ -418,7 +416,7 @@ def main():
     if synctool.param.MASTER != synctool.param.HOSTNAME:
         verbose('master %s != hostname %s' % (synctool.param.MASTER,
                                               synctool.param.HOSTNAME))
-        stderr('error: not running on the master node')
+        error('not running on the master node')
         sys.exit(-1)
 
     synctool.lib.openlog()

@@ -76,7 +76,6 @@ COLORMAP = {
     'default' : 0,
 }
 
-# FIXME add error(), warning()
 
 def verbose(msg):
     '''do conditional output based on the verbose command line parameter'''
@@ -98,6 +97,18 @@ def stderr(msg):
     '''
 
     print msg
+
+
+def error(msg):
+    '''print error message'''
+
+    stderr('error: ' + msg)
+
+
+def warning(msg):
+    '''print warning message'''
+
+    stderr('warning: ' + msg)
 
 
 def terse(code, msg):
@@ -406,7 +417,7 @@ def exec_command(cmd_arr, silent=False):
         else:
             ret = subprocess.call(cmd_arr, shell=False)
     except OSError as err:
-        stderr('error: failed to exec %s: %s' % (cmd_arr[0], err.strerror))
+        error('failed to exec %s: %s' % (cmd_arr[0], err.strerror))
         ret = -1
     else:
         verbose('exit code %d' % ret)
@@ -459,8 +470,7 @@ def mkdir_p(path, mode=0700):
     try:
         os.makedirs(path, mode)
     except OSError as err:
-        stderr('error: failed to create directory %s: %s' % (path,
-                                                             err.strerror))
+        error('failed to create directory %s: %s' % (path, err.strerror))
         os.umask(mask)
         return False
     else:

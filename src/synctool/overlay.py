@@ -38,7 +38,7 @@ import os
 import fnmatch
 
 import synctool.lib
-from synctool.lib import verbose, stderr, terse, prettypath
+from synctool.lib import verbose, warning, terse, prettypath
 import synctool.object
 from synctool.object import SyncObject
 import synctool.param
@@ -124,7 +124,7 @@ def _split_extension(filename, src_dir):
                 terse(synctool.lib.TERSE_ERROR, 'invalid group on %s' %
                                                 src_path)
             else:
-                stderr('unknown group on %s, skipped' % prettypath(src_path))
+                warning('unknown group on %s, skipped' % prettypath(src_path))
             return None, -1
 
         # it is not one of my groups
@@ -295,7 +295,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback, *args):
                 terse(synctool.lib.TERSE_ERROR, 'no group on %s' %
                                                 obj.src_path)
             else:
-                stderr('no group extension on %s, skipped' % obj.print_src())
+                warning('no group extension on %s, skipped' % obj.print_src())
             continue
 
         if obj.dest_path in duplicates:

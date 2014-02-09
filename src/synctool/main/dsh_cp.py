@@ -18,7 +18,7 @@ import shlex
 import synctool.aggr
 import synctool.config
 import synctool.lib
-from synctool.lib import stdout, stderr, unix_out
+from synctool.lib import stdout, error, unix_out
 import synctool.multiplex
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
@@ -54,7 +54,7 @@ def run_remote_copy(address_list, files):
             continue
 
         if not os.path.exists(filename):
-            stderr('error: no such file or directory: %s' % filename)
+            error('no such file or directory: %s' % filename)
             errs += 1
             continue
 
@@ -358,7 +358,7 @@ def main():
     try:
         files = get_options()
     except synctool.range.RangeSyntaxError as err:
-        print 'error:', err
+        error(str(err))
         sys.exit(1)
 
     if OPT_AGGREGATE:
@@ -371,7 +371,7 @@ def main():
 
     address_list = NODESET.addresses()
     if not address_list:
-        print 'no valid nodes specified'
+        error('no valid nodes specified')
         sys.exit(1)
 
     run_remote_copy(address_list, files)

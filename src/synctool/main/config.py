@@ -18,7 +18,7 @@ import socket
 
 import synctool.config
 import synctool.configparser
-from synctool.configparser import stderr
+from synctool.lib import stderr, error
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.param
@@ -114,7 +114,7 @@ def list_nodes(nodelist):
     try:
         nodeset.add_node(nodelist)
     except synctool.range.RangeSyntaxError as err:
-        print 'error:', err
+        error(str(err))
         sys.exit(1)
 
     if nodeset.addresses() == None:
@@ -122,11 +122,9 @@ def list_nodes(nodelist):
         sys.exit(1)
 
     groups = []
-
     for node in nodeset.nodelist:
         if OPT_IPADDRESS or OPT_HOSTNAME or OPT_RSYNC:
             out = ''
-
             if OPT_IPADDRESS:
                 out += ' ' + synctool.config.get_node_ipaddress(node)
 
@@ -140,7 +138,6 @@ def list_nodes(nodelist):
                     out += ' yes'
 
             print out[1:]
-
         else:
             for group in synctool.config.get_groups(node):
                 # extend groups, but do not have duplicates
@@ -171,7 +168,7 @@ def list_nodegroups(grouplist):
     try:
         nodeset.add_group(grouplist)
     except synctool.range.RangeSyntaxError as err:
-        print 'error:', err
+        error(str(err))
         sys.exit(1)
 
     if nodeset.addresses() == None:
@@ -247,7 +244,7 @@ def list_commands(cmds):
                 print synctool.param.PKG_CMD
 
         else:
-            stderr("no such command '%s' available in synctool" % cmd)
+            error("no such command '%s' available in synctool" % cmd)
 
 
 def list_dirs():
@@ -267,7 +264,7 @@ def expand(nodelist):
     try:
         nodeset.add_node(nodelist)
     except synctool.range.RangeSyntaxError as err:
-        print 'error:', err
+        error(str(err))
         sys.exit(1)
 
     # don't care if the nodes do not exist
@@ -288,7 +285,7 @@ def set_action(a, opt):
     global ACTION, ACTION_OPTION
 
     if ACTION > 0:
-        stderr('options %s and %s can not be combined' % (ACTION_OPTION, opt))
+        error('options %s and %s can not be combined' % (ACTION_OPTION, opt))
         sys.exit(1)
 
     ACTION = a
@@ -354,7 +351,7 @@ def get_options():
         sys.exit(1)
 
     if args != None and len(args) > 0:
-        stderr('error: excessive arguments on command-line')
+        error('excessive arguments on command-line')
         sys.exit(1)
 
     errors = 0
@@ -448,7 +445,7 @@ def get_options():
             set_action(ACTION_VERSION, '--version')
             continue
 
-        stderr("unknown command line option '%s'" % opt)
+        error("unknown command line option '%s'" % opt)
         errors += 1
 
     if errors:
@@ -487,15 +484,15 @@ def main():
 
     elif ACTION == ACTION_NODES:
         if not ARG_NODENAMES:
-            stderr("option '--node' requires an argument; the node name")
+            error("option '--node' requires an argument; the node name")
             sys.exit(1)
 
         list_nodes(ARG_NODENAMES)
 
     elif ACTION == ACTION_GROUPS:
         if not ARG_GROUPS:
-            stderr("option '--node-group' requires an argument; "
-                   "the node group name")
+            error("option '--node-group' requires an argument; "
+                  "the node group name")
             sys.exit(1)
 
         list_nodegroups(ARG_GROUPS)
@@ -519,8 +516,8 @@ def main():
         synctool.config.init_mynodename()
 
         if not synctool.param.NODENAME:
-            stderr('unable to determine my nodename (%s)' %
-                   synctool.param.HOSTNAME)
+            error('unable to determine my nodename (%s)' %
+                  synctool.param.HOSTNAME)
             stderr('please check %s' % synctool.param.CONF_FILE)
             sys.exit(1)
 

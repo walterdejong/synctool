@@ -17,7 +17,7 @@ import shutil
 import hashlib
 
 import synctool.lib
-from synctool.lib import verbose, stdout, stderr, terse, unix_out, log
+from synctool.lib import verbose, stdout, error, terse, unix_out, log
 from synctool.lib import dryrun_msg, prettypath
 import synctool.param
 import synctool.syncstat
@@ -54,9 +54,9 @@ class VNode(object):
             try:
                 os.rename(self.name, '%s.saved' % self.name)
             except OSError as err:
-                stderr('failed to save %s as %s.saved : %s' % (self.name,
-                                                               self.name,
-                                                               err.strerror))
+                error('failed to save %s as %s.saved : %s' % (self.name,
+                                                              self.name,
+                                                              err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'save %s.saved' % self.name)
 
     def harddelete(self):
@@ -76,7 +76,7 @@ class VNode(object):
             try:
                 os.unlink(self.name)
             except OSError as err:
-                stderr('failed to delete %s : %s' % (self.name, err.strerror))
+                error('failed to delete %s : %s' % (self.name, err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'delete %s' % self.name)
             else:
                 log('deleted %s' % self.name)
@@ -140,9 +140,9 @@ class VNode(object):
             try:
                 os.chown(self.name, self.stat.uid, self.stat.gid)
             except OSError as err:
-                stderr('failed to chown %s.%s %s : %s' %
-                       (self.stat.ascii_uid(), self.stat.ascii_gid(),
-                        self.name, err.strerror))
+                error('failed to chown %s.%s %s : %s' %
+                      (self.stat.ascii_uid(), self.stat.ascii_gid(),
+                       self.name, err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'owner %s' % self.name)
 
     def set_permissions(self):
@@ -155,8 +155,8 @@ class VNode(object):
             try:
                 os.chmod(self.name, self.stat.mode & 07777)
             except OSError as err:
-                stderr('failed to chmod %04o %s : %s' %
-                       (self.stat.mode & 07777, self.name, err.strerror))
+                error('failed to chmod %04o %s : %s' %
+                      (self.stat.mode & 07777, self.name, err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'mode %s' % self.name)
 
     def set_times(self, atime, mtime):
@@ -168,8 +168,8 @@ class VNode(object):
             try:
                 os.utime(self.name, (atime, mtime))
             except OSError as err:
-                stderr('failed to set utime on %s : %s' % (self.name,
-                                                           err.strerror))
+                error('failed to set utime on %s : %s' % (self.name,
+                                                          err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'utime %s' % self.name)
 
 
@@ -209,7 +209,7 @@ class VNodeFile(VNode):
         try:
             f1 = open(src_path, 'rb')
         except IOError as err:
-            stderr('error: failed to open %s : %s' % (src_path, err.strerror))
+            error('failed to open %s : %s' % (src_path, err.strerror))
             # return True because we can't fix an error in src_path
             return True
 
@@ -220,8 +220,7 @@ class VNodeFile(VNode):
             try:
                 f2 = open(self.name, 'rb')
             except IOError as err:
-                stderr('error: failed to open %s : %s' % (self.name,
-                                                          err.strerror))
+                error('failed to open %s : %s' % (self.name, err.strerror))
                 return False
 
             with f2:
@@ -230,7 +229,7 @@ class VNodeFile(VNode):
                     try:
                         data1 = f1.read(IO_SIZE)
                     except IOError as err:
-                        stderr('error reading file %s: %s' % (src_path,
+                        error('failed to read file %s: %s' % (src_path,
                                                               err.strerror))
                         return False
 
@@ -242,7 +241,7 @@ class VNodeFile(VNode):
                     try:
                         data2 = f2.read(IO_SIZE)
                     except IOError as err:
-                        stderr('error reading file %s: %s' % (self.name,
+                        error('failed to read file %s: %s' % (self.name,
                                                               err.strerror))
                         return False
 
@@ -277,8 +276,8 @@ class VNodeFile(VNode):
                 # copy file
                 shutil.copy(self.src_path, self.name)
             except IOError as err:
-                stderr('failed to copy %s to %s: %s' %
-                       (prettypath(self.src_path), self.name, err.strerror))
+                error('failed to copy %s to %s: %s' %
+                      (prettypath(self.src_path), self.name, err.strerror))
                 terse(synctool.lib.TERSE_FAIL, self.name)
 
 
@@ -312,8 +311,8 @@ class VNodeDir(VNode):
             try:
                 os.mkdir(self.name, self.stat.mode & 07777)
             except OSError as err:
-                stderr('failed to make directory %s : %s' % (self.name,
-                                                             err.strerror))
+                error('failed to make directory %s : %s' % (self.name,
+                                                            err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'mkdir %s' % self.name)
 
     def harddelete(self):
@@ -375,7 +374,7 @@ class VNodeLink(VNode):
         try:
             link_to = os.readlink(self.name)
         except OSError as err:
-            stderr('error reading symlink %s : %s' % (self.name,
+            error('failed to read symlink %s : %s' % (self.name,
                                                       err.strerror))
             return False
 
@@ -399,7 +398,7 @@ class VNodeLink(VNode):
             try:
                 os.symlink(self.oldpath, self.name)
             except OSError as err:
-                stderr('failed to create symlink %s -> %s : %s' %
+                error('failed to create symlink %s -> %s : %s' %
                        (self.name, self.oldpath, err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'link %s' % self.name)
 
@@ -418,9 +417,9 @@ class VNodeLink(VNode):
             try:
                 os.lchown(self.name, self.stat.uid, self.stat.gid)
             except OSError as err:
-                stderr('failed to lchown %s.%s %s : %s' %
-                       (self.stat.ascii_uid(), self.stat.ascii_gid(),
-                        self.name, err.strerror))
+                error('failed to lchown %s.%s %s : %s' %
+                      (self.stat.ascii_uid(), self.stat.ascii_gid(),
+                       self.name, err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'owner %s' % self.name)
 
     def set_permissions(self):
@@ -438,8 +437,8 @@ class VNodeLink(VNode):
             try:
                 os.lchmod(self.name, self.stat.mode & 07777)
             except OSError as err:
-                stderr('failed to lchmod %04o %s : %s' %
-                       (self.stat.mode & 07777, self.name, err.strerror))
+                error('failed to lchmod %04o %s : %s' %
+                      (self.stat.mode & 07777, self.name, err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'mode %s' % self.name)
 
 
@@ -467,8 +466,8 @@ class VNodeFifo(VNode):
             try:
                 os.mkfifo(self.name, self.stat.mode & 0777)
             except OSError as err:
-                stderr('failed to create fifo %s : %s' % (self.name,
-                                                          err.strerror))
+                error('failed to create fifo %s : %s' % (self.name,
+                                                         err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'fifo %s' % self.name)
 
 
@@ -497,7 +496,7 @@ class VNodeChrDev(VNode):
         try:
             dest_stat = os.lstat(self.name)
         except OSError as err:
-            stderr('error checking %s : %s' % (self.name, err.strerror))
+            error('error checking %s : %s' % (self.name, err.strerror))
             return False
 
         src_major = os.major(self.src_stat.st_rdev)
@@ -530,8 +529,8 @@ class VNodeChrDev(VNode):
                          (self.src_stat.st_mode & 0777) | stat.S_IFCHR,
                          os.makedev(major, minor))
             except OSError as err:
-                stderr('failed to create device %s : %s' % (self.name,
-                                                            err.strerror))
+                error('failed to create device %s : %s' % (self.name,
+                                                           err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'device %s' % self.name)
 
 
@@ -560,7 +559,7 @@ class VNodeBlkDev(VNode):
         try:
             dest_stat = os.lstat(self.name)
         except OSError as err:
-            stderr('error checking %s : %s' % (self.name, err.strerror))
+            error('error checking %s : %s' % (self.name, err.strerror))
             return False
 
         src_major = os.major(self.src_stat.st_rdev)
@@ -593,8 +592,8 @@ class VNodeBlkDev(VNode):
                          (self.src_stat.st_mode & 0777) | stat.S_IFBLK,
                          os.makedev(major, minor))
             except OSError as err:
-                stderr('failed to create device %s : %s' % (self.name,
-                                                            err.strerror))
+                error('failed to create device %s : %s' % (self.name,
+                                                           err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'device %s' % self.name)
 
 
@@ -731,7 +730,7 @@ class SyncObject(object):
             try:
                 oldpath = os.readlink(self.src_path)
             except OSError as err:
-                stderr('error reading symlink %s : %s' % (self.print_src(),
+                error('failed to read symlink %s : %s' % (self.print_src(),
                                                           err.strerror))
                 terse(synctool.lib.TERSE_FAIL, self.src_path)
                 return None
@@ -768,7 +767,7 @@ class SyncObject(object):
             try:
                 oldpath = os.readlink(self.src_path)
             except OSError as err:
-                stderr('error reading symlink %s : %s' % (self.print_src(),
+                error('failed to read symlink %s : %s' % (self.print_src(),
                                                           err.strerror))
                 terse(synctool.lib.TERSE_FAIL, self.src_path)
                 return None
@@ -808,15 +807,13 @@ class SyncObject(object):
         try:
             src_stat = os.lstat(self.src_path)
         except OSError as err:
-            stderr('error: stat(%s) failed: %s' % (self.src_path,
-                                                   err.strerror))
+            error('stat(%s) failed: %s' % (self.src_path, err.strerror))
             return False
 
         try:
             dest_stat = os.lstat(self.dest_path)
         except OSError as err:
-            stderr('error: stat(%s) failed: %s' % (self.dest_path,
-                                                   err.strerror))
+            error('stat(%s) failed: %s' % (self.dest_path, err.strerror))
             return False
 
         if src_stat.st_mtime > dest_stat.st_mtime:
