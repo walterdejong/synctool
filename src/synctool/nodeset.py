@@ -21,6 +21,8 @@ usage:
   use nodeset.get_nodename_from_address() to get a nodename
 '''
 
+import sys
+
 import synctool.config
 import synctool.lib
 from synctool.lib import verbose, stderr
@@ -170,5 +172,38 @@ class NodeSet(object):
             return self.namemap[addr]
 
         return addr
+
+
+def make_default_nodeset():
+    '''take the (temporary) DEFAULT_NODESET and expand it to
+    the definitive DEFAULT_NODESET
+    Return value: none, exit the program on error
+    '''
+
+    # Note: this function is called by synctool.config.read_config()
+
+    temp_set = synctool.param.DEFAULT_NODESET
+    synctool.param.DEFAULT_NODESET = set()
+    nodeset = NodeSet()
+    errors = 0
+    for elem in temp_set:
+        if elem in synctool.param.NODES:
+            nodeset.add_node(elem)
+        elif elem in synctool.param.ALL_GROUPS:
+            nodeset.add_group(elem)
+        else:
+            stderr("config error: unknown node or group '%s' "
+                   "in default_nodeset" % elem)
+            errors += 1
+
+    if not errors:
+        if not nodeset.addresses():
+            # error message already printed
+            errors += 1
+        else:
+            synctool.param.DEFAULT_NODESET = nodeset.nodelist
+
+    if errors > 0:
+        sys.exit(-1)
 
 # EOB

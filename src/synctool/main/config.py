@@ -474,7 +474,7 @@ def main():
         sys.exit(0)
 
     synctool.config.read_config()
-#    synctool.config.make_default_nodeset()
+#    synctool.nodeset.make_default_nodeset()
 
     if ACTION == ACTION_LIST_NODES:
         list_all_nodes()

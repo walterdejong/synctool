@@ -19,7 +19,6 @@ import socket
 import synctool.configparser
 import synctool.lib
 from synctool.lib import stderr, error
-import synctool.nodeset
 import synctool.param
 
 
@@ -89,37 +88,6 @@ def read_config():
 
     # initialize ALL_GROUPS
     synctool.param.ALL_GROUPS = make_all_groups()
-
-    if errors > 0:
-        sys.exit(-1)
-
-
-def make_default_nodeset():
-    '''take the (temporary) DEFAULT_NODESET and expand it to
-    the definitive DEFAULT_NODESET
-    Return value: none, exit the program on error
-    '''
-
-    temp_set = synctool.param.DEFAULT_NODESET
-    synctool.param.DEFAULT_NODESET = set()
-    nodeset = synctool.nodeset.NodeSet()
-    errors = 0
-    for elem in temp_set:
-        if elem in synctool.param.NODES:
-            nodeset.add_node(elem)
-        elif elem in synctool.param.ALL_GROUPS:
-            nodeset.add_group(elem)
-        else:
-            stderr("config error: unknown node or group '%s' "
-                   "in default_nodeset" % elem)
-            errors += 1
-
-    if not errors:
-        if not nodeset.addresses():
-            # error message already printed
-            errors += 1
-        else:
-            synctool.param.DEFAULT_NODESET = nodeset.nodelist
 
     if errors > 0:
         sys.exit(-1)

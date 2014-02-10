@@ -258,7 +258,7 @@ def get_options():
             continue
 
     synctool.config.read_config()
-#    synctool.config.make_default_nodeset()
+#    synctool.nodeset.make_default_nodeset()
 
     # then process the other options
     ACTION = 0
