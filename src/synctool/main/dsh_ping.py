@@ -33,29 +33,11 @@ OPT_AGGREGATE = False
 
 MASTER_OPTS = []
 
-MAX_DISPLAY_LEN = 1
-
 
 def ping_nodes(address_list):
     '''ping nodes in parallel'''
 
-    global MAX_DISPLAY_LEN
-
-    MAX_DISPLAY_LEN = _max_nodename_len(address_list)
-
     synctool.lib.multiprocess(ping_node, address_list)
-
-
-def _max_nodename_len(address_list):
-    '''Returs maximum length of nodename to display'''
-
-    max_len = 1
-    for addr in address_list:
-        node = NODESET.get_nodename_from_address(addr)
-        if len(node) > max_len:
-            max_len = len(node)
-
-    return max_len
 
 
 def ping_node(addr):
@@ -111,9 +93,9 @@ def ping_node(addr):
                     packets_received = -1
 
     if packets_received > 0:
-        print '%-*s: up' % (MAX_DISPLAY_LEN, node)
+        print '%s: up' % node
     else:
-        print '%-*s: not responding' % (MAX_DISPLAY_LEN, node)
+        print '%s: not responding' % node
 
 
 def check_cmd_config():
