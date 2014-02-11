@@ -23,6 +23,7 @@ import re
 import synctool.lib
 from synctool.lib import stderr
 import synctool.param
+import synctool.range
 
 # this allows alphanumeric concatenated by underscore, minus, or plus symbol
 # and no other characters
