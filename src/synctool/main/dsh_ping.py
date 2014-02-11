@@ -111,9 +111,9 @@ def ping_node(addr):
                     packets_received = -1
 
     if packets_received > 0:
-        print '%-*s  up' % (MAX_DISPLAY_LEN, node)
+        print '%-*s: up' % (MAX_DISPLAY_LEN, node)
     else:
-        print '%-*s  not responding' % (MAX_DISPLAY_LEN, node)
+        print '%-*s: not responding' % (MAX_DISPLAY_LEN, node)
 
 
 def check_cmd_config():
