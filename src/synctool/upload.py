@@ -17,6 +17,8 @@ import shlex
 import stat
 import subprocess
 import urllib
+import pwd
+import grp
 
 import synctool.config
 import synctool.lib
@@ -139,6 +141,26 @@ class RemoteStat(object):
 
         return stat.S_ISLNK(self.mode)
 
+    def translate_uid(self):
+        '''Return local numeric uid corresponding to remote owner'''
+
+        try:
+            pw_entry = pwd.getpwnam(self.owner)
+        except KeyError:
+            return self.uid
+
+        return pw_entry.pw_uid
+
+    def translate_gid(self):
+        '''Return local numeric gid corresponding to remote group'''
+
+        try:
+            grp_entry = grp.getgrnam(self.group)
+        except KeyError:
+            return self.gid
+
+        return grp_entry.gr_gid
+
     def __repr__(self):
         '''Returns string representation'''
 
@@ -256,9 +278,15 @@ def _makedir(path, remote_stats):
         warning('failed to chmod %04o %s: %s' % (mode, path, err.strerror))
 
     # also set the owner & group
-    # TODO translate the remote owner/group names unless 'rsync --numeric-ids'
-    uid = remote_stats[0].uid
-    gid = remote_stats[0].gid
+    # uid/gid are translated from remote owner/group,
+    # unless --numeric-ids is wanted
+    rsync_cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
+    if '--numeric-ids' in rsync_cmd_arr:
+        uid = remote_stats[0].uid
+        gid = remote_stats[0].gid
+    else:
+        uid = remote_stats[0].translate_uid()
+        gid = remote_stats[0].translate_gid()
     try:
         os.lchown(path, uid, gid)
     except OSError as err:
