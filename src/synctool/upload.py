@@ -14,12 +14,14 @@
 import os
 import sys
 import shlex
+import stat
 import subprocess
+import urllib
 
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose, stdout, stderr, error, terse, unix_out
-from synctool.lib import prettypath
+from synctool.lib import verbose, stdout, stderr, error, warning
+from synctool.lib import terse, unix_out, prettypath
 import synctool.multiplex
 import synctool.overlay
 import synctool.param
@@ -101,65 +103,168 @@ class UploadFile(object):
                                        self.purge) + self.filename
 
 
-def _remote_isdir(up):
-    '''See if the remote rsync source is a directory or a file
-    Parameter 'up' is an instance of UploadFile
-    Returns: tuple of booleans: (exists, isdir)
+class RemoteStat(object):
+    '''represent stat() info of a remote file'''
+
+    def __init__(self, arr):
+        '''initialize instance
+        May throw ValueError
+        '''
+
+        if not arr:
+            raise ValueError()
+
+        if arr[0] == 'error:':
+            raise ValueError()
+
+        if len(arr) != 8:
+            raise ValueError()
+
+        self.mode = int(arr[0], 8)
+        self.uid = int(arr[1])
+        self.owner = arr[2]
+        self.gid = int(arr[3])
+        self.group = arr[4]
+        self.size = int(arr[5])
+        self.filename = urllib.unquote(arr[6])
+        self.linkdest = urllib.unquote(arr[7])
+
+    def is_dir(self):
+        '''Returns True if it's a directory'''
+
+        return stat.S_ISDIR(self.mode)
+
+    def is_symlink(self):
+        '''Returns True if it's a symbolic link'''
+
+        return stat.S_ISLNK(self.mode)
+
+    def __repr__(self):
+        '''Returns string representation'''
+
+        return ('<RemoteStat: %06o %u %s %u %s %u %r %r>' %
+                (self.mode, self.uid, self.owner, self.gid, self.group,
+                 self.size, self.filename, self.linkdest))
+
+
+def _remote_stat(up):
+    '''Get stat info of the remote object
+    Returns array of RemoteStat data, or None on error
     '''
 
-    cmd_arr = shlex.split(synctool.param.RSYNC_CMD)[:1]
-    cmd_arr.append('--list-only')
     # use ssh connection multiplexing (if possible)
-    ssh_cmd_arr = shlex.split(synctool.param.SSH_CMD)
+    cmd_arr = shlex.split(synctool.param.SSH_CMD)
     use_multiplex = synctool.multiplex.use_mux(up.node, up.address)
     if use_multiplex:
-        synctool.multiplex.ssh_args(ssh_cmd_arr, up.node)
-    cmd_arr.extend(['-e', ' '.join(ssh_cmd_arr)])
-    cmd_arr.extend(['--', up.address + ':' + up.filename])
+        synctool.multiplex.ssh_args(cmd_arr, up.node)
 
-    verbose('running rsync --list-only %s:%s' % (up.node, up.filename))
+    list_cmd = os.path.join(synctool.param.ROOTDIR, 'sbin',
+                            'synctool_list.py')
+    cmd_arr.extend(['--', up.address, list_cmd, up.filename])
+
+    verbose('running synctool_list %s:%s' % (up.node, up.filename))
     unix_out(' '.join(cmd_arr))
-
     try:
         proc = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
     except OSError as err:
         error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
-        return False, False
+        return None
 
     out, err = proc.communicate()
 
     if proc.returncode != 0:
-        if proc.returncode == 255:
-            error('failed to connect to %s' % up.node)
-        elif proc.returncode == 23:
-            error('no such file or directory')
-        else:
-            error('failed rsync %s:%s' % (up.node, up.filename))
+        error('failed to list remote %s:%s' % (up.node, up.filename))
+        return None
 
-        return False, False
-
-    # output should be an 'ls -l' like line, with first a mode string
+    # parse synctool_list output into array of RemoteStat info
+    data = []
     for line in out.split('\n'):
+        if not line:
+            continue
+
         arr = line.split()
-        mode = arr[0]
-        if len(mode) == 10:     # crude test
-            if mode[0] == 'd':
-                # it's a directory
-                verbose('remote rsync source is a directory')
-                return True, True
+        if arr[0] == 'error:':
+            # relay error message
+            error(' '.join(arr[1:]))
+            return None
 
-            if mode[0] in '-lpcbs':
-                # accept it as a file entry
-                verbose('remote rsync source is a file entry')
-                return True, False
+        try:
+            remote_stat = RemoteStat(arr)
+        except ValueError:
+            error('unexpected output from synctool_list %s:%s' %
+                  (up.node, up.filename))
+            return None
 
-        # some other line on stdout; just ignore it
+        verbose('remote: %r' % remote_stat)
+        data.append(remote_stat)
 
-    # got no good output
-    error('failed to parse rsync --list-only output')
-    return False, False
+    return data
+
+
+def _makedir(path, remote_stats):
+    '''make directory in repository, copying over mode and ownership
+    of the directories as they are on the remote side
+    remote_stats is array holding stat info of the remote side
+    Returns True on success, False on error
+
+    Note that this function creates directories even if the remote
+    path component may be a symbolic link
+    '''
+
+    if not path or not remote_stats:
+        error("recursion too deep")
+        return False
+
+    if os.path.exists(path):
+        return True
+
+    verbose('_makedir %s %r' % (path, remote_stats))
+
+    # recursively make parent directory
+    if not _makedir(os.path.dirname(path), remote_stats[1:]):
+        return False
+
+    # do a simple check against the names of the dir
+    # (are we still 'in sync' with remote_stats?)
+    basename = os.path.basename(path)
+    remote_basename = os.path.basename(remote_stats[0].filename)
+    if remote_basename and basename != remote_basename:
+        error("out of sync with remote stat information, I'm lost")
+        return False
+
+    # temporarily restore admin's umask
+    mask = os.umask(synctool.param.ORIG_UMASK)
+    mode = remote_stats[0].mode & 0777
+    try:
+        os.mkdir(path, mode)
+    except OSError as err:
+        error('failed to create directory %s: %s' % (path, err.strerror))
+        os.umask(mask)
+        return False
+    else:
+        unix_out('mkdir -p -m %04o %s' % (mode, path))
+
+    os.umask(mask)
+
+    # the mkdir mode is affected by umask
+    # so set the mode the way we want it
+    try:
+        os.chmod(path, mode)
+    except OSError as err:
+        warning('failed to chmod %04o %s: %s' % (mode, path, err.strerror))
+
+    # also set the owner & group
+    # TODO translate the remote owner/group names unless 'rsync --numeric-ids'
+    uid = remote_stats[0].uid
+    gid = remote_stats[0].gid
+    try:
+        os.lchown(path, uid, gid)
+    except OSError as err:
+        warning('failed to chown %s: %s' % (path, err.strerror))
+
+    return True
 
 
 def _upload_callback(obj, post_dict, dir_changed=False):
@@ -240,11 +345,13 @@ def rsync_upload(up):
     up.make_repos_path()
 
     # check whether the remote entry exists
-    ok, isdir = _remote_isdir(up)
-    if not ok:
+    remote_stats = _remote_stat(up)
+    if remote_stats is None:
         # error message was already printed
         return
 
+    # first element in array is our 'target'
+    isdir = remote_stats[0].is_dir()
     if isdir and synctool.param.REQUIRE_EXTENSION and not up.purge:
         error('remote is a directory')
         stderr('synctool can not upload directories to $overlay '
@@ -261,7 +368,7 @@ def rsync_upload(up):
     # opts is just for the 'visual aspect'; it is displayed when --verbose
     opts = ' '
     if synctool.lib.DRY_RUN:
-        cmd_arr.append('-n')
+#        cmd_arr.append('-n')
         opts += '-n '
 
     if synctool.lib.VERBOSE:
@@ -285,7 +392,7 @@ def rsync_upload(up):
         stdout('would be uploaded as %s' % verbose_path)
     else:
         dest_dir = os.path.dirname(up.repos_path)
-        synctool.lib.mkdir_p(dest_dir)
+        _makedir(dest_dir, remote_stats[1:])
         if not os.path.exists(dest_dir):
             error('failed to create %s/' % dest_dir)
             return
@@ -301,13 +408,15 @@ def rsync_upload(up):
 
     verbose('running rsync%s%s:%s to %s' % (opts, up.node, up.filename,
                                             verbose_path))
-    unix_out(' '.join(cmd_arr))
-
     if not synctool.lib.DRY_RUN:
         synctool.lib.run_with_nodename(cmd_arr, up.node)
         if not os.path.exists(up.repos_path):
             error('upload failed')
         else:
             stdout('uploaded %s' % verbose_path)
+    else:
+        # in dry-run mode, show the command anyway
+        unix_out('# dry run, rsync not performed')
+        unix_out(' '.join(cmd_arr))
 
 # EOB
