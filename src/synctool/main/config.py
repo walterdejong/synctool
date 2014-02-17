@@ -117,7 +117,7 @@ def list_nodes(nodelist):
         error(str(err))
         sys.exit(1)
 
-    if nodeset.addresses() == None:
+    if nodeset.addresses() is None:
         # error message already printed
         sys.exit(1)
 
@@ -171,7 +171,7 @@ def list_nodegroups(grouplist):
         error(str(err))
         sys.exit(1)
 
-    if nodeset.addresses() == None:
+    if nodeset.addresses() is None:
         # error message already printed
         sys.exit(1)
 
