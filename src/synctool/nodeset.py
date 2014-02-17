@@ -25,7 +25,7 @@ import sys
 
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose, stderr
+from synctool.lib import verbose, stderr, warning
 import synctool.param
 import synctool.range
 
@@ -156,12 +156,12 @@ class NodeSet(object):
                 synctool.lib.terse(synctool.lib.TERSE_WARNING,
                                    'ignored nodes')
             else:
-                ignored_str = ('warning: ignored nodes: ' +
+                ignored_str = ('ignored nodes: ' +
                                ','.join(list(ignored_nodes)))
-                if len(ignored_str) < 80:
-                    print ignored_str
+                if len(ignored_str) < 70:
+                    warning(ignored_str)
                 else:
-                    print 'warning: some nodes are ignored'
+                    warning('some nodes are ignored')
 
         return addrs
 
