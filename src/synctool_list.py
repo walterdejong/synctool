@@ -20,6 +20,9 @@ import pwd
 import grp
 import urllib
 
+# Note: do not import synctool modules here
+# They can't be found without the launcher, and this program is small anyway
+
 # caches for usernames/groupnames by uid/gid
 UID_CACHE = {}
 GID_CACHE = {}
@@ -33,7 +36,7 @@ def do_stat(filename):
     try:
         statbuf = os.lstat(filename)
     except OSError as err:
-        print 'error:', err
+        print 'error:', err.strerror
         return None
 
     owner = uid_username(statbuf.st_uid)
@@ -44,7 +47,7 @@ def do_stat(filename):
         try:
             linkdest = os.readlink(filename)
         except OSError as err:
-            print 'error:', err
+            print 'error:', err.strerror
             return None
     else:
         linkdest = '.'
@@ -59,7 +62,7 @@ def uid_username(uid):
     '''Return username for numeric uid'''
 
     s_uid = '%u' % uid
-    if UID_CACHE.has_key(s_uid):
+    if s_uid in UID_CACHE:
         return UID_CACHE[s_uid]
 
     try:
@@ -77,7 +80,7 @@ def gid_groupname(gid):
     '''Return group name for numeric gid'''
 
     s_gid = '%u' % gid
-    if GID_CACHE.has_key(s_gid):
+    if s_gid in GID_CACHE:
         return GID_CACHE[s_gid]
 
     try:
@@ -105,16 +108,16 @@ if __name__ == '__main__':
     while True:
         line = do_stat(fullpath)
         if line is None:
-            sys.exit(1)
+            sys.exit(-1)
 
         print line
 
-        path, filename = os.path.split(fullpath)
+        path, _filename = os.path.split(fullpath)
         if not path:
             # filename without leading path
             break
 
-        if not filename:
+        if not _filename:
             # reached root directory
             break
 
