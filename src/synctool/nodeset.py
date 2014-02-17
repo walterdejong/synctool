@@ -150,8 +150,7 @@ class NodeSet(object):
                 addrs.append(addr)
 
         # print message about ignored nodes
-        if (len(ignored_nodes) > 0 and not synctool.lib.QUIET and
-            not synctool.lib.UNIX_CMD):
+        if len(ignored_nodes) > 0 and not synctool.lib.QUIET:
             if synctool.param.TERSE:
                 synctool.lib.terse(synctool.lib.TERSE_WARNING,
                                    'ignored nodes')
