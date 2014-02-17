@@ -501,7 +501,7 @@ def visit_purge_single(callback):
                 continue
 
             src = os.path.join(synctool.param.PURGE_DIR, g, filepath)
-            if os.path.exists(src):
+            if synctool.lib.path_exists(src):
                 # make a SyncObject
                 obj = synctool.object.SyncObject(src, dest)
                 obj.src_stat = synctool.syncstat.SyncStat(obj.src_path)

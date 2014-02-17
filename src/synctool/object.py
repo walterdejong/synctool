@@ -297,7 +297,7 @@ class VNodeDir(VNode):
     def create(self):
         '''create directory'''
 
-        if os.path.exists(self.name):
+        if synctool.lib.path_exists(self.name):
             # it can happen that the dir already exists
             # due to recursion in visit() + VNode.mkdir_basepath()
             # So this is double checked for dirs that did not exist

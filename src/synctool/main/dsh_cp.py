@@ -53,7 +53,7 @@ def run_remote_copy(address_list, files):
         if not filename:
             continue
 
-        if not os.path.exists(filename):
+        if not synctool.lib.path_exists(filename):
             error('no such file or directory: %s' % filename)
             errs += 1
             continue

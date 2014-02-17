@@ -13,6 +13,7 @@
 import os
 import sys
 import subprocess
+import errno
 import shlex
 import time
 import syslog
@@ -461,7 +462,7 @@ def mkdir_p(path, mode=0700):
     Returns False on error, else True
     '''
 
-    if os.path.exists(path):
+    if path_exists(path):
         return True
 
     # temporarily restore admin's umask
@@ -567,6 +568,35 @@ def prepare_path(path):
     path = strip_trailing_slash(path)
     path = path.replace('$SYNCTOOL/', synctool.param.ROOTDIR + os.sep)
     return path
+
+
+def path_exists(filename):
+    '''Returns True if filename exists'''
+
+    # Note that os.path.exists() returns False for dead symlinks
+    # synctool has module syncstat, but it's nice to have this
+    # function as well for convenience
+
+    if not filename:
+        raise ValueError()
+
+    try:
+        os.lstat(filename)
+    except OSError as err:
+        if err.errno == errno.ENOENT:
+            # No such file or directory
+            return False
+        elif err.errno == errno.ENOTDIR:
+            # path component is not a directory
+            return False
+        elif err.errno == errno.EACCES:
+            # Permission denied: it exists, but we don't have access
+            return True
+
+        error('stat(%s) failed: %s' % (filename, err.strerror))
+        return False
+
+    return True
 
 
 def multiprocess(fn, work):

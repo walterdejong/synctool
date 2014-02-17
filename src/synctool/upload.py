@@ -241,7 +241,7 @@ def _makedir(path, remote_stats):
         error("recursion too deep")
         return False
 
-    if os.path.exists(path):
+    if synctool.lib.path_exists(path):
         return True
 
     verbose('_makedir %s %r' % (path, remote_stats))
@@ -425,7 +425,7 @@ def rsync_upload(up):
     else:
         dest_dir = os.path.dirname(up.repos_path)
         _makedir(dest_dir, remote_stats[1:])
-        if not os.path.exists(dest_dir):
+        if not synctool.lib.path_exists(dest_dir):
             error('failed to create %s/' % dest_dir)
             return
 
@@ -442,7 +442,8 @@ def rsync_upload(up):
                                             verbose_path))
     if not synctool.lib.DRY_RUN:
         synctool.lib.run_with_nodename(cmd_arr, up.node)
-        if not os.path.exists(up.repos_path):
+
+        if not synctool.lib.path_exists(up.repos_path):
             error('upload failed')
         else:
             stdout('uploaded %s' % verbose_path)
