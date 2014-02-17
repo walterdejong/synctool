@@ -19,7 +19,7 @@ BUILD_DOCS="no"
 PROGS="synctool_master.py synctool_launch.py
 dsh.py dsh_cp.py dsh_ping.py dsh_pkg.py synctool_config.py
 synctool_aggr.py synctool_client.py synctool_client_pkg.py
-synctool_template.py"
+synctool_template.py synctool_list.py"
 
 LAUNCHER="synctool_launch.py"
 
