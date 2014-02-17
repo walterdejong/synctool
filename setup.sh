@@ -24,8 +24,8 @@ synctool_template.py synctool_list.py"
 LAUNCHER="synctool_launch.py"
 
 LIBS="__init__.py aggr.py config.py configparser.py lib.py multiplex.py
-nodeset.py object.py overlay.py param.py pkgclass.py range.py syncstat.py
-unbuffered.py update.py upload.py"
+nodeset.py object.py overlay.py param.py pkgclass.py pwdgrp.py range.py
+syncstat.py unbuffered.py update.py upload.py"
 
 MAIN_LIBS="__init__.py aggr.py client.py config.py master.py dsh_pkg.py
 client_pkg.py dsh_ping.py dsh_cp.py dsh.py template.py wrapper.py"

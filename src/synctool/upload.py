@@ -17,8 +17,6 @@ import shlex
 import stat
 import subprocess
 import urllib
-import pwd
-import grp
 
 import synctool.config
 import synctool.lib
@@ -27,6 +25,7 @@ from synctool.lib import terse, unix_out, prettypath
 import synctool.multiplex
 import synctool.overlay
 import synctool.param
+import synctool.pwdgrp
 
 # UploadFile object, used in callback function for overlay.visit()
 GLOBAL_UPLOAD_FILE = None
@@ -145,21 +144,21 @@ class RemoteStat(object):
         '''Return local numeric uid corresponding to remote owner'''
 
         try:
-            pw_entry = pwd.getpwnam(self.owner)
+            local_uid = synctool.pwdgrp.pw_uid(self.owner)
         except KeyError:
             return self.uid
 
-        return pw_entry.pw_uid
+        return local_uid
 
     def translate_gid(self):
         '''Return local numeric gid corresponding to remote group'''
 
         try:
-            grp_entry = grp.getgrnam(self.group)
+            local_gid = synctool.pwdgrp.grp_gid(self.group)
         except KeyError:
             return self.gid
 
-        return grp_entry.gr_gid
+        return local_gid
 
     def __repr__(self):
         '''Returns string representation'''
@@ -290,7 +289,9 @@ def _makedir(path, remote_stats):
     try:
         os.lchown(path, uid, gid)
     except OSError as err:
-        warning('failed to chown %s: %s' % (path, err.strerror))
+        warning('failed to chown %s.%s %s: %s' %
+                (synctool.pwdgrp.pw_name(uid), synctool.pwdgrp.grp_name(gid),
+                 path, err.strerror))
 
     return True
 
