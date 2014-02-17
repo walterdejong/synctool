@@ -80,7 +80,7 @@ def pw_uid(username):
 
 
 def grp_gid(group):
-    '''Returns uid for a given group
+    '''Returns gid for a given group
     Throws KeyError when not found
     '''
 
