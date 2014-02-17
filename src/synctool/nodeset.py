@@ -155,8 +155,9 @@ class NodeSet(object):
                 synctool.lib.terse(synctool.lib.TERSE_WARNING,
                                    'ignored nodes')
             else:
-                ignored_str = ('ignored nodes: ' +
-                               ','.join(list(ignored_nodes)))
+                arr = list(ignored_nodes)
+                arr.sort()
+                ignored_str = ('ignored: ' + synctool.range.compress(arr))
                 if len(ignored_str) < 70:
                     warning(ignored_str)
                 else:
