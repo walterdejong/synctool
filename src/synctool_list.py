@@ -108,7 +108,11 @@ if __name__ == '__main__':
     while True:
         line = do_stat(fullpath)
         if line is None:
-            sys.exit(-1)
+            # error exit
+            # mind the exit code; do not use -1, 255, 127
+            #  255 ssh failed to connect
+            #  127 remote command does not exist
+            sys.exit(2)
 
         print line
 

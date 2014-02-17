@@ -195,8 +195,11 @@ def _remote_stat(up):
 
     out, err = proc.communicate()
 
-    if proc.returncode != 0:
-        error('failed to list remote %s:%s' % (up.node, up.filename))
+    if proc.returncode == 255:
+        error('ssh connection to %s failed' % up.node)
+        return None
+    elif proc.returncode == 127:
+        error('remote list command failed')
         return None
 
     # parse synctool_list output into array of RemoteStat info
