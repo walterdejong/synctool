@@ -34,6 +34,9 @@ def do_stat(filename):
     '''
 
     try:
+        # FIXME if it's an "intermediate" symlinked dir, I really want
+        # FIXME the mode of the linkdest instead
+        # FIXME (this is easiest solved by rewriting as recursive func)
         statbuf = os.lstat(filename)
     except OSError as err:
         print 'error:', err.strerror
@@ -43,6 +46,9 @@ def do_stat(filename):
     group = gid_groupname(statbuf.st_gid)
     quoted_filename = urllib.quote(filename)
 
+    # Note: linkdest isn't used
+    # FIXME take this code out or not?
+    # FIXME maybe change to "filename -> linkdest" ?
     if stat.S_ISLNK(statbuf.st_mode):
         try:
             linkdest = os.readlink(filename)
@@ -105,6 +111,7 @@ if __name__ == '__main__':
     while len(fullpath) > 1 and fullpath[-1] == os.sep:
         fullpath = fullpath[:-1]
 
+    # FIXME rewrite as recursive func?
     while True:
         line = do_stat(fullpath)
         if line is None:
