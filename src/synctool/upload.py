@@ -118,7 +118,7 @@ class RemoteStat(object):
         if arr[0] == 'error:':
             raise ValueError()
 
-        if len(arr) != 8:
+        if len(arr) < 7:
             raise ValueError()
 
         self.mode = int(arr[0], 8)
@@ -128,7 +128,14 @@ class RemoteStat(object):
         self.group = arr[4]
         self.size = int(arr[5])
         self.filename = urllib.unquote(arr[6])
-        self.linkdest = urllib.unquote(arr[7])
+
+        if self.is_symlink():
+            if len(arr) != 9:
+                raise ValueError()
+
+            self.linkdest = urllib.unquote(arr[8])
+        else:
+            self.linkdest = None
 
     def is_dir(self):
         '''Returns True if it's a directory'''
