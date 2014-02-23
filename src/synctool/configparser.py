@@ -28,10 +28,7 @@ import synctool.range
 # this allows alphanumeric concatenated by underscore, minus, or plus symbol
 # and no other characters
 # Valid names are: node1 node1-10 node_10_0_0_2 node1+node2
-SPELLCHECK = re.compile(r'[a-zA-Z]+([a-zA-Z0-9]+|'
-                        r'\_[a-zA-Z0-9]+|'
-                        r'\-[a-zA-Z0-9]+|'
-                        r'\+[a-zA-Z0-9]+)*')
+SPELLCHECK = re.compile(r'^[a-zA-Z](?:[_+-]?[a-zA-Z0-9])*$')
 
 # this will match "60", "1h30m", "1w4d10h3m50s", "yes", etc.
 PERSIST_TIME = re.compile(r'^\d+$|'
