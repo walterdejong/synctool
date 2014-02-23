@@ -29,7 +29,7 @@ SPLIT_EXPR = re.compile(r'([a-zA-Z0-9_+-]+\[\d+[0-9,/-]*\][a-zA-Z0-9_+-]*|'
                         r'[a-zA-Z0-9_+-]+)')
 
 # This regex is used to take apart a single node range expression
-NODE_EXPR = re.compile(r'([a-zA-Z]+[a-zA-Z0-9_+-]*)'
+NODE_EXPR = re.compile(r'([a-zA-Z][a-zA-Z0-9_+-]*)'
                        r'\[(\d+[0-9,/-]*)\]'
                        r'([a-zA-Z0-9_+-]*)$')
 
