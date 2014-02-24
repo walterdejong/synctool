@@ -21,6 +21,8 @@ def catch_signals(func):
     '''
 
     def wrap(*args, **kwargs):
+        '''wraps a function (catch_signals is a decorator)'''
+
         try:
             ret = func(*args, **kwargs)
 
@@ -35,7 +37,6 @@ def catch_signals(func):
                 sys.exit(-1)
 
         except KeyboardInterrupt:   # user pressed Ctrl-C
-            print
             sys.exit(127)
 
         return ret

@@ -22,6 +22,7 @@ from synctool.lib import verbose, error
 from synctool.main.wrapper import catch_signals
 import synctool.multiplex
 import synctool.nodeset
+import synctool.parallel
 import synctool.param
 import synctool.unbuffered
 
@@ -79,7 +80,7 @@ def run_dsh(address_list, remote_cmd_arr):
 
     REMOTE_CMD_ARR = remote_cmd_arr
 
-    synctool.lib.multiprocess(worker_ssh, address_list)
+    synctool.parallel.do(worker_ssh, address_list)
 
 
 def worker_ssh(addr):
@@ -181,7 +182,7 @@ def control_multiplex(address_list, ctl_cmd):
     if SSH_OPTIONS:
         SSH_CMD_ARR.extend(shlex.split(SSH_OPTIONS))
 
-    synctool.lib.multiprocess(_ssh_control, address_list)
+    synctool.parallel.do(_ssh_control, address_list)
 
 
 def _ssh_control(addr):
@@ -394,7 +395,7 @@ def get_options():
             if not synctool.param.SLEEP_TIME:
                 # (temporarily) set to -1 to indicate we want
                 # to run serialized
-                # synctool.lib.multiprocess() will use this
+                # synctool.parallel.do() will use this
                 synctool.param.SLEEP_TIME = -1
 
             continue

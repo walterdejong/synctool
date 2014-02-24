@@ -27,6 +27,7 @@ import synctool.multiplex
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.overlay
+import synctool.parallel
 import synctool.param
 import synctool.syncstat
 import synctool.unbuffered
@@ -52,7 +53,7 @@ UPLOAD_FILE = None
 def run_remote_synctool(address_list):
     '''run synctool on target nodes'''
 
-    synctool.lib.multiprocess(worker_synctool, address_list)
+    synctool.parallel.do(worker_synctool, address_list)
 
 
 def worker_synctool(addr):

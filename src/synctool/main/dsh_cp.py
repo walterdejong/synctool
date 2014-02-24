@@ -22,6 +22,7 @@ from synctool.lib import stdout, error, unix_out
 import synctool.multiplex
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
+import synctool.parallel
 import synctool.param
 import synctool.unbuffered
 
@@ -91,7 +92,7 @@ def run_remote_copy(address_list, files):
     if DSH_CP_OPTIONS:
         DSH_CP_CMD_ARR.extend(shlex.split(DSH_CP_OPTIONS))
 
-    synctool.lib.multiprocess(worker_dsh_cp, address_list)
+    synctool.parallel.do(worker_dsh_cp, address_list)
 
 
 def worker_dsh_cp(addr):
