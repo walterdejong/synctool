@@ -25,6 +25,9 @@ ALL_PIDS = set()
 def do(func, work):
     '''run func in parallel'''
 
+    if synctool.param.SLEEP_TIME != 0:
+        synctool.param.NUM_PROC = 1
+
     len_work = len(work)
     if len_work <= synctool.param.NUM_PROC:
         num_proc = len_work
@@ -105,6 +108,7 @@ if __name__ == '__main__':
         synctool.param.NUM_PROC = 3
         do(hello, range(10))
 
+#    synctool.param.SLEEP_TIME = 2
     main()
 
 # EOB
