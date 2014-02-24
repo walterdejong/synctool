@@ -45,17 +45,17 @@ def do(func, work):
 
         if pid == 0:
             # child process
-            # run all work items
-            if part == 1:
-                func(work[rank])
-            else:
-                lower = part * rank
-                upper = part * (rank + 1)
-                if upper > len_work:
-                    upper = len_work
+            # run all work items in sequence
+            lower = part * rank
+            upper = part * (rank + 1)
+            if upper > len_work:
+                upper = len_work
 
-                for item in work[lower:upper]:
-                    func(item)
+            for item in work[lower:upper]:
+                func(item)
+                # this is for option --zzz
+                if synctool.param.SLEEP_TIME > 0:
+                    time.sleep(synctool.param.SLEEP_TIME)
 
             sys.exit(0)
 
