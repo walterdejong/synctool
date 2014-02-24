@@ -13,11 +13,10 @@
 import os
 import sys
 import errno
-
-# TD sleep
 import time
 
 from synctool.lib import error
+from synctool.main.wrapper import catch_signals
 import synctool.param
 
 ALL_PIDS = set()
@@ -44,25 +43,32 @@ def do(func, work):
             return
 
         if pid == 0:
-            # child process
-            # run all work items in sequence
-            lower = part * rank
-            upper = part * (rank + 1)
-            if upper > len_work:
-                upper = len_work
-
-            for item in work[lower:upper]:
-                func(item)
-                # this is for option --zzz
-                if synctool.param.SLEEP_TIME > 0:
-                    time.sleep(synctool.param.SLEEP_TIME)
-
+            do_child(rank, func, work, part)
             sys.exit(0)
 
         # parent
         ALL_PIDS.add(pid)
 
     join()
+
+
+@catch_signals
+def do_child(rank, func, work, part):
+    '''run func to do part of work for parallel rank'''
+
+    # determine which chunk of work to do
+    lower = part * rank
+    upper = part * (rank + 1)
+    len_work = len(work)
+    if upper > len_work:
+        upper = len_work
+
+    # run all work items in sequence
+    for item in work[lower:upper]:
+        func(item)
+        # this is for option --zzz
+        if synctool.param.SLEEP_TIME > 0:
+            time.sleep(synctool.param.SLEEP_TIME)
 
 
 def join():
@@ -86,13 +92,19 @@ def join():
 
 # unit test
 if __name__ == '__main__':
-    def hello(item):
-        '''print item'''
+    @catch_signals
+    def main():
+        '''main func'''
 
-        print '[%u]: hello' % os.getpid(), item
-        time.sleep(0.1245)
+        def hello(item):
+            '''print item'''
 
-    synctool.param.NUM_PROC = 3
-    do(hello, range(10))
+            print '[%u]: hello' % os.getpid(), item
+            time.sleep(0.1245)
+
+        synctool.param.NUM_PROC = 3
+        do(hello, range(10))
+
+    main()
 
 # EOB
