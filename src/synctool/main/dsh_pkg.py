@@ -23,6 +23,7 @@ from synctool.lib import verbose, error
 import synctool.multiplex
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
+import synctool.parallel
 import synctool.param
 import synctool.unbuffered
 
@@ -40,7 +41,7 @@ MASTER_OPTS = None
 def run_remote_pkg(address_list):
     '''run synctool-pkg on the target nodes'''
 
-    synctool.lib.multiprocess(worker_pkg, address_list)
+    synctool.parallel.do(worker_pkg, address_list)
 
 
 def worker_pkg(addr):

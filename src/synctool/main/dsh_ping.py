@@ -21,6 +21,7 @@ import synctool.lib
 from synctool.lib import verbose, error, unix_out
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
+import synctool.parallel
 import synctool.param
 import synctool.unbuffered
 
@@ -37,7 +38,7 @@ MASTER_OPTS = []
 def ping_nodes(address_list):
     '''ping nodes in parallel'''
 
-    synctool.lib.multiprocess(ping_node, address_list)
+    synctool.parallel.do(ping_node, address_list)
 
 
 def ping_node(addr):
@@ -246,7 +247,7 @@ def get_options():
             if not synctool.param.SLEEP_TIME:
                 # (temporarily) set to -1 to indicate we want
                 # to run serialized
-                # synctool.lib.multiprocess() will use this
+                # synctool.parallel.do() will use this
                 synctool.param.SLEEP_TIME = -1
 
             continue
