@@ -35,7 +35,6 @@ def catch_signals(func):
                 sys.exit(-1)
 
         except KeyboardInterrupt:   # user pressed Ctrl-C
-            print
             sys.exit(127)
 
         return ret
