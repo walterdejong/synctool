@@ -10,6 +10,9 @@
 
 '''do things in parallel. This module is very UNIX-only, sorry'''
 
+# This module offers the same as Python's multiprocessing
+# but there are some issues with multiprocessing, so ...
+
 import os
 import sys
 import errno
@@ -28,6 +31,7 @@ def do(func, work):
     if synctool.param.SLEEP_TIME != 0:
         synctool.param.NUM_PROC = 1
 
+    # 'part' becomes amount of work for each rank to do
     len_work = len(work)
     if len_work <= synctool.param.NUM_PROC:
         num_proc = len_work
@@ -38,6 +42,7 @@ def do(func, work):
         if len_work % num_proc != 0:
             part += 1
 
+    # spawn pool of workers
     for rank in xrange(num_proc):
         try:
             pid = os.fork()
@@ -46,17 +51,19 @@ def do(func, work):
             return
 
         if pid == 0:
-            do_child(rank, func, work, part)
+            # child process
+            worker(rank, func, work, part)
             sys.exit(0)
 
-        # parent
+        # parent process
         ALL_PIDS.add(pid)
 
+    # wait for all workers to exit
     join()
 
 
 @catch_signals
-def do_child(rank, func, work, part):
+def worker(rank, func, work, part):
     '''run func to do part of work for parallel rank'''
 
     # determine which chunk of work to do
