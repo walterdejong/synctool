@@ -21,6 +21,8 @@ def catch_signals(func):
     '''
 
     def wrap(*args, **kwargs):
+        '''wraps a function (catch_signals is a decorator)'''
+
         try:
             ret = func(*args, **kwargs)
 
