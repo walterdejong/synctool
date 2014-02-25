@@ -270,8 +270,15 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback, *args):
                 # quick exit
                 return False, dir_changed
 
-            # FIXME how to handle duplicate dirs?
-            # FIXME take into account OV_NO_EXT
+            # Note: duplicates for directories do not function the same
+            #       way they do for files
+            # a directory is always visited if it applies to the node;
+            # directories are _overlayed_ if they occur multiple times;
+            # putting a group extension on a dir does not exclude other dirs;
+            # 'duplicates' ensures that the callback is run only once;
+            # the owner/mode is determined by the most important source
+            # and the .post script (if any) is run only once
+
             if obj.dest_path in duplicates:
                 # there already was a more important source for this dir
                 continue
