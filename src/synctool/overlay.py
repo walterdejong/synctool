@@ -270,6 +270,8 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback, *args):
                 # quick exit
                 return False, dir_changed
 
+            # FIXME how to handle duplicate dirs?
+            # FIXME take into account OV_NO_EXT
             if obj.dest_path in duplicates:
                 # there already was a more important source for this dir
                 continue
