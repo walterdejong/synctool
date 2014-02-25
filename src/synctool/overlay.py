@@ -258,12 +258,6 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback, *args):
                     verbose('ignoring dotdir %s' % obj.print_src())
                     continue
 
-            if obj.dest_path in duplicates:
-                # there already was a more important source for this dir
-                continue
-
-            duplicates.add(obj.dest_path)
-
             # if there is a .post script on this dir, pass it on
             subdir_post_dict = {}
             if obj.dest_path in post_dict:
@@ -275,6 +269,12 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback, *args):
             if not ok:
                 # quick exit
                 return False, dir_changed
+
+            if obj.dest_path in duplicates:
+                # there already was a more important source for this dir
+                continue
+
+            duplicates.add(obj.dest_path)
 
             # run callback on the directory itself
             ok, _ = callback(obj, post_dict, updated, *args)
