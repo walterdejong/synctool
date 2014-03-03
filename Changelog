@@ -4,6 +4,7 @@ February 2014
 - synctool,dsh -a print list of nodes using range syntax
 - uploading from a deep directory correctly sets owner+mode of subdirs
 - bugfix for having group extension on directories
+- fixed issue with multiprocessing by replacing it with good old forking
 
 January 2014
 - dropped names "synctool-ssh", "synctool-ping", etc. in favor of "dsh",
