@@ -12,7 +12,6 @@
 
 import errno
 import sys
-import time
 
 # decorator
 def catch_signals(func):
@@ -25,10 +24,6 @@ def catch_signals(func):
 
         try:
             ret = func(*args, **kwargs)
-
-            # workaround exception in QueueFeederThread at exit
-            # which is a Python bug, really
-            time.sleep(0.01)
         except IOError as err:
             if err.errno == errno.EPIPE:    # Broken pipe
                 pass
