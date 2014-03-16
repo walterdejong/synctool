@@ -136,7 +136,7 @@ def get_options():
     global MASTER_OPTS, OPT_AGGREGATE
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:aNqp:z:',
+        opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:aN:qp:z:',
             ['help', 'conf=', 'verbose', 'node=', 'group=',
             'exclude=', 'exclude-group=', 'aggregate', 'unix', 'quiet',
             'numproc=', 'zzz='])
