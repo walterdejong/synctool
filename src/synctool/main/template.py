@@ -99,8 +99,7 @@ def get_options():
         sys.exit(1)
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hv:',
-            ['help', 'var='])
+        opts, args = getopt.getopt(sys.argv[1:], 'hv:', ['help', 'var='])
     except getopt.GetoptError as reason:
         print '%s: %s' % (PROGNAME, reason)
         usage()
