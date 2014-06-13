@@ -275,22 +275,59 @@ def _walk_subtree(src_dir, dest_dir, duplicates, post_dict, callback, *args):
             # a directory is always visited if it applies to the node;
             # directories are _overlayed_ if they occur multiple times;
             # putting a group extension on a dir does not exclude other dirs;
-            # 'duplicates' ensures that the callback is run only once;
-            # the owner/mode is determined by the most important source
-            # and the .post script (if any) is run only once
+            # 'duplicates' only ensures that the owner/mode is determined by
+            # the most important source
+            # On update, the correct .post script (if any) is run
+            # Note that because of this, multiple .post scripts may be run
+            # for the same dir if you duplicate it under different subtrees
+            # and make multiple changes at once in those subtrees
 
-            if obj.dest_path in duplicates:
-                # there already was a more important source for this dir
+            if not obj.dest_path in duplicates:
+                # this is the most important source for this dir
+                duplicates.add(obj.dest_path)
+
+                # run callback on the directory itself
+                # this will also trigger any .post script on the dir
+                # if it is updated, or already was updated
+                ok, _ = callback(obj, post_dict, updated, *args)
+                if not ok:
+                    # quick exit
+                    return False, dir_changed
+
                 continue
 
-            duplicates.add(obj.dest_path)
+            # if we got here, the dir is a duplicate; a more important
+            # source already exists
+            # However, if the contents of the dir were updated earlier,
+            # we still need to run the .post script on the dir (if any)
 
-            # run callback on the directory itself
+            if not updated:
+                continue
+
+            if not obj.dest_path in post_dict:
+                continue
+
+            # the content of dir was updated; run .post script
+            # we use a trick with a local function here that overrides
+            # the dir object's .check() method
+            def _no_check_only_run_post():
+                '''local function that overrides object method check()
+                Returns pair: updated, meta_updated
+                '''
+                # This is to force an updated status without changing
+                # the object (it is not changed because a more
+                # important source for this dir already exists)
+                # In effect, this will trigger run_post() on the dir
+                return True, False
+
+            obj.check = _no_check_only_run_post
+
             ok, _ = callback(obj, post_dict, updated, *args)
             if not ok:
                 # quick exit
                 return False, dir_changed
 
+            # finished checking directory
             continue
 
         if synctool.param.IGNORE_DOTFILES:
