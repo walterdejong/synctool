@@ -1,3 +1,6 @@
+June 2014
+- fix issue where .post script on directory would occasionally not be run
+
 March 2014
 - released as version 6.0
 
