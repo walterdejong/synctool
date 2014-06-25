@@ -115,11 +115,12 @@ if [ -z "$2" ] ; then
   # Only 'node:' specified without file? Then call myself for each file on that node that is not in sync.
   if echo "$1" | grep --silent '.:$' ; then
     node=$(echo "$1" | sed -e 's/:.*//')
-    echo Check $node.
-    synctool -q --no-color -n "$node" \
-    | grep ': sync ' \
-    | sed -e 's/ sync //' \
-    | while read syncfile ; do
+    synclist=`synctool -q --no-color -n "$node" \
+              | grep ': sync ' \
+              | sed -e 's/ sync //'`
+    echo "Comparing file list:"
+    echo -e "$synclist\n" | sed -e 's/^/  /' 
+    for syncfile in $synclist; do
       "$0" "$syncfile"
     done
     exit
