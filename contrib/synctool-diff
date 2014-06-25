@@ -13,6 +13,7 @@
 # 2011-05-27 - improved regex - Onno
 # 2012-02-08 - improved uniqueness of temp file names - Onno
 # 2012-04-16 - improved grep regex to parse synctool.conf - Onno
+# 2014-06-25 - you can now specify 'node:' to compare all unsynced files for that node - Onno
 
 SYNCTOOL_CONF=/var/lib/synctool/synctool.conf
 
@@ -23,6 +24,9 @@ Syntax:
 
   Compare file in synctool overlay tree with file on node:
     `basename $0` node:/path/file
+
+  Compare all files on node not in sync with their synctool overlay counterparts:
+    `basename $0` node:
 
   Compare files on nodes or local:
     `basename $0` [node1:]/path1/file1 [node2:]/path2/file2
@@ -108,12 +112,26 @@ PREFIX=`mktemp /tmp/tmp.XXXXXXXXXX`
 
 # Only one file specified? Compare with synctool overlay version!
 if [ -z "$2" ] ; then
-  # Process the only parm and use it as the SECOND file
-  process_parm "$1" "2"
-  check_file "${DIFF_FILE[2]}" "File '${FILE[2]}' not found on node ${NODE[2]}."
-  # The first file is the synctool overlay version
-  DIFF_FILE[1]=`synctool -q -n ${NODE[2]} --ref ${FILE[2]} | grep -o '/data/synctool/.*'`
-  check_file "${DIFF_FILE[1]}" "File '$1' not found in the synctool overlay tree."
+  # Only 'node:' specified without file? Then call myself for each file on that node that is not in sync.
+  if echo "$1" | grep --silent '.:$' ; then
+    node=$(echo "$1" | sed -e 's/:.*//')
+    echo Check $node.
+    synctool -q --no-color -n "$node" \
+    | grep ': sync ' \
+    | sed -e 's/ sync //' \
+    | while read syncfile ; do
+      "$0" "$syncfile"
+    done
+    exit
+  else
+    # node:file specified (and not node: ).
+    # Process the only parm and use it as the SECOND file (because the first will be the overlay file).
+    process_parm "$1" "2"
+    check_file "${DIFF_FILE[2]}" "File '${FILE[2]}' not found on node ${NODE[2]}."
+    # The first file is the synctool overlay version
+    DIFF_FILE[1]=`synctool -q -n ${NODE[2]} --ref ${FILE[2]} | grep -o '/data/synctool/.*'`
+    check_file "${DIFF_FILE[1]}" "File '$1' not found in the synctool overlay tree."
+  fi 
 else
   # Two parameters specified. Copy them from node if needed.
   process_parm "$1" 1
