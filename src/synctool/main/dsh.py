@@ -134,7 +134,14 @@ def worker_ssh(addr):
     ssh_cmd_arr.extend(REMOTE_CMD_ARR)
 
     # execute ssh+remote command and show output with the nodename
-    synctool.lib.run_with_nodename(ssh_cmd_arr, nodename)
+    if synctool.param.NUM_PROC <= 1:
+        # run with -N 1 : wait on prompts, flush output
+        print nodename + ': ',
+        synctool.lib.exec_command(ssh_cmd_arr)
+    else:
+        # run_with_nodename() shows the nodename, but
+        # does not expect any prompts while running the cmd
+        synctool.lib.run_with_nodename(ssh_cmd_arr, nodename)
 
 
 def start_multiplex(address_list):
