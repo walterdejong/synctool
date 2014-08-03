@@ -262,6 +262,15 @@ def _sort_compress(a, b):
     return cmp(a[0], b[0])
 
 
+def uniq(seq):
+    '''remove duplicates from set, preserving order'''
+
+    # mostly taken from StackOverflow
+
+    seen = set()
+    return [x for x in seq if not (x in seen or seen.add(x))]
+
+
 def compress(nodelist):
     '''Return comma-separated list of nodes, using range syntax
 
@@ -274,7 +283,7 @@ def compress(nodelist):
     all_grouped = []
     grouped = []
     prev_prefix = prev_postfix = None
-    for node in nodelist:
+    for node in uniq(nodelist):
         # try to match a number in the nodename
         m = COMPRESSOR.match(node)
         if not m:
