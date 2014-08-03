@@ -37,9 +37,22 @@ OPT_AGGREGATE = False
 PASS_ARGS = None
 MASTER_OPTS = None
 
+# ugly global helps parallelism
+SSH_CMD_ARR = None
+
 
 def run_remote_pkg(address_list):
     '''run synctool-pkg on the target nodes'''
+
+    global SSH_CMD_ARR
+
+    SSH_CMD_ARR = shlex.split(synctool.param.SSH_CMD)
+    # if -N 1, force tty allocation
+    if synctool.param.NUM_PROC <= 1 and not '-t' in SSH_CMD_ARR:
+        SSH_CMD_ARR.append('-t')
+        # remove option -T (disable tty allocation)
+        if '-T' in SSH_CMD_ARR:
+            SSH_CMD_ARR.remove('-T')
 
     synctool.parallel.do(worker_pkg, address_list)
 
@@ -52,8 +65,8 @@ def worker_pkg(addr):
     # use ssh connection multiplexing (if possible)
     use_multiplex = synctool.multiplex.use_mux(nodename, addr)
 
-    # run 'ssh node pkg_cmd'
-    cmd_arr = shlex.split(synctool.param.SSH_CMD)
+    # make command array 'ssh node pkg_cmd'
+    cmd_arr = SSH_CMD_ARR[:]
 
     # add extra arguments for ssh multiplexing (if OK to use)
     if use_multiplex:
@@ -65,7 +78,16 @@ def worker_pkg(addr):
     cmd_arr.extend(PASS_ARGS)
 
     verbose('running synctool-pkg on node %s' % nodename)
-    synctool.lib.run_with_nodename(cmd_arr, nodename)
+
+    # execute ssh synctool-pkg and show output with the nodename
+    if synctool.param.NUM_PROC <= 1:
+        # run with -N 1 : wait on prompts, flush output
+        print nodename + ': ',
+        synctool.lib.exec_command(cmd_arr)
+    else:
+        # run_with_nodename() shows the nodename, but
+        # does not expect any prompts while running the cmd
+        synctool.lib.run_with_nodename(cmd_arr, nodename)
 
 
 def rearrange_options():
