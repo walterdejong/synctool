@@ -77,6 +77,12 @@ def run_dsh(address_list, remote_cmd_arr):
 
     if SSH_OPTIONS:
         SSH_CMD_ARR.extend(shlex.split(SSH_OPTIONS))
+        # if -N 1, force tty allocation
+        if synctool.param.NUM_PROC <= 1 and not '-t' in SSH_CMD_ARR:
+            SSH_CMD_ARR.append('-t')
+            # remove option -T (disable tty allocation)
+            if '-T' in SSH_CMD_ARR:
+                SSH_CMD_ARR.remove('-T')
 
     REMOTE_CMD_ARR = remote_cmd_arr
 
