@@ -28,17 +28,17 @@ def aggregate(f):
     output_per_node = {}
 
     for line in lines:
-        arr = line.split(':')
+        arr = line.split(':', 1)
 
         if len(arr) <= 1:
             print line
             continue
 
         node = arr[0]
-        output = ':'.join(arr[1:])
+        output = arr[1]
 
         if not node in output_per_node:
-            output_per_node[node] = [output]
+            output_per_node[node] = [output,]
         else:
             output_per_node[node].append(output)
 
@@ -53,7 +53,7 @@ def aggregate(f):
 
         out = output_per_node[node]
 
-        nodelist = [node]
+        nodelist = [node,]
 
         for node2 in nodes[:]:
             if out == output_per_node[node2]:
