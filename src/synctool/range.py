@@ -347,7 +347,6 @@ def compress(nodelist):
                         pass
                     elif in_seq == 1:
                         range_str += ',' + prev_number_str
-                        range_str += ',' + number_str
                     else:
                         range_str += '-' + prev_number_str
 
