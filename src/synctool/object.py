@@ -603,6 +603,13 @@ class SyncObject(object):
     The SyncObject caches any stat info
     '''
 
+    FIX_UNDEF = 0
+    FIX_CREATE = 1
+    FIX_TYPE = 2
+    FIX_UPDATE = 3
+    FIX_OWNER = 4
+    FIX_MODE = 8    # this is actually a bit
+
     def __init__(self, src_name, dest_name, ov_type=0):
         '''src_name is simple filename without leading path
         dest_name is the src_name without group extension
@@ -616,6 +623,7 @@ class SyncObject(object):
         self.dest_path = dest_name
         self.ov_type = ov_type
         self.src_stat = self.dest_stat = None
+        self.fix_action = SyncObject.FIX_UNDEF
 
     def make(self, src_dir, dest_dir):
         '''make() fills in the full paths and stat structures'''
@@ -640,8 +648,7 @@ class SyncObject(object):
 
     def check(self):
         '''check differences between src and dest,
-        and fix it when not a dry run
-        Return pair: updated, metadata_updated
+        Return a FIX_xxx code
         '''
 
         # src_path is under $overlay/
@@ -651,10 +658,7 @@ class SyncObject(object):
 
         if not self.dest_stat.exists():
             stdout('%s does not exist' % self.dest_path)
-            log('creating %s' % self.dest_path)
-            vnode = self.vnode_obj()
-            vnode.fix()
-            return True, False
+            return SyncObject.FIX_CREATE
 
         src_type = self.src_stat.filetype()
         dest_type = self.dest_stat.filetype()
@@ -664,20 +668,17 @@ class SyncObject(object):
             stdout('%s should be a %s' % (self.dest_path, vnode.typename()))
             terse(synctool.lib.TERSE_WARNING, 'wrong type %s' %
                                                self.dest_path)
-            log('fix type %s' % self.dest_path)
-            vnode.fix()
-            return True, False
+            return SyncObject.FIX_TYPE
 
         vnode = self.vnode_obj()
         if not vnode.compare(self.src_path, self.dest_stat):
             # content is different; change the entire object
             log('updating %s' % self.dest_path)
-            vnode.fix()
-            return True, False
+            return SyncObject.FIX_UPDATE
 
         # check ownership and permissions
         # rectify if needed
-        meta_updated = False
+        fix_action = 0
         if ((self.src_stat.uid != self.dest_stat.uid) or
             (self.src_stat.gid != self.dest_stat.gid)):
             stdout('%s should have owner %s.%s (%d.%d), '
@@ -692,12 +693,7 @@ class SyncObject(object):
                                             (self.src_stat.ascii_uid(),
                                              self.src_stat.ascii_gid(),
                                              self.dest_path))
-            log('set owner %s.%s (%d.%d) %s' %
-                (self.src_stat.ascii_uid(), self.src_stat.ascii_gid(),
-                 self.src_stat.uid, self.src_stat.gid,
-                 self.dest_path))
-            vnode.set_owner()
-            meta_updated = True
+            fix_action = SyncObject.FIX_OWNER
 
         if self.src_stat.mode != self.dest_stat.mode:
             stdout('%s should have mode %04o, but has %04o' %
@@ -706,13 +702,82 @@ class SyncObject(object):
             terse(synctool.lib.TERSE_MODE, '%04o %s' %
                                            (self.src_stat.mode & 07777,
                                             self.dest_path))
+            fix_action |= SyncObject.FIX_MODE
+
+        return fix_action
+
+    def fix(self, fix_action, post_dict, dir_changed):
+        '''fix differences, and run .post script if any
+        Returns True if updated, else False
+        '''
+
+        # most cases will have FIX_UNDEF
+        if fix_action == SyncObject.FIX_UNDEF:
+            if dir_changed and self.src_stat.is_dir():
+                self.run_script(post_dict)
+            return False
+
+        vnode = self.vnode_obj()
+
+        # Note that .post scripts are not run for owner/mode changes
+
+        need_run = False
+
+        if fix_action == SyncObject.FIX_CREATE:
+            log('creating %s' % self.dest_path)
+            vnode.fix()
+            need_run = True
+
+        elif fix_action == SyncObject.FIX_TYPE:
+            log('fix type %s' % self.dest_path)
+            vnode.fix()
+            need_run = True
+
+        elif fix_action == SyncObject.FIX_UPDATE:
+            log('updating %s' % self.dest_path)
+            vnode.fix()
+            need_run = True
+
+        elif fix_action == SyncObject.FIX_OWNER:
+            log('set owner %s.%s (%d.%d) %s' %
+                (self.src_stat.ascii_uid(), self.src_stat.ascii_gid(),
+                 self.src_stat.uid, self.src_stat.gid,
+                 self.dest_path))
+            vnode.set_owner()
+
+        if fix_action & SyncObject.FIX_MODE:
             log('set mode %04o %s' % (self.src_stat.mode & 07777,
                                       self.dest_path))
             vnode.set_permissions()
-            meta_updated = True
 
-        # set owner/permissions do not trigger .post scripts
-        return False, meta_updated
+        if need_run or (dir_changed and self.src_stat.is_dir()):
+            self.run_script(post_dict)
+
+        return True
+
+    def run_script(self, scripts_dict):
+        '''run a .post script, if any'''
+
+        if synctool.lib.NO_POST:
+            return
+
+        if not self.dest_path in scripts_dict:
+            return
+
+        script = scripts_dict[self.dest_path]
+
+        # temporarily restore original umask
+        # so the script runs with the umask set by the sysadmin
+        os.umask(synctool.param.ORIG_UMASK)
+
+        if self.dest_stat.is_dir():
+            # run in the directory itself
+            synctool.lib.run_command_in_dir(self.dest_path, script)
+        else:
+            # run in the directory where the file is
+            synctool.lib.run_command_in_dir(os.path.dirname(self.dest_path),
+                                            script)
+        os.umask(077)
 
     def vnode_obj(self):
         '''create vnode object for this SyncObject'''
