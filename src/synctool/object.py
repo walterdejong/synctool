@@ -706,8 +706,8 @@ class SyncObject(object):
 
         return fix_action
 
-    def fix(self, fix_action, post_dict, dir_changed):
-        '''fix differences, and run .post script if any
+    def fix(self, fix_action, pre_dict, post_dict, dir_changed):
+        '''fix differences, and run .pre/.post script if any
         Returns True if updated, else False
         '''
 
@@ -724,16 +724,19 @@ class SyncObject(object):
         need_run = False
 
         if fix_action == SyncObject.FIX_CREATE:
+            self.run_script(pre_dict)
             log('creating %s' % self.dest_path)
             vnode.fix()
             need_run = True
 
         elif fix_action == SyncObject.FIX_TYPE:
+            self.run_script(pre_dict)
             log('fix type %s' % self.dest_path)
             vnode.fix()
             need_run = True
 
         elif fix_action == SyncObject.FIX_UPDATE:
+            self.run_script(pre_dict)
             log('updating %s' % self.dest_path)
             vnode.fix()
             need_run = True
@@ -756,7 +759,7 @@ class SyncObject(object):
         return True
 
     def run_script(self, scripts_dict):
-        '''run a .post script, if any'''
+        '''run a .pre/.post script, if any'''
 
         if synctool.lib.NO_POST:
             return

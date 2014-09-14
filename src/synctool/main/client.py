@@ -311,7 +311,7 @@ def _run_rsync_purge(cmd_arr):
             stdout('%s mismatch (purge)' % prettypath(path))
 
 
-def _overlay_callback(obj, post_dict, dir_changed, *args):
+def _overlay_callback(obj, pre_dict, post_dict, dir_changed, *args):
     '''compare files and run post-script if needed
     Returns pair: True (continue), updated (data or metadata)
     '''
@@ -321,7 +321,7 @@ def _overlay_callback(obj, post_dict, dir_changed, *args):
 
     verbose('checking %s' % obj.print_src())
     fixup = obj.check()
-    updated = obj.fix(fixup, post_dict, dir_changed)
+    updated = obj.fix(fixup, pre_dict, post_dict, dir_changed)
     return True, updated
 
 
@@ -331,7 +331,7 @@ def overlay_files():
     synctool.overlay.visit(synctool.param.OVERLAY_DIR, _overlay_callback)
 
 
-def _delete_callback(obj, post_dict, dir_changed, *args):
+def _delete_callback(obj, pre_dict, post_dict, dir_changed, *args):
     '''delete files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -366,7 +366,7 @@ def delete_files():
     synctool.overlay.visit(synctool.param.DELETE_DIR, _delete_callback)
 
 
-def _erase_saved_callback(obj, post_dict, dir_changed, *args):
+def _erase_saved_callback(obj, pre_dict, post_dict, dir_changed, *args):
     '''erase *.saved backup files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -444,7 +444,7 @@ def _match_single(path):
     return False
 
 
-def _single_overlay_callback(obj, post_dict, updated, *args):
+def _single_overlay_callback(obj, pre_dict, post_dict, updated, *args):
     '''do overlay function for single files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -453,7 +453,7 @@ def _single_overlay_callback(obj, post_dict, updated, *args):
     go_on = True
 
     if _match_single(obj.dest_path):
-        _, updated = _overlay_callback(obj, post_dict, False, *args)
+        _, updated = _overlay_callback(obj, pre_dict, post_dict, False, *args)
         if not updated:
             stdout('%s is up to date' % obj.dest_path)
             terse(synctool.lib.TERSE_OK, obj.dest_path)
@@ -473,7 +473,7 @@ def _single_overlay_callback(obj, post_dict, updated, *args):
     return go_on, updated
 
 
-def _single_delete_callback(obj, post_dict, updated, *args):
+def _single_delete_callback(obj, pre_dict, post_dict, updated, *args):
     '''do delete function for single files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -482,7 +482,7 @@ def _single_delete_callback(obj, post_dict, updated, *args):
     go_on = True
 
     if _match_single(obj.dest_path):
-        _, updated = _delete_callback(obj, post_dict, False, *args)
+        _, updated = _delete_callback(obj, pre_dict, post_dict, False, *args)
         if updated:
             # register .post on the parent dir, if it has a .post script
             obj.dest_path = os.path.dirname(obj.dest_path)
@@ -498,7 +498,7 @@ def _single_delete_callback(obj, post_dict, updated, *args):
     return go_on, updated
 
 
-def _single_purge_callback(obj, post_dict, updated, *args):
+def _single_purge_callback(obj, pre_dict, post_dict, updated, *args):
     '''do purge function for single files'''
 
     # The same as _single_overlay_callback(), except that
@@ -516,7 +516,7 @@ def _single_purge_callback(obj, post_dict, updated, *args):
     go_on = True
 
     if _match_single(obj.dest_path):
-        _, updated = _overlay_callback(obj, post_dict, False, *args)
+        _, updated = _overlay_callback(obj, pre_dict, post_dict, False, *args)
         if not updated:
             if obj.check_purge_timestamp():
                 stdout('%s is up to date' % obj.dest_path)
@@ -572,7 +572,7 @@ def single_files():
         stderr('%s is not in the overlay tree' % filename)
 
 
-def _single_erase_saved_callback(obj, post_dict, updated, *args):
+def _single_erase_saved_callback(obj, pre_dict, post_dict, updated, *args):
     '''do 'erase saved' function for single files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -594,7 +594,8 @@ def _single_erase_saved_callback(obj, post_dict, updated, *args):
         is_saved = False
 
     if is_dest or is_saved:
-        _, updated = _erase_saved_callback(obj, post_dict, False, *args)
+        _, updated = _erase_saved_callback(obj, pre_dict, post_dict, False,
+                                           *args)
         if updated:
             # register .post on the parent dir, if it has a .post script
             obj.dest_path = os.path.dirname(obj.dest_path)
@@ -639,7 +640,7 @@ def single_erase_saved():
         stderr('%s is not in the overlay tree' % filename)
 
 
-def _reference_callback(obj, post_dict, dir_changed, *args):
+def _reference_callback(obj, pre_dict, post_dict, dir_changed, *args):
     '''callback for reference_files()'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -685,7 +686,7 @@ def _exec_diff(src, dest):
     synctool.lib.exec_command(cmd_arr)
 
 
-def _diff_callback(obj, post_dict, dir_changed, *args):
+def _diff_callback(obj, pre_dict, post_dict, dir_changed, *args):
     '''callback function for doing a diff on overlay/ files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
