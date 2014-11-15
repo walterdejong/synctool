@@ -428,6 +428,63 @@ def exec_command(cmd_arr, silent=False):
     return ret
 
 
+def run_command(cmd):
+    '''run a shell command'''
+
+    # a command can have arguments
+    arr = shlex.split(cmd)
+    cmdfile = arr[0]
+
+    statbuf = synctool.syncstat.SyncStat(cmdfile)
+    if not statbuf.exists():
+        error('command %s not found' % prettypath(cmdfile))
+        return
+
+    if not statbuf.is_exec():
+        error("file '%s' is not executable" % prettypath(cmdfile))
+        return
+
+    # run the shell command
+    shell_command(cmd)
+
+
+def run_command_in_dir(dest_dir, cmd):
+    '''change directory to dest_dir, and run the shell command'''
+
+    verbose('  os.chdir(%s)' % dest_dir)
+    unix_out('cd %s' % dest_dir)
+
+    cwd = os.getcwd()
+
+    # if dry run, the target directory may not exist yet
+    # (mkdir has not been called for real, for a dry run)
+    if DRY_RUN:
+        run_command(cmd)
+
+        verbose('  os.chdir(%s)' % cwd)
+        unix_out('cd %s' % cwd)
+        unix_out('')
+        return
+
+    try:
+        os.chdir(dest_dir)
+    except OSError as err:
+        error('failed to change directory to %s: %s' % (dest_dir,
+                                                        err.strerror))
+    else:
+        run_command(cmd)
+
+        verbose('  os.chdir(%s)' % cwd)
+        unix_out('cd %s' % cwd)
+        unix_out('')
+
+        try:
+            os.chdir(cwd)
+        except OSError as err:
+            error('failed to change directory to %s: %s' % (cwd,
+                                                            err.strerror))
+
+
 def search_path(cmd):
     '''search the PATH for the location of cmd'''
 
