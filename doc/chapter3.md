@@ -158,12 +158,20 @@ The `.post` script will be run when the file changes:
     node1: /etc/ntp.conf updated (file size mismatch)
     node1: running command $overlay/all/etc/ntp.conf.post
 
-The `.post` script is executed in the directory where the accompanying file
-is in, in this case `/etc/`. It is possible to add a group extension to
-the `.post` script, so that you can have one group of nodes perform different
-actions than another.
+The `.post` script is run after synctool updated the file, and likewise,
+you may also create a `.pre` script that runs before the update:
 
-The `.post` script is run with `sh -c`. Note that `/bin/sh` is often not the
+    root@masternode:/# synctool -f
+    node1: running command $overlay/all/etc/ntp.conf.pre
+    node1: /etc/ntp.conf updated (file size mismatch)
+    node1: running command $overlay/all/etc/ntp.conf.post
+
+The `.pre` and `.post` scripts are executed in the directory where the
+accompanying file resides; in this case `/etc/`. It is possible to add
+a group extension to the script, so that you can have one group of nodes
+perform different actions than another.
+
+The scripts are run with `sh -c`. Note that `/bin/sh` is often not the
 same as `bash`, so some clever shell scripting tricks may not work. However,
 you can fix this by including "`#!/bin/bash`" in the top of the `.post`
 script.
@@ -175,6 +183,12 @@ In the environment you will find two variables that might be useful:
 
 So expanding on that, `$SYNCTOOL_ROOT/bin/` is the bindir, and the repository
 is found under `$SYNCTOOL_ROOT/var/overlay/`.
+
+A `.post` script for a directory will trigger when any file in that directory
+changes. This is particularly useful for daemons that have multiple config
+files in a directory, such as `conf.d`, or, for example, `/etc/cron.d`.
+A `.pre` script for a directory will only trigger if the directory does not
+exist and will be created.
 
 
 3.3 Other useful options
