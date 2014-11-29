@@ -306,7 +306,7 @@ def _makedir(path, remote_stats):
     return True
 
 
-def _upload_callback(obj, pre_dict, post_dict, dir_changed=False):
+def _upload_callback(obj, pre_dict, post_dict):
     '''find the overlay path for the destination in UPLOAD_FILE'''
 
     # this callback modifies the global GLOBAL_UPLOAD_FILE object

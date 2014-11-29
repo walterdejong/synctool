@@ -207,11 +207,9 @@ def _sort_by_importance_post_first(item1, item2):
     return cmp(importance1, importance2)
 
 
-def _walk_subtree(src_dir, dest_dir, duplicates, pre_dict, post_dict,
-                  callback, *args):
+def _walk_subtree(src_dir, dest_dir, duplicates, callback):
     '''walk subtree under overlay/group/
     duplicates is a set that keeps us from selecting any duplicate matches
-    post_dict holds .post scripts with destination as key
     Returns pair of booleans: ok, dir was updated
     '''
 
@@ -242,10 +240,12 @@ def _walk_subtree(src_dir, dest_dir, duplicates, pre_dict, post_dict,
 
         arr.append((obj, importance))
 
-    # sort with .post scripts first
+    # sort with .pre and .post scripts first
     # this ensures that post_dict will have the required script when needed
     arr.sort(_sort_by_importance_post_first)
 
+    pre_dict = {}
+    post_dict = {}
     dir_changed = False
 
     for obj, importance in arr:
@@ -285,57 +285,31 @@ def _walk_subtree(src_dir, dest_dir, duplicates, pre_dict, post_dict,
                     verbose('ignoring dotdir %s' % obj.print_src())
                     continue
 
-            # if there is a .post script on this dir, pass it on
-            subdir_pre_dict = {}
-            if obj.dest_path in pre_dict:
-                subdir_pre_dict[obj.dest_path] = pre_dict[obj.dest_path]
-
-            subdir_post_dict = {}
-            if obj.dest_path in post_dict:
-                subdir_post_dict[obj.dest_path] = post_dict[obj.dest_path]
-
-            ok, updated = _walk_subtree(obj.src_path, obj.dest_path,
-                                        duplicates, subdir_pre_dict,
-                                        subdir_post_dict, callback, *args)
-            if not ok:
-                # quick exit
-                return False, dir_changed
-
-            # Note: duplicates for directories do not function the same
-            #       way they do for files
-            # a directory is always visited if it applies to the node;
-            # directories are _overlayed_ if they occur multiple times;
-            # putting a group extension on a dir does not exclude other dirs;
-            # 'duplicates' only ensures that the owner/mode is determined by
-            # the most important source
-            # On update, the correct .post script (if any) is run
-            # Note that because of this, multiple .post scripts may be run
-            # for the same dir if you duplicate it under different subtrees
-            # and make multiple changes at once in those subtrees
-
+            updated = False
             if not obj.dest_path in duplicates:
                 # this is the most important source for this dir
                 duplicates.add(obj.dest_path)
 
                 # run callback on the directory itself
-                # this will also trigger any .post script on the dir
-                # if it is updated, or already was updated
-                ok, _ = callback(obj, pre_dict, post_dict, updated, *args)
+                # this will create or fix directory entry if needed
+                # a .pre script may be run
+                # a .post script should not be run
+                ok, updated = callback(obj, pre_dict, {})
                 if not ok:
                     # quick exit
                     return False, dir_changed
 
-                continue
+            # recurse down into the directory
+            # with empty pre_dict and post_dict parameters
+            ok, updated2 = _walk_subtree(obj.src_path, obj.dest_path,
+                                         duplicates, callback)
+            if not ok:
+                # quick exit
+                return False, dir_changed
 
-            # if we got here, the dir is a duplicate; a more important
-            # source already exists
-            # However, if the contents of the dir were updated earlier,
             # we still need to run the .post script on the dir (if any)
-
-            if not updated:
-                continue
-
-            obj.run_script(post_dict)
+            if updated or updated2:
+                obj.run_script(post_dict)
 
             # finished checking directory
             continue
@@ -360,7 +334,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, pre_dict, post_dict,
 
         duplicates.add(obj.dest_path)
 
-        ok, updated = callback(obj, pre_dict, post_dict, False, *args)
+        ok, updated = callback(obj, pre_dict, post_dict)
         if not ok:
             # quick exit
             return False, dir_changed
@@ -375,7 +349,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, pre_dict, post_dict,
             obj.ov_type = OV_REG
             obj.make(src_dir, dest_dir)
 
-            ok, updated = callback(obj, pre_dict, post_dict, False, *args)
+            ok, updated = callback(obj, pre_dict, post_dict)
             if not ok:
                 # quick exit
                 return False, dir_changed
@@ -385,7 +359,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, pre_dict, post_dict,
     return True, dir_changed
 
 
-def visit(overlay, callback, *args):
+def visit(overlay, callback):
     '''visit all entries in the overlay tree
     overlay is either synctool.param.OVERLAY_DIR or synctool.param.DELETE_DIR
     callback will called with arguments: (SyncObject, pre_dict, post_dict)
@@ -395,7 +369,7 @@ def visit(overlay, callback, *args):
     duplicates = set()
 
     for d in _toplevel(overlay):
-        ok, _ = _walk_subtree(d, os.sep, duplicates, {}, {}, callback, *args)
+        ok, _ = _walk_subtree(d, os.sep, duplicates, callback)
         if not ok:
             # quick exit
             break

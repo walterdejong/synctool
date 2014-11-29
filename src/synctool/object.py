@@ -46,6 +46,11 @@ class VNode(object):
     def move_saved(self):
         '''move existing entry to .saved'''
 
+        # do not save files that already are .saved
+        _, ext = os.path.splitext(self.name)
+        if ext == '.saved':
+            return
+
         verbose(dryrun_msg('saving %s as %s.saved' % (self.name, self.name)))
         unix_out('mv %s %s.saved' % (self.name, self.name))
 
@@ -327,7 +332,7 @@ class VNodeDir(VNode):
         unix_out('rmdir %s' % self.name)
         terse(synctool.lib.TERSE_DELETE, self.name + os.sep)
 
-        if not synctool.lib.DRY_RUN and not synctool.param.BACKUP_COPIES:
+        if not synctool.lib.DRY_RUN:
             verbose('  os.rmdir(%s)' % self.name)
             try:
                 os.rmdir(self.name)
@@ -706,15 +711,13 @@ class SyncObject(object):
 
         return fix_action
 
-    def fix(self, fix_action, pre_dict, post_dict, dir_changed):
+    def fix(self, fix_action, pre_dict, post_dict):
         '''fix differences, and run .pre/.post script if any
         Returns True if updated, else False
         '''
 
         # most cases will have FIX_UNDEF
         if fix_action == SyncObject.FIX_UNDEF:
-            if dir_changed and self.src_stat.is_dir():
-                self.run_script(post_dict)
             return False
 
         vnode = self.vnode_obj()
@@ -753,7 +756,9 @@ class SyncObject(object):
                                       self.dest_path))
             vnode.set_permissions()
 
-        if need_run or (dir_changed and self.src_stat.is_dir()):
+        # run .post script, if needed
+        # Note: for dirs, it is run from overlay._walk_subtree()
+        if need_run and not self.src_stat.is_dir():
             self.run_script(post_dict)
 
         return True
