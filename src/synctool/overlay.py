@@ -285,57 +285,34 @@ def _walk_subtree(src_dir, dest_dir, duplicates, pre_dict, post_dict,
                     verbose('ignoring dotdir %s' % obj.print_src())
                     continue
 
-            # if there is a .post script on this dir, pass it on
-            subdir_pre_dict = {}
-            if obj.dest_path in pre_dict:
-                subdir_pre_dict[obj.dest_path] = pre_dict[obj.dest_path]
-
-            subdir_post_dict = {}
-            if obj.dest_path in post_dict:
-                subdir_post_dict[obj.dest_path] = post_dict[obj.dest_path]
-
-            ok, updated = _walk_subtree(obj.src_path, obj.dest_path,
-                                        duplicates, subdir_pre_dict,
-                                        subdir_post_dict, callback, *args)
-            if not ok:
-                # quick exit
-                return False, dir_changed
-
-            # Note: duplicates for directories do not function the same
-            #       way they do for files
-            # a directory is always visited if it applies to the node;
-            # directories are _overlayed_ if they occur multiple times;
-            # putting a group extension on a dir does not exclude other dirs;
-            # 'duplicates' only ensures that the owner/mode is determined by
-            # the most important source
-            # On update, the correct .post script (if any) is run
-            # Note that because of this, multiple .post scripts may be run
-            # for the same dir if you duplicate it under different subtrees
-            # and make multiple changes at once in those subtrees
-
+            updated = False
             if not obj.dest_path in duplicates:
                 # this is the most important source for this dir
                 duplicates.add(obj.dest_path)
 
                 # run callback on the directory itself
-                # this will also trigger any .post script on the dir
-                # if it is updated, or already was updated
-                ok, _ = callback(obj, pre_dict, post_dict, updated, *args)
+                # this will create or fix directory entry if needed
+                # a .pre script may be run
+                # a .post script should not be run
+# FIXME dir_changed no longer has any meaning for callbacks
+                ok, updated = callback(obj, pre_dict, {}, False, *args)
                 if not ok:
                     # quick exit
                     return False, dir_changed
 
-                continue
+            # recurse down into the directory
+            subdir_pre_dict = {}
+            subdir_post_dict = {}
+            ok, updated2 = _walk_subtree(obj.src_path, obj.dest_path,
+                                         duplicates, subdir_pre_dict,
+                                         subdir_post_dict, callback, *args)
+            if not ok:
+                # quick exit
+                return False, dir_changed
 
-            # if we got here, the dir is a duplicate; a more important
-            # source already exists
-            # However, if the contents of the dir were updated earlier,
             # we still need to run the .post script on the dir (if any)
-
-            if not updated:
-                continue
-
-            obj.run_script(post_dict)
+            if updated or updated2:
+                obj.run_script(post_dict)
 
             # finished checking directory
             continue
@@ -360,6 +337,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, pre_dict, post_dict,
 
         duplicates.add(obj.dest_path)
 
+# FIXME dir_changed no longer has any meaning for callbacks
         ok, updated = callback(obj, pre_dict, post_dict, False, *args)
         if not ok:
             # quick exit
@@ -375,6 +353,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, pre_dict, post_dict,
             obj.ov_type = OV_REG
             obj.make(src_dir, dest_dir)
 
+# FIXME dir_changed no longer has any meaning for callbacks
             ok, updated = callback(obj, pre_dict, post_dict, False, *args)
             if not ok:
                 # quick exit

@@ -316,12 +316,14 @@ def _overlay_callback(obj, pre_dict, post_dict, dir_changed, *args):
     Returns pair: True (continue), updated (data or metadata)
     '''
 
+    # FIXME dir_changed no longer has any meaning for callbacks
+
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
         return generate_template(obj, post_dict), False
 
     verbose('checking %s' % obj.print_src())
     fixup = obj.check()
-    updated = obj.fix(fixup, pre_dict, post_dict, dir_changed)
+    updated = obj.fix(fixup, pre_dict, post_dict)
     return True, updated
 
 
