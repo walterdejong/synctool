@@ -207,11 +207,9 @@ def _sort_by_importance_post_first(item1, item2):
     return cmp(importance1, importance2)
 
 
-def _walk_subtree(src_dir, dest_dir, duplicates, pre_dict, post_dict,
-                  callback, *args):
+def _walk_subtree(src_dir, dest_dir, duplicates, callback, *args):
     '''walk subtree under overlay/group/
     duplicates is a set that keeps us from selecting any duplicate matches
-    post_dict holds .post scripts with destination as key
     Returns pair of booleans: ok, dir was updated
     '''
 
@@ -242,10 +240,12 @@ def _walk_subtree(src_dir, dest_dir, duplicates, pre_dict, post_dict,
 
         arr.append((obj, importance))
 
-    # sort with .post scripts first
+    # sort with .pre and .post scripts first
     # this ensures that post_dict will have the required script when needed
     arr.sort(_sort_by_importance_post_first)
 
+    pre_dict = {}
+    post_dict = {}
     dir_changed = False
 
     for obj, importance in arr:
@@ -301,9 +301,8 @@ def _walk_subtree(src_dir, dest_dir, duplicates, pre_dict, post_dict,
 
             # recurse down into the directory
             # with empty pre_dict and post_dict parameters
-# FIXME eliminate pre_dict and post_dict; always empty
             ok, updated2 = _walk_subtree(obj.src_path, obj.dest_path,
-                                         duplicates, {}, {}, callback, *args)
+                                         duplicates, callback, *args)
             if not ok:
                 # quick exit
                 return False, dir_changed
@@ -370,7 +369,7 @@ def visit(overlay, callback, *args):
     duplicates = set()
 
     for d in _toplevel(overlay):
-        ok, _ = _walk_subtree(d, os.sep, duplicates, {}, {}, callback, *args)
+        ok, _ = _walk_subtree(d, os.sep, duplicates, callback, *args)
         if not ok:
             # quick exit
             break
