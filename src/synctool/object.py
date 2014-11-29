@@ -46,6 +46,11 @@ class VNode(object):
     def move_saved(self):
         '''move existing entry to .saved'''
 
+        # do not save files that already are .saved
+        _, ext = os.path.splitext(self.name)
+        if ext == '.saved':
+            return
+
         verbose(dryrun_msg('saving %s as %s.saved' % (self.name, self.name)))
         unix_out('mv %s %s.saved' % (self.name, self.name))
 
