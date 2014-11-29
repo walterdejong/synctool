@@ -294,18 +294,16 @@ def _walk_subtree(src_dir, dest_dir, duplicates, pre_dict, post_dict,
                 # this will create or fix directory entry if needed
                 # a .pre script may be run
                 # a .post script should not be run
-# FIXME dir_changed no longer has any meaning for callbacks
-                ok, updated = callback(obj, pre_dict, {}, False, *args)
+                ok, updated = callback(obj, pre_dict, {}, *args)
                 if not ok:
                     # quick exit
                     return False, dir_changed
 
             # recurse down into the directory
-            subdir_pre_dict = {}
-            subdir_post_dict = {}
+            # with empty pre_dict and post_dict parameters
+# FIXME eliminate pre_dict and post_dict; always empty
             ok, updated2 = _walk_subtree(obj.src_path, obj.dest_path,
-                                         duplicates, subdir_pre_dict,
-                                         subdir_post_dict, callback, *args)
+                                         duplicates, {}, {}, callback, *args)
             if not ok:
                 # quick exit
                 return False, dir_changed
@@ -337,8 +335,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, pre_dict, post_dict,
 
         duplicates.add(obj.dest_path)
 
-# FIXME dir_changed no longer has any meaning for callbacks
-        ok, updated = callback(obj, pre_dict, post_dict, False, *args)
+        ok, updated = callback(obj, pre_dict, post_dict, *args)
         if not ok:
             # quick exit
             return False, dir_changed
@@ -353,8 +350,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, pre_dict, post_dict,
             obj.ov_type = OV_REG
             obj.make(src_dir, dest_dir)
 
-# FIXME dir_changed no longer has any meaning for callbacks
-            ok, updated = callback(obj, pre_dict, post_dict, False, *args)
+            ok, updated = callback(obj, pre_dict, post_dict, *args)
             if not ok:
                 # quick exit
                 return False, dir_changed
