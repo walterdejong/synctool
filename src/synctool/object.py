@@ -327,7 +327,7 @@ class VNodeDir(VNode):
         unix_out('rmdir %s' % self.name)
         terse(synctool.lib.TERSE_DELETE, self.name + os.sep)
 
-        if not synctool.lib.DRY_RUN and not synctool.param.BACKUP_COPIES:
+        if not synctool.lib.DRY_RUN:
             verbose('  os.rmdir(%s)' % self.name)
             try:
                 os.rmdir(self.name)
