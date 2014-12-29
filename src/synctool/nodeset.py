@@ -84,7 +84,7 @@ class NodeSet(object):
             else:
                 self.exclude_groups.add(group)
 
-    def addresses(self):
+    def addresses(self, silent=False):
         '''return list of addresses of relevant nodes'''
 
         # by default, work on default_nodeset
@@ -145,7 +145,7 @@ class NodeSet(object):
                 addrs.append(addr)
 
         # print message about ignored nodes
-        if len(ignored_nodes) > 0 and not synctool.lib.QUIET:
+        if not silent and len(ignored_nodes) > 0 and not synctool.lib.QUIET:
             if synctool.param.TERSE:
                 synctool.lib.terse(synctool.lib.TERSE_WARNING,
                                    'ignored nodes')
@@ -195,7 +195,8 @@ def make_default_nodeset():
             errors += 1
 
     if not errors:
-        if not nodeset.addresses():
+        if not nodeset.addresses(silent=True):
+            # Note: silent=True suppresses warnings about ignored nodes
             # error message already printed
             errors += 1
         else:
