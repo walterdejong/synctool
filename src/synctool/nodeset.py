@@ -127,11 +127,6 @@ class NodeSet(object):
         addrs = []
 
         ignored_nodes = self.nodelist & synctool.param.IGNORE_GROUPS
-
-        if synctool.lib.VERBOSE:
-            for node in ignored_nodes:
-                verbose('node %s is ignored' % node)
-
         self.nodelist -= ignored_nodes
 
         for node in self.nodelist:
@@ -162,6 +157,9 @@ class NodeSet(object):
                     warning(ignored_str)
                 else:
                     warning('some nodes are ignored')
+                    if synctool.lib.VERBOSE:
+                        for node in ignored_nodes:
+                            verbose('ignored: %s' % node)
 
         return addrs
 
