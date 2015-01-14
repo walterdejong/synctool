@@ -440,9 +440,6 @@ def _single_overlay_callback(obj, pre_dict, post_dict):
             terse(synctool.lib.TERSE_OK, obj.dest_path)
             unix_out('# %s is up to date\n' % obj.dest_path)
 
-        if not SINGLE_FILES:
-            return False, updated
-
     return go_on, updated
 
 
