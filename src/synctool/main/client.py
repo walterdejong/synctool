@@ -427,6 +427,10 @@ def _match_single(path):
 def _single_overlay_callback(obj, pre_dict, post_dict):
     '''do overlay function for single files'''
 
+    if not SINGLE_FILES:
+        # proceed quickly
+        return True, False
+
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
         return generate_template(obj, post_dict), False
 
