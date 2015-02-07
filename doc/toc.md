@@ -36,7 +36,8 @@ Table of contents
   5.3 Use group extensions on directories sparingly      <br />
   5.4 Do not manage the master node                      <br />
   5.5 Managing multiple clusters with one synctool       <br />
-  5.6 Use a tiered setup for large clusters
+  5.6 Use a tiered setup for large clusters              <br />
+  5.7 Manage hosts behind a gateway
 
 6. [Migrating to synctool 6](chapter6.html)              <br />
   6.1 Installing synctool 6                              <br />
