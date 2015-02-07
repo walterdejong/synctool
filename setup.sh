@@ -106,7 +106,7 @@ Use a _dedicated_ installdir like /opt/synctool or /home/synctool
 By default setup.sh does a DRY RUN, use -f or --fix to
 really setup synctool on the master node
 
-synctool by Walter de Jong <walter@heiho.net> (c) 2003-2014
+synctool by Walter de Jong <walter@heiho.net> (c) 2003-2015
 EOF
 			exit 1
 			;;

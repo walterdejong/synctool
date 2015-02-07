@@ -436,7 +436,7 @@ def usage():
 
 Note that synctool does a dry run unless you specify --fix
 
-Written by Walter de Jong <walter@heiho.net> (c) 2003-2014'''
+Written by Walter de Jong <walter@heiho.net> (c) 2003-2015'''
 
 
 def get_options():
