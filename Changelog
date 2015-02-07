@@ -1,3 +1,16 @@
+Jan 2015
+- fixed bug for not running .post script when --single is used
+
+December 2014
+- fixed bug; printing multiple warnings for ignored nodes
+
+November 2014
+- added .pre scripts, that run before the change is applied
+- directories are now fixed in a new order. It's better this way
+
+August 2014
+- fixed bug double entry in compressed range
+
 June 2014
 - fix issue where .post script on directory would occasionally not be run
 
