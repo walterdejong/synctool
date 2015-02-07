@@ -187,3 +187,30 @@ a setup like this only if you are truly experiencing problems due to the
 scale of your cluster. There are security implications to consider when
 giving nodes a full copy of the repository. It depends on your situation
 whether it is acceptable to run like this.
+
+5.7 Manage hosts behind a gateway
+---------------------------------
+
+As synctool relies on ssh authentication you can easily manage hosts that are
+not directly available. Imagine this setup:
+
+    synctool-master-node
+        |
+    Internet
+        |
+    gateway.your.domain
+        |
+        + privatenode1
+        + privatenode2
+
+You need to set up your ssh connection as follows in /root/.ssh/config
+
+    Host *.intra.your.domain
+        ProxyCommand ssh gateay.your.domain -W %h:22
+	
+Add your hosts in synctool.conf:
+
+    node privatenode1 group1 group2 group3 ipaddress:privatenode1.intra.your.domain
+    node privatenode2 group1 group2 group3 ipaddress:privatenode2.intra.your.domain
+
+Of course this requires also a proper dns setup for your intra zone at gatewy.your.domain 
