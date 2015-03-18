@@ -63,15 +63,21 @@ def run_dsh(address_list, remote_cmd_arr):
     if not full_path:
         # command was not found in PATH
         # look under scripts/
-        full_path = os.path.join(synctool.param.SCRIPT_DIR, remote_cmd_arr[0])
-        if os.access(full_path, os.X_OK):
-            # found the command under scripts/
-            remote_cmd_arr[0] = full_path
-            # sync the script to the node
-            SYNC_IT = True
+        full_path = os.path.join(synctool.param.SCRIPT_DIR,
+                                 remote_cmd_arr[0])
+        # found the command under scripts/
+        remote_cmd_arr[0] = full_path
+        # sync the script to the node
+        SYNC_IT = True
     elif (full_path[:len(synctool.param.SCRIPT_DIR)+1] ==
           synctool.param.SCRIPT_DIR + os.sep):
         SYNC_IT = True
+
+    if not (os.path.isfile(full_path) and os.access(full_path, os.X_OK)):
+        # not an executable file
+        # must be wrong, do not bother syncing it
+        # Note that syncing wrong paths with rsync --delete is dangerous
+        SYNC_IT = False
 
     SSH_CMD_ARR = shlex.split(synctool.param.SSH_CMD)
 
