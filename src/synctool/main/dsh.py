@@ -123,6 +123,10 @@ def worker_ssh(addr):
             synctool.multiplex.ssh_args(ssh_cmd_arr, nodename)
         cmd_arr.extend(['-e', ' '.join(ssh_cmd_arr)])
 
+        # safety first; do not use --delete here
+        if '--delete' in cmd_arr:
+            cmd_arr.remove('--delete')
+
         cmd_arr.append('--')
         cmd_arr.append('%s' % REMOTE_CMD_ARR[0])
         cmd_arr.append('%s:%s' % (addr, REMOTE_CMD_ARR[0]))
