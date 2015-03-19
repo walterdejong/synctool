@@ -131,6 +131,8 @@ def worker_ssh(addr):
         # safety first; do not use --delete here
         if '--delete' in cmd_arr:
             cmd_arr.remove('--delete')
+        if '--delete-excluded' in cmd_arr:
+            cmd_arr.remove('--delete-excluded')
 
         cmd_arr.append('--')
         cmd_arr.append('%s' % REMOTE_CMD_ARR[0])
