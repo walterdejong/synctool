@@ -73,10 +73,15 @@ def run_dsh(address_list, remote_cmd_arr):
           synctool.param.SCRIPT_DIR + os.sep):
         SYNC_IT = True
 
-    if not (os.path.isfile(full_path) and os.access(full_path, os.X_OK)):
-        # not an executable file
-        # must be wrong, do not bother syncing it
-        # Note that syncing wrong paths with rsync --delete is dangerous
+    try:
+        if not (os.path.isfile(full_path) and os.access(full_path, os.X_OK)):
+            # not an executable file
+            # must be wrong, do not bother syncing it
+            # Note that syncing wrong paths with rsync --delete is dangerous
+            verbose('%s: not an executable file' % full_path)
+            SYNC_IT = False
+    except OSError as err:
+        verbose('%s: %s' % (full_path, err.strerror))
         SYNC_IT = False
 
     SSH_CMD_ARR = shlex.split(synctool.param.SSH_CMD)
