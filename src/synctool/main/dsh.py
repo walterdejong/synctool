@@ -65,8 +65,6 @@ def run_dsh(address_list, remote_cmd_arr):
         # look under scripts/
         full_path = os.path.join(synctool.param.SCRIPT_DIR,
                                  remote_cmd_arr[0])
-        # found the command under scripts/
-        remote_cmd_arr[0] = full_path
         # sync the script to the node
         SYNC_IT = True
     elif (full_path[:len(synctool.param.SCRIPT_DIR)+1] ==
@@ -80,6 +78,9 @@ def run_dsh(address_list, remote_cmd_arr):
             # Note that syncing wrong paths with rsync --delete is dangerous
             verbose('%s: not an executable file' % full_path)
             SYNC_IT = False
+        else:
+            # found the command under scripts/
+            remote_cmd_arr[0] = full_path
     except OSError as err:
         verbose('%s: %s' % (full_path, err.strerror))
         SYNC_IT = False
