@@ -13,7 +13,7 @@
 import os
 import sys
 
-VERSION = '6.2'
+VERSION = '6.3-beta'
 
 # location of default config file on the master node
 DEFAULT_CONF = '/opt/synctool/etc/synctool.conf'
