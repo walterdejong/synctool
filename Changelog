@@ -1,3 +1,7 @@
+Mar 2015
+- fixed bug in dsh: directory arguments are invalid
+  and exceptionally dangerous when coupled with rsync --delete
+
 Jan 2015
 - fixed bug for not running .post script when --single is used
 
