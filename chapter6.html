@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>synctool documentation</title>
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="stylesheet" type="text/css" href="synctool_doc.css" />
+</head>
+<body>
+
+<div id="page">
+
+<div id="header">
+
+<h1>synctool documentation</h1>
+<br class="vtab" />
+<p>
+<em>synctool &copy; 2015 Walter de Jong &lt;walter@heiho.net&gt;</em>
+<br />
+<br />
+synctool comes with <strong>no warranty</strong>. synctool is
+<strong>free software</strong>.<br />
+synctool is distributed under terms described
+in the <a href="http://www.gnu.org/licenses/gpl-2.0.html">GNU General Public
+License</a>.
+</p>
+
+</div>   <!-- end header -->
+
+<div id="content">
+<h1>6. Migrating to synctool 6</h1>
+
+<p>This chapter may be of importance if you already are using an older version
+of synctool, and wish to upgrade to synctool 6. Everything you need to know
+is really in the previous chapters, so some sound advice: read the manual!
+Other than that, this chapter gives some pointers on how to lift your
+installation up to level 6.</p>
+
+<p>First of all, this is a big upgrade so be sure you have some time on your
+hands. It is recommended that your current synctool setup is &#8216;clean&#8217;, does
+not produce any errors, and that your cluster is &#8216;in sync&#8217; (ie. there are
+no pending changes). It is also recommended that you first read through this
+chapter (and/or the entire manual) before taking any action.</p>
+
+<p>This chapter assumes your old synctool repository is <code>/var/lib/synctool/</code>.
+The programs are under <code>/opt/synctool/</code>.</p>
+
+<h1>6.1 Installing synctool 6</h1>
+
+<p>Log on to the master node. The first step is to move the old synctool dir
+out of the way:</p>
+
+<pre><code>mv /opt/synctool /opt/synctool.old
+</code></pre>
+
+<p>Install synctool 6 as described in <a href="chapter2.html">chapter 2</a>.
+This boils down to:</p>
+
+<pre><code>./setup.sh -f
+</code></pre>
+
+<p>This installs the programs under <code>/opt/synctool/</code> and creates a new, empty
+repository under <code>/opt/synctool/var/</code>. Let&#8217;s leave it empty for now, first
+go configure synctool 6.</p>
+
+<h1>6.2 Configuring synctool 6</h1>
+
+<p>The old config file is <code>/var/lib/synctool/synctool.conf</code>. The new config
+file will be <code>/opt/synctool/etc/synctool.conf</code>, but you can&#8217;t just copy it
+in place and expect it to work. The reason is that some config parameters
+have changed; some were dropped and new ones have been added.
+The best thing to do is to take <code>/opt/synctool/etc/synctool.conf.example</code>
+and adapt it.</p>
+
+<pre><code>cd /opt/synctool/etc
+cp synctool.conf.example synctool.conf
+editor_of_choice synctool.conf
+</code></pre>
+
+<p>Fill in all the parameters the way you want them. synctool uses sensible
+defaults for most parameters; these are commented in the example config.
+You must set the <code>master_node</code>.</p>
+
+<p>Delete the obvious example groups and nodes; copy over the group and node
+definitions from your old <code>synctool.conf</code> in the <code>/var/lib/synctool/</code>
+directory.
+As shown in the example config, if your nodes are neatly numbered, the node
+config lines can be greatly shortened by using the new node range syntax.</p>
+
+<p>Comment the <code>ignore_node</code> and <code>ignore_group</code> lines or set them like they
+were in the old <code>synctool.conf</code>.</p>
+
+<p>The rest of the config file are reasonable defaults. Leave them be or change
+them to match the old <code>synctool.conf</code>.</p>
+
+<p>If you had any <code>on_update</code> lines in the old config, these must be converted
+to <code>.post</code> scripts; <code>.post</code> scripts are the only way to trigger actions on
+updates in synctool 6.</p>
+
+<p>You are now set to try out the new config with <code>synctool-config</code> and/or <code>dsh</code>.</p>
+
+<p>For more information on configuring synctool, see <a href="chapter2.html">chapter 2</a>
+and <a href="chapter4.html">chapter 4</a>.</p>
+
+<h1>6.3 Updating the repository</h1>
+
+<p>If the configuration is working, it is safe to run <code>synctool</code>. This will
+install synctool 6 on the entire cluster. But wait &#8230; the repository is
+still empty &#8230;? Indeed, and thus synctool won&#8217;t make any changes to the
+nodes &#8212; other than automatically upgrading synctool itself.</p>
+
+<p>The repository works a little different in synctool 6. In synctool 5 you
+had the option of configuring multiple overlay dirs. This was nothing more
+than logical grouping of files, synctool would sync all overlay dirs onto
+each node. In synctool 6, the overlay dir is divided by group, and nodes
+only get copy of a relevant subtree.
+Learn more about it in <a href="chapter3.html">chapter 3</a>.</p>
+
+<p>In general, you should be able to do this:</p>
+
+<ul>
+<li><p>If you had only a single overlay dir, copy the old overlay directory
+<code>/var/lib/synctool/overlay/</code> to <code>/opt/synctool/var/overlay/all/</code>
+(or <code>common/</code> &#8212; see best practices in <a href="chapter5.html">chapter 5</a>).</p></li>
+<li><p>If you had multiple overlay dirs, copy them over to
+<code>/opt/synctool/var/overlay/</code> and realize that synctool will now use them
+in a different way. Go through the list of files in the grouped overlay
+dirs and examine files tagged with extension <code>._all</code>. They should probably
+be moved elsewhere. In fact, you should pay attention to files tagged with
+an extension other than the name of the <code>overlay/group/</code> directory.</p></li>
+</ul>
+
+<p>This is the quick and dirty way. It is more safe however to carefully go
+through the old repository and copy them to the correct place in the new
+repository.</p>
+
+<p>Run synctool on a single node, see what it does. Fix any errors and iterate.
+When all is well, run synctool over groups of nodes and eventually the entire
+cluster.</p>
+
+<p>Go over the same process for the <code>delete/</code> tree.</p>
+
+<p>The <code>tasks/</code> tree no longer exists. If you have any scripts under <code>tasks/</code>,
+you may move them to <code>/opt/synctool/scripts/</code> (without group extension).
+They can now be run using <code>dsh</code>. See <a href="chapter3.html">chapter 3</a> for more
+information.</p>
+
+<p>synctool should now largely already work.</p>
+
+<h1>6.4 Updating templates</h1>
+
+<p>In older versions of synctool you could generate config files by pulling
+a trick with a template file and a <code>.post</code> script. This trick is now
+built into synctool, and it uses a <code>._template</code> file and an accompanying
+<code>._template.post</code> script. A big advantage of this new templating system is
+that you can do a proper dry run, and use <code>synctool --diff</code> to examine any
+changes made to the config file that is installed and active on the node;
+this was previously not possible with templated files.</p>
+
+<p>To adapt to the new template system, seek out any template files you have,
+and rename them to have extension <code>._template</code>. Rename the matching <code>.post</code>
+script to <code>._template.post</code>. Next, edit the <code>._template.post</code> script, and
+change it to call <code>synctool-template</code>:</p>
+
+<pre><code>/opt/synctool/bin/synctool-template "$1" &gt;"$2"
+</code></pre>
+
+<p>You should probably also set a variable to make it work.
+See <a href="chapter3.html">chapter 3</a> for more information on how to operate
+templates.</p>
+
+<p>You can use <code>dsh rm</code> or the <code>delete/</code> tree to clean up any old <code>.template</code>
+files that are still floating around in your system.</p>
+
+<h1>6.5 Wrapping up</h1>
+
+<p>The migration to synctool 6 is now finished. After a week or so, you should
+feel confident enough to delete the old repository <code>/var/lib/synctool/</code>.
+synctool 6 does not use it. The quickest way to dispose of it is:</p>
+
+<pre><code># delete old repos from cluster nodes
+dsh -g all rm -rf /var/lib/synctool
+# delete old repos from master node
+rm -rf /var/lib/synctool
+</code></pre>
+
+<p>There is more to synctool 6 than this; you might want to make use of the
+new &#8216;purge&#8217; feature, or use the new options for uploading files, or use
+<code>dsh-pkg</code> to upgrade software packages, or configure slave nodes, or go
+multi-cluster with synctool, or configure syslogging, or try out multiplexed
+connections, or &#8230;
+Read all about it in this manual.</p>
+<div id="footer"> 
+<div class="line"> </div><br />
+If you really must, you can contact the author at
+<a href="mailto:walter at heiho dot net">walter at heiho dot net</a>
+</div>
+
+</div>    <!-- end content -->
+</div>    <!-- end page -->
+
+</body>
+</html>

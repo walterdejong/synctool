@@ -1,0 +1,181 @@
+/*
+	synctool_doc.css	WJ111
+
+	synctool Copyright 2015 Walter de Jong <walter@heiho.net>
+
+	synctool COMES WITH NO WARRANTY. synctool IS FREE SOFTWARE.
+	synctool is distributed under terms described in the GNU General Public
+	License.
+*/
+
+/* reset default browser CSS */
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, font, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+	background: transparent;
+	border: 0;
+	margin: 0;
+	padding: 0;
+	vertical-align: baseline;
+}
+
+html,body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	background-color: #eee;
+	color: #000;
+	font-family: georgia, times, serif;
+}
+
+h1 {
+	font-family: verdana, geneva, helvetica, arial, sans-serif;
+	font-size: 2em;
+	font-weight: bold;
+/*	text-transform: capitalize;	*/
+	margin: 2em 0 .5em 0;
+}
+
+h2 {
+	font-family: verdana, geneva, helvetica, arial, sans-serif;
+	font-size: 1.5em;
+	font-weight: normal;
+	margin-top: 1em;
+	margin-bottom: .5em;
+}
+
+h3 {
+	font-size: 1.1em;
+	font-weight: bold;
+	margin-bottom: .25em;
+}
+
+p { margin: 1em 0 0 0; }
+
+strong {
+	font-family: helvetica, arial, sans-serif;
+	font-style: bold;
+	text-transform: uppercase;
+}
+
+em { font-style: italic; }
+
+a {
+	text-decoration: none;
+}
+
+a:link {
+	color: #00e;
+}
+
+a:visited {
+	color: #b0b;
+}
+
+ul,ol {
+	padding-left: 1.5em;
+	padding-bottom: .5em;
+}
+
+/* used in the table of contents */
+ol.subindex {
+	list-style-type: lower-roman;
+}
+
+dl {
+	padding: 1em;
+}
+
+dt {
+	font-family: menlo, courier, monospace;
+	font-weight: bold;
+}
+
+dd {
+	padding-bottom: .5em;
+}
+
+/* all text is put into a div class=page */
+div#page {
+	position: relative;
+    width: 80%;
+
+	height: auto !important;	/* real browsers */
+	height: 100%;				/* IE6: treated as min-height*/
+	min-height: 100%;			/* real browsers */
+
+	margin: 0 auto;
+	padding: 0;
+	background-color: #fff;
+}
+
+div#header {
+	padding: 1em;
+	background: #fff url("synctool_logo.jpg") 98% 10px no-repeat;
+	border-bottom: dashed 3px #eee;
+}
+
+div#header p {
+	text-align: center;
+}
+
+div#content {
+	width: 80%;
+	text-align: justify;
+	padding: 1em 1em 5em;	/* bottom padding for footer */
+}
+
+div#footer {
+	position: absolute;
+	width: 100%;
+	bottom: 0;				/* stick to bottom */
+	padding: 0em 0em .5em;
+
+	font-family: georgia, times, serif;
+	font-style: italic;
+	font-size: .8em;
+}
+
+pre {
+	border: solid 1px #000;
+	background-color: #eee;
+	font-family: menlo, courier, monospace;
+	font-size: .95em;
+	margin: 1em auto 1em auto;
+	padding: 1em;
+	padding-left: 1.5em;
+}
+
+blockquote {
+	border: dashed 1px #aaa;
+	background-color: #eee;
+	margin: 1em auto 1em auto;
+	padding: 0 1em 1em 1em;
+}
+
+code {
+	font-family: menlo, courier, monospace;
+	font-size: .95em;
+	word-break: keep-all;
+}
+
+.vtab {
+	display: block;
+	margin: 1em auto 1em auto;
+	padding: .5em;
+}
+
+.line {
+	border: dashed 2px #eee;
+}
+
+/* EOB */
+/*
+:vim:ts=4:sw=4
+*/

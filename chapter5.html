@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>synctool documentation</title>
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="stylesheet" type="text/css" href="synctool_doc.css" />
+</head>
+<body>
+
+<div id="page">
+
+<div id="header">
+
+<h1>synctool documentation</h1>
+<br class="vtab" />
+<p>
+<em>synctool &copy; 2015 Walter de Jong &lt;walter@heiho.net&gt;</em>
+<br />
+<br />
+synctool comes with <strong>no warranty</strong>. synctool is
+<strong>free software</strong>.<br />
+synctool is distributed under terms described
+in the <a href="http://www.gnu.org/licenses/gpl-2.0.html">GNU General Public
+License</a>.
+</p>
+
+</div>   <!-- end header -->
+
+<div id="content">
+<h1>5. Best practices</h1>
+
+<p>This chapter contains tips, tricks and examples of how to make good use of
+synctool.</p>
+
+<h2>5.1 Use logical group names</h2>
+
+<p>synctool allows you to use nodenames as extension on files in the repository.
+This is nice because it allows you to easily differentiate for a single node.
+However, it is much better practice to put that node in a certain group, and
+let it be the only member of that group. Now label the file as belonging to
+that group, and you&#8217;re done.</p>
+
+<p>Bad:</p>
+
+<pre><code>overlay/all/etc/hosts.allow._all
+overlay/all/etc/hosts.allow._node1
+overlay/all/etc/motd._all
+overlay/all/etc/motd._node1
+</code></pre>
+
+<p>Good:</p>
+
+<pre><code>overlay/mycluster/etc/hosts.allow._all
+overlay/mycluster/etc/hosts.allow._login
+overlay/mycluster/etc/motd._all
+overlay/mycluster/etc/motd._login
+</code></pre>
+
+<p>The advantage is that you will be able to shift the service to another node
+simply by changing the synctool configuration, rather than having to rename
+all files in the repository.</p>
+
+<h2>5.2 Future planning: Be mindful of group &#8216;all&#8217;</h2>
+
+<p>synctool has this great group &#8216;all&#8217; that applies to all nodes. One day,
+however, you decide to add a new machine to your cluster that has a pretty
+different role than any other. (Not) suprisingly, synctool will want to apply
+all files tagged as <code>all</code> to the new node &#8212; but in this case, it&#8217;s exactly
+<em>not</em> what you want.</p>
+
+<p>The problem is that <code>all</code> is too generic, and the solution is to rename
+<code>overlay/all/</code> to something else, such as <code>overlay/common/</code>, or better yet,
+<code>overlay/subcluster1/</code>. This moves <code>all</code> out of the way and you can integrate
+your new node in a better way.</p>
+
+<p>The lesson here is that <code>overlay/all/</code> is a nice catch-all directory, but
+it&#8217;s maybe best left unused. It&#8217;s perfectly OK for files to be tagged as
+<code>._all</code>, but they really should be placed in a group-specific overlay
+directory.</p>
+
+<h2>5.3 Use group extensions on directories sparingly</h2>
+
+<p>synctool allows you to add a group extension to a directory, like so:</p>
+
+<pre><code>$overlay/all/etc._mygroup/
+</code></pre>
+
+<p>This is a powerful feature. However, it can make a mess of your repository
+as well. If you catch yourself having to use <code>find</code> all the time to pinpoint
+the location of a file in the repository, chances are that you making things
+harder on yourself than ought to be.</p>
+
+<p>Maybe it is better structured as:</p>
+
+<pre><code>$overlay/mygroup/etc/
+</code></pre>
+
+<p>but maybe it is better structured as:</p>
+
+<pre><code>$overlay/all/etc/somefile._all
+$overlay/all/etc/somefile._mygroup
+</code></pre>
+
+<p>The main message is &#8220;keep it simple&#8221;. Try not to use too many group
+directories, because it makes things complicated.</p>
+
+<h2>5.4 Do not manage the master node</h2>
+
+<p>It is recommended that you do not manage the master node with synctool.
+The reason is that it makes things more complicated when you choose to put
+the configuration of your master node under control of synctool.</p>
+
+<p>Why is this? It is mainly because synctool by default works on &#8216;all&#8217; nodes,
+and for some reason it is unnatural when &#8216;all&#8217; includes the master node too.
+Imagine calling <code>dsh reboot</code> to reboot all nodes, and pulling down the master
+with you (in the middle of the process, so you may not even succeed at
+rebooting all nodes).</p>
+
+<p>It often means doing double work; the config files of the master node tend
+to differ from the ones on your nodes. It is good practice though to label
+the master node as <em>master</em>, and to simply ignore it:</p>
+
+<pre><code>node n01 master
+ignore_group master
+</code></pre>
+
+<p>It&#8217;s also OK to leave the master node out of the configuration altogether.
+(Here, &#8216;master&#8217; is a group, not to be confused with the <code>master</code> keyword that
+defines the master node. Are you still with me?)</p>
+
+<p>If you still want to manage the master with synctool, do as you must. Just be
+sure to call <code>dsh -X master reboot</code> when you want to reboot your cluster.</p>
+
+<h2>5.5 Managing multiple clusters with one synctool</h2>
+
+<p>It is really easy to manage just one cluster with one synctool. This means
+that your repository will contain files that apply only to that cluster.
+In reality, you may have only one management host for managing multiple
+clusters, or you may have several subclusters in a single cluster.</p>
+
+<p>Managing such a setup with synctool used to be hard &amp; hackish, but since
+version 6 it is only a matter of using groups in the right way.</p>
+
+<p>Add all clusters to the synctool repository as you would with adding more
+nodes. Create a group for each (sub)cluster. For each clustergroup, add a
+directory <code>overlay/cluster/</code>, so you can handle them independently whenever
+you wish to. Your repository will look like this:</p>
+
+<pre><code>$overlay/all/
+$overlay/cluster1/
+$overlay/cluster2/
+$overlay/cluster3/
+</code></pre>
+
+<p>If you tend to reinstall systems a lot with different operating systems,
+it may be a good idea to create per OS groups. This also helps when upgrading
+to new OS releases.</p>
+
+<pre><code>$overlay/wheezy/
+$overlay/centos64/
+$overlay/sles11sp2/
+</code></pre>
+
+<p>Note that files under these directories can still be marked <code>._all</code>, synctool
+will select the correct file as long as you tag the node with the right group.</p>
+
+<p>Decide for yourself what files should go under what directory, and what
+layout works best for you.</p>
+
+<h2>5.6 Use a tiered setup for large clusters</h2>
+
+<p>If you have a large cluster consisting of hundreds or thousands (or maybe
+more) nodes, you will run into a scaling issue at the master node.
+synctool doesn&#8217;t care how many nodes you manage with it, but doing a
+synctool run to a large number of nodes will take considerable time. You can
+increase the <code>num_proc</code> parameter to have synctool do more work in parallel,
+but this will put more load on your master node. To manage such a large
+cluster with synctool, a different approach is needed.</p>
+
+<p>The solution is to make a tiered setup. In such a setup, the master node syncs
+to other master nodes (for example, the first node in a rack), which in turn
+sync to subsets of nodes. Script it along these lines:</p>
+
+<pre><code>#! /bin/bash
+
+for rack in $RACKS
+do
+    # give rackmasters a full copy of the repos
+    rsync -a --delete /opt/synctool/ ${rack}-n1:/opt/synctool/
+
+    # run synctool on rackmaster
+    dsh -n ${rack}-n1 --no-nodename \
+      /opt/synctool/bin/synctool -g $rack "$@"
+done &amp;
+wait
+</code></pre>
+
+<p>So, the master node syncs to &#8216;rack masters&#8217;, and the rack masters in turn
+run synctool on their subset of nodes. In the config, the nodes are
+grouped by rack. The option <code>--no-nodename</code> is used with <code>dsh</code> to make the
+output come out right.
+You also still need to manage the rack masters &#8212; with synctool, from the
+master node.</p>
+
+<p>A slightly different solution is to make use of slave nodes; the master
+syncs full copies only to slaves; next, the slaves manage the nodes.
+This requires having multiple config files (eg, one per rack) and scripting
+it so that it uses the correct config file for each rack.</p>
+
+<pre><code>synctool -c slaves.conf "$@"
+for rack in $RACKS
+do
+    dsh -n ${rack}-n1  --no-nodename \
+      synctool -c confs/${rack}.conf "$@"
+done
+</code></pre>
+
+<p>This tip is mentioned here mostly for completeness; I recommend running with
+a setup like this only if you are truly experiencing problems due to the
+scale of your cluster. There are security implications to consider when
+giving nodes a full copy of the repository. It depends on your situation
+whether it is acceptable to run like this.</p>
+
+<h2>5.7 Manage hosts behind a gateway</h2>
+
+<p>As synctool relies on ssh authentication you can easily manage hosts that are
+not directly available. Imagine this setup:</p>
+
+<pre><code>synctool-master-node
+    |
+Internet
+    |
+gateway.your.domain
+    |
+    + privatenode1
+    + privatenode2
+</code></pre>
+
+<p>You need to set up your ssh connection as follows in /root/.ssh/config</p>
+
+<pre><code>Host *.intra.your.domain
+    ProxyCommand ssh gateway.your.domain -W %h:22
+</code></pre>
+
+<p>Add your hosts in synctool.conf:</p>
+
+<pre><code>node privatenode1 group1 group2 ipaddress:privatenode1.intra.your.domain
+node privatenode2 group1 group2 ipaddress:privatenode2.intra.your.domain
+</code></pre>
+
+<p>Of course this requires also a proper DNS setup for your intra zone
+at <code>gateway.your.domain</code></p>
+<div id="footer"> 
+<div class="line"> </div><br />
+If you really must, you can contact the author at
+<a href="mailto:walter at heiho dot net">walter at heiho dot net</a>
+</div>
+
+</div>    <!-- end content -->
+</div>    <!-- end page -->
+
+</body>
+</html>

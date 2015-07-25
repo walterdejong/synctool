@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>synctool documentation</title>
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="stylesheet" type="text/css" href="synctool_doc.css" />
+</head>
+<body>
+
+<div id="page">
+
+<div id="header">
+
+<h1>synctool documentation</h1>
+<br class="vtab" />
+<p>
+<em>synctool &copy; 2015 Walter de Jong &lt;walter@heiho.net&gt;</em>
+<br />
+<br />
+synctool comes with <strong>no warranty</strong>. synctool is
+<strong>free software</strong>.<br />
+synctool is distributed under terms described
+in the <a href="http://www.gnu.org/licenses/gpl-2.0.html">GNU General Public
+License</a>.
+</p>
+
+</div>   <!-- end header -->
+
+<div id="content">
+<h1>2. Installation</h1>
+
+<blockquote>
+  <p>In synctool terminology, a <em>node</em> is a host, a computer in a group
+of computers. A group of computers is called a <em>cluster</em>.</p>
+</blockquote>
+
+<h2>2.1 Installation dependencies</h2>
+
+<p>synctool depends on a number of (fairly standard) programs:</p>
+
+<ul>
+<li><a href="http://www.python.org/download/">python</a> version 2.6 or better</li>
+<li><a href="http://openssh.org/portable.html">ssh</a>, preferably OpenSSH version 5.6 or better</li>
+<li><a href="http://rsync.samba.org/">rsync</a></li>
+<li><code>ping</code>, or you can configure <a href="http://fping.org/">fping</a> later</li>
+<li><a href="http://daringfireball.net/projects/markdown/">markdown</a> and <a href="http://daringfireball.net/projects/smartypants/">smartypants</a> &#8212; but only if you want to install
+this documentation as HTML pages</li>
+</ul>
+
+<p>If you got all that, it&#8217;s on to the next section.</p>
+
+<h2>2.2 Passwordless SSH</h2>
+
+<p>synctool requires passwordless SSH from the master node to each cluster node
+as root. If you need more information on how to set this up, please see the
+SSH documentation or just google around. I like to give you these tips:</p>
+
+<ul>
+<li>use an SSH keypair</li>
+<li>or use hostbased authentication, also for root</li>
+<li>set <code>PermitRootLogin without-password</code> in <code>sshd_config</code> on the nodes</li>
+<li>use <code>ssh-keyscan</code> to create <code>/etc/ssh/ssh_known_hosts</code></li>
+<li>run <code>sshd</code> only the internal network interface to secure your system;
+configure <code>ListenAddress</code> appropriately</li>
+<li>in general, passwordless SSH from any cluster node to your master node
+should <em>not</em> work or be allowed &#8212; or at least, synctool does not need this</li>
+</ul>
+
+<p>If you want extra security, use a passphrase on the keypair and employ
+<code>ssh-agent</code>. Use <code>ssh-add</code> with a timeout.
+For sites with extra tight security, it is possible to configure <code>ssh</code> to
+run only specific (synctool) commands, or maybe you want to change
+the <code>ssh_cmd</code> in synctool&#8217;s configuration so that it runs a different command,
+one that does suit your security needs.</p>
+
+<p>When passwordless SSH as root works, proceed to installing the software.</p>
+
+<h2>2.3 Installing the software</h2>
+
+<p>To install synctool on the master node, run <code>setup.sh</code> like so:</p>
+
+<pre><code># ./setup.sh --installdir=/opt/synctool
+</code></pre>
+
+<p>The default location is <code>/opt/synctool</code>, which is a good place to put it.
+Note that synctool requires an &#8216;installdir&#8217; directory of its own. The
+installdir is not the same as a prefix; whatever you do, do <em>not</em> install
+synctool directly under <code>/usr</code> or <code>/usr/local</code>. Use <code>/usr/synctool</code> or
+<code>/usr/local/synctool</code> instead, or better, stick with the default location.
+The rest of the documentation assumes the default <code>/opt/synctool</code>.</p>
+
+<p><code>setup.sh</code> creates the following directory structure:</p>
+
+<pre><code>/opt/synctool/bin/                  synctool commands
+/opt/synctool/sbin/                 'system' programs
+/opt/synctool/etc/                  configuration files
+/opt/synctool/lib/                  libraries, modules
+/opt/synctool/lib/synctool/
+/opt/synctool/lib/synctool/main/
+/opt/synctool/lib/synctool/pkg/
+/opt/synctool/doc/                  documentation
+/opt/synctool/scripts/              place to store your scripts
+/opt/synctool/var/                  repository directory
+/opt/synctool/var/overlay/
+/opt/synctool/var/delete/
+/opt/synctool/var/purge/
+</code></pre>
+
+<p>The <code>doc/</code> directory contains a copy of this documentation.
+You may build the HTML documentation from the plain text sources
+by running <code>setup.sh</code> with <code>--build-docs</code>.</p>
+
+<p>The following synctool commands will be made available in
+<code>/opt/synctool/bin/</code>:</p>
+
+<pre><code>synctool               Main command
+dsh                    Run remote commands
+dsh-pkg                Upgrade or install packages
+dsh-ping               Check whether nodes are up
+dsh-cp                 Copy files to nodes
+
+synctool-client        Only run on target nodes
+synctool-client-pkg    Only run on target nodes
+synctool-config        Inspect the configuration
+synctool-template      Useful command for .post scripts
+</code></pre>
+
+<blockquote>
+  <p>Tip: Add <code>/opt/synctool/bin</code> to your <code>PATH</code>.</p>
+</blockquote>
+
+<h2>2.4 synctool configuration: nodes and groups</h2>
+
+<p>Copy the <code>synctool.conf.example</code> file to <code>/opt/synctool/etc/synctool.conf</code>.
+Edit <code>synctool.conf</code>, adjusting it as needed.</p>
+
+<p>The file <code>synctool.conf</code> describes what your cluster looks like;
+what nodes have what roles, and how synctool can contact them.
+Think a bit about what role each machine has. There is no need to go into
+great depth right now; you can always adjust the configuration later.</p>
+
+<pre><code>node n1  group1 group2  ipaddress:machine-n01
+</code></pre>
+
+<p>The nodename is the &#8216;synctool name that the node has.&#8217; It is in general the
+short hostname of the host, but in fact it can be anything you like.
+The nodename has nothing to do with hostnames or DNS entries.
+The <code>ipaddress</code> specifier tells synctool how to contact the node; this can be
+an IP address or a DNS name of the host you wish to contact. In clusters,
+there is often a management network interface &#8212; configure its IP address
+here. The <code>ipaddress</code> specifier is <em>optional</em> and only needed if the nodename
+does not exactly match the DNS name for contacting the remote host.</p>
+
+<p>Directly following the node name, you can list groups. synctool uses the
+term &#8216;group&#8217;, but you can also think of them as node properties. You can make
+up as many different properties as you like. You can split long lines by
+ending them with a backslash:</p>
+
+<pre><code>node n101 workernode plasma mathworks solar \
+      fsmounted backup debian  ipaddress:if0-n101
+</code></pre>
+
+<blockquote>
+  <p>Mind that in practice, synctool repositories are generally easiest
+maintainable with as few groups as possible. Make sure to use
+logical names for logical groups, and use a top-down group structure.
+Make things easy on yourself.</p>
+</blockquote>
+
+<p>If you have many nodes that all share the same long list of groups, the
+groups may be abbreviated by defining a <em>compound</em> group. This compound
+group must be defined before defining the nodes:</p>
+
+<pre><code>group wn workernode plasma mathworks solar \
+     fsmounted backup
+
+node n101  wn  debian  ipaddress:if0-n101
+</code></pre>
+
+<p>You have to add a node definition for each and every node in your cluster.
+If your nodes are neatly numbered (and for large clusters, they often are),
+you can make use of node ranges and IP address sequences, like so:</p>
+
+<pre><code>node n[001-100]  wn  debian  ipaddress:if0-n[001]
+node n[101-200]  wn  debian  ipaddress:192.168.1.[20]
+</code></pre>
+
+<p>If you do have the luxury of a high performance shared filesystem on your
+cluster, you may put <code>/opt/synctool/</code> on there and add <code>rsync:no</code> to the node
+definition lines in the config file to tell synctool not to run <code>rsync</code>.
+Mind that there are certain security implications with having a shared
+filesystem between management and production nodes.</p>
+
+<p>Next, you have to tell synctool which node is the master management node.
+This is done by setting <code>master</code> to the fqdn (fully qualified domain name)
+of the management host.</p>
+
+<pre><code>master n1.mycluster.org
+</code></pre>
+
+<p>If you don&#8217;t know what the fqdn is, you can get it by running the command:</p>
+
+<pre><code>synctool-config --fqdn
+</code></pre>
+
+<p>If you want to manage the master node itself with synctool, you should also
+define it as a node. It is a matter of taste, but it is maybe better <em>not</em>
+to do so. If you choose not to manage the master node, it may be omitted
+from the configuration. You may also explicitly exclude it:</p>
+
+<pre><code>node n1 master           hostname:n1.mycluster.org
+ignore_node n1
+</code></pre>
+
+<p>Beside a master node, you may also define slave nodes.
+Slaves are cold standby&#8217;s that get full copies of the synctool repository.
+A slave may be used as a failback in case your management host breaks down.
+Since there can be only one master node in a synctool cluster, slaves must
+be enabled &#8216;by hand&#8217; by editing the config file and changing the master
+definition.</p>
+
+<blockquote>
+  <p>Previous versions of synctool had a <code>masterdir</code> setting.
+It no longer exists; the overlay directory now must reside under
+the synctool root, under <code>/opt/synctool/var/</code>.</p>
+</blockquote>
+
+<p>You can test your <code>synctool.conf</code> with the command <code>synctool-config</code>.
+It&#8217;s more exciting however to test with <code>dsh</code> and actually run commands
+on the cluster.</p>
+
+<h2>2.5 Testing with dsh</h2>
+
+<p>After filling in a couple of nodes in <code>synctool.conf</code>, try the command
+<code>dsh-ping</code> to see if the nodes are &#8216;up&#8217;. If they are, try running the
+commands <code>dsh hostname</code>, <code>dsh uptime</code>, or <code>dsh date</code>.
+If you correctly set up passwordless SSH, <code>dsh</code> should run the commands on
+every node without problems or needed manual intervention. It is important
+that this works before proceeding.</p>
+
+<blockquote>
+  <p>Some (mostly IBM) systems already have a <code>dsh</code> command.
+Be mindful to start the correct <code>dsh</code> command.</p>
+</blockquote>
+
+<p>See section 3.15 for a trick that greatly speeds up synctool and dsh using
+OpenSSH&#8217;s multiplexed connections capability.</p>
+
+<h2>2.6 Your first synctool run</h2>
+
+<p>Now that you have a rough setup on the master node, try running <code>synctool</code>
+to a single node:</p>
+
+<pre><code>synctool -n nodename
+</code></pre>
+
+<p>There should be some output message saying <strong>DRY RUN</strong>.
+This means that synctool is now working. You can try running synctool across
+all nodes:</p>
+
+<pre><code>synctool
+</code></pre>
+
+<p>Check that every node responds. If it doesn&#8217;t, go back to the step where
+we tested the setup using <code>dsh</code>.
+When synctool to every node works, the basic setup is done and you can start
+filling your repository with useful files.</p>
+
+<h2>2.7 Client installation</h2>
+
+<p>As you may have noticed, we never installed any client software on the nodes.
+There is no client installation step; the master node automatically
+updates synctool on the client nodes. The binaries needed for this are
+located under <code>/opt/synctool/sbin/</code>, and this directory gets synced to the
+nodes with <code>rsync</code> every time you run <code>synctool</code>.</p>
+<div id="footer"> 
+<div class="line"> </div><br />
+If you really must, you can contact the author at
+<a href="mailto:walter at heiho dot net">walter at heiho dot net</a>
+</div>
+
+</div>    <!-- end content -->
+</div>    <!-- end page -->
+
+</body>
+</html>

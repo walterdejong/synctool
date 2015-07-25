@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>synctool</title>
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="stylesheet" type="text/css" href="doc/synctool_doc.css" />
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript"></script>
+<script type="text/javascript">
+_uacct = "UA-2096342-1";
+urchinTracker();
+</script>
+
+</head>
+<body>
+
+<div id="page">
+
+<div id="header">
+
+<h1>synctool</h1>
+<br class="vtab" />
+<p>
+<em>synctool &copy; 2015 Walter de Jong &lt;walter@heiho.net&gt;</em><br />
+<br />
+synctool comes with <strong>no warranty</strong>. synctool is
+<strong>free software</strong>.<br />
+synctool is distributed under terms described
+in the <a href="http://www.gnu.org/licenses/gpl-2.0.html">GNU General Public
+License</a>.
+</p>
+
+</div>   <!-- end header -->
+
+<div id="content">
+<p>
+synctool is a configuration management tool for working with clusters of
+computers. synctool copies configuration files to groups of machines in your
+cluster based on what groups (or classes) they are in. By doing so, it keeps
+the configuration on that group of machines synchronized
+(or, &ldquo;in sync&rdquo;). If needed, synctool will restart or reload any
+daemons as you wish. synctool can be easily extended to do other
+administrative tasks such as checking daemons, checking free disk space,
+installing packages, etc. or any other task you want it to do.
+</p>
+
+<br />
+
+<p>
+synctool simplifies system administration by working with the following
+concepts: 
+<ul>
+<li>a host can be part of one or more groups, or classes</li>
+<li>files are designated a group by means of filename extension</li>
+<li>the &lsquo;overlay&rsquo; directory tree contains the files and
+  directories that should be copied (or &lsquo;synced&rsquo;) to the target
+  host</li>
+<li>when certain files are updated, you will want to execute a script
+(e.g, <span class="cmd">/etc/init.d/daemon restart</span>)</li>
+<li>simplicity. It uses the power of <span class="cmd">rsync</span> and
+  <span class="cmd">ssh</span> to distribute the files</li>
+<li>extendibility. Make synctool more powerful by writing plugin scripts</li>
+</ul>
+</p>
+
+<p>
+See the <a href="doc/toc.html">documentation</a> for more information.<br />
+Read the documentation as a <a href="doc/single.html">single page</a> document.
+</p>
+
+<br />
+<div class="line"> </div>
+<br />
+
+The latest version is <strong>6.2</strong>
+<p>
+Download synctool from github: <a href="https://github.com/walterdejong/synctool/archive/v6.2.tar.gz" onClick="javascript:urchinTracker ('/downloads/synctool-6.2.tar.gz');">v6.2.tar.gz</a>
+<br />
+</p>
+
+<p>
+Please see the <a href="Changelog.txt">Changelog</a> for changes between the
+releases
+</p>
+<p>
+If you don't have <span class="cmd">ssh</span>, I recommend
+<span class="cmd">OpenSSH</span>, which you can get at
+<a href="http://www.openssh.org">OpenSSH.org</a><br />
+If you don't have <span class="cmd">rsync</span>, I recommend
+<span class="cmd">rsync</span>, which you can get at
+<a href="http://samba.anu.edu.au/rsync/">the samba rsync web pages</a>
+</p>
+<p>
+The source code of synctool is hosted at
+<a href="https://github.com/walterdejong/synctool">github</a>
+</p>
+
+<br />
+<div class="line"> </div>
+
+<div id="footer">
+<div class="line"> </div><br />
+If you really must, you can contact the author at
+<a href="mailto:walter at heiho dot net">walter at heiho dot net</a>
+</div>
+
+</div>  <!-- end content -->
+</div>  <!-- end page -->
+
+</body>
+</html>

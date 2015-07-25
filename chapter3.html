@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>synctool documentation</title>
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="stylesheet" type="text/css" href="synctool_doc.css" />
+</head>
+<body>
+
+<div id="page">
+
+<div id="header">
+
+<h1>synctool documentation</h1>
+<br class="vtab" />
+<p>
+<em>synctool &copy; 2015 Walter de Jong &lt;walter@heiho.net&gt;</em>
+<br />
+<br />
+synctool comes with <strong>no warranty</strong>. synctool is
+<strong>free software</strong>.<br />
+synctool is distributed under terms described
+in the <a href="http://www.gnu.org/licenses/gpl-2.0.html">GNU General Public
+License</a>.
+</p>
+
+</div>   <!-- end header -->
+
+<div id="content">
+<h1>3. Using synctool</h1>
+
+<p>The main power of synctool is the fact that you can define logical groups,
+and you can add these to a filename as a filename extension. This will result
+in the file being copied, only if the node belongs to the same group.
+The groups a node is in, are defined in the <code>synctool.conf</code> file.
+In the configuration file, the nodename is associated with one or more groups.
+The nodename itself can also be used as a group to indicate that a file
+belongs to that node.</p>
+
+<p>Under the synctool root there are these interesting directories:</p>
+
+<ul>
+<li><code>/opt/synctool/var/overlay/</code></li>
+<li><code>/opt/synctool/var/delete/</code></li>
+<li><code>/opt/synctool/var/purge/</code></li>
+</ul>
+
+<p>This is referred to as &#8216;the repository&#8217;.</p>
+
+<p>The <code>overlay/</code> tree contains files that have to be copied to the target nodes.
+When synctool detects a difference between a file on the system and a file
+in the overlay tree, the file will be copied from the overlay tree onto
+the node.</p>
+
+<p>The <code>delete/</code> tree contains files that always have to be deleted from the
+nodes. Only the filename matters, so it is alright if the files in this tree
+are only zero bytes in size.</p>
+
+<p>The <code>purge/</code> tree contains directories that are copied as-is to the nodes,
+and deleting any files on the target node that are unmanaged &#8212; files that
+should not be there.</p>
+
+<p>synctool uses <code>rsync</code> to copy these trees to the node, and afterwards it
+runs the <code>synctool-client</code> command on that node. Note that it is perfectly
+possible to run <code>synctool-client</code> on a node by hand, in which case it will
+check its local copy of the repository. The client by itself will not
+synchronize with the master repository; synctool works with <em>server push</em>
+and not client pull.</p>
+
+<blockquote>
+  <p>Previously, synctool was located under <code>/var/lib/synctool/</code>.
+It worked for me (tm), except that the Filesystem Hierarchy Standard (FHS)
+has various things to say about it:</p>
+
+<ul>
+<li>thou shalt put configuration files under an <code>etc/</code> directory;</li>
+<li>thou shalt not execute programs from the <code>/var</code> partition;</li>
+<li><code>/var</code> may be mounted read-only;</li>
+<li>programs that want to keep things together, should use <code>/opt</code>.</li>
+</ul>
+
+<p>If you have difficulty with getting used to synctool&#8217;s new root,
+try this:</p>
+
+<ul>
+<li>symlink <code>/var/lib/synctool -&gt; /opt/synctool/var</code></li>
+<li><code>export overlay=/opt/synctool/var/overlay ; cd $overlay</code></li>
+</ul>
+</blockquote>
+
+<h2>3.1 Populating the repository</h2>
+
+<p>In the repository you will store all the important system configuration files
+of the cluster nodes. The overlay directory represents the root directory of
+the cluster nodes. By assigning an extension to a file in the repository,
+you can tell synctool what nodes should get what copy of a file.
+Consider this example:</p>
+
+<pre><code>/opt/synctool/var/overlay/all/
+  etc/ntp.conf._all
+  etc/ntp.conf._node1
+  etc/ntp.conf._wn
+</code></pre>
+
+<p>Here, worker nodes (nodes tagged with group <code>wn</code> in <code>synctool.conf</code>) will
+get the file <code>ntp.conf._wn</code> for <code>/etc/ntp.conf</code>. Node <code>node1</code> is special
+and gets a different file. All other nodes will get <code>ntp.conf._all</code>.</p>
+
+<p>There is a special group named <code>'none'</code>. Files with the extension <code>._none</code>
+will be copied to no nodes at all. This can be convenient when you
+temporarily wish to &#8216;disable&#8217; a file.</p>
+
+<p>synctool responds to the directory directly under <code>overlay/</code>; it selects
+this subtree as a candidate when the node has a matching group. For example,</p>
+
+<pre><code>/opt/synctool/var/overlay/wn/
+  etc/ntp.conf._all
+</code></pre>
+
+<p>this file will only be used on worker nodes because it resides in the
+overlay directory specific to the group <code>wn</code>.</p>
+
+<blockquote>
+  <p>Tip: Do not make group-specific overlay directories for each and every
+group. Instead, think about what subclusters you have, and arrange your
+repository accordingly. See also chapter 5 on Best Practices.</p>
+
+<p>In synctool version 5, you would configure &#8216;overlaydir&#8217; and synctool would
+still consider all overlay directories no matter what name the subdirectory
+had. In synctool 6, the group is strictly enforced and the subtree is
+synced to only those nodes that are in the group.
+Slave nodes are special; they get a full copy of the repository.</p>
+</blockquote>
+
+<p>To populate the repository, you can <code>scp</code> files from nodes, or you can use
+synctool&#8217;s super convenient upload feature:</p>
+
+<pre><code>synctool -n node1 --upload /etc/ntp.conf
+synctool -n node1 -u /etc/ntp.conf
+</code></pre>
+
+<p>synctool will automatically choose an extension for the file to save. If you
+disagree and want a different suffix, choose one:</p>
+
+<pre><code>synctool -n node1 --upload /etc/ntp.conf --suffix wn
+synctool -n node1 -u /etc/ntp.conf -s wn
+</code></pre>
+
+<p>synctool will suggest the overlay directory where to put the file in
+the repository. If you disagree, use:</p>
+
+<pre><code>synctool -n node1 --upload /etc/ntp.conf --overlay mycluster
+synctool -n node1 -u /etc/ntp.conf -o mycluster
+</code></pre>
+
+<p>By default synctool does a <em>dry run</em>. It will not do anything but show
+what would happen if this would not be a dry run. Add <code>-f</code> or <code>--fix</code> to
+really upload the file.</p>
+
+<p>Now edit the the uploaded <code>ntp.conf</code>, make some changes and run synctool:</p>
+
+<pre><code>root@masternode:/# synctool
+node1: DRY RUN, not doing any updates
+node1: /etc/ntp.conf updated (file size mismatch)
+</code></pre>
+
+<p>Again, synctool does a <em>dry run</em>. It shows the file is going to be updated
+because there is a mismatch in the file size. Should the file size be the
+same, synctool will calculate an MD5 checksum to see whether the file was
+changed or not.</p>
+
+<p>You may want to review your changes before applying them, or inspect the
+difference between the version in the repository with what&#8217;s currently
+installed on a node:</p>
+
+<pre><code>synctool -n node1 --diff /etc/ntp.conf
+synctool -n node1 -d /etc/ntp.conf
+</code></pre>
+
+<p>This will present a UNIX &#8216;diff&#8217; of the files. Note the destination path in
+the syntax of the command.</p>
+
+<p>To apply the change, you could now run synctool with option <code>--fix</code>.
+But maybe it&#8217;s better to read on, we are going to have synctool automatically
+reload the <code>ntpd</code> after updating the <code>ntp.conf</code> file.</p>
+
+<h2>3.2 Adding actions to updates</h2>
+
+<p>Now I would like the <code>ntpd</code> to be automatically reloaded after I change
+the <code>ntp.conf</code> file. This is done by adding a trigger script, in
+synctool-speak known as a &#8220;.post&#8221; script.</p>
+
+<p>Make a new file <code>overlay/all/etc/ntp.conf.post</code> and put only this line in it:</p>
+
+<pre><code>service ntp reload
+</code></pre>
+
+<p>Make the <code>.post</code> script executable: <code>chmod +x ntp.conf.post</code>.</p>
+
+<p>The <code>.post</code> script will be run when the file changes:</p>
+
+<pre><code>root@masternode:/# synctool -f
+node1: /etc/ntp.conf updated (file size mismatch)
+node1: running command $overlay/all/etc/ntp.conf.post
+</code></pre>
+
+<p>The <code>.post</code> script is run after synctool updated the file, and likewise,
+you may also create a <code>.pre</code> script that runs before the update:</p>
+
+<pre><code>root@masternode:/# synctool -f
+node1: running command $overlay/all/etc/ntp.conf.pre
+node1: /etc/ntp.conf updated (file size mismatch)
+node1: running command $overlay/all/etc/ntp.conf.post
+</code></pre>
+
+<p>The <code>.pre</code> and <code>.post</code> scripts are executed in the directory where the
+accompanying file resides; in this case <code>/etc/</code>. It is possible to add
+a group extension to the script, so that you can have one group of nodes
+perform different actions than another.</p>
+
+<p>The scripts are run with <code>sh -c</code>. Note that <code>/bin/sh</code> is often not the
+same as <code>bash</code>, so some clever shell scripting tricks may not work. However,
+you can fix this by including &#8220;<code>#!/bin/bash</code>&#8221; in the top of the <code>.post</code>
+script.</p>
+
+<p>In the environment you will find two variables that might be useful:</p>
+
+<ul>
+<li><code>SYNCTOOL_NODE</code> is set to the node that we&#8217;re running on</li>
+<li><code>SYNCTOOL_ROOT</code> is set to the directory where synctool lives</li>
+</ul>
+
+<p>So expanding on that, <code>$SYNCTOOL_ROOT/bin/</code> is the bindir, and the repository
+is found under <code>$SYNCTOOL_ROOT/var/overlay/</code>.</p>
+
+<p>A <code>.post</code> script for a directory will trigger when any file in that directory
+changes. This is particularly useful for daemons that have multiple config
+files in a directory, such as <code>conf.d</code>, or, for example, <code>/etc/cron.d</code>.
+A <code>.pre</code> script for a directory will only trigger if the directory does not
+exist and will be created.</p>
+
+<h2>3.3 Other useful options</h2>
+
+<p>The option <code>-q</code> of synctool gives less output:</p>
+
+<pre><code>root@masternode:/# synctool -q
+node3: /etc/xinetd.d/identd updated (file size mismatch)
+</code></pre>
+
+<p>If <code>-q</code> still gives too much output, because you have many nodes in your
+cluster, it is possible to specify <code>-a</code> to condense (aggregate) output.
+The condensed output groups together output that is the same for many nodes.</p>
+
+<p>One of my favorite commands is <code>synctool -qa</code>.
+You may also use option <code>-a</code> to condense output from <code>dsh</code>, for example</p>
+
+<pre><code># dsh -a date
+
+# dsh-ping -a
+</code></pre>
+
+<p>The option <code>-f</code> or <code>--fix</code> applies all changes. Always be sure to run
+synctool at least once as a dry run! (without <code>-f</code>).
+Mind that synctool does not lock the repository and does not guard against
+concurrent use by multiple sysadmins at once. In practice, this hardly ever
+leads to any problems.</p>
+
+<p>To update only a single file rather than all files, use the option
+<code>--single</code> or <code>-1</code> (that&#8217;s a number one, not the letter <em>ell</em>).
+You may give multiple <code>--single</code> options to update multiple files at once.</p>
+
+<p>If you want to check what file synctool is using for a given destination
+file, use option <code>-ref</code> or <code>-r</code>:</p>
+
+<pre><code>root@masternode:/# synctool -q -n node1 -r /etc/resolv.conf
+node1: /etc/resolv.conf._somegroup
+</code></pre>
+
+<p>synctool can be run on a subset of nodes, a group, or even on individual
+nodes using the options <code>--node</code> or <code>-n</code>, <code>--group</code> or <code>-g</code>, <code>--exclude</code>
+or <code>-x</code>, and <code>--exclude-group</code> or <code>-X</code>. This also works for <code>dsh</code> and friends,
+and you may use the range syntax to select a range of nodes.
+For example:</p>
+
+<pre><code># synctool -g batch,sched -X rack8
+</code></pre>
+
+<p>More examples:</p>
+
+<pre><code># dsh -n node1,node2,node3 date
+# dsh -n node[1-3] date
+# dsh -n node[01-10] -x node[05-07] hostname
+# dsh -n node[02-10/2,05,07] hostname
+</code></pre>
+
+<p>Copy a file to three nodes:</p>
+
+<pre><code># dsh-cp -n node[1-3] patchfile-1.0.tar.gz /tmp
+</code></pre>
+
+<p>After rebooting a cluster, use <code>dsh-ping</code> to see if the nodes respond to ping
+yet. You may also do this on a group of nodes:</p>
+
+<pre><code># dsh-ping -g rack4
+</code></pre>
+
+<p>The option <code>-v</code> gives verbose output. This is another way of displaying
+the logic that synctool performs:</p>
+
+<pre><code># synctool -v
+node3: checking $overlay/all/etc/tcpd_banner.production._all
+node3: overridden by $overlay/all/etc/tcpd_banner.production._batch
+node3: checking $overlay/all/etc/issue.net.production._all
+node3: checking $overlay/all/etc/syslog.conf._all
+node3: checking $overlay/all/etc/issue.production._all
+node3: checking $overlay/all/etc/modules.conf._all
+node3: checking $overlay/all/etc/hosts.allow.production._interactive
+node3: skipping $overlay/all/etc/hosts.allow.production._interactive,
+it is not one of my groups
+</code></pre>
+
+<p>The option <code>--unix</code> produces UNIX-style output. This shows in standard shell
+syntax just what synctool is about to do.</p>
+
+<pre><code>root@masternode:/# synctool --unix
+node3: # updating file /etc/xinetd.d/identd
+node3: mv /etc/xinetd.d/identd /etc/xinetd.d/identd.saved
+node3: umask 077
+node3: cp /var/lib/synctool/overlay/etc/xinetd.d/identd._all
+/etc/xinetd.d/identd
+node3: chown root.root /etc/xinetd.d/identd
+node3: chmod 0644 /etc/xinetd.d/identd
+</code></pre>
+
+<blockquote>
+  <p>synctool does not apply changes by executing shell commands; all
+operations are programmed in Python. The option <code>--unix</code> is only a way of
+displaying what synctool does, and may be useful when debugging.</p>
+</blockquote>
+
+<p>The option <code>-T</code> option produces terse output. In terse mode, long paths are
+abbreviated in an attempt to fit them on a single line of 80 characters wide.
+Terse mode can be made to give colored output through <code>synctool.conf</code>.</p>
+
+<pre><code>root@masternode# synctool -n n1 -T
+n1: DRYRUN not doing any updates
+n1: mkdir /Users/walter/src/.../testroot/etc/cron.daily
+n1: new /Users/walter/src/.../testroot/etc/cron.daily/testfile
+n1: exec //overlay/Users/.../testroot/etc/cron.daily.post
+</code></pre>
+
+<p>Note that these abbreviated paths can still be copy-and-pasted and used with
+other synctool commands like <code>--single</code> and <code>--diff</code>. synctool will recognize
+the abbreviated path and expand it on the fly. In the case of any name clashes
+synctool will report this and present a list of possibilities for you to
+consider.</p>
+
+<p>The option <code>--skip-rsync</code> skips the <code>rsync</code> run that copies the repository
+from the master to the client node. You may use this option when you are
+absolutely certain that the master and client are already in sync, for example
+if you just ran synctool to examine any changes. In general, this option is
+unnecessary, but it may be efficient if you are working with slow network
+links or a large synctool repository.</p>
+
+<h2>3.4 Templates</h2>
+
+<p>For &#8216;dynamic&#8217; config files, synctool has a feature called templates.
+There are a number of rather standard configuration files that (for example)
+require the IP address of a node to be listed. These are not particularly
+synctool friendly. You are free to upload each and every unique instance
+of the config file in question into the repository, however, if your cluster
+is large this does not make your repository look very nice, nor does it
+make them any easier to handle. Instead, make a template and couple it with
+a <code>._template.post</code> script that calls <code>synctool-template</code> to generate the
+config file on the node.</p>
+
+<p>As an example, I will use a fictional snippet of config file, but this
+trick applies to things like <code>sshd_config</code> with a specific <code>ListenAddress</code>
+in it, and network configuration files that have static IPs configured.</p>
+
+<pre><code># fiction.conf._template
+MyPort 22
+MyIPAddress @IPADDR@
+SomeOption no
+PrintMotd yes
+</code></pre>
+
+<p>And the accompanying <code>fiction.conf._template.post</code> script:</p>
+
+<pre><code>#! /bin/sh
+IPADDR=`ifconfig en0 | awk '/inet / { print $2 }'`
+export IPADDR
+/opt/synctool/bin/synctool-template "$1" &gt;"$2"
+</code></pre>
+
+<p>This example uses <code>ifconfig</code> to get the IP address of the node. You may also
+use the <code>ip addr</code> command, consult DNS or you might be able to use
+<code>synctool-config</code> to get what you need.</p>
+
+<p>The <code>synctool-template</code> command takes as input the template file (&#8220;<code>$1</code>&#8221;)
+and redirects the output to a newly generated file (&#8220;<code>$2</code>&#8221;). The &#8220;<code>$2</code>&#8221;
+on the last line expands to <code>fiction.conf._nodename</code>.
+Hence, synctool generates a new config file in the repository. It does so
+even on dry runs; you can ask synctool to display a diff of <code>fiction.conf</code>
+even though it is templated.</p>
+
+<blockquote>
+  <p>Note <em>not</em> to redirect the output of <code>synctool-template</code> directly over
+the target file. Doing that is destructive and wrong; it defies synctool&#8217;s
+dry-run mode and keeps you from being able to review changes, a core
+function of synctool.</p>
+</blockquote>
+
+<p>Instead of using <code>synctool-template</code>, you might use the UNIX <code>sed</code> command.
+If you have multiple variables to replace, <code>synctool-template</code> is more easy.
+synctool-template accepts variables either from the command-line or from
+the shell environment. Like with regular <code>.post</code> scripts, the environment
+variables <code>SYNCTOOL_NODE</code> and <code>SYNCTOOL_ROOT</code> are also present here.
+However <em>unlike</em> regular <code>.post</code> scripts, template post scripts require a <code>#!</code>
+hashbang line. This is required for shell arguments (like &#8220;<code>$1</code>&#8221;, &#8220;<code>$2</code>&#8221;)
+to work.</p>
+
+<p>Now, when you want to change the configuration, edit the template file.
+synctool will fill in the template and see the difference with the target
+file.</p>
+
+<p>Template files and template post scripts can have group extensions to
+select different templates for certain groups of nodes.</p>
+
+<p>If you want to automatically reload or restart a service after updating
+<code>fiction.conf</code>, you&#8217;ll also have to implement a regular <code>.post</code> script for
+that: <code>fiction.conf.post</code>.</p>
+
+<h2>3.5 Purge directories</h2>
+
+<p>In the previous sections we saw how you can use the <code>overlay/</code> and <code>delete/</code>
+trees to manage your cluster. synctool has a third mechanism of syncing
+files, and it works with the <code>purge/</code> tree. Purge directories are great for
+mirroring entire directory trees to groups of nodes.</p>
+
+<p>Unlike with the <code>overlay/</code> tree, files in the <code>purge/</code> tree do not have group
+extensions. Instead, synctool will copy the entire subtree and it will
+<em>delete</em> any files on the target node that do not reside in the source tree.
+So, it will make a perfect mirror of the source under <code>purge/</code>.</p>
+
+<p>To populate the <code>purge/</code> tree, use <code>--upload</code> with the <code>--purge</code> option:</p>
+
+<pre><code># synctool -n n1 --upload /usr/local --purge compute
+# synctool -n n1 -u /usr/local -p compute
+</code></pre>
+
+<p>In this example, we want to upload the entire <code>/usr/local</code> tree from node <code>n1</code>
+to the repository directory <code>/opt/synctool/var/purge/compute/</code>.
+Afterwards, all compute nodes will get <code>/usr/local</code> synced via the purge
+mechanism by running <code>synctool -f</code>.</p>
+
+<blockquote>
+  <p>Purging is a blunt but effective means to synchronise directory trees.
+Mind that it will delete data that is not supposed to be there, so be
+careful with this feature. For added safety, synctool will not allow you
+to purge the root directory of a system.</p>
+</blockquote>
+
+<p>Under the hood, synctool employs <code>rsync</code> to purge files. Hence, you can not
+trigger actions through <code>.post</code> scripts in the purge directory, but it is
+possible to use <code>synctool --diff</code>, <code>--ref</code>, and even <code>--single</code> with files
+that reside under <code>purge/</code>.</p>
+
+<p>Remember that purging is for making perfect mirrors. It is like sharing a
+directory across nodes. Once you start differentiating directory content
+between nodes, &#8220;purge&#8221; will no longer work in a satisfying way; in such a
+case, you should really use <code>overlay/</code> rather than <code>purge/</code>.</p>
+
+<p><code>dsh-cp</code> also has an option <code>--purge</code> to quickly mirror directories across
+nodes. Use with care.</p>
+
+<h2>3.6 The order of operations</h2>
+
+<p>The previous sections described a lot of operations that synctool performs
+when it runs. This section summarises what we have seen so far.
+For a normal synctool run, the order of operations is roughly as follows.</p>
+
+<ol>
+<li>synchronise the synctool installdir to each node. This synchronises
+the repository as well as the main program and config file.
+Any subtrees under <code>overlay</code>, <code>delete</code>, and <code>purge</code> that do not apply for
+the target node, are excluded.</li>
+<li>run synctool-client on the nodes</li>
+<li>synctool-client mirrors the <code>purge</code> directory</li>
+<li>synctool-client processes the <code>overlay</code> directory;
+<ul>
+<li>generate templates by running <code>.template.post</code> scripts</li>
+<li>compare files
+<ul>
+<li>check filetype</li>
+<li>check file size</li>
+<li>check MD5 checksum</li>
+<li>check file ownership</li>
+<li>check file mode</li>
+</ul></li>
+<li>make backup copies</li>
+<li>update files as needed</li>
+<li>run <code>.post script</code> for any updated files</li>
+<li>run <code>.post script</code> (if any) for changed directories</li>
+</ul></li>
+<li>synctool-client deletes files listed in the <code>delete</code> directory
+<ul>
+<li>run <code>.post script</code> (if any) for deleted files</li>
+<li>run <code>.post script</code> (if any) for changed directories</li>
+</ul></li>
+</ol>
+
+<h2>3.7 dsh-pkg, the synctool package manager</h2>
+
+<p>synctool comes with a package manager named <code>dsh-pkg</code>.
+Rather than being yet another package manager with its own format of packages,
+dsh-pkg is a wrapper around existing package management software.
+dsh-pkg unifies all the different package managers out there so you can
+operate any of them using just one command and the same set of command-line
+arguments. This is particularly useful in heterogeneous clusters or when
+you are working with multiple platforms or distributions.</p>
+
+<p>dsh-pkg supports a number of different package management systems and will
+detect the appropriate package manager for the operating system of the node.
+If detection fails, you may force the package manager on the command-line or
+in <code>synctool.conf</code>:</p>
+
+<pre><code>package_manager apt-get
+#package_manager yum
+#package_manager zypper
+#package_manager pacman
+#package_manager brew
+#package_manager bsdpkg
+</code></pre>
+
+<p>dsh-pkg knows about more platforms and package managers, but currently
+only the ones listed above are implemented and supported.</p>
+
+<blockquote>
+  <p>dsh-pkg is pluggable. Adding support for other package management systems
+is rather easy. If your platform and/or favorite package manager is not yet
+supported, feel free to develop your own plug-in for dsh-pkg
+or contact the author of synctool.</p>
+</blockquote>
+
+<p>The <code>bsdpkg</code> module uses <code>freebsd-update</code> on FreeBSD and <code>pkg_add -u</code> on
+other BSDs for upgrading packages.</p>
+
+<p>Following are examples of how to use synctool-pkg.</p>
+
+<pre><code>dsh-pkg -n node1 --list
+dsh-pkg -n node1 --list wget
+dsh-pkg -g batch --install lynx wget curl
+dsh-pkg -g batch -x node3 --remove somepackage
+</code></pre>
+
+<p>Sometimes you need to refresh the contents of the local package database.
+You can do this with the &#8216;update&#8217; command:</p>
+
+<pre><code>dsh-pkg -qa --update
+</code></pre>
+
+<p>You may check for software upgrades for the node with <code>--upgrade</code>.
+This will only show what upgrades are available. To really upgrade a node,
+specify <code>--fix</code>. It is wise to always test an upgrade on a single node.</p>
+
+<pre><code>dsh-pkg --upgrade
+dsh-pkg -n testnode --upgrade -f
+dsh-pkg --upgrade -f
+</code></pre>
+
+<p>Package managers download their packages into an on-disk cache. Sometimes the
+disk fills up and you may want to clean out the disk cache:</p>
+
+<pre><code>dsh-pkg -qa --clean
+</code></pre>
+
+<p>A specific package manager may be selected from the command-line.</p>
+
+<pre><code>dsh-pkg -m yum -i somepackage   # force it to use yum
+</code></pre>
+
+<p>If you want to further examine what dsh-pkg is doing, you may specify
+<code>--verbose</code> or <code>--unix</code> to display more information about what is going on
+under the hood.</p>
+
+<h2>3.8 Ignoring them: I&#8217;m not touching you</h2>
+
+<p>By using directives in the <code>synctool.conf</code> file, synctool can be told to
+ignore certain files, nodes, or groups. These will be excluded, skipped.
+For example:</p>
+
+<pre><code>ignore_dotfiles no
+ignore_dotdirs yes
+ignore .svn
+ignore .gitignore .git
+ignore .*.swp
+</code></pre>
+
+<p>synctool will not run on ignored nodes or on nodes that are in a group that
+is ignored:</p>
+
+<pre><code>ignore_node node1 node2
+ignore_group broken
+</code></pre>
+
+<h2>3.9 Backup copies</h2>
+
+<p>For any file synctool updates, it keeps a backup copy around on the target
+node with the extension <code>.saved</code>. If you don&#8217;t like this, you can tell
+synctool to not make any backup copies with:</p>
+
+<pre><code>backup_copies no
+</code></pre>
+
+<p>It is however highly recommended that you run with <code>backup_copies</code> enabled.
+You can manually specify that you want to remove backup copies using:</p>
+
+<pre><code>synctool --erase-saved
+synctool -e
+</code></pre>
+
+<p>To erase a single <code>.saved</code> file, use option <code>--single</code> in combination with
+<code>--erase-saved</code>.</p>
+
+<p>For some (Linux) directories like <code>/etc/cron.d/</code> and <code>/etc/xinet.d/</code>, it is
+not OK to keep <code>.saved</code> files around because it influences how the daemons
+function. For these directories it is recommended that you implement
+a <code>.post</code> script that removes the backup copies, like so:</p>
+
+<pre><code># $overlay/all/etc/xinetd.d.post
+rm -f *.saved
+service xinetd reload
+</code></pre>
+
+<p>Alternatively, you may want to move the backup copies to a safe location.</p>
+
+<h2>3.10 Logging</h2>
+
+<p>When using option <code>--fix</code> to apply changes, synctool logs the made changes
+to syslog on the master node. It provides a trace of what was changed on the
+systems. On large clusters, this may produce a lot of log records. If you
+don&#8217;t want any logging, you can disable it in <code>synctool.conf</code>:</p>
+
+<pre><code>syslogging no
+</code></pre>
+
+<p>When you do use syslogging, you may want to split off the synctool messages
+to a separate file like <code>/var/log/synctool.log</code>. Please see your <code>syslogd</code>
+manual on how to do this. In the <code>contrib/</code> directory in the synctool source,
+you will find config files for use with <code>syslog-ng</code> and <code>logrotate</code>.</p>
+
+<h2>3.11 About symbolic links</h2>
+
+<p>synctool requires all files in the repository to have an extension (well &#8230;
+unless you changed the default configuration), and symbolic links must have
+extensions too. Symbolic links in the repository will be <em>dead</em> symlinks but
+they will point to the correct destination on the target node.</p>
+
+<p>Consider the following example, where <code>file</code> does not exist &#8216;as is&#8217; in the
+repository:</p>
+
+<pre><code>$overlay/all/etc/motd._red -&gt; file
+$overlay/all/etc/file._red
+</code></pre>
+
+<p>In the repository, <code>motd._red</code> is a red &amp; dead symlink to <code>file</code>. On the
+target node, <code>/etc/motd</code> is going to be fine.</p>
+
+<h2>3.12 Slow updates</h2>
+
+<p>By default, synctool addresses the nodes in parallel, and they are running
+updates concurrently. In some cases, like when doing rolling upgrades,
+you will not want to have this parallelism. There are two easy ways around
+this.</p>
+
+<pre><code>dsh --numproc=1 uptime
+dsh -p 1 uptime
+
+dsh --zzz=10 uptime
+dsh -z 10 uptime
+</code></pre>
+
+<p>The first one tells synctool (or in this case, <code>dsh</code>) to run only one
+process at a time. The second does the same thing, and sleeps for ten seconds
+after running the command.</p>
+
+<blockquote>
+  <p>Suppose you have a 60 node cluster, and run with <code>--zzz=60</code>.
+You now have to wait at least one hour for the run to complete.</p>
+</blockquote>
+
+<p>The options <code>--numproc</code> and <code>--zzz</code> work for both <code>synctool</code> and <code>dsh</code>
+programs.</p>
+
+<h2>3.13 Checking for updates</h2>
+
+<p>synctool can check whether a new version of synctool itself is available by
+using the option <code>--check-update</code> on the master node. You can check
+periodically for updates by using <code>--check-update</code> in a crontab entry.
+To download the latest version, run <code>synctool --download</code> on the master node.
+These functions connect to the main website at <a href="http://www.heiho.net/synctool/">www.heiho.net/synctool</a>.</p>
+
+<h2>3.14 Running tasks with synctool</h2>
+
+<p>synctool&#8217;s <code>dsh</code> command is ideal for running commands on groups of nodes.
+On occasion, you will also want to run custom scripts with <code>dsh</code>.
+These scripts can be placed in <code>scripts/</code>, and <code>dsh</code> will find them.
+When running a command that resides under <code>scripts/</code>, <code>dsh</code> will sync this
+script to the target node prior to running the command on the remote side.
+This is done to make sure that always the &#8216;current&#8217; version of the script
+runs on the target node.</p>
+
+<p>For example, if you have a script <code>/opt/synctool/scripts/admin_example.sh</code>
+then you might run:</p>
+
+<pre><code>dsh -n node1 admin_example.sh
+</code></pre>
+
+<p>No path to the script is required; dsh will find it.</p>
+
+<blockquote>
+  <p>Previous versions had a <code>tasks/</code> directory under the repository and you
+could invoke synctool with the <code>--tasks</code> option. This mechanism has been
+obsoleted by <code>dsh</code> and the <code>scripts/</code> directory.</p>
+</blockquote>
+
+<p>Note that you can write scripts to do software package installations,
+but you may also use the <code>dsh-pkg</code> command.</p>
+
+<h2>3.15 Multiplexed connections</h2>
+
+<p>synctool and dsh can multiplex SSH connections over a &#8216;master&#8217; connection.
+This feature greatly speeds up synctool and dsh because it allows skipping
+the costly SSL handshake.
+Multiplexing is started through dsh:</p>
+
+<pre><code>dsh -M          # start master connections
+dsh -O check    # check master connections
+dsh -O stop     # stop master connections
+dsh -O exit     # terminate master connections
+</code></pre>
+
+<p>You may also do this for certain groups or nodes, like so:</p>
+
+<pre><code>dsh -g all -M
+dsh -n node1 -O check
+</code></pre>
+
+<p>synctool will detect any open control paths and use them if they are present.
+The control paths (socket files) to each node are kept under synctool&#8217;s temp
+directory (by default: <code>/tmp/synctool/sshmux/</code>).
+These control paths are managed by ssh mux processes that are running in the
+background. If your cluster is very large, you might find the large number of
+ssh mux processes on the management node to be objectionable. These processes
+are mostly sleeping so it shouldn&#8217;t pose a problem.
+The control paths may be given a timeout by using the config parameter
+<code>ssh_control_persist</code>. Note that this parameter is only supported for
+OpenSSH 5.6 and later. The timeout may also be specified on the command-line:</p>
+
+<pre><code>dsh -M --persist 4h
+</code></pre>
+
+<blockquote>
+  <p>The <code>ControlMaster</code> and <code>ControlPath</code> options of ssh first appeared in
+OpenSSH version 3.9. synctool also supports <code>ControlPersist</code>, which is
+present in OpenSSH version 5.6 and later.
+See <code>man ssh_config</code> for more information on these OpenSSH options.</p>
+</blockquote>
+<div id="footer"> 
+<div class="line"> </div><br />
+If you really must, you can contact the author at
+<a href="mailto:walter at heiho dot net">walter at heiho dot net</a>
+</div>
+
+</div>    <!-- end content -->
+</div>    <!-- end page -->
+
+</body>
+</html>
