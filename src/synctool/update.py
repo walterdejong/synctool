@@ -44,11 +44,13 @@ def get_latest_version_and_checksum():
         # can not use 'with' statement with urlopen()..?
         web = urllib2.urlopen(VERSION_CHECKING_URL)
     except urllib2.HTTPError as err:
-        error('webserver at %s: %s' % (VERSION_CHECKING_URL, err.reason))
+        error('webserver at %s: %u %s' % (VERSION_CHECKING_URL, err.code,
+                                          err.msg))
         return None
 
     except urllib2.URLError as err:
-        error('failed to access %s: %s' % (VERSION_CHECKING_URL, err.reason))
+        error('failed to access %s: %u %s' % (VERSION_CHECKING_URL, err.code,
+                                              err.msg))
         return None
 
     except IOError as err:
@@ -81,6 +83,9 @@ def check():
     '''
 
     latest_version = get_latest_version()
+    if latest_version is None:
+        # error message already printed
+        return False
 
     if latest_version == synctool.param.VERSION:
         stdout('You are running the latest version of synctool')
