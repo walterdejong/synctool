@@ -142,7 +142,7 @@ div#footer {
 	font-size: .8em;
 }
 
-pre {
+pre code {
 	border: solid 1px #000;
 	background-color: #eee;
 	font: medium 'Andale Mono', Consolas, Monaco, monospace;
@@ -161,6 +161,7 @@ blockquote {
 code {
 	font: medium 'Andale Mono', Consolas, Monaco, monospace;
 	word-break: keep-all;
+	background-color: #eee;
 }
 
 .vtab {
