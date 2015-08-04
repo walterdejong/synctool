@@ -32,27 +32,30 @@ html,body {
 	background-color: #eee;
 	color: #000;
 	font: medium georgia, times, serif;
+	line-height: 1.3;
+}
+
+div#header h1 {
+	font: bold x-large verdana, geneva, helvetica, arial, sans-serif;
+/*	text-transform: capitalize;	*/
+	margin: 2em 0 .5em 0;
 }
 
 h1 {
-	font: bold x-large verdana, geneva, helvetica, arial, sans-serif;
+	font: x-large verdana, geneva, helvetica, arial, sans-serif;
 /*	text-transform: capitalize;	*/
 	margin: 2em 0 .5em 0;
 }
 
 h2 {
 	font: large verdana, geneva, helvetica, arial, sans-serif;
-	margin-top: 1em;
-	margin-bottom: .5em;
+	margin-top: 1.5em;
+	margin-bottom: 1ex;
 }
 
-h3 {
-	font-size: 1.1em;
-	font-weight: bold;
-	margin-bottom: .25em;
+p {
+	margin: 1ex 0 1ex 0;
 }
-
-p { margin: 1em 0 0 0; }
 
 strong {
 	font-family: helvetica, arial, sans-serif;
@@ -75,26 +78,8 @@ a:visited {
 }
 
 ul,ol {
-	padding-left: 1.5em;
-	padding-bottom: .5em;
-}
-
-/* used in the table of contents */
-ol.subindex {
-	list-style-type: lower-roman;
-}
-
-dl {
-	padding: 1em;
-}
-
-dt {
-	font-family: 'Andale Mono', Consolas, Monaco, monospace;
-	font-weight: bold;
-}
-
-dd {
-	padding-bottom: .5em;
+	padding: 1ex 1em 1em 1em;
+	margin-left: 1em;
 }
 
 /* all text is put into a div class=page */
@@ -107,7 +92,7 @@ div#page {
 	min-height: 100%;			/* real browsers */
 
 	margin: 0 auto;
-	padding: 0;
+	padding: 1em;
 	background-color: #fff;
 }
 
@@ -140,16 +125,16 @@ pre {
 	border: solid 1px #000;
 	background-color: #eee;
 	font: medium 'Andale Mono', Consolas, Monaco, monospace;
-	margin: 1em auto 1em auto;
 	padding: 1em;
-	padding-left: 1.5em;
+	margin: 1ex 0 1em 0;
+	line-height: 1.0;
 }
 
 blockquote {
 	border: dashed 1px #aaa;
 	background-color: #eee;
-	margin: 1em auto 1em auto;
-	padding: 0 1em 1em 1em;
+	padding: 1ex 1em 1ex 1em;
+	margin: 1em 0 1em 0;
 }
 
 code {
