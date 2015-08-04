@@ -145,8 +145,7 @@ div#footer {
 pre {
 	border: solid 1px #000;
 	background-color: #eee;
-	font-family: menlo, courier, monospace;
-	font-size: .95em;
+	font: medium 'Andale Mono', Consolas, Monaco, monospace;
 	margin: 1em auto 1em auto;
 	padding: 1em;
 	padding-left: 1.5em;
