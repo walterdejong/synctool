@@ -317,10 +317,9 @@ synctool's configuration file.
   to sync the repository to the target node. This is only convenient when
   the node has access to the repository via another way, such as a shared
   filesystem.
-
+<pre><code>
     node node1 fs sched rack1 ipaddress:node1-mgmt
-    node node2 login    rack1 ipaddress:node2-mgmt \
-                                hostname:login.mydomain.com
+    node node2 login    rack1 ipaddress:node2-mgmt hostname:login.mydomain.com
     node node3 test     rack1 ipaddress:node8-mgmt
     node node4 batch    rack1 ipaddress:node9-mgmt rsync:no
     node node5 wn       rack1 ipaddress:node5-mgmt
@@ -328,7 +327,7 @@ synctool's configuration file.
     node node7 wn       rack1 ipaddress:node7-mgmt
     node node[20-29] wn rack2 ipaddress:node[20]-mgmt
     node node[30-39] wn rack3 ipaddress:192.168.3.[130]
-
+</code></pre>
   As shown in this example, a node range may be given to define a number
   of nodes using a single definition line. The (optional) IP address may
   use the sequence notation, that numbers the IP addresses in sequence.
