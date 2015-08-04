@@ -18,7 +18,7 @@ I highly recommend `git` and [github][1].
 
 
 7.1 Fun facts
-=============
+-------------
 Some fun facts about synctool 6:
 
 * synctool 6 is the 6th major release of synctool
@@ -31,3 +31,4 @@ Some fun facts about synctool 6:
 * synctool encompasses more than 10,000 lines of code (including comments)
 * synctool 6 is faster than ever
 * synctool 6 still is easy to use
+

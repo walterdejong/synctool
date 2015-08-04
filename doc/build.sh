@@ -26,4 +26,7 @@ do
 done ;
 cat footer.html ) > single.html
 
+# index for doc/ directory
+cp toc.html index.html
+
 # EOB

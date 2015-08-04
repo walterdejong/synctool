@@ -203,15 +203,16 @@ not directly available. Imagine this setup:
         + privatenode1
         + privatenode2
 
-You need to set up your ssh connection as follows in /root/.ssh/config
+You need to set up your ssh connection as follows in `/root/.ssh/config`:
 
     Host *.intra.your.domain
         ProxyCommand ssh gateway.your.domain -W %h:22
 
-Add your hosts in synctool.conf:
+Add your hosts in `synctool.conf`:
 
     node privatenode1 group1 group2 ipaddress:privatenode1.intra.your.domain
     node privatenode2 group1 group2 ipaddress:privatenode2.intra.your.domain
 
 Of course this requires also a proper DNS setup for your intra zone
 at `gateway.your.domain`
+
