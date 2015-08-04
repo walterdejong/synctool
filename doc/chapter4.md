@@ -45,7 +45,7 @@ synctool's configuration file.
   The time argument is a string like "1h" or "1h30m". When it is "yes",
   there is no timeout, and it will persist indefinitely until the master
   is stopped or terminated with `dsh -O stop` or `dsh -O exit`.
-  Note that OpenSSH supports "`ControlPersist=no`", but synctool does not.
+  Note that OpenSSH supports `ControlPersist=no`, but synctool does not.
   It can be set to `none` to call `ssh` without `-o ControlPersist` option.
   The default timeout is 1 hour. This parameter only has effect for OpenSSH
   version 5.6 and later.
@@ -317,17 +317,17 @@ synctool's configuration file.
   to sync the repository to the target node. This is only convenient when
   the node has access to the repository via another way, such as a shared
   filesystem.
-<pre><code>
-    node node1 fs sched rack1 ipaddress:node1-mgmt
-    node node2 login    rack1 ipaddress:node2-mgmt hostname:login.mydomain.com
-    node node3 test     rack1 ipaddress:node8-mgmt
-    node node4 batch    rack1 ipaddress:node9-mgmt rsync:no
-    node node5 wn       rack1 ipaddress:node5-mgmt
-    node node6 wn       rack1 ipaddress:node6-mgmt
-    node node7 wn       rack1 ipaddress:node7-mgmt
-    node node[20-29] wn rack2 ipaddress:node[20]-mgmt
-    node node[30-39] wn rack3 ipaddress:192.168.3.[130]
-</code></pre>
+
+        node node1 fs sched rack1 ipaddress:node1-mgmt
+        node node2 login    rack1 ipaddress:node2-mgmt hostname:login.mydomain.com
+        node node3 test     rack1 ipaddress:node8-mgmt
+        node node4 batch    rack1 ipaddress:node9-mgmt rsync:no
+        node node5 wn       rack1 ipaddress:node5-mgmt
+        node node6 wn       rack1 ipaddress:node6-mgmt
+        node node7 wn       rack1 ipaddress:node7-mgmt
+        node node[20-29] wn rack2 ipaddress:node[20]-mgmt
+        node node[30-39] wn rack3 ipaddress:192.168.3.[130]
+
   As shown in this example, a node range may be given to define a number
   of nodes using a single definition line. The (optional) IP address may
   use the sequence notation, that numbers the IP addresses in sequence.
@@ -406,11 +406,11 @@ synctool's configuration file.
 
   Same as `colorize_bright`.
 
-Following are keywords to customize colors. Valid color codes are:
+  Following are keywords to customize colors. Valid color codes are:
 
-    white       red       blue       default
-    black       green     magenta    bold
-    darkgray    yellow    cyan
+        white       red       blue       default
+        black       green     magenta    bold
+        darkgray    yellow    cyan
 
 * `color_info <color>`
 
