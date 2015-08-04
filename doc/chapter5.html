@@ -236,13 +236,13 @@ gateway.your.domain
     + privatenode2
 </code></pre>
 
-<p>You need to set up your ssh connection as follows in /root/.ssh/config</p>
+<p>You need to set up your ssh connection as follows in <code>/root/.ssh/config</code>:</p>
 
 <pre><code>Host *.intra.your.domain
     ProxyCommand ssh gateway.your.domain -W %h:22
 </code></pre>
 
-<p>Add your hosts in synctool.conf:</p>
+<p>Add your hosts in <code>synctool.conf</code>:</p>
 
 <pre><code>node privatenode1 group1 group2 ipaddress:privatenode1.intra.your.domain
 node privatenode2 group1 group2 ipaddress:privatenode2.intra.your.domain

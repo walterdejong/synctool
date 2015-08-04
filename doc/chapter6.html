@@ -44,7 +44,7 @@ chapter (and/or the entire manual) before taking any action.</p>
 <p>This chapter assumes your old synctool repository is <code>/var/lib/synctool/</code>.
 The programs are under <code>/opt/synctool/</code>.</p>
 
-<h1>6.1 Installing synctool 6</h1>
+<h2>6.1 Installing synctool 6</h2>
 
 <p>Log on to the master node. The first step is to move the old synctool dir
 out of the way:</p>
@@ -62,7 +62,7 @@ This boils down to:</p>
 repository under <code>/opt/synctool/var/</code>. Let&#8217;s leave it empty for now, first
 go configure synctool 6.</p>
 
-<h1>6.2 Configuring synctool 6</h1>
+<h2>6.2 Configuring synctool 6</h2>
 
 <p>The old config file is <code>/var/lib/synctool/synctool.conf</code>. The new config
 file will be <code>/opt/synctool/etc/synctool.conf</code>, but you can&#8217;t just copy it
@@ -101,7 +101,7 @@ updates in synctool 6.</p>
 <p>For more information on configuring synctool, see <a href="chapter2.html">chapter 2</a>
 and <a href="chapter4.html">chapter 4</a>.</p>
 
-<h1>6.3 Updating the repository</h1>
+<h2>6.3 Updating the repository</h2>
 
 <p>If the configuration is working, it is safe to run <code>synctool</code>. This will
 install synctool 6 on the entire cluster. But wait &#8230; the repository is
@@ -146,7 +146,7 @@ information.</p>
 
 <p>synctool should now largely already work.</p>
 
-<h1>6.4 Updating templates</h1>
+<h2>6.4 Updating templates</h2>
 
 <p>In older versions of synctool you could generate config files by pulling
 a trick with a template file and a <code>.post</code> script. This trick is now
@@ -171,7 +171,7 @@ templates.</p>
 <p>You can use <code>dsh rm</code> or the <code>delete/</code> tree to clean up any old <code>.template</code>
 files that are still floating around in your system.</p>
 
-<h1>6.5 Wrapping up</h1>
+<h2>6.5 Wrapping up</h2>
 
 <p>The migration to synctool 6 is now finished. After a week or so, you should
 feel confident enough to delete the old repository <code>/var/lib/synctool/</code>.

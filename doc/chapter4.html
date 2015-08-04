@@ -68,7 +68,7 @@ This parameter may be overridden on the command-line with <code>dsh --persist</c
 The time argument is a string like &#8220;1h&#8221; or &#8220;1h30m&#8221;. When it is &#8220;yes&#8221;,
 there is no timeout, and it will persist indefinitely until the master
 is stopped or terminated with <code>dsh -O stop</code> or <code>dsh -O exit</code>.
-Note that OpenSSH supports &#8220;<code>ControlPersist=no</code>&#8221;, but synctool does not.
+Note that OpenSSH supports <code>ControlPersist=no</code>, but synctool does not.
 It can be set to <code>none</code> to call <code>ssh</code> without <code>-o ControlPersist</code> option.
 The default timeout is 1 hour. This parameter only has effect for OpenSSH
 version 5.6 and later.</p></li>
@@ -317,16 +317,16 @@ to sync the repository to the target node. This is only convenient when
 the node has access to the repository via another way, such as a shared
 filesystem.</p>
 
-<p>node node1 fs sched rack1 ipaddress:node1-mgmt
-node node2 login    rack1 ipaddress:node2-mgmt \
-                            hostname:login.mydomain.com
+<pre><code>node node1 fs sched rack1 ipaddress:node1-mgmt
+node node2 login    rack1 ipaddress:node2-mgmt hostname:login.mydomain.com
 node node3 test     rack1 ipaddress:node8-mgmt
 node node4 batch    rack1 ipaddress:node9-mgmt rsync:no
 node node5 wn       rack1 ipaddress:node5-mgmt
 node node6 wn       rack1 ipaddress:node6-mgmt
 node node7 wn       rack1 ipaddress:node7-mgmt
 node node[20-29] wn rack2 ipaddress:node[20]-mgmt
-node node[30-39] wn rack3 ipaddress:192.168.3.[130]</p>
+node node[30-39] wn rack3 ipaddress:192.168.3.[130]
+</code></pre>
 
 <p>As shown in this example, a node range may be given to define a number
 of nodes using a single definition line. The (optional) IP address may
@@ -394,17 +394,14 @@ are enabled.
 The default is <code>yes</code>.</p></li>
 <li><p><code>colorize_bold &lt;yes/no&gt;</code></p>
 
-<p>Same as <code>colorize_bright</code>.</p></li>
-</ul>
+<p>Same as <code>colorize_bright</code>.</p>
 
 <p>Following are keywords to customize colors. Valid color codes are:</p>
 
 <pre><code>white       red       blue       default
 black       green     magenta    bold
 darkgray    yellow    cyan
-</code></pre>
-
-<ul>
+</code></pre></li>
 <li><p><code>color_info &lt;color&gt;</code></p>
 
 <p>Specify the color for informational messages in terse mode.

@@ -1178,7 +1178,7 @@ This parameter may be overridden on the command-line with <code>dsh --persist</c
 The time argument is a string like &#8220;1h&#8221; or &#8220;1h30m&#8221;. When it is &#8220;yes&#8221;,
 there is no timeout, and it will persist indefinitely until the master
 is stopped or terminated with <code>dsh -O stop</code> or <code>dsh -O exit</code>.
-Note that OpenSSH supports &#8220;<code>ControlPersist=no</code>&#8221;, but synctool does not.
+Note that OpenSSH supports <code>ControlPersist=no</code>, but synctool does not.
 It can be set to <code>none</code> to call <code>ssh</code> without <code>-o ControlPersist</code> option.
 The default timeout is 1 hour. This parameter only has effect for OpenSSH
 version 5.6 and later.</p></li>
@@ -1427,16 +1427,16 @@ to sync the repository to the target node. This is only convenient when
 the node has access to the repository via another way, such as a shared
 filesystem.</p>
 
-<p>node node1 fs sched rack1 ipaddress:node1-mgmt
-node node2 login    rack1 ipaddress:node2-mgmt \
-                            hostname:login.mydomain.com
+<pre><code>node node1 fs sched rack1 ipaddress:node1-mgmt
+node node2 login    rack1 ipaddress:node2-mgmt hostname:login.mydomain.com
 node node3 test     rack1 ipaddress:node8-mgmt
 node node4 batch    rack1 ipaddress:node9-mgmt rsync:no
 node node5 wn       rack1 ipaddress:node5-mgmt
 node node6 wn       rack1 ipaddress:node6-mgmt
 node node7 wn       rack1 ipaddress:node7-mgmt
 node node[20-29] wn rack2 ipaddress:node[20]-mgmt
-node node[30-39] wn rack3 ipaddress:192.168.3.[130]</p>
+node node[30-39] wn rack3 ipaddress:192.168.3.[130]
+</code></pre>
 
 <p>As shown in this example, a node range may be given to define a number
 of nodes using a single definition line. The (optional) IP address may
@@ -1504,17 +1504,14 @@ are enabled.
 The default is <code>yes</code>.</p></li>
 <li><p><code>colorize_bold &lt;yes/no&gt;</code></p>
 
-<p>Same as <code>colorize_bright</code>.</p></li>
-</ul>
+<p>Same as <code>colorize_bright</code>.</p>
 
 <p>Following are keywords to customize colors. Valid color codes are:</p>
 
 <pre><code>white       red       blue       default
 black       green     magenta    bold
 darkgray    yellow    cyan
-</code></pre>
-
-<ul>
+</code></pre></li>
 <li><p><code>color_info &lt;color&gt;</code></p>
 
 <p>Specify the color for informational messages in terse mode.
@@ -1808,13 +1805,13 @@ gateway.your.domain
     + privatenode2
 </code></pre>
 
-<p>You need to set up your ssh connection as follows in /root/.ssh/config</p>
+<p>You need to set up your ssh connection as follows in <code>/root/.ssh/config</code>:</p>
 
 <pre><code>Host *.intra.your.domain
     ProxyCommand ssh gateway.your.domain -W %h:22
 </code></pre>
 
-<p>Add your hosts in synctool.conf:</p>
+<p>Add your hosts in <code>synctool.conf</code>:</p>
 
 <pre><code>node privatenode1 group1 group2 ipaddress:privatenode1.intra.your.domain
 node privatenode2 group1 group2 ipaddress:privatenode2.intra.your.domain
@@ -1840,7 +1837,7 @@ chapter (and/or the entire manual) before taking any action.</p>
 <p>This chapter assumes your old synctool repository is <code>/var/lib/synctool/</code>.
 The programs are under <code>/opt/synctool/</code>.</p>
 
-<h1>6.1 Installing synctool 6</h1>
+<h2>6.1 Installing synctool 6</h2>
 
 <p>Log on to the master node. The first step is to move the old synctool dir
 out of the way:</p>
@@ -1858,7 +1855,7 @@ This boils down to:</p>
 repository under <code>/opt/synctool/var/</code>. Let&#8217;s leave it empty for now, first
 go configure synctool 6.</p>
 
-<h1>6.2 Configuring synctool 6</h1>
+<h2>6.2 Configuring synctool 6</h2>
 
 <p>The old config file is <code>/var/lib/synctool/synctool.conf</code>. The new config
 file will be <code>/opt/synctool/etc/synctool.conf</code>, but you can&#8217;t just copy it
@@ -1897,7 +1894,7 @@ updates in synctool 6.</p>
 <p>For more information on configuring synctool, see <a href="chapter2.html">chapter 2</a>
 and <a href="chapter4.html">chapter 4</a>.</p>
 
-<h1>6.3 Updating the repository</h1>
+<h2>6.3 Updating the repository</h2>
 
 <p>If the configuration is working, it is safe to run <code>synctool</code>. This will
 install synctool 6 on the entire cluster. But wait &#8230; the repository is
@@ -1942,7 +1939,7 @@ information.</p>
 
 <p>synctool should now largely already work.</p>
 
-<h1>6.4 Updating templates</h1>
+<h2>6.4 Updating templates</h2>
 
 <p>In older versions of synctool you could generate config files by pulling
 a trick with a template file and a <code>.post</code> script. This trick is now
@@ -1967,7 +1964,7 @@ templates.</p>
 <p>You can use <code>dsh rm</code> or the <code>delete/</code> tree to clean up any old <code>.template</code>
 files that are still floating around in your system.</p>
 
-<h1>6.5 Wrapping up</h1>
+<h2>6.5 Wrapping up</h2>
 
 <p>The migration to synctool 6 is now finished. After a week or so, you should
 feel confident enough to delete the old repository <code>/var/lib/synctool/</code>.
@@ -2002,7 +1999,7 @@ fork the <a href="https://github.com/walterdejong/synctool">github project</a> a
 <code>git</code> works, patches in <code>diff -u</code> format are always welcome too. However,
 I highly recommend <code>git</code> and <a href="https://github.com/walterdejong/synctool">github</a>.</p>
 
-<h1>7.1 Fun facts</h1>
+<h2>7.1 Fun facts</h2>
 
 <p>Some fun facts about synctool 6:</p>
 
