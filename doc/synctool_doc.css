@@ -35,7 +35,7 @@ html,body {
 }
 
 h1 {
-	font: x-large verdana, geneva, helvetica, arial, sans-serif;
+	font: bold x-large verdana, geneva, helvetica, arial, sans-serif;
 /*	text-transform: capitalize;	*/
 	margin: 2em 0 .5em 0;
 }
