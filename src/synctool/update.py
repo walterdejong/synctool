@@ -27,7 +27,7 @@ def get_latest_version():
     '''get latest version by downloading the LATEST.txt versioning file'''
 
     tup = get_latest_version_and_checksum()
-    if not tup:
+    if tup is None:
         return None
 
     return tup[0]
@@ -36,6 +36,9 @@ def get_latest_version():
 def get_latest_version_and_checksum():
     '''get latest version and checksum by downloading
     the LATEST.txt versioning file
+
+    Returns tuple (version, md5)
+    or None on error
     '''
 
     verbose('accessing URL %s' % VERSION_CHECKING_URL)
@@ -76,7 +79,7 @@ def get_latest_version_and_checksum():
         error('data format error in %s' % VERSION_CHECKING_URL)
         return None
 
-    return (arr[0], arr[1])
+    return arr
 
 
 def check():
@@ -135,11 +138,16 @@ def download():
     Returns True on success, False on error
     '''
 
-    tup = get_latest_version_and_checksum()
-    if not tup:
+    arr = get_latest_version_and_checksum()
+    if arr is None:
         return False
 
-    (version, checksum) = tup
+    version = arr[0]
+    md5_checksum = arr[1]
+    if len(arr) > 2:
+        sha512_checksum = arr[2]
+    else:
+        sha512_checksum = None
 
     filename = 'synctool-%s.tar.gz' % version
     download_url = DOWNLOAD_URL + filename
@@ -162,10 +170,18 @@ def download():
         error('failed to access %s: %s' % (download_url, err.strerror))
         return False
 
+    # compute checksum of downloaded file data
+    # if present, check the SHA-512 checksum
+    # otherwise, check the MD5 checksum
+    # (MD5 is for historical reasons)
+    sum5 = hashlib.md5()
+    if sha512_checksum is not None:
+        sum512 = hashlib.sha512()
+
     try:
         # get file size: Content-Length
         try:
-            totalsize = int(web.info().getheaders("Content-Length")[0])
+            totalsize = int(web.info().getheaders('Content-Length')[0])
         except (ValueError, KeyError):
             error('invalid response from webserver at %s' % download_url)
             return False
@@ -182,9 +198,6 @@ def download():
             print_progress(download_filename, totalsize, 0)
             download_bytes = 0
 
-            # compute checksum of downloaded file data
-            sum1 = hashlib.md5()
-
             while True:
                 data = web.read(4096)
                 if not data:
@@ -194,7 +207,10 @@ def download():
                 print_progress(download_filename, totalsize, download_bytes)
 
                 f.write(data)
-                sum1.update(data)
+                if sha512_checksum is not None:
+                    sum512.update(data)
+                else:
+                    sum5.update(data)
     finally:
         web.close()
 
@@ -206,7 +222,12 @@ def download():
     download_bytes += 100    # force 100% in the progress counter
     print_progress(download_filename, totalsize, download_bytes)
 
-    if sum1.hexdigest() != checksum:
+    if sha512_checksum is not None:
+        if sum512.hexdigest() != sha512_checksum:
+            error('checksum failed for %s' % download_filename)
+            return False
+
+    elif sum5.hexdigest() != md5_checksum:
         error('checksum failed for %s' % download_filename)
         return False
 
