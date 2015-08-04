@@ -19,8 +19,8 @@ from synctool.lib import verbose, error, stdout
 import synctool.param
 
 
-VERSION_CHECKING_URL = 'http://www.heiho.net/synctool/LATEST.txt'
-DOWNLOAD_URL = 'http://www.heiho.net/synctool/'
+VERSION_CHECKING_URL = 'https://walterdejong.github.io/synctool/LATEST.txt'
+DOWNLOAD_URL = 'https://github.com/walterdejong/synctool/archive/'
 
 
 def get_latest_version():
@@ -58,8 +58,10 @@ def get_latest_version_and_checksum():
                                            err.strerror))
         return None
 
-    data = web.read(1024)
-    web.close()
+    try:
+        data = web.read(1024)
+    finally:
+        web.close()
 
     if not data or len(data) < 10:
         error('failed to access %s' % VERSION_CHECKING_URL)
@@ -71,6 +73,7 @@ def get_latest_version_and_checksum():
     # <version> <MD5 checksum>
     arr = data.split()
     if len(arr) < 2:
+        error('data format error in %s' % VERSION_CHECKING_URL)
         return None
 
     return (arr[0], arr[1])
@@ -159,42 +162,41 @@ def download():
         error('failed to access %s: %s' % (download_url, err.strerror))
         return False
 
-    # get file size: Content-Length
     try:
-        totalsize = int(web.info().getheaders("Content-Length")[0])
-    except (ValueError, KeyError):
-        error('invalid response from webserver at %s' % download_url)
+        # get file size: Content-Length
+        try:
+            totalsize = int(web.info().getheaders("Content-Length")[0])
+        except (ValueError, KeyError):
+            error('invalid response from webserver at %s' % download_url)
+            return False
+
+        # create download_filename
+        try:
+            f = open(download_filename, 'w+b')
+        except IOError as err:
+            error('failed to create file %s: %s' % (download_filename,
+                                                    err.strerror))
+            return False
+
+        with f:
+            print_progress(download_filename, totalsize, 0)
+            download_bytes = 0
+
+            # compute checksum of downloaded file data
+            sum1 = hashlib.md5()
+
+            while True:
+                data = web.read(4096)
+                if not data:
+                    break
+
+                download_bytes += len(data)
+                print_progress(download_filename, totalsize, download_bytes)
+
+                f.write(data)
+                sum1.update(data)
+    finally:
         web.close()
-        return False
-
-    # create download_filename
-    try:
-        f = open(download_filename, 'w+b')
-    except IOError as err:
-        error('failed to create file %s: %s' % (download_filename,
-                                                err.strerror))
-        web.close()
-        return False
-
-    with f:
-        print_progress(download_filename, totalsize, 0)
-        download_bytes = 0
-
-        # compute checksum of downloaded file data
-        sum1 = hashlib.md5()
-
-        while True:
-            data = web.read(4096)
-            if not data:
-                break
-
-            download_bytes += len(data)
-            print_progress(download_filename, totalsize, download_bytes)
-
-            f.write(data)
-            sum1.update(data)
-
-    web.close()
 
     if download_bytes < totalsize:
         print
