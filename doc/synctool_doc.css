@@ -31,21 +31,17 @@ html,body {
 	height: 100%;
 	background-color: #eee;
 	color: #000;
-	font-family: georgia, times, serif;
+	font: medium georgia, times, serif;
 }
 
 h1 {
-	font-family: verdana, geneva, helvetica, arial, sans-serif;
-	font-size: 2em;
-	font-weight: bold;
+	font: x-large verdana, geneva, helvetica, arial, sans-serif;
 /*	text-transform: capitalize;	*/
 	margin: 2em 0 .5em 0;
 }
 
 h2 {
-	font-family: verdana, geneva, helvetica, arial, sans-serif;
-	font-size: 1.5em;
-	font-weight: normal;
+	font: large verdana, geneva, helvetica, arial, sans-serif;
 	margin-top: 1em;
 	margin-bottom: .5em;
 }
@@ -137,9 +133,7 @@ div#footer {
 	bottom: 0;				/* stick to bottom */
 	padding: 0em 0em .5em;
 
-	font-family: georgia, times, serif;
-	font-style: italic;
-	font-size: .8em;
+	font: italic small georgia, times, serif;
 }
 
 pre {
