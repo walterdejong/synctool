@@ -147,11 +147,12 @@ def download():
     try:
         web = urllib2.urlopen(download_url)
     except urllib2.HTTPError as err:
-        error('webserver at %s: %s' % (download_url, err.reason))
+        error('webserver at %s: %u %s' % (download_url, err.code, err.msg))
         return False
 
     except urllib2.URLError as err:
-        error('failed to access %s: %s' % (download_url, err.reason))
+        error('failed to access %s: %u %s' % (download_url, err.code,
+                                              err.msg))
         return False
 
     except IOError as err:
