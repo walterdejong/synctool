@@ -17,7 +17,7 @@ The programs are under `/opt/synctool/`.
 
 
 6.1 Installing synctool 6
-=========================
+-------------------------
 Log on to the master node. The first step is to move the old synctool dir
 out of the way:
 
@@ -34,7 +34,7 @@ go configure synctool 6.
 
 
 6.2 Configuring synctool 6
-==========================
+--------------------------
 The old config file is `/var/lib/synctool/synctool.conf`. The new config
 file will be `/opt/synctool/etc/synctool.conf`, but you can't just copy it
 in place and expect it to work. The reason is that some config parameters
@@ -73,7 +73,7 @@ and [chapter 4](chapter4.html).
 
 
 6.3 Updating the repository
-===========================
+---------------------------
 If the configuration is working, it is safe to run `synctool`. This will
 install synctool 6 on the entire cluster. But wait ... the repository is
 still empty ...? Indeed, and thus synctool won't make any changes to the
@@ -118,7 +118,7 @@ synctool should now largely already work.
 
 
 6.4 Updating templates
-======================
+----------------------
 In older versions of synctool you could generate config files by pulling
 a trick with a template file and a `.post` script. This trick is now
 built into synctool, and it uses a `._template` file and an accompanying
@@ -143,7 +143,7 @@ files that are still floating around in your system.
 
 
 6.5 Wrapping up
-===============
+---------------
 The migration to synctool 6 is now finished. After a week or so, you should
 feel confident enough to delete the old repository `/var/lib/synctool/`.
 synctool 6 does not use it. The quickest way to dispose of it is:
@@ -159,3 +159,4 @@ new 'purge' feature, or use the new options for uploading files, or use
 multi-cluster with synctool, or configure syslogging, or try out multiplexed
 connections, or ...
 Read all about it in this manual.
+
