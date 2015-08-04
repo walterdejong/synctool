@@ -93,7 +93,7 @@ dl {
 }
 
 dt {
-	font-family: menlo, courier, monospace;
+	font-family: 'Andale Mono', Consolas, Monaco, monospace;
 	font-weight: bold;
 }
 
@@ -159,8 +159,7 @@ blockquote {
 }
 
 code {
-	font-family: menlo, courier, monospace;
-	font-size: .95em;
+	font: medium 'Andale Mono', Consolas, Monaco, monospace;
 	word-break: keep-all;
 }
 
