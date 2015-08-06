@@ -1212,9 +1212,10 @@ directories in the repository. Multiple <code>ignore</code> definitions are allo
 You may put multiple filenames on a line, and you may use wildcards.
 Example:</p>
 
-<p>ignore .gitignore .git .svn
+<pre><code>ignore .gitignore .git .svn
 ignore .*.swp
-ignore tmp[0-9][0-9][0-9]??</p></li>
+ignore tmp[0-9][0-9][0-9]??
+</code></pre></li>
 <li><p><code>ignore_file &lt;file name&gt;</code></p>
 
 <p><strong>obsolete</strong> Use the <code>ignore</code> keyword instead.</p></li>
@@ -1313,12 +1314,13 @@ This setting can be overridden from the command-line when invoking
 
 <p>Valid values for <code>package_manager</code> are:</p>
 
-<p>apt-get
+<pre><code>apt-get
 yum
 zypper
 pacman
 brew
-bsdpkg</p></li>
+bsdpkg
+</code></pre></li>
 <li><p><code>num_proc &lt;number&gt;</code></p>
 
 <p>This specifies the maximum amount of parallel processes that synctool
@@ -1345,14 +1347,16 @@ hardware installation.</p>
 <p>The default is <code>all</code>. You may set it to <code>none</code> to make synctool not run
 on a default set of nodes at all. Example:</p>
 
-<p>default_nodeset test1 test2 testnodes xtest[1-10]</p></li>
+<pre><code>default_nodeset test1 test2 testnodes xtest[1-10]
+</code></pre></li>
 <li><p><code>master &lt;fqdn&gt;</code></p>
 
 <p>Indicates which node is the master, the management node from where you
 will run synctool to control the cluster. It should be set to the fully
 qualified domain name of the management host. You can get the fqdn with:</p>
 
-<p>synctool-config &#8212;fqdn</p></li>
+<pre><code>synctool-config --fqdn
+</code></pre></li>
 <li><p><code>slave &lt;nodename&gt; [..]</code></p>
 
 <p>Slave nodes get a full copy of the synctool repository. Slaves have no
@@ -1364,15 +1368,17 @@ change it into a master node in the config file.</p></li>
 several subgroups together into a single group. If the subgroups did not
 exist yet, they are defined automatically as new, empty groups.</p>
 
-<p>group wn workernode batch
+<pre><code>group wn workernode batch
 group test wn
-group g1 batch test wn</p>
+group g1 batch test wn
+</code></pre>
 
 <p>Group names are alphanumeric, but can have an underscore, minus, or plus
 symbol in between. The following are valid group names:</p>
 
-<p>group group1 group-1 group<em>1 group+1 192</em>168_1 10 node1+node2
-group A+B+C A B C</p></li>
+<pre><code>group group1 group-1 group_1 group+1 192_168_1 10 node1+node2
+group A+B+C A B C
+</code></pre></li>
 <li><p><code>node &lt;nodename&gt; &lt;group&gt; [..] [ipaddress:&lt;IP address&gt;]
 [hostname:&lt;fully qualified hostname&gt;] [hostid:&lt;filename&gt;]
 [rsync:&lt;yes/no&gt;]</code></p>
@@ -1390,7 +1396,8 @@ before it can be used in a node definition.</p>
 <p>Node names are alphanumeric, but can have an underscore, minus, or plus
 symbol in between. The following are valid node names:</p>
 
-<p>node node1 node-1 node<em>1 node+1 10</em>0<em>0</em>2 10 node1+node2</p>
+<pre><code>node node1 node-1 node_1 node+1 10_0_0_2 10 node1+node2
+</code></pre>
 
 <p>The <code>ipaddress</code> specifier tells synctool how to contact the node. This is
 optional; when omitted, synctool assumes the nodename can be found in DNS.
@@ -1472,12 +1479,14 @@ slightly different synctool configuration than others. This can be
 important, especially in setups where you are running a multitude of
 operating systems.</p>
 
-<p>include /etc/synctool_local.conf</p>
+<pre><code>include /etc/synctool_local.conf
+</code></pre>
 
 <p>Another good use of this option is to clean up your configuration:</p>
 
-<p>include /opt/synctool/etc/nodes.conf
-include /opt/synctool/etc/colors.conf</p></li>
+<pre><code>include /opt/synctool/etc/nodes.conf
+include /opt/synctool/etc/colors.conf
+</code></pre></li>
 <li><p><code>terse &lt;yes/no&gt;</code></p>
 
 <p>In terse mode, synctool shows a very brief output with paths abbreviated
