@@ -84,9 +84,9 @@ synctool's configuration file.
   You may put multiple filenames on a line, and you may use wildcards.
   Example:
 
-    ignore .gitignore .git .svn
-    ignore .*.swp
-    ignore tmp[0-9][0-9][0-9]??
+        ignore .gitignore .git .svn
+        ignore .*.swp
+        ignore tmp[0-9][0-9][0-9]??
 
 * `ignore_file <file name>`
 
@@ -199,12 +199,12 @@ synctool's configuration file.
 
   Valid values for `package_manager` are:
 
-    apt-get
-    yum
-    zypper
-    pacman
-    brew
-    bsdpkg
+        apt-get
+        yum
+        zypper
+        pacman
+        brew
+        bsdpkg
 
 * `num_proc <number>`
 
@@ -234,7 +234,7 @@ synctool's configuration file.
   The default is `all`. You may set it to `none` to make synctool not run
   on a default set of nodes at all. Example:
 
-    default_nodeset test1 test2 testnodes xtest[1-10]
+        default_nodeset test1 test2 testnodes xtest[1-10]
 
 * `master <fqdn>`
 
@@ -242,7 +242,7 @@ synctool's configuration file.
   will run synctool to control the cluster. It should be set to the fully
   qualified domain name of the management host. You can get the fqdn with:
 
-    synctool-config --fqdn
+        synctool-config --fqdn
 
 * `slave <nodename> [..]`
 
@@ -256,15 +256,15 @@ synctool's configuration file.
   several subgroups together into a single group. If the subgroups did not
   exist yet, they are defined automatically as new, empty groups.
 
-    group wn workernode batch
-    group test wn
-    group g1 batch test wn
+        group wn workernode batch
+        group test wn
+        group g1 batch test wn
 
   Group names are alphanumeric, but can have an underscore, minus, or plus
   symbol in between. The following are valid group names:
 
-    group group1 group-1 group_1 group+1 192_168_1 10 node1+node2
-    group A+B+C A B C
+        group group1 group-1 group_1 group+1 192_168_1 10 node1+node2
+        group A+B+C A B C
 
 * `node <nodename> <group> [..] [ipaddress:<IP address>]
   [hostname:<fully qualified hostname>] [hostid:<filename>]
@@ -283,7 +283,7 @@ synctool's configuration file.
   Node names are alphanumeric, but can have an underscore, minus, or plus
   symbol in between. The following are valid node names:
 
-    node node1 node-1 node_1 node+1 10_0_0_2 10 node1+node2
+        node node1 node-1 node_1 node+1 10_0_0_2 10 node1+node2
 
   The `ipaddress` specifier tells synctool how to contact the node. This is
   optional; when omitted, synctool assumes the nodename can be found in DNS.
@@ -367,12 +367,12 @@ synctool's configuration file.
   important, especially in setups where you are running a multitude of
   operating systems.
 
-    include /etc/synctool_local.conf
+        include /etc/synctool_local.conf
 
   Another good use of this option is to clean up your configuration:
 
-    include /opt/synctool/etc/nodes.conf
-    include /opt/synctool/etc/colors.conf
+        include /opt/synctool/etc/nodes.conf
+        include /opt/synctool/etc/colors.conf
 
 * `terse <yes/no>`
 
@@ -498,7 +498,6 @@ synctool's configuration file.
   Specify the color for the 'DRYRUN' message in terse mode.
   It occurs when synctool performs a dry run.
   The default is `default`.
-
 
 * `color_fixing <color>`
 
