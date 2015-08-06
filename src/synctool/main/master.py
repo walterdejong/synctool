@@ -662,6 +662,11 @@ def get_options():
         if arg:
             PASS_ARGS.append(arg)
 
+	# diff with fix works like single
+	if opt_diff and opt_fix:
+		opt_diff = False
+		opt_single = True
+
     # do basic checks for uploading and sub options
     if opt_suffix and not opt_upload:
         print 'option --suffix must be used in conjunction with --upload'

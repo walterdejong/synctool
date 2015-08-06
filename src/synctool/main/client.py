@@ -639,28 +639,6 @@ def diff_files():
         stderr('%s is not in the overlay tree' % filename)
 
 
-def be_careful_with_getopt():
-    '''check sys.argv for dangerous common typo's on the command-line'''
-
-    # be extra careful with possible typo's on the command-line
-    # because '-f' might run --fix because of the way that getopt() works
-
-    for arg in sys.argv:
-        # This is probably going to give stupid-looking output
-        # in some cases, but it's better to be safe than sorry
-
-        if arg[:2] == '-d' and arg.find('f') > -1:
-            print "Did you mean '--diff'?"
-            sys.exit(1)
-
-        if arg[:2] == '-r' and arg.find('f') > -1:
-            if arg.count('e') >= 2:
-                print "Did you mean '--reference'?"
-            else:
-                print "Did you mean '--ref'?"
-            sys.exit(1)
-
-
 def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
                         opt_upload, opt_suffix, opt_fix):
     '''some combinations of command-line options don't make sense;
@@ -729,9 +707,6 @@ def get_options():
     '''parse command-line options'''
 
     global SINGLE_FILES
-
-    # check for dangerous common typo's on the command-line
-    be_careful_with_getopt()
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:efFTvq',
@@ -906,6 +881,12 @@ def get_options():
     if errors:
         usage()
         sys.exit(1)
+
+	# diff with fix works like single
+	if opt_diff and opt_fix:
+		opt_diff = False
+		opt_single = True
+	    action = ACTION_DEFAULT
 
     option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
                         opt_upload, opt_suffix, opt_fix)
