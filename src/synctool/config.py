@@ -153,15 +153,10 @@ def init_mynodename():
 
     else:
         # try to find a node that has the (short) hostname
-        # listed as interface or as a group
+        # listed as interface
         for node in all_nodes:
             addr = get_node_ipaddress(node)
             if addr == short_hostname or addr == hostname:
-                nodename = node
-                break
-
-            groups = get_groups(node)
-            if short_hostname in groups or hostname in groups:
                 nodename = node
                 break
 
