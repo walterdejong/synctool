@@ -89,18 +89,6 @@ NODES = {}
 #
 IPADDRESSES = {}
 
-# dict of nodes ... by hostname
-#
-#   HOSTNAMES[hostname] -> nodename
-#
-HOSTNAMES = {}
-
-# dict of hostnames by nodename
-#
-#   HOSTNAMES_BY_NODE[node] -> hostname
-#
-HOSTNAMES_BY_NODE = {}
-
 # compound groups are lists of groups, in order of importance
 #
 #   GROUP_DEFS[compound] -> [ list of groups ]

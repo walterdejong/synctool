@@ -149,12 +149,6 @@ def init_mynodename():
         arr = synctool.param.HOST_ID.split('.')
         nodename = arr[0]
 
-    elif hostname in synctool.param.HOSTNAMES:
-        nodename = synctool.param.HOSTNAMES[hostname]
-
-    elif short_hostname in synctool.param.HOSTNAMES:
-        nodename = synctool.param.HOSTNAMES[short_hostname]
-
     elif short_hostname in all_nodes:
         nodename = short_hostname
 
@@ -206,15 +200,6 @@ def get_node_ipaddress(node):
 
     if node in synctool.param.IPADDRESSES:
         return synctool.param.IPADDRESSES[node]
-
-    return node
-
-
-def get_node_hostname(node):
-    '''Return hostname of node, or node name if unknown'''
-
-    if node in synctool.param.HOSTNAMES_BY_NODE:
-        return synctool.param.HOSTNAMES_BY_NODE[node]
 
     return node
 
