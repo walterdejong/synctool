@@ -288,11 +288,10 @@ synctool's configuration file.
   optional; when omitted, synctool assumes the nodename can be found in DNS.
   Note that synctool nodenames need not be same as DNS names.
 
-  > synctool-client uses the `socket.getfqdn()` function to determine the
-  > fully qualified name of the host. If synctool-client is confused about
-  > the hostname or nodename, you should really fix your DNS or `/etc/hosts`
-  > file. We running synctool-client in stand-alone mode, you can pass
-  > `--nodename` to tell it what node it is.
+  > The synctool master tells the clients what node they are.
+  > When running synctool-client in stand-alone mode, the client tries to
+  > figure out by itself what node it is running on. If it fails to determine
+  > the nodename, you may pass option `--nodename` to force it.
 
   The optional `rsync:no` specifier may be used to tell synctool not
   to sync the repository to the target node. This is only convenient when
