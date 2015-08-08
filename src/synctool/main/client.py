@@ -882,11 +882,11 @@ def get_options():
         usage()
         sys.exit(1)
 
-	# diff with fix works like single
-	if opt_diff and opt_fix:
-		opt_diff = False
-		opt_single = True
-	    action = ACTION_DEFAULT
+    # diff with fix works like single
+    if opt_diff and opt_fix:
+        opt_diff = False
+        opt_single = True
+        action = ACTION_DEFAULT
 
     option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
                         opt_upload, opt_suffix, opt_fix)
