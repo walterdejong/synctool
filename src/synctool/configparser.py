@@ -804,8 +804,7 @@ def config_node(arr, configfile, lineno):
 
 
 def _node_specifier(configfile, lineno, node, spec):
-    '''parse optional node specifiers like 'ipaddress:', 'hostname:',
-    'hostid:', 'rsync:' etc.
+    '''parse optional node specifiers like 'ipaddress:', 'rsync:' etc.
     Returns True if OK, False on error
     '''
 
@@ -831,36 +830,6 @@ def _node_specifier(configfile, lineno, node, spec):
             stderr('%s:%d: %s' % (configfile, lineno, err))
             return False
 
-    elif specifier == 'hostname':
-        if arg in synctool.param.HOSTNAMES:
-            stderr('%s:%d: hostname %s already in use for node %s' %
-                   (configfile, lineno, arg,
-                    synctool.param.HOSTNAMES[arg]))
-            return False
-
-        synctool.param.HOSTNAMES[arg] = node
-        synctool.param.HOSTNAMES_BY_NODE[node] = arg
-
-    elif specifier == 'hostid':
-        try:
-            f = open(arg, 'r')
-        except IOError:
-            # this is a real error ... but it doesn't matter on
-            # the master node
-            # So how to handle this?
-            return True
-
-        hostid = f.readline()
-        f.close()
-        if not hostid:
-            return True
-
-        hostid = hostid.strip()
-        if not hostid:
-            return True
-
-        synctool.param.HOST_ID = hostid
-
     elif specifier == 'rsync':
         if arg == 'yes':
             pass
@@ -870,6 +839,11 @@ def _node_specifier(configfile, lineno, node, spec):
             stderr("%s:%d: node specifier 'rsync' can have value "
                    "'yes' or 'no'" % (configfile, lineno))
             return False
+
+    elif specifier in ('hostname', 'hostid'):
+        stderr("%s:%d: node specifier '%s:' is deprecated" %
+               (configfile, lineno, specifier))
+
     else:
         stderr('%s:%d: unknown node specifier %s' %
                (configfile, lineno, specifier))

@@ -266,8 +266,7 @@ synctool's configuration file.
         group group1 group-1 group_1 group+1 192_168_1 10 node1+node2
         group A+B+C A B C
 
-* `node <nodename> <group> [..] [ipaddress:<IP address>]
-  [hostname:<fully qualified hostname>] [hostid:<filename>]
+* `node <nodename> <group> [..] [ipaddress:<name, IP address, or sequence>]
   [rsync:<yes/no>]`
 
   The `node` keyword defines what groups a node is in. Multiple groups may
@@ -289,37 +288,18 @@ synctool's configuration file.
   optional; when omitted, synctool assumes the nodename can be found in DNS.
   Note that synctool nodenames need not be same as DNS names.
 
-  The optional `hostname` specifier tells synctool that a host that has this
-  fully qualified hostname, must be this node. In general it is safe to omit
-  this. This specifier is normally _not used_ by synctool. It is only used
-  when you run `synctool-client` manually in 'stand alone' mode on a node.
-  Then there are cases in which synctool-client can fail to figure out
-  its own node name. You may put the hostname in the config file to help
-  synctool-client out in this situation. If this seems odd to you, then mind
-  that synctool-client can not magically know what node it is running on.
-  In any case, the property that uniquely identifies a host is its _hostname_.
-  Note that you can also pass the option `--nodename` to synctool-client
-  to tell it what its name is.
-
-  > synctool-client uses the `socket.getfqdn()` function to determine the
-  > fully qualified name of the host. If synctool-client is confused about
-  > the hostname or nodename, you should really fix your DNS or `/etc/hosts`
-  > file. As said, you can still pass `--nodename` to get around any problems
-  > that arise.
-
-  The optional `hostid` specifier can be used in the unusual case where
-  the hostname does not uniquely identify a host, so when you have multiple
-  hosts that have the same hostname. The filename argument is a file on the
-  target node that contains the 'synctool hostname' that will be used to
-  uniquely identify the host.
+  > The synctool master tells the clients what node they are.
+  > When running synctool-client in stand-alone mode, the client tries to
+  > figure out by itself what node it is running on. If it fails to determine
+  > the nodename, you may pass option `--nodename` to force it.
 
   The optional `rsync:no` specifier may be used to tell synctool not
   to sync the repository to the target node. This is only convenient when
   the node has access to the repository via another way, such as a shared
   filesystem.
 
-        node node1 fs sched rack1 ipaddress:node1-mgmt
-        node node2 login    rack1 ipaddress:node2-mgmt hostname:login.mydomain.com
+        node node1 fs sched rack1
+        node node2 login    rack1
         node node3 test     rack1 ipaddress:node8-mgmt
         node node4 batch    rack1 ipaddress:node9-mgmt rsync:no
         node node5 wn       rack1 ipaddress:node5-mgmt

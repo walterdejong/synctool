@@ -54,8 +54,6 @@ ACTION_VERSION = 15
 OPT_FILTER_IGNORED = False
 # optional: list ipaddresses of the selected nodes
 OPT_IPADDRESS = False
-# optional: list hostnames of the selected nodes
-OPT_HOSTNAME = False
 # optional: list rsync yes/no qualifier
 OPT_RSYNC = False
 
@@ -75,9 +73,6 @@ def list_all_nodes():
 
         if OPT_IPADDRESS:
             node += ' ' + synctool.config.get_node_ipaddress(node)
-
-        if OPT_HOSTNAME:
-            node += ' ' + synctool.config.get_node_hostname(node)
 
         if OPT_RSYNC:
             if node in synctool.param.NO_RSYNC:
@@ -123,13 +118,10 @@ def list_nodes(nodelist):
 
     groups = []
     for node in nodeset.nodelist:
-        if OPT_IPADDRESS or OPT_HOSTNAME or OPT_RSYNC:
+        if OPT_IPADDRESS or OPT_RSYNC:
             out = ''
             if OPT_IPADDRESS:
                 out += ' ' + synctool.config.get_node_ipaddress(node)
-
-            if OPT_HOSTNAME:
-                out += ' ' + synctool.config.get_node_hostname(node)
 
             if OPT_RSYNC:
                 if node in synctool.param.NO_RSYNC:
@@ -187,9 +179,6 @@ def list_nodegroups(grouplist):
 
         if OPT_IPADDRESS:
             node += ' ' + synctool.config.get_node_ipaddress(node)
-
-        if OPT_HOSTNAME:
-            node += ' ' + synctool.config.get_node_hostname(node)
 
         if OPT_RSYNC:
             if node in synctool.param.NO_RSYNC:
@@ -307,7 +296,6 @@ def usage():
   -n, --node=LIST             List all groups this node is in
   -g, --group=LIST            List all nodes in this group
   -i, --ipaddress             List selected nodes' IP address
-  -H, --hostname              List selected nodes' hostname
   -r, --rsync                 List selected nodes' rsync qualifier
   -f, --filter-ignored        Do not list ignored nodes and groups
   -C, --command=COMMAND       Display setting for command
@@ -330,16 +318,16 @@ def get_options():
     '''parse command-line options'''
 
     global ARG_NODENAMES, ARG_GROUPS, ARG_CMDS, ARG_EXPAND
-    global OPT_FILTER_IGNORED, OPT_IPADDRESS, OPT_HOSTNAME, OPT_RSYNC
+    global OPT_FILTER_IGNORED, OPT_IPADDRESS, OPT_RSYNC
 
     if len(sys.argv) <= 1:
         usage()
         sys.exit(1)
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hc:lLn:g:iHrfC:PNdx:v',
+        opts, args = getopt.getopt(sys.argv[1:], 'hc:lLn:g:irfC:PNdx:v',
             ['help', 'conf=', 'list-nodes', 'list-groups', 'node=', 'group=',
-            'ipaddress', 'hostname', 'rsync', 'filter-ignored',
+            'ipaddress', 'rsync', 'filter-ignored',
             'command', 'package-manager', 'numproc', 'list-dirs',
             'prefix', 'master', 'slave', 'nodename', 'fqdn', 'expand',
             'version'])
@@ -385,10 +373,6 @@ def get_options():
 
         if opt in ('-i', 'ipaddress'):
             OPT_IPADDRESS = True
-            continue
-
-        if opt in ('-H', '--hostname'):
-            OPT_HOSTNAME = True
             continue
 
         if opt in ('-r', '--rsync'):

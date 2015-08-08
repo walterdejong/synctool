@@ -38,7 +38,6 @@ SCRIPT_DIR = None
 TEMP_DIR = '/tmp/synctool'
 HOSTNAME = None
 NODENAME = None
-HOST_ID = None
 
 DIFF_CMD = 'diff -u'
 PING_CMD = 'ping -q -c 1 -t 1'
@@ -88,18 +87,6 @@ NODES = {}
 #   IPADDRESSES[node] -> ipaddress
 #
 IPADDRESSES = {}
-
-# dict of nodes ... by hostname
-#
-#   HOSTNAMES[hostname] -> nodename
-#
-HOSTNAMES = {}
-
-# dict of hostnames by nodename
-#
-#   HOSTNAMES_BY_NODE[node] -> hostname
-#
-HOSTNAMES_BY_NODE = {}
 
 # compound groups are lists of groups, in order of importance
 #

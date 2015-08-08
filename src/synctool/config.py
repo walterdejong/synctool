@@ -137,6 +137,8 @@ def init_mynodename():
     arr = hostname.split('.')
     short_hostname = arr[0]
 
+    ipaddresses = get_ipaddresses(hostname)
+
     all_nodes = get_all_nodes()
 
     nodename = synctool.param.NODENAME
@@ -145,33 +147,16 @@ def init_mynodename():
         # the master set it because it already knows the node's nodename
         pass
 
-    elif synctool.param.HOST_ID != None:
-        arr = synctool.param.HOST_ID.split('.')
-        nodename = arr[0]
-
-    elif hostname in synctool.param.HOSTNAMES:
-        nodename = synctool.param.HOSTNAMES[hostname]
-
-    elif short_hostname in synctool.param.HOSTNAMES:
-        nodename = synctool.param.HOSTNAMES[short_hostname]
-
-    elif short_hostname in all_nodes:
-        nodename = short_hostname
-
-    elif hostname in all_nodes:
-        nodename = hostname
-
     else:
-        # try to find a node that has the (short) hostname
-        # listed as interface or as a group
+        # try to find a node that has the (short) hostname or
+        # or IP address listed as interface
         for node in all_nodes:
             addr = get_node_ipaddress(node)
-            if addr == short_hostname or addr == hostname:
+            if ipaddresses is not None and addr in ipaddresses:
                 nodename = node
                 break
 
-            groups = get_groups(node)
-            if short_hostname in groups or hostname in groups:
+            if addr == short_hostname or addr == hostname:
                 nodename = node
                 break
 
@@ -180,6 +165,32 @@ def init_mynodename():
 
     synctool.param.NODENAME = nodename
     synctool.param.MY_GROUPS = get_my_groups()
+
+
+def get_ipaddresses(name):
+    '''Returns list of IP addresses for DNS name
+    or None on error
+    '''
+
+    try:
+        addrinfo = socket.getaddrinfo(name, None)
+    except socket.gaierror:
+        return None
+
+    if addrinfo is None or len(addrinfo) < 1:
+        return []
+
+    ipaddresses = set([])
+
+    # address info is a list of tuples:
+    # [(family, socktype, proto, canonname, sockaddr), ]
+    # sockaddr is a tuple (address, port) for IPv4
+    # or a tuple for IPv6 (address, port, flow, scope)
+    for tup in addrinfo:
+        sockaddr = tup[4]
+        ipaddresses.add(sockaddr[0])
+
+    return list(ipaddresses)
 
 
 def insert_group(node, group):
@@ -206,15 +217,6 @@ def get_node_ipaddress(node):
 
     if node in synctool.param.IPADDRESSES:
         return synctool.param.IPADDRESSES[node]
-
-    return node
-
-
-def get_node_hostname(node):
-    '''Return hostname of node, or node name if unknown'''
-
-    if node in synctool.param.HOSTNAMES_BY_NODE:
-        return synctool.param.HOSTNAMES_BY_NODE[node]
 
     return node
 
