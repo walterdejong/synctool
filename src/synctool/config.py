@@ -148,9 +148,6 @@ def init_mynodename():
     elif short_hostname in all_nodes:
         nodename = short_hostname
 
-    elif hostname in all_nodes:
-        nodename = hostname
-
     else:
         # try to find a node that has the (short) hostname
         # listed as interface
