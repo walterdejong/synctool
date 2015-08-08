@@ -145,10 +145,6 @@ def init_mynodename():
         # the master set it because it already knows the node's nodename
         pass
 
-    elif synctool.param.HOST_ID != None:
-        arr = synctool.param.HOST_ID.split('.')
-        nodename = arr[0]
-
     elif short_hostname in all_nodes:
         nodename = short_hostname
 

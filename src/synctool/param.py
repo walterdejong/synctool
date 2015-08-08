@@ -38,7 +38,6 @@ SCRIPT_DIR = None
 TEMP_DIR = '/tmp/synctool'
 HOSTNAME = None
 NODENAME = None
-HOST_ID = None
 
 DIFF_CMD = 'diff -u'
 PING_CMD = 'ping -q -c 1 -t 1'

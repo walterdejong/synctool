@@ -830,26 +830,6 @@ def _node_specifier(configfile, lineno, node, spec):
             stderr('%s:%d: %s' % (configfile, lineno, err))
             return False
 
-    elif specifier == 'hostid':
-        try:
-            f = open(arg, 'r')
-        except IOError:
-            # this is a real error ... but it doesn't matter on
-            # the master node
-            # So how to handle this?
-            return True
-
-        hostid = f.readline()
-        f.close()
-        if not hostid:
-            return True
-
-        hostid = hostid.strip()
-        if not hostid:
-            return True
-
-        synctool.param.HOST_ID = hostid
-
     elif specifier == 'rsync':
         if arg == 'yes':
             pass
@@ -860,9 +840,9 @@ def _node_specifier(configfile, lineno, node, spec):
                    "'yes' or 'no'" % (configfile, lineno))
             return False
 
-    elif specifier == 'hostname':
-        stderr("%s:%d: node specifier 'hostname:' is deprecated" %
-               (configfile, lineno))
+    elif specifier in ('hostname', 'hostid'):
+        stderr("%s:%d: node specifier '%s:' is deprecated" %
+               (configfile, lineno, specifier))
 
     else:
         stderr('%s:%d: unknown node specifier %s' %
