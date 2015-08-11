@@ -690,6 +690,7 @@ def usage():
   -e, --erase-saved     Erase *.saved backup files
   -f, --fix             Perform updates (otherwise, do dry-run)
       --no-post         Do not run any .post scripts
+  -N, --nodename=NODE   Force nodename
   -F, --fullpath        Show full paths instead of shortened ones
   -T, --terse           Show terse, shortened paths
       --color           Use colored output (only for terse mode)
@@ -709,10 +710,10 @@ def get_options():
     global SINGLE_FILES
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:efFTvq',
+        opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:efNFTvq',
             ['help', 'conf=', 'diff=', 'single=', 'ref=',
             'erase-saved', 'fix', 'no-post', 'fullpath',
-            'terse', 'color', 'no-color', 'masterlog', 'nodename=',
+            'terse', 'color', 'no-color', 'masterlog', 'node=', 'nodename=',
             'verbose', 'quiet', 'unix', 'version'])
     except getopt.GetoptError as reason:
         print '%s: %s' % (PROGNAME, reason)
@@ -818,8 +819,9 @@ def get_options():
             synctool.lib.MASTERLOG = True
             continue
 
-        if opt == '--nodename':
+        if opt in ('-N', '--node', '--nodename'):
             # used by the master to set the client's nodename
+            # or to force the nodename when running in stand-alone mode
             synctool.param.NODENAME = arg
             continue
 
@@ -904,7 +906,7 @@ def main():
     synctool.config.init_mynodename()
 
     if not synctool.param.NODENAME:
-        error('unable to determine my nodename (%s)' %
+        error('unable to determine my nodename (hostname: %s)' %
               synctool.param.HOSTNAME)
         stderr('please check %s' % synctool.param.CONF_FILE)
         sys.exit(-1)

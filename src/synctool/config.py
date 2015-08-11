@@ -122,46 +122,51 @@ def init_mynodename():
     and initialize MY_GROUPS
     '''
 
-    # In practice, the nodename is determined by the master in synctool.conf
-    # The master then tells the client what its nodename is
-    # In two special cases, we still need to detect the nodename:
-    # 1. user runs synctool.py in stand-alone mode on a node
-    # 2. master node itself is being managed by synctool
-    #
-    # In older versions, the hostname was implicitly treated as a group
-    # This is no longer the case
+    # The nodename is determined by the master in synctool.conf
+    # The master tells the client what its nodename is
+    # If the user runs synctool-client in stand-alone mode on a node
+    # then we need to detect what node that is
+    # The best way of identifying a node is by its IP address
+    # This fails when a host is multi-homed and the FQDN is not
+    # listed as 'ipaddress:' in synctool.conf
+    # synctool makes no further assumptions about the nodename
 
     # get my hostname
     synctool.param.HOSTNAME = hostname = socket.getfqdn()
 
-    arr = hostname.split('.')
-    short_hostname = arr[0]
-
-    ipaddresses = get_ipaddresses(hostname)
-
-    all_nodes = get_all_nodes()
-
     nodename = synctool.param.NODENAME
-    if nodename != None:
-        # nodename was already set
-        # the master set it because it already knows the node's nodename
-        pass
+    if nodename is None:
+        # try to find out who am I
+        all_nodes = get_all_nodes()
 
-    else:
-        # try to find a node that has the (short) hostname or
-        # or IP address listed as interface
-        for node in all_nodes:
-            addr = get_node_ipaddress(node)
-            if ipaddresses is not None and addr in ipaddresses:
-                nodename = node
-                break
+        ipaddresses = get_ipaddresses(hostname)
+        if ipaddresses is not None:
+            # try find a node that lists any of our IP addresses
+            for node in all_nodes:
+                if node in synctool.param.IPADDRESSES:
+                    addr = synctool.param.IPADDRESSES[node]
+                else:
+                    # unknown (explicit) IP address for node
+                    continue
 
-            if addr == short_hostname or addr == hostname:
-                nodename = node
-                break
+                addrs = get_ipaddresses(addr)
+                if addrs is None:
+                    continue
+
+                found = False
+                for addr in addrs:
+                    if addr in ipaddresses:
+                        nodename = node
+                        found = True
+                        break
+
+                if found:
+                    break
 
     # At this point, nodename can still be None
-    # It only really matters for synctool.py, which checks this condition
+    # It only really matters for client.py, which checks this condition
+    # Note that synctool-client does _not_ use the short hostname to
+    # identify the node it is running on
 
     synctool.param.NODENAME = nodename
     synctool.param.MY_GROUPS = get_my_groups()
