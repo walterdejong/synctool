@@ -12,15 +12,122 @@
 
 import os
 import sys
+import datetime
 import urllib2
 import hashlib
+import xml.parsers
+import xml.dom.minidom
 
 from synctool.lib import verbose, error, stdout
 import synctool.param
 
-
+LATEST_XML = 'https://walterdejong.github.io/synctool/latest.xml'
 VERSION_CHECKING_URL = 'https://walterdejong.github.io/synctool/LATEST.txt'
 DOWNLOAD_URL = 'https://github.com/walterdejong/synctool/archive/'
+
+
+class ReleaseInfo(object):
+    '''holds release info'''
+
+    # put a limit on how much data we will read at the most
+    DATA_LIMIT = 4096
+
+    def __init__(self):
+        '''initialize instance'''
+
+        self.version = None
+        self.datetime = None
+        self.url = None
+        self.md5sum = None
+        self.sha512sum = None
+
+    def load(self, url=LATEST_XML):
+        '''load release info from URL
+        Returns True on success
+        '''
+
+        verbose('loading URL %s' % url)
+        try:
+            # can not use 'with' statement with urlopen()..?
+            web = urllib2.urlopen(url)
+        except urllib2.HTTPError as err:
+            error('webserver at %s: %u %s' % (url, err.code, err.msg))
+            return False
+
+        except urllib2.URLError as err:
+            error('failed to access %s: %u %s' % (url, err.code, err.msg))
+            return False
+
+        except IOError as err:
+            error('failed to access %s: %s' % (VERSION_CHECKING_URL,
+                                               err.strerror))
+            return False
+
+        try:
+            data = web.read(ReleaseInfo.DATA_LIMIT)
+        finally:
+            web.close()
+
+        if not data or len(data) < 10:
+            error('failed to access %s' % url)
+            return False
+
+        return self.parse(data)
+
+    def parse(self, data):
+        '''Parse XML data
+        Returns True on success
+        '''
+
+        try:
+            doc = xml.dom.minidom.parseString(data)
+        except xml.parsers.expat.ExpatError:
+            error('syntax error in XML data')
+            return False
+
+        self.version = xml_tagvalue(doc, 'version')
+        self.datetime = xml_tagvalue(doc, 'datetime')
+        self.url = xml_tagvalue(doc, 'url')
+        self.md5sum = xml_tagvalue(doc, 'checksum', 'type=md5')
+        self.sha512sum = xml_tagvalue(doc, 'checksum', 'type=sha512')
+
+        # convert datetime object
+        if self.datetime is not None:
+            try:
+                self.datetime = datetime.datetime.strptime(self.datetime,
+                                                          '%Y-%m-%dT%H:%M:%S')
+            except ValueError:
+                error('invalid datetime format in XML data')
+                return False
+
+        return True
+
+
+def xml_tagvalue(doc, tagname, attrib=None):
+    '''Return value for tag
+    A specific attribute may also be given,
+    in the form "attrib=value"
+    '''
+
+    if attrib is None:
+        # return value of tag
+        tags = doc.documentElement.getElementsByTagName(tagname)
+        if len(tags) >= 1:
+            return tags[0].childNodes[0].data
+
+    else:
+        # return value of tag where attrib is set
+        attr, attr_value = attrib.split('=', 1)
+
+        for tag in doc.documentElement.getElementsByTagName(tagname):
+            if (tag.hasAttribute(attr) and
+                tag.getAttribute(attr) == attr_value):
+                return tag.childNodes[0].data
+
+    # tag not found
+    return None
+
+
 
 
 def get_latest_version():
