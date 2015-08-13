@@ -13,6 +13,10 @@
 import os
 import sys
 
+# Note: the release datetime should be set slightly in the future
+# in regards to when the release tag is made in git
+# For example, the next (half) hour
+# This is so that synctool --check-update will work correctly
 VERSION = '6.3-beta'
 RELEASE_DATETIME = '2015-08-12T22:20:00'
 

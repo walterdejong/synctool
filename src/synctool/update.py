@@ -14,9 +14,7 @@ import os
 import sys
 import datetime
 import urllib2
-import hashlib
-import xml.parsers
-import xml.dom.minidom
+import json
 
 from synctool.lib import verbose, error, stdout
 import synctool.param
@@ -25,10 +23,7 @@ import synctool.param
 class ReleaseInfo(object):
     '''holds release info'''
 
-    LATEST_XML = 'https://walterdejong.github.io/synctool/latest.xml'
-
-    # put a limit on how much data we will read at the most
-    DATA_LIMIT = 4096
+    TAGS_URL = 'https://api.github.com/repos/walterdejong/synctool/tags'
 
     def __init__(self):
         '''initialize instance'''
@@ -36,101 +31,100 @@ class ReleaseInfo(object):
         self.version = None
         self.datetime = None
         self.url = None
-        self.sha512sum = None
 
-    def load(self, url=LATEST_XML):
-        '''load release info from URL
+    def load(self):
+        '''load release info from github
         Returns True on success
         '''
 
-        verbose('loading URL %s' % url)
-        try:
-            # can not use 'with' statement with urlopen()..?
-            web = urllib2.urlopen(url)
-        except urllib2.HTTPError as err:
-            error('webserver at %s: %u %s' % (url, err.code, err.msg))
-            return False
-
-        except urllib2.URLError as err:
-            error('failed to access %s: %u %s' % (url, err.code, err.msg))
-            return False
-
-        except IOError as err:
-            error('failed to access %s: %s' % (url, err.strerror))
+        tags = github_api(ReleaseInfo.TAGS_URL)
+        if tags is None:
+            # error message already printed
             return False
 
         try:
-            data = web.read(ReleaseInfo.DATA_LIMIT)
-        finally:
-            web.close()
-
-        if not data or len(data) < 10:
-            error('failed to access %s' % url)
+            self.version = tags[0]['name']
+            self.url = tags[0]['tarball_url']
+        except (IndexError, KeyError, TypeError):
+            error('JSON data format error')
             return False
 
-        return self.parse(data)
+        # go find the date of the commit for this tag
+        try:
+            url = tags[0]['commit']['url']
+        except (IndexError, KeyError, TypeError):
+            error('JSON data format error')
+            return False
 
-    def parse(self, data):
-        '''Parse XML data
-        Returns True on success
-        '''
+        # get commit metadata via GitHub API
+        commit = github_api(url)
+        if commit is None:
+            # error already printed
+            return False
 
         try:
-            doc = xml.dom.minidom.parseString(data)
-        except xml.parsers.expat.ExpatError:
-            error('syntax error in XML data')
+            date_str = commit['commit']['committer']['date']
+        except (KeyError, TypeError):
+            error('JSON data format error')
             return False
 
-        self.version = xml_tagvalue(doc, 'version')
-        self.datetime = xml_tagvalue(doc, 'datetime')
-        self.url = xml_tagvalue(doc, 'url')
-        self.sha512sum = xml_tagvalue(doc, 'checksum', 'type=sha512')
+        # try parse the date string
+        # unfortunately, the %Z format specifier is very badly
+        # supported by Python (ie. it doesn't work right)
+        # so I strip off the timezone as a workaround
+        idx = date_str.find('Z')
+        if idx > -1:
+            date_str = date_str[:idx]
 
-        # convert datetime object
-        if self.datetime is not None:
-            try:
-                self.datetime = datetime.datetime.strptime(self.datetime,
-                                                          '%Y-%m-%dT%H:%M:%S')
-            except ValueError:
-                error('invalid datetime format in XML data')
-                return False
-
-        if (self.version is None or self.datetime is None or
-            self.url is None or self.sha512sum is None):
-            error('missing tags in XML data')
+        try:
+            self.datetime = datetime.datetime.strptime(date_str,
+                                                       '%Y-%m-%dT%H:%M:%S')
+        except ValueError:
+            error("datetime format error: '%s'" % date_str)
             return False
 
+        verbose('info.version = %s' % self.version)
+        verbose('info.datetime = %s' % str(self.datetime))
+        verbose('info.url = %s' % self.url)
         return True
 
 
-def xml_tagvalue(doc, tagname, attrib=None):
-    '''Return value for tag
-    A specific attribute may also be given,
-    in the form "attrib=value"
+def github_api(url):
+    '''Access GitHub API via URL
+    Returns data (list or dict) depending on GitHub API function
+    or None on error
     '''
 
-    if attrib is None:
-        # return value of tag
-        tags = doc.documentElement.getElementsByTagName(tagname)
-        if len(tags) >= 1:
-            return tags[0].childNodes[0].data
+    verbose('loading URL %s' % url)
+    try:
+        # can not use 'with' statement with urlopen()..?
+        web = urllib2.urlopen(url)
+    except urllib2.HTTPError as err:
+        error('webserver at %s: %u %s' % (url, err.code, err.msg))
+        return None
 
-    else:
-        # return value of tag where attrib is set
-        attr, attr_value = attrib.split('=', 1)
+    except urllib2.URLError as err:
+        error('failed to access %s: %u %s' % (url, err.code, err.msg))
+        return None
 
-        for tag in doc.documentElement.getElementsByTagName(tagname):
-            if (tag.hasAttribute(attr) and
-                tag.getAttribute(attr) == attr_value):
-                return tag.childNodes[0].data
+    except IOError as err:
+        error('failed to access %s: %s' % (url, err.strerror))
+        return None
 
-    # tag not found
-    return None
+    try:
+        # parse JSON data at URL
+        data = json.load(web)
+    finally:
+        web.close()
+
+    # this may be a list or a dict
+    # don't know and don't care at this point
+    return data
 
 
 def check():
-    '''check for newer version on the website
-    It does this by downloading the latest.xml versioning file
+    '''check for newer version
+    It does this by looking at releases at GitHub
     Returns True if a newer version is available
     '''
 
@@ -142,16 +136,22 @@ def check():
     my_time = datetime.datetime.strptime(synctool.param.RELEASE_DATETIME,
                                          '%Y-%m-%dT%H:%M:%S')
     if info.datetime <= my_time:
-        stdout('You are running the latest version of synctool')
+        stdout('You are running the latest release of synctool')
         return False
 
-    stdout('A newer version of synctool is available: '
-           'version %s' % info.version)
+    stdout('A newer version is available: %s' % info.version)
+    stdout('released %s' % info.datetime)
     return True
 
 
 def make_local_filename_for_version(version):
     '''make filename for the downloaded synctool-x.y.tar.gz'''
+
+    # strip tag naming scheme lead
+    if version[:1] == 'v':
+        version = version[1:]
+    elif version[:9] == 'synctool-':
+        version = version[9:]
 
     filename = 'synctool-%s.tar.gz' % version
 
@@ -159,13 +159,12 @@ def make_local_filename_for_version(version):
         return filename
 
     # file already exists, add sequence number
-    n = 2
+    n = 0
     while True:
+        n += 1
         filename = 'synctool-%s(%d).tar.gz' % (version, n)
         if not os.path.isfile(filename):
             return filename
-
-        n += 1
 
 
 def print_progress(filename, totalsize, current_size):
@@ -189,7 +188,6 @@ def download():
         # error message already printed
         return False
 
-    # FIXME improve this; use filename from url
     download_filename = make_local_filename_for_version(info.version)
     download_bytes = 0
     try:
@@ -206,13 +204,11 @@ def download():
         error('failed to access %s: %s' % (info.url, err.strerror))
         return False
 
-    # compute checksum of downloaded file data
-    checksum = hashlib.sha512()
     try:
         # get file size: Content-Length
         try:
             totalsize = int(web.info().getheaders('Content-Length')[0])
-        except (ValueError, KeyError):
+        except (ValueError, KeyError, IndexError):
             error('invalid response from webserver at %s' % info.url)
             return False
 
@@ -237,7 +233,6 @@ def download():
                 print_progress(download_filename, totalsize, download_bytes)
 
                 f.write(data)
-                checksum.update(data)
     finally:
         web.close()
 
@@ -248,11 +243,6 @@ def download():
 
     download_bytes += 100    # force 100% in the progress counter
     print_progress(download_filename, totalsize, download_bytes)
-
-    if checksum.hexdigest() != info.sha512sum:
-        error('checksum failed for %s' % download_filename)
-        return False
-
     return True
 
 # EOB
