@@ -361,6 +361,12 @@ def config_syslogging(arr, configfile, lineno):
                                                        configfile, lineno)
     return err
 
+def config_sync_times(arr, configfile, lineno):
+    '''parse keyword: sync_times'''
+
+    (err, synctool.param.SYNC_TIMES) = _config_boolean('sync_times', arr[1],
+                                                       configfile, lineno)
+    return err
 
 def config_ignore_dotfiles(arr, configfile, lineno):
     '''parse keyword: ignore_dotfiles'''

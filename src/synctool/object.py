@@ -177,6 +177,18 @@ class VNode(object):
                                                           err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'utime %s' % self.name)
 
+    def copy_stat(self):
+        '''set access and mod times'''
+
+        if not synctool.lib.DRY_RUN and synctool.param.SYNC_TIMES:
+            try:
+                verbose('copystat: %s => %s' % (self.src_path, self.name))
+                shutil.copystat(self.src_path, self.name)
+            except OSError as err:
+                error('failed to set utime on %s : %s' % (self.name,
+                                                          err.strerror))
+                terse(synctool.lib.TERSE_FAIL, 'utime %s' % self.name)
+
 
 class VNodeFile(VNode):
     '''vnode for a regular file'''
@@ -280,6 +292,10 @@ class VNodeFile(VNode):
             try:
                 # copy file
                 shutil.copy(self.src_path, self.name)
+
+                if synctool.param.SYNC_TIMES:
+                    shutil.copystat(self.src_path, self.name)
+
             except IOError as err:
                 error('failed to copy %s to %s: %s' %
                       (prettypath(self.src_path), self.name, err.strerror))
@@ -614,6 +630,7 @@ class SyncObject(object):
     FIX_UPDATE = 3
     FIX_OWNER = 4
     FIX_MODE = 8    # this is actually a bit
+    FIX_TIME = 16    # this is actually a bit
 
     def __init__(self, src_name, dest_name, ov_type=0):
         '''src_name is simple filename without leading path
@@ -681,7 +698,7 @@ class SyncObject(object):
             log('updating %s' % self.dest_path)
             return SyncObject.FIX_UPDATE
 
-        # check ownership and permissions
+        # check ownership and permissions and time
         # rectify if needed
         fix_action = 0
         if ((self.src_stat.uid != self.dest_stat.uid) or
@@ -699,6 +716,17 @@ class SyncObject(object):
                                              self.src_stat.ascii_gid(),
                                              self.dest_path))
             fix_action = SyncObject.FIX_OWNER
+
+        if synctool.param.SYNC_TIMES and self.src_stat.is_file():
+
+            self.src_stattime = os.lstat(self.src_path)
+            self.dest_stattime = os.lstat(self.dest_path)
+
+            if self.src_stattime.st_mtime != self.dest_stattime.st_mtime:
+                stdout('%s has wrong timestamp' % (self.dest_path))
+                terse(synctool.lib.TERSE_MODE, '%s has wrong timestamp' % (self.dest_path))
+
+                fix_action |= SyncObject.FIX_TIME
 
         if self.src_stat.mode != self.dest_stat.mode:
             stdout('%s should have mode %04o, but has %04o' %
@@ -755,6 +783,10 @@ class SyncObject(object):
             log('set mode %04o %s' % (self.src_stat.mode & 07777,
                                       self.dest_path))
             vnode.set_permissions()
+
+        if (fix_action & SyncObject.FIX_TIME) and self.src_stat.is_file():
+            log('set time %s' % (self.dest_path))
+            vnode.copy_stat()
 
         # run .post script, if needed
         # Note: for dirs, it is run from overlay._walk_subtree()
@@ -860,6 +892,7 @@ class SyncObject(object):
 
         # error, can not handle file type of src_path
         return None
+
 
     def check_purge_timestamp(self):
         '''check timestamp between src and dest
