@@ -722,7 +722,7 @@ class SyncObject(object):
             self.src_stattime = os.lstat(self.src_path)
             self.dest_stattime = os.lstat(self.dest_path)
 
-            if self.src_stattime.st_mtime != self.dest_stattime.st_mtime:
+            if int(self.src_stattime.st_mtime) != int(self.dest_stattime.st_mtime):
                 stdout('%s has wrong timestamp' % (self.dest_path))
                 terse(synctool.lib.TERSE_MODE, '%s has wrong timestamp' % (self.dest_path))
 
