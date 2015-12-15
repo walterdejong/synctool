@@ -115,14 +115,14 @@ synctool's configuration file.
 
 * `sync_times <yes/no>`
 
-  Synchronize timestamps of files. every file on the node
+  Synchronize timestamps of files. Every file on the node
   will get the timestamp identical to the file in the overlay.
   Template generated files will get the timestamp of the template.
 
-  This setting only works for files. 
+  This setting only works for files.
   No timestamps of links, directories, blockdevices etc. are managed.
 
-  The default is: `no` to be in compliance how synctool used to work.
+  The default is: `no`.
 
 * `diff_cmd <diff UNIX command>`
 
