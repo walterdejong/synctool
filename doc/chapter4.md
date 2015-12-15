@@ -113,6 +113,17 @@ synctool's configuration file.
   Log any updates to syslog. Nothing is logged for dry runs.
   The default is: `yes`.
 
+* `sync_times <yes/no>`
+
+  Synchronize timestamps of files. every file on the node
+  will get the timestamp identical to the file in the overlay.
+  Template generated files will get the timestamp of the template.
+
+  This setting only works for files. 
+  No timestamps of links, directories, blockdevices etc. are managed.
+
+  The default is: `no` to be in compliance how synctool used to work.
+
 * `diff_cmd <diff UNIX command>`
 
   Give the command and arguments to execute `diff`.

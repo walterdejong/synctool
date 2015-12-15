@@ -16,6 +16,7 @@ import time
 import shlex
 import getopt
 import subprocess
+import shutil
 
 import synctool.config
 import synctool.lib
@@ -67,9 +68,15 @@ def generate_template(obj, post_dict):
     # add most important extension
     newname += '._' + synctool.param.NODENAME
 
+    verbose('generating template as %s' % newname)
+
     statbuf = synctool.syncstat.SyncStat(newname)
     if statbuf.exists():
         verbose('template destination %s already exists' % newname)
+
+        if synctool.param.SYNC_TIMES:
+            # copy source timestamps of template first
+            shutil.copystat(obj.src_path, newname)
 
         # modify the object; set new src and dest filenames
         # later, visit() will call obj.make(), which will make full paths
@@ -152,6 +159,11 @@ def generate_template(obj, post_dict):
 
     if have_error:
         return False
+
+    if synctool.param.SYNC_TIMES:
+        # copy source timestamps of template first
+        shutil.copystat(obj.src_path, newname)
+        verbose('copying timestamp %s => %s' % (obj.src_path, newname))
 
     # modify the object; set new src and dest filenames
     # later, visit() will call obj.make(), which will make full paths
