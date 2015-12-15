@@ -24,8 +24,7 @@ class SyncStat(object):
     # NB. the reasoning behind keeping a subset of the statbuf is that
     # a subset costs less memory than the real thing
     # However it may be possible that the Python object takes more
-    # But then again, this object should take less than the posix.stat_result
-    # Python object
+    # But then again, should take less than the posix.stat_result Pyobject
     # Also note how I left device files (major, minor) out, they are so rare
     # that they get special treatment in object.py
 
@@ -33,6 +32,7 @@ class SyncStat(object):
         '''initialize instance'''
 
         self.entry_exists = False
+        # FIXME include atime, mtime
         self.mode = self.uid = self.gid = self.size = None
         self.stat(path)
 
@@ -50,6 +50,7 @@ class SyncStat(object):
 
         if not path:
             self.entry_exists = False
+            # FIXME include atime, mtime
             self.mode = self.uid = self.gid = self.size = None
             return
 
@@ -65,15 +66,19 @@ class SyncStat(object):
                 error('stat(%s) failed: %s' % (path, err.strerror))
 
             self.entry_exists = False
+            # FIXME include atime, mtime
             self.mode = self.uid = self.gid = self.size = None
 
         else:
             self.entry_exists = True
-
             self.mode = statbuf.st_mode
             self.uid = statbuf.st_uid
             self.gid = statbuf.st_gid
             self.size = statbuf.st_size
+            # FIXME include atime, mtime
+            # FIXME statbuf times are float values..!
+            # FIXME This may give problems when utime() rounds/truncs to int
+            # FIXME So we should always already round/trunc to int
 
     def is_dir(self):
         '''Returns True if it's a directory'''
