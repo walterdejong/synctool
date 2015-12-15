@@ -127,6 +127,7 @@ def read_config_file(configfile):
                 errors += 1
                 continue
 
+            # FIXME make it more Pythonic by using exceptions
             errors += func(arr, configfile, lineno)
 
     return errors
@@ -189,32 +190,32 @@ def _config_boolean(param, value, configfile, lineno):
     '''a boolean parameter can be "true|false|yes|no|on|off|1|0"'''
 
     if not check_definition(param, configfile, lineno):
-        return (1, False)
+        return 1, False
 
     value = value.lower()
     if value in synctool.param.BOOLEAN_VALUE_TRUE:
-        return (0, True)
+        return 0, True
 
     elif value in synctool.param.BOOLEAN_VALUE_FALSE:
-        return (0, False)
+        return 0, False
 
     stderr('%s:%d: invalid argument for %s' % (configfile, lineno, param))
-    return (1, False)
+    return 1, False
 
 
 def _config_integer(param, value, configfile, lineno, radix=10):
     '''get numeric integer value'''
 
     if not check_definition(param, configfile, lineno):
-        return (1, 0)
+        return 1, 0
 
     try:
         n = int(value, radix)
     except ValueError:
         stderr('%s:%d: invalid argument for %s' % (configfile, lineno, param))
-        return (1, 0)
+        return 1, 0
 
-    return (0, n)
+    return 0, n
 
 
 def _config_color_variant(param, value, configfile, lineno):
@@ -236,19 +237,19 @@ def _config_command(param, arr, short_cmd, configfile, lineno):
     '''helper for configuring rsync_cmd, ssh_cmd, synctool_cmd, etc.'''
 
     if not check_definition(param, configfile, lineno):
-        return (1, None)
+        return 1, None
 
     if len(arr) < 2:
         stderr("%s:%d: '%s' requires an argument: "
                "the '%s' command, and any appropriate switches" %
                (configfile, lineno, param, short_cmd))
-        return (1, None)
+        return 1, None
 
     # This function does not check the existence of the command
     # That is deferred until later; the client only runs diff_cmd,
     # while the master runs a bunch of commands
 
-    return (0, synctool.lib.prepare_path(' '.join(arr[1:])))
+    return 0, synctool.lib.prepare_path(' '.join(arr[1:]))
 
 
 def spellcheck(name):
@@ -333,7 +334,7 @@ def config_ssh_control_persist(arr, configfile, lineno):
 def config_require_extension(arr, configfile, lineno):
     '''parse keyword: require_extension'''
 
-    (err, synctool.param.REQUIRE_EXTENSION) = _config_boolean(
+    err, synctool.param.REQUIRE_EXTENSION = _config_boolean(
                             'require_extension', arr[1], configfile, lineno)
     return err
 
@@ -341,15 +342,15 @@ def config_require_extension(arr, configfile, lineno):
 def config_full_path(arr, configfile, lineno):
     '''parse keyword: full_path'''
 
-    (err, synctool.param.FULL_PATH) = _config_boolean('full_path', arr[1],
-                                                      configfile, lineno)
+    err, synctool.param.FULL_PATH = _config_boolean('full_path', arr[1],
+                                                    configfile, lineno)
     return err
 
 
 def config_backup_copies(arr, configfile, lineno):
     '''parse keyword: backup_copies'''
 
-    (err, synctool.param.BACKUP_COPIES) = _config_boolean('backup_copies',
+    err, synctool.param.BACKUP_COPIES = _config_boolean('backup_copies',
                                                 arr[1], configfile, lineno)
     return err
 
@@ -357,21 +358,21 @@ def config_backup_copies(arr, configfile, lineno):
 def config_syslogging(arr, configfile, lineno):
     '''parse keyword: syslogging'''
 
-    (err, synctool.param.SYSLOGGING) = _config_boolean('syslogging', arr[1],
-                                                       configfile, lineno)
+    err, synctool.param.SYSLOGGING = _config_boolean('syslogging', arr[1],
+                                                     configfile, lineno)
     return err
 
 def config_sync_times(arr, configfile, lineno):
     '''parse keyword: sync_times'''
 
-    (err, synctool.param.SYNC_TIMES) = _config_boolean('sync_times', arr[1],
-                                                       configfile, lineno)
+    err, synctool.param.SYNC_TIMES = _config_boolean('sync_times', arr[1],
+                                                     configfile, lineno)
     return err
 
 def config_ignore_dotfiles(arr, configfile, lineno):
     '''parse keyword: ignore_dotfiles'''
 
-    (err, synctool.param.IGNORE_DOTFILES) = _config_boolean('ignore_dotfiles',
+    err, synctool.param.IGNORE_DOTFILES = _config_boolean('ignore_dotfiles',
                                                 arr[1], configfile, lineno)
     return err
 
@@ -379,7 +380,7 @@ def config_ignore_dotfiles(arr, configfile, lineno):
 def config_ignore_dotdirs(arr, configfile, lineno):
     '''parse keyword: ignore_dotdirs'''
 
-    (err, synctool.param.IGNORE_DOTDIRS) = _config_boolean('ignore_dotdirs',
+    err, synctool.param.IGNORE_DOTDIRS = _config_boolean('ignore_dotdirs',
                                                 arr[1], configfile, lineno)
     return err
 
@@ -408,23 +409,23 @@ def config_ignore(arr, configfile, lineno):
 def config_terse(arr, configfile, lineno):
     '''parse keyword: terse'''
 
-    (err, synctool.param.TERSE) = _config_boolean('terse', arr[1], configfile,
-                                                  lineno)
+    err, synctool.param.TERSE = _config_boolean('terse', arr[1], configfile,
+                                                lineno)
     return err
 
 
 def config_colorize(arr, configfile, lineno):
     '''parse keyword: colorize'''
 
-    (err, synctool.param.COLORIZE) = _config_boolean('colorize', arr[1],
-                                                     configfile, lineno)
+    err, synctool.param.COLORIZE = _config_boolean('colorize', arr[1],
+                                                   configfile, lineno)
     return err
 
 
 def config_colorize_full_line(arr, configfile, lineno):
     '''parse keyword: colorize_full_line'''
 
-    (err, synctool.param.COLORIZE_FULL_LINE) = _config_boolean(
+    err, synctool.param.COLORIZE_FULL_LINE = _config_boolean(
                             'colorize_full_line', arr[1], configfile, lineno)
     return err
 
@@ -433,7 +434,7 @@ def config_colorize_full_line(arr, configfile, lineno):
 def config_colorize_full_lines(arr, configfile, lineno):
     '''parse keyword: colorize_full_lines'''
 
-    (err, synctool.param.COLORIZE_FULL_LINE) = _config_boolean(
+    err, synctool.param.COLORIZE_FULL_LINE = _config_boolean(
                             'colorize_full_line', arr[1], configfile, lineno)
     return err
 
@@ -441,7 +442,7 @@ def config_colorize_full_lines(arr, configfile, lineno):
 def config_colorize_bright(arr, configfile, lineno):
     '''parse keyword: colorize_bright'''
 
-    (err, synctool.param.COLORIZE_BRIGHT) = _config_boolean(
+    err, synctool.param.COLORIZE_BRIGHT = _config_boolean(
                                 'colorize_bright', arr[1], configfile, lineno)
     return err
 
@@ -449,7 +450,7 @@ def config_colorize_bright(arr, configfile, lineno):
 def config_colorize_bold(arr, configfile, lineno):
     '''parse keyword: colorize_bold'''
 
-    (err, synctool.param.COLORIZE_BRIGHT) = _config_boolean('colorize_bold',
+    err, synctool.param.COLORIZE_BRIGHT = _config_boolean('colorize_bold',
                                                 arr[1], configfile, lineno)
     return err
 
@@ -965,24 +966,24 @@ def config_ignore_group(arr, configfile, lineno):
 def config_diff_cmd(arr, configfile, lineno):
     '''parse keyword: diff_cmd'''
 
-    (err, synctool.param.DIFF_CMD) = _config_command('diff_cmd', arr, 'diff',
-                                                     configfile, lineno)
+    err, synctool.param.DIFF_CMD = _config_command('diff_cmd', arr, 'diff',
+                                                   configfile, lineno)
     return err
 
 
 def config_ping_cmd(arr, configfile, lineno):
     '''parse keyword: ping_cmd'''
 
-    (err, synctool.param.PING_CMD) = _config_command('ping_cmd', arr, 'ping',
-                                                     configfile, lineno)
+    err, synctool.param.PING_CMD = _config_command('ping_cmd', arr, 'ping',
+                                                   configfile, lineno)
     return err
 
 
 def config_ssh_cmd(arr, configfile, lineno):
     '''parse keyword: ssh_cmd'''
 
-    (err, synctool.param.SSH_CMD) = _config_command('ssh_cmd', arr, 'ssh',
-                                                    configfile, lineno)
+    err, synctool.param.SSH_CMD = _config_command('ssh_cmd', arr, 'ssh',
+                                                  configfile, lineno)
     return err
 
 
@@ -993,35 +994,35 @@ def config_rsync_cmd(arr, configfile, lineno):
     # and strip_trailing_slashes() may break rsync paths
     # but these are usually not used in rsync_cmd
 
-    (err, synctool.param.RSYNC_CMD) = _config_command('rsync_cmd', arr,
-                                                      'rsync', configfile,
-                                                      lineno)
+    err, synctool.param.RSYNC_CMD = _config_command('rsync_cmd', arr,
+                                                    'rsync', configfile,
+                                                    lineno)
     return err
 
 
 def config_synctool_cmd(arr, configfile, lineno):
     '''parse keyword: synctool_cmd'''
 
-    (err, synctool.param.SYNCTOOL_CMD) = _config_command('synctool_cmd', arr,
-                                                         'synctool.py',
-                                                         configfile, lineno)
+    err, synctool.param.SYNCTOOL_CMD = _config_command('synctool_cmd', arr,
+                                                       'synctool.py',
+                                                       configfile, lineno)
     return err
 
 
 def config_pkg_cmd(arr, configfile, lineno):
     '''parse keyword: pkg_cmd'''
 
-    (err, synctool.param.PKG_CMD) = _config_command('pkg_cmd', arr,
-                                                    'synctool_pkg.py',
-                                                    configfile, lineno)
+    err, synctool.param.PKG_CMD = _config_command('pkg_cmd', arr,
+                                                  'synctool_pkg.py',
+                                                  configfile, lineno)
     return err
 
 
 def config_num_proc(arr, configfile, lineno):
     '''parse keyword: num_proc'''
 
-    (err, synctool.param.NUM_PROC) = _config_integer('num_proc', arr[1],
-                                                     configfile, lineno)
+    err, synctool.param.NUM_PROC = _config_integer('num_proc', arr[1],
+                                                   configfile, lineno)
 
     if not err and synctool.param.NUM_PROC < 1:
         stderr("%s:%d: invalid argument for num_proc" % (configfile, lineno))
