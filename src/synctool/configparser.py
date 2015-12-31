@@ -107,7 +107,7 @@ def read_config_file(configfile):
 
             arr = line.split()
 
-            line = ''    # <-- line is being reset here;
+            line = ''   # <-- line is being reset here;
                         # use arr[] from here on
 
             if len(arr) <= 1:
@@ -127,7 +127,6 @@ def read_config_file(configfile):
                 errors += 1
                 continue
 
-            # FIXME make it more Pythonic by using exceptions
             errors += func(arr, configfile, lineno)
 
     return errors
