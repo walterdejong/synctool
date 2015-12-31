@@ -12,7 +12,7 @@
 
 import os
 import stat
-import time
+import datetime
 import shutil
 import hashlib
 
@@ -139,6 +139,8 @@ class VNode(object):
         self.create()
         self.set_owner()
         self.set_permissions()
+        if synctool.param.SYNC_TIMES:
+            self.set_times()
 
     def set_owner(self):
         '''set ownership equal to source'''
@@ -170,32 +172,22 @@ class VNode(object):
                       (self.stat.mode & 07777, self.name, err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'mode %s' % self.name)
 
-    def set_times(self, atime, mtime):
+    def set_times(self):
         '''set access and modification times'''
 
-        # only used for purge --single
-
-        # FIXME change to: def set_times(self): set equal to source
-        # FIXME agree to copy mtime, but atime should be kept intact?
-        # FIXME change set_times() to set_mtime() ?
-
+        # only mtime is shown
+        dt = datetime.datetime.fromtimestamp(self.stat.mtime)
+        time_str = dt.strftime('%Y-%m-%d %H:%M:%S')
+        verbose(dryrun_msg('  os.utime(%s, %s)' % (self.name, time_str)))
+        time_str = dt.strftime('%Y%m%d%H%M.%S')
+        unix_out('touch -t %s %s' % (time_str, self.name))
         if not synctool.lib.DRY_RUN:
             try:
-                os.utime(self.name, (atime, mtime))
+                os.utime(self.name, (self.stat.atime, self.stat.mtime))
             except OSError as err:
                 error('failed to set utime on %s : %s' % (self.name,
                                                           err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'utime %s' % self.name)
-
-    def copy_stat(self):
-        '''set access and mod times'''
-
-        # FIXME change this to os.utime()
-        # FIXME but see above ... method set_times()
-        # FIXME agree to copy mtime, but atime should be kept intact?
-
-        # only makes sense for VNodeFile objects at the moment
-        raise RuntimeError('pure virtual function called')
 
 
 
@@ -296,34 +288,15 @@ class VNodeFile(VNode):
 
         verbose(dryrun_msg('  copy %s %s' % (self.src_path, self.name)))
         unix_out('cp %s %s' % (self.src_path, self.name))
-
         if not synctool.lib.DRY_RUN:
             try:
                 # copy file
-                # FIXME use shutil.copy2() or ...
                 shutil.copy(self.src_path, self.name)
-                if synctool.param.SYNC_TIMES:
-                    shutil.copystat(self.src_path, self.name)
             except (OSError, IOError) as err:
                 error('failed to copy %s to %s: %s' %
                       (prettypath(self.src_path), self.name, err.strerror))
                 terse(synctool.lib.TERSE_FAIL, self.name)
 
-    def copy_stat(self):
-        '''set access and mod times'''
-
-        # FIXME change this to os.utime()
-        # FIXME but see above ... method VNode.set_times()
-        # FIXME agree to copy mtime, but atime should be kept intact?
-
-        if not synctool.lib.DRY_RUN and synctool.param.SYNC_TIMES:
-            try:
-                verbose('copystat: %s => %s' % (self.src_path, self.name))
-                shutil.copystat(self.src_path, self.name)
-            except OSError as err:
-                error('failed to set utime on %s : %s' % (self.name,
-                                                          err.strerror))
-                terse(synctool.lib.TERSE_FAIL, 'utime %s' % self.name)
 
 
 class VNodeDir(VNode):
@@ -351,7 +324,6 @@ class VNodeDir(VNode):
         verbose(dryrun_msg('  os.mkdir(%s)' % self.name))
         unix_out('mkdir %s' % self.name)
         terse(synctool.lib.TERSE_MKDIR, self.name)
-
         if not synctool.lib.DRY_RUN:
             try:
                 os.mkdir(self.name, self.stat.mode & 07777)
@@ -371,7 +343,6 @@ class VNodeDir(VNode):
         stdout('%sremoving %s' % (not_str, self.name + os.sep))
         unix_out('rmdir %s' % self.name)
         terse(synctool.lib.TERSE_DELETE, self.name + os.sep)
-
         if not synctool.lib.DRY_RUN:
             verbose('  os.rmdir(%s)' % self.name)
             try:
@@ -394,6 +365,12 @@ class VNodeDir(VNode):
                 # refuse to delete dir, just move it aside
                 verbose('refusing to delete directory %s' % self.name)
                 self.move_saved()
+
+    def set_times(self):
+        '''set access and modification times'''
+
+        # Note: should we raise RuntimeError here?
+        pass
 
 
 
@@ -439,7 +416,6 @@ class VNodeLink(VNode):
                                                      self.name)))
         unix_out('ln -s %s %s' % (self.oldpath, self.name))
         terse(synctool.lib.TERSE_LINK, self.name)
-
         if not synctool.lib.DRY_RUN:
             try:
                 os.symlink(self.oldpath, self.name)
@@ -487,7 +463,12 @@ class VNodeLink(VNode):
                       (self.stat.mode & 07777, self.name, err.strerror))
                 terse(synctool.lib.TERSE_FAIL, 'mode %s' % self.name)
 
-    # FIXME add VNodeLink.set_times() -- which is a no-op
+    def set_times(self):
+        '''set access and modification times'''
+
+        # Note: should we raise RuntimeError here?
+        pass
+
 
 
 class VNodeFifo(VNode):
@@ -509,7 +490,6 @@ class VNodeFifo(VNode):
         verbose(dryrun_msg('  os.mkfifo(%s)' % self.name))
         unix_out('mkfifo %s' % self.name)
         terse(synctool.lib.TERSE_NEW, self.name)
-
         if not synctool.lib.DRY_RUN:
             try:
                 os.mkfifo(self.name, self.stat.mode & 0777)
@@ -566,12 +546,10 @@ class VNodeChrDev(VNode):
 
         major = os.major(self.src_stat.st_rdev)
         minor = os.minor(self.src_stat.st_rdev)
-
         verbose(dryrun_msg('  os.mknod(%s, CHR %d,%d)' % (self.name, major,
                                                           minor)))
         unix_out('mknod %s c %d %d' % (self.name, major, minor))
         terse(synctool.lib.TERSE_NEW, self.name)
-
         if not synctool.lib.DRY_RUN:
             try:
                 os.mknod(self.name,
@@ -630,17 +608,15 @@ class VNodeBlkDev(VNode):
 
         major = os.major(self.src_stat.st_rdev)
         minor = os.minor(self.src_stat.st_rdev)
-
         verbose(dryrun_msg('  os.mknod(%s, BLK %d,%d)' % (self.name, major,
                                                           minor)))
         unix_out('mknod %s b %d %d' % (self.name, major, minor))
         terse(synctool.lib.TERSE_NEW, self.name)
-
         if not synctool.lib.DRY_RUN:
             try:
                 os.mknod(self.name,
                          (self.src_stat.st_mode & 0777) | stat.S_IFBLK,
-                         os.makedev(major, minor))
+                          os.makedev(major, minor))
             except OSError as err:
                 error('failed to create device %s : %s' % (self.name,
                                                            err.strerror))
@@ -756,15 +732,14 @@ class SyncObject(object):
                                             self.dest_path))
             fix_action |= SyncObject.FIX_MODE
 
-        # FIXME check times for other objects too, but
-        # FIXME not for symlinks
-        # FIXME not for directories (change when you add files ...)
-        if synctool.param.SYNC_TIMES and self.src_stat.is_file():
-            if self.src_stat.mtime != self.dest_stat.mtime:
-                stdout('%s has wrong timestamp' % self.dest_path)
-                terse(synctool.lib.TERSE_MODE, ('%s has wrong timestamp' %
-                                                self.dest_path))
-                fix_action |= SyncObject.FIX_TIME
+        # check times, but not for symlinks, directories
+        if (synctool.param.SYNC_TIMES and
+            not self.src_stat.is_link() and not self.src_stat.is_dir() and
+            self.src_stat.mtime != self.dest_stat.mtime):
+            stdout('%s has wrong timestamp' % self.dest_path)
+            terse(synctool.lib.TERSE_MODE, ('%s has wrong timestamp' %
+                                            self.dest_path))
+            fix_action |= SyncObject.FIX_TIME
 
         return fix_action
 
@@ -779,7 +754,7 @@ class SyncObject(object):
 
         vnode = self.vnode_obj()
 
-        # Note that .post scripts are not run for owner/mode changes
+        # Note that .post scripts are not run for owner/mode/time changes
 
         need_run = False
 
@@ -813,10 +788,11 @@ class SyncObject(object):
                                       self.dest_path))
             vnode.set_permissions()
 
-        if (fix_action & SyncObject.FIX_TIME) and self.src_stat.is_file():
+        if fix_action & SyncObject.FIX_TIME:
             log('set time %s' % self.dest_path)
-            # FIXME use vnode.set_times()
-            vnode.copy_stat()
+            # leave the atime intact
+            vnode.stat.atime = self.dest_stat.atime
+            vnode.set_times()
 
         # run .post script, if needed
         # Note: for dirs, it is run from overlay._walk_subtree()
@@ -936,19 +912,17 @@ class SyncObject(object):
             # this was already handled by check() and fix()
             return True
 
-        # FIXME set_times() should not be called for symlinks
-        if self.src_stat.mtime != self.dest_stat.mtime:
+        # set times, but not for symlinks, directories
+        if (not self.src_stat.is_link() and not self.src_stat.is_dir() and
+            self.src_stat.mtime != self.dest_stat.mtime):
             stdout('%s mismatch (only timestamp)' % self.dest_path)
             terse(synctool.lib.TERSE_WARNING,
                   '%s (only timestamp)' % self.dest_path)
 
-            verbose(dryrun_msg('  os.utime(%s, %s)'
-                               '' % (self.dest_path,
-                                     time.ctime(self.src_stat.mtime))))
-            unix_out('touch -r %s %s' % (self.src_path, self.dest_path))
-
             vnode = self.vnode_obj()
-            vnode.set_times(self.dest_stat.atime, self.src_stat.mtime)
+            # leave the atime intact
+            vnode.stat.atime = self.dest_stat.atime
+            vnode.set_times()
             return False
 
         return True
