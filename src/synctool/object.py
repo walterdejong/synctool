@@ -171,7 +171,7 @@ class VNode(object):
                 terse(synctool.lib.TERSE_FAIL, 'mode %s' % self.name)
 
     def set_times(self, atime, mtime):
-        '''set access and mod times'''
+        '''set access and modification times'''
 
         # only used for purge --single
 
@@ -675,8 +675,6 @@ class SyncObject(object):
         self.dest_path = dest_name
         self.ov_type = ov_type
         self.src_stat = self.dest_stat = None
-        # FIXME take times out when SyncStat has times members
-        self.src_stattime = self.dest_stattime = None
         self.fix_action = SyncObject.FIX_UNDEF
 
     def make(self, src_dir, dest_dir):
@@ -762,11 +760,7 @@ class SyncObject(object):
         # FIXME not for symlinks
         # FIXME not for directories (change when you add files ...)
         if synctool.param.SYNC_TIMES and self.src_stat.is_file():
-            # FIXME do not call stat() again / SyncStat should have times
-            self.src_stattime = os.lstat(self.src_path)
-            self.dest_stattime = os.lstat(self.dest_path)
-            if (int(self.src_stattime.st_mtime) !=
-                int(self.dest_stattime.st_mtime)):
+            if self.src_stat.mtime != self.dest_stat.mtime:
                 stdout('%s has wrong timestamp' % self.dest_path)
                 terse(synctool.lib.TERSE_MODE, ('%s has wrong timestamp' %
                                                 self.dest_path))
@@ -937,40 +931,24 @@ class SyncObject(object):
         # This is only used for purge/
         # check() has already determined that the files are the same
         # Now only check the timestamp ...
-        # FIXME have SyncStat time fields
-        # Note that SyncStat objects do not know the timestamps;
-        # they are not cached only to save memory
-        # So now we have to os.stat() again to get the times; it is
-        # not a big problem because this func is used for purge_single only
 
-        # src_path is under $purge/
-        # dest_path is in the filesystem
-
-        try:
-            src_stat = os.lstat(self.src_path)
-        except OSError as err:
-            error('stat(%s) failed: %s' % (self.src_path, err.strerror))
-            return False
-
-        try:
-            dest_stat = os.lstat(self.dest_path)
-        except OSError as err:
-            error('stat(%s) failed: %s' % (self.dest_path, err.strerror))
-            return False
+        if synctool.param.SYNC_TIMES:
+            # this was already handled by check() and fix()
+            return True
 
         # FIXME set_times() should not be called for symlinks
-        if src_stat.st_mtime > dest_stat.st_mtime:
+        if self.src_stat.mtime != self.dest_stat.mtime:
             stdout('%s mismatch (only timestamp)' % self.dest_path)
             terse(synctool.lib.TERSE_WARNING,
                   '%s (only timestamp)' % self.dest_path)
 
             verbose(dryrun_msg('  os.utime(%s, %s)'
                                '' % (self.dest_path,
-                                     time.ctime(src_stat.st_mtime))))
+                                     time.ctime(self.src_stat.mtime))))
             unix_out('touch -r %s %s' % (self.src_path, self.dest_path))
 
             vnode = self.vnode_obj()
-            vnode.set_times(src_stat.st_atime, src_stat.st_mtime)
+            vnode.set_times(self.dest_stat.atime, self.src_stat.mtime)
             return False
 
         return True

@@ -32,8 +32,8 @@ class SyncStat(object):
         '''initialize instance'''
 
         self.entry_exists = False
-        # FIXME include atime, mtime
         self.mode = self.uid = self.gid = self.size = None
+        self.atime = self.mtime = None
         self.stat(path)
 
     def __repr__(self):
@@ -50,8 +50,8 @@ class SyncStat(object):
 
         if not path:
             self.entry_exists = False
-            # FIXME include atime, mtime
             self.mode = self.uid = self.gid = self.size = None
+            self.atime = self.mtime = None
             return
 
         try:
@@ -66,8 +66,8 @@ class SyncStat(object):
                 error('stat(%s) failed: %s' % (path, err.strerror))
 
             self.entry_exists = False
-            # FIXME include atime, mtime
             self.mode = self.uid = self.gid = self.size = None
+            self.atime = self.mtime = None
 
         else:
             self.entry_exists = True
@@ -75,10 +75,10 @@ class SyncStat(object):
             self.uid = statbuf.st_uid
             self.gid = statbuf.st_gid
             self.size = statbuf.st_size
-            # FIXME include atime, mtime
-            # FIXME statbuf times are float values..!
-            # FIXME This may give problems when utime() rounds/truncs to int
-            # FIXME So we should always already round/trunc to int
+            # Note that statbuf times are float values (!)
+            # trunc to an integer value
+            self.atime = int(statbuf.st_atime)
+            self.mtime = int(statbuf.st_mtime)
 
     def is_dir(self):
         '''Returns True if it's a directory'''
