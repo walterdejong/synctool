@@ -20,7 +20,7 @@ class SyncPkgZypper(synctool.pkgclass.SyncPkg):
     def __init__(self):
         super(SyncPkgZypper, self).__init__()
 
-    def list(self, pkgs = None):
+    def list(self, pkgs=None):
         super(SyncPkgZypper, self).list(pkgs)
 
         cmd = 'rpm -qa'            # zypper has no 'list-installed' ?

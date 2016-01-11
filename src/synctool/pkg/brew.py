@@ -20,7 +20,7 @@ class SyncPkgBrew(synctool.pkgclass.SyncPkg):
     def __init__(self):
         super(SyncPkgBrew, self).__init__()
 
-    def list(self, pkgs = None):
+    def list(self, pkgs=None):
         super(SyncPkgBrew, self).list(pkgs)
 
         cmd = 'brew list'

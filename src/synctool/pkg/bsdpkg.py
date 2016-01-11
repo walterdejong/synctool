@@ -27,7 +27,7 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
     def __init__(self):
         super(SyncPkgBsdpkg, self).__init__()
 
-    def list(self, pkgs = None):
+    def list(self, pkgs=None):
         super(SyncPkgBsdpkg, self).list(pkgs)
 
         cmd = 'pkg_info'

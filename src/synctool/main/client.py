@@ -18,13 +18,12 @@ import getopt
 import subprocess
 import shutil
 
-import synctool.config
+from synctool import config, param
 import synctool.lib
 from synctool.lib import verbose, stdout, stderr, error, warning, terse
 from synctool.lib import unix_out, prettypath
 from synctool.main.wrapper import catch_signals
 import synctool.overlay
-import synctool.param
 import synctool.syncstat
 
 # hardcoded name because otherwise we get "synctool_client.py"
@@ -66,7 +65,7 @@ def generate_template(obj, post_dict):
     newname = os.path.join(src_dir, os.path.basename(obj.dest_path))
     template = newname + '._template'
     # add most important extension
-    newname += '._' + synctool.param.NODENAME
+    newname += '._' + param.NODENAME
 
     verbose('generating template as %s' % newname)
 
@@ -74,7 +73,7 @@ def generate_template(obj, post_dict):
     if statbuf.exists():
         verbose('template destination %s already exists' % newname)
 
-        if synctool.param.SYNC_TIMES:
+        if param.SYNC_TIMES:
             # copy source timestamps of template first
             shutil.copystat(obj.src_path, newname)
 
@@ -86,7 +85,7 @@ def generate_template(obj, post_dict):
 
     # get the .post script for the template file
     if not template in post_dict:
-        if synctool.param.TERSE:
+        if param.TERSE:
             terse(synctool.lib.TERSE_ERROR, 'no .post %s' % obj.src_path)
         else:
             error('template generator for %s not found' % obj.src_path)
@@ -104,7 +103,7 @@ def generate_template(obj, post_dict):
     try:
         os.chdir(src_dir)
     except OSError as err:
-        if synctool.param.TERSE:
+        if param.TERSE:
             terse(synctool.lib.TERSE_ERROR, 'chdir %s' % src_dir)
         else:
             error('failed to change directory to %s: %s' % (src_dir,
@@ -113,13 +112,13 @@ def generate_template(obj, post_dict):
 
     # temporarily restore original umask
     # so the script runs with the umask set by the sysadmin
-    os.umask(synctool.param.ORIG_UMASK)
+    os.umask(param.ORIG_UMASK)
 
     # run the script
     # pass template and newname as "$1" and "$2"
     cmd_arr = [generator, obj.src_path, newname]
     verbose('  os.system(%s, %s, %s)' % (prettypath(cmd_arr[0]),
-            cmd_arr[1], cmd_arr[2]))
+                                         cmd_arr[1], cmd_arr[2]))
     unix_out('# run command %s' % os.path.basename(cmd_arr[0]))
 
     have_error = False
@@ -129,7 +128,7 @@ def generate_template(obj, post_dict):
     statbuf = synctool.syncstat.SyncStat(newname)
     if not statbuf.exists():
         if not have_error:
-            if synctool.param.TERSE:
+            if param.TERSE:
                 terse(synctool.lib.TERSE_WARNING, 'no output %s' % newname)
             else:
                 warning('expected output %s was not generated' % newname)
@@ -150,7 +149,7 @@ def generate_template(obj, post_dict):
     try:
         os.chdir(cwd)
     except OSError as err:
-        if synctool.param.TERSE:
+        if param.TERSE:
             terse(synctool.lib.TERSE_ERROR, 'chdir %s' % src_dir)
         else:
             error('failed to change directory to %s: %s' % (cwd,
@@ -160,7 +159,7 @@ def generate_template(obj, post_dict):
     if have_error:
         return False
 
-    if synctool.param.SYNC_TIMES:
+    if param.SYNC_TIMES:
         # copy source timestamps of template first
         shutil.copystat(obj.src_path, newname)
         verbose('copying timestamp %s => %s' % (obj.src_path, newname))
@@ -176,13 +175,13 @@ def purge_files():
     '''run the purge function'''
 
     paths = []
-    purge_groups = os.listdir(synctool.param.PURGE_DIR)
+    purge_groups = os.listdir(param.PURGE_DIR)
 
     # find the source purge paths that we need to copy
     # scan only the group dirs that apply
-    for g in synctool.param.MY_GROUPS:
+    for g in param.MY_GROUPS:
         if g in purge_groups:
-            purge_root = os.path.join(synctool.param.PURGE_DIR, g)
+            purge_root = os.path.join(param.PURGE_DIR, g)
             if not os.path.isdir(purge_root):
                 continue
 
@@ -197,7 +196,7 @@ def purge_files():
                     # rsync --delete would destroy the whole filesystem
                     warning('cowardly refusing to purge the root directory')
                     stderr('please remove any files directly under %s/' %
-                            prettypath(purge_root))
+                           prettypath(purge_root))
                     return
 
                 # paths has (src_dir, dest_dir)
@@ -230,7 +229,7 @@ def _make_rsync_purge_cmd():
     '''
 
     # make rsync command array with command line arguments
-    cmd_rsync = shlex.split(synctool.param.RSYNC_CMD)
+    cmd_rsync = shlex.split(param.RSYNC_CMD)
     # opts is just for the 'visual aspect';
     # it is displayed when --verbose is active
     # They aren't all options, just a couple I want to show
@@ -330,7 +329,7 @@ def _overlay_callback(obj, pre_dict, post_dict):
 def overlay_files():
     '''run the overlay function'''
 
-    synctool.overlay.visit(synctool.param.OVERLAY_DIR, _overlay_callback)
+    synctool.overlay.visit(param.OVERLAY_DIR, _overlay_callback)
 
 
 def _delete_callback(obj, pre_dict, post_dict):
@@ -362,7 +361,7 @@ def _delete_callback(obj, pre_dict, post_dict):
 def delete_files():
     '''run the delete/ dir'''
 
-    synctool.overlay.visit(synctool.param.DELETE_DIR, _delete_callback)
+    synctool.overlay.visit(param.DELETE_DIR, _delete_callback)
 
 
 def _erase_saved_callback(obj, pre_dict, post_dict):
@@ -387,8 +386,8 @@ def _erase_saved_callback(obj, pre_dict, post_dict):
 def erase_saved():
     '''List and delete *.saved backup files'''
 
-    synctool.overlay.visit(synctool.param.OVERLAY_DIR, _erase_saved_callback)
-    synctool.overlay.visit(synctool.param.DELETE_DIR, _erase_saved_callback)
+    synctool.overlay.visit(param.OVERLAY_DIR, _erase_saved_callback)
+    synctool.overlay.visit(param.DELETE_DIR, _erase_saved_callback)
 
 
 def visit_purge_single(callback):
@@ -397,7 +396,7 @@ def visit_purge_single(callback):
     if not SINGLE_FILES:
         return
 
-    purge_groups = os.listdir(synctool.param.PURGE_DIR)
+    purge_groups = os.listdir(param.PURGE_DIR)
 
     # use a copy of SINGLE_FILES, because the callback will remove items
     for dest in SINGLE_FILES[:]:
@@ -405,11 +404,11 @@ def visit_purge_single(callback):
         if filepath[0] == os.sep:
             filepath = filepath[1:]
 
-        for g in synctool.param.MY_GROUPS:
+        for g in param.MY_GROUPS:
             if not g in purge_groups:
                 continue
 
-            src = os.path.join(synctool.param.PURGE_DIR, g, filepath)
+            src = os.path.join(param.PURGE_DIR, g, filepath)
             if synctool.lib.path_exists(src):
                 # make a SyncObject
                 obj = synctool.object.SyncObject(src, dest)
@@ -513,7 +512,7 @@ def _single_purge_callback(obj, pre_dict, post_dict):
 def single_files():
     '''check/update a list of single files'''
 
-    synctool.overlay.visit(synctool.param.OVERLAY_DIR,
+    synctool.overlay.visit(param.OVERLAY_DIR,
                            _single_overlay_callback)
 
     # For files that were not found, look in the purge/ tree
@@ -524,7 +523,7 @@ def single_files():
     if len(SINGLE_FILES) > 0:
         # there are still single files left
         # maybe they are in the delete tree?
-        synctool.overlay.visit(synctool.param.DELETE_DIR,
+        synctool.overlay.visit(param.DELETE_DIR,
                                _single_delete_callback)
 
     for filename in SINGLE_FILES:
@@ -565,13 +564,13 @@ def _single_erase_saved_callback(obj, pre_dict, post_dict):
 def single_erase_saved():
     '''erase single backup files'''
 
-    synctool.overlay.visit(synctool.param.OVERLAY_DIR,
+    synctool.overlay.visit(param.OVERLAY_DIR,
                            _single_erase_saved_callback)
 
     if len(SINGLE_FILES) > 0:
         # there are still single files left
         # maybe they are in the delete tree?
-        synctool.overlay.visit(synctool.param.DELETE_DIR,
+        synctool.overlay.visit(param.DELETE_DIR,
                                _single_erase_saved_callback)
 
     for filename in SINGLE_FILES:
@@ -603,7 +602,7 @@ def _reference_callback(obj, pre_dict, post_dict):
 def reference_files():
     '''show which source file in the repository synctool uses'''
 
-    synctool.overlay.visit(synctool.param.OVERLAY_DIR, _reference_callback)
+    synctool.overlay.visit(param.OVERLAY_DIR, _reference_callback)
 
     # look in the purge/ tree, too
     visit_purge_single(_reference_callback)
@@ -615,9 +614,9 @@ def reference_files():
 def _exec_diff(src, dest):
     '''execute diff_cmd to display diff between dest and src'''
 
-    verbose('%s %s %s' % (synctool.param.DIFF_CMD, dest, prettypath(src)))
+    verbose('%s %s %s' % (param.DIFF_CMD, dest, prettypath(src)))
 
-    cmd_arr = shlex.split(synctool.param.DIFF_CMD)
+    cmd_arr = shlex.split(param.DIFF_CMD)
     cmd_arr.append(dest)
     cmd_arr.append(src)
 
@@ -642,7 +641,7 @@ def _diff_callback(obj, pre_dict, post_dict):
 def diff_files():
     '''display a diff of the single files'''
 
-    synctool.overlay.visit(synctool.param.OVERLAY_DIR, _diff_callback)
+    synctool.overlay.visit(param.OVERLAY_DIR, _diff_callback)
 
     # look in the purge/ tree, too
     visit_purge_single(_diff_callback)
@@ -681,8 +680,7 @@ def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
 def check_cmd_config():
     '''check whether the commands as given in synctool.conf actually exist'''
 
-    (ok, synctool.param.DIFF_CMD) = synctool.config.check_cmd_config(
-                                        'diff_cmd', synctool.param.DIFF_CMD)
+    ok, param.DIFF_CMD = config.check_cmd_config('diff_cmd', param.DIFF_CMD)
     if not ok:
         sys.exit(-1)
 
@@ -694,8 +692,8 @@ def usage():
     print 'options:'
     print '  -h, --help            Display this information'
     print '  -c, --conf=FILE       Use this config file'
-    print ('                        (default: %s)' %
-            synctool.param.DEFAULT_CONF)
+    print '                        (default: %s)' % param.DEFAULT_CONF
+
     print '''  -d, --diff=FILE       Show diff for file
   -1, --single=PATH     Update a single file
   -r, --ref=PATH        Show which source file synctool chooses
@@ -723,10 +721,11 @@ def get_options():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:efNFTvq',
-            ['help', 'conf=', 'diff=', 'single=', 'ref=',
-            'erase-saved', 'fix', 'no-post', 'fullpath',
-            'terse', 'color', 'no-color', 'masterlog', 'node=', 'nodename=',
-            'verbose', 'quiet', 'unix', 'version'])
+                                   ['help', 'conf=', 'diff=', 'single=',
+                                    'ref=', 'erase-saved', 'fix', 'no-post',
+                                    'fullpath', 'terse', 'color', 'no-color',
+                                    'masterlog', 'node=', 'nodename=',
+                                    'verbose', 'quiet', 'unix', 'version'])
     except getopt.GetoptError as reason:
         print '%s: %s' % (PROGNAME, reason)
         usage()
@@ -742,7 +741,7 @@ def get_options():
             sys.exit(1)
 
         if opt in ('-c', '--conf'):
-            synctool.param.CONF_FILE = arg
+            param.CONF_FILE = arg
             continue
 
         # these options influence program output, so process them
@@ -760,20 +759,20 @@ def get_options():
             continue
 
         if opt in ('-T', '--terse'):
-            synctool.param.TERSE = True
-            synctool.param.FULL_PATH = False
+            param.TERSE = True
+            param.FULL_PATH = False
             continue
 
         if opt in ('-F', '--fullpath'):
-            synctool.param.FULL_PATH = True
+            param.FULL_PATH = True
             continue
 
         if opt == '--version':
-            print synctool.param.VERSION
+            print param.VERSION
             sys.exit(0)
 
     # first read the config file
-    synctool.config.read_config()
+    config.read_config()
 #    synctool.nodeset.make_default_nodeset()
     check_cmd_config()
 
@@ -807,11 +806,11 @@ def get_options():
             continue
 
         if opt == '--color':
-            synctool.param.COLORIZE = True
+            param.COLORIZE = True
             continue
 
         if opt == '--no-color':
-            synctool.param.COLORIZE = False
+            param.COLORIZE = False
             continue
 
         if opt in ('-v', '--verbose'):
@@ -834,7 +833,7 @@ def get_options():
         if opt in ('-N', '--node', '--nodename'):
             # used by the master to set the client's nodename
             # or to force the nodename when running in stand-alone mode
-            synctool.param.NODENAME = arg
+            param.NODENAME = arg
             continue
 
         if opt in ('-d', '--diff'):
@@ -911,28 +910,28 @@ def get_options():
 def main():
     '''run the program'''
 
-    synctool.param.init()
+    param.init()
 
     action = get_options()
 
-    synctool.config.init_mynodename()
+    config.init_mynodename()
 
-    if not synctool.param.NODENAME:
+    if not param.NODENAME:
         error('unable to determine my nodename (hostname: %s)' %
-              synctool.param.HOSTNAME)
-        stderr('please check %s' % synctool.param.CONF_FILE)
+              param.HOSTNAME)
+        stderr('please check %s' % param.CONF_FILE)
         sys.exit(-1)
 
-    if not synctool.param.NODENAME in synctool.param.NODES:
-        error("unknown node '%s'" % synctool.param.NODENAME)
-        stderr('please check %s' % synctool.param.CONF_FILE)
+    if not param.NODENAME in param.NODES:
+        error("unknown node '%s'" % param.NODENAME)
+        stderr('please check %s' % param.CONF_FILE)
         sys.exit(-1)
 
-    if synctool.param.NODENAME in synctool.param.IGNORE_GROUPS:
+    if param.NODENAME in param.IGNORE_GROUPS:
         # this is only a warning ...
         # you can still run synctool-pkg on the client by hand
         warning('node %s is disabled in %s' %
-                (synctool.param.NODENAME, synctool.param.CONF_FILE))
+                (param.NODENAME, param.CONF_FILE))
 
     if synctool.lib.UNIX_CMD:
         t = time.localtime(time.time())
@@ -942,9 +941,9 @@ def main():
                  '%04d/%02d/%02d %02d:%02d:%02d' %
                  (t[0], t[1], t[2], t[3], t[4], t[5]))
         unix_out('#')
-        unix_out('# my hostname: %s' % synctool.param.HOSTNAME)
-        unix_out('# SYNCTOOL_NODE=%s' % synctool.param.NODENAME)
-        unix_out('# SYNCTOOL_ROOT=%s' % synctool.param.ROOTDIR)
+        unix_out('# my hostname: %s' % param.HOSTNAME)
+        unix_out('# SYNCTOOL_NODE=%s' % param.NODENAME)
+        unix_out('# SYNCTOOL_ROOT=%s' % param.ROOTDIR)
         unix_out('#')
 
         if not synctool.lib.DRY_RUN:
@@ -969,12 +968,12 @@ def main():
                 else:
                     verbose('--fix specified, applying changes')
 
-        verbose('my nodename: %s' % synctool.param.NODENAME)
-        verbose('my hostname: %s' % synctool.param.HOSTNAME)
-        verbose('rootdir: %s' % synctool.param.ROOTDIR)
+        verbose('my nodename: %s' % param.NODENAME)
+        verbose('my hostname: %s' % param.HOSTNAME)
+        verbose('rootdir: %s' % param.ROOTDIR)
 
-    os.environ['SYNCTOOL_NODE'] = synctool.param.NODENAME
-    os.environ['SYNCTOOL_ROOT'] = synctool.param.ROOTDIR
+    os.environ['SYNCTOOL_NODE'] = param.NODENAME
+    os.environ['SYNCTOOL_ROOT'] = param.ROOTDIR
 
     unix_out('umask 077')
     unix_out('')

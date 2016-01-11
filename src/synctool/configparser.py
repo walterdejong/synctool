@@ -20,9 +20,9 @@ import os
 import sys
 import re
 
+from synctool import param
 import synctool.lib
 from synctool.lib import stderr
-import synctool.param
 import synctool.range
 
 # this allows alphanumeric concatenated by underscore, minus, or plus symbol
@@ -185,63 +185,63 @@ def check_group_definition(group, configfile, lineno):
 # This enables the 'include' keyword to return more than 1 error
 #
 
-def _config_boolean(param, value, configfile, lineno):
+def _config_boolean(label, value, configfile, lineno):
     '''a boolean parameter can be "true|false|yes|no|on|off|1|0"'''
 
-    if not check_definition(param, configfile, lineno):
+    if not check_definition(label, configfile, lineno):
         return 1, False
 
     value = value.lower()
-    if value in synctool.param.BOOLEAN_VALUE_TRUE:
+    if value in param.BOOLEAN_VALUE_TRUE:
         return 0, True
 
-    elif value in synctool.param.BOOLEAN_VALUE_FALSE:
+    elif value in param.BOOLEAN_VALUE_FALSE:
         return 0, False
 
-    stderr('%s:%d: invalid argument for %s' % (configfile, lineno, param))
+    stderr('%s:%d: invalid argument for %s' % (configfile, lineno, label))
     return 1, False
 
 
-def _config_integer(param, value, configfile, lineno, radix=10):
+def _config_integer(label, value, configfile, lineno, radix=10):
     '''get numeric integer value'''
 
-    if not check_definition(param, configfile, lineno):
+    if not check_definition(label, configfile, lineno):
         return 1, 0
 
     try:
         n = int(value, radix)
     except ValueError:
-        stderr('%s:%d: invalid argument for %s' % (configfile, lineno, param))
+        stderr('%s:%d: invalid argument for %s' % (configfile, lineno, label))
         return 1, 0
 
     return 0, n
 
 
-def _config_color_variant(param, value, configfile, lineno):
+def _config_color_variant(label, value, configfile, lineno):
     '''set a color by name'''
 
-    if not check_definition(param, configfile, lineno):
+    if not check_definition(label, configfile, lineno):
         return 1
 
     value = value.lower()
     if value in synctool.lib.COLORMAP.keys():
-        synctool.param.TERSE_COLORS[param[6:]] = value
+        param.TERSE_COLORS[label[6:]] = value
         return 0
 
-    stderr('%s:%d: invalid argument for %s' % (configfile, lineno, param))
+    stderr('%s:%d: invalid argument for %s' % (configfile, lineno, label))
     return 1
 
 
-def _config_command(param, arr, short_cmd, configfile, lineno):
+def _config_command(label, arr, short_cmd, configfile, lineno):
     '''helper for configuring rsync_cmd, ssh_cmd, synctool_cmd, etc.'''
 
-    if not check_definition(param, configfile, lineno):
+    if not check_definition(label, configfile, lineno):
         return 1, None
 
     if len(arr) < 2:
         stderr("%s:%d: '%s' requires an argument: "
                "the '%s' command, and any appropriate switches" %
-               (configfile, lineno, param, short_cmd))
+               (configfile, lineno, label, short_cmd))
         return 1, None
 
     # This function does not check the existence of the command
@@ -287,7 +287,7 @@ def config_tempdir(arr, configfile, lineno):
                                                             lineno))
         return 1
 
-    synctool.param.TEMP_DIR = d
+    param.TEMP_DIR = d
     return 0
 
 
@@ -302,12 +302,12 @@ def config_package_manager(arr, configfile, lineno):
     if not check_definition(arr[0], configfile, lineno):
         return 1
 
-    if not arr[1] in synctool.param.KNOWN_PACKAGE_MANAGERS:
+    if not arr[1] in param.KNOWN_PACKAGE_MANAGERS:
         stderr("%s:%d: unknown or unsupported package manager '%s'" %
                (configfile, lineno, arr[1]))
         return 1
 
-    synctool.param.PACKAGE_MANAGER = arr[1]
+    param.PACKAGE_MANAGER = arr[1]
     return 0
 
 
@@ -326,61 +326,61 @@ def config_ssh_control_persist(arr, configfile, lineno):
         stderr("%s:%d: invalid value '%s'" % (configfile, lineno, persist))
         return 1
 
-    synctool.param.CONTROL_PERSIST = persist
+    param.CONTROL_PERSIST = persist
     return 0
 
 
 def config_require_extension(arr, configfile, lineno):
     '''parse keyword: require_extension'''
 
-    err, synctool.param.REQUIRE_EXTENSION = _config_boolean(
-                            'require_extension', arr[1], configfile, lineno)
+    err, param.REQUIRE_EXTENSION = _config_boolean('require_extension',
+                                                   arr[1], configfile, lineno)
     return err
 
 
 def config_full_path(arr, configfile, lineno):
     '''parse keyword: full_path'''
 
-    err, synctool.param.FULL_PATH = _config_boolean('full_path', arr[1],
-                                                    configfile, lineno)
+    err, param.FULL_PATH = _config_boolean('full_path', arr[1], configfile,
+                                           lineno)
     return err
 
 
 def config_backup_copies(arr, configfile, lineno):
     '''parse keyword: backup_copies'''
 
-    err, synctool.param.BACKUP_COPIES = _config_boolean('backup_copies',
-                                                arr[1], configfile, lineno)
+    err, param.BACKUP_COPIES = _config_boolean('backup_copies', arr[1],
+                                               configfile, lineno)
     return err
 
 
 def config_syslogging(arr, configfile, lineno):
     '''parse keyword: syslogging'''
 
-    err, synctool.param.SYSLOGGING = _config_boolean('syslogging', arr[1],
-                                                     configfile, lineno)
+    err, param.SYSLOGGING = _config_boolean('syslogging', arr[1], configfile,
+                                            lineno)
     return err
 
 def config_sync_times(arr, configfile, lineno):
     '''parse keyword: sync_times'''
 
-    err, synctool.param.SYNC_TIMES = _config_boolean('sync_times', arr[1],
-                                                     configfile, lineno)
+    err, param.SYNC_TIMES = _config_boolean('sync_times', arr[1], configfile,
+                                            lineno)
     return err
 
 def config_ignore_dotfiles(arr, configfile, lineno):
     '''parse keyword: ignore_dotfiles'''
 
-    err, synctool.param.IGNORE_DOTFILES = _config_boolean('ignore_dotfiles',
-                                                arr[1], configfile, lineno)
+    err, param.IGNORE_DOTFILES = _config_boolean('ignore_dotfiles', arr[1],
+                                                 configfile, lineno)
     return err
 
 
 def config_ignore_dotdirs(arr, configfile, lineno):
     '''parse keyword: ignore_dotdirs'''
 
-    err, synctool.param.IGNORE_DOTDIRS = _config_boolean('ignore_dotdirs',
-                                                arr[1], configfile, lineno)
+    err, param.IGNORE_DOTDIRS = _config_boolean('ignore_dotdirs', arr[1],
+                                                configfile, lineno)
     return err
 
 
@@ -396,11 +396,11 @@ def config_ignore(arr, configfile, lineno):
         # if fn has wildcards, put it in array IGNORE_FILES_WITH_WILDCARDS
         if (fn.find('*') >= 0 or fn.find('?') >= 0 or
             (fn.find('[') >= 0 and fn.find(']') >= 0)):
-            if not fn in synctool.param.IGNORE_FILES_WITH_WILDCARDS:
-                synctool.param.IGNORE_FILES_WITH_WILDCARDS.append(fn)
+            if not fn in param.IGNORE_FILES_WITH_WILDCARDS:
+                param.IGNORE_FILES_WITH_WILDCARDS.append(fn)
         else:
             # no wildcards, do a regular ignore
-            synctool.param.IGNORE_FILES.add(fn)
+            param.IGNORE_FILES.add(fn)
 
     return 0
 
@@ -408,24 +408,24 @@ def config_ignore(arr, configfile, lineno):
 def config_terse(arr, configfile, lineno):
     '''parse keyword: terse'''
 
-    err, synctool.param.TERSE = _config_boolean('terse', arr[1], configfile,
-                                                lineno)
+    err, param.TERSE = _config_boolean('terse', arr[1], configfile, lineno)
     return err
 
 
 def config_colorize(arr, configfile, lineno):
     '''parse keyword: colorize'''
 
-    err, synctool.param.COLORIZE = _config_boolean('colorize', arr[1],
-                                                   configfile, lineno)
+    err, param.COLORIZE = _config_boolean('colorize', arr[1], configfile,
+                                          lineno)
     return err
 
 
 def config_colorize_full_line(arr, configfile, lineno):
     '''parse keyword: colorize_full_line'''
 
-    err, synctool.param.COLORIZE_FULL_LINE = _config_boolean(
-                            'colorize_full_line', arr[1], configfile, lineno)
+    err, param.COLORIZE_FULL_LINE = _config_boolean('colorize_full_line',
+                                                    arr[1], configfile,
+                                                    lineno)
     return err
 
 
@@ -433,24 +433,25 @@ def config_colorize_full_line(arr, configfile, lineno):
 def config_colorize_full_lines(arr, configfile, lineno):
     '''parse keyword: colorize_full_lines'''
 
-    err, synctool.param.COLORIZE_FULL_LINE = _config_boolean(
-                            'colorize_full_line', arr[1], configfile, lineno)
+    err, param.COLORIZE_FULL_LINE = _config_boolean('colorize_full_line',
+                                                    arr[1], configfile,
+                                                    lineno)
     return err
 
 
 def config_colorize_bright(arr, configfile, lineno):
     '''parse keyword: colorize_bright'''
 
-    err, synctool.param.COLORIZE_BRIGHT = _config_boolean(
-                                'colorize_bright', arr[1], configfile, lineno)
+    err, param.COLORIZE_BRIGHT = _config_boolean('colorize_bright', arr[1],
+                                                 configfile, lineno)
     return err
 
 
 def config_colorize_bold(arr, configfile, lineno):
     '''parse keyword: colorize_bold'''
 
-    err, synctool.param.COLORIZE_BRIGHT = _config_boolean('colorize_bold',
-                                                arr[1], configfile, lineno)
+    err, param.COLORIZE_BRIGHT = _config_boolean('colorize_bold', arr[1],
+                                                 configfile, lineno)
     return err
 
 
@@ -567,7 +568,7 @@ def config_default_nodeset(arr, configfile, lineno):
                (configfile, lineno))
         return 1
 
-    synctool.param.DEFAULT_NODESET = set()
+    param.DEFAULT_NODESET = set()
 
     for elem in arr[1:]:
         if '[' in elem:
@@ -577,7 +578,7 @@ def config_default_nodeset(arr, configfile, lineno):
                         raise RuntimeError("bug: expanded range contains "
                                            "'[' character")
 
-                    synctool.param.DEFAULT_NODESET.add(expanded)
+                    param.DEFAULT_NODESET.add(expanded)
             except synctool.range.RangeSyntaxError as err:
                 stderr("%s:%d: %s" % (configfile, lineno, err))
                 return 1
@@ -589,9 +590,9 @@ def config_default_nodeset(arr, configfile, lineno):
                 return 1
 
             if elem == 'none':
-                synctool.param.DEFAULT_NODESET = set()
+                param.DEFAULT_NODESET = set()
             else:
-                synctool.param.DEFAULT_NODESET.add(elem)
+                param.DEFAULT_NODESET.add(elem)
 
     # for now, accept this as the default nodeset
     # There can be compound groups in it, so
@@ -607,7 +608,7 @@ def config_master(arr, configfile, lineno):
                (configfile, lineno))
         return 1
 
-    synctool.param.MASTER = arr[1]
+    param.MASTER = arr[1]
     return 0
 
 
@@ -644,7 +645,7 @@ def config_slave(arr, configfile, lineno):
             return 1
 
         SYMBOLS['node %s'] = node
-        synctool.param.SLAVES.add(node)
+        param.SLAVES.add(node)
 
     # check for valid nodes is made later
     return 0
@@ -694,7 +695,7 @@ def config_group(arr, configfile, lineno):
             grouplist.append(grp)
 
     try:
-        synctool.param.GROUP_DEFS[group] = expand_grouplist(grouplist)
+        param.GROUP_DEFS[group] = expand_grouplist(grouplist)
     except RuntimeError:
         stderr('%s:%d: compound groups can not contain node names' %
                (configfile, lineno))
@@ -800,7 +801,7 @@ def config_node(arr, configfile, lineno):
         grouplist.append(group)
 
     try:
-        synctool.param.NODES[node] = expand_grouplist(grouplist)
+        param.NODES[node] = expand_grouplist(grouplist)
     except RuntimeError:
         stderr('%s:%d: a group list can not contain node names' %
                (configfile, lineno))
@@ -823,14 +824,14 @@ def _node_specifier(configfile, lineno, node, spec):
     # got specifier, arg
 
     if specifier == 'ipaddress':
-        if node in synctool.param.IPADDRESSES:
+        if node in param.IPADDRESSES:
             stderr('%s:%d: redefinition of IP address for node %s' %
                    (configfile, lineno, node))
             return False
 
         # support IP address sequence syntax
         try:
-            synctool.param.IPADDRESSES[node] = \
+            param.IPADDRESSES[node] = \
                 synctool.range.expand_sequence(arg)
         except synctool.range.RangeSyntaxError as err:
             stderr('%s:%d: %s' % (configfile, lineno, err))
@@ -840,7 +841,7 @@ def _node_specifier(configfile, lineno, node, spec):
         if arg == 'yes':
             pass
         elif arg == 'no':
-            synctool.param.NO_RSYNC.add(node)
+            param.NO_RSYNC.add(node)
         else:
             stderr("%s:%d: node specifier 'rsync' can have value "
                    "'yes' or 'no'" % (configfile, lineno))
@@ -903,7 +904,7 @@ def config_ignore_node(arr, configfile, lineno):
             errors += 1
             continue
 
-        synctool.param.IGNORE_GROUPS.add(node)
+        param.IGNORE_GROUPS.add(node)
 
     return errors
 
@@ -953,11 +954,11 @@ def config_ignore_group(arr, configfile, lineno):
             errors += 1
             continue
 
-        synctool.param.IGNORE_GROUPS.add(group)
+        param.IGNORE_GROUPS.add(group)
 
         # add any (yet) unknown group names to the group_defs dict
-        if not group in synctool.param.GROUP_DEFS:
-            synctool.param.GROUP_DEFS[group] = None
+        if not group in param.GROUP_DEFS:
+            param.GROUP_DEFS[group] = None
 
     return errors
 
@@ -965,24 +966,24 @@ def config_ignore_group(arr, configfile, lineno):
 def config_diff_cmd(arr, configfile, lineno):
     '''parse keyword: diff_cmd'''
 
-    err, synctool.param.DIFF_CMD = _config_command('diff_cmd', arr, 'diff',
-                                                   configfile, lineno)
+    err, param.DIFF_CMD = _config_command('diff_cmd', arr, 'diff', configfile,
+                                          lineno)
     return err
 
 
 def config_ping_cmd(arr, configfile, lineno):
     '''parse keyword: ping_cmd'''
 
-    err, synctool.param.PING_CMD = _config_command('ping_cmd', arr, 'ping',
-                                                   configfile, lineno)
+    err, param.PING_CMD = _config_command('ping_cmd', arr, 'ping', configfile,
+                                          lineno)
     return err
 
 
 def config_ssh_cmd(arr, configfile, lineno):
     '''parse keyword: ssh_cmd'''
 
-    err, synctool.param.SSH_CMD = _config_command('ssh_cmd', arr, 'ssh',
-                                                  configfile, lineno)
+    err, param.SSH_CMD = _config_command('ssh_cmd', arr, 'ssh', configfile,
+                                         lineno)
     return err
 
 
@@ -993,37 +994,35 @@ def config_rsync_cmd(arr, configfile, lineno):
     # and strip_trailing_slashes() may break rsync paths
     # but these are usually not used in rsync_cmd
 
-    err, synctool.param.RSYNC_CMD = _config_command('rsync_cmd', arr,
-                                                    'rsync', configfile,
-                                                    lineno)
+    err, param.RSYNC_CMD = _config_command('rsync_cmd', arr, 'rsync',
+                                           configfile, lineno)
     return err
 
 
 def config_synctool_cmd(arr, configfile, lineno):
     '''parse keyword: synctool_cmd'''
 
-    err, synctool.param.SYNCTOOL_CMD = _config_command('synctool_cmd', arr,
-                                                       'synctool.py',
-                                                       configfile, lineno)
+    err, param.SYNCTOOL_CMD = _config_command('synctool_cmd', arr,
+                                              'synctool.py', configfile,
+                                              lineno)
     return err
 
 
 def config_pkg_cmd(arr, configfile, lineno):
     '''parse keyword: pkg_cmd'''
 
-    err, synctool.param.PKG_CMD = _config_command('pkg_cmd', arr,
-                                                  'synctool_pkg.py',
-                                                  configfile, lineno)
+    err, param.PKG_CMD = _config_command('pkg_cmd', arr, 'synctool_pkg.py',
+                                         configfile, lineno)
     return err
 
 
 def config_num_proc(arr, configfile, lineno):
     '''parse keyword: num_proc'''
 
-    err, synctool.param.NUM_PROC = _config_integer('num_proc', arr[1],
-                                                   configfile, lineno)
+    err, param.NUM_PROC = _config_integer('num_proc', arr[1], configfile,
+                                          lineno)
 
-    if not err and synctool.param.NUM_PROC < 1:
+    if not err and param.NUM_PROC < 1:
         stderr("%s:%d: invalid argument for num_proc" % (configfile, lineno))
         return 1
 
@@ -1040,8 +1039,8 @@ def expand_grouplist(grouplist):
     for elem in grouplist:
         groups.append(elem)
 
-        if elem in synctool.param.GROUP_DEFS:
-            compound_groups = synctool.param.GROUP_DEFS[elem]
+        if elem in param.GROUP_DEFS:
+            compound_groups = param.GROUP_DEFS[elem]
 
             # mind that GROUP_DEFS[group] can be None
             # for any groups that have no subgroups
@@ -1051,11 +1050,11 @@ def expand_grouplist(grouplist):
             # node names are treated as groups too ...
             # but they are special groups, and can not be in a compound group
             # just to prevent odd things from happening
-            if elem in synctool.param.NODES:
+            if elem in param.NODES:
                 raise RuntimeError('node %s can not be part of '
                                    'compound group list' % elem)
 
-            synctool.param.GROUP_DEFS[elem] = None
+            param.GROUP_DEFS[elem] = None
 
     # remove duplicates
     # this looks pretty lame ... but Python sets are not usable here;

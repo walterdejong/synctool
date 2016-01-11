@@ -23,7 +23,7 @@ class SyncPkgPacman(synctool.pkgclass.SyncPkg):
     def __init__(self):
         super(SyncPkgPacman, self).__init__()
 
-    def list(self, pkgs = None):
+    def list(self, pkgs=None):
         super(SyncPkgPacman, self).list(pkgs)
 
         cmd = 'pacman -Q'

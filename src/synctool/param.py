@@ -139,10 +139,9 @@ TERSE_COLORS = {
 }
 
 # list of supported package managers
-KNOWN_PACKAGE_MANAGERS = (
-    'apt-get', 'yum', 'zypper', 'brew', 'pacman', 'bsdpkg',
-#   'urpmi', 'portage', 'port', 'swaret',
-)
+KNOWN_PACKAGE_MANAGERS = ('apt-get', 'yum', 'zypper', 'brew', 'pacman',
+                          # 'urpmi', 'portage', 'port', 'swaret',
+                          'bsdpkg')
 
 ORIG_UMASK = 022
 

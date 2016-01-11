@@ -15,14 +15,13 @@ import subprocess
 import getopt
 import shlex
 
+from synctool import config, param
 import synctool.aggr
-import synctool.config
 import synctool.lib
 from synctool.lib import verbose, error, unix_out
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.parallel
-import synctool.param
 import synctool.unbuffered
 
 # hardcoded name because otherwise we get "dsh_ping.py"
@@ -46,17 +45,18 @@ def ping_node(addr):
 
     node = NODESET.get_nodename_from_address(addr)
     verbose('pinging %s' % node)
-    unix_out('%s %s' % (synctool.param.PING_CMD, addr))
+    unix_out('%s %s' % (param.PING_CMD, addr))
 
     packets_received = 0
 
     # execute ping command and show output with the nodename
-    cmd = '%s %s' % (synctool.param.PING_CMD, addr)
+    cmd = '%s %s' % (param.PING_CMD, addr)
     cmd_arr = shlex.split(cmd)
 
     try:
         f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT).stdout
     except OSError as err:
         error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return False
@@ -102,8 +102,7 @@ def ping_node(addr):
 def check_cmd_config():
     '''check whether the commands as given in synctool.conf actually exist'''
 
-    (ok, synctool.param.PING_CMD) = synctool.config.check_cmd_config(
-                                        'ping_cmd', synctool.param.PING_CMD)
+    ok, param.PING_CMD = config.check_cmd_config('ping_cmd', param.PING_CMD)
     if not ok:
         sys.exit(-1)
 
@@ -116,7 +115,7 @@ def usage():
     print '  -h, --help                     Display this information'
     print '  -c, --conf=FILE                Use this config file'
     print ('                                 (default: %s)' %
-        synctool.param.DEFAULT_CONF)
+           param.DEFAULT_CONF)
 
     print '''  -n, --node=LIST                Execute only on these nodes
   -g, --group=LIST               Execute only on these groups of nodes
@@ -137,9 +136,10 @@ def get_options():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:aN:qp:z:',
-            ['help', 'conf=', 'verbose', 'node=', 'group=',
-            'exclude=', 'exclude-group=', 'aggregate', 'unix', 'quiet',
-            'numproc=', 'zzz='])
+                                   ['help', 'conf=', 'verbose', 'node=',
+                                    'group=', 'exclude=', 'exclude-group=',
+                                    'aggregate', 'unix', 'quiet', 'numproc=',
+                                    'zzz='])
     except getopt.GetoptError as reason:
         print '%s: %s' % (PROGNAME, reason)
 #        usage()
@@ -152,7 +152,7 @@ def get_options():
             sys.exit(1)
 
         if opt in ('-c', '--conf'):
-            synctool.param.CONF_FILE = arg
+            param.CONF_FILE = arg
             continue
 
         # these options influence program output, so process them
@@ -169,12 +169,12 @@ def get_options():
             synctool.lib.UNIX_CMD = True
             continue
 
-    synctool.config.read_config()
+    config.read_config()
     synctool.nodeset.make_default_nodeset()
     check_cmd_config()
 
     # then process the other options
-    MASTER_OPTS = [ sys.argv[0] ]
+    MASTER_OPTS = [sys.argv[0],]
 
     for opt, arg in opts:
         if opt:
@@ -220,13 +220,13 @@ def get_options():
 
         if opt in ('-N', '--numproc'):
             try:
-                synctool.param.NUM_PROC = int(arg)
+                param.NUM_PROC = int(arg)
             except ValueError:
                 print ("%s: option '%s' requires a numeric value" %
                        (PROGNAME, opt))
                 sys.exit(1)
 
-            if synctool.param.NUM_PROC < 1:
+            if param.NUM_PROC < 1:
                 print '%s: invalid value for numproc' % PROGNAME
                 sys.exit(1)
 
@@ -234,21 +234,21 @@ def get_options():
 
         if opt in ('-z', '--zzz'):
             try:
-                synctool.param.SLEEP_TIME = int(arg)
+                param.SLEEP_TIME = int(arg)
             except ValueError:
                 print ("%s: option '%s' requires a numeric value" %
                        (PROGNAME, opt))
                 sys.exit(1)
 
-            if synctool.param.SLEEP_TIME < 0:
+            if param.SLEEP_TIME < 0:
                 print '%s: invalid value for sleep time' % PROGNAME
                 sys.exit(1)
 
-            if not synctool.param.SLEEP_TIME:
+            if not param.SLEEP_TIME:
                 # (temporarily) set to -1 to indicate we want
                 # to run serialized
                 # synctool.parallel.do() will use this
-                synctool.param.SLEEP_TIME = -1
+                param.SLEEP_TIME = -1
 
             continue
 
@@ -261,7 +261,7 @@ def get_options():
 def main():
     '''run the program'''
 
-    synctool.param.init()
+    param.init()
 
     sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)
     sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)
@@ -278,7 +278,7 @@ def main():
 
         sys.exit(0)
 
-    synctool.config.init_mynodename()
+    config.init_mynodename()
 
     address_list = NODESET.addresses()
     if not address_list:

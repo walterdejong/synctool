@@ -21,9 +21,13 @@ class SyncPkg(object):
     # And/or you may use this class as a superclass
 
     def __init__(self):
+        '''initialize instance'''
+
         pass
 
     def list(self, pkgs=None):
+        '''output list of packages'''
+
         if pkgs:
             if len(pkgs) > 1:
                 plural = 's'
@@ -35,6 +39,8 @@ class SyncPkg(object):
             verbose('list all packages')
 
     def install(self, pkgs):
+        '''install list of packages'''
+
         if len(pkgs) > 1:
             plural = 's'
         else:
@@ -45,6 +51,8 @@ class SyncPkg(object):
         log(msg)
 
     def remove(self, pkgs):
+        '''remove list of packages'''
+
         if len(pkgs) > 1:
             plural = 's'
         else:
@@ -55,9 +63,13 @@ class SyncPkg(object):
         log(msg)
 
     def update(self):
+        '''update package database'''
+
         verbose('updating package database')
 
     def upgrade(self):
+        '''upgrade packages'''
+
         msg = 'upgrading packages'
         verbose(dryrun_msg(msg))
 
@@ -66,6 +78,8 @@ class SyncPkg(object):
         log(msg)
 
     def clean(self):
+        '''cleanup any package database caches'''
+
         verbose('cleaning up caches')
 
 # EOB

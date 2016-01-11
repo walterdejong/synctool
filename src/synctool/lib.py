@@ -17,7 +17,8 @@ import errno
 import shlex
 import syslog
 
-import synctool.param
+from synctool import param
+import synctool.syncstat
 
 # options (mostly) set by command-line arguments
 DRY_RUN = True
@@ -53,25 +54,21 @@ TERSE_DRYRUN = 14
 TERSE_FIXING = 15
 TERSE_OK = 16
 
-TERSE_TXT = (
-    'info', 'WARN', 'ERROR', 'FAIL',
-    'sync', 'link', 'mkdir', 'rm', 'chown', 'chmod', 'exec',
-    'upload', 'new', 'type', 'DRYRUN', 'FIXING', 'OK'
-)
+TERSE_TXT = ('info', 'WARN', 'ERROR', 'FAIL',
+             'sync', 'link', 'mkdir', 'rm', 'chown', 'chmod', 'exec',
+             'upload', 'new', 'type', 'DRYRUN', 'FIXING', 'OK')
 
-COLORMAP = {
-    'black'   : 30,
-    'darkgray': 30,
-    'red'     : 31,
-    'green'   : 32,
-    'yellow'  : 33,
-    'blue'    : 34,
-    'magenta' : 35,
-    'cyan'    : 36,
-    'white'   : 37,
-    'bold'    : 1,
-    'default' : 0,
-}
+COLORMAP = {'black'   : 30,
+            'darkgray': 30,
+            'red'     : 31,
+            'green'   : 32,
+            'yellow'  : 33,
+            'blue'    : 34,
+            'magenta' : 35,
+            'cyan'    : 36,
+            'white'   : 37,
+            'bold'    : 1,
+            'default' : 0}
 
 
 def verbose(msg):
@@ -84,7 +81,7 @@ def verbose(msg):
 def stdout(msg):
     '''print message to stdout (unless special output mode was selected)'''
 
-    if not (UNIX_CMD or synctool.param.TERSE):
+    if not (UNIX_CMD or param.TERSE):
         print msg
 
 
@@ -111,7 +108,7 @@ def warning(msg):
 def terse(code, msg):
     '''print short message + shortened filename'''
 
-    if synctool.param.TERSE:
+    if param.TERSE:
         # convert any path to terse path
         if msg.find(' ') >= 0:
             arr = msg.split()
@@ -123,17 +120,16 @@ def terse(code, msg):
             if msg[0] == os.sep:
                 msg = terse_path(msg)
 
-        if synctool.param.COLORIZE:        # and sys.stdout.isatty():
+        if param.COLORIZE:        # and sys.stdout.isatty():
             txt = TERSE_TXT[code]
-            color = COLORMAP[synctool.param.TERSE_COLORS[
-                             TERSE_TXT[code].lower()]]
+            color = COLORMAP[param.TERSE_COLORS[TERSE_TXT[code].lower()]]
 
-            if synctool.param.COLORIZE_BRIGHT:
+            if param.COLORIZE_BRIGHT:
                 bright = ';1'
             else:
                 bright = ''
 
-            if synctool.param.COLORIZE_FULL_LINE:
+            if param.COLORIZE_FULL_LINE:
                 print '\x1b[%d%sm%s %s\x1b[0m' % (color, bright, txt, msg)
             else:
                 print '\x1b[%d%sm%s\x1b[0m %s' % (color, bright, txt, msg)
@@ -151,31 +147,28 @@ def unix_out(msg):
 def prettypath(path):
     '''print long paths as "$overlay/path"'''
 
-    if synctool.param.FULL_PATH:
+    if param.FULL_PATH:
         return path
 
-    if synctool.param.TERSE:
+    if param.TERSE:
         return terse_path(path)
 
-    if path[:synctool.param.OVERLAY_LEN] == (synctool.param.OVERLAY_DIR +
-                                             os.sep):
-        return os.path.join('$overlay', path[synctool.param.OVERLAY_LEN:])
+    if path[:param.OVERLAY_LEN] == (param.OVERLAY_DIR + os.sep):
+        return os.path.join('$overlay', path[param.OVERLAY_LEN:])
 
-    if path[:synctool.param.DELETE_LEN] == (synctool.param.DELETE_DIR +
-                                            os.sep):
-        return os.path.join('$delete', path[synctool.param.DELETE_LEN:])
+    if path[:param.DELETE_LEN] == (param.DELETE_DIR + os.sep):
+        return os.path.join('$delete', path[param.DELETE_LEN:])
 
-    if path[:synctool.param.PURGE_LEN] == (synctool.param.PURGE_DIR +
-                                           os.sep):
-        return os.path.join('$purge', path[synctool.param.PURGE_LEN:])
+    if path[:param.PURGE_LEN] == (param.PURGE_DIR + os.sep):
+        return os.path.join('$purge', path[param.PURGE_LEN:])
 
     return path
 
 
-def terse_path(path, maxlen = 55):
+def terse_path(path, maxlen=55):
     '''print long path as "//overlay/.../dir/file"'''
 
-    if synctool.param.FULL_PATH:
+    if param.FULL_PATH:
         return path
 
     # by the way, this function will misbehave a bit for a _destination_
@@ -183,8 +176,8 @@ def terse_path(path, maxlen = 55):
     # because this function doesn't know whether it is working with
     # a source or a destination path and it treats them both in the same way
 
-    if path[:synctool.param.VAR_LEN] == (synctool.param.VAR_DIR + os.sep):
-        path = os.sep + os.sep + path[synctool.param.VAR_LEN:]
+    if path[:param.VAR_LEN] == (param.VAR_DIR + os.sep):
+        path = os.sep + os.sep + path[param.VAR_LEN:]
 
     if len(path) > maxlen:
         arr = path.split(os.sep)
@@ -265,7 +258,7 @@ def dryrun_msg(msg):
 def openlog():
     '''start logging'''
 
-    if DRY_RUN or not synctool.param.SYSLOGGING:
+    if DRY_RUN or not param.SYSLOGGING:
         return
 
     syslog.openlog('synctool', 0, syslog.LOG_USER)
@@ -274,7 +267,7 @@ def openlog():
 def closelog():
     '''stop logging'''
 
-    if DRY_RUN or not synctool.param.SYSLOGGING:
+    if DRY_RUN or not param.SYSLOGGING:
         return
 
     log('--')
@@ -284,7 +277,7 @@ def closelog():
 def _masterlog(msg):
     '''log only locally (on the master node)'''
 
-    if DRY_RUN or not synctool.param.SYSLOGGING:
+    if DRY_RUN or not param.SYSLOGGING:
         return
 
     syslog.syslog(syslog.LOG_INFO|syslog.LOG_USER, msg)
@@ -293,7 +286,7 @@ def _masterlog(msg):
 def log(msg):
     '''log message to syslog'''
 
-    if DRY_RUN or not synctool.param.SYSLOGGING:
+    if DRY_RUN or not param.SYSLOGGING:
         return
 
     if MASTERLOG:
@@ -519,7 +512,7 @@ def mkdir_p(path, mode=0700):
         return True
 
     # temporarily restore admin's umask
-    mask = os.umask(synctool.param.ORIG_UMASK)
+    mask = os.umask(param.ORIG_UMASK)
 
     try:
         os.makedirs(path, mode)
@@ -592,7 +585,7 @@ def strip_terse_path(path):
     if not path:
         return path
 
-    if not synctool.param.TERSE:
+    if not param.TERSE:
         return strip_path(path)
 
     # terse paths may start with two slashes
@@ -619,7 +612,7 @@ def prepare_path(path):
 
     path = strip_multiple_slashes(path)
     path = strip_trailing_slash(path)
-    path = path.replace('$SYNCTOOL/', synctool.param.ROOTDIR + os.sep)
+    path = path.replace('$SYNCTOOL/', param.ROOTDIR + os.sep)
     return path
 
 

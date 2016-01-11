@@ -20,7 +20,7 @@ class SyncPkgYum(synctool.pkgclass.SyncPkg):
     def __init__(self):
         super(SyncPkgYum, self).__init__()
 
-    def list(self, pkgs = None):
+    def list(self, pkgs=None):
         super(SyncPkgYum, self).list(pkgs)
 
         cmd = 'yum list installed'

@@ -15,7 +15,7 @@ node range expressions
 usage:
   first make an instance of NodeSet
   then add nodes, groups, excluded nodes/groups
-  call synctool.config.read_config()
+  call config.read_config()
   call nodeset.addresses(), which will return a list of addresses
   use the address list to contact the nodes
   use nodeset.get_nodename_from_address() to get a nodename
@@ -23,10 +23,9 @@ usage:
 
 import sys
 
-import synctool.config
+from synctool import config, param
 import synctool.lib
 from synctool.lib import verbose, stderr, warning
-import synctool.param
 import synctool.range
 
 
@@ -89,14 +88,14 @@ class NodeSet(object):
 
         # by default, work on default_nodeset
         if not self.nodelist and not self.grouplist:
-            if not synctool.param.DEFAULT_NODESET:
+            if not param.DEFAULT_NODESET:
                 return []
 
-            self.nodelist = synctool.param.DEFAULT_NODESET
+            self.nodelist = param.DEFAULT_NODESET
 
         # check if the nodes exist at all
         # the user may have given bogus names
-        all_nodes = set(synctool.config.get_all_nodes())
+        all_nodes = set(config.get_all_nodes())
         unknown = (self.nodelist | self.exclude_nodes) - all_nodes
         if len(unknown) > 0:
             # it's nice to display "the first" unknown node
@@ -108,16 +107,13 @@ class NodeSet(object):
 
         # check if the groups exist at all
         unknown = ((self.grouplist | self.exclude_groups) -
-                   synctool.param.ALL_GROUPS)
+                   param.ALL_GROUPS)
         for group in unknown:
             stderr("no such group '%s'" % group)
             return None
 
-        self.nodelist |= synctool.config.get_nodes_in_groups(self.grouplist)
-
-        self.exclude_nodes |= synctool.config.get_nodes_in_groups(
-                                self.exclude_groups)
-
+        self.nodelist |= config.get_nodes_in_groups(self.grouplist)
+        self.exclude_nodes |= config.get_nodes_in_groups(self.exclude_groups)
         # remove excluded nodes from nodelist
         self.nodelist -= self.exclude_nodes
 
@@ -126,19 +122,19 @@ class NodeSet(object):
 
         addrs = []
 
-        ignored_nodes = self.nodelist & synctool.param.IGNORE_GROUPS
+        ignored_nodes = self.nodelist & param.IGNORE_GROUPS
         self.nodelist -= ignored_nodes
 
         for node in self.nodelist:
             # ignoring a group results in also ignoring the node
-            my_groups = set(synctool.config.get_groups(node))
-            my_groups &= synctool.param.IGNORE_GROUPS
+            my_groups = set(config.get_groups(node))
+            my_groups &= param.IGNORE_GROUPS
             if len(my_groups) > 0:
                 verbose('node %s is ignored due to an ignored group' % node)
                 ignored_nodes.add(node)
                 continue
 
-            addr = synctool.config.get_node_ipaddress(node)
+            addr = config.get_node_ipaddress(node)
             self.namemap[addr] = node
 
             if not addr in addrs:    # make sure we do not have duplicates
@@ -146,7 +142,7 @@ class NodeSet(object):
 
         # print message about ignored nodes
         if not silent and len(ignored_nodes) > 0 and not synctool.lib.QUIET:
-            if synctool.param.TERSE:
+            if param.TERSE:
                 synctool.lib.terse(synctool.lib.TERSE_WARNING,
                                    'ignored nodes')
             else:
@@ -178,16 +174,16 @@ def make_default_nodeset():
     Return value: none, exit the program on error
     '''
 
-    # Note: this function is called by synctool.config.read_config()
+    # Note: this function is called by config.read_config()
 
-    temp_set = synctool.param.DEFAULT_NODESET
-    synctool.param.DEFAULT_NODESET = set()
+    temp_set = param.DEFAULT_NODESET
+    param.DEFAULT_NODESET = set()
     nodeset = NodeSet()
     errors = 0
     for elem in temp_set:
-        if elem in synctool.param.NODES:
+        if elem in param.NODES:
             nodeset.add_node(elem)
-        elif elem in synctool.param.ALL_GROUPS:
+        elif elem in param.ALL_GROUPS:
             nodeset.add_group(elem)
         else:
             stderr("config error: unknown node or group '%s' "
@@ -200,7 +196,7 @@ def make_default_nodeset():
             # error message already printed
             errors += 1
         else:
-            synctool.param.DEFAULT_NODESET = nodeset.nodelist
+            param.DEFAULT_NODESET = nodeset.nodelist
 
     if errors > 0:
         sys.exit(-1)

@@ -15,15 +15,14 @@ import sys
 import getopt
 import shlex
 
+from synctool import config, param
 import synctool.aggr
-import synctool.config
 import synctool.lib
 from synctool.lib import stdout, error, unix_out
 import synctool.multiplex
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.parallel
-import synctool.param
 import synctool.unbuffered
 
 # hardcoded name because otherwise we get "dsh_cp.py"
@@ -71,7 +70,7 @@ def run_remote_copy(address_list, files):
     SOURCE_LIST = sourcelist
     FILES_STR = ' '.join(sourcelist)    # only used for printing
 
-    DSH_CP_CMD_ARR = shlex.split(synctool.param.RSYNC_CMD)
+    DSH_CP_CMD_ARR = shlex.split(param.RSYNC_CMD)
 
     if not OPT_PURGE:
         if '--delete' in DSH_CP_CMD_ARR:
@@ -99,7 +98,7 @@ def worker_dsh_cp(addr):
     '''do remote copy to node'''
 
     nodename = NODESET.get_nodename_from_address(addr)
-    if nodename == synctool.param.NODENAME:
+    if nodename == param.NODENAME:
         # do not copy to local node; files are already here
         return
 
@@ -113,7 +112,7 @@ def worker_dsh_cp(addr):
     dsh_cp_cmd_arr = DSH_CP_CMD_ARR[:]
 
     # add ssh cmd
-    ssh_cmd_arr = shlex.split(synctool.param.SSH_CMD)
+    ssh_cmd_arr = shlex.split(param.SSH_CMD)
     if use_multiplex:
         synctool.multiplex.ssh_args(ssh_cmd_arr, nodename)
 
@@ -138,8 +137,7 @@ def worker_dsh_cp(addr):
 def check_cmd_config():
     '''check whether the commands as given in synctool.conf actually exist'''
 
-    (ok, synctool.param.RSYNC_CMD) = synctool.config.check_cmd_config(
-                                        'rsync_cmd', synctool.param.RSYNC_CMD)
+    ok, param.RSYNC_CMD = config.check_cmd_config('rsync_cmd', param.RSYNC_CMD)
     if not ok:
         sys.exit(-1)
 
@@ -148,10 +146,10 @@ def usage():
     '''print usage information'''
 
     print 'usage: %s [options] FILE [..] DESTDIR|:' % PROGNAME
-    print ('''options:
+    print '''options:
   -h, --help                  Display this information
   -c, --conf=FILE             Use this config file
-                              (default: %s)''' % synctool.param.DEFAULT_CONF)
+                              (default: %s)''' % param.DEFAULT_CONF
     print '''  -n, --node=LIST             Execute only on these nodes
   -g, --group=LIST            Execute only on these groups of nodes
   -x, --exclude=LIST          Exclude these nodes from the selected group
@@ -184,9 +182,11 @@ def get_options():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hc:n:g:x:X:o:pN:z:vqaf',
-            ['help', 'conf=', 'node=', 'group=', 'exclude=', 'exclude-group=',
-             'options=', 'purge', 'no-nodename', 'numproc=', 'zzz=',
-             'unix', 'verbose', 'quiet', 'aggregate', 'fix'])
+                                   ['help', 'conf=', 'node=', 'group=',
+                                    'exclude=', 'exclude-group=', 'options=',
+                                    'purge', 'no-nodename', 'numproc=',
+                                    'zzz=', 'unix', 'verbose', 'quiet',
+                                    'aggregate', 'fix'])
     except getopt.GetoptError as reason:
         print '%s: %s' % (PROGNAME, reason)
 #        usage()
@@ -199,7 +199,7 @@ def get_options():
             sys.exit(1)
 
         if opt in ('-c', '--conf'):
-            synctool.param.CONF_FILE = arg
+            param.CONF_FILE = arg
             continue
 
         # these options influence program output, so process them
@@ -216,12 +216,12 @@ def get_options():
             synctool.lib.UNIX_CMD = True
             continue
 
-    synctool.config.read_config()
+    config.read_config()
     synctool.nodeset.make_default_nodeset()
     check_cmd_config()
 
     # then process the other options
-    MASTER_OPTS = [ sys.argv[0] ]
+    MASTER_OPTS = [sys.argv[0],]
 
     for opt, arg in opts:
         if opt:
@@ -263,13 +263,13 @@ def get_options():
 
         if opt in ('-N', '--numproc'):
             try:
-                synctool.param.NUM_PROC = int(arg)
+                param.NUM_PROC = int(arg)
             except ValueError:
                 print ("%s: option '%s' requires a numeric value" %
                        (PROGNAME, opt))
                 sys.exit(1)
 
-            if synctool.param.NUM_PROC < 1:
+            if param.NUM_PROC < 1:
                 print '%s: invalid value for numproc' % PROGNAME
                 sys.exit(1)
 
@@ -277,21 +277,21 @@ def get_options():
 
         if opt in ('-z', '--zzz'):
             try:
-                synctool.param.SLEEP_TIME = int(arg)
+                param.SLEEP_TIME = int(arg)
             except ValueError:
                 print ("%s: option '%s' requires a numeric value" %
                        (PROGNAME, opt))
                 sys.exit(1)
 
-            if synctool.param.SLEEP_TIME < 0:
+            if param.SLEEP_TIME < 0:
                 print '%s: invalid value for sleep time' % PROGNAME
                 sys.exit(1)
 
-            if not synctool.param.SLEEP_TIME:
+            if not param.SLEEP_TIME:
                 # (temporarily) set to -1 to indicate we want
                 # to run serialized
                 # synctool.lib.multiprocess() will use this
-                synctool.param.SLEEP_TIME = -1
+                param.SLEEP_TIME = -1
 
             continue
 
@@ -351,7 +351,7 @@ def get_options():
 def main():
     '''run the program'''
 
-    synctool.param.init()
+    param.init()
 
     sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)
     sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)
@@ -368,7 +368,7 @@ def main():
 
         sys.exit(0)
 
-    synctool.config.init_mynodename()
+    config.init_mynodename()
 
     address_list = NODESET.addresses()
     if not address_list:

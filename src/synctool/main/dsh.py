@@ -15,15 +15,15 @@ import sys
 import getopt
 import shlex
 
+from synctool import config, param
 import synctool.aggr
-import synctool.config
+import synctool.configparser
 import synctool.lib
 from synctool.lib import verbose, error
 from synctool.main.wrapper import catch_signals
 import synctool.multiplex
 import synctool.nodeset
 import synctool.parallel
-import synctool.param
 import synctool.unbuffered
 
 # hardcoded name because otherwise we get "dsh.py"
@@ -63,12 +63,12 @@ def run_dsh(address_list, remote_cmd_arr):
     if not full_path:
         # command was not found in PATH
         # look under scripts/
-        full_path = os.path.join(synctool.param.SCRIPT_DIR,
+        full_path = os.path.join(param.SCRIPT_DIR,
                                  remote_cmd_arr[0])
         # sync the script to the node
         SYNC_IT = True
-    elif (full_path[:len(synctool.param.SCRIPT_DIR)+1] ==
-          synctool.param.SCRIPT_DIR + os.sep):
+    elif (full_path[:len(param.SCRIPT_DIR)+1] ==
+          param.SCRIPT_DIR + os.sep):
         SYNC_IT = True
 
     try:
@@ -85,12 +85,12 @@ def run_dsh(address_list, remote_cmd_arr):
         verbose('%s: %s' % (full_path, err.strerror))
         SYNC_IT = False
 
-    SSH_CMD_ARR = shlex.split(synctool.param.SSH_CMD)
+    SSH_CMD_ARR = shlex.split(param.SSH_CMD)
 
     if SSH_OPTIONS:
         SSH_CMD_ARR.extend(shlex.split(SSH_OPTIONS))
         # if -N 1, force tty allocation
-        if synctool.param.NUM_PROC <= 1 and not '-t' in SSH_CMD_ARR:
+        if param.NUM_PROC <= 1 and not '-t' in SSH_CMD_ARR:
             SSH_CMD_ARR.append('-t')
             # remove option -T (disable tty allocation)
             if '-T' in SSH_CMD_ARR:
@@ -114,17 +114,16 @@ def worker_ssh(addr):
     # use ssh connection multiplexing (if possible)
     use_multiplex = synctool.multiplex.use_mux(nodename, addr)
 
-    if (SYNC_IT and
-        not (OPT_SKIP_RSYNC or nodename in synctool.param.NO_RSYNC)):
+    if SYNC_IT and not (OPT_SKIP_RSYNC or nodename in param.NO_RSYNC):
         # first, sync the script to the node using rsync
         # REMOTE_CMD_ARR[0] is the full path to the cmd in SCRIPT_DIR
         verbose('running rsync $SYNCTOOL/scripts/%s to node %s' %
                 (os.path.basename(REMOTE_CMD_ARR[0]), nodename))
 
-        cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
+        cmd_arr = shlex.split(param.RSYNC_CMD)
 
         # add "-e ssh_cmd" to rsync command
-        ssh_cmd_arr = shlex.split(synctool.param.SSH_CMD)
+        ssh_cmd_arr = shlex.split(param.SSH_CMD)
         if use_multiplex:
             synctool.multiplex.ssh_args(ssh_cmd_arr, nodename)
         cmd_arr.extend(['-e', ' '.join(ssh_cmd_arr)])
@@ -158,7 +157,7 @@ def worker_ssh(addr):
     ssh_cmd_arr.extend(REMOTE_CMD_ARR)
 
     # execute ssh+remote command and show output with the nodename
-    if synctool.param.NUM_PROC <= 1:
+    if param.NUM_PROC <= 1:
         # run with -N 1 : wait on prompts, flush output
         print nodename + ': ',
         synctool.lib.exec_command(ssh_cmd_arr)
@@ -174,15 +173,15 @@ def start_multiplex(address_list):
     global PERSIST
 
     # allow this only on the master node because of security considerations
-    if synctool.param.MASTER != synctool.param.HOSTNAME:
-        verbose('master %s != hostname %s' % (synctool.param.MASTER,
-                                              synctool.param.HOSTNAME))
+    if param.MASTER != param.HOSTNAME:
+        verbose('master %s != hostname %s' % (param.MASTER,
+                                              param.HOSTNAME))
         error('not running on the master node')
         sys.exit(-1)
 
     if PERSIST is None:
         # use default from synctool.conf
-        PERSIST = synctool.param.CONTROL_PERSIST
+        PERSIST = param.CONTROL_PERSIST
     else:
         # spellcheck the parameter
         m = synctool.configparser.PERSIST_TIME.match(PERSIST)
@@ -208,7 +207,7 @@ def control_multiplex(address_list, ctl_cmd):
         error('unsupported version of ssh')
         sys.exit(-1)
 
-    SSH_CMD_ARR = shlex.split(synctool.param.SSH_CMD)
+    SSH_CMD_ARR = shlex.split(param.SSH_CMD)
 
     if SSH_OPTIONS:
         SSH_CMD_ARR.extend(shlex.split(SSH_OPTIONS))
@@ -249,14 +248,13 @@ def check_cmd_config():
 
     errors = 0
 
-    (ok, synctool.param.SSH_CMD) = synctool.config.check_cmd_config(
-                                        'ssh_cmd', synctool.param.SSH_CMD)
+    ok, param.SSH_CMD = config.check_cmd_config('ssh_cmd', param.SSH_CMD)
     if not ok:
         errors += 1
 
     if not OPT_SKIP_RSYNC:
-        (ok, synctool.param.RSYNC_CMD) = synctool.config.check_cmd_config(
-                                        'rsync_cmd', synctool.param.RSYNC_CMD)
+        ok, param.RSYNC_CMD = config.check_cmd_config('rsync_cmd',
+                                                      param.RSYNC_CMD)
         if not ok:
             errors += 1
 
@@ -272,7 +270,7 @@ def usage():
     print '  -h, --help                  Display this information'
     print '  -c, --conf=FILE             Use this config file'
     print ('                              (default: %s)' %
-        synctool.param.DEFAULT_CONF)
+           param.DEFAULT_CONF)
     print '''  -n, --node=LIST             Execute only on these nodes
   -g, --group=LIST            Execute only on these groups of nodes
   -x, --exclude=LIST          Exclude these nodes from the selected group
@@ -307,10 +305,12 @@ def get_options():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hc:n:g:x:X:o:MP:O:N:z:vqa',
-            ['help', 'conf=', 'node=', 'group=', 'exclude=',
-            'exclude-group=', 'aggregate', 'options=', 'master', 'multiplex',
-            'persist=', 'numproc=', 'zzz=', 'no-nodename', 'unix', 'verbose',
-            'aggregate', 'skip-rsync', 'quiet'])
+                                   ['help', 'conf=', 'node=', 'group=',
+                                    'exclude=', 'exclude-group=', 'aggregate',
+                                    'options=', 'master', 'multiplex',
+                                    'persist=', 'numproc=', 'zzz=',
+                                    'no-nodename', 'unix', 'verbose',
+                                    'aggregate', 'skip-rsync', 'quiet'])
     except getopt.GetoptError as reason:
         print '%s: %s' % (PROGNAME, reason)
 #        usage()
@@ -323,7 +323,7 @@ def get_options():
             sys.exit(1)
 
         if opt in ('-c', '--conf'):
-            synctool.param.CONF_FILE = arg
+            param.CONF_FILE = arg
             continue
 
         # these options influence program output, so process them
@@ -340,12 +340,12 @@ def get_options():
             synctool.lib.UNIX_CMD = True
             continue
 
-    synctool.config.read_config()
+    config.read_config()
     synctool.nodeset.make_default_nodeset()
     check_cmd_config()
 
     # then process the other options
-    MASTER_OPTS = [ sys.argv[0] ]
+    MASTER_OPTS = [sys.argv[0],]
 
     for opt, arg in opts:
         if opt:
@@ -399,13 +399,13 @@ def get_options():
 
         if opt in ('-N', '--numproc'):
             try:
-                synctool.param.NUM_PROC = int(arg)
+                param.NUM_PROC = int(arg)
             except ValueError:
                 print ("%s: option '%s' requires a numeric value" %
                        (PROGNAME, opt))
                 sys.exit(1)
 
-            if synctool.param.NUM_PROC < 1:
+            if param.NUM_PROC < 1:
                 print '%s: invalid value for numproc' % PROGNAME
                 sys.exit(1)
 
@@ -413,21 +413,21 @@ def get_options():
 
         if opt in ('-z', '--zzz'):
             try:
-                synctool.param.SLEEP_TIME = int(arg)
+                param.SLEEP_TIME = int(arg)
             except ValueError:
                 print ("%s: option '%s' requires a numeric value" %
                        (PROGNAME, opt))
                 sys.exit(1)
 
-            if synctool.param.SLEEP_TIME < 0:
+            if param.SLEEP_TIME < 0:
                 print '%s: invalid value for sleep time' % PROGNAME
                 sys.exit(1)
 
-            if not synctool.param.SLEEP_TIME:
+            if not param.SLEEP_TIME:
                 # (temporarily) set to -1 to indicate we want
                 # to run serialized
                 # synctool.parallel.do() will use this
-                synctool.param.SLEEP_TIME = -1
+                param.SLEEP_TIME = -1
 
             continue
 
@@ -463,7 +463,7 @@ def get_options():
         print '%s: options --master and -O can not be combined' % PROGNAME
         sys.exit(1)
 
-    if (OPT_MULTIPLEX or CTL_CMD != None):
+    if OPT_MULTIPLEX or CTL_CMD != None:
         if len(args) > 0:
             print '%s: excessive arguments on command-line' % PROGNAME
             sys.exit(1)
@@ -482,7 +482,7 @@ def get_options():
 def main():
     '''run the program'''
 
-    synctool.param.init()
+    param.init()
 
     sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)
     sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)
@@ -499,7 +499,7 @@ def main():
 
         sys.exit(0)
 
-    synctool.config.init_mynodename()
+    config.init_mynodename()
 
     address_list = NODESET.addresses()
     if not address_list:

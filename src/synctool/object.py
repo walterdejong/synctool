@@ -420,7 +420,7 @@ class VNodeLink(VNode):
                 os.symlink(self.oldpath, self.name)
             except OSError as err:
                 error('failed to create symlink %s -> %s : %s' %
-                       (self.name, self.oldpath, err.strerror))
+                      (self.name, self.oldpath, err.strerror))
                 terse(TERSE_FAIL, 'link %s' % self.name)
 
     def set_owner(self):
@@ -595,7 +595,7 @@ class VNodeBlkDev(VNode):
         dest_minor = os.minor(dest_stat.st_rdev)
         if src_major != dest_major or src_minor != dest_minor:
             stdout('%s should have major,minor %d,%d but has %d,%d' %
-                (self.name, src_major, src_minor, dest_major, dest_minor))
+                   (self.name, src_major, src_minor, dest_major, dest_minor))
             unix_out('# updating major,minor %s' % self.name)
             terse(synctool.lib.TERSE_SYNC, self.name)
             return False
@@ -615,7 +615,7 @@ class VNodeBlkDev(VNode):
             try:
                 os.mknod(self.name,
                          (self.src_stat.st_mode & 0777) | stat.S_IFBLK,
-                          os.makedev(major, minor))
+                         os.makedev(major, minor))
             except OSError as err:
                 error('failed to create device %s : %s' % (self.name,
                                                            err.strerror))
@@ -693,8 +693,8 @@ class SyncObject(object):
             # entry is of a different file type
             vnode = self.vnode_obj()
             stdout('%s should be a %s' % (self.dest_path, vnode.typename()))
-            terse(synctool.lib.TERSE_WARNING, 'wrong type %s' %
-                                               self.dest_path)
+            terse(synctool.lib.TERSE_WARNING, ('wrong type %s' %
+                                               self.dest_path))
             return SyncObject.FIX_TYPE
 
         vnode = self.vnode_obj()
@@ -710,25 +710,27 @@ class SyncObject(object):
             (self.src_stat.gid != self.dest_stat.gid)):
             stdout('%s should have owner %s.%s (%d.%d), '
                    'but has %s.%s (%d.%d)' % (self.dest_path,
-                   self.src_stat.ascii_uid(),
-                   self.src_stat.ascii_gid(),
-                   self.src_stat.uid, self.src_stat.gid,
-                   self.dest_stat.ascii_uid(),
-                   self.dest_stat.ascii_gid(),
-                   self.dest_stat.uid, self.dest_stat.gid))
-            terse(synctool.lib.TERSE_OWNER, '%s.%s %s' %
-                                            (self.src_stat.ascii_uid(),
-                                             self.src_stat.ascii_gid(),
-                                             self.dest_path))
+                                              self.src_stat.ascii_uid(),
+                                              self.src_stat.ascii_gid(),
+                                              self.src_stat.uid,
+                                              self.src_stat.gid,
+                                              self.dest_stat.ascii_uid(),
+                                              self.dest_stat.ascii_gid(),
+                                              self.dest_stat.uid,
+                                              self.dest_stat.gid))
+            terse(synctool.lib.TERSE_OWNER, ('%s.%s %s' %
+                                             (self.src_stat.ascii_uid(),
+                                              self.src_stat.ascii_gid(),
+                                              self.dest_path)))
             fix_action = SyncObject.FIX_OWNER
 
         if self.src_stat.mode != self.dest_stat.mode:
             stdout('%s should have mode %04o, but has %04o' %
                    (self.dest_path, self.src_stat.mode & 07777,
                     self.dest_stat.mode & 07777))
-            terse(synctool.lib.TERSE_MODE, '%04o %s' %
-                                           (self.src_stat.mode & 07777,
-                                            self.dest_path))
+            terse(synctool.lib.TERSE_MODE, ('%04o %s' %
+                                            (self.src_stat.mode & 07777,
+                                             self.dest_path)))
             fix_action |= SyncObject.FIX_MODE
 
         # check times, but not for symlinks, directories

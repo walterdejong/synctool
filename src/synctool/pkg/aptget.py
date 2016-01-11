@@ -22,7 +22,7 @@ class SyncPkgAptget(synctool.pkgclass.SyncPkg):
     def __init__(self):
         super(SyncPkgAptget, self).__init__()
 
-    def list(self, pkgs = None):
+    def list(self, pkgs=None):
         super(SyncPkgAptget, self).list(pkgs)
 
         cmd = 'dpkg -l'

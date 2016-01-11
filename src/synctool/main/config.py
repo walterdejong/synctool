@@ -16,15 +16,13 @@ import sys
 import getopt
 import socket
 
-import synctool.config
-import synctool.configparser
+from synctool import config, param
 from synctool.lib import stderr, error
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
-import synctool.param
 
-# hardcoded name because otherwise we get "synctool_config.py"
-PROGNAME = 'synctool-config'
+# hardcoded name because otherwise we get "config.py"
+PROGNAME = 'config'
 
 ACTION = 0
 ACTION_OPTION = None
@@ -61,21 +59,21 @@ OPT_RSYNC = False
 def list_all_nodes():
     '''display a list of all nodes'''
 
-    nodes = synctool.config.get_all_nodes()
+    nodes = config.get_all_nodes()
     nodes.sort()
 
     for node in nodes:
-        ignored = set(synctool.config.get_groups(node))
-        ignored &= synctool.param.IGNORE_GROUPS
+        ignored = set(config.get_groups(node))
+        ignored &= param.IGNORE_GROUPS
 
         if OPT_FILTER_IGNORED and len(ignored) > 0:
             continue
 
         if OPT_IPADDRESS:
-            node += ' ' + synctool.config.get_node_ipaddress(node)
+            node += ' ' + config.get_node_ipaddress(node)
 
         if OPT_RSYNC:
-            if node in synctool.param.NO_RSYNC:
+            if node in param.NO_RSYNC:
                 node += ' no'
             else:
                 node += ' yes'
@@ -89,14 +87,14 @@ def list_all_nodes():
 def list_all_groups():
     '''display a list of all groups'''
 
-    groups = synctool.param.GROUP_DEFS.keys()
+    groups = param.GROUP_DEFS.keys()
     groups.sort()
 
     for group in groups:
-        if OPT_FILTER_IGNORED and group in synctool.param.IGNORE_GROUPS:
+        if OPT_FILTER_IGNORED and group in param.IGNORE_GROUPS:
             continue
 
-        if group in synctool.param.IGNORE_GROUPS:
+        if group in param.IGNORE_GROUPS:
             group += ' (ignored)'
 
         print group
@@ -121,17 +119,17 @@ def list_nodes(nodelist):
         if OPT_IPADDRESS or OPT_RSYNC:
             out = ''
             if OPT_IPADDRESS:
-                out += ' ' + synctool.config.get_node_ipaddress(node)
+                out += ' ' + config.get_node_ipaddress(node)
 
             if OPT_RSYNC:
-                if node in synctool.param.NO_RSYNC:
+                if node in param.NO_RSYNC:
                     out += ' no'
                 else:
                     out += ' yes'
 
             print out[1:]
         else:
-            for group in synctool.config.get_groups(node):
+            for group in config.get_groups(node):
                 # extend groups, but do not have duplicates
                 if not group in groups:
                     groups.append(group)
@@ -144,10 +142,10 @@ def list_nodes(nodelist):
 #    groups.sort()
 
     for group in groups:
-        if OPT_FILTER_IGNORED and group in synctool.param.IGNORE_GROUPS:
+        if OPT_FILTER_IGNORED and group in param.IGNORE_GROUPS:
             continue
 
-        if group in synctool.param.IGNORE_GROUPS:
+        if group in param.IGNORE_GROUPS:
             group += ' (ignored)'
 
         print group
@@ -171,17 +169,17 @@ def list_nodegroups(grouplist):
     arr.sort()
 
     for node in arr:
-        ignored = set(synctool.config.get_groups(node))
-        ignored &= synctool.param.IGNORE_GROUPS
+        ignored = set(config.get_groups(node))
+        ignored &= param.IGNORE_GROUPS
 
         if OPT_FILTER_IGNORED and len(ignored) > 0:
             continue
 
         if OPT_IPADDRESS:
-            node += ' ' + synctool.config.get_node_ipaddress(node)
+            node += ' ' + config.get_node_ipaddress(node)
 
         if OPT_RSYNC:
-            if node in synctool.param.NO_RSYNC:
+            if node in param.NO_RSYNC:
                 node += ' no'
             else:
                 node += ' yes'
@@ -197,40 +195,34 @@ def list_commands(cmds):
 
     for cmd in cmds:
         if cmd == 'diff':
-            ok, _ = synctool.config.check_cmd_config('diff_cmd',
-                        synctool.param.DIFF_CMD)
+            ok, _ = config.check_cmd_config('diff_cmd', param.DIFF_CMD)
             if ok:
-                print synctool.param.DIFF_CMD
+                print param.DIFF_CMD
 
         if cmd == 'ping':
-            ok, _ = synctool.config.check_cmd_config('ping_cmd',
-                        synctool.param.PING_CMD)
+            ok, _ = config.check_cmd_config('ping_cmd', param.PING_CMD)
             if ok:
-                print synctool.param.PING_CMD
+                print param.PING_CMD
 
         elif cmd == 'ssh':
-            ok, _ = synctool.config.check_cmd_config('ssh_cmd',
-                        synctool.param.SSH_CMD)
+            ok, _ = config.check_cmd_config('ssh_cmd', param.SSH_CMD)
             if ok:
-                print synctool.param.SSH_CMD
+                print param.SSH_CMD
 
         elif cmd == 'rsync':
-            ok, _ = synctool.config.check_cmd_config('rsync_cmd',
-                        synctool.param.RSYNC_CMD)
+            ok, _ = config.check_cmd_config('rsync_cmd', param.RSYNC_CMD)
             if ok:
-                print synctool.param.RSYNC_CMD
+                print param.RSYNC_CMD
 
         elif cmd == 'synctool':
-            ok, _ = synctool.config.check_cmd_config('synctool_cmd',
-                        synctool.param.SYNCTOOL_CMD)
+            ok, _ = config.check_cmd_config('synctool_cmd', param.SYNCTOOL_CMD)
             if ok:
-                print synctool.param.SYNCTOOL_CMD
+                print param.SYNCTOOL_CMD
 
         elif cmd == 'pkg':
-            ok, _ = synctool.config.check_cmd_config('pkg_cmd',
-                        synctool.param.PKG_CMD)
+            ok, _ = config.check_cmd_config('pkg_cmd', param.PKG_CMD)
             if ok:
-                print synctool.param.PKG_CMD
+                print param.PKG_CMD
 
         else:
             error("no such command '%s' available in synctool" % cmd)
@@ -239,11 +231,11 @@ def list_commands(cmds):
 def list_dirs():
     '''display directory settings'''
 
-    print 'rootdir', synctool.param.ROOTDIR
-    print 'overlaydir', synctool.param.OVERLAY_DIR
-    print 'deletedir', synctool.param.DELETE_DIR
-    print 'scriptdir', synctool.param.SCRIPT_DIR
-    print 'tempdir', synctool.param.TEMP_DIR
+    print 'rootdir', param.ROOTDIR
+    print 'overlaydir', param.OVERLAY_DIR
+    print 'deletedir', param.DELETE_DIR
+    print 'scriptdir', param.SCRIPT_DIR
+    print 'tempdir', param.TEMP_DIR
 
 
 def expand(nodelist):
@@ -288,8 +280,7 @@ def usage():
     print 'options:'
     print '  -h, --help                  Display this information'
     print '  -c, --conf=FILE             Use this config file'
-    print ('                              (default: %s)' %
-        synctool.param.DEFAULT_CONF)
+    print '                              (default: %s)' % param.DEFAULT_CONF
 
     print '''  -l, --list-nodes            List all configured nodes
   -L, --list-groups           List all configured groups
@@ -326,11 +317,12 @@ def get_options():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hc:lLn:g:irfC:PNdx:v',
-            ['help', 'conf=', 'list-nodes', 'list-groups', 'node=', 'group=',
-            'ipaddress', 'rsync', 'filter-ignored',
-            'command', 'package-manager', 'numproc', 'list-dirs',
-            'prefix', 'master', 'slave', 'nodename', 'fqdn', 'expand',
-            'version'])
+                                   ['help', 'conf=', 'list-nodes',
+                                    'list-groups', 'node=', 'group=',
+                                    'ipaddress', 'rsync', 'filter-ignored',
+                                    'command', 'package-manager', 'numproc',
+                                    'list-dirs', 'prefix', 'master', 'slave',
+                                    'nodename', 'fqdn', 'expand', 'version'])
     except getopt.GetoptError as reason:
         print
         print '%s: %s' % (PROGNAME, reason)
@@ -350,7 +342,7 @@ def get_options():
             sys.exit(1)
 
         if opt in ('-c', '--conf'):
-            synctool.param.CONF_FILE = arg
+            param.CONF_FILE = arg
             continue
 
         if opt in ('-l', '--list-nodes'):
@@ -445,19 +437,19 @@ def get_options():
 def main():
     '''do your thing'''
 
-    synctool.param.init()
+    param.init()
 
     get_options()
 
     if ACTION == ACTION_VERSION:
-        print synctool.param.VERSION
+        print param.VERSION
         sys.exit(0)
 
     if ACTION == ACTION_FQDN:
         print socket.getfqdn()
         sys.exit(0)
 
-    synctool.config.read_config()
+    config.read_config()
 #    synctool.nodeset.make_default_nodeset()
 
     if ACTION == ACTION_LIST_NODES:
@@ -485,36 +477,36 @@ def main():
         list_commands(ARG_CMDS)
 
     elif ACTION == ACTION_PKGMGR:
-        print synctool.param.PACKAGE_MANAGER
+        print param.PACKAGE_MANAGER
 
     elif ACTION == ACTION_NUMPROC:
-        print synctool.param.NUM_PROC
+        print param.NUM_PROC
 
     elif ACTION == ACTION_LIST_DIRS:
         list_dirs()
 
     elif ACTION == ACTION_PREFIX:
-        print synctool.param.ROOTDIR
+        print param.ROOTDIR
 
     elif ACTION == ACTION_NODENAME:
-        synctool.config.init_mynodename()
+        config.init_mynodename()
 
-        if not synctool.param.NODENAME:
+        if not param.NODENAME:
             error('unable to determine my nodename (%s)' %
-                  synctool.param.HOSTNAME)
-            stderr('please check %s' % synctool.param.CONF_FILE)
+                  param.HOSTNAME)
+            stderr('please check %s' % param.CONF_FILE)
             sys.exit(1)
 
-        print synctool.param.NODENAME
+        print param.NODENAME
 
     elif ACTION == ACTION_MASTER:
-        print synctool.param.MASTER
+        print param.MASTER
 
     elif ACTION == ACTION_SLAVE:
-        if not len(synctool.param.SLAVES):
+        if not len(param.SLAVES):
             print '(none)'
         else:
-            for node in synctool.param.SLAVES:
+            for node in param.SLAVES:
                 print node,
             print
 

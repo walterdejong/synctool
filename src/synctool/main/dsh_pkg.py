@@ -16,15 +16,14 @@ import sys
 import getopt
 import shlex
 
+from synctool import config, param
 import synctool.aggr
-import synctool.config
 import synctool.lib
 from synctool.lib import verbose, error
 import synctool.multiplex
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.parallel
-import synctool.param
 import synctool.unbuffered
 
 # hardcoded name because otherwise we get "dsh_pkg.py"
@@ -46,9 +45,9 @@ def run_remote_pkg(address_list):
 
     global SSH_CMD_ARR
 
-    SSH_CMD_ARR = shlex.split(synctool.param.SSH_CMD)
+    SSH_CMD_ARR = shlex.split(param.SSH_CMD)
     # if -N 1, force tty allocation
-    if synctool.param.NUM_PROC <= 1 and not '-t' in SSH_CMD_ARR:
+    if param.NUM_PROC <= 1 and not '-t' in SSH_CMD_ARR:
         SSH_CMD_ARR.append('-t')
         # remove option -T (disable tty allocation)
         if '-T' in SSH_CMD_ARR:
@@ -74,13 +73,13 @@ def worker_pkg(addr):
 
     cmd_arr.append('--')
     cmd_arr.append(addr)
-    cmd_arr.extend(shlex.split(synctool.param.PKG_CMD))
+    cmd_arr.extend(shlex.split(param.PKG_CMD))
     cmd_arr.extend(PASS_ARGS)
 
     verbose('running synctool-pkg on node %s' % nodename)
 
     # execute ssh synctool-pkg and show output with the nodename
-    if synctool.param.NUM_PROC <= 1:
+    if param.NUM_PROC <= 1:
         # run with -N 1 : wait on prompts, flush output
         print nodename + ': ',
         synctool.lib.exec_command(cmd_arr)
@@ -138,13 +137,11 @@ def check_cmd_config():
 
     errors = 0
 
-    (ok, synctool.param.SSH_CMD) = synctool.config.check_cmd_config('ssh_cmd',
-                                    synctool.param.SSH_CMD)
+    ok, param.SSH_CMD = config.check_cmd_config('ssh_cmd', param.SSH_CMD)
     if not ok:
         errors += 1
 
-    (ok, synctool.param.PKG_CMD) = synctool.config.check_cmd_config('pkg_cmd',
-                                    synctool.param.PKG_CMD)
+    ok, param.PKG_CMD = config.check_cmd_config('pkg_cmd', param.PKG_CMD)
     if not ok:
         errors += 1
 
@@ -173,7 +170,7 @@ def usage():
     print '  -h, --help                     Display this information'
     print '  -c, --conf=FILE                Use this config file'
     print ('                                 (default: %s)' %
-           synctool.param.DEFAULT_CONF)
+           param.DEFAULT_CONF)
 
     print '''  -n, --node=LIST                Execute only on these nodes
   -g, --group=LIST               Execute only on these groups of nodes
@@ -199,7 +196,7 @@ Supported package managers are:'''
     # format it at 78 characters wide
     print ' ',
     n = 2
-    for pkg in synctool.param.KNOWN_PACKAGE_MANAGERS:
+    for pkg in param.KNOWN_PACKAGE_MANAGERS:
         if n + len(pkg) + 1 <= 78:
             n = n + len(pkg) + 1
             print pkg,
@@ -234,17 +231,19 @@ def get_options():
 
     try:
         opts, args = getopt.getopt(arglist, 'hc:n:g:x:X:iRluUCm:fN:z:vqa',
-            ['help', 'conf=', 'node=', 'group=', 'exclude=', 'exclude-group=',
-            'list', 'install', 'remove', 'update', 'upgrade', 'clean',
-            'cleanup', 'manager=', 'numproc=', 'zzz=',
-            'fix', 'verbose', 'quiet', 'unix', 'aggregate'])
+                                   ['help', 'conf=', 'node=', 'group=',
+                                    'exclude=', 'exclude-group=', 'list',
+                                    'install', 'remove', 'update', 'upgrade',
+                                    'clean', 'cleanup', 'manager=',
+                                    'numproc=', 'zzz=', 'fix', 'verbose',
+                                    'quiet', 'unix', 'aggregate'])
     except getopt.GetoptError as reason:
         print '%s: %s' % (PROGNAME, reason)
 #        usage()
         sys.exit(1)
 
     PASS_ARGS = []
-    MASTER_OPTS = [ sys.argv[0] ]
+    MASTER_OPTS = [sys.argv[0],]
 
     # first read the config file
     for opt, arg in opts:
@@ -253,7 +252,7 @@ def get_options():
             sys.exit(1)
 
         if opt in ('-c', '--conf'):
-            synctool.param.CONF_FILE = arg
+            param.CONF_FILE = arg
             PASS_ARGS.append(opt)
             PASS_ARGS.append(arg)
             continue
@@ -272,7 +271,7 @@ def get_options():
             synctool.lib.UNIX_CMD = True
             continue
 
-    synctool.config.read_config()
+    config.read_config()
     synctool.nodeset.make_default_nodeset()
     check_cmd_config()
 
@@ -332,24 +331,24 @@ def get_options():
             action += 1
 
         if opt in ('-m', '--manager'):
-            if not arg in synctool.param.KNOWN_PACKAGE_MANAGERS:
+            if not arg in param.KNOWN_PACKAGE_MANAGERS:
                 error("unknown or unsupported package manager '%s'" % arg)
                 sys.exit(1)
 
-            synctool.param.PACKAGE_MANAGER = arg
+            param.PACKAGE_MANAGER = arg
 
         if opt in ('-f', '--fix'):
             synctool.lib.DRY_RUN = False
 
         if opt in ('-N', '--numproc'):
             try:
-                synctool.param.NUM_PROC = int(arg)
+                param.NUM_PROC = int(arg)
             except ValueError:
                 print ("%s: option '%s' requires a numeric value" %
                        (PROGNAME, opt))
                 sys.exit(1)
 
-            if synctool.param.NUM_PROC < 1:
+            if param.NUM_PROC < 1:
                 print '%s: invalid value for numproc' % PROGNAME
                 sys.exit(1)
 
@@ -357,21 +356,21 @@ def get_options():
 
         if opt in ('-z', '--zzz'):
             try:
-                synctool.param.SLEEP_TIME = int(arg)
+                param.SLEEP_TIME = int(arg)
             except ValueError:
                 print ("%s: option '%s' requires a numeric value" %
                        (PROGNAME, opt))
                 sys.exit(1)
 
-            if synctool.param.SLEEP_TIME < 0:
+            if param.SLEEP_TIME < 0:
                 print '%s: invalid value for sleep time' % PROGNAME
                 sys.exit(1)
 
-            if not synctool.param.SLEEP_TIME:
+            if not param.SLEEP_TIME:
                 # (temporarily) set to -1 to indicate we want
                 # to run serialized
                 # synctool.lib.multiprocess() will use this
-                synctool.param.SLEEP_TIME = -1
+                param.SLEEP_TIME = -1
 
             continue
 
@@ -417,7 +416,7 @@ def get_options():
 def main():
     '''run the program'''
 
-    synctool.param.init()
+    param.init()
 
     sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)
     sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)
@@ -434,11 +433,11 @@ def main():
 
         sys.exit(0)
 
-    synctool.config.init_mynodename()
+    config.init_mynodename()
 
-    if synctool.param.MASTER != synctool.param.HOSTNAME:
-        verbose('master %s != hostname %s' % (synctool.param.MASTER,
-                                              synctool.param.HOSTNAME))
+    if param.MASTER != param.HOSTNAME:
+        verbose('master %s != hostname %s' % (param.MASTER,
+                                              param.HOSTNAME))
         error('not running on the master node')
         sys.exit(-1)
 

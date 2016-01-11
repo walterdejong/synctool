@@ -28,7 +28,7 @@ class SyncStat(object):
     # Also note how I left device files (major, minor) out, they are so rare
     # that they get special treatment in object.py
 
-    def __init__(self, path = None):
+    def __init__(self, path=None):
         '''initialize instance'''
 
         self.entry_exists = False
@@ -83,37 +83,37 @@ class SyncStat(object):
     def is_dir(self):
         '''Returns True if it's a directory'''
 
-        return (self.entry_exists and stat.S_ISDIR(self.mode))
+        return self.entry_exists and stat.S_ISDIR(self.mode)
 
     def is_file(self):
         '''Returns True if it's a regular file'''
 
-        return (self.entry_exists and stat.S_ISREG(self.mode))
+        return self.entry_exists and stat.S_ISREG(self.mode)
 
     def is_link(self):
         '''Returns True if it's a symbolic link'''
 
-        return (self.entry_exists and stat.S_ISLNK(self.mode))
+        return self.entry_exists and stat.S_ISLNK(self.mode)
 
     def is_fifo(self):
         '''Returns True if it's a FIFO'''
 
-        return (self.entry_exists and stat.S_ISFIFO(self.mode))
+        return self.entry_exists and stat.S_ISFIFO(self.mode)
 
     def is_sock(self):
         '''Returns True if it's a socket file'''
 
-        return (self.entry_exists and stat.S_ISSOCK(self.mode))
+        return self.entry_exists and stat.S_ISSOCK(self.mode)
 
     def is_chardev(self):
         '''Returns True if it's a character device file'''
 
-        return (self.entry_exists and stat.S_ISCHR(self.mode))
+        return self.entry_exists and stat.S_ISCHR(self.mode)
 
     def is_blockdev(self):
         '''Returns True if it's a block device file'''
 
-        return (self.entry_exists and stat.S_ISCHR(self.mode))
+        return self.entry_exists and stat.S_ISCHR(self.mode)
 
     def filetype(self):
         '''Returns the file type part of the mode'''
@@ -128,7 +128,7 @@ class SyncStat(object):
     def is_exec(self):
         '''Returns True if its mode has any 'x' bit set'''
 
-        return (self.entry_exists and ((self.mode & 0111) != 0))
+        return self.entry_exists and ((self.mode & 0111) != 0)
 
     def ascii_uid(self):
         '''Returns the username for this uid'''

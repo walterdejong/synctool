@@ -39,17 +39,15 @@ ACTION = 0
 PKG_LIST = None
 
 # list of Linux package managers: (Linux release file, package manager)
-LINUX_PACKAGE_MANAGERS = (
-    ( '/etc/debian_version', 'apt-get' ),
-    ( '/etc/SuSE-release', 'zypper' ),
-    ( '/etc/redhat-release', 'yum' ),
-    ( '/etc/arch-release', 'pacman' ),
-    ( '/etc/gentoo-release', 'portage' ),
-    ( '/etc/slackware-version', 'swaret' ),
-    ( '/etc/fedora-release', 'yum' ),
-    ( '/etc/yellowdog-release', 'yum' ),
-    ( '/etc/mandrake-release', 'urpmi' ),
-)
+LINUX_PACKAGE_MANAGERS = (('/etc/debian_version', 'apt-get'),
+                          ('/etc/SuSE-release', 'zypper'),
+                          ('/etc/redhat-release', 'yum'),
+                          ('/etc/arch-release', 'pacman'),
+                          ('/etc/gentoo-release', 'portage'),
+                          ('/etc/slackware-version', 'swaret'),
+                          ('/etc/fedora-release', 'yum'),
+                          ('/etc/yellowdog-release', 'yum'),
+                          ('/etc/mandrake-release', 'urpmi'))
 
 
 def package_manager():
@@ -159,9 +157,10 @@ def detect_installer():
     # Want to know more OSes? See the source of autoconf's config.guess
 
     elif platform in ('4.4BSD', '4.3bsd', 'BSD/OS', 'SunOS', 'AIX', 'OSF1',
-        'HP-UX', 'HI-UX', 'IRIX', 'UNICOS', 'UNICOS/mp', 'ConvexOS', 'Minix',
-        'Windows_95', 'Windows_NT', 'CYGWIN', 'MinGW',
-        'LynxOS', 'UNIX_System_V', 'BeOS', 'TOPS-10', 'TOPS-20'):
+                      'HP-UX', 'HI-UX', 'IRIX', 'UNICOS', 'UNICOS/mp',
+                      'ConvexOS', 'Minix', 'Windows_95', 'Windows_NT',
+                      'CYGWIN', 'MinGW', 'LynxOS', 'UNIX_System_V', 'BeOS',
+                      'TOPS-10', 'TOPS-20'):
         verbose('detected platform %s' % platform)
         warning('synctool package management under %s is not yet supported' %
                 platform)
@@ -192,7 +191,7 @@ def usage():
     print '  -h, --help                     Display this information'
     print '  -c, --conf=FILE                Use this config file'
     print ('                                 (default: %s)' %
-        synctool.param.DEFAULT_CONF)
+           synctool.param.DEFAULT_CONF)
     print '''  -l, --list   [PACKAGE ...]     List installed packages
   -i, --install PACKAGE [..]     Install package
   -R, --remove  PACKAGE [..]     Uninstall package
@@ -238,10 +237,10 @@ def get_options():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hc:iRluUCm:fvq',
-            ['help', 'conf=',
-            'list', 'install', 'remove', 'update', 'upgrade', 'clean',
-            'cleanup', 'manager=', 'masterlog',
-            'fix', 'verbose', 'unix', 'quiet'])
+                                   ['help', 'conf=', 'list', 'install',
+                                    'remove', 'update', 'upgrade', 'clean',
+                                    'cleanup', 'manager=', 'masterlog',
+                                    'fix', 'verbose', 'unix', 'quiet'])
     except getopt.GetoptError as reason:
         print '%s: %s' % (PROGNAME, reason)
 #        usage()

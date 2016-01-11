@@ -126,8 +126,8 @@ def _split_extension(filename, src_dir):
         if not ext in synctool.param.ALL_GROUPS:
             src_path = os.path.join(src_dir, filename)
             if synctool.param.TERSE:
-                terse(synctool.lib.TERSE_ERROR, 'invalid group on %s' %
-                                                src_path)
+                terse(synctool.lib.TERSE_ERROR, ('invalid group on %s' %
+                                                 src_path))
             else:
                 warning('unknown group on %s, skipped' % prettypath(src_path))
             return None, -1
@@ -322,8 +322,8 @@ def _walk_subtree(src_dir, dest_dir, duplicates, callback):
 
         if synctool.param.REQUIRE_EXTENSION and obj.ov_type == OV_NO_EXT:
             if synctool.param.TERSE:
-                terse(synctool.lib.TERSE_ERROR, 'no group on %s' %
-                                                obj.src_path)
+                terse(synctool.lib.TERSE_ERROR, ('no group on %s' %
+                                                 obj.src_path))
             else:
                 warning('no group extension on %s, skipped' % obj.print_src())
             continue

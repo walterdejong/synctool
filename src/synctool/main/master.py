@@ -18,8 +18,8 @@ import getopt
 import shlex
 import tempfile
 
+from synctool import config, param
 import synctool.aggr
-import synctool.config
 import synctool.lib
 from synctool.lib import verbose, stdout, stderr, error, warning, terse
 from synctool.lib import prettypath
@@ -28,7 +28,6 @@ from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.overlay
 import synctool.parallel
-import synctool.param
 import synctool.syncstat
 import synctool.unbuffered
 import synctool.update
@@ -61,41 +60,40 @@ def worker_synctool(addr):
 
     nodename = NODESET.get_nodename_from_address(addr)
 
-    if nodename == synctool.param.NODENAME:
+    if nodename == param.NODENAME:
         run_local_synctool()
         return
 
     # use ssh connection multiplexing (if possible)
     use_multiplex = synctool.multiplex.use_mux(nodename, addr)
 
-    ssh_cmd_arr = shlex.split(synctool.param.SSH_CMD)
+    ssh_cmd_arr = shlex.split(param.SSH_CMD)
     if use_multiplex:
         synctool.multiplex.ssh_args(ssh_cmd_arr, nodename)
 
     # rsync ROOTDIR/dirs/ to the node
     # if "it wants it"
-    if not (OPT_SKIP_RSYNC or nodename in synctool.param.NO_RSYNC):
+    if not (OPT_SKIP_RSYNC or nodename in param.NO_RSYNC):
         verbose('running rsync $SYNCTOOL/ to node %s' % nodename)
 
         # make rsync filter to include the correct dirs
         tmp_filename = rsync_include_filter(nodename)
 
-        cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
+        cmd_arr = shlex.split(param.RSYNC_CMD)
         cmd_arr.append('--filter=. %s' % tmp_filename)
 
         # add "-e ssh_cmd" to rsync command
         cmd_arr.extend(['-e', ' '.join(ssh_cmd_arr)])
 
         cmd_arr.append('--')
-        cmd_arr.append('%s/' % synctool.param.ROOTDIR)
-        cmd_arr.append('%s:%s/' % (addr, synctool.param.ROOTDIR))
+        cmd_arr.append('%s/' % param.ROOTDIR)
+        cmd_arr.append('%s:%s/' % (addr, param.ROOTDIR))
 
         # double check the rsync destination
         # our filters are like playing with fire
-        if not synctool.param.ROOTDIR or (
-            synctool.param.ROOTDIR == os.sep):
+        if not param.ROOTDIR or (param.ROOTDIR == os.sep):
             warning('cowardly refusing to rsync with rootdir == %s' %
-                    synctool.param.ROOTDIR)
+                    param.ROOTDIR)
             sys.exit(-1)
 
         synctool.lib.run_with_nodename(cmd_arr, nodename)
@@ -111,7 +109,7 @@ def worker_synctool(addr):
     cmd_arr = ssh_cmd_arr[:]
     cmd_arr.append('--')
     cmd_arr.append(addr)
-    cmd_arr.extend(shlex.split(synctool.param.SYNCTOOL_CMD))
+    cmd_arr.extend(shlex.split(param.SYNCTOOL_CMD))
     cmd_arr.append('--nodename=%s' % nodename)
     cmd_arr.extend(PASS_ARGS)
 
@@ -122,10 +120,10 @@ def worker_synctool(addr):
 def run_local_synctool():
     '''run synctool on the master node itself'''
 
-    cmd_arr = shlex.split(synctool.param.SYNCTOOL_CMD) + PASS_ARGS
+    cmd_arr = shlex.split(param.SYNCTOOL_CMD) + PASS_ARGS
 
-    verbose('running synctool on node %s' % synctool.param.NODENAME)
-    synctool.lib.run_with_nodename(cmd_arr, synctool.param.NODENAME)
+    verbose('running synctool on node %s' % param.NODENAME)
+    synctool.lib.run_with_nodename(cmd_arr, param.NODENAME)
 
 
 def rsync_include_filter(nodename):
@@ -136,7 +134,7 @@ def rsync_include_filter(nodename):
 
     try:
         (fd, filename) = tempfile.mkstemp(prefix='synctool-',
-                                          dir=synctool.param.TEMP_DIR)
+                                          dir=param.TEMP_DIR)
     except OSError as err:
         error('failed to create temp file: %s' % err.strerror)
         sys.exit(-1)
@@ -153,12 +151,12 @@ def rsync_include_filter(nodename):
         f.write('# synctool rsync filter')
 
         # set mygroups for this nodename
-        synctool.param.NODENAME = nodename
-        synctool.param.MY_GROUPS = synctool.config.get_my_groups()
+        param.NODENAME = nodename
+        param.MY_GROUPS = config.get_my_groups()
 
         # slave nodes get a copy of the entire tree
         # all other nodes use a specific rsync filter
-        if not nodename in synctool.param.SLAVES:
+        if not nodename in param.SLAVES:
             if not (_write_overlay_filter(f) and
                     _write_delete_filter(f) and
                     _write_purge_filter(f)):
@@ -192,7 +190,7 @@ def _write_rsync_filter(f, overlaydir, label):
     groups = os.listdir(overlaydir)
 
     # add only the group dirs that apply
-    for g in synctool.param.MY_GROUPS:
+    for g in param.MY_GROUPS:
         if g in groups:
             d = os.path.join(overlaydir, g)
             if os.path.isdir(d):
@@ -206,7 +204,7 @@ def _write_overlay_filter(f):
     Returns False on error
     '''
 
-    _write_rsync_filter(f, synctool.param.OVERLAY_DIR, 'overlay')
+    _write_rsync_filter(f, param.OVERLAY_DIR, 'overlay')
     return True
 
 
@@ -215,7 +213,7 @@ def _write_delete_filter(f):
     Returns False on error
     '''
 
-    _write_rsync_filter(f, synctool.param.DELETE_DIR, 'delete')
+    _write_rsync_filter(f, param.DELETE_DIR, 'delete')
     return True
 
 
@@ -226,12 +224,12 @@ def _write_purge_filter(f):
 
     f.write('+ /var/purge/\n')
 
-    purge_groups = os.listdir(synctool.param.PURGE_DIR)
+    purge_groups = os.listdir(param.PURGE_DIR)
 
     # add only the group dirs that apply
-    for g in synctool.param.MY_GROUPS:
+    for g in param.MY_GROUPS:
         if g in purge_groups:
-            purge_root = os.path.join(synctool.param.PURGE_DIR, g)
+            purge_root = os.path.join(param.PURGE_DIR, g)
             if not os.path.isdir(purge_root):
                 continue
 
@@ -257,12 +255,12 @@ def _write_purge_filter(f):
 def make_tempdir():
     '''create temporary directory (for storing rsync filter files)'''
 
-    if not os.path.isdir(synctool.param.TEMP_DIR):
+    if not os.path.isdir(param.TEMP_DIR):
         try:
-            os.mkdir(synctool.param.TEMP_DIR, 0750)
+            os.mkdir(param.TEMP_DIR, 0750)
         except OSError as err:
             error('failed to create tempdir %s: %s' %
-                  (synctool.param.TEMP_DIR, err.strerror))
+                  (param.TEMP_DIR, err.strerror))
             sys.exit(-1)
 
 
@@ -278,8 +276,7 @@ def _check_valid_overlaydirs():
         entries = os.listdir(overlaydir)
         for entry in entries:
             fullpath = os.path.join(overlaydir, entry)
-            if (os.path.isdir(fullpath) and
-                not entry in synctool.param.ALL_GROUPS):
+            if os.path.isdir(fullpath) and not entry in param.ALL_GROUPS:
                 error("$%s/%s/ exists, but there is no such group '%s'" %
                       (label, entry, entry))
                 errs += 1
@@ -290,15 +287,15 @@ def _check_valid_overlaydirs():
     errs = 0
 
     # check group dirs under overlay/
-    if not _check_valid_groupdir(synctool.param.OVERLAY_DIR, 'overlay'):
+    if not _check_valid_groupdir(param.OVERLAY_DIR, 'overlay'):
         errs += 1
 
     # check group dirs under delete/
-    if not _check_valid_groupdir(synctool.param.DELETE_DIR, 'delete'):
+    if not _check_valid_groupdir(param.DELETE_DIR, 'delete'):
         errs += 1
 
     # check group dirs under purge/
-    if not _check_valid_groupdir(synctool.param.PURGE_DIR, 'purge'):
+    if not _check_valid_groupdir(param.PURGE_DIR, 'purge'):
         errs += 1
 
     return errs == 0
@@ -312,34 +309,30 @@ def check_cmd_config():
 
     errors = 0
 
-#    (ok, synctool.param.DIFF_CMD) = synctool.config.check_cmd_config(
-#                                       'diff_cmd', synctool.param.DIFF_CMD)
+#    ok, param.DIFF_CMD = config.check_cmd_config('diff_cmd', param.DIFF_CMD)
 #    if not ok:
 #        errors += 1
 
-#    (ok, synctool.param.PING_CMD) = synctool.config.check_cmd_config(
-#                                       'ping_cmd', synctool.param.PING_CMD)
+#    ok, param.PING_CMD = config.check_cmd_config('ping_cmd', param.PING_CMD)
 #    if not ok:
 #        errors += 1
 
-    (ok, synctool.param.SSH_CMD) = synctool.config.check_cmd_config(
-                                    'ssh_cmd', synctool.param.SSH_CMD)
+    ok, param.SSH_CMD = config.check_cmd_config('ssh_cmd', param.SSH_CMD)
     if not ok:
         errors += 1
 
     if not OPT_SKIP_RSYNC:
-        (ok, synctool.param.RSYNC_CMD) = synctool.config.check_cmd_config(
-                                        'rsync_cmd', synctool.param.RSYNC_CMD)
+        ok, param.RSYNC_CMD = config.check_cmd_config('rsync_cmd',
+                                                      param.RSYNC_CMD)
         if not ok:
             errors += 1
 
-    (ok, synctool.param.SYNCTOOL_CMD) = synctool.config.check_cmd_config(
-                                'synctool_cmd', synctool.param.SYNCTOOL_CMD)
+    ok, param.SYNCTOOL_CMD = config.check_cmd_config('synctool_cmd',
+                                                     param.SYNCTOOL_CMD)
     if not ok:
         errors += 1
 
-#    (ok, synctool.param.PKG_CMD) = synctool.config.check_cmd_config(
-#                                       'pkg_cmd', synctool.param.PKG_CMD)
+#    ok, param.PKG_CMD = config.check_cmd_config('pkg_cmd', param.PKG_CMD)
 #    if not ok:
 #        errors += 1
 
@@ -405,7 +398,7 @@ def usage():
     print '  -h, --help                  Display this information'
     print '  -c, --conf=FILE             Use this config file'
     print ('                              (default: %s)' %
-        synctool.param.DEFAULT_CONF)
+           param.DEFAULT_CONF)
     print '''  -n, --node=LIST             Execute only on these nodes
   -g, --group=LIST            Execute only on these groups of nodes
   -x, --exclude=LIST          Exclude these nodes from the selected group
@@ -452,13 +445,16 @@ def get_options():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:],
-            'hc:vn:g:x:X:d:1:r:u:s:o:p:efN:FTqaS',
-            ['help', 'conf=', 'verbose', 'node=', 'group=',
-            'exclude=', 'exclude-group=', 'diff=', 'single=', 'ref=',
-            'upload=', 'suffix=', 'overlay=', 'purge=', 'erase-saved', 'fix',
-            'no-post', 'numproc=', 'fullpath', 'terse', 'color', 'no-color',
-            'quiet', 'aggregate', 'unix', 'skip-rsync',
-            'version', 'check-update', 'download'])
+                                   'hc:vn:g:x:X:d:1:r:u:s:o:p:efN:FTqaS',
+                                   ['help', 'conf=', 'verbose', 'node=',
+                                    'group=', 'exclude=', 'exclude-group=',
+                                    'diff=', 'single=', 'ref=', 'upload=',
+                                    'suffix=', 'overlay=', 'purge=',
+                                    'erase-saved', 'fix', 'no-post',
+                                    'numproc=', 'fullpath', 'terse', 'color',
+                                    'no-color', 'quiet', 'aggregate', 'unix',
+                                    'skip-rsync', 'version', 'check-update',
+                                    'download'])
     except getopt.GetoptError as reason:
         print '%s: %s' % (PROGNAME, reason)
 #        usage()
@@ -483,7 +479,7 @@ def get_options():
     opt_group = False
 
     PASS_ARGS = []
-    MASTER_OPTS = [ sys.argv[0] ]
+    MASTER_OPTS = [sys.argv[0],]
 
     # first read the config file
     for opt, arg in opts:
@@ -492,7 +488,7 @@ def get_options():
             sys.exit(1)
 
         if opt in ('-c', '--conf'):
-            synctool.param.CONF_FILE = arg
+            param.CONF_FILE = arg
             PASS_ARGS.append(opt)
             PASS_ARGS.append(arg)
             continue
@@ -512,19 +508,19 @@ def get_options():
             continue
 
         if opt in ('-T', '--terse'):
-            synctool.param.TERSE = True
-            synctool.param.FULL_PATH = False
+            param.TERSE = True
+            param.FULL_PATH = False
             continue
 
         if opt in ('-F', '--fullpath'):
-            synctool.param.FULL_PATH = True
+            param.FULL_PATH = True
             continue
 
         if opt == '--version':
-            print synctool.param.VERSION
+            print param.VERSION
             sys.exit(0)
 
-    synctool.config.read_config()
+    config.read_config()
     synctool.nodeset.make_default_nodeset()
     check_cmd_config()
 
@@ -612,30 +608,30 @@ def get_options():
 
         if opt in ('-N', '--numproc'):
             try:
-                synctool.param.NUM_PROC = int(arg)
+                param.NUM_PROC = int(arg)
             except ValueError:
                 print "option '%s' requires a numeric value" % opt
                 sys.exit(1)
 
-            if synctool.param.NUM_PROC < 1:
+            if param.NUM_PROC < 1:
                 print 'invalid value for numproc'
                 sys.exit(1)
 
             continue
 
         if opt in ('-F', '--fullpath'):
-            synctool.param.FULL_PATH = True
-            synctool.param.TERSE = False
+            param.FULL_PATH = True
+            param.TERSE = False
 
         if opt in ('-T', '--terse'):
-            synctool.param.TERSE = True
-            synctool.param.FULL_PATH = False
+            param.TERSE = True
+            param.FULL_PATH = False
 
         if opt == '--color':
-            synctool.param.COLORIZE = True
+            param.COLORIZE = True
 
         if opt == '--no-color':
-            synctool.param.COLORIZE = False
+            param.COLORIZE = False
 
         if opt in ('-a', '--aggregate'):
             OPT_AGGREGATE = True
@@ -704,7 +700,7 @@ def get_options():
 def main():
     '''run the program'''
 
-    synctool.param.init()
+    param.init()
 
     sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)
     sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)
@@ -735,11 +731,10 @@ def main():
 
         sys.exit(0)
 
-    synctool.config.init_mynodename()
+    config.init_mynodename()
 
-    if synctool.param.MASTER != synctool.param.HOSTNAME:
-        verbose('master %s != hostname %s' % (synctool.param.MASTER,
-                                              synctool.param.HOSTNAME))
+    if param.MASTER != param.HOSTNAME:
+        verbose('master %s != hostname %s' % (param.MASTER, param.HOSTNAME))
         error('not running on the master node')
         sys.exit(-1)
 
