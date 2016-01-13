@@ -266,7 +266,7 @@ def spellcheck(name):
     return True
 
 
-def config_include(arr, configfile, lineno):
+def config_include(arr, _configfile, _lineno):
     '''parse keyword: include'''
 
     # recursively read the given config file
@@ -302,7 +302,7 @@ def config_package_manager(arr, configfile, lineno):
     if not check_definition(arr[0], configfile, lineno):
         return 1
 
-    if not arr[1] in param.KNOWN_PACKAGE_MANAGERS:
+    if arr[1] not in param.KNOWN_PACKAGE_MANAGERS:
         stderr("%s:%d: unknown or unsupported package manager '%s'" %
                (configfile, lineno, arr[1]))
         return 1
@@ -395,8 +395,8 @@ def config_ignore(arr, configfile, lineno):
     for fn in arr[1:]:
         # if fn has wildcards, put it in array IGNORE_FILES_WITH_WILDCARDS
         if (fn.find('*') >= 0 or fn.find('?') >= 0 or
-            (fn.find('[') >= 0 and fn.find(']') >= 0)):
-            if not fn in param.IGNORE_FILES_WITH_WILDCARDS:
+                (fn.find('[') >= 0 and fn.find(']') >= 0)):
+            if fn not in param.IGNORE_FILES_WITH_WILDCARDS:
                 param.IGNORE_FILES_WITH_WILDCARDS.append(fn)
         else:
             # no wildcards, do a regular ignore
@@ -957,7 +957,7 @@ def config_ignore_group(arr, configfile, lineno):
         param.IGNORE_GROUPS.add(group)
 
         # add any (yet) unknown group names to the group_defs dict
-        if not group in param.GROUP_DEFS:
+        if group not in param.GROUP_DEFS:
             param.GROUP_DEFS[group] = None
 
     return errors
@@ -1062,7 +1062,7 @@ def expand_grouplist(grouplist):
 
     expanded_grouplist = []
     for elem in groups:
-        if not elem in expanded_grouplist:
+        if elem not in expanded_grouplist:
             expanded_grouplist.append(elem)
 
     return expanded_grouplist

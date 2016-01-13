@@ -111,7 +111,7 @@ class VNode(object):
 
         synctool.lib.mkdir_p(basedir)
 
-    def compare(self, src_path, dest_stat):
+    def compare(self, _src_path, _dest_stat):
         '''compare content
         Return True when same, False when different
         '''
@@ -387,7 +387,7 @@ class VNodeLink(VNode):
 
         return 'symbolic link'
 
-    def compare(self, src_path, dest_stat):
+    def compare(self, _src_path, _dest_stat):
         '''compare symbolic links'''
 
         if not self.exists:
@@ -513,7 +513,7 @@ class VNodeChrDev(VNode):
 
         return 'character device file'
 
-    def compare(self, src_path, dest_stat):
+    def compare(self, _src_path, dest_stat):
         '''see if devs are the same'''
 
         if not self.exists:
@@ -575,7 +575,7 @@ class VNodeBlkDev(VNode):
 
         return 'block device file'
 
-    def compare(self, src_path, dest_stat):
+    def compare(self, _src_path, dest_stat):
         '''see if devs are the same'''
 
         if not self.exists:
@@ -707,7 +707,7 @@ class SyncObject(object):
         # rectify if needed
         fix_action = 0
         if ((self.src_stat.uid != self.dest_stat.uid) or
-            (self.src_stat.gid != self.dest_stat.gid)):
+                (self.src_stat.gid != self.dest_stat.gid)):
             stdout('%s should have owner %s.%s (%d.%d), '
                    'but has %s.%s (%d.%d)' % (self.dest_path,
                                               self.src_stat.ascii_uid(),
@@ -735,8 +735,8 @@ class SyncObject(object):
 
         # check times, but not for symlinks, directories
         if (synctool.param.SYNC_TIMES and
-            not self.src_stat.is_link() and not self.src_stat.is_dir() and
-            self.src_stat.mtime != self.dest_stat.mtime):
+                not self.src_stat.is_link() and not self.src_stat.is_dir() and
+                self.src_stat.mtime != self.dest_stat.mtime):
             stdout('%s has wrong timestamp' % self.dest_path)
             terse(synctool.lib.TERSE_MODE, ('%s has wrong timestamp' %
                                             self.dest_path))
@@ -808,7 +808,7 @@ class SyncObject(object):
         if synctool.lib.NO_POST:
             return
 
-        if not self.dest_path in scripts_dict:
+        if self.dest_path not in scripts_dict:
             return
 
         script = scripts_dict[self.dest_path]
@@ -915,7 +915,7 @@ class SyncObject(object):
 
         # set times, but not for symlinks, directories
         if (not self.src_stat.is_link() and not self.src_stat.is_dir() and
-            self.src_stat.mtime != self.dest_stat.mtime):
+                self.src_stat.mtime != self.dest_stat.mtime):
             stdout('%s mismatch (only timestamp)' % self.dest_path)
             terse(synctool.lib.TERSE_WARNING,
                   '%s (only timestamp)' % self.dest_path)

@@ -131,7 +131,7 @@ def list_nodes(nodelist):
         else:
             for group in config.get_groups(node):
                 # extend groups, but do not have duplicates
-                if not group in groups:
+                if group not in groups:
                     groups.append(group)
 
     # group order is important, so don't sort

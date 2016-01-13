@@ -90,7 +90,7 @@ def run_dsh(address_list, remote_cmd_arr):
     if SSH_OPTIONS:
         SSH_CMD_ARR.extend(shlex.split(SSH_OPTIONS))
         # if -N 1, force tty allocation
-        if param.NUM_PROC <= 1 and not '-t' in SSH_CMD_ARR:
+        if param.NUM_PROC <= 1 and '-t' not in SSH_CMD_ARR:
             SSH_CMD_ARR.append('-t')
             # remove option -T (disable tty allocation)
             if '-T' in SSH_CMD_ARR:
@@ -197,7 +197,7 @@ def start_multiplex(address_list):
     synctool.multiplex.setup_master(pairs, PERSIST)
 
 
-def control_multiplex(address_list, ctl_cmd):
+def control_multiplex(address_list, _ctl_cmd):
     '''run ssh -O ctl_cmd to each node in address_list'''
 
     global SSH_CMD_ARR
@@ -390,7 +390,7 @@ def get_options():
                 print "%s: only a single '-O' option can be given" % PROGNAME
                 sys.exit(1)
 
-            if not arg in ('check', 'stop', 'exit'):
+            if arg not in ('check', 'stop', 'exit'):
                 print "%s: unknown control command '%s'" % (PROGNAME, arg)
                 sys.exit(1)
 
@@ -455,7 +455,7 @@ def get_options():
             synctool.lib.QUIET = True
             continue
 
-    if not OPT_MULTIPLEX and not PERSIST is None:
+    if not OPT_MULTIPLEX and PERSIST is not None:
         print '%s: option --persist requires option --master' % PROGNAME
         sys.exit(1)
 

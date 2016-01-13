@@ -104,7 +104,7 @@ def github_api(url):
         return None
 
     except urllib2.URLError as err:
-        error('failed to access %s: %u %s' % (url, err.code, err.msg))
+        error('failed to access %s: %s' % (url, str(err.reason)))
         return None
 
     except IOError as err:
@@ -197,7 +197,7 @@ def download():
         return False
 
     except urllib2.URLError as err:
-        error('failed to access %s: %u %s' % (info.url, err.code, err.msg))
+        error('failed to access %s: %s' % (info.url, str(err.reason)))
         return False
 
     except IOError as err:

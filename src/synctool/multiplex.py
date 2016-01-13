@@ -40,7 +40,7 @@ def _make_control_path(nodename):
     return os.path.join(control_dir, nodename)
 
 
-def use_mux(nodename, remote_addr):
+def use_mux(nodename):
     '''Returns True if it's OK to use a master connection to node
     Otherwise returns False -> don't use multiplexing
     '''
@@ -80,7 +80,7 @@ def control(nodename, remote_addr, ctl_cmd):
     Returns True on success, False otherwise
     '''
 
-    if not ctl_cmd in ('check', 'stop', 'exit'):
+    if ctl_cmd not in ('check', 'stop', 'exit'):
         raise RuntimeError("unsupported control command '%s'" % ctl_cmd)
 
     control_path = _make_control_path(nodename)
@@ -134,7 +134,7 @@ def setup_master(node_list, persist):
 
     ssh_cmd_arr = shlex.split(synctool.param.SSH_CMD)
     ssh_cmd_arr.extend(['-M', '-N', '-n'])
-    if SSH_VERSION >= 56 and not persist is None:
+    if SSH_VERSION >= 56 and persist is not None:
         ssh_cmd_arr.extend(['-o', 'ControlPersist=' + persist])
 
     verbose('spawning ssh master connections')
@@ -218,7 +218,7 @@ def detect_ssh():
 
     global SSH_VERSION
 
-    if not SSH_VERSION is None:
+    if SSH_VERSION is not None:
         return SSH_VERSION
 
     cmd_arr = shlex.split(synctool.param.SSH_CMD)

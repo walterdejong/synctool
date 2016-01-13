@@ -311,7 +311,7 @@ def get_options():
             continue
 
         if opt in ('-m', '--manager'):
-            if not arg in synctool.param.KNOWN_PACKAGE_MANAGERS:
+            if arg not in synctool.param.KNOWN_PACKAGE_MANAGERS:
                 error("unknown or unsupported package manager '%s'" % arg)
                 sys.exit(1)
 

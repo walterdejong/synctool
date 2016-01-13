@@ -170,7 +170,7 @@ def expand_sequence(arg):
 
     global _EXPAND_SEQ
 
-    if not '[' in arg:
+    if '[' not in arg:
         return arg
 
     if MATCH_IPv4.match(arg):
@@ -205,7 +205,7 @@ def expand_seq(arg, radix=10, overflow=False):
     or just a string "node[10].sub[20].domain.org"
     '''
 
-    if not '[' in arg:
+    if '[' not in arg:
         return arg
 
     m = MATCH_SEQ.match(arg)

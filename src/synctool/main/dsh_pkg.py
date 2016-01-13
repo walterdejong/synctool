@@ -47,7 +47,7 @@ def run_remote_pkg(address_list):
 
     SSH_CMD_ARR = shlex.split(param.SSH_CMD)
     # if -N 1, force tty allocation
-    if param.NUM_PROC <= 1 and not '-t' in SSH_CMD_ARR:
+    if param.NUM_PROC <= 1 and '-t' not in SSH_CMD_ARR:
         SSH_CMD_ARR.append('-t')
         # remove option -T (disable tty allocation)
         if '-T' in SSH_CMD_ARR:
@@ -331,7 +331,7 @@ def get_options():
             action += 1
 
         if opt in ('-m', '--manager'):
-            if not arg in param.KNOWN_PACKAGE_MANAGERS:
+            if arg not in param.KNOWN_PACKAGE_MANAGERS:
                 error("unknown or unsupported package manager '%s'" % arg)
                 sys.exit(1)
 

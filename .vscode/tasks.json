@@ -21,7 +21,7 @@
 		"owner": "py",
 		"fileLocation": ["relative", "${workspaceRoot}"],
 		"pattern": {
-			"regexp": "^(.+):(\\d+):\\s+(W|E)\\d+\\s+(.*)$",
+			"regexp": "^(.+):(\\d+):\\s+([WECR])\\d+\\s+(.*)$",
 			"file": 1,
 			"line": 2,
 			"severity": 3,

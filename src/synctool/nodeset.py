@@ -137,7 +137,8 @@ class NodeSet(object):
             addr = config.get_node_ipaddress(node)
             self.namemap[addr] = node
 
-            if not addr in addrs:    # make sure we do not have duplicates
+            # make sure we do not have duplicates
+            if addr not in addrs:
                 addrs.append(addr)
 
         # print message about ignored nodes

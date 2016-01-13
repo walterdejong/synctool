@@ -89,7 +89,7 @@ class UploadFile(object):
             # user supplied (maybe a different) overlay group dir
             # so take repos_filename apart and insert a new group dir
             if (self.repos_path[:synctool.param.OVERLAY_LEN] ==
-                synctool.param.OVERLAY_DIR + os.sep):
+                    synctool.param.OVERLAY_DIR + os.sep):
                 arr = self.repos_path.split(os.sep)
                 overlay_arr = synctool.param.OVERLAY_DIR.split(os.sep)
                 # replace the group dir with what the user gave
@@ -182,7 +182,7 @@ def _remote_stat(up):
 
     # use ssh connection multiplexing (if possible)
     cmd_arr = shlex.split(synctool.param.SSH_CMD)
-    use_multiplex = synctool.multiplex.use_mux(up.node, up.address)
+    use_multiplex = synctool.multiplex.use_mux(up.node)
     if use_multiplex:
         synctool.multiplex.ssh_args(cmd_arr, up.node)
 
@@ -306,7 +306,7 @@ def _makedir(path, remote_stats):
     return True
 
 
-def _upload_callback(obj, pre_dict, post_dict):
+def _upload_callback(obj, _pre_dict, _post_dict):
     '''find the overlay path for the destination in UPLOAD_FILE'''
 
     # this callback modifies the global GLOBAL_UPLOAD_FILE object
@@ -337,15 +337,15 @@ def upload(up):
         error('the filename to upload must be an absolute path')
         sys.exit(-1)
 
-    if up.suffix and not up.suffix in synctool.param.ALL_GROUPS:
+    if up.suffix and up.suffix not in synctool.param.ALL_GROUPS:
         error("no such group '%s'" % up.suffix)
         sys.exit(-1)
 
-    if up.overlay and not up.overlay in synctool.param.ALL_GROUPS:
+    if up.overlay and up.overlay not in synctool.param.ALL_GROUPS:
         error("no such group '%s'" % up.overlay)
         sys.exit(-1)
 
-    if up.purge and not up.purge in synctool.param.ALL_GROUPS:
+    if up.purge and up.purge not in synctool.param.ALL_GROUPS:
         error("no such group '%s'" % up.purge)
         sys.exit(-1)
 
@@ -420,7 +420,7 @@ def rsync_upload(up):
 
     # use ssh connection multiplexing (if possible)
     ssh_cmd_arr = shlex.split(synctool.param.SSH_CMD)
-    use_multiplex = synctool.multiplex.use_mux(up.node, up.address)
+    use_multiplex = synctool.multiplex.use_mux(up.node)
     if use_multiplex:
         synctool.multiplex.ssh_args(ssh_cmd_arr, up.node)
     cmd_arr.extend(['-e', ' '.join(ssh_cmd_arr)])

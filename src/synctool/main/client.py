@@ -84,7 +84,7 @@ def generate_template(obj, post_dict):
         return True
 
     # get the .post script for the template file
-    if not template in post_dict:
+    if template not in post_dict:
         if param.TERSE:
             terse(synctool.lib.TERSE_ERROR, 'no .post %s' % obj.src_path)
         else:
@@ -246,11 +246,11 @@ def _make_rsync_purge_cmd():
             cmd_rsync.remove(opt)
 
     # add rsync option -i : itemized output
-    if not '-i' in cmd_rsync and not '--itemize-changes' in cmd_rsync:
+    if '-i' not in cmd_rsync and '--itemize-changes' not in cmd_rsync:
         cmd_rsync.append('-i')
 
     # it's purge; must have --delete
-    if not '--delete' in cmd_rsync:
+    if '--delete' not in cmd_rsync:
         cmd_rsync.append('--delete')
 
     # show the -i and --delete option (in verbose mode)
@@ -332,7 +332,7 @@ def overlay_files():
     synctool.overlay.visit(param.OVERLAY_DIR, _overlay_callback)
 
 
-def _delete_callback(obj, pre_dict, post_dict):
+def _delete_callback(obj, _pre_dict, post_dict):
     '''delete files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -364,7 +364,7 @@ def delete_files():
     synctool.overlay.visit(param.DELETE_DIR, _delete_callback)
 
 
-def _erase_saved_callback(obj, pre_dict, post_dict):
+def _erase_saved_callback(obj, _pre_dict, post_dict):
     '''erase *.saved backup files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -405,7 +405,7 @@ def visit_purge_single(callback):
             filepath = filepath[1:]
 
         for g in param.MY_GROUPS:
-            if not g in purge_groups:
+            if g not in purge_groups:
                 continue
 
             src = os.path.join(param.PURGE_DIR, g, filepath)
@@ -539,10 +539,8 @@ def _single_erase_saved_callback(obj, pre_dict, post_dict):
     go_on = True
     updated = False
 
-    if _match_single(obj.dest_path):
-        is_dest = True
-    else:
-        is_dest = False
+    # if match(): dest = True; else dest = False
+    is_dest = _match_single(obj.dest_path)
 
     # maybe the user supplied a '.saved' filename
     filename = obj.dest_path + '.saved'
@@ -577,7 +575,7 @@ def single_erase_saved():
         stderr('%s is not in the overlay tree' % filename)
 
 
-def _reference_callback(obj, pre_dict, post_dict):
+def _reference_callback(obj, _pre_dict, _post_dict):
     '''callback for reference_files()'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -623,7 +621,7 @@ def _exec_diff(src, dest):
     synctool.lib.exec_command(cmd_arr)
 
 
-def _diff_callback(obj, pre_dict, post_dict):
+def _diff_callback(obj, _pre_dict, post_dict):
     '''callback function for doing a diff on overlay/ files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -848,7 +846,7 @@ def get_options():
                 error('filename must be a full path, starting with a slash')
                 sys.exit(1)
 
-            if not filename in SINGLE_FILES:
+            if filename not in SINGLE_FILES:
                 SINGLE_FILES.append(filename)
             continue
 
@@ -863,7 +861,7 @@ def get_options():
                 error('filename must be a full path, starting with a slash')
                 sys.exit(1)
 
-            if not filename in SINGLE_FILES:
+            if filename not in SINGLE_FILES:
                 SINGLE_FILES.append(filename)
             continue
 
@@ -879,7 +877,7 @@ def get_options():
                 error('filename must be a full path, starting with a slash')
                 sys.exit(1)
 
-            if not filename in SINGLE_FILES:
+            if filename not in SINGLE_FILES:
                 SINGLE_FILES.append(filename)
             continue
 
@@ -922,7 +920,7 @@ def main():
         stderr('please check %s' % param.CONF_FILE)
         sys.exit(-1)
 
-    if not param.NODENAME in param.NODES:
+    if param.NODENAME not in param.NODES:
         error("unknown node '%s'" % param.NODENAME)
         stderr('please check %s' % param.CONF_FILE)
         sys.exit(-1)

@@ -156,7 +156,7 @@ def rsync_include_filter(nodename):
 
         # slave nodes get a copy of the entire tree
         # all other nodes use a specific rsync filter
-        if not nodename in param.SLAVES:
+        if nodename not in param.SLAVES:
             if not (_write_overlay_filter(f) and
                     _write_delete_filter(f) and
                     _write_purge_filter(f)):
@@ -276,7 +276,7 @@ def _check_valid_overlaydirs():
         entries = os.listdir(overlaydir)
         for entry in entries:
             fullpath = os.path.join(overlaydir, entry)
-            if os.path.isdir(fullpath) and not entry in param.ALL_GROUPS:
+            if os.path.isdir(fullpath) and entry not in param.ALL_GROUPS:
                 error("$%s/%s/ exists, but there is no such group '%s'" %
                       (label, entry, entry))
                 errs += 1

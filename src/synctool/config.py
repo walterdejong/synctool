@@ -66,12 +66,12 @@ def read_config():
         errors += 1
 
     for node in synctool.param.SLAVES:
-        if not node in synctool.param.NODES:
+        if node not in synctool.param.NODES:
             error("slave '%s': no such node" % node)
             errors += 1
 
     # implicitly add group 'all'
-    if not 'all' in synctool.param.GROUP_DEFS:
+    if 'all' not in synctool.param.GROUP_DEFS:
         synctool.param.GROUP_DEFS['all'] = None
 
     # implicitly add 'nodename' as first group
@@ -81,7 +81,7 @@ def read_config():
         synctool.param.NODES[node].append('all')
 
     # implicitly add group 'none'
-    if not 'none' in synctool.param.GROUP_DEFS:
+    if 'none' not in synctool.param.GROUP_DEFS:
         synctool.param.GROUP_DEFS['none'] = None
 
     synctool.param.IGNORE_GROUPS.add('none')

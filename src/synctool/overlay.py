@@ -123,7 +123,7 @@ def _split_extension(filename, src_dir):
     try:
         importance = synctool.param.MY_GROUPS.index(ext)
     except ValueError:
-        if not ext in synctool.param.ALL_GROUPS:
+        if ext not in synctool.param.ALL_GROUPS:
             src_path = os.path.join(src_dir, filename)
             if synctool.param.TERSE:
                 terse(synctool.lib.TERSE_ERROR, ('invalid group on %s' %
@@ -286,7 +286,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, callback):
                     continue
 
             updated = False
-            if not obj.dest_path in duplicates:
+            if obj.dest_path not in duplicates:
                 # this is the most important source for this dir
                 duplicates.add(obj.dest_path)
 

@@ -107,7 +107,7 @@ IGNORE_GROUPS = set()
 MY_GROUPS = None
 
 # set of all known groups
-ALL_GROUPS = None
+ALL_GROUPS = set([])
 
 # set of nodes that don't want an rsync copy
 NO_RSYNC = set()
@@ -184,7 +184,7 @@ def init():
 
     # add the synctool/bin/ dir
     bindir = os.path.join(ROOTDIR, 'bin')
-    if not bindir in path_arr:
+    if bindir not in path_arr:
         path_arr.append(bindir)
         os.environ['PATH'] = os.pathsep.join(path_arr)
 

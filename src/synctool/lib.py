@@ -487,7 +487,7 @@ def search_path(cmd):
         return cmd
 
     # search the PATH environment variable
-    if not 'PATH' in os.environ:
+    if 'PATH' not in os.environ:
         return None
 
     env_path = os.environ['PATH']
@@ -589,10 +589,7 @@ def strip_terse_path(path):
         return strip_path(path)
 
     # terse paths may start with two slashes
-    if len(path) >= 2 and path[:1] == '//':
-        is_terse = True
-    else:
-        is_terse = False
+    is_terse = len(path) >= 2 and path[:1] == '//'
 
     path = strip_multiple_slashes(path)
     path = strip_trailing_slash(path)

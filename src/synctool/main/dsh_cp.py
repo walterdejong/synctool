@@ -59,7 +59,7 @@ def run_remote_copy(address_list, files):
             continue
 
         # for directories, append a '/' slash
-        if os.path.isdir(filename) and not filename[-1] == os.sep:
+        if os.path.isdir(filename) and filename[-1] != os.sep:
             sourcelist.append(filename + os.sep)
         else:
             sourcelist.append(filename)
@@ -85,7 +85,7 @@ def run_remote_copy(address_list, files):
             DSH_CP_CMD_ARR.remove('--quiet')
 
     if synctool.lib.QUIET:
-        if not '-q' in DSH_CP_CMD_ARR and not '--quiet' in DSH_CP_CMD_ARR:
+        if '-q' not in DSH_CP_CMD_ARR and '--quiet' not in DSH_CP_CMD_ARR:
             DSH_CP_CMD_ARR.append('-q')
 
     if DSH_CP_OPTIONS:
