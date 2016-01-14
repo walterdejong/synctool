@@ -65,7 +65,7 @@ def worker_synctool(addr):
         return
 
     # use ssh connection multiplexing (if possible)
-    use_multiplex = synctool.multiplex.use_mux(nodename, addr)
+    use_multiplex = synctool.multiplex.use_mux(nodename)
 
     ssh_cmd_arr = shlex.split(param.SSH_CMD)
     if use_multiplex:
