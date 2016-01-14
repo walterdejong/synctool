@@ -18,7 +18,6 @@ import shlex
 import syslog
 
 from synctool import param
-import synctool.syncstat
 
 # options (mostly) set by command-line arguments
 DRY_RUN = True
@@ -427,13 +426,11 @@ def run_command(cmd):
     # a command can have arguments
     arr = shlex.split(cmd)
     cmdfile = arr[0]
-
-    statbuf = synctool.syncstat.SyncStat(cmdfile)
-    if not statbuf.exists():
+    if not os.path.isfile(cmdfile):
         error('command %s not found' % prettypath(cmdfile))
         return
 
-    if not statbuf.is_exec():
+    if not os.access(cmdfile, os.X_OK):
         error("file '%s' is not executable" % prettypath(cmdfile))
         return
 
@@ -617,8 +614,6 @@ def path_exists(filename):
     '''Returns True if filename exists'''
 
     # Note that os.path.exists() returns False for dead symlinks
-    # synctool has module syncstat, but it's nice to have this
-    # function as well for convenience
 
     if not filename:
         raise ValueError()
