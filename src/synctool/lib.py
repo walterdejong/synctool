@@ -12,6 +12,7 @@
 
 import os
 import sys
+import datetime
 import subprocess
 import errno
 import shlex
@@ -635,5 +636,27 @@ def path_exists(filename):
         return False
 
     return True
+
+
+def set_filetimes(filename, atime, mtime):
+    '''set file atime and mtime'''
+
+    # This func is used for forcing the mtime onto generated templates
+    # The sync_times functionality is implemented in module object.py
+
+    # only mtime is shown
+    dt = datetime.datetime.fromtimestamp(mtime)
+    time_str = dt.strftime('%Y-%m-%d %H:%M:%S')
+    verbose('  os.utime(%s, %s)' % (filename, time_str))
+    time_str = dt.strftime('%Y%m%d%H%M.%S')
+    unix_out('touch -t %s %s' % (time_str, filename))
+
+    # regardless of dry run
+    try:
+        os.utime(filename, (atime, mtime))
+    except OSError as err:
+        error('failed to set utime on %s : %s' % (filename, err.strerror))
+        terse(TERSE_FAIL, 'utime %s' % filename)
+
 
 # EOB

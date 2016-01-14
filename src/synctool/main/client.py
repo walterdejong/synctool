@@ -16,7 +16,6 @@ import time
 import shlex
 import getopt
 import subprocess
-import shutil
 
 from synctool import config, param
 import synctool.lib
@@ -73,9 +72,11 @@ def generate_template(obj, post_dict):
     if statbuf.exists():
         verbose('template destination %s already exists' % newname)
 
-        if param.SYNC_TIMES:
-            # copy source timestamps of template first
-            shutil.copystat(obj.src_path, newname)
+        if param.SYNC_TIMES and statbuf.mtime != obj.src_stat.mtime:
+            # force the mtime of the template onto the existing output
+            verbose('forcing mtime %s => %s' % (obj.src_path, newname))
+            synctool.lib.set_filetimes(newname, statbuf.atime,
+                                       obj.src_stat.mtime)
 
         # modify the object; set new src and dest filenames
         # later, visit() will call obj.make(), which will make full paths
@@ -139,6 +140,11 @@ def generate_template(obj, post_dict):
             verbose('error: expected output %s was not generated' % newname)
     else:
         verbose('found generated output %s' % newname)
+        if param.SYNC_TIMES:
+            # force the mtime of the template onto the generated output
+            verbose('forcing mtime %s => %s' % (obj.src_path, newname))
+            synctool.lib.set_filetimes(newname, statbuf.atime,
+                                       obj.src_stat.mtime)
 
     os.umask(077)
 
@@ -158,11 +164,6 @@ def generate_template(obj, post_dict):
 
     if have_error:
         return False
-
-    if param.SYNC_TIMES:
-        # copy source timestamps of template first
-        shutil.copystat(obj.src_path, newname)
-        verbose('copying timestamp %s => %s' % (obj.src_path, newname))
 
     # modify the object; set new src and dest filenames
     # later, visit() will call obj.make(), which will make full paths
