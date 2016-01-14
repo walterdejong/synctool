@@ -112,7 +112,7 @@ def worker_ssh(addr):
     nodename = NODESET.get_nodename_from_address(addr)
 
     # use ssh connection multiplexing (if possible)
-    use_multiplex = synctool.multiplex.use_mux(nodename, addr)
+    use_multiplex = synctool.multiplex.use_mux(nodename)
 
     if SYNC_IT and not (OPT_SKIP_RSYNC or nodename in param.NO_RSYNC):
         # first, sync the script to the node using rsync
