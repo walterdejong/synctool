@@ -645,9 +645,9 @@ def set_filetimes(filename, atime, mtime):
     # The sync_times functionality is implemented in module object.py
 
     # only mtime is shown
+    verbose('  os.utime(%s, %s)' % (filename, print_timestamp(mtime)))
+    # print timestamp in other format
     dt = datetime.datetime.fromtimestamp(mtime)
-    time_str = dt.strftime('%Y-%m-%d %H:%M:%S')
-    verbose('  os.utime(%s, %s)' % (filename, time_str))
     time_str = dt.strftime('%Y%m%d%H%M.%S')
     unix_out('touch -t %s %s' % (time_str, filename))
 
@@ -657,6 +657,13 @@ def set_filetimes(filename, atime, mtime):
     except OSError as err:
         error('failed to set utime on %s : %s' % (filename, err.strerror))
         terse(TERSE_FAIL, 'utime %s' % filename)
+
+
+def print_timestamp(stamp):
+    '''Returns timestamp as string'''
+
+    dt = datetime.datetime.fromtimestamp(stamp)
+    return dt.strftime('%Y-%m-%d %H:%M:%S')
 
 
 # EOB

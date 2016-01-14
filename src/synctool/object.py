@@ -18,7 +18,7 @@ import hashlib
 
 import synctool.lib
 from synctool.lib import verbose, stdout, error, terse, unix_out, log
-from synctool.lib import dryrun_msg, prettypath, TERSE_FAIL
+from synctool.lib import dryrun_msg, prettypath, TERSE_FAIL, print_timestamp
 import synctool.param
 import synctool.syncstat
 
@@ -175,9 +175,10 @@ class VNode(object):
         '''set access and modification times'''
 
         # only mtime is shown
+        verbose(dryrun_msg('  os.utime(%s, %s)' %
+                           (self.name, print_timestamp(self.stat.mtime))))
+        # print timestamp in other format
         dt = datetime.datetime.fromtimestamp(self.stat.mtime)
-        time_str = dt.strftime('%Y-%m-%d %H:%M:%S')
-        verbose(dryrun_msg('  os.utime(%s, %s)' % (self.name, time_str)))
         time_str = dt.strftime('%Y%m%d%H%M.%S')
         unix_out('touch -t %s %s' % (time_str, self.name))
         if not synctool.lib.DRY_RUN:
@@ -737,7 +738,8 @@ class SyncObject(object):
         if (synctool.param.SYNC_TIMES and
                 not self.src_stat.is_link() and not self.src_stat.is_dir() and
                 self.src_stat.mtime != self.dest_stat.mtime):
-            stdout('%s has wrong timestamp' % self.dest_path)
+            stdout('%s has wrong timestamp %s' %
+                   (self.dest_path, print_timestamp(self.dest_stat.mtime)))
             terse(synctool.lib.TERSE_MODE, ('%s has wrong timestamp' %
                                             self.dest_path))
             fix_action |= SyncObject.FIX_TIME
