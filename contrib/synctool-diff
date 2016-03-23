@@ -16,6 +16,7 @@
 # 2014-06-25 - you can now specify 'node:' to compare all unsynced files for that node - Onno
 # 2014-08-14 - ran code through http://www.shellcheck.net - Onno
 # 2014-08-14 - read masterdir from synctool-config - Onno
+# 2016-03-22 - Filter out error messages when getting reference file name - Onno
 
 SYNCTOOL_CONF=/var/lib/synctool/synctool.conf
 
@@ -133,7 +134,7 @@ if [ -z "$2" ] ; then
     check_file "${DIFF_FILE[2]}" "File '${FILE[2]}' not found on node ${NODE[2]}."
     # The first file is the synctool overlay version
     MASTERDIR=$(synctool-config --masterdir)
-    DIFF_FILE[1]=$(synctool -q -n "${NODE[2]}" --ref "${FILE[2]}" | grep -o "$MASTERDIR/.*")
+    DIFF_FILE[1]=$(synctool -q -n "${NODE[2]}" --ref "${FILE[2]}" | grep -v ERROR | grep -o "$MASTERDIR/.*")
     check_file "${DIFF_FILE[1]}" "File '$1' not found in the synctool overlay tree."
   fi 
 else
