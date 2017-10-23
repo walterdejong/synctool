@@ -22,11 +22,12 @@ def catch_signals(func):
     def wrap(*args, **kwargs):
         '''wraps a function (catch_signals is a decorator)'''
 
+        ret = -1
         try:
             ret = func(*args, **kwargs)
         except IOError as err:
             if err.errno == errno.EPIPE:    # Broken pipe
-                pass
+                ret = 141                   # 128 + 13
             else:
                 print err.strerror
                 sys.exit(-1)
