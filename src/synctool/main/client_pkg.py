@@ -118,8 +118,8 @@ def detect_installer():
     # - I've seen apt-get work with dpkg, and/or with rpm
     # - OS X has no 'standard' software packaging (the App store??)
     #   There are ports, fink, brew. I prefer 'brew'
-    # - The *BSDs have both pkg_add and ports
-    # - FreeBSD has freebsd-update to upgrade packages (FIXME not true!)
+    # - FreeBSD has pkg and ports
+    # - Most other BSDs have pkg_add and ports
 
     platform = os.uname()[0]
 
@@ -149,7 +149,11 @@ def detect_installer():
         verbose('choosing package manager brew')
         synctool.param.PACKAGE_MANAGER = 'brew'
 
-    elif platform in ('NetBSD', 'OpenBSD', 'FreeBSD'):
+    elif platform == 'FreeBSD':
+        verbose('detected platform FreeBSD')
+        synctool.param.PACKAGE_MANAGER = 'pkg'
+
+    elif platform in ('NetBSD', 'OpenBSD'):
         verbose('detected platform %s' % platform)
 
         # choose bsdpkg

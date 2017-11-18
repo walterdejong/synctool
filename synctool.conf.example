@@ -139,6 +139,7 @@ sync_times no
 #package_manager zypper
 #package_manager pacman
 #package_manager brew
+#package_manager pkg
 #package_manager bsdpkg
 
 # max amount of parallel processes that synctool uses on the master node

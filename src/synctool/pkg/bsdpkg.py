@@ -8,7 +8,9 @@
 #   License.
 #
 
-'''bsdpkg package manager (Free/Open/Net/DragonFly BSD)'''
+'''bsdpkg package manager (Open/Net/DragonFly BSD)'''
+
+# Note: for FreeBSD, use the 'pkg' package manager (not 'bsdpkg')
 
 import os
 
@@ -66,18 +68,10 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
         # type: () -> None
         super(SyncPkgBsdpkg, self).upgrade()
 
-        if os.uname()[0] == 'FreeBSD':
-            # FreeBSD has no pkg_add -u, but freebsd-update instead
-            if synctool.lib.DRY_RUN:
-                cmd = 'freebsd-update fetch'
-            else:
-                cmd = 'freebsd-update fetch install'
+        if synctool.lib.DRY_RUN:
+            cmd = 'pkg_add -uvn'
         else:
-            # OpenBSD/NetBSD/other BSD, use pkg_add -u
-            if synctool.lib.DRY_RUN:
-                cmd = 'pkg_add -uvn'
-            else:
-                cmd = 'pkg_add -uv'
+            cmd = 'pkg_add -uv'
 
         tmp = synctool.lib.DRY_RUN
         synctool.lib.DRY_RUN = False
