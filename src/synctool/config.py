@@ -142,9 +142,10 @@ def init_mynodename():
     # get my hostname
     synctool.param.HOSTNAME = hostname = socket.getfqdn()
 
-    nodename = synctool.param.NODENAME
-    if nodename is None:
+    if synctool.param.NODENAME is None:
         # try to find out who am I
+        nodename = None
+        found = False
         all_nodes = get_all_nodes()
 
         ipaddresses = get_ipaddresses(hostname)
@@ -161,7 +162,6 @@ def init_mynodename():
                 if addrs is None:
                     continue
 
-                found = False
                 for addr in addrs:
                     if addr in ipaddresses:
                         nodename = node
@@ -171,12 +171,14 @@ def init_mynodename():
                 if found:
                     break
 
+        if found:
+            synctool.param.NODENAME = nodename
+
     # At this point, nodename can still be None
     # It only really matters for client.py, which checks this condition
     # Note that synctool-client does _not_ use the short hostname to
     # identify the node it is running on
 
-    synctool.param.NODENAME = nodename
     synctool.param.MY_GROUPS = get_my_groups()
 
 
