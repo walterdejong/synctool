@@ -10,6 +10,11 @@
 
 '''brew package manager (Mac OS X)'''
 
+try:
+    from typing import List
+except ImportError:
+    pass
+
 import synctool.lib
 import synctool.pkgclass
 
@@ -17,10 +22,8 @@ import synctool.pkgclass
 class SyncPkgBrew(synctool.pkgclass.SyncPkg):
     '''package installer class for brew'''
 
-    def __init__(self):
-        super(SyncPkgBrew, self).__init__()
-
     def list(self, pkgs=None):
+        # type: (List[str]) -> None
         super(SyncPkgBrew, self).list(pkgs)
 
         cmd = 'brew list'
@@ -30,23 +33,27 @@ class SyncPkgBrew(synctool.pkgclass.SyncPkg):
         synctool.lib.shell_command(cmd)
 
     def install(self, pkgs):
+        # type: (List[str]) -> None
         super(SyncPkgBrew, self).install(pkgs)
 
         cmd = 'brew install ' + ' '.join(pkgs)
         synctool.lib.shell_command(cmd)
 
     def remove(self, pkgs):
+        # type: (List[str]) -> None
         super(SyncPkgBrew, self).remove(pkgs)
 
         cmd = 'brew remove ' + ' '.join(pkgs)
         synctool.lib.shell_command(cmd)
 
     def update(self):
+        # type: () -> None
         super(SyncPkgBrew, self).update()
 
         synctool.lib.shell_command('brew update')
 
     def upgrade(self):
+        # type: () -> None
         super(SyncPkgBrew, self).upgrade()
 
         if synctool.lib.DRY_RUN:
@@ -60,6 +67,7 @@ class SyncPkgBrew(synctool.pkgclass.SyncPkg):
         synctool.lib.DRY_RUN = tmp
 
     def clean(self):
+        # type: () -> None
         super(SyncPkgBrew, self).clean()
 
         synctool.lib.shell_command('brew cleanup')

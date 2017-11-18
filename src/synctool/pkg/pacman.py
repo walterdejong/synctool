@@ -10,6 +10,11 @@
 
 '''pacman package manager (ArchLinux)'''
 
+try:
+    from typing import List
+except ImportError:
+    pass
+
 import synctool.lib
 import synctool.pkgclass
 
@@ -20,10 +25,8 @@ import synctool.pkgclass
 class SyncPkgPacman(synctool.pkgclass.SyncPkg):
     '''package installer class for pacman'''
 
-    def __init__(self):
-        super(SyncPkgPacman, self).__init__()
-
     def list(self, pkgs=None):
+        # type: (List[str]) -> None
         super(SyncPkgPacman, self).list(pkgs)
 
         cmd = 'pacman -Q'
@@ -33,23 +36,27 @@ class SyncPkgPacman(synctool.pkgclass.SyncPkg):
         synctool.lib.shell_command(cmd)
 
     def install(self, pkgs):
+        # type: (List[str]) -> None
         super(SyncPkgPacman, self).install(pkgs)
 
         cmd = 'pacman -S --noconfirm ' + ' '.join(pkgs)
         synctool.lib.shell_command(cmd)
 
     def remove(self, pkgs):
+        # type: (List[str]) -> None
         super(SyncPkgPacman, self).remove(pkgs)
 
         cmd = 'pacman -Rs --noconfirm ' + ' '.join(pkgs)
         synctool.lib.shell_command(cmd)
 
     def update(self):
+        # type: () -> None
         super(SyncPkgPacman, self).update()
 
         synctool.lib.shell_command('pacman -Sy --noconfirm')
 
     def upgrade(self):
+        # type: () -> None
         super(SyncPkgPacman, self).upgrade()
 
         if synctool.lib.DRY_RUN:
@@ -63,6 +70,7 @@ class SyncPkgPacman(synctool.pkgclass.SyncPkg):
         synctool.lib.DRY_RUN = tmp
 
     def clean(self):
+        # type: () -> None
         super(SyncPkgPacman, self).clean()
 
         synctool.lib.shell_command('pacman -Scc --noconfirm')

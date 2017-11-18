@@ -10,6 +10,11 @@
 
 '''yum package manager (CentOS Linux)'''
 
+try:
+    from typing import List
+except ImportError:
+    pass
+
 import synctool.lib
 import synctool.pkgclass
 
@@ -17,10 +22,8 @@ import synctool.pkgclass
 class SyncPkgYum(synctool.pkgclass.SyncPkg):
     '''package installer class for yum'''
 
-    def __init__(self):
-        super(SyncPkgYum, self).__init__()
-
     def list(self, pkgs=None):
+        # type: (List[str]) -> None
         super(SyncPkgYum, self).list(pkgs)
 
         cmd = 'yum list installed'
@@ -30,18 +33,21 @@ class SyncPkgYum(synctool.pkgclass.SyncPkg):
         synctool.lib.shell_command(cmd)
 
     def install(self, pkgs):
+        # type: (List[str]) -> None
         super(SyncPkgYum, self).install(pkgs)
 
         cmd = 'yum -y install ' + ' '.join(pkgs)
         synctool.lib.shell_command(cmd)
 
     def remove(self, pkgs):
+        # type: (List[str]) -> None
         super(SyncPkgYum, self).remove(pkgs)
 
         cmd = 'yum -y remove ' + ' '.join(pkgs)
         synctool.lib.shell_command(cmd)
 
     def update(self):
+        # type: () -> None
         super(SyncPkgYum, self).update()
 
         # yum has no 'update' command, but will fetch a new database
@@ -51,6 +57,7 @@ class SyncPkgYum(synctool.pkgclass.SyncPkg):
         synctool.lib.shell_command('yum -y clean metadata')
 
     def upgrade(self):
+        # type: () -> None
         super(SyncPkgYum, self).upgrade()
 
         if synctool.lib.DRY_RUN:
@@ -64,6 +71,7 @@ class SyncPkgYum(synctool.pkgclass.SyncPkg):
         synctool.lib.DRY_RUN = tmp
 
     def clean(self):
+        # type: () -> None
         super(SyncPkgYum, self).clean()
 
         synctool.lib.shell_command('yum clean packages')

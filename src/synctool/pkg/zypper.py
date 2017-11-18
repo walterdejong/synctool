@@ -10,6 +10,11 @@
 
 '''zypper package manager (SuSE Linux)'''
 
+try:
+    from typing import List
+except ImportError:
+    pass
+
 import synctool.lib
 import synctool.pkgclass
 
@@ -17,10 +22,8 @@ import synctool.pkgclass
 class SyncPkgZypper(synctool.pkgclass.SyncPkg):
     '''package installer class for zypper'''
 
-    def __init__(self):
-        super(SyncPkgZypper, self).__init__()
-
     def list(self, pkgs=None):
+        # type: (List[str]) -> None
         super(SyncPkgZypper, self).list(pkgs)
 
         cmd = 'rpm -qa'            # zypper has no 'list-installed' ?
@@ -30,6 +33,7 @@ class SyncPkgZypper(synctool.pkgclass.SyncPkg):
         synctool.lib.shell_command(cmd)
 
     def install(self, pkgs):
+        # type: (List[str]) -> None
         super(SyncPkgZypper, self).install(pkgs)
 
         cmd = ('zypper --non-interactive install '
@@ -37,17 +41,20 @@ class SyncPkgZypper(synctool.pkgclass.SyncPkg):
         synctool.lib.shell_command(cmd)
 
     def remove(self, pkgs):
+        # type: (List[str]) -> None
         super(SyncPkgZypper, self).remove(pkgs)
 
         cmd = 'zypper --non-interactive remove ' + ' '.join(pkgs)
         synctool.lib.shell_command(cmd)
 
     def update(self):
+        # type: () -> None
         super(SyncPkgZypper, self).update()
 
         synctool.lib.shell_command('zypper --non-interactive refresh')
 
     def upgrade(self):
+        # type: () -> None
         super(SyncPkgZypper, self).upgrade()
 
         if synctool.lib.DRY_RUN:
@@ -62,6 +69,7 @@ class SyncPkgZypper(synctool.pkgclass.SyncPkg):
         synctool.lib.DRY_RUN = tmp
 
     def clean(self):
+        # type: () -> None
         super(SyncPkgZypper, self).clean()
 
         synctool.lib.shell_command('zypper clean')

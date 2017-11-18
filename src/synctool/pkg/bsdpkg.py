@@ -12,6 +12,11 @@
 
 import os
 
+try:
+    from typing import List
+except ImportError:
+    pass
+
 import synctool.lib
 import synctool.pkgclass
 
@@ -24,10 +29,8 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
     # PKG_PATH should be set already
     # set it in the environment of the root user
 
-    def __init__(self):
-        super(SyncPkgBsdpkg, self).__init__()
-
     def list(self, pkgs=None):
+        # type: (List[str]) -> None
         super(SyncPkgBsdpkg, self).list(pkgs)
 
         cmd = 'pkg_info'
@@ -39,25 +42,28 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
         synctool.lib.shell_command(cmd)
 
     def install(self, pkgs):
+        # type: (List[str]) -> None
         super(SyncPkgBsdpkg, self).install(pkgs)
 
         cmd = 'pkg_add -v ' + ' '.join(pkgs)
         synctool.lib.shell_command(cmd)
 
     def remove(self, pkgs):
+        # type: (List[str]) -> None
         super(SyncPkgBsdpkg, self).remove(pkgs)
 
         cmd = 'pkg_delete -v ' + ' '.join(pkgs)
         synctool.lib.shell_command(cmd)
 
-
     def update(self):
+        # type: () -> None
         super(SyncPkgBsdpkg, self).update()
 
         # There is no update command
         # or is there?
 
     def upgrade(self):
+        # type: () -> None
         super(SyncPkgBsdpkg, self).upgrade()
 
         if os.uname()[0] == 'FreeBSD':
@@ -78,8 +84,8 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
         synctool.lib.shell_command(cmd)
         synctool.lib.DRY_RUN = tmp
 
-
     def clean(self):
+        # type: () -> None
         super(SyncPkgBsdpkg, self).clean()
 
         # there is a PKG_TMPDIR but I won't touch it
