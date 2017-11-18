@@ -459,6 +459,7 @@ in `synctool.conf`:
     #package_manager zypper
     #package_manager pacman
     #package_manager brew
+    #package_manager pkg
     #package_manager bsdpkg
 
 dsh-pkg knows about more platforms and package managers, but currently
@@ -469,8 +470,7 @@ only the ones listed above are implemented and supported.
 > supported, feel free to develop your own plug-in for dsh-pkg
 > or contact the author of synctool.
 
-The `bsdpkg` module uses `freebsd-update` on FreeBSD and `pkg_add -u` on
-other BSDs for upgrading packages.
+The `pkg` module is for FreeBSD, use `bsdpkg` on other BSD systems.
 
 Following are examples of how to use synctool-pkg.
 

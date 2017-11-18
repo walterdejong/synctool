@@ -215,6 +215,7 @@ synctool's configuration file.
         zypper
         pacman
         brew
+        pkg
         bsdpkg
 
 * `num_proc <number>`
