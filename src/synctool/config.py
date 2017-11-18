@@ -276,7 +276,7 @@ def get_nodes_in_groups(groups):
     s = set()   # type: Set[str]
 
     for g in groups:
-        for node in synctool.param.NODES.keys():
+        for node in synctool.param.NODES:
             # NODES[node] is an ordered list (groups in order of importance)
             # so we can not do neat tricks with combining sets here ...
             if g in synctool.param.NODES[node]:
