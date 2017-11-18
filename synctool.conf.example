@@ -91,7 +91,7 @@ ignore .*.swp
 #syslogging yes
 
 # copy file last modified time from repository
-sync_times no
+#sync_times no
 
 # configure external commands that synctool uses
 #diff_cmd diff -u
