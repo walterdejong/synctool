@@ -79,7 +79,7 @@ IGNORE_FILES_WITH_WILDCARDS = []    # type: List[str]
 # The client commands do not expand/set DEFAULT_NODESET
 DEFAULT_NODESET = set(['all'])      # type: Set[str]
 
-# the master's nodename
+# the master's fqdn hostname
 MASTER = None               # type: str
 
 # set of slaves by nodename
