@@ -1,3 +1,19 @@
+Nov 2017
+- dsh_pkg now has proper FreeBSD pkg support
+- code cleanup: added Python type annotations
+- small bug fixes, found by type checking
+
+Jan 2016
+- generic bug fixes
+
+Dec 2015
+- set "sync_times true" to sync timestamps of files and templates
+
+Aug 2015
+- option --diff now accepts -f to also fix (for easy typing)
+- config "hostname:" and "hostid:" are deprecated because confusing
+- now uses GitHub API to detect if a new version is available
+
 Mar 2015
 - fixed bug in dsh: directory arguments are invalid
   and exceptionally dangerous when coupled with rsync --delete
