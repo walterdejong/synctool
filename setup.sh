@@ -30,7 +30,7 @@ range.py syncstat.py unbuffered.py update.py upload.py"
 MAIN_LIBS="__init__.py aggr.py client.py config.py master.py dsh_pkg.py
 client_pkg.py dsh_ping.py dsh_cp.py dsh.py template.py wrapper.py"
 
-PKG_LIBS="__init__.py aptget.py brew.py bsdpkg.py pacman.py yum.py zypper.py"
+PKG_LIBS="__init__.py aptget.py brew.py pkg.py bsdpkg.py pacman.py yum.py zypper.py"
 
 DOCS="chapter1.md chapter2.md chapter3.md chapter4.md chapter5.md chapter6.md
 thank_you.md toc.md footer.html header.html line.html synctool_doc.css
