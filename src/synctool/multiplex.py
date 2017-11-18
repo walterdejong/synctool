@@ -15,16 +15,22 @@ import re
 import shlex
 import subprocess
 
+try:
+    from typing import List, Pattern
+except ImportError:
+    pass
+
 import synctool.lib
 from synctool.lib import verbose, error, warning, unix_out
 import synctool.param
 import synctool.syncstat
 
-SSH_VERSION = None
-MATCH_SSH_VERSION = re.compile(r'^OpenSSH\_(\d+)\.(\d+)')
+SSH_VERSION = None      # type: int
+MATCH_SSH_VERSION = re.compile(r'^OpenSSH\_(\d+)\.(\d+)')   # type: Pattern
 
 
 def _make_control_path(nodename):
+    # type: (str) -> str
     '''Returns a control pathname for nodename
     or None on error
     It does not create the control path; just the fullpath filename
@@ -41,6 +47,7 @@ def _make_control_path(nodename):
 
 
 def use_mux(nodename):
+    # type: (str) -> bool
     '''Returns True if it's OK to use a master connection to node
     Otherwise returns False -> don't use multiplexing
     '''
@@ -76,6 +83,7 @@ def use_mux(nodename):
 
 
 def control(nodename, remote_addr, ctl_cmd):
+    # type: (str, str, str) -> bool
     '''Tell the ssh mux process the ctl_cmd
     Returns True on success, False otherwise
     '''
@@ -105,6 +113,7 @@ def control(nodename, remote_addr, ctl_cmd):
 
 
 def ssh_args(ssh_cmd_arr, nodename):
+    # type: (List[str], str) -> None
     '''add multiplexing arguments to ssh_cmd_arr'''
 
     control_path = _make_control_path(nodename)
@@ -116,6 +125,7 @@ def ssh_args(ssh_cmd_arr, nodename):
 
 
 def setup_master(node_list, persist):
+    # type: (List[str], str) -> bool
     '''setup master connections to all nodes in node_list
     node_list is a list of pairs: (addr, nodename)
     Argument 'persist' is the SSH ControlPersist parameter
@@ -208,6 +218,7 @@ in another terminal
 
 
 def detect_ssh():
+    # type: () -> int
     '''detect ssh version
     Set global SSH_VERSION to 2-digit int number:
     eg. version "5.6p1" -> SSH_VERSION = 56

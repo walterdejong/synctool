@@ -12,15 +12,23 @@
 
 '''make stdio unbuffered'''
 
+try:
+    from typing import IO, Any
+except ImportError:
+    pass
+
+
 class Unbuffered(object):
     '''class representing an unbuffered stream'''
 
     def __init__(self, stream):
+        # type: (IO) -> None
         '''initialize instance'''
 
         self.stream = stream
 
     def write(self, data):
+        # type: (str) -> None
         '''unbuffered write'''
 
         self.stream.write(data)
@@ -29,21 +37,25 @@ class Unbuffered(object):
             self.stream.flush()
 
     def flush(self):
+        # type: () -> None
         '''flush output'''
 
         self.stream.flush()
 
     def fileno(self):
+        # type: () -> int
         '''Returns file descriptor'''
 
         return self.stream.fileno()
 
     def close(self):
+        # type: () -> None
         '''close the stream'''
 
         self.stream.close()
 
     def __getattr__(self, attr):
+        # type: (str) -> Any
         '''Returns attribute
         Raises AttributeError if no such attribute
         '''
@@ -51,11 +63,13 @@ class Unbuffered(object):
         return getattr(self.stream, attr)
 
     def __enter__(self):
+        # type: () -> IO
         '''enter context; for Python 'with' statement'''
 
         return self.stream
 
     def __exit__(self, the_type, value, traceback):
+        # type: (...) -> None
         '''leave context; for Python 'with' statement'''
 
         self.stream.close()

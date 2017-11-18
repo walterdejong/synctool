@@ -12,11 +12,17 @@
 
 import subprocess
 
+try:
+    from typing import List, Dict, IO
+except ImportError:
+    pass
+
 from synctool.lib import stderr
 import synctool.range
 
 
 def aggregate(f):
+    # type: (IO) -> None
     '''group together input lines that are the same'''
 
     lines = f.readlines()
@@ -25,7 +31,7 @@ def aggregate(f):
 
     lines = [x.strip() for x in lines]
 
-    output_per_node = {}
+    output_per_node = {}    # type: Dict[str, List[str]]
 
     for line in lines:
         arr = line.split(':', 1)
@@ -48,7 +54,7 @@ def aggregate(f):
 
     nodes.sort()
 
-    while len(nodes) > 0:
+    while nodes:
         node = nodes.pop(0)
 
         out = output_per_node[node]
@@ -67,6 +73,7 @@ def aggregate(f):
 
 
 def run(cmd_arr):
+    # type: (List[str]) -> bool
     '''pipe the output through the aggregator
     Returns False on error, else True
     '''

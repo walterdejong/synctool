@@ -18,45 +18,50 @@ import errno
 import shlex
 import syslog
 
+try:
+    from typing import List, Dict, Sequence
+except ImportError:
+    pass
+
 from synctool import param
 
 # options (mostly) set by command-line arguments
-DRY_RUN = True
-VERBOSE = False
-QUIET = False
-UNIX_CMD = False
-NO_POST = False
-MASTERLOG = False
+DRY_RUN = True      # type: bool
+VERBOSE = False     # type: bool
+QUIET = False       # type: bool
+UNIX_CMD = False    # type: bool
+NO_POST = False     # type: bool
+MASTERLOG = False   # type: bool
 
 # print nodename in output?
 # This option is pretty useless except in synctool-ssh it may be useful
-OPT_NODENAME = True
+OPT_NODENAME = True # type: bool
 
 MONTHS = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
+          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec') # Sequence[str]
 
 # enums for terse output
-TERSE_INFO = 0
-TERSE_WARNING = 1
-TERSE_ERROR = 2
-TERSE_FAIL = 3
-TERSE_SYNC = 4
-TERSE_LINK = 5
-TERSE_MKDIR = 6
-TERSE_DELETE = 7
-TERSE_OWNER = 8
-TERSE_MODE = 9
-TERSE_EXEC = 10
-TERSE_UPLOAD = 11
-TERSE_NEW = 12
-TERSE_TYPE = 13
-TERSE_DRYRUN = 14
-TERSE_FIXING = 15
-TERSE_OK = 16
+TERSE_INFO = 0      # type: int
+TERSE_WARNING = 1   # type: int
+TERSE_ERROR = 2     # type: int
+TERSE_FAIL = 3      # type: int
+TERSE_SYNC = 4      # type: int
+TERSE_LINK = 5      # type: int
+TERSE_MKDIR = 6     # type: int
+TERSE_DELETE = 7    # type: int
+TERSE_OWNER = 8     # type: int
+TERSE_MODE = 9      # type: int
+TERSE_EXEC = 10     # type: int
+TERSE_UPLOAD = 11   # type: int
+TERSE_NEW = 12      # type: int
+TERSE_TYPE = 13     # type: int
+TERSE_DRYRUN = 14   # type: int
+TERSE_FIXING = 15   # type: int
+TERSE_OK = 16       # type: int
 
 TERSE_TXT = ('info', 'WARN', 'ERROR', 'FAIL',
              'sync', 'link', 'mkdir', 'rm', 'chown', 'chmod', 'exec',
-             'upload', 'new', 'type', 'DRYRUN', 'FIXING', 'OK')
+             'upload', 'new', 'type', 'DRYRUN', 'FIXING', 'OK') # type: Sequence[str]
 
 COLORMAP = {'black'   : 30,
             'darkgray': 30,
@@ -68,10 +73,11 @@ COLORMAP = {'black'   : 30,
             'cyan'    : 36,
             'white'   : 37,
             'bold'    : 1,
-            'default' : 0}
+            'default' : 0}  # type: Dict[str, int]
 
 
 def verbose(msg):
+    # type: (str) -> None
     '''do conditional output based on the verbose command line parameter'''
 
     if VERBOSE:
@@ -79,6 +85,7 @@ def verbose(msg):
 
 
 def stdout(msg):
+    # type: (str) -> None
     '''print message to stdout (unless special output mode was selected)'''
 
     if not (UNIX_CMD or param.TERSE):
@@ -86,6 +93,7 @@ def stdout(msg):
 
 
 def stderr(msg):
+    # type: (str) -> None
     '''print message to stderr
     I don't like stderr much, so it really prints to stdout
     '''
@@ -94,18 +102,21 @@ def stderr(msg):
 
 
 def error(msg):
+    # type: (str) -> None
     '''print error message'''
 
     stderr('error: ' + msg)
 
 
 def warning(msg):
+    # type: (str) -> None
     '''print warning message'''
 
     stderr('warning: ' + msg)
 
 
 def terse(code, msg):
+    # type: (int, str) -> None
     '''print short message + shortened filename'''
 
     if param.TERSE:
@@ -138,6 +149,7 @@ def terse(code, msg):
 
 
 def unix_out(msg):
+    # type: (str) -> None
     '''output as unix shell command'''
 
     if UNIX_CMD:
@@ -145,7 +157,8 @@ def unix_out(msg):
 
 
 def prettypath(path):
-    '''print long paths as "$overlay/path"'''
+    # type: (str) -> str
+    '''Return long path as "$overlay/path"'''
 
     if param.FULL_PATH:
         return path
@@ -166,7 +179,8 @@ def prettypath(path):
 
 
 def terse_path(path, maxlen=55):
-    '''print long path as "//overlay/.../dir/file"'''
+    # type: (str, int) -> str
+    '''Return long path as "//overlay/.../dir/file"'''
 
     if param.FULL_PATH:
         return path
@@ -196,6 +210,7 @@ def terse_path(path, maxlen=55):
 
 
 def terse_match(a_terse_path, path):
+    # type: (str, str) -> bool
     '''Return True if it matches, else False'''
 
     if a_terse_path[:2] != os.sep + os.sep:
@@ -219,6 +234,7 @@ def terse_match(a_terse_path, path):
 
 
 def terse_match_many(path, terse_path_list):
+    # type: (str, List[str]) -> int
     '''Return index of first path match in list of terse paths'''
 
     idx = 0
@@ -232,6 +248,7 @@ def terse_match_many(path, terse_path_list):
 
 
 def dryrun_msg(msg):
+    # type: (str) -> str
     '''print a "dry run" message filled to (almost) 80 chars'''
 
     if not DRY_RUN:
@@ -256,6 +273,7 @@ def dryrun_msg(msg):
 
 
 def openlog():
+    # type: () -> None
     '''start logging'''
 
     if DRY_RUN or not param.SYSLOGGING:
@@ -265,6 +283,7 @@ def openlog():
 
 
 def closelog():
+    # type: () -> None
     '''stop logging'''
 
     if DRY_RUN or not param.SYSLOGGING:
@@ -275,6 +294,7 @@ def closelog():
 
 
 def _masterlog(msg):
+    # type: (str) -> None
     '''log only locally (on the master node)'''
 
     if DRY_RUN or not param.SYSLOGGING:
@@ -284,6 +304,7 @@ def _masterlog(msg):
 
 
 def log(msg):
+    # type: (str) -> None
     '''log message to syslog'''
 
     if DRY_RUN or not param.SYSLOGGING:
@@ -298,6 +319,7 @@ def log(msg):
 
 
 def run_with_nodename(cmd_arr, nodename):
+    # type: (List[str], str) -> int
     '''run command and show output with nodename
     It will run regardless of what DRY_RUN is
     Returns process return code or -1 on error
@@ -344,6 +366,7 @@ def run_with_nodename(cmd_arr, nodename):
 
 
 def shell_command(cmd):
+    # type: (str) -> int
     '''run a shell command
     Unless DRY_RUN is set
     Returns: return code of shell command
@@ -387,6 +410,7 @@ def shell_command(cmd):
 
 
 def exec_command(cmd_arr, silent=False):
+    # type: (List[str], bool) -> int
     '''run a command given in cmd_arr, regardless of DRY_RUN
     Returns: return code of execute command or -1 on error
     '''
@@ -422,6 +446,7 @@ def exec_command(cmd_arr, silent=False):
 
 
 def run_command(cmd):
+    # type: (str) -> None
     '''run a shell command'''
 
     # a command can have arguments
@@ -440,6 +465,7 @@ def run_command(cmd):
 
 
 def run_command_in_dir(dest_dir, cmd):
+    # type: (str, str) -> None
     '''change directory to dest_dir, and run the shell command'''
 
     verbose('  os.chdir(%s)' % dest_dir)
@@ -477,6 +503,7 @@ def run_command_in_dir(dest_dir, cmd):
 
 
 def search_path(cmd):
+    # type: (str) -> str
     '''search the PATH for the location of cmd'''
 
     # maybe a full path was given
@@ -502,6 +529,7 @@ def search_path(cmd):
 
 
 def mkdir_p(path, mode=0700):
+    # type: (str, int) -> bool
     '''like mkdir -p; make directory and subdirectories
     Returns False on error, else True
     '''
@@ -530,6 +558,7 @@ def mkdir_p(path, mode=0700):
 #
 
 def strip_multiple_slashes(path):
+    # type: (str) -> str
     '''remove double slashes from path'''
 
     # like os.path.normpath(), but do not change symlinked paths
@@ -554,6 +583,7 @@ def strip_multiple_slashes(path):
 
 
 def strip_trailing_slash(path):
+    # type: (str) -> str
     '''remove trailing slash from path'''
 
     if not path:
@@ -566,6 +596,7 @@ def strip_trailing_slash(path):
 
 
 def strip_path(path):
+    # type: (str) -> str
     '''remove trailing and multiple slashes from path'''
 
     if not path:
@@ -578,6 +609,7 @@ def strip_path(path):
 
 
 def strip_terse_path(path):
+    # type: (str) -> str
     '''strip a terse path'''
 
     if not path:
@@ -600,6 +632,7 @@ def strip_terse_path(path):
 
 
 def prepare_path(path):
+    # type: (str) -> str
     '''strip path, and replace $SYNCTOOL by the installdir'''
 
     if not path:
@@ -612,6 +645,7 @@ def prepare_path(path):
 
 
 def path_exists(filename):
+    # type: (str) -> bool
     '''Returns True if filename exists'''
 
     # Note that os.path.exists() returns False for dead symlinks
@@ -639,6 +673,7 @@ def path_exists(filename):
 
 
 def set_filetimes(filename, atime, mtime):
+    # type: (str, float, float) -> None
     '''set file atime and mtime'''
 
     # This func is used for forcing the mtime onto generated templates
@@ -660,6 +695,7 @@ def set_filetimes(filename, atime, mtime):
 
 
 def print_timestamp(stamp):
+    # type: (float) -> str
     '''Returns timestamp as string'''
 
     dt = datetime.datetime.fromtimestamp(stamp)

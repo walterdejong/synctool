@@ -13,72 +13,77 @@
 import os
 import sys
 
+try:
+    from typing import Dict, List, Sequence, Set
+except ImportError:
+    pass
+
 # Note: the release datetime should be set slightly in the future
 # in regards to when the release tag is made in git
 # For example, the next (half) hour
 # This is so that synctool --check-update will work correctly
-VERSION = '6.3-beta'
-RELEASE_DATETIME = '2015-08-12T22:20:00'
+VERSION = '6.3-beta'                                # type: str
+RELEASE_DATETIME = '2015-08-12T22:20:00'            # type: str
 
 # location of default config file on the master node
-DEFAULT_CONF = '/opt/synctool/etc/synctool.conf'
-CONF_FILE = DEFAULT_CONF
+DEFAULT_CONF = '/opt/synctool/etc/synctool.conf'    # type: str
+CONF_FILE = DEFAULT_CONF                            # type: str
 
-BOOLEAN_VALUE_TRUE = ('1', 'on', 'yes', 'true')
-BOOLEAN_VALUE_FALSE = ('0', 'off', 'no', 'false')
+BOOLEAN_VALUE_TRUE = ('1', 'on', 'yes', 'true')     # type: Sequence[str]
+BOOLEAN_VALUE_FALSE = ('0', 'off', 'no', 'false')   # type: Sequence[str]
 
 #
 # config variables
 #
-ROOTDIR = None
-VAR_DIR = None
-VAR_LEN = 0
-OVERLAY_DIR = None
-OVERLAY_LEN = 0
-DELETE_DIR = None
-DELETE_LEN = 0
-PURGE_DIR = None
-PURGE_LEN = 0
-SCRIPT_DIR = None
-TEMP_DIR = '/tmp/synctool'
-HOSTNAME = None
-NODENAME = None
+ROOTDIR = None              # type: str
+VAR_DIR = None              # type: str
+VAR_LEN = 0                 # type: int
+OVERLAY_DIR = None          # type: str
+OVERLAY_LEN = 0             # type: int
+DELETE_DIR = None           # type: str
+DELETE_LEN = 0              # type: int
+PURGE_DIR = None            # type: str
+PURGE_LEN = 0               # type: int
+SCRIPT_DIR = None           # type: str
+TEMP_DIR = '/tmp/synctool'  # type: str
+HOSTNAME = None             # type: str
+NODENAME = None             # type: str
 
-DIFF_CMD = 'diff -u'
-PING_CMD = 'ping -q -c 1 -t 1'
-SSH_CMD = 'ssh -o ConnectTimeout=10 -x -q'
-RSYNC_CMD = "rsync -ar --delete --delete-excluded -q"
-SYNCTOOL_CMD = None
-PKG_CMD = None
+DIFF_CMD = 'diff -u'                                    # type: str
+PING_CMD = 'ping -q -c 1 -t 1'                          # type: str
+SSH_CMD = 'ssh -o ConnectTimeout=10 -x -q'              # type: str
+RSYNC_CMD = "rsync -ar --delete --delete-excluded -q"   # type: str
+SYNCTOOL_CMD = None                                     # type: str
+PKG_CMD = None                                          # type: str
 
-PACKAGE_MANAGER = None
+PACKAGE_MANAGER = None      # type: str
 
-NUM_PROC = 16       # use sensible default
-SLEEP_TIME = 0
+NUM_PROC = 16               # type: int
+SLEEP_TIME = 0              # type: int
 
-CONTROL_PERSIST = '1h'
-REQUIRE_EXTENSION = True
-BACKUP_COPIES = True
-SYSLOGGING = True
-FULL_PATH = False
-TERSE = False
-SYNC_TIMES = False
-IGNORE_DOTFILES = False
-IGNORE_DOTDIRS = False
-IGNORE_FILES = set()
-IGNORE_FILES_WITH_WILDCARDS = []
+CONTROL_PERSIST = '1h'      # type: str
+REQUIRE_EXTENSION = True    # type: bool
+BACKUP_COPIES = True        # type: bool
+SYSLOGGING = True           # type: bool
+FULL_PATH = False           # type: bool
+TERSE = False               # type: bool
+SYNC_TIMES = False          # type: bool
+IGNORE_DOTFILES = False     # type: bool
+IGNORE_DOTDIRS = False      # type: bool
+IGNORE_FILES = set()                # type: Set[str]
+IGNORE_FILES_WITH_WILDCARDS = []    # type: List[str]
 
 # default_nodeset parameter in the config file
 # warning: make_default_nodeset() is only called by commands that are
 # supposed to run on the master node
 # The client commands do not expand/set DEFAULT_NODESET
-DEFAULT_NODESET = set(['all'])
+DEFAULT_NODESET = set(['all'])      # type: Set[str]
 
 # the master's nodename
-MASTER = None
+MASTER = None               # type: str
 
 # set of slaves by nodename
-SLAVES = set()
+SLAVES = set()              # type: Set[str]
 
 # NODES is a dict of nodes
 # each node is a list of groups, ordered by importance;
@@ -86,36 +91,36 @@ SLAVES = set()
 #
 #   NODES[node] -> [ list of groups ]
 #
-NODES = {}
+NODES = {}                  # type: Dict[str, List[str]]
 
 # dict of ipaddresses by nodename
 #
 #   IPADDRESSES[node] -> ipaddress
 #
-IPADDRESSES = {}
+IPADDRESSES = {}            # type: Dict[str, str]
 
 # compound groups are lists of groups, in order of importance
 #
 #   GROUP_DEFS[compound] -> [ list of groups ]
 #
-GROUP_DEFS = {}
+GROUP_DEFS = {}             # type: Dict[str, List[str]]
 
 # set of ignored groups and nodes
-IGNORE_GROUPS = set()
+IGNORE_GROUPS = set()       # type: Set[str]
 
 # list of my groups, ordered by importance
-MY_GROUPS = None
+MY_GROUPS = None            # type: List[str]
 
 # set of all known groups
-ALL_GROUPS = set([])
+ALL_GROUPS = set([])        # type: Set[str]
 
 # set of nodes that don't want an rsync copy
-NO_RSYNC = set()
+NO_RSYNC = set()            # type: Set[str]
 
 # colorize output
-COLORIZE = True
-COLORIZE_FULL_LINE = False
-COLORIZE_BRIGHT = True
+COLORIZE = True             # type: bool
+COLORIZE_FULL_LINE = False  # type: bool
+COLORIZE_BRIGHT = True      # type: bool
 
 TERSE_COLORS = {
     'info'   : 'default',
@@ -136,17 +141,18 @@ TERSE_COLORS = {
     'dryrun' : 'default',
     'fixing' : 'default',
     'ok'     : 'default',
-}
+}                           # type: Dict[str, str]
 
 # list of supported package managers
 KNOWN_PACKAGE_MANAGERS = ('apt-get', 'yum', 'zypper', 'brew', 'pacman',
                           # 'urpmi', 'portage', 'port', 'swaret',
-                          'bsdpkg')
+                          'bsdpkg')     # type: Sequence[str]
 
-ORIG_UMASK = 022
+ORIG_UMASK = 022    # type: int
 
 
 def init():
+    # type() -> None
     '''detect my rootdir and set default symlink mode'''
 
     global ROOTDIR, CONF_FILE

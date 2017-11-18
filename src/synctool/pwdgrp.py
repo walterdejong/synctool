@@ -13,13 +13,19 @@
 import pwd
 import grp
 
-CACHE_BY_UID = {}
-CACHE_BY_GID = {}
-CACHE_BY_USER = {}
-CACHE_BY_GROUP = {}
+try:
+    from typing import Dict
+except ImportError:
+    pass
+
+CACHE_BY_UID = {}   # type: Dict[str, str]
+CACHE_BY_GID = {}   # type: Dict[str, str]
+CACHE_BY_USER = {}  # type: Dict[str, int]
+CACHE_BY_GROUP = {} # type: Dict[str, int]
 
 
 def pw_name(uid):
+    # type: (int) -> str
     '''Returns username for uid, or "uid" when not found'''
 
     if uid < 0:
@@ -40,6 +46,7 @@ def pw_name(uid):
 
 
 def grp_name(gid):
+    # type: (int) -> str
     '''Returns group for gid, or "gid" when not found'''
 
     if gid < 0:
@@ -60,6 +67,7 @@ def grp_name(gid):
 
 
 def pw_uid(username):
+    # type: (str) -> int
     '''Returns uid for a given username
     Throws KeyError when not found
     '''
@@ -80,6 +88,7 @@ def pw_uid(username):
 
 
 def grp_gid(group):
+    # type: (str) -> int
     '''Returns gid for a given group
     Throws KeyError when not found
     '''

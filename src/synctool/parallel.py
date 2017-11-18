@@ -18,14 +18,20 @@ import sys
 import errno
 import time
 
+try:
+    from typing import List, Set, Callable, Any
+except ImportError:
+    pass
+
 from synctool.lib import error
 from synctool.main.wrapper import catch_signals
 import synctool.param
 
-ALL_PIDS = set()
+ALL_PIDS = set()    # type: Set[int]
 
 
 def do(func, work):
+    # type: (Callable[[Any], None], List[Any]) -> None
     '''run func in parallel'''
 
     if synctool.param.SLEEP_TIME != 0:
@@ -64,6 +70,7 @@ def do(func, work):
 
 @catch_signals
 def worker(rank, func, work, part):
+    # type: (int, Callable[[Any], None], List[Any], int) -> None
     '''run func to do part of work for parallel rank'''
 
     # determine which chunk of work to do
@@ -82,12 +89,13 @@ def worker(rank, func, work, part):
 
 
 def join():
+    # type: () -> None
     '''wait for parallel threads to exit'''
 
     global ALL_PIDS
 
     # wait until no more child processes left
-    while len(ALL_PIDS) > 0:
+    while ALL_PIDS:
         try:
             pid, _ = os.wait()
         except OSError as err:

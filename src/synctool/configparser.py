@@ -20,6 +20,11 @@ import os
 import sys
 import re
 
+try:
+    from typing import List, Dict, Tuple, Pattern
+except ImportError:
+    pass
+
 from synctool import param
 import synctool.lib
 from synctool.lib import stderr
@@ -28,23 +33,24 @@ import synctool.range
 # this allows alphanumeric concatenated by underscore, minus, or plus symbol
 # and no other characters
 # Valid names are: node1 node1-10 node_10_0_0_2 node1+node2
-SPELLCHECK = re.compile(r'^[a-zA-Z](?:[_+-]?[a-zA-Z0-9])*$')
+SPELLCHECK = re.compile(r'^[a-zA-Z](?:[_+-]?[a-zA-Z0-9])*$')    # type: Pattern
 
 # this will match "60", "1h30m", "1w4d10h3m50s", "yes", etc.
 PERSIST_TIME = re.compile(r'^\d+$|'
                           r'^(\d+[w])*(\d+[d])*(\d+[h])*(\d+[m])*(\d+[s])*$|'
                           r'^yes$|'
-                          r'^none$')
+                          r'^none$')    # type: Pattern
 
 # dict of defined Symbols
 # to see if a parameter is being redefined
-SYMBOLS = {}
+SYMBOLS = {}    # type: Dict[str, Symbol]
 
 
 class Symbol(object):
     '''structure that says where a symbol was first defined'''
 
     def __init__(self, name=None, filename=None, lineno=0):
+        # type: (str, str, int) -> None
         '''initialize instance'''
 
         self.name = name                    # not really used ...
@@ -52,6 +58,7 @@ class Symbol(object):
         self.lineno = lineno
 
     def origin(self):
+        # type: () -> str
         '''Returns string "filename:lineno" where the symbol was
         first defined
         '''
@@ -60,6 +67,7 @@ class Symbol(object):
 
 
 def read_config_file(configfile):
+    # type: (str) -> int
     '''read a (included) config file
     Returns 0 on success, or error count on errors
     '''
@@ -133,6 +141,7 @@ def read_config_file(configfile):
 
 
 def check_definition(keyword, configfile, lineno):
+    # type: (str, str, int) -> bool
     '''check whether a param was not defined earlier
     Returns False on error, True if OK
     '''
@@ -147,6 +156,7 @@ def check_definition(keyword, configfile, lineno):
 
 
 def check_node_definition(node, configfile, lineno):
+    # type: (str, str, int) -> bool
     '''check whether a node was not defined earlier
     Returns False on error, True if OK
     '''
@@ -164,6 +174,7 @@ def check_node_definition(node, configfile, lineno):
 
 
 def check_group_definition(group, configfile, lineno):
+    # type: (str, str, int) -> bool
     '''check whether a group was not defined earlier
     Returns False on error, True if OK
     '''
@@ -186,6 +197,7 @@ def check_group_definition(group, configfile, lineno):
 #
 
 def _config_boolean(label, value, configfile, lineno):
+    # type: (str, str, str, int) -> Tuple[int, bool]
     '''a boolean parameter can be "true|false|yes|no|on|off|1|0"'''
 
     if not check_definition(label, configfile, lineno):
@@ -203,6 +215,7 @@ def _config_boolean(label, value, configfile, lineno):
 
 
 def _config_integer(label, value, configfile, lineno, radix=10):
+    # type: (str, str, str, int, int) -> Tuple[int, int]
     '''get numeric integer value'''
 
     if not check_definition(label, configfile, lineno):
@@ -218,6 +231,7 @@ def _config_integer(label, value, configfile, lineno, radix=10):
 
 
 def _config_color_variant(label, value, configfile, lineno):
+    # type: (str, str, str, int) -> int
     '''set a color by name'''
 
     if not check_definition(label, configfile, lineno):
@@ -233,6 +247,7 @@ def _config_color_variant(label, value, configfile, lineno):
 
 
 def _config_command(label, arr, short_cmd, configfile, lineno):
+    # type: (str, List[str], str, str, int) -> Tuple[int, str]
     '''helper for configuring rsync_cmd, ssh_cmd, synctool_cmd, etc.'''
 
     if not check_definition(label, configfile, lineno):
@@ -252,6 +267,7 @@ def _config_command(label, arr, short_cmd, configfile, lineno):
 
 
 def spellcheck(name):
+    # type: (str) -> bool
     '''Check for valid spelling of name
     Returns True if OK, False if not OK
     '''
@@ -267,6 +283,7 @@ def spellcheck(name):
 
 
 def config_include(arr, _configfile, _lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: include'''
 
     # recursively read the given config file
@@ -274,12 +291,13 @@ def config_include(arr, _configfile, _lineno):
 
 
 def config_tempdir(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: tempdir'''
 
     if not check_definition(arr[0], configfile, lineno):
         return 1
 
-    d = arr[1:].join()
+    d = ' '.join(arr[1:])
     d = synctool.lib.prepare_path(d)
 
     if not os.path.isabs(d):
@@ -292,6 +310,7 @@ def config_tempdir(arr, configfile, lineno):
 
 
 def config_package_manager(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: package_manager'''
 
     if len(arr) < 2:
@@ -312,6 +331,7 @@ def config_package_manager(arr, configfile, lineno):
 
 
 def config_ssh_control_persist(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: ssh_control_persist'''
 
     if len(arr) != 2:
@@ -331,6 +351,7 @@ def config_ssh_control_persist(arr, configfile, lineno):
 
 
 def config_require_extension(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: require_extension'''
 
     err, param.REQUIRE_EXTENSION = _config_boolean('require_extension',
@@ -339,6 +360,7 @@ def config_require_extension(arr, configfile, lineno):
 
 
 def config_full_path(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: full_path'''
 
     err, param.FULL_PATH = _config_boolean('full_path', arr[1], configfile,
@@ -347,6 +369,7 @@ def config_full_path(arr, configfile, lineno):
 
 
 def config_backup_copies(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: backup_copies'''
 
     err, param.BACKUP_COPIES = _config_boolean('backup_copies', arr[1],
@@ -355,6 +378,7 @@ def config_backup_copies(arr, configfile, lineno):
 
 
 def config_syslogging(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: syslogging'''
 
     err, param.SYSLOGGING = _config_boolean('syslogging', arr[1], configfile,
@@ -362,6 +386,7 @@ def config_syslogging(arr, configfile, lineno):
     return err
 
 def config_sync_times(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: sync_times'''
 
     err, param.SYNC_TIMES = _config_boolean('sync_times', arr[1], configfile,
@@ -369,6 +394,7 @@ def config_sync_times(arr, configfile, lineno):
     return err
 
 def config_ignore_dotfiles(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: ignore_dotfiles'''
 
     err, param.IGNORE_DOTFILES = _config_boolean('ignore_dotfiles', arr[1],
@@ -377,6 +403,7 @@ def config_ignore_dotfiles(arr, configfile, lineno):
 
 
 def config_ignore_dotdirs(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: ignore_dotdirs'''
 
     err, param.IGNORE_DOTDIRS = _config_boolean('ignore_dotdirs', arr[1],
@@ -385,6 +412,7 @@ def config_ignore_dotdirs(arr, configfile, lineno):
 
 
 def config_ignore(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: ignore'''
 
     if len(arr) < 2:
@@ -406,6 +434,7 @@ def config_ignore(arr, configfile, lineno):
 
 
 def config_terse(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: terse'''
 
     err, param.TERSE = _config_boolean('terse', arr[1], configfile, lineno)
@@ -413,6 +442,7 @@ def config_terse(arr, configfile, lineno):
 
 
 def config_colorize(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: colorize'''
 
     err, param.COLORIZE = _config_boolean('colorize', arr[1], configfile,
@@ -421,6 +451,7 @@ def config_colorize(arr, configfile, lineno):
 
 
 def config_colorize_full_line(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: colorize_full_line'''
 
     err, param.COLORIZE_FULL_LINE = _config_boolean('colorize_full_line',
@@ -431,6 +462,7 @@ def config_colorize_full_line(arr, configfile, lineno):
 
 # nice for typo's
 def config_colorize_full_lines(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: colorize_full_lines'''
 
     err, param.COLORIZE_FULL_LINE = _config_boolean('colorize_full_line',
@@ -440,6 +472,7 @@ def config_colorize_full_lines(arr, configfile, lineno):
 
 
 def config_colorize_bright(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: colorize_bright'''
 
     err, param.COLORIZE_BRIGHT = _config_boolean('colorize_bright', arr[1],
@@ -448,6 +481,7 @@ def config_colorize_bright(arr, configfile, lineno):
 
 
 def config_colorize_bold(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: colorize_bold'''
 
     err, param.COLORIZE_BRIGHT = _config_boolean('colorize_bold', arr[1],
@@ -456,108 +490,126 @@ def config_colorize_bold(arr, configfile, lineno):
 
 
 def config_color_info(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: color_info'''
 
     return _config_color_variant('color_info', arr[1], configfile, lineno)
 
 
 def config_color_warn(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: color_warn'''
 
     return _config_color_variant('color_warn', arr[1], configfile, lineno)
 
 
 def config_color_error(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: color_error'''
 
     return _config_color_variant('color_error', arr[1], configfile, lineno)
 
 
 def config_color_fail(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: color_fail'''
 
     return _config_color_variant('color_fail', arr[1], configfile, lineno)
 
 
 def config_color_sync(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: color_sync'''
 
     return _config_color_variant('color_sync', arr[1], configfile, lineno)
 
 
 def config_color_link(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: color_link'''
 
     return _config_color_variant('color_link', arr[1], configfile, lineno)
 
 
 def config_color_mkdir(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: color_mkdir'''
 
     return _config_color_variant('color_mkdir', arr[1], configfile, lineno)
 
 
 def config_color_rm(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: color_rm'''
 
     return _config_color_variant('color_rm', arr[1], configfile, lineno)
 
 
 def config_color_chown(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: color_chown'''
 
     return _config_color_variant('color_chown', arr[1], configfile, lineno)
 
 
 def config_color_chmod(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: color_chmod'''
 
     return _config_color_variant('color_chmod', arr[1], configfile, lineno)
 
 
 def config_color_exec(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: color_exec'''
 
     return _config_color_variant('color_exec', arr[1], configfile, lineno)
 
 
 def config_color_upload(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: color_upload'''
 
     return _config_color_variant('color_upload', arr[1], configfile, lineno)
 
 
 def config_color_new(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: color_new'''
 
     return _config_color_variant('color_new', arr[1], configfile, lineno)
 
 
 def config_color_type(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: color_type'''
 
     return _config_color_variant('color_type', arr[1], configfile, lineno)
 
 
 def config_color_dryrun(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: color_dryrun'''
 
     return _config_color_variant('color_dryrun', arr[1], configfile, lineno)
 
 
 def config_color_fixing(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: color_fixing'''
 
     return _config_color_variant('color_fixing', arr[1], configfile, lineno)
 
 
 def config_color_ok(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: color_ok'''
 
     return _config_color_variant('color_ok', arr[1], configfile, lineno)
 
 
 def config_default_nodeset(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: default_nodeset'''
 
     if not check_definition(arr[0], configfile, lineno):
@@ -601,6 +653,7 @@ def config_default_nodeset(arr, configfile, lineno):
 
 
 def config_master(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: master'''
 
     if len(arr) != 2:
@@ -613,6 +666,7 @@ def config_master(arr, configfile, lineno):
 
 
 def config_slave(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: slave'''
 
     if len(arr) < 2:
@@ -644,7 +698,7 @@ def config_slave(arr, configfile, lineno):
                    (configfile, lineno, node))
             return 1
 
-        SYMBOLS['node %s'] = node
+        SYMBOLS['node %s' % node] = Symbol(node, configfile, lineno)
         param.SLAVES.add(node)
 
     # check for valid nodes is made later
@@ -652,6 +706,7 @@ def config_slave(arr, configfile, lineno):
 
 
 def config_group(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: group'''
 
     if len(arr) < 3:
@@ -682,7 +737,7 @@ def config_group(arr, configfile, lineno):
         stderr('%s: previous definition was here' % SYMBOLS[key].origin())
         return 1
 
-    grouplist = []
+    grouplist = []          # type: List[str]
     for grp in arr[2:]:
         # range expression syntax: 'group generator'
         if '[' in grp:
@@ -705,6 +760,7 @@ def config_group(arr, configfile, lineno):
 
 
 def config_node(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: node'''
 
     if len(arr) < 2:
@@ -811,6 +867,7 @@ def config_node(arr, configfile, lineno):
 
 
 def _node_specifier(configfile, lineno, node, spec):
+    # type: (str, int, str, str) -> bool
     '''parse optional node specifiers like 'ipaddress:', 'rsync:' etc.
     Returns True if OK, False on error
     '''
@@ -860,6 +917,7 @@ def _node_specifier(configfile, lineno, node, spec):
 
 
 def config_ignore_node(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: ignore_node'''
 
     if len(arr) < 2:
@@ -910,6 +968,7 @@ def config_ignore_node(arr, configfile, lineno):
 
 
 def config_ignore_group(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: ignore_group'''
 
     if len(arr) < 2:
@@ -964,6 +1023,7 @@ def config_ignore_group(arr, configfile, lineno):
 
 
 def config_diff_cmd(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: diff_cmd'''
 
     err, param.DIFF_CMD = _config_command('diff_cmd', arr, 'diff', configfile,
@@ -972,6 +1032,7 @@ def config_diff_cmd(arr, configfile, lineno):
 
 
 def config_ping_cmd(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: ping_cmd'''
 
     err, param.PING_CMD = _config_command('ping_cmd', arr, 'ping', configfile,
@@ -980,6 +1041,7 @@ def config_ping_cmd(arr, configfile, lineno):
 
 
 def config_ssh_cmd(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: ssh_cmd'''
 
     err, param.SSH_CMD = _config_command('ssh_cmd', arr, 'ssh', configfile,
@@ -988,6 +1050,7 @@ def config_ssh_cmd(arr, configfile, lineno):
 
 
 def config_rsync_cmd(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: rsync_cmd'''
 
     # Note! strip_multiple_slashes() will break "rsync://" paths
@@ -1000,6 +1063,7 @@ def config_rsync_cmd(arr, configfile, lineno):
 
 
 def config_synctool_cmd(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: synctool_cmd'''
 
     err, param.SYNCTOOL_CMD = _config_command('synctool_cmd', arr,
@@ -1009,6 +1073,7 @@ def config_synctool_cmd(arr, configfile, lineno):
 
 
 def config_pkg_cmd(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: pkg_cmd'''
 
     err, param.PKG_CMD = _config_command('pkg_cmd', arr, 'synctool_pkg.py',
@@ -1017,6 +1082,7 @@ def config_pkg_cmd(arr, configfile, lineno):
 
 
 def config_num_proc(arr, configfile, lineno):
+    # type: (List[str], str, int) -> int
     '''parse keyword: num_proc'''
 
     err, param.NUM_PROC = _config_integer('num_proc', arr[1], configfile,
@@ -1030,6 +1096,7 @@ def config_num_proc(arr, configfile, lineno):
 
 
 def expand_grouplist(grouplist):
+    # type: (List[str]) -> List[str]
     '''expand a list of (compound) groups recursively
     Returns the expanded group list
     '''
@@ -1060,7 +1127,7 @@ def expand_grouplist(grouplist):
     # this looks pretty lame ... but Python sets are not usable here;
     # sets have no order and order is important here
 
-    expanded_grouplist = []
+    expanded_grouplist = []     # type: List[str]
     for elem in groups:
         if elem not in expanded_grouplist:
             expanded_grouplist.append(elem)

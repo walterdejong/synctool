@@ -10,6 +10,11 @@
 
 '''base class for synctool package managers'''
 
+try:
+    from typing import List
+except ImportError:
+    pass
+
 from synctool.lib import verbose, log, dryrun_msg
 
 
@@ -21,11 +26,13 @@ class SyncPkg(object):
     # And/or you may use this class as a superclass
 
     def __init__(self):
+        # type: () -> None
         '''initialize instance'''
 
         pass
 
     def list(self, pkgs=None):
+        # type: (List[str]) -> None
         '''output list of packages'''
 
         if pkgs:
@@ -39,6 +46,7 @@ class SyncPkg(object):
             verbose('list all packages')
 
     def install(self, pkgs):
+        # type: (List[str]) -> None
         '''install list of packages'''
 
         if len(pkgs) > 1:
@@ -51,6 +59,7 @@ class SyncPkg(object):
         log(msg)
 
     def remove(self, pkgs):
+        # type: (List[str]) -> None
         '''remove list of packages'''
 
         if len(pkgs) > 1:
@@ -63,11 +72,13 @@ class SyncPkg(object):
         log(msg)
 
     def update(self):
+        # type: () -> None
         '''update package database'''
 
         verbose('updating package database')
 
     def upgrade(self):
+        # type: () -> None
         '''upgrade packages'''
 
         msg = 'upgrading packages'
@@ -78,6 +89,7 @@ class SyncPkg(object):
         log(msg)
 
     def clean(self):
+        # type: () -> None
         '''cleanup any package database caches'''
 
         verbose('cleaning up caches')

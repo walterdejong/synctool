@@ -16,6 +16,11 @@ import datetime
 import urllib2
 import json
 
+try:
+    from typing import List, Dict, Union, Any
+except ImportError:
+    pass
+
 from synctool.lib import verbose, error, stdout
 import synctool.param
 
@@ -26,13 +31,15 @@ class ReleaseInfo(object):
     TAGS_URL = 'https://api.github.com/repos/walterdejong/synctool/tags'
 
     def __init__(self):
+        # type: () -> None
         '''initialize instance'''
 
-        self.version = None
-        self.datetime = None
-        self.url = None
+        self.version = None     # type: str
+        self.datetime = None    # type: datetime.datetime
+        self.url = None         # type: str
 
     def load(self):
+        # type: () -> bool
         '''load release info from github
         Returns True on success
         '''
@@ -90,6 +97,7 @@ class ReleaseInfo(object):
 
 
 def github_api(url):
+    # mypy-bug-type: (str) -> Union[List[Dict[str, Any]], Dict[str, Any]]
     '''Access GitHub API via URL
     Returns data (list or dict) depending on GitHub API function
     or None on error
@@ -123,6 +131,7 @@ def github_api(url):
 
 
 def check():
+    # type: () -> bool
     '''check for newer version
     It does this by looking at releases at GitHub
     Returns True if a newer version is available
@@ -145,6 +154,7 @@ def check():
 
 
 def make_local_filename_for_version(version):
+    # type: (str) -> str
     '''make filename for the downloaded synctool-x.y.tar.gz'''
 
     # strip tag naming scheme lead
@@ -168,6 +178,7 @@ def make_local_filename_for_version(version):
 
 
 def print_progress(filename, totalsize, current_size):
+    # type: (str, int, int) -> None
     '''print the download progress'''
 
     percent = 100 * current_size / totalsize
@@ -179,6 +190,7 @@ def print_progress(filename, totalsize, current_size):
 
 
 def download():
+    # type: () -> bool
     '''download latest version
     Returns True on success, False on error
     '''
@@ -193,7 +205,7 @@ def download():
     try:
         web = urllib2.urlopen(info.url)
     except urllib2.HTTPError as err:
-        error('webserver at %s: %u %s' % (info.url, err.code, err.msg))
+        error('webserver at %s: %u %s' % (info.url, err.code, err.message))
         return False
 
     except urllib2.URLError as err:

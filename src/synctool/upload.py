@@ -18,6 +18,12 @@ import stat
 import subprocess
 import urllib
 
+try:
+    from typing import List, Dict, Tuple
+    from synctool.object import SyncObject
+except ImportError:
+    pass
+
 import synctool.config
 import synctool.lib
 from synctool.lib import verbose, stdout, stderr, error, warning
@@ -28,22 +34,24 @@ import synctool.param
 import synctool.pwdgrp
 
 # UploadFile object, used in callback function for overlay.visit()
-GLOBAL_UPLOAD_FILE = None
+GLOBAL_UPLOAD_FILE = None   # type: UploadFile
 
 
 class UploadFile(object):
     '''class that holds information on requested upload'''
 
     def __init__(self):
-        self.filename = None
-        self.overlay = None
-        self.purge = None
-        self.suffix = None
-        self.node = None
-        self.address = None
-        self.repos_path = None
+        # type: () -> None
+        self.filename = None    # type: str
+        self.overlay = None     # type: str
+        self.purge = None       # type: str
+        self.suffix = None      # type: str
+        self.node = None        # type: str
+        self.address = None     # type: str
+        self.repos_path = None  # type: str
 
     def make_repos_path(self):
+        # type: () -> None
         '''make $overlay repository path from elements'''
 
         if len(self.filename) > 1 and self.filename[-1] == '/':
@@ -98,6 +106,7 @@ class UploadFile(object):
                 self.repos_path = os.sep.join(arr)
 
     def _make_purge_path(self):
+        # type: () -> None
         '''make $purge repository path from elements'''
 
         self.repos_path = os.path.join(synctool.param.PURGE_DIR,
@@ -108,6 +117,7 @@ class RemoteStat(object):
     '''represent stat() info of a remote file'''
 
     def __init__(self, arr):
+        # type: (List[str]) -> None
         '''initialize instance
         May throw ValueError
         '''
@@ -135,19 +145,22 @@ class RemoteStat(object):
 
             self.linkdest = urllib.unquote(arr[8])
         else:
-            self.linkdest = None
+            self.linkdest = None    # type: str
 
     def is_dir(self):
+        # type: () -> bool
         '''Returns True if it's a directory'''
 
         return stat.S_ISDIR(self.mode)
 
     def is_symlink(self):
+        # type: () -> bool
         '''Returns True if it's a symbolic link'''
 
         return stat.S_ISLNK(self.mode)
 
     def translate_uid(self):
+        # type: () -> int
         '''Return local numeric uid corresponding to remote owner'''
 
         try:
@@ -158,6 +171,7 @@ class RemoteStat(object):
         return local_uid
 
     def translate_gid(self):
+        # type: () -> int
         '''Return local numeric gid corresponding to remote group'''
 
         try:
@@ -168,6 +182,7 @@ class RemoteStat(object):
         return local_gid
 
     def __repr__(self):
+        # type: () -> str
         '''Returns string representation'''
 
         return ('<RemoteStat: %06o %u %s %u %s %u %r %r>' %
@@ -176,6 +191,7 @@ class RemoteStat(object):
 
 
 def _remote_stat(up):
+    # type: (UploadFile) -> List[RemoteStat]
     '''Get stat info of the remote object
     Returns array of RemoteStat data, or None on error
     '''
@@ -200,13 +216,17 @@ def _remote_stat(up):
         error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return None
 
-    out, err = proc.communicate()
+    out, err_output = proc.communicate()
 
     if proc.returncode == 255:
         error('ssh connection to %s failed' % up.node)
+        if err_output:
+            verbose('error output: %s' % err_output)
         return None
     elif proc.returncode == 127:
         error('remote list command failed')
+        if err_output:
+            verbose('error output: %s' % err_output)
         return None
 
     # parse synctool_list output into array of RemoteStat info
@@ -235,6 +255,7 @@ def _remote_stat(up):
 
 
 def _makedir(path, remote_stats):
+    # type: (str, List[RemoteStat]) -> bool
     '''make directory in repository, copying over mode and ownership
     of the directories as they are on the remote side
     remote_stats is array holding stat info of the remote side
@@ -307,6 +328,7 @@ def _makedir(path, remote_stats):
 
 
 def _upload_callback(obj, _pre_dict, _post_dict):
+    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
     '''find the overlay path for the destination in UPLOAD_FILE'''
 
     # this callback modifies the global GLOBAL_UPLOAD_FILE object
@@ -328,6 +350,7 @@ def _upload_callback(obj, _pre_dict, _post_dict):
 
 
 def upload(up):
+    # type: (UploadFile) -> None
     '''copy a file from a node into the overlay/ tree'''
 
     # Note: this global is only needed because of callback fn ...
@@ -379,6 +402,7 @@ def upload(up):
 
 
 def rsync_upload(up):
+    # type: (UploadFile) -> None
     '''upload a file/dir to $overlay/group/ or $purge/group/'''
 
     up.make_repos_path()

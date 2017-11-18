@@ -16,6 +16,11 @@ import os
 import sys
 import socket
 
+try:
+    from typing import List, Dict, Tuple, Set, Union
+except ImportError:
+    pass
+
 import synctool.configparser
 import synctool.lib
 from synctool.lib import stderr, error
@@ -23,6 +28,7 @@ import synctool.param
 
 
 def read_config():
+    # type: () -> None
     '''read the config file and set a bunch of globals
     Return value: none, exit the program on error
     '''
@@ -94,6 +100,7 @@ def read_config():
 
 
 def check_cmd_config(param_name, cmd):
+    # type: (str, str) -> Tuple[bool, str]
     '''check whether the command given in the config exists
     Returns (True, full pathed command) when OK,
     and (False, None) on error
@@ -118,6 +125,7 @@ def check_cmd_config(param_name, cmd):
 
 
 def init_mynodename():
+    # type: () -> None
     '''determine the nodename of the current host
     and initialize MY_GROUPS
     '''
@@ -173,6 +181,7 @@ def init_mynodename():
 
 
 def get_ipaddresses(name):
+    # type: (str) -> List[str]
     '''Returns list of IP addresses for DNS name
     or None on error
     '''
@@ -199,6 +208,7 @@ def get_ipaddresses(name):
 
 
 def insert_group(node, group):
+    # type: (str, str) -> None
     '''add group to node definition'''
 
     if node in synctool.param.NODES:
@@ -212,12 +222,14 @@ def insert_group(node, group):
 
 
 def get_all_nodes():
+    # type: () -> List[str]
     '''Returns array with all node names'''
 
     return synctool.param.NODES.keys()
 
 
 def get_node_ipaddress(node):
+    # type: (str) -> str
     '''Return IPaddress of node, or node name if unknown'''
 
     if node in synctool.param.IPADDRESSES:
@@ -227,6 +239,7 @@ def get_node_ipaddress(node):
 
 
 def make_all_groups():
+    # type: () -> Set[str]
     '''make a set of all possible groups
     This is a set of all group names plus all node names
     '''
@@ -237,6 +250,7 @@ def make_all_groups():
 
 
 def get_groups(nodename):
+    # type: (str) -> List[str]
     '''returns the groups for the node'''
 
     if nodename in synctool.param.NODES:
@@ -246,6 +260,7 @@ def get_groups(nodename):
 
 
 def get_my_groups():
+    # type: () -> List[str]
     '''returns the groups for this node'''
 
     if synctool.param.NODENAME in synctool.param.NODES:
@@ -255,9 +270,10 @@ def get_my_groups():
 
 
 def get_nodes_in_groups(groups):
+    # type: (Union[List[str], Set[str]]) -> Set[str]
     '''returns a set of nodes that are in a set or list of groups'''
 
-    s = set()
+    s = set()   # type: Set[str]
 
     for g in groups:
         for node in synctool.param.NODES.keys():

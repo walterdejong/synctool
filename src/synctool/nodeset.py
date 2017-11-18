@@ -23,6 +23,11 @@ usage:
 
 import sys
 
+try:
+    from typing import List, Dict, Set
+except ImportError:
+    pass
+
 from synctool import config, param
 import synctool.lib
 from synctool.lib import verbose, stderr, warning
@@ -35,15 +40,17 @@ class NodeSet(object):
     '''
 
     def __init__(self):
+        # type: () -> None
         '''initialize instance'''
 
-        self.nodelist = set()
-        self.grouplist = set()
-        self.exclude_nodes = set()
-        self.exclude_groups = set()
-        self.namemap = {}
+        self.nodelist = set()       # type: Set[str]
+        self.grouplist = set()      # type: Set[str]
+        self.exclude_nodes = set()  # type: Set[str]
+        self.exclude_groups = set() # type: Set[str]
+        self.namemap = {}           # type: Dict[str, str]
 
     def add_node(self, nodelist):
+        # type: (str) -> None
         '''add a node to the nodeset'''
 
 #        self.nodelist = set()
@@ -54,6 +61,7 @@ class NodeSet(object):
                 self.nodelist.add(node)
 
     def add_group(self, grouplist):
+        # type: (str) -> None
         '''add a group to the nodeset'''
 
 #        self.grouplist = set()
@@ -64,6 +72,7 @@ class NodeSet(object):
                 self.grouplist.add(group)
 
     def exclude_node(self, nodelist):
+        # type: (str) -> None
         '''remove a node from the nodeset'''
 
 #        self.exclude_nodes = set()
@@ -74,6 +83,7 @@ class NodeSet(object):
                 self.exclude_nodes.add(node)
 
     def exclude_group(self, grouplist):
+        # type: (str) -> None
         '''remove a group from the nodeset'''
 
 #        self.exclude_groups = set()
@@ -84,6 +94,7 @@ class NodeSet(object):
                 self.exclude_groups.add(group)
 
     def addresses(self, silent=False):
+        # type: (bool) -> List[str]
         '''return list of addresses of relevant nodes'''
 
         # by default, work on default_nodeset
@@ -97,7 +108,7 @@ class NodeSet(object):
         # the user may have given bogus names
         all_nodes = set(config.get_all_nodes())
         unknown = (self.nodelist | self.exclude_nodes) - all_nodes
-        if len(unknown) > 0:
+        if unknown:
             # it's nice to display "the first" unknown node
             # (at least, for numbered nodes)
             arr = list(unknown)
@@ -120,7 +131,7 @@ class NodeSet(object):
         if not self.nodelist:
             return []
 
-        addrs = []
+        addrs = []  # type: List[str]
 
         ignored_nodes = self.nodelist & param.IGNORE_GROUPS
         self.nodelist -= ignored_nodes
@@ -129,7 +140,7 @@ class NodeSet(object):
             # ignoring a group results in also ignoring the node
             my_groups = set(config.get_groups(node))
             my_groups &= param.IGNORE_GROUPS
-            if len(my_groups) > 0:
+            if my_groups:
                 verbose('node %s is ignored due to an ignored group' % node)
                 ignored_nodes.add(node)
                 continue
@@ -142,7 +153,7 @@ class NodeSet(object):
                 addrs.append(addr)
 
         # print message about ignored nodes
-        if not silent and len(ignored_nodes) > 0 and not synctool.lib.QUIET:
+        if not silent and ignored_nodes and not synctool.lib.QUIET:
             if param.TERSE:
                 synctool.lib.terse(synctool.lib.TERSE_WARNING,
                                    'ignored nodes')
@@ -161,6 +172,7 @@ class NodeSet(object):
         return addrs
 
     def get_nodename_from_address(self, addr):
+        # type: (str) -> str
         '''map the address back to a nodename'''
 
         if addr in self.namemap:
@@ -170,6 +182,7 @@ class NodeSet(object):
 
 
 def make_default_nodeset():
+    # type: () -> None
     '''take the (temporary) DEFAULT_NODESET and expand it to
     the definitive DEFAULT_NODESET
     Return value: none, exit the program on error

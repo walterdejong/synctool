@@ -37,6 +37,11 @@
 import os
 import fnmatch
 
+try:
+    from typing import List, Dict, Tuple, Set, Callable
+except ImportError:
+    pass
+
 import synctool.lib
 from synctool.lib import verbose, warning, terse, prettypath
 import synctool.object
@@ -54,15 +59,17 @@ OV_IGNORE = 6
 
 
 def _sort_by_importance(item1, item2):
+    # type: (Tuple[str, int], Tuple[str, int]) -> int
     '''item is a tuple (x, importance)'''
 
     return cmp(item1[1], item2[1])
 
 
 def _toplevel(overlay):
+    # type: (str) -> List[str]
     '''Returns sorted list of fullpath directories under overlay/'''
 
-    arr = []
+    arr = []    # type: List[Tuple[str, int]]
     for entry in os.listdir(overlay):
         fullpath = os.path.join(overlay, entry)
         try:
@@ -81,6 +88,7 @@ def _toplevel(overlay):
 
 
 def _group_all():
+    # type: () -> int
     '''Return the importance level of group 'all' '''
 
     # it is the final group in MY_GROUPS
@@ -88,6 +96,7 @@ def _group_all():
 
 
 def _split_extension(filename, src_dir):
+    # type: (str, str) -> Tuple[SyncObject, int]
     '''filename in the overlay tree, without leading path
     src_dir is passed for the purpose of printing error messages
     Returns tuple: SyncObject, importance
@@ -159,6 +168,7 @@ def _split_extension(filename, src_dir):
 
 
 def _sort_by_importance_post_first(item1, item2):
+    # type: (Tuple[SyncObject, int], Tuple[SyncObject, int]) -> int
     '''sort by importance, but always put .post scripts first'''
 
     # after the .post scripts come ._template.post scripts
@@ -208,6 +218,7 @@ def _sort_by_importance_post_first(item1, item2):
 
 
 def _walk_subtree(src_dir, dest_dir, duplicates, callback):
+    # type: (str, str, Set[str], Callable[[SyncObject, Dict[str, str], Dict[str, str]], Tuple[bool, bool]]) -> Tuple[bool, bool]
     '''walk subtree under overlay/group/
     duplicates is a set that keeps us from selecting any duplicate matches
     Returns pair of booleans: ok, dir was updated
@@ -244,8 +255,8 @@ def _walk_subtree(src_dir, dest_dir, duplicates, callback):
     # this ensures that post_dict will have the required script when needed
     arr.sort(_sort_by_importance_post_first)
 
-    pre_dict = {}
-    post_dict = {}
+    pre_dict = {}       # type: Dict[str, str]
+    post_dict = {}      # type: Dict[str, str]
     dir_changed = False
 
     for obj, importance in arr:
@@ -354,19 +365,21 @@ def _walk_subtree(src_dir, dest_dir, duplicates, callback):
                 # quick exit
                 return False, dir_changed
 
-        dir_changed |= updated
+        if updated:
+            dir_changed = True
 
     return True, dir_changed
 
 
 def visit(overlay, callback):
+    # type: (str, Callable[[SyncObject, Dict[str, str], Dict[str, str]], Tuple[bool, bool]]) -> None
     '''visit all entries in the overlay tree
     overlay is either synctool.param.OVERLAY_DIR or synctool.param.DELETE_DIR
     callback will called with arguments: (SyncObject, pre_dict, post_dict)
     callback must return a two booleans: ok, updated
     '''
 
-    duplicates = set()
+    duplicates = set()  # type: Set[str]
 
     for d in _toplevel(overlay):
         ok, _ = _walk_subtree(d, os.sep, duplicates, callback)

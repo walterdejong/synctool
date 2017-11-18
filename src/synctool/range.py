@@ -20,40 +20,45 @@ or just a string "node-[10].sub[20].domain.org"
 
 import re
 
+try:
+    from typing import List, Dict, Tuple, Pattern, Set, Sequence, Any
+except ImportError:
+    pass
+
 # a node expression may look like 'node1-[1,2,8-10/2]-mgmt'
 # or something somewhat resembling that
 # Take make matters worse, a line may have multiple of these
 # separated by comma's
 # The regex here is not super strict, but it suffices to split a line
 SPLIT_EXPR = re.compile(r'([a-zA-Z0-9_+-]+\[\d+[0-9,/-]*\][a-zA-Z0-9_+-]*|'
-                        r'[a-zA-Z0-9_+-]+)')
+                        r'[a-zA-Z0-9_+-]+)')    # type: Pattern
 
 # This regex is used to take apart a single node range expression
 NODE_EXPR = re.compile(r'([a-zA-Z][a-zA-Z0-9_+-]*)'
                        r'\[(\d+[0-9,/-]*)\]'
-                       r'([a-zA-Z0-9_+-]*)$')
+                       r'([a-zA-Z0-9_+-]*)$')   # type: Pattern
 
 # match sequence notation "192.168.1.[200]" or "node[10].domain.org"
 # supports hex for IPv6
-MATCH_SEQ = re.compile(r'([^[]*)\[([0-9a-f]+)\](.*)')
+MATCH_SEQ = re.compile(r'([^[]*)\[([0-9a-f]+)\](.*)')   # type: Pattern
 
 # these look pretty naive, but note that they include brackets for
 # sequence notation: automated numbering of sequences
 # It's for recognising a pattern, not for checking validity of IP addresses
-MATCH_IPv4 = re.compile(r'^[0-9\.\[\]]+$')
-MATCH_IPv6 = re.compile(r'^[0-9a-f:\[\]]+$')
-MATCH_IPv6_v4 = re.compile(r'^[0-9a-f:\[\]]+:[0-9\.\[\]]+$')
-SPLIT_IPv6_v4 = re.compile(r'(?=[0-9a-f:\[\]]+):(?=[0-9\.\[\]]+)')
+MATCH_IPv4 = re.compile(r'^[0-9\.\[\]]+$')      # type: Pattern
+MATCH_IPv6 = re.compile(r'^[0-9a-f:\[\]]+$')    # type: Pattern
+MATCH_IPv6_v4 = re.compile(r'^[0-9a-f:\[\]]+:[0-9\.\[\]]+$')        # type: Pattern
+SPLIT_IPv6_v4 = re.compile(r'(?=[0-9a-f:\[\]]+):(?=[0-9\.\[\]]+)')  # type: Pattern
 
 # this matches nodenames like "n8", "r1n8", "r1n8-mgmt"
 # and is used by compress()
 # It works like: "head,number,tail" or "prefix-number-postfix"
 COMPRESSOR = re.compile(r'^([a-zA-Z0-9_+-]*[a-zA-Z_+-]+)'
                         r'(\d+)'
-                        r'([a-zA-Z_+-]*)$')
+                        r'([a-zA-Z_+-]*)$')     # type: Pattern
 
 # state used for automatic numbering of IP ranges
-_EXPAND_SEQ = 0
+_EXPAND_SEQ = 0     # type: int
 
 
 class RangeSyntaxError(Exception):
@@ -62,9 +67,10 @@ class RangeSyntaxError(Exception):
 
 
 def split_nodelist(expr):
+    # type: (str) -> List[str]
     '''split a string like 'node1,node2,node[3-6,8,10],node-x'
     May throw RangeSyntaxError if there is a syntax error
-    Returns the array of elements
+    Returns the list of elements
     '''
 
     arr = []
@@ -86,9 +92,10 @@ def split_nodelist(expr):
 
 
 def expand(expr):
+    # type: (str) -> List[str]
     '''expand a range expression like 'node[1-10,20]-mgmt'
     May throw RangeSyntaxError if there is a syntax error
-    Returns array of node names
+    Returns list of node names
     '''
 
     # NODE_EXPR is a global compiled regex for recognising expression
@@ -154,6 +161,7 @@ def expand(expr):
 
 
 def reset_sequence():
+    # type: () -> None
     '''reset a sequence to zero'''
 
     global _EXPAND_SEQ
@@ -162,6 +170,7 @@ def reset_sequence():
 
 
 def expand_sequence(arg):
+    # type: (str) -> str
     '''expand a sequence that looks like '192.168.1.[100]'
     or hexidecimal IPv6 "64:b9:e8:ff:fe:c2:fd:[20]"
     or IPv6:v4 notation "64:b9:e8:[0a]:10.0.0.[100]"
@@ -200,6 +209,7 @@ def expand_sequence(arg):
 
 
 def expand_seq(arg, radix=10, overflow=False):
+    # type: (str, int, bool) -> str
     '''expand an automatic numbering sequence like "192.168.1.[200]"
     or IPv6 "64:b9:e8:ff:fe:c2:fd:[0a]" or "64:b9:e8:[0a]:10.0.0.[100]"
     or just a string "node[10].sub[20].domain.org"
@@ -238,6 +248,7 @@ def expand_seq(arg, radix=10, overflow=False):
 
 
 def _sort_compress(a, b):
+    # type: (Tuple[str, str, str, int, str], Tuple[str, str, str, int, str]) -> int
     '''sorting function
     a and b are tuples: (nodename, prefix, number_str, number, postfix)
     '''
@@ -263,16 +274,16 @@ def _sort_compress(a, b):
 
 
 def uniq(seq):
-    '''remove duplicates from set, preserving order'''
+    # type: (Sequence[Any]) -> Sequence[Any]
+    '''remove duplicates from sequence, preserving order'''
 
-    # mostly taken from StackOverflow
-
-    seen = set()
-    return [x for x in seq if not (x in seen or seen.add(x))]
+    unique = set(seq)
+    return [x for x in seq if x in unique]
 
 
 def compress(nodelist):
-    '''Return comma-separated list of nodes, using range syntax
+    # type: (List[str]) -> str
+    '''Return comma-separated string-list of nodes, using range syntax
 
     This is the opposite of function expand()
     It can not do step-notation but it's good at finding sequences
@@ -280,15 +291,15 @@ def compress(nodelist):
     '''
 
     # make all_grouped a list of lists, of grouped splitted nodenames
-    all_grouped = []
-    grouped = []
+    all_grouped = []    # type: List[List[Tuple[str, str, str, int, str]]]
+    grouped = []        # type: List[Tuple[str, str, str, int, str]]
     prev_prefix = prev_postfix = None
     for node in uniq(nodelist):
         # try to match a number in the nodename
         m = COMPRESSOR.match(node)
         if not m:
             # no number in node name
-            if len(grouped) > 0:
+            if grouped:
                 grouped.sort(_sort_compress)
                 all_grouped.append(grouped[:],)
                 grouped = []
@@ -303,7 +314,7 @@ def compress(nodelist):
             if prefix == prev_prefix and postfix == prev_postfix:
                 grouped.append((node, prefix, number, int(number), postfix),)
             else:
-                if len(grouped) > 0:
+                if grouped:
                     grouped.sort(_sort_compress)
                     all_grouped.append(grouped[:],)
                     grouped = []
@@ -312,7 +323,7 @@ def compress(nodelist):
                 prev_prefix = prefix
                 prev_postfix = postfix
 
-    if len(grouped) > 0:
+    if grouped:
         grouped.sort(_sort_compress)
         all_grouped.append(grouped[:],)
         grouped = []
