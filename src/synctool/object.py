@@ -573,15 +573,13 @@ class VNodeChrDev(VNode):
             return False
 
         # Note: mypy triggers false errors here
-        # at least, it does in mypy version 0.5
-        # and I also had no luck with Union[SyncStat, posix.stat_result]
-        # mypy is just buggy like that
+        # Also, no luck with Union[SyncStat, posix.stat_result]
         # In any case, for VNodeChrDev and VNodeBlkDev,
         # the self.src_stat is of type posix.stat_result
-        src_major = os.major(self.src_stat.st_rdev)
-        src_minor = os.minor(self.src_stat.st_rdev)
-        dest_major = os.major(dest_stat.st_rdev)
-        dest_minor = os.minor(dest_stat.st_rdev)
+        src_major = os.major(self.src_stat.st_rdev)     # type: ignore
+        src_minor = os.minor(self.src_stat.st_rdev)     # type: ignore
+        dest_major = os.major(dest_stat.st_rdev)        # type: ignore
+        dest_minor = os.minor(dest_stat.st_rdev)        # type: ignore
         if src_major != dest_major or src_minor != dest_minor:
             stdout('%s should have major,minor %d,%d but has %d,%d' %
                    (self.name, src_major, src_minor, dest_major, dest_minor))
@@ -595,8 +593,8 @@ class VNodeChrDev(VNode):
         # type: () -> None
         '''make a character device file'''
 
-        major = os.major(self.src_stat.st_rdev)
-        minor = os.minor(self.src_stat.st_rdev)
+        major = os.major(self.src_stat.st_rdev)         # type: ignore
+        minor = os.minor(self.src_stat.st_rdev)         # type: ignore
         verbose(dryrun_msg('  os.mknod(%s, CHR %d,%d)' % (self.name, major,
                                                           minor)))
         unix_out('mknod %s c %d %d' % (self.name, major, minor))
@@ -644,10 +642,10 @@ class VNodeBlkDev(VNode):
             error('error checking %s : %s' % (self.name, err.strerror))
             return False
 
-        src_major = os.major(self.src_stat.st_rdev)
-        src_minor = os.minor(self.src_stat.st_rdev)
-        dest_major = os.major(dest_stat.st_rdev)
-        dest_minor = os.minor(dest_stat.st_rdev)
+        src_major = os.major(self.src_stat.st_rdev)     # type: ignore
+        src_minor = os.minor(self.src_stat.st_rdev)     # type: ignore
+        dest_major = os.major(dest_stat.st_rdev)        # type: ignore
+        dest_minor = os.minor(dest_stat.st_rdev)        # type: ignore
         if src_major != dest_major or src_minor != dest_minor:
             stdout('%s should have major,minor %d,%d but has %d,%d' %
                    (self.name, src_major, src_minor, dest_major, dest_minor))
@@ -661,8 +659,8 @@ class VNodeBlkDev(VNode):
         # type: () -> None
         '''make a block device file'''
 
-        major = os.major(self.src_stat.st_rdev)
-        minor = os.minor(self.src_stat.st_rdev)
+        major = os.major(self.src_stat.st_rdev)          # type: ignore
+        minor = os.minor(self.src_stat.st_rdev)          # type: ignore
         verbose(dryrun_msg('  os.mknod(%s, BLK %d,%d)' % (self.name, major,
                                                           minor)))
         unix_out('mknod %s b %d %d' % (self.name, major, minor))
