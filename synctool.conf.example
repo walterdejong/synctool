@@ -28,11 +28,6 @@ group g1 batch test wn
 # the nodename is a logical name known only to synctool
 # "ipaddress:" specifies the IP address where synctool connects to
 #
-# The optional 'hostname:' keyword may be used to tell synctool
-# the hostname of the node. This is generally not needed, unless
-# you ever decide to run synctool.py manually on the target node,
-# in stand-alone mode.
-#
 # Optionally, 'rsync:no' may be given to keep synctool from rsync-ing
 # the repository to that node. This is only useful when the node has access
 # to the repository via shared storage (like an NFS share)
@@ -40,15 +35,15 @@ group g1 batch test wn
 # managing the masternode also with synctool is generally not a great idea
 #node node0 master
 
-node node1 fs sched aix    ipaddress:node1-mgmt hostname:myhost1.mydomain.com
-node node2 login    debian ipaddress:node2-mgmt hostname:myhost2.mydomain.com
+node node1 fs sched aix    ipaddress:node1-mgmt
+node node2 login    debian ipaddress:node2-mgmt
 node node3 wn       debian ipaddress:node3-mgmt
 node node4 wn       debian ipaddress:node4-mgmt rsync:no
 node node5 wn       centos ipaddress:node5-mgmt rsync:no
 node node6 wn       centos ipaddress:node6-mgmt
 node node7 wn       centos ipaddress:node7-mgmt
-node node8 test     sunos  ipaddress:node8-mgmt hostid:/etc/hostname.bnx0
-node node9 batch    sunos  ipaddress:node9-mgmt hostid:/etc/hostname.bnx0
+node node8 test     sunos  ipaddress:node8-mgmt
+node node9 batch    sunos  ipaddress:node9-mgmt
 
 # node10 to node25 are all the same
 node node[10-25]    wn  debian
