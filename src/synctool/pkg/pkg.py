@@ -72,6 +72,6 @@ class SyncPkgPkg(synctool.pkgclass.SyncPkg):
         # type: () -> None
         super(SyncPkgPkg, self).clean()
 
-        synctool.lib.shell_command('pkg clean')
+        synctool.lib.shell_command('pkg clean -y')
 
 # EOB
