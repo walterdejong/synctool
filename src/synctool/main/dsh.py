@@ -15,6 +15,11 @@ import sys
 import getopt
 import shlex
 
+try:
+    from typing import List
+except ImportError:
+    pass
+
 from synctool import config, param
 import synctool.aggr
 import synctool.configparser
@@ -33,15 +38,15 @@ NODESET = synctool.nodeset.NodeSet()
 
 OPT_SKIP_RSYNC = False
 OPT_AGGREGATE = False
-MASTER_OPTS = None
-SSH_OPTIONS = None
+MASTER_OPTS = None      # type: List[str]
+SSH_OPTIONS = None      # type: str
 OPT_MULTIPLEX = False
-CTL_CMD = None
-PERSIST = None
+CTL_CMD = None          # type: str
+PERSIST = None          # type: str
 
 # ugly globals help parallelism
-SSH_CMD_ARR = None
-REMOTE_CMD_ARR = None
+SSH_CMD_ARR = None      # type: List[str]
+REMOTE_CMD_ARR = None   # type: List[str]
 
 # boolean saying whether we should sync the script to the nodes
 # before running it
@@ -51,6 +56,7 @@ SYNC_IT = False
 
 
 def run_dsh(address_list, remote_cmd_arr):
+    # type: (List[str], List[str]) -> None
     '''run remote command to a set of nodes using ssh (param ssh_cmd)'''
 
     global SSH_CMD_ARR, REMOTE_CMD_ARR, SYNC_IT
@@ -102,6 +108,7 @@ def run_dsh(address_list, remote_cmd_arr):
 
 
 def worker_ssh(addr):
+    # type: (str) -> None
     '''worker process: sync script and run ssh+command to the node'''
 
     # Note that this func even runs ssh to the local node if
@@ -168,6 +175,7 @@ def worker_ssh(addr):
 
 
 def start_multiplex(address_list):
+    # type: (List[str]) -> None
     '''run ssh -M to each node in address_list'''
 
     global PERSIST
@@ -198,6 +206,7 @@ def start_multiplex(address_list):
 
 
 def control_multiplex(address_list, _ctl_cmd):
+    # type: (List[str], str) -> None
     '''run ssh -O ctl_cmd to each node in address_list'''
 
     global SSH_CMD_ARR
@@ -216,6 +225,7 @@ def control_multiplex(address_list, _ctl_cmd):
 
 
 def _ssh_control(addr):
+    # type: (str) -> None
     '''run ssh -O CTL_CMD addr'''
 
     nodename = NODESET.get_nodename_from_address(addr)
@@ -244,6 +254,7 @@ def _ssh_control(addr):
 
 
 def check_cmd_config():
+    # type: () -> None
     '''check whether the commands as given in synctool.conf actually exist'''
 
     errors = 0
@@ -263,6 +274,7 @@ def check_cmd_config():
 
 
 def usage():
+    # type: () -> None
     '''print usage information'''
 
     print 'usage: %s [options] <remote command>' % PROGNAME
@@ -294,6 +306,7 @@ CTL_CMD can be: check, stop, exit
 
 
 def get_options():
+    # type: () -> List[str]
     '''parse command-line options'''
 
     global MASTER_OPTS, OPT_SKIP_RSYNC, OPT_AGGREGATE, SSH_OPTIONS
@@ -464,7 +477,7 @@ def get_options():
         sys.exit(1)
 
     if OPT_MULTIPLEX or CTL_CMD != None:
-        if len(args) > 0:
+        if args:
             print '%s: excessive arguments on command-line' % PROGNAME
             sys.exit(1)
 
@@ -472,7 +485,7 @@ def get_options():
         print '%s: missing remote command' % PROGNAME
         sys.exit(1)
 
-    if len(args) > 0:
+    if args:
         MASTER_OPTS.extend(args)
 
     return args
@@ -480,12 +493,13 @@ def get_options():
 
 @catch_signals
 def main():
+    # type: () -> None
     '''run the program'''
 
     param.init()
 
-    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)
-    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)
+    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout) # type: ignore
+    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr) # type: ignore
 
     try:
         cmd_args = get_options()

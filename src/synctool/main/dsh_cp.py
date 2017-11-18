@@ -15,6 +15,11 @@ import sys
 import getopt
 import shlex
 
+try:
+    from typing import List
+except ImportError:
+    pass
+
 from synctool import config, param
 import synctool.aggr
 import synctool.lib
@@ -30,25 +35,26 @@ PROGNAME = 'dsh-cp'
 
 NODESET = synctool.nodeset.NodeSet()
 
-DESTDIR = None
+DESTDIR = None          # type: str
 OPT_AGGREGATE = False
-MASTER_OPTS = None
-DSH_CP_OPTIONS = None
+MASTER_OPTS = None      # type: List[str]
+DSH_CP_OPTIONS = None   # type: str
 OPT_PURGE = False
 
 # ugly globals help parallelism
-DSH_CP_CMD_ARR = None
-SOURCE_LIST = None
-FILES_STR = None
+DSH_CP_CMD_ARR = None   # type: List[str]
+SOURCE_LIST = None      # type: List[str]
+FILES_STR = None        # type: str
 
 
 def run_remote_copy(address_list, files):
+    # type: (List[str], List[str]) -> None
     '''copy files[] to nodes[]'''
 
     global DSH_CP_CMD_ARR, SOURCE_LIST, FILES_STR
 
     errs = 0
-    sourcelist = []
+    sourcelist = []     # type: List[str]
     for filename in files:
         if not filename:
             continue
@@ -95,6 +101,7 @@ def run_remote_copy(address_list, files):
 
 
 def worker_dsh_cp(addr):
+    # type: (str) -> None
     '''do remote copy to node'''
 
     nodename = NODESET.get_nodename_from_address(addr)
@@ -135,6 +142,7 @@ def worker_dsh_cp(addr):
 
 
 def check_cmd_config():
+    # type: () -> None
     '''check whether the commands as given in synctool.conf actually exist'''
 
     ok, param.RSYNC_CMD = config.check_cmd_config('rsync_cmd', param.RSYNC_CMD)
@@ -143,6 +151,7 @@ def check_cmd_config():
 
 
 def usage():
+    # type: () -> None
     '''print usage information'''
 
     print 'usage: %s [options] FILE [..] DESTDIR|:' % PROGNAME
@@ -169,6 +178,7 @@ DESTDIR may be ':' (colon) meaning the directory of the first source file
 
 
 def get_options():
+    # type: () -> List[str]
     '''parse command-line options'''
 
     global DESTDIR, MASTER_OPTS, OPT_AGGREGATE, DSH_CP_OPTIONS, OPT_PURGE
@@ -349,12 +359,13 @@ def get_options():
 
 @catch_signals
 def main():
+    # type: () -> None
     '''run the program'''
 
     param.init()
 
-    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)
-    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)
+    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout) # type: ignore
+    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr) # type: ignore
 
     try:
         files = get_options()

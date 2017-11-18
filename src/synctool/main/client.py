@@ -25,6 +25,12 @@ from synctool.main.wrapper import catch_signals
 import synctool.overlay
 import synctool.syncstat
 
+try:
+    from typing import List, Dict, Tuple, Callable
+    from synctool.object import SyncObject
+except ImportError:
+    pass
+
 # hardcoded name because otherwise we get "synctool_client.py"
 PROGNAME = 'synctool-client'
 
@@ -34,10 +40,11 @@ ACTION_DIFF = 1
 ACTION_ERASE_SAVED = 2
 ACTION_REFERENCE = 3
 
-SINGLE_FILES = []
+SINGLE_FILES = []   # type: List[str]
 
 
 def generate_template(obj, post_dict):
+    # type: (SyncObject, Dict[str, str]) -> bool
     '''run template .post script, generating a new file
     The script will run in the source dir (overlay tree) and
     it will run even in dry-run mode
@@ -53,7 +60,7 @@ def generate_template(obj, post_dict):
         obj.ov_type = synctool.overlay.OV_IGNORE
         return True
 
-    if len(SINGLE_FILES) > 0 and obj.dest_path not in SINGLE_FILES:
+    if SINGLE_FILES and obj.dest_path not in SINGLE_FILES:
         verbose('skipping template generation of %s' % obj.src_path)
         obj.ov_type = synctool.overlay.OV_IGNORE
         return True
@@ -173,6 +180,7 @@ def generate_template(obj, post_dict):
 
 
 def purge_files():
+    # type: () -> None
     '''run the purge function'''
 
     paths = []
@@ -223,6 +231,7 @@ def purge_files():
 
 
 def _make_rsync_purge_cmd():
+    # type: () -> Tuple[List[str], str]
     '''make command array for running rsync purge
     Returns pair: cmd_arr, options_string
     cmd_arr is the rsync command + arguments
@@ -260,9 +269,9 @@ def _make_rsync_purge_cmd():
 
 
 def _run_rsync_purge(cmd_arr):
+    # type: (List[str]) -> None
     '''run rsync for purging
     cmd_arr holds already prepared rsync command + arguments
-    Returns: None
     '''
 
     unix_out(' '.join(cmd_arr))
@@ -314,6 +323,7 @@ def _run_rsync_purge(cmd_arr):
 
 
 def _overlay_callback(obj, pre_dict, post_dict):
+    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
     '''compare files and run post-script if needed
     Returns pair: True (continue), updated (data or metadata)
     '''
@@ -328,12 +338,14 @@ def _overlay_callback(obj, pre_dict, post_dict):
 
 
 def overlay_files():
+    # type: () -> None
     '''run the overlay function'''
 
     synctool.overlay.visit(param.OVERLAY_DIR, _overlay_callback)
 
 
 def _delete_callback(obj, _pre_dict, post_dict):
+    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
     '''delete files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -360,12 +372,14 @@ def _delete_callback(obj, _pre_dict, post_dict):
 
 
 def delete_files():
+    # type: () -> None
     '''run the delete/ dir'''
 
     synctool.overlay.visit(param.DELETE_DIR, _delete_callback)
 
 
 def _erase_saved_callback(obj, _pre_dict, post_dict):
+    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
     '''erase *.saved backup files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -385,6 +399,7 @@ def _erase_saved_callback(obj, _pre_dict, post_dict):
 
 
 def erase_saved():
+    # type: () -> None
     '''List and delete *.saved backup files'''
 
     synctool.overlay.visit(param.OVERLAY_DIR, _erase_saved_callback)
@@ -392,6 +407,7 @@ def erase_saved():
 
 
 def visit_purge_single(callback):
+    # type: (Callable[[SyncObject, Dict[str, str], Dict[str, str]], Tuple[bool, bool]]) -> None
     '''look in the purge/ dir for SINGLE_FILES, and call callback'''
 
     if not SINGLE_FILES:
@@ -422,6 +438,7 @@ def visit_purge_single(callback):
 
 
 def _match_single(path):
+    # type: (str) -> bool
     '''Returns True if (terse) path is in SINGLE_FILES, else False'''
 
     if path in SINGLE_FILES:
@@ -437,6 +454,7 @@ def _match_single(path):
 
 
 def _single_overlay_callback(obj, pre_dict, post_dict):
+    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
     '''do overlay function for single files'''
 
     if not SINGLE_FILES:
@@ -460,6 +478,7 @@ def _single_overlay_callback(obj, pre_dict, post_dict):
 
 
 def _single_delete_callback(obj, pre_dict, post_dict):
+    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
     '''do delete function for single files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -478,6 +497,7 @@ def _single_delete_callback(obj, pre_dict, post_dict):
 
 
 def _single_purge_callback(obj, pre_dict, post_dict):
+    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
     '''do purge function for single files'''
 
     # The same as _single_overlay_callback(), except that
@@ -511,6 +531,7 @@ def _single_purge_callback(obj, pre_dict, post_dict):
 
 
 def single_files():
+    # type: () -> None
     '''check/update a list of single files'''
 
     synctool.overlay.visit(param.OVERLAY_DIR,
@@ -521,7 +542,7 @@ def single_files():
     # So purge/ won't overrule overlay/
     visit_purge_single(_single_purge_callback)
 
-    if len(SINGLE_FILES) > 0:
+    if SINGLE_FILES:
         # there are still single files left
         # maybe they are in the delete tree?
         synctool.overlay.visit(param.DELETE_DIR,
@@ -532,6 +553,7 @@ def single_files():
 
 
 def _single_erase_saved_callback(obj, pre_dict, post_dict):
+    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
     '''do 'erase saved' function for single files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -561,12 +583,13 @@ def _single_erase_saved_callback(obj, pre_dict, post_dict):
 
 
 def single_erase_saved():
+    # type: () -> None
     '''erase single backup files'''
 
     synctool.overlay.visit(param.OVERLAY_DIR,
                            _single_erase_saved_callback)
 
-    if len(SINGLE_FILES) > 0:
+    if SINGLE_FILES:
         # there are still single files left
         # maybe they are in the delete tree?
         synctool.overlay.visit(param.DELETE_DIR,
@@ -577,6 +600,7 @@ def single_erase_saved():
 
 
 def _reference_callback(obj, _pre_dict, _post_dict):
+    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
     '''callback for reference_files()'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -599,6 +623,7 @@ def _reference_callback(obj, _pre_dict, _post_dict):
 
 
 def reference_files():
+    # type: () -> None
     '''show which source file in the repository synctool uses'''
 
     synctool.overlay.visit(param.OVERLAY_DIR, _reference_callback)
@@ -611,6 +636,7 @@ def reference_files():
 
 
 def _exec_diff(src, dest):
+    # type: (str, str) -> None
     '''execute diff_cmd to display diff between dest and src'''
 
     verbose('%s %s %s' % (param.DIFF_CMD, dest, prettypath(src)))
@@ -623,6 +649,7 @@ def _exec_diff(src, dest):
 
 
 def _diff_callback(obj, _pre_dict, post_dict):
+    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
     '''callback function for doing a diff on overlay/ files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -638,6 +665,7 @@ def _diff_callback(obj, _pre_dict, post_dict):
 
 
 def diff_files():
+    # type: () -> None
     '''display a diff of the single files'''
 
     synctool.overlay.visit(param.OVERLAY_DIR, _diff_callback)
@@ -651,6 +679,7 @@ def diff_files():
 
 def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
                         opt_upload, opt_suffix, opt_fix):
+    # type: (bool, bool, bool, bool, bool, bool, bool) -> None
     '''some combinations of command-line options don't make sense;
     alert the user and abort
     '''
@@ -677,6 +706,7 @@ def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
 
 
 def check_cmd_config():
+    # type: () -> None
     '''check whether the commands as given in synctool.conf actually exist'''
 
     ok, param.DIFF_CMD = config.check_cmd_config('diff_cmd', param.DIFF_CMD)
@@ -685,6 +715,7 @@ def check_cmd_config():
 
 
 def usage():
+    # type: () -> None
     '''print usage information'''
 
     print 'usage: %s [options]' % PROGNAME
@@ -714,6 +745,7 @@ Note that synctool does a dry run unless you specify --fix
 
 
 def get_options():
+    # type: () -> int
     '''parse command-line options'''
 
     global SINGLE_FILES
@@ -730,7 +762,7 @@ def get_options():
         usage()
         sys.exit(1)
 
-    if args != None and len(args) > 0:
+    if args:
         error('excessive arguments on command line')
         sys.exit(1)
 
@@ -907,6 +939,7 @@ def get_options():
 
 @catch_signals
 def main():
+    # type: () -> None
     '''run the program'''
 
     param.init()
@@ -985,12 +1018,12 @@ def main():
         reference_files()
 
     elif action == ACTION_ERASE_SAVED:
-        if len(SINGLE_FILES) > 0:
+        if SINGLE_FILES:
             single_erase_saved()
         else:
             erase_saved()
 
-    elif len(SINGLE_FILES) > 0:
+    elif SINGLE_FILES:
         single_files()
 
     else:

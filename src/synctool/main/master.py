@@ -18,6 +18,11 @@ import getopt
 import shlex
 import tempfile
 
+try:
+    from typing import List, IO
+except ImportError:
+    pass
+
 from synctool import config, param
 import synctool.aggr
 import synctool.lib
@@ -43,19 +48,21 @@ OPT_AGGREGATE = False
 OPT_CHECK_UPDATE = False
 OPT_DOWNLOAD = False
 
-PASS_ARGS = None
-MASTER_OPTS = None
+PASS_ARGS = None        # type: List[str]
+MASTER_OPTS = None      # type: List[str]
 
-UPLOAD_FILE = None
+UPLOAD_FILE = None      # type: synctool.upload.UploadFile
 
 
 def run_remote_synctool(address_list):
+    # type: (List[str]) -> None
     '''run synctool on target nodes'''
 
     synctool.parallel.do(worker_synctool, address_list)
 
 
 def worker_synctool(addr):
+    # type: (str) -> None
     '''run rsync of ROOTDIR to the nodes and ssh+synctool, in parallel'''
 
     nodename = NODESET.get_nodename_from_address(addr)
@@ -118,6 +125,7 @@ def worker_synctool(addr):
 
 
 def run_local_synctool():
+    # type: () -> None
     '''run synctool on the master node itself'''
 
     cmd_arr = shlex.split(param.SYNCTOOL_CMD) + PASS_ARGS
@@ -127,6 +135,7 @@ def run_local_synctool():
 
 
 def rsync_include_filter(nodename):
+    # type: (str) -> str
     '''create temp file with rsync filter rules
     Include only those dirs that apply for this node
     Returns filename of the filter file
@@ -183,6 +192,7 @@ def rsync_include_filter(nodename):
 
 
 def _write_rsync_filter(f, overlaydir, label):
+    # type: (IO, str, str) -> None
     '''helper function for writing rsync filter'''
 
     f.write('+ /var/%s/\n' % label)
@@ -200,6 +210,7 @@ def _write_rsync_filter(f, overlaydir, label):
 
 
 def _write_overlay_filter(f):
+    # type: (IO) -> bool
     '''write rsync filter rules for overlay/ tree
     Returns False on error
     '''
@@ -209,6 +220,7 @@ def _write_overlay_filter(f):
 
 
 def _write_delete_filter(f):
+    # type: (IO) -> bool
     '''write rsync filter rules for delete/ tree
     Returns False on error
     '''
@@ -218,6 +230,7 @@ def _write_delete_filter(f):
 
 
 def _write_purge_filter(f):
+    # type: (IO) -> bool
     '''write rsync filter rules for purge/ tree
     Returns False on error
     '''
@@ -238,7 +251,7 @@ def _write_purge_filter(f):
                     # guard against user mistakes;
                     # danger of destroying the entire filesystem
                     # if it would rsync --delete the root
-                    if len(files) > 0:
+                    if files:
                         warning('cowardly refusing to purge the root '
                                 'directory')
                         stderr('please remove any files directly '
@@ -253,6 +266,7 @@ def _write_purge_filter(f):
 
 
 def make_tempdir():
+    # type: () -> None
     '''create temporary directory (for storing rsync filter files)'''
 
     if not os.path.isdir(param.TEMP_DIR):
@@ -265,11 +279,13 @@ def make_tempdir():
 
 
 def _check_valid_overlaydirs():
+    # type: () -> bool
     '''check that the group specific dirs are valid groups
     Returns True on OK, False on error
     '''
 
     def _check_valid_groupdir(overlaydir, label):
+        # type: (str, str) -> bool
         '''local helper function for _check_valid_overlaydirs()'''
 
         errs = 0
@@ -302,6 +318,7 @@ def _check_valid_overlaydirs():
 
 
 def check_cmd_config():
+    # type: () -> None
     '''check whether the commands as given in synctool.conf actually exist'''
 
     # pretty lame code
@@ -341,6 +358,7 @@ def check_cmd_config():
 
 
 def be_careful_with_getopt():
+    # type: () -> None
     '''check sys.argv for dangerous common typo's on the command-line'''
 
     # be extra careful with possible typo's on the command-line
@@ -365,6 +383,7 @@ def be_careful_with_getopt():
 
 def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
                         opt_upload, opt_fix, opt_group):
+    # type: (bool, bool, bool, bool, bool, bool, bool) -> None
     '''some combinations of command-line options don't make sense;
     alert the user and abort
     '''
@@ -391,6 +410,7 @@ def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
 
 
 def usage():
+    # type: () -> None
     '''print usage information'''
 
     print 'usage: %s [options]' % PROGNAME
@@ -433,6 +453,7 @@ Written by Walter de Jong <walter@heiho.net> (c) 2003-2015'''
 
 
 def get_options():
+    # type: () -> None
     '''parse command-line options'''
 
     global PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE
@@ -460,7 +481,7 @@ def get_options():
 #        usage()
         sys.exit(1)
 
-    if args != None and len(args) > 0:
+    if args:
         error('excessive arguments on command line')
         sys.exit(1)
 
@@ -698,12 +719,13 @@ def get_options():
 
 @catch_signals
 def main():
+    # type: () -> None
     '''run the program'''
 
     param.init()
 
-    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)
-    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)
+    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout) # type: ignore
+    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr) # type: ignore
 
     try:
         get_options()

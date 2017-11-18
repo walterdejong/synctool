@@ -20,15 +20,21 @@ import pwd
 import grp
 import urllib
 
+try:
+    from typing import Dict
+except ImportError:
+    pass
+
 # Note: do not import synctool modules here
 # They can't be found without the launcher, and this program is small anyway
 
 # caches for usernames/groupnames by uid/gid
-UID_CACHE = {}
-GID_CACHE = {}
+UID_CACHE = {}      # type: Dict[str, str]
+GID_CACHE = {}      # type: Dict[str, str]
 
 
 def print_stat(filename, top=True):
+    # type: (str, bool) -> None
     '''print directory entry and parent entries'''
 
     if top:
@@ -85,6 +91,7 @@ def print_stat(filename, top=True):
 
 
 def uid_username(uid):
+    # type: (int) -> str
     '''Return username for numeric uid'''
 
     s_uid = '%u' % uid
@@ -103,6 +110,7 @@ def uid_username(uid):
 
 
 def gid_groupname(gid):
+    # type: (int) -> str
     '''Return group name for numeric gid'''
 
     s_gid = '%u' % gid

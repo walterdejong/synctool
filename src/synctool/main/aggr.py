@@ -19,6 +19,7 @@ from synctool.main.wrapper import catch_signals
 
 
 def usage():
+    # type: () -> None
     '''print usage information'''
 
     print '''Typical use of synctool-aggr is:
@@ -31,6 +32,7 @@ and activated by the '-a' option
 
 
 def get_options():
+    # type: () -> None
     '''parse command-line options'''
 
     if len(sys.argv) <= 1:
@@ -43,7 +45,7 @@ def get_options():
 #       usage()
         sys.exit(1)
 
-    for opt, _ in opts:
+    for opt, _optarg in opts:
         if opt in ('-h', '--help', '-?'):
             usage()
             sys.exit(1)
@@ -51,6 +53,7 @@ def get_options():
 
 @catch_signals
 def main():
+    # type: () -> None
     '''run the program'''
 
     get_options()

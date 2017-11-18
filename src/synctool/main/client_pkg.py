@@ -14,6 +14,12 @@ import os
 import sys
 import getopt
 
+try:
+    from typing import List, Sequence, Tuple
+    from synctool.pkgclass import SyncPkg
+except ImportError:
+    pass
+
 import synctool.config
 import synctool.lib
 from synctool.lib import verbose, stderr, error, warning
@@ -36,7 +42,7 @@ ACTION_CLEAN = 6
 ACTION = 0
 
 # list of packages given on the command-line
-PKG_LIST = None
+PKG_LIST = None     # type: List[str]
 
 # list of Linux package managers: (Linux release file, package manager)
 LINUX_PACKAGE_MANAGERS = (('/etc/debian_version', 'apt-get'),
@@ -47,10 +53,11 @@ LINUX_PACKAGE_MANAGERS = (('/etc/debian_version', 'apt-get'),
                           ('/etc/slackware-version', 'swaret'),
                           ('/etc/fedora-release', 'yum'),
                           ('/etc/yellowdog-release', 'yum'),
-                          ('/etc/mandrake-release', 'urpmi'))
+                          ('/etc/mandrake-release', 'urpmi'))   # type: Sequence[Tuple[str, str]]
 
 
 def package_manager():
+    # type: () -> SyncPkg
     '''return instance of SyncPkg installer class'''
 
     detected = False
@@ -90,12 +97,12 @@ def package_manager():
               synctool.param.PACKAGE_MANAGER)
 
     sys.exit(1)
+    return None     # not reached
 
 
 def detect_installer():
-    '''Attempt to detect the operating system and package system
-    Returns instance of a SyncPkg installer class
-    '''
+    # type: () -> None
+    '''Attempt to detect the operating system and package system'''
 
     # attempt a best effort at detecting OSes for the purpose of
     # choosing a package manager
@@ -112,7 +119,7 @@ def detect_installer():
     # - OS X has no 'standard' software packaging (the App store??)
     #   There are ports, fink, brew. I prefer 'brew'
     # - The *BSDs have both pkg_add and ports
-    # - FreeBSD has freebsd-update to upgrade packages
+    # - FreeBSD has freebsd-update to upgrade packages (FIXME not true!)
 
     platform = os.uname()[0]
 
@@ -170,6 +177,7 @@ def detect_installer():
 
 
 def there_can_be_only_one():
+    # type: () -> None
     '''print usage information about actions'''
 
     print '''Specify only one of these options:
@@ -184,6 +192,7 @@ def there_can_be_only_one():
 
 
 def usage():
+    # type: () -> None
     '''print usage information'''
 
     print 'usage: %s [options] [package [..]]' % PROGNAME
@@ -227,6 +236,7 @@ Note that --upgrade does a dry run unless you specify --fix
 
 
 def get_options():
+    # type: () -> None
     '''parse command-line options'''
 
     global ACTION, PKG_LIST
@@ -350,7 +360,7 @@ def get_options():
             error('options --install and --remove require a package name')
             sys.exit(1)
 
-    elif args != None and len(args) > 0:
+    elif args != None and args:
         error('excessive arguments on command line')
         sys.exit(1)
 
@@ -366,6 +376,7 @@ def get_options():
 
 @catch_signals
 def main():
+    # type: () -> None
     '''run the program'''
 
     synctool.param.init()

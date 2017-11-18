@@ -16,7 +16,7 @@ import shlex
 import subprocess
 
 try:
-    from typing import List, Pattern
+    from typing import List, Tuple, Pattern
 except ImportError:
     pass
 
@@ -125,7 +125,7 @@ def ssh_args(ssh_cmd_arr, nodename):
 
 
 def setup_master(node_list, persist):
-    # type: (List[str], str) -> bool
+    # type: (List[Tuple[str, str]], str) -> bool
     '''setup master connections to all nodes in node_list
     node_list is a list of pairs: (addr, nodename)
     Argument 'persist' is the SSH ControlPersist parameter

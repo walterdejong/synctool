@@ -13,13 +13,20 @@
 import errno
 import sys
 
+try:
+    from typing import Callable
+except ImportError:
+    pass
+
 # decorator
 def catch_signals(func):
+    # type: (Callable[..., int]) -> Callable[..., int]
     '''run main function
     Ctrl-C and "Broken pipe" signal will gracefully terminate the program
     '''
 
     def wrap(*args, **kwargs):
+        # type: (...) -> int
         '''wraps a function (catch_signals is a decorator)'''
 
         ret = -1

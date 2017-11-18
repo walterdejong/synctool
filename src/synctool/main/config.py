@@ -16,6 +16,11 @@ import sys
 import getopt
 import socket
 
+try:
+    from typing import List
+except ImportError:
+    pass
+
 from synctool import config, param
 from synctool.lib import stderr, error
 from synctool.main.wrapper import catch_signals
@@ -25,11 +30,11 @@ import synctool.nodeset
 PROGNAME = 'config'
 
 ACTION = 0
-ACTION_OPTION = None
-ARG_NODENAMES = None
-ARG_GROUPS = None
-ARG_CMDS = None
-ARG_EXPAND = None
+ACTION_OPTION = None    # type: str
+ARG_NODENAMES = None    # type: str
+ARG_GROUPS = None       # type: str
+ARG_CMDS = None         # type: List[str]
+ARG_EXPAND = None       # type: str
 
 # these are enums for the "list" command-line options
 ACTION_LIST_NODES = 1
@@ -57,6 +62,7 @@ OPT_RSYNC = False
 
 
 def list_all_nodes():
+    # type: () -> None
     '''display a list of all nodes'''
 
     nodes = config.get_all_nodes()
@@ -66,7 +72,7 @@ def list_all_nodes():
         ignored = set(config.get_groups(node))
         ignored &= param.IGNORE_GROUPS
 
-        if OPT_FILTER_IGNORED and len(ignored) > 0:
+        if OPT_FILTER_IGNORED and ignored:
             continue
 
         if OPT_IPADDRESS:
@@ -78,13 +84,14 @@ def list_all_nodes():
             else:
                 node += ' yes'
 
-        if len(ignored) > 0:
+        if ignored:
             node += ' (ignored)'
 
         print node
 
 
 def list_all_groups():
+    # type: () -> None
     '''display a list of all groups'''
 
     groups = param.GROUP_DEFS.keys()
@@ -101,6 +108,7 @@ def list_all_groups():
 
 
 def list_nodes(nodelist):
+    # type: (str) -> None
     '''display node definition'''
 
     nodeset = synctool.nodeset.NodeSet()
@@ -114,7 +122,7 @@ def list_nodes(nodelist):
         # error message already printed
         sys.exit(1)
 
-    groups = []
+    groups = []     # type: List[str]
     for node in nodeset.nodelist:
         if OPT_IPADDRESS or OPT_RSYNC:
             out = ''
@@ -152,6 +160,7 @@ def list_nodes(nodelist):
 
 
 def list_nodegroups(grouplist):
+    # type: (str) -> None
     '''display list of nodes that are member of group'''
 
     nodeset = synctool.nodeset.NodeSet()
@@ -172,7 +181,7 @@ def list_nodegroups(grouplist):
         ignored = set(config.get_groups(node))
         ignored &= param.IGNORE_GROUPS
 
-        if OPT_FILTER_IGNORED and len(ignored) > 0:
+        if OPT_FILTER_IGNORED and ignored:
             continue
 
         if OPT_IPADDRESS:
@@ -184,13 +193,14 @@ def list_nodegroups(grouplist):
             else:
                 node += ' yes'
 
-        if len(ignored) > 0:
+        if ignored:
             node += ' (ignored)'
 
         print node
 
 
 def list_commands(cmds):
+    # type: (List[str]) -> None
     '''display command setting'''
 
     for cmd in cmds:
@@ -229,6 +239,7 @@ def list_commands(cmds):
 
 
 def list_dirs():
+    # type: () -> None
     '''display directory settings'''
 
     print 'rootdir', param.ROOTDIR
@@ -239,6 +250,7 @@ def list_dirs():
 
 
 def expand(nodelist):
+    # type: (str) -> None
     '''display expanded argument'''
 
     nodeset = synctool.nodeset.NodeSet()
@@ -259,6 +271,7 @@ def expand(nodelist):
 
 
 def set_action(a, opt):
+    # type: (int, str) -> None
     '''set the action to perform'''
 
     # this is a helper function for the command-line parser
@@ -274,6 +287,7 @@ def set_action(a, opt):
 
 
 def usage():
+    # type: () -> None
     '''print usage information'''
 
     print 'usage: %s [options]' % PROGNAME
@@ -306,6 +320,7 @@ COMMAND is a list of these: diff,ping,ssh,rsync,synctool,pkg
 
 
 def get_options():
+    # type: () -> None
     '''parse command-line options'''
 
     global ARG_NODENAMES, ARG_GROUPS, ARG_CMDS, ARG_EXPAND
@@ -330,7 +345,7 @@ def get_options():
         usage()
         sys.exit(1)
 
-    if args != None and len(args) > 0:
+    if args:
         error('excessive arguments on command-line')
         sys.exit(1)
 
@@ -435,6 +450,7 @@ def get_options():
 
 @catch_signals
 def main():
+    # type: () -> None
     '''do your thing'''
 
     param.init()
@@ -503,7 +519,7 @@ def main():
         print param.MASTER
 
     elif ACTION == ACTION_SLAVE:
-        if not len(param.SLAVES):
+        if not param.SLAVES:
             print '(none)'
         else:
             for node in param.SLAVES:

@@ -16,6 +16,11 @@ import sys
 import getopt
 import shlex
 
+try:
+    from typing import List
+except ImportError:
+    pass
+
 from synctool import config, param
 import synctool.aggr
 import synctool.lib
@@ -33,14 +38,15 @@ NODESET = synctool.nodeset.NodeSet()
 
 OPT_AGGREGATE = False
 
-PASS_ARGS = None
-MASTER_OPTS = None
+PASS_ARGS = None        # type: List[str]
+MASTER_OPTS = None      # type: List[str]
 
 # ugly global helps parallelism
-SSH_CMD_ARR = None
+SSH_CMD_ARR = None      # type: List[str]
 
 
 def run_remote_pkg(address_list):
+    # type: (List[str]) -> None
     '''run synctool-pkg on the target nodes'''
 
     global SSH_CMD_ARR
@@ -57,6 +63,7 @@ def run_remote_pkg(address_list):
 
 
 def worker_pkg(addr):
+    # type: (str) -> None
     '''runs ssh + synctool-pkg to the nodes in parallel'''
 
     nodename = NODESET.get_nodename_from_address(addr)
@@ -90,6 +97,7 @@ def worker_pkg(addr):
 
 
 def rearrange_options():
+    # type: () -> List[str]
     '''rearrange command-line options so that getopt() behaves
     more logical for us
     '''
@@ -105,7 +113,7 @@ def rearrange_options():
     new_argv = []
     pkg_list = []
 
-    while len(arglist) > 0:
+    while arglist:
         arg = arglist.pop(0)
 
         new_argv.append(arg)
@@ -122,8 +130,7 @@ def rearrange_options():
                     pkg_list.append(optional_arg)
 
                     arglist.pop(0)
-
-                    if not len(arglist):
+                    if not arglist:
                         break
 
                     optional_arg = arglist[0]
@@ -133,6 +140,7 @@ def rearrange_options():
 
 
 def check_cmd_config():
+    # type: () -> None
     '''check whether the commands as given in synctool.conf actually exist'''
 
     errors = 0
@@ -150,6 +158,7 @@ def check_cmd_config():
 
 
 def there_can_be_only_one():
+    # type: () -> None
     '''print usage information about actions'''
 
     print '''Specify only one of these options:
@@ -163,6 +172,7 @@ def there_can_be_only_one():
 
 
 def usage():
+    # type: () -> None
     '''print usage information'''
 
     print 'usage: %s [options] [package [..]]' % PROGNAME
@@ -213,6 +223,7 @@ Note that --upgrade does a dry run unless you specify --fix
 
 
 def get_options():
+    # type: () -> None
     '''parse command-line options'''
 
     global MASTER_OPTS, PASS_ARGS, OPT_AGGREGATE
@@ -396,7 +407,7 @@ def get_options():
     # enable logging at the master node
     PASS_ARGS.append('--masterlog')
 
-    if args != None:
+    if args:
         MASTER_OPTS.extend(args)
         PASS_ARGS.extend(args)
     else:
@@ -414,12 +425,13 @@ def get_options():
 
 @catch_signals
 def main():
+    # type: () -> None
     '''run the program'''
 
     param.init()
 
-    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)
-    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)
+    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout) # type: ignore
+    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr) # type: ignore
 
     try:
         get_options()

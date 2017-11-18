@@ -15,6 +15,11 @@ import subprocess
 import getopt
 import shlex
 
+try:
+    from typing import List
+except ImportError:
+    pass
+
 from synctool import config, param
 import synctool.aggr
 import synctool.lib
@@ -31,16 +36,18 @@ NODESET = synctool.nodeset.NodeSet()
 
 OPT_AGGREGATE = False
 
-MASTER_OPTS = []
+MASTER_OPTS = []    # type: List[str]
 
 
 def ping_nodes(address_list):
+    # type: (List[str]) -> None
     '''ping nodes in parallel'''
 
     synctool.parallel.do(ping_node, address_list)
 
 
 def ping_node(addr):
+    # type: (str) -> None
     '''ping a single node'''
 
     node = NODESET.get_nodename_from_address(addr)
@@ -59,7 +66,7 @@ def ping_node(addr):
                              stderr=subprocess.STDOUT).stdout
     except OSError as err:
         error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
-        return False
+        return
 
     with f:
         for line in f:
@@ -100,6 +107,7 @@ def ping_node(addr):
 
 
 def check_cmd_config():
+    # type: () -> None
     '''check whether the commands as given in synctool.conf actually exist'''
 
     ok, param.PING_CMD = config.check_cmd_config('ping_cmd', param.PING_CMD)
@@ -108,6 +116,7 @@ def check_cmd_config():
 
 
 def usage():
+    # type: () -> None
     '''print usage information'''
 
     print 'usage: %s [options]' % PROGNAME
@@ -130,6 +139,7 @@ def usage():
 
 
 def get_options():
+    # type: () -> None
     '''parse command-line options'''
 
     global MASTER_OPTS, OPT_AGGREGATE
@@ -252,19 +262,20 @@ def get_options():
 
             continue
 
-    if args != None and len(args) > 0:
+    if args:
         print '%s: too many arguments' % PROGNAME
         sys.exit(1)
 
 
 @catch_signals
 def main():
+    # type: () -> None
     '''run the program'''
 
     param.init()
 
-    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)
-    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)
+    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout) # type: ignore
+    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr) # type: ignore
 
     try:
         get_options()

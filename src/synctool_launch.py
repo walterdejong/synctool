@@ -14,6 +14,11 @@
 import os
 import sys
 
+try:
+    from typing import Dict
+except ImportError:
+    pass
+
 LAUNCH = {
     'synctool' : 'synctool_master.py',
     'dsh' : 'dsh.py',
@@ -24,10 +29,11 @@ LAUNCH = {
     'synctool-client' : 'synctool_client.py',
     'synctool-client-pkg' : 'synctool_client_pkg.py',
     'synctool-template' : 'synctool_template.py'
-}
+}   # type: Dict[str, str]
 
 
 def stderr(msg):
+    # type: (str) -> None
     '''print error message to stderr'''
 
     sys.stdout.flush()
