@@ -1,5 +1,6 @@
 Nov 2017
 - dsh_pkg now has proper FreeBSD pkg support
+- default ping command uses -w option; assumes Linux ping
 - code cleanup: added Python type annotations
 - small bug fixes, found by type checking
 

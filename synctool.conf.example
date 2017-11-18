@@ -96,7 +96,7 @@ sync_times no
 # configure external commands that synctool uses
 #diff_cmd diff -u
 #ping_cmd fping -t 500
-#ping_cmd ping -q -c 1 -t 1
+#ping_cmd ping -q -c 1 -w 1
 
 # synctool depends on ssh, but this command is configurable
 # so that you can do things like:

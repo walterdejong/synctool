@@ -50,7 +50,7 @@ HOSTNAME = None             # type: str
 NODENAME = None             # type: str
 
 DIFF_CMD = 'diff -u'                                    # type: str
-PING_CMD = 'ping -q -c 1 -t 1'                          # type: str
+PING_CMD = 'ping -q -c 1 -w 1'                          # type: str
 SSH_CMD = 'ssh -o ConnectTimeout=10 -x -q'              # type: str
 RSYNC_CMD = "rsync -ar --delete --delete-excluded -q"   # type: str
 SYNCTOOL_CMD = None                                     # type: str

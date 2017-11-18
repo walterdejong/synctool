@@ -145,7 +145,7 @@ synctool's configuration file.
   system specific; the PATH environment variable will be searched for the
   command if you do not supply a full path.
 
-  The default is: `ping -q -c 1 -t 1`
+  The default is: `ping -q -c 1 -w 1` (which assumes Linux ping options)
 
 * `ssh_cmd <ssh UNIX command>`
 
