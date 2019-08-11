@@ -125,6 +125,16 @@ ignore tmp[0-9][0-9][0-9]??
 
 <p>Log any updates to syslog. Nothing is logged for dry runs.
 The default is: <code>yes</code>.</p></li>
+<li><p><code>sync_times &lt;yes/no&gt;</code></p>
+
+<p>Synchronize modification timestamps of files. Every file on the node
+will get the timestamp identical to the file in the overlay.
+Template generated files will get the timestamp of the template.</p>
+
+<p>This setting only works for files (and special files).
+Timestamps of symbolic links and directories are not managed.</p>
+
+<p>The default is: <code>no</code>.</p></li>
 <li><p><code>diff_cmd &lt;diff UNIX command&gt;</code></p>
 
 <p>Give the command and arguments to execute <code>diff</code>.
@@ -145,7 +155,7 @@ command if you do not supply a full path.</p>
 system specific; the PATH environment variable will be searched for the
 command if you do not supply a full path.</p>
 
-<p>The default is: <code>ping -q -c 1 -t 1</code></p></li>
+<p>The default is: <code>ping -q -c 1 -w 1</code> (which assumes Linux ping options)</p></li>
 <li><p><code>ssh_cmd &lt;ssh UNIX command&gt;</code></p>
 
 <p>Give the command and arguments to execute <code>ssh</code>. synctool and <code>dsh</code> use
@@ -175,7 +185,7 @@ not supply a full path.</p>
 which it uses to ensure that the correct overlay directories are synced
 to the nodes. So be mindful that you can tweak the parameters of the
 <code>rsync</code> command, but you can not replace it with a different copying
-program &#8212; unless it also supports <code>rsync</code>&#8217;s filtering capabilities.</p></li>
+program &#8212; unless it also supports <code>rsync</code>&#8216;s filtering capabilities.</p></li>
 <li><p><code>synctool_cmd &lt;synctool UNIX command&gt;</code></p>
 
 <p>Give the command and arguments to execute <code>synctool-client</code>. synctool uses
@@ -209,6 +219,7 @@ yum
 zypper
 pacman
 brew
+pkg
 bsdpkg
 </code></pre></li>
 <li><p><code>num_proc &lt;number&gt;</code></p>

@@ -161,11 +161,11 @@ of computers. A group of computers is called a <em>cluster</em>.</p>
 <p>synctool depends on a number of (fairly standard) programs:</p>
 
 <ul>
-<li><a href="http://www.python.org/download/">python</a> version 2.6 or better</li>
-<li><a href="http://openssh.org/portable.html">ssh</a>, preferably OpenSSH version 5.6 or better</li>
-<li><a href="http://rsync.samba.org/">rsync</a></li>
-<li><code>ping</code>, or you can configure <a href="http://fping.org/">fping</a> later</li>
-<li><a href="http://daringfireball.net/projects/markdown/">markdown</a> and <a href="http://daringfireball.net/projects/smartypants/">smartypants</a> &#8212; but only if you want to install
+<li><a href="https://www.python.org/download/">python2</a> version 2.6 or better</li>
+<li><a href="https://www.openssh.com/portable.html">ssh</a>, preferably OpenSSH version 5.6 or better</li>
+<li><a href="https://rsync.samba.org/">rsync</a></li>
+<li><code>ping</code>, or you can configure <a href="https://fping.org/">fping</a> later</li>
+<li><a href="https://daringfireball.net/projects/markdown/">markdown</a> and <a href="https://daringfireball.net/projects/smartypants/">smartypants</a> &#8212; but only if you want to install
 this documentation as HTML pages</li>
 </ul>
 
@@ -766,8 +766,8 @@ export IPADDR
 use the <code>ip addr</code> command, consult DNS or you might be able to use
 <code>synctool-config</code> to get what you need.</p>
 
-<p>The <code>synctool-template</code> command takes as input the template file (&#8220;<code>$1</code>&#8221;)
-and redirects the output to a newly generated file (&#8220;<code>$2</code>&#8221;). The &#8220;<code>$2</code>&#8221;
+<p>The <code>synctool-template</code> command takes as input the template file (&#8220;<code>$1</code>&#8220;)
+and redirects the output to a newly generated file (&#8220;<code>$2</code>&#8220;). The &#8220;<code>$2</code>&#8221;
 on the last line expands to <code>fiction.conf._nodename</code>.
 Hence, synctool generates a new config file in the repository. It does so
 even on dry runs; you can ask synctool to display a diff of <code>fiction.conf</code>
@@ -786,7 +786,7 @@ synctool-template accepts variables either from the command-line or from
 the shell environment. Like with regular <code>.post</code> scripts, the environment
 variables <code>SYNCTOOL_NODE</code> and <code>SYNCTOOL_ROOT</code> are also present here.
 However <em>unlike</em> regular <code>.post</code> scripts, template post scripts require a <code>#!</code>
-hashbang line. This is required for shell arguments (like &#8220;<code>$1</code>&#8221;, &#8220;<code>$2</code>&#8221;)
+hashbang line. This is required for shell arguments (like &#8220;<code>$1</code>&#8220;, &#8220;<code>$2</code>&#8220;)
 to work.</p>
 
 <p>Now, when you want to change the configuration, edit the template file.
@@ -899,6 +899,7 @@ in <code>synctool.conf</code>:</p>
 #package_manager zypper
 #package_manager pacman
 #package_manager brew
+#package_manager pkg
 #package_manager bsdpkg
 </code></pre>
 
@@ -912,8 +913,7 @@ supported, feel free to develop your own plug-in for dsh-pkg
 or contact the author of synctool.</p>
 </blockquote>
 
-<p>The <code>bsdpkg</code> module uses <code>freebsd-update</code> on FreeBSD and <code>pkg_add -u</code> on
-other BSDs for upgrading packages.</p>
+<p>The <code>pkg</code> module is for FreeBSD, use <code>bsdpkg</code> on other BSD systems.</p>
 
 <p>Following are examples of how to use synctool-pkg.</p>
 
@@ -1235,6 +1235,16 @@ ignore tmp[0-9][0-9][0-9]??
 
 <p>Log any updates to syslog. Nothing is logged for dry runs.
 The default is: <code>yes</code>.</p></li>
+<li><p><code>sync_times &lt;yes/no&gt;</code></p>
+
+<p>Synchronize modification timestamps of files. Every file on the node
+will get the timestamp identical to the file in the overlay.
+Template generated files will get the timestamp of the template.</p>
+
+<p>This setting only works for files (and special files).
+Timestamps of symbolic links and directories are not managed.</p>
+
+<p>The default is: <code>no</code>.</p></li>
 <li><p><code>diff_cmd &lt;diff UNIX command&gt;</code></p>
 
 <p>Give the command and arguments to execute <code>diff</code>.
@@ -1255,7 +1265,7 @@ command if you do not supply a full path.</p>
 system specific; the PATH environment variable will be searched for the
 command if you do not supply a full path.</p>
 
-<p>The default is: <code>ping -q -c 1 -t 1</code></p></li>
+<p>The default is: <code>ping -q -c 1 -w 1</code> (which assumes Linux ping options)</p></li>
 <li><p><code>ssh_cmd &lt;ssh UNIX command&gt;</code></p>
 
 <p>Give the command and arguments to execute <code>ssh</code>. synctool and <code>dsh</code> use
@@ -1285,7 +1295,7 @@ not supply a full path.</p>
 which it uses to ensure that the correct overlay directories are synced
 to the nodes. So be mindful that you can tweak the parameters of the
 <code>rsync</code> command, but you can not replace it with a different copying
-program &#8212; unless it also supports <code>rsync</code>&#8217;s filtering capabilities.</p></li>
+program &#8212; unless it also supports <code>rsync</code>&#8216;s filtering capabilities.</p></li>
 <li><p><code>synctool_cmd &lt;synctool UNIX command&gt;</code></p>
 
 <p>Give the command and arguments to execute <code>synctool-client</code>. synctool uses
@@ -1319,6 +1329,7 @@ yum
 zypper
 pacman
 brew
+pkg
 bsdpkg
 </code></pre></li>
 <li><p><code>num_proc &lt;number&gt;</code></p>

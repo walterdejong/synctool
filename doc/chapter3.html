@@ -397,8 +397,8 @@ export IPADDR
 use the <code>ip addr</code> command, consult DNS or you might be able to use
 <code>synctool-config</code> to get what you need.</p>
 
-<p>The <code>synctool-template</code> command takes as input the template file (&#8220;<code>$1</code>&#8221;)
-and redirects the output to a newly generated file (&#8220;<code>$2</code>&#8221;). The &#8220;<code>$2</code>&#8221;
+<p>The <code>synctool-template</code> command takes as input the template file (&#8220;<code>$1</code>&#8220;)
+and redirects the output to a newly generated file (&#8220;<code>$2</code>&#8220;). The &#8220;<code>$2</code>&#8221;
 on the last line expands to <code>fiction.conf._nodename</code>.
 Hence, synctool generates a new config file in the repository. It does so
 even on dry runs; you can ask synctool to display a diff of <code>fiction.conf</code>
@@ -417,7 +417,7 @@ synctool-template accepts variables either from the command-line or from
 the shell environment. Like with regular <code>.post</code> scripts, the environment
 variables <code>SYNCTOOL_NODE</code> and <code>SYNCTOOL_ROOT</code> are also present here.
 However <em>unlike</em> regular <code>.post</code> scripts, template post scripts require a <code>#!</code>
-hashbang line. This is required for shell arguments (like &#8220;<code>$1</code>&#8221;, &#8220;<code>$2</code>&#8221;)
+hashbang line. This is required for shell arguments (like &#8220;<code>$1</code>&#8220;, &#8220;<code>$2</code>&#8220;)
 to work.</p>
 
 <p>Now, when you want to change the configuration, edit the template file.
@@ -530,6 +530,7 @@ in <code>synctool.conf</code>:</p>
 #package_manager zypper
 #package_manager pacman
 #package_manager brew
+#package_manager pkg
 #package_manager bsdpkg
 </code></pre>
 
@@ -543,8 +544,7 @@ supported, feel free to develop your own plug-in for dsh-pkg
 or contact the author of synctool.</p>
 </blockquote>
 
-<p>The <code>bsdpkg</code> module uses <code>freebsd-update</code> on FreeBSD and <code>pkg_add -u</code> on
-other BSDs for upgrading packages.</p>
+<p>The <code>pkg</code> module is for FreeBSD, use <code>bsdpkg</code> on other BSD systems.</p>
 
 <p>Following are examples of how to use synctool-pkg.</p>
 
