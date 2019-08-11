@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2
 #
 #   synctool_client_pkg.py  WJ114
 #
