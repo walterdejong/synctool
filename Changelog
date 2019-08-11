@@ -1,3 +1,6 @@
+Aug 2019
+- change default interpreter to 'python2'
+
 Nov 2017
 - dsh_pkg now has proper FreeBSD pkg support
 - default ping command uses -w option; assumes Linux ping
