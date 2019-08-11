@@ -113,6 +113,17 @@ synctool's configuration file.
   Log any updates to syslog. Nothing is logged for dry runs.
   The default is: `yes`.
 
+* `sync_times <yes/no>`
+
+  Synchronize modification timestamps of files. Every file on the node
+  will get the timestamp identical to the file in the overlay.
+  Template generated files will get the timestamp of the template.
+
+  This setting only works for files (and special files).
+  Timestamps of symbolic links and directories are not managed.
+
+  The default is: `no`.
+
 * `diff_cmd <diff UNIX command>`
 
   Give the command and arguments to execute `diff`.
@@ -134,7 +145,7 @@ synctool's configuration file.
   system specific; the PATH environment variable will be searched for the
   command if you do not supply a full path.
 
-  The default is: `ping -q -c 1 -t 1`
+  The default is: `ping -q -c 1 -w 1` (which assumes Linux ping options)
 
 * `ssh_cmd <ssh UNIX command>`
 
@@ -204,6 +215,7 @@ synctool's configuration file.
         zypper
         pacman
         brew
+        pkg
         bsdpkg
 
 * `num_proc <number>`

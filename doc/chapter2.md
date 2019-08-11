@@ -8,19 +8,19 @@
 -----------------------------
 synctool depends on a number of (fairly standard) programs:
 
-* [python][1] version 2.6 or better
+* [python2][1] version 2.6 or better
 * [ssh][2], preferably OpenSSH version 5.6 or better
 * [rsync][3]
 * `ping`, or you can configure [fping][4] later
 * [markdown][5] and [smartypants][6] -- but only if you want to install
 this documentation as HTML pages
 
-[1]: http://www.python.org/download/
-[2]: http://openssh.org/portable.html
-[3]: http://rsync.samba.org/
-[4]: http://fping.org/
-[5]: http://daringfireball.net/projects/markdown/
-[6]: http://daringfireball.net/projects/smartypants/
+[1]: https://www.python.org/download/
+[2]: https://www.openssh.com/portable.html
+[3]: https://rsync.samba.org/
+[4]: https://fping.org/
+[5]: https://daringfireball.net/projects/markdown/
+[6]: https://daringfireball.net/projects/smartypants/
 
 If you got all that, it's on to the next section.
 
