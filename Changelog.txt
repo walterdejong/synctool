@@ -1,0 +1,346 @@
+Aug 2019
+- change default interpreter to 'python2'
+
+Nov 2017
+- dsh_pkg now has proper FreeBSD pkg support
+- default ping command uses -w option; assumes Linux ping
+- code cleanup: added Python type annotations
+- small bug fixes, found by type checking
+
+Jan 2016
+- generic bug fixes
+
+Dec 2015
+- set "sync_times true" to sync timestamps of files and templates
+
+Aug 2015
+- option --diff now accepts -f to also fix (for easy typing)
+- config "hostname:" and "hostid:" are deprecated because confusing
+- now uses GitHub API to detect if a new version is available
+
+Mar 2015
+- fixed bug in dsh: directory arguments are invalid
+  and exceptionally dangerous when coupled with rsync --delete
+- released as version 6.2
+
+Jan 2015
+- fixed bug for not running .post script when --single is used
+
+December 2014
+- fixed bug; printing multiple warnings for ignored nodes
+
+November 2014
+- added .pre scripts, that run before the change is applied
+- directories are now fixed in a new order. It's better this way
+
+August 2014
+- fixed bug double entry in compressed range
+
+June 2014
+- fix issue where .post script on directory would occasionally not be run
+
+March 2014
+- released as version 6.0
+
+February 2014
+- added ssh multiplexing for fast SSH connections
+  Idea given by calind at github
+- synctool,dsh -a print list of nodes using range syntax
+- uploading from a deep directory correctly sets owner+mode of subdirs
+- bugfix for having group extension on directories
+- fixed issue with multiprocessing by replacing it with good old forking
+
+January 2014
+- dropped names "synctool-ssh", "synctool-ping", etc. in favor of "dsh",
+  "dsh-ping" and the like
+- added migration guide chapter to documentation
+- released as version 6.0rc1
+
+December 2013
+- purge --single may complain about timestamps (because rsync will also)
+  synctool can fix these, but only for purge --single. Otherwise synctool
+  doesn't care about timestamps
+- added node range syntax for command-line
+- added node range syntax to synctool.conf
+- added IP address sequence numbering for in synctool.conf
+- fix issue with logging deletes when backup_copies is no
+- upload uses rsync, now copies along ownership and mode
+- scp_cmd is obsolete; dcp uses rsync
+- dcp can do purge copies with --purge
+
+November 2013
+- 'master' node must be explicitly defined in config file
+- slaves may be defined; they get full copies of the repository
+
+June/July/August 2013
+- overlay dirs are grouped; default overlay dir is overlay/all/
+- rsync only relevant directories to the target nodes
+- templates allow you to generate config files on the fly
+- templates and template post scripts can have group extensions
+- new command synctool-template helps with 'templating' config files
+- add purge directories, they are mirrored to the target nodes
+- when uploading, use option --overlay to change the suggested overlay dir
+- when uploading, use option --purge to upload to purge dir
+- when dsh runs a script from the scripts/ dir, it will first sync it
+  to the nodes to make sure it runs the latest version of the script
+- default_nodeset: by default run only on these nodes
+- added support for fifo's and device files
+- node and group names are checked against a character set;
+  'strange' symbols are no longer allowed
+- master passes nodename to the client; "hostid:" no longer needed
+- new node specifier 'rsync:no' may be given if the synctool repository is
+  on a shared filesystem
+- option --numproc now works on synctool, dsh and friends
+- synctool now logs updates to syslog on the master node
+- dsh-pkg now logs package installs/removals/upgrades
+- config parser shows better error messages
+- synctool-config output has changed ... check your scripts
+- fix issue with multi-OS; do not check all paths of configured commands
+  like ping_cmd, ssh_cmd, etc.
+- fix issue; --erase-saved -f would also apply changes
+- fix issues with ownership and mode of symbolic links
+- fix; groups "all" and "none" can not be redefined
+- option --tasks is obsolete; use dsh and dsh-pkg
+- on_update is obsolete; use .post scripts
+- always_run is obsolete; use dsh or a wrapper script if you really need it
+- overlaydir is obsolete; hardcoded as ROOT/var/overlay
+- deletedir is obsolete; hardcoded as ROOT/var/delete
+- scriptdir is obsolete; hardcoded as ROOT/scripts
+- tasksdir is obsolete; tasks are obsolete
+- use new tempdir setting as location for temp files
+- interface: specifier is obsolete; use "ipaddress:"
+- ignore_host is obsolete; use "ignore_node"
+- host is obsolete; use "node"
+- ignore_file is obsolete; use "ignore"
+- ignore_files is obsolete; use "ignore"
+- ignore_dir is obsolete; use "ignore"
+- ignore_dirs is obsolete; use "ignore"
+- masterdir is obsolete; synctool finds it by itself
+- symlink_mode is obsolete; synctool now treats symlink mode correctly
+- new documentation in markdown format
+- run setup.sh to install synctool
+- code now conforms to PEP 8 Python Coding Style (for the most part)
+
+Aug 2012
+- added dsh --numproc, patch by Werner Maier
+
+April 2012:
+- fixed issue with dsh-pkg, multiple packages on command line
+- Jurriaan Saathof contributed nagios script check_synctool.pl
+- released as version 5.2
+
+October 2011:
+- added hostid:filename for uniquely identifying weird hosts
+- fix for bug regarding redefinition of group 'all'
+- fix for bug with output to stderr not showing the nodename
+- fix for problem where multiple nodes have the same hostname: hostid file
+- released as version 5.1
+
+September 2011:
+- small fixes (see git log)
+- Werner Maier contributed synctool-check
+  It keeps timestamps so you can see when a node was last updated
+- bugfix: the comma-separated list of nodes or groups was not working
+  correctly; this problem was fixed
+
+August 8th 2011:
+- released as version 5.0
+
+July 2011:
+- I was on a vacation
+
+June 2011:
+- added new 'hostname:' qualifier to synctool.conf
+- for new files: create base directory if it did not yet exist
+- added synctool-pkg / dsh-pkg for package management
+- config parameter 'ignore' supports wildcards
+
+May 2011:
+- added contributions by Onno Zweers:
+  - synctool-diff patches
+  - tasks/functions shell scripting library
+  - a script that cleans dirs but also has whitelisting capability
+- checksum performance gain when there is no match
+- bugfix for running a single task
+- options -1, --single, --diff, --ref can be given multiple times on a
+  single command-line to handle multiple files
+- 'synctool-config --nodename' displays my nodename
+  Which comes in handy when scripting .post scripts
+- dumped synctool_core for synctool_overlay, which has much cleaner code
+  and supports having multiple overlay dirs, which are merged together
+  in memory
+- .post scripts for directories are now run _in_ that directory rather than
+  in the parent dir. So the current working dir has changed
+- .post scripts for directories are run at the very end after making changes
+  to all files. This shouldn't break anything unless you have (weird)
+  dependancies over multiple directories with .post scripts
+- fixed possible bug for on_update where quotation was lost for the command
+- added new config parameters for overlaydir, deletedir, tasksdir, scriptdir
+- added new config parameter require_extension (default: yes)
+- added new config parameter backup_copies (default: yes)
+- added new config parameter full_path (default: no)
+- full_path can be set from cmdline using -F and/or --fullpath
+- $masterdir can be used in the config file to reference parameter 'masterdir'
+- synctool-ssh/dsh now has option '-o' for passing additional options to ssh
+- possible bugfix for symlink mode on platforms where it matters
+- added documentation in html format
+- upload creates the repository (sub)directory if needed
+
+17 April 2011:
+- use '-e' to erase .saved files: patch by Werner Maier
+- added the synctool-ping / dsh-ping command
+
+14 March 2011:
+- fixed bug when ignoring files by name were not being ignored
+  reported by Werner Maier
+- dsh and dcp now accept option -q, --quiet, but these are
+  ignored and do not really trim down the output
+- released as version 4.7.1
+
+22 December 2010:
+- release as version 4.7
+
+13 November 2010:
+- added contributed synctool-diff script by Onno Zweers
+
+9 November 2010:
+- guard against common but dangerous typo's on command-line
+  like "-diff" instead of "--diff"
+
+23 Sep 2010:
+- bugfix: issue with dsh and --aggregate
+
+17 Sep 2010:
+- fixed typo in variable name for catching a Broken Pipe exception
+
+14 Sep 2010:
+- strip multiple slashes of filenames given on the command-line
+
+11 Sep 2010:
+- use subprocess.Popen() rather than os.popen() / os.system()
+  if the subprocess module is available
+
+6 Sep 2010:
+- Tim Dittler contributed a bash_completion file
+
+12 Aug 2010:
+- synctool_master do not print python stack trace for perfectly normal
+  conditions like 'Broken pipe', 'Keyboard Interrupt'
+
+9 Aug 2010:
+- removed usage of Python class "set" since older Pythons do not have it
+
+6 Aug 2010:
+- put 'binaries' under $masterdir/sbin/ so that clients automatically
+  receive up to date synctool with every run (!)
+
+28 Jul 2010:
+- released version 4.6.1 (bugfixes)
+
+25 Jul 2010:
+- bugfix for not running .post scripts on directories when a subdirectory
+  also had a .post script ready to run. Fix contributed by Charles Lane
+- option --single allows trailing slash on argument for directories
+
+15 Jul 2010:
+- added contributed debian control files needed for making .deb packages
+
+14 Jul 2010:
+- release version 4.6
+
+10 Jul 2010:
+- groups 'all' and 'none' are now built-in
+
+9 Jul 2010:
+- bugfix: it's OK when a node is no group at all
+
+7 Jul 2010:
+- check getopt extra arguments: Python getopt is not the GNU getopt
+- added new config keyword 'group' for defining compound groups
+
+31 May 2010:
+- improved upload: it finds the most optimal reference file if it exists
+  (still minor issue with typed subdirs and non-existent target file)
+
+28 May 2010:
+- print message when no valid nodes are given in nodeset
+- synctool-config -l[f] was broken, now fixed
+
+23 Feb 2010:
+- option '--download' does an md5 checksum of the downloaded file
+- release version 4.5
+
+29 Jan 2010:
+- added new option '--check-update' to check for newer versions
+- added new option '--version' to display current version number
+- added new option '--download' to download the latest version
+- added new options '--upload' and '--suffix' for pulling files into the
+  repository
+- bugfix for issues with buffered I/O in synctool_master/aggr/ssh
+
+26 Jan 2010:
+- bugfix: '--single' did not work for directories
+- added new option '--ref' to show what file synctool uses from the repository
+
+22 Jan 2010:
+- bugfix for configurations where the master node is being managed with
+  synctool as well
+- released as 4.4
+
+9 Oct 2009:
+- enhancement: better handling of filenames containing spaces for dsh and dcp
+- enhancement: added -a option to dsh
+- enhancement: added -v option to synctool-config
+- enhancement: added --prefix to synctool-config
+- bugfix: since version 4 it would not detect changes on directory entries
+- bugfix: since version 4 it would not run on_update / .post scripts
+  for updated directories
+- bugfix: --single did not trigger an update in the directory
+- enhancement: when running .post scripts or on_update commands,
+  change the working directory to the relevant directory
+- bugfix: diff flushes the output buffer so that the lines do not get mixed up
+  when using synctool_master
+- bugfix: option --unix did not behave well in all cases
+- bugfix: locally run commands also produce output with nodename in front
+- enhancement: better support for tiered setups via option --no-nodename
+- code cleanup: use True/False
+- contrib: synctool-upgradechk script checks for availability of new release
+- enhancement: central logging at master node
+- enhancement: specify logfile in synctool.conf, "--log" is deprecated
+- released as 4.3
+
+5 Sep 2009:
+- added synctool-scp or dcp command to easily copy files to all nodes
+  using scp
+- released as 4.2
+
+31 Aug 2009:
+- small bugfix: chown+chmod required two update runs, now done in the same
+  run
+- small bugfix: the order of the output messages would be incorrect when
+  running an external command. The fix is to flush output before running
+  an external command
+- released as 4.1
+
+26 Aug 2009:
+- synctool_master.py replaces wrapper scripts
+- synctool-config helps creation of handy scripts
+- level of parallelism is configurable through 'numproc' setting
+- included synctool-ssh or 'dsh' command
+- synctool and dsh can be run on a subset of groups or even on
+  individual nodes
+- output can be condensed by using synctool-aggr or '-a' option
+- on_update actions can also be put into '.post' scripts
+- fully rewritten internals of treewalk and file selection mechanism
+- released as 4.0
+
+12 Sep 2008:
+- files must have underscored group extension
+  (NB. This breaks backwards compatibility!)
+- directories can have group extensions, too
+- release as 3.0
+
+06 Feb 2007:
+- fixed bug in path_isfile() ; it checked for a directory (!) rather than a file
+- released as 2.3.0
+
