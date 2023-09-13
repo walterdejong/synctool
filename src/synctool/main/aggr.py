@@ -22,13 +22,13 @@ def usage():
     # type: () -> None
     '''print usage information'''
 
-    print '''Typical use of synctool-aggr is:
+    print('''Typical use of synctool-aggr is:
 
   command | synctool-aggr
 
 synctool-aggr is built in to synctool-master and synctool-ssh
 and activated by the '-a' option
-'''
+''')
 
 
 def get_options():
@@ -41,7 +41,7 @@ def get_options():
     try:
         opts, _ = getopt.getopt(sys.argv[1:], 'h', ['help'])
     except getopt.GetoptError as reason:
-        print '%s: %s' % (os.path.basename(sys.argv[0]), reason)
+        print('%s: %s' % (os.path.basename(sys.argv[0]), reason))
 #       usage()
         sys.exit(1)
 

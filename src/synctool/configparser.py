@@ -238,7 +238,7 @@ def _config_color_variant(label, value, configfile, lineno):
         return 1
 
     value = value.lower()
-    if value in synctool.lib.COLORMAP.keys():
+    if value in list(synctool.lib.COLORMAP.keys()):
         param.TERSE_COLORS[label[6:]] = value
         return 0
 

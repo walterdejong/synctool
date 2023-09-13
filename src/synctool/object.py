@@ -179,14 +179,14 @@ class VNode(object):
         '''set access permission bits equal to source'''
 
         verbose(dryrun_msg('  os.chmod(%s, %04o)' %
-                           (self.name, self.stat.mode & 07777)))
-        unix_out('chmod 0%o %s' % (self.stat.mode & 07777, self.name))
+                           (self.name, self.stat.mode & 0o7777)))
+        unix_out('chmod 0%o %s' % (self.stat.mode & 0o7777, self.name))
         if not synctool.lib.DRY_RUN:
             try:
-                os.chmod(self.name, self.stat.mode & 07777)
+                os.chmod(self.name, self.stat.mode & 0o7777)
             except OSError as err:
                 error('failed to chmod %04o %s : %s' %
-                      (self.stat.mode & 07777, self.name, err.strerror))
+                      (self.stat.mode & 0o7777, self.name, err.strerror))
                 terse(TERSE_FAIL, 'mode %s' % self.name)
 
     def set_times(self):
@@ -354,7 +354,7 @@ class VNodeDir(VNode):
         terse(synctool.lib.TERSE_MKDIR, self.name)
         if not synctool.lib.DRY_RUN:
             try:
-                os.mkdir(self.name, self.stat.mode & 07777)
+                os.mkdir(self.name, self.stat.mode & 0o7777)
             except OSError as err:
                 error('failed to make directory %s : %s' % (self.name,
                                                             err.strerror))
@@ -490,14 +490,14 @@ class VNodeLink(VNode):
             return
 
         verbose(dryrun_msg('  os.lchmod(%s, %04o)' %
-                           (self.name, self.stat.mode & 07777)))
-        unix_out('lchmod 0%o %s' % (self.stat.mode & 07777, self.name))
+                           (self.name, self.stat.mode & 0o7777)))
+        unix_out('lchmod 0%o %s' % (self.stat.mode & 0o7777, self.name))
         if not synctool.lib.DRY_RUN:
             try:
-                os.lchmod(self.name, self.stat.mode & 07777)
+                os.lchmod(self.name, self.stat.mode & 0o7777)
             except OSError as err:
                 error('failed to lchmod %04o %s : %s' %
-                      (self.stat.mode & 07777, self.name, err.strerror))
+                      (self.stat.mode & 0o7777, self.name, err.strerror))
                 terse(TERSE_FAIL, 'mode %s' % self.name)
 
     def set_times(self):
@@ -533,7 +533,7 @@ class VNodeFifo(VNode):
         terse(synctool.lib.TERSE_NEW, self.name)
         if not synctool.lib.DRY_RUN:
             try:
-                os.mkfifo(self.name, self.stat.mode & 0777)
+                os.mkfifo(self.name, self.stat.mode & 0o777)
             except OSError as err:
                 error('failed to create fifo %s : %s' % (self.name,
                                                          err.strerror))
@@ -602,7 +602,7 @@ class VNodeChrDev(VNode):
         if not synctool.lib.DRY_RUN:
             try:
                 os.mknod(self.name,
-                         (self.src_stat.st_mode & 0777) | stat.S_IFCHR,
+                         (self.src_stat.st_mode & 0o777) | stat.S_IFCHR,
                          os.makedev(major, minor))
             except OSError as err:
                 error('failed to create device %s : %s' % (self.name,
@@ -668,7 +668,7 @@ class VNodeBlkDev(VNode):
         if not synctool.lib.DRY_RUN:
             try:
                 os.mknod(self.name,
-                         (self.src_stat.st_mode & 0777) | stat.S_IFBLK,
+                         (self.src_stat.st_mode & 0o777) | stat.S_IFBLK,
                          os.makedev(major, minor))
             except OSError as err:
                 error('failed to create device %s : %s' % (self.name,
@@ -785,10 +785,10 @@ class SyncObject(object):
 
         if self.src_stat.mode != self.dest_stat.mode:
             stdout('%s should have mode %04o, but has %04o' %
-                   (self.dest_path, self.src_stat.mode & 07777,
-                    self.dest_stat.mode & 07777))
+                   (self.dest_path, self.src_stat.mode & 0o7777,
+                    self.dest_stat.mode & 0o7777))
             terse(synctool.lib.TERSE_MODE, ('%04o %s' %
-                                            (self.src_stat.mode & 07777,
+                                            (self.src_stat.mode & 0o7777,
                                              self.dest_path)))
             fix_action |= SyncObject.FIX_MODE
 
@@ -846,7 +846,7 @@ class SyncObject(object):
             vnode.set_owner()
 
         if fix_action & SyncObject.FIX_MODE:
-            log('set mode %04o %s' % (self.src_stat.mode & 07777,
+            log('set mode %04o %s' % (self.src_stat.mode & 0o7777,
                                       self.dest_path))
             vnode.set_permissions()
 
@@ -886,7 +886,7 @@ class SyncObject(object):
             # run in the directory where the file is
             synctool.lib.run_command_in_dir(os.path.dirname(self.dest_path),
                                             script)
-        os.umask(077)
+        os.umask(0o77)
 
     def vnode_obj(self):
         # type: () -> VNode

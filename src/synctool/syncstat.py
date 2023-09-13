@@ -141,7 +141,7 @@ class SyncStat(object):
         # type: () -> bool
         '''Returns True if its mode has any 'x' bit set'''
 
-        return self.entry_exists and ((self.mode & 0111) != 0)
+        return self.entry_exists and ((self.mode & 0o111) != 0)
 
     def ascii_uid(self):
         # type: () -> str

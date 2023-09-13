@@ -1,4 +1,4 @@
-#! /usr/bin/env python2
+#! /usr/bin/env python3
 #
 #   synctool_list.py    WJ114
 #
@@ -18,7 +18,7 @@ import sys
 import stat
 import pwd
 import grp
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 try:
     from typing import Dict
@@ -48,7 +48,7 @@ def print_stat(filename, top=True):
     try:
         statbuf = statfunc(filename)
     except OSError as err:
-        print 'error: %s: %s' % (filename, err.strerror)
+        print('error: %s: %s' % (filename, err.strerror))
         return
 
     owner = uid_username(statbuf.st_uid)
@@ -56,26 +56,26 @@ def print_stat(filename, top=True):
 
     # filename is quoted like an URL to properly support nasty filenames
     # with spaces and newlines and such
-    quoted_filename = urllib.quote(filename)
+    quoted_filename = urllib.parse.quote(filename)
 
     # if it's a symlink, get the linkdest as well
     if stat.S_ISLNK(statbuf.st_mode):
         try:
             linkdest = os.readlink(filename)
         except OSError as err:
-            print 'error: %s: %s' % (filename, err.strerror)
+            print('error: %s: %s' % (filename, err.strerror))
             return
 
-        quoted_linkdest = urllib.quote(linkdest)
+        quoted_linkdest = urllib.parse.quote(linkdest)
 
         # Be wary that a symlink has more fields
-        print ('%06o %u %s %u %s %u %s -> %s' %
+        print(('%06o %u %s %u %s %u %s -> %s' %
                (statbuf.st_mode, statbuf.st_uid, owner, statbuf.st_gid, group,
-                statbuf.st_size, quoted_filename, quoted_linkdest))
+                statbuf.st_size, quoted_filename, quoted_linkdest)))
     else:
-        print ('%06o %u %s %u %s %u %s' %
+        print(('%06o %u %s %u %s %u %s' %
                (statbuf.st_mode, statbuf.st_uid, owner, statbuf.st_gid, group,
-                statbuf.st_size, quoted_filename))
+                statbuf.st_size, quoted_filename)))
 
     path, filename = os.path.split(filename)
     if not path:
@@ -131,7 +131,7 @@ def gid_groupname(gid):
 
 if __name__ == '__main__':
     if len(sys.argv) <= 1:
-        print 'usage: %s <filename>' % os.path.basename(sys.argv[0])
+        print('usage: %s <filename>' % os.path.basename(sys.argv[0]))
         sys.exit(1)
 
     fullpath = sys.argv[1]

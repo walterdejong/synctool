@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 #
 #   synctool.upload.py    WJ113
 #
@@ -16,7 +16,7 @@ import sys
 import shlex
 import stat
 import subprocess
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 try:
     from typing import List, Dict, Tuple
@@ -137,13 +137,13 @@ class RemoteStat(object):
         self.gid = int(arr[3])
         self.group = arr[4]
         self.size = int(arr[5])
-        self.filename = urllib.unquote(arr[6])
+        self.filename = urllib.parse.unquote(arr[6])
 
         if self.is_symlink():
             if len(arr) != 9:
                 raise ValueError()
 
-            self.linkdest = urllib.unquote(arr[8])
+            self.linkdest = urllib.parse.unquote(arr[8])
         else:
             self.linkdest = None    # type: str
 
@@ -288,7 +288,7 @@ def _makedir(path, remote_stats):
 
     # temporarily restore admin's umask
     mask = os.umask(synctool.param.ORIG_UMASK)
-    mode = remote_stats[0].mode & 0777
+    mode = remote_stats[0].mode & 0o777
     try:
         os.mkdir(path, mode)
     except OSError as err:

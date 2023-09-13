@@ -153,7 +153,7 @@ def generate_template(obj, post_dict):
             synctool.lib.set_filetimes(newname, statbuf.atime,
                                        obj.src_stat.mtime)
 
-    os.umask(077)
+    os.umask(0o77)
 
     # chdir back to original location
     # chdir to source directory
@@ -289,7 +289,7 @@ def _run_rsync_purge(cmd_arr):
     out, _ = proc.communicate()
 
     if synctool.lib.VERBOSE:
-        print out
+        print(out)
 
     out = out.split('\n')
     for line in out:
@@ -606,7 +606,7 @@ def _reference_callback(obj, _pre_dict, _post_dict):
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
         if obj.dest_path in SINGLE_FILES:
             # this template generates the file
-            print obj.print_src()
+            print(obj.print_src())
             SINGLE_FILES.remove(obj.dest_path)
             if not SINGLE_FILES:
                 return False, False
@@ -614,7 +614,7 @@ def _reference_callback(obj, _pre_dict, _post_dict):
         return True, False
 
     if _match_single(obj.dest_path):
-        print obj.print_src()
+        print(obj.print_src())
 
     if not SINGLE_FILES:
         return False, False
@@ -718,13 +718,13 @@ def usage():
     # type: () -> None
     '''print usage information'''
 
-    print 'usage: %s [options]' % PROGNAME
-    print 'options:'
-    print '  -h, --help            Display this information'
-    print '  -c, --conf=FILE       Use this config file'
-    print '                        (default: %s)' % param.DEFAULT_CONF
+    print('usage: %s [options]' % PROGNAME)
+    print('options:')
+    print('  -h, --help            Display this information')
+    print('  -c, --conf=FILE       Use this config file')
+    print('                        (default: %s)' % param.DEFAULT_CONF)
 
-    print '''  -d, --diff=FILE       Show diff for file
+    print('''  -d, --diff=FILE       Show diff for file
   -1, --single=PATH     Update a single file
   -r, --ref=PATH        Show which source file synctool chooses
   -e, --erase-saved     Erase *.saved backup files
@@ -741,7 +741,7 @@ def usage():
       --version         Print current version number
 
 Note that synctool does a dry run unless you specify --fix
-'''
+''')
 
 
 def get_options():
@@ -758,7 +758,7 @@ def get_options():
                                     'masterlog', 'node=', 'nodename=',
                                     'verbose', 'quiet', 'unix', 'version'])
     except getopt.GetoptError as reason:
-        print '%s: %s' % (PROGNAME, reason)
+        print('%s: %s' % (PROGNAME, reason))
         usage()
         sys.exit(1)
 
@@ -799,7 +799,7 @@ def get_options():
             continue
 
         if opt == '--version':
-            print param.VERSION
+            print(param.VERSION)
             sys.exit(0)
 
     # first read the config file
@@ -1009,7 +1009,7 @@ def main():
 
     unix_out('umask 077')
     unix_out('')
-    os.umask(077)
+    os.umask(0o77)
 
     if action == ACTION_DIFF:
         diff_files()

@@ -87,14 +87,14 @@ def list_all_nodes():
         if ignored:
             node += ' (ignored)'
 
-        print node
+        print(node)
 
 
 def list_all_groups():
     # type: () -> None
     '''display a list of all groups'''
 
-    groups = param.GROUP_DEFS.keys()
+    groups = list(param.GROUP_DEFS.keys())
     groups.sort()
 
     for group in groups:
@@ -104,7 +104,7 @@ def list_all_groups():
         if group in param.IGNORE_GROUPS:
             group += ' (ignored)'
 
-        print group
+        print(group)
 
 
 def list_nodes(nodelist):
@@ -135,7 +135,7 @@ def list_nodes(nodelist):
                 else:
                     out += ' yes'
 
-            print out[1:]
+            print(out[1:])
         else:
             for group in config.get_groups(node):
                 # extend groups, but do not have duplicates
@@ -156,7 +156,7 @@ def list_nodes(nodelist):
         if group in param.IGNORE_GROUPS:
             group += ' (ignored)'
 
-        print group
+        print(group)
 
 
 def list_nodegroups(grouplist):
@@ -196,7 +196,7 @@ def list_nodegroups(grouplist):
         if ignored:
             node += ' (ignored)'
 
-        print node
+        print(node)
 
 
 def list_commands(cmds):
@@ -207,32 +207,32 @@ def list_commands(cmds):
         if cmd == 'diff':
             ok, _ = config.check_cmd_config('diff_cmd', param.DIFF_CMD)
             if ok:
-                print param.DIFF_CMD
+                print(param.DIFF_CMD)
 
         if cmd == 'ping':
             ok, _ = config.check_cmd_config('ping_cmd', param.PING_CMD)
             if ok:
-                print param.PING_CMD
+                print(param.PING_CMD)
 
         elif cmd == 'ssh':
             ok, _ = config.check_cmd_config('ssh_cmd', param.SSH_CMD)
             if ok:
-                print param.SSH_CMD
+                print(param.SSH_CMD)
 
         elif cmd == 'rsync':
             ok, _ = config.check_cmd_config('rsync_cmd', param.RSYNC_CMD)
             if ok:
-                print param.RSYNC_CMD
+                print(param.RSYNC_CMD)
 
         elif cmd == 'synctool':
             ok, _ = config.check_cmd_config('synctool_cmd', param.SYNCTOOL_CMD)
             if ok:
-                print param.SYNCTOOL_CMD
+                print(param.SYNCTOOL_CMD)
 
         elif cmd == 'pkg':
             ok, _ = config.check_cmd_config('pkg_cmd', param.PKG_CMD)
             if ok:
-                print param.PKG_CMD
+                print(param.PKG_CMD)
 
         else:
             error("no such command '%s' available in synctool" % cmd)
@@ -242,11 +242,11 @@ def list_dirs():
     # type: () -> None
     '''display directory settings'''
 
-    print 'rootdir', param.ROOTDIR
-    print 'overlaydir', param.OVERLAY_DIR
-    print 'deletedir', param.DELETE_DIR
-    print 'scriptdir', param.SCRIPT_DIR
-    print 'tempdir', param.TEMP_DIR
+    print('rootdir', param.ROOTDIR)
+    print('overlaydir', param.OVERLAY_DIR)
+    print('deletedir', param.DELETE_DIR)
+    print('scriptdir', param.SCRIPT_DIR)
+    print('tempdir', param.TEMP_DIR)
 
 
 def expand(nodelist):
@@ -266,8 +266,8 @@ def expand(nodelist):
     arr.sort()
 
     for elem in arr:
-        print elem,
-    print
+        print(elem, end=' ')
+    print()
 
 
 def set_action(a, opt):
@@ -290,13 +290,13 @@ def usage():
     # type: () -> None
     '''print usage information'''
 
-    print 'usage: %s [options]' % PROGNAME
-    print 'options:'
-    print '  -h, --help                  Display this information'
-    print '  -c, --conf=FILE             Use this config file'
-    print '                              (default: %s)' % param.DEFAULT_CONF
+    print('usage: %s [options]' % PROGNAME)
+    print('options:')
+    print('  -h, --help                  Display this information')
+    print('  -c, --conf=FILE             Use this config file')
+    print('                              (default: %s)' % param.DEFAULT_CONF)
 
-    print '''  -l, --list-nodes            List all configured nodes
+    print('''  -l, --list-nodes            List all configured nodes
   -L, --list-groups           List all configured groups
   -n, --node=LIST             List all groups this node is in
   -g, --group=LIST            List all nodes in this group
@@ -316,7 +316,7 @@ def usage():
   -v, --version               Display synctool version
 
 COMMAND is a list of these: diff,ping,ssh,rsync,synctool,pkg
-'''
+''')
 
 
 def get_options():
@@ -339,9 +339,9 @@ def get_options():
                                     'list-dirs', 'prefix', 'master', 'slave',
                                     'nodename', 'fqdn', 'expand', 'version'])
     except getopt.GetoptError as reason:
-        print
-        print '%s: %s' % (PROGNAME, reason)
-        print
+        print()
+        print('%s: %s' % (PROGNAME, reason))
+        print()
         usage()
         sys.exit(1)
 
@@ -458,11 +458,11 @@ def main():
     get_options()
 
     if ACTION == ACTION_VERSION:
-        print param.VERSION
+        print(param.VERSION)
         sys.exit(0)
 
     if ACTION == ACTION_FQDN:
-        print socket.getfqdn()
+        print(socket.getfqdn())
         sys.exit(0)
 
     config.read_config()
@@ -493,16 +493,16 @@ def main():
         list_commands(ARG_CMDS)
 
     elif ACTION == ACTION_PKGMGR:
-        print param.PACKAGE_MANAGER
+        print(param.PACKAGE_MANAGER)
 
     elif ACTION == ACTION_NUMPROC:
-        print param.NUM_PROC
+        print(param.NUM_PROC)
 
     elif ACTION == ACTION_LIST_DIRS:
         list_dirs()
 
     elif ACTION == ACTION_PREFIX:
-        print param.ROOTDIR
+        print(param.ROOTDIR)
 
     elif ACTION == ACTION_NODENAME:
         config.init_mynodename()
@@ -513,22 +513,22 @@ def main():
             stderr('please check %s' % param.CONF_FILE)
             sys.exit(1)
 
-        print param.NODENAME
+        print(param.NODENAME)
 
     elif ACTION == ACTION_MASTER:
-        print param.MASTER
+        print(param.MASTER)
 
     elif ACTION == ACTION_SLAVE:
         if not param.SLAVES:
-            print '(none)'
+            print('(none)')
         else:
             for node in param.SLAVES:
-                print node,
-            print
+                print(node, end=' ')
+            print()
 
     elif ACTION == ACTION_EXPAND:
         if not ARG_EXPAND:
-            print 'none'
+            print('none')
         else:
             expand(ARG_EXPAND)
 

@@ -271,7 +271,7 @@ def make_tempdir():
 
     if not os.path.isdir(param.TEMP_DIR):
         try:
-            os.mkdir(param.TEMP_DIR, 0750)
+            os.mkdir(param.TEMP_DIR, 0o750)
         except OSError as err:
             error('failed to create tempdir %s: %s' %
                   (param.TEMP_DIR, err.strerror))
@@ -370,14 +370,14 @@ def be_careful_with_getopt():
         # in some cases, but it's better to be safe than sorry
 
         if arg[:2] == '-d' and arg.find('f') > -1:
-            print "Did you mean '--diff'?"
+            print("Did you mean '--diff'?")
             sys.exit(1)
 
         if arg[:2] == '-r' and arg.find('f') > -1:
             if arg.count('e') >= 2:
-                print "Did you mean '--reference'?"
+                print("Did you mean '--reference'?")
             else:
-                print "Did you mean '--ref'?"
+                print("Did you mean '--ref'?")
             sys.exit(1)
 
 
@@ -397,7 +397,7 @@ def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
         sys.exit(1)
 
     if opt_upload and opt_group:
-        print 'option --upload and --group can not be combined'
+        print('option --upload and --group can not be combined')
         sys.exit(1)
 
     if opt_diff and (opt_single or opt_reference or opt_fix):
@@ -413,13 +413,13 @@ def usage():
     # type: () -> None
     '''print usage information'''
 
-    print 'usage: %s [options]' % PROGNAME
-    print 'options:'
-    print '  -h, --help                  Display this information'
-    print '  -c, --conf=FILE             Use this config file'
-    print ('                              (default: %s)' %
-           param.DEFAULT_CONF)
-    print '''  -n, --node=LIST             Execute only on these nodes
+    print('usage: %s [options]' % PROGNAME)
+    print('options:')
+    print('  -h, --help                  Display this information')
+    print('  -c, --conf=FILE             Use this config file')
+    print(('                              (default: %s)' %
+           param.DEFAULT_CONF))
+    print('''  -n, --node=LIST             Execute only on these nodes
   -g, --group=LIST            Execute only on these groups of nodes
   -x, --exclude=LIST          Exclude these nodes from the selected group
   -X, --exclude-group=LIST    Exclude these groups from the selection
@@ -449,7 +449,7 @@ def usage():
 
 Note that synctool does a dry run unless you specify --fix
 
-Written by Walter de Jong <walter@heiho.net> (c) 2003-2015'''
+Written by Walter de Jong <walter@heiho.net> (c) 2003-2015''')
 
 
 def get_options():
@@ -477,7 +477,7 @@ def get_options():
                                     'skip-rsync', 'version', 'check-update',
                                     'download'])
     except getopt.GetoptError as reason:
-        print '%s: %s' % (PROGNAME, reason)
+        print('%s: %s' % (PROGNAME, reason))
 #        usage()
         sys.exit(1)
 
@@ -538,7 +538,7 @@ def get_options():
             continue
 
         if opt == '--version':
-            print param.VERSION
+            print(param.VERSION)
             sys.exit(0)
 
     config.read_config()
@@ -631,11 +631,11 @@ def get_options():
             try:
                 param.NUM_PROC = int(arg)
             except ValueError:
-                print "option '%s' requires a numeric value" % opt
+                print("option '%s' requires a numeric value" % opt)
                 sys.exit(1)
 
             if param.NUM_PROC < 1:
-                print 'invalid value for numproc'
+                print('invalid value for numproc')
                 sys.exit(1)
 
             continue
@@ -686,24 +686,24 @@ def get_options():
 
     # do basic checks for uploading and sub options
     if opt_suffix and not opt_upload:
-        print 'option --suffix must be used in conjunction with --upload'
+        print('option --suffix must be used in conjunction with --upload')
         sys.exit(1)
 
     if opt_overlay and not opt_upload:
-        print 'option --overlay must be used in conjunction with --upload'
+        print('option --overlay must be used in conjunction with --upload')
         sys.exit(1)
 
     if opt_purge:
         if not opt_upload:
-            print 'option --purge must be used in conjunction with --upload'
+            print('option --purge must be used in conjunction with --upload')
             sys.exit(1)
 
         if opt_overlay:
-            print 'option --overlay and --purge can not be combined'
+            print('option --overlay and --purge can not be combined')
             sys.exit(1)
 
         if opt_suffix:
-            print 'option --suffix and --purge can not be combined'
+            print('option --suffix and --purge can not be combined')
             sys.exit(1)
 
     # enable logging at the master node
@@ -768,7 +768,7 @@ def main():
 
     address_list = NODESET.addresses()
     if not address_list:
-        print 'no valid nodes specified'
+        print('no valid nodes specified')
         sys.exit(1)
 
     if UPLOAD_FILE.filename:

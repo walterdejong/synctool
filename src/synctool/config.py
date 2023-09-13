@@ -227,7 +227,7 @@ def get_all_nodes():
     # type: () -> List[str]
     '''Returns array with all node names'''
 
-    return synctool.param.NODES.keys()
+    return list(synctool.param.NODES.keys())
 
 
 def get_node_ipaddress(node):

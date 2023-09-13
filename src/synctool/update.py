@@ -13,7 +13,7 @@
 import os
 import sys
 import datetime
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import json
 
 try:
@@ -106,12 +106,12 @@ def github_api(url):
     verbose('loading URL %s' % url)
     try:
         # can not use 'with' statement with urlopen()..?
-        web = urllib2.urlopen(url)
-    except urllib2.HTTPError as err:
+        web = urllib.request.urlopen(url)
+    except urllib.error.HTTPError as err:
         error('webserver at %s: %u %s' % (url, err.code, err.msg))
         return None
 
-    except urllib2.URLError as err:
+    except urllib.error.URLError as err:
         error('failed to access %s: %s' % (url, str(err.reason)))
         return None
 
@@ -185,7 +185,7 @@ def print_progress(filename, totalsize, current_size):
     if percent > 100:
         percent = 100
 
-    print '\rdownloading %s ... %d%% ' % (filename, percent),
+    print('\rdownloading %s ... %d%% ' % (filename, percent), end=' ')
     sys.stdout.flush()
 
 
@@ -203,12 +203,12 @@ def download():
     download_filename = make_local_filename_for_version(info.version)
     download_bytes = 0
     try:
-        web = urllib2.urlopen(info.url)
-    except urllib2.HTTPError as err:
+        web = urllib.request.urlopen(info.url)
+    except urllib.error.HTTPError as err:
         error('webserver at %s: %u %s' % (info.url, err.code, err.message))
         return False
 
-    except urllib2.URLError as err:
+    except urllib.error.URLError as err:
         error('failed to access %s: %s' % (info.url, str(err.reason)))
         return False
 
@@ -249,7 +249,7 @@ def download():
         web.close()
 
     if download_bytes < totalsize:
-        print
+        print()
         error('failed to download %s' % info.url)
         return False
 

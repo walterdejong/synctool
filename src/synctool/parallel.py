@@ -49,7 +49,7 @@ def do(func, work):
             part += 1
 
     # spawn pool of workers
-    for rank in xrange(num_proc):
+    for rank in range(num_proc):
         try:
             pid = os.fork()
         except OSError as err:
@@ -117,11 +117,11 @@ if __name__ == '__main__':
         def hello(item):
             '''print item'''
 
-            print '[%u]: hello' % os.getpid(), item
+            print('[%u]: hello' % os.getpid(), item)
             time.sleep(0.1245)
 
         synctool.param.NUM_PROC = 3
-        do(hello, range(10))
+        do(hello, list(range(10)))
 
 #    synctool.param.SLEEP_TIME = 2
     main()

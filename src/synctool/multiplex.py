@@ -70,9 +70,9 @@ def use_mux(nodename):
                     (control_path, statbuf.uid))
             return False
 
-        if statbuf.mode & 077 != 0:
+        if statbuf.mode & 0o77 != 0:
             warning('control path %s: suspicious file mode %04o' %
-                    (control_path, statbuf.mode & 0777))
+                    (control_path, statbuf.mode & 0o777))
             return False
 
         verbose('control path %s already exists' % control_path)
@@ -169,9 +169,9 @@ def setup_master(node_list, persist):
                 errors += 1
                 continue
 
-            if statbuf.mode & 077 != 0:
+            if statbuf.mode & 0o77 != 0:
                 warning('control path %s: suspicious file mode %04o' %
-                        (control_path, statbuf.mode & 0777))
+                        (control_path, statbuf.mode & 0o777))
                 errors += 1
                 continue
 
@@ -198,12 +198,12 @@ def setup_master(node_list, persist):
     # print some info to the user about what's going on
     if len(procs) > 0:
         if SSH_VERSION < 56 or persist is None:
-            print '''waiting for ssh master processes to terminate
+            print('''waiting for ssh master processes to terminate
 Meanwhile, you may background this process or continue working
 in another terminal
-'''
+''')
         else:
-            print 'ssh master processes started'
+            print('ssh master processes started')
 
         for proc in procs:
             if errors > 0:
@@ -212,7 +212,7 @@ in another terminal
             proc.wait()
     else:
         if errors == 0:
-            print 'ssh master processes already running'
+            print('ssh master processes already running')
 
     return errors == 0
 

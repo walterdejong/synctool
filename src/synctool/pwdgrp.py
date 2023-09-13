@@ -110,9 +110,9 @@ def grp_gid(group):
 
 # unit test
 if __name__ == '__main__':
-    print 'uid 501:   ', pw_name(501)
-    print 'gid 20:    ', grp_name(20)
-    print 'uid walter:', pw_uid('walter')
-    print 'gid staff: ', grp_gid('staff')
+    print('uid 501:   ', pw_name(501))
+    print('gid 20:    ', grp_name(20))
+    print('uid walter:', pw_uid('walter'))
+    print('gid staff: ', grp_gid('staff'))
 
 # EOB

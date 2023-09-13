@@ -81,7 +81,7 @@ def verbose(msg):
     '''do conditional output based on the verbose command line parameter'''
 
     if VERBOSE:
-        print msg
+        print(msg)
 
 
 def stdout(msg):
@@ -89,7 +89,7 @@ def stdout(msg):
     '''print message to stdout (unless special output mode was selected)'''
 
     if not (UNIX_CMD or param.TERSE):
-        print msg
+        print(msg)
 
 
 def stderr(msg):
@@ -98,7 +98,7 @@ def stderr(msg):
     I don't like stderr much, so it really prints to stdout
     '''
 
-    print msg
+    print(msg)
 
 
 def error(msg):
@@ -141,11 +141,11 @@ def terse(code, msg):
                 bright = ''
 
             if param.COLORIZE_FULL_LINE:
-                print '\x1b[%d%sm%s %s\x1b[0m' % (color, bright, txt, msg)
+                print('\x1b[%d%sm%s %s\x1b[0m' % (color, bright, txt, msg))
             else:
-                print '\x1b[%d%sm%s\x1b[0m %s' % (color, bright, txt, msg)
+                print('\x1b[%d%sm%s\x1b[0m %s' % (color, bright, txt, msg))
         else:
-            print TERSE_TXT[code], msg
+            print(TERSE_TXT[code], msg)
 
 
 def unix_out(msg):
@@ -153,7 +153,7 @@ def unix_out(msg):
     '''output as unix shell command'''
 
     if UNIX_CMD:
-        print msg
+        print(msg)
 
 
 def prettypath(path):
@@ -313,7 +313,7 @@ def log(msg):
     if MASTERLOG:
         # print it with magic prefix,
         # synctool-master will pick it up
-        print '%synctool-log%', msg
+        print('%synctool-log%', msg)
     else:
         _masterlog(msg)
 
@@ -352,11 +352,11 @@ def run_with_nodename(cmd_arr, nodename):
             else:
                 # pass output on; simply use 'print' rather than 'stdout()'
                 if OPT_NODENAME:
-                    print '%s: %s' % (nodename, line)
+                    print('%s: %s' % (nodename, line))
                 else:
                     # do not prepend the nodename of this node to the output
                     # if option --no-nodename was given
-                    print line
+                    print(line)
 
     proc.wait()
     if proc.returncode != 0:
@@ -528,7 +528,7 @@ def search_path(cmd):
     return None
 
 
-def mkdir_p(path, mode=0700):
+def mkdir_p(path, mode=0o700):
     # type: (str, int) -> bool
     '''like mkdir -p; make directory and subdirectories
     Returns False on error, else True
