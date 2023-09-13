@@ -50,7 +50,7 @@ mv %buildroot/opt/synctool/doc %buildroot/usr/share/doc/%{name}-%{version}-%{rel
 install -d %buildroot/etc/profile.d
 install contrib/synctool.profile.sh %buildroot/etc/profile.d/synctool.sh
 install -d %buildroot/etc/bash_completion.d
-install contrib/synctool.bash_completion %buildroot/etc/bash_completion./synctool
+install contrib/synctool.bash_completion %buildroot/etc/bash_completion.d/synctool
 mv contrib %{buildroot}/usr/share/doc/%{name}-%{version}-%{release}/
 
 %clean
