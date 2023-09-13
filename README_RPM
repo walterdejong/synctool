@@ -4,7 +4,7 @@ https://github.com/iovation/git-build-rpm
 To build the rpm, I cd to the 'home' directory of the package,
 and then:
 
-git build-rpm --rpm-dir /home/local/lane/rpmbuild  --dist .fc35
+git build-rpm --rpm-dir /home/local/lane/rpmbuild  --dist .fc38
 mv /home/local/lane/rpmbuild/SRPMS/synctool* . 
 
 the --rpm-dir is to recover the .rpm files after building,

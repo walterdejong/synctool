@@ -43,7 +43,6 @@ help2man -n"Cluster configuration copy tool" -s8 --manual="System Administration
 
 install -d %buildroot/usr/share/doc/%{name}-%{version}-%{release}/contrib
 install Changelog README LICENSE synctool.conf.example  %{buildroot}/usr/share/doc/%{name}-%{version}-%{release}/
-mv contrib %{buildroot}/usr/share/doc/%{name}-%{version}-%{release}/
 install -d %buildroot/usr/share/man/man8
 install *.8 %buildroot/usr/share/man/man8/
 ./setup.sh  --installdir=%buildroot/opt/synctool --build-docs --fix
@@ -52,6 +51,7 @@ install -d %buildroot/etc/profile.d
 install contrib/synctool.profile.sh %buildroot/etc/profile.d/synctool.sh
 install -d %buildroot/etc/bash_completion.d
 install contrib/synctool.bash_completion %buildroot/etc/bash_completion./synctool
+mv contrib %{buildroot}/usr/share/doc/%{name}-%{version}-%{release}/
 
 %clean
 
