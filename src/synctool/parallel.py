@@ -31,6 +31,7 @@ ALL_PIDS = set()    # type: Set[int]
 
 
 def do(func, work):
+#pylint: disable=invalid-name
     # type: (Callable[[Any], None], List[Any]) -> None
     '''run func in parallel'''
 
@@ -77,8 +78,7 @@ def worker(rank, func, work, part):
     lower = part * rank
     upper = part * (rank + 1)
     len_work = len(work)
-    if upper > len_work:
-        upper = len_work
+    upper = min(upper, len_work)
 
     # run all work items in sequence
     for item in work[lower:upper]:
@@ -89,6 +89,7 @@ def worker(rank, func, work, part):
 
 
 def join():
+#pylint: disable=global-statement
     # type: () -> None
     '''wait for parallel threads to exit'''
 

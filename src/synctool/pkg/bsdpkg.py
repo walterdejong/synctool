@@ -12,7 +12,7 @@
 
 # Note: for FreeBSD, use the 'pkg' package manager (not 'bsdpkg')
 
-import os
+#import os
 
 try:
     from typing import List
@@ -33,7 +33,7 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
 
     def list(self, pkgs=None):
         # type: (List[str]) -> None
-        super(SyncPkgBsdpkg, self).list(pkgs)
+        super().list(pkgs)
 
         cmd = 'pkg_info'
         if pkgs:
@@ -45,28 +45,21 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
 
     def install(self, pkgs):
         # type: (List[str]) -> None
-        super(SyncPkgBsdpkg, self).install(pkgs)
+        super().install(pkgs)
 
         cmd = 'pkg_add -v ' + ' '.join(pkgs)
         synctool.lib.shell_command(cmd)
 
     def remove(self, pkgs):
         # type: (List[str]) -> None
-        super(SyncPkgBsdpkg, self).remove(pkgs)
+        super().remove(pkgs)
 
         cmd = 'pkg_delete -v ' + ' '.join(pkgs)
         synctool.lib.shell_command(cmd)
 
-    def update(self):
-        # type: () -> None
-        super(SyncPkgBsdpkg, self).update()
-
-        # There is no update command
-        # or is there?
-
     def upgrade(self):
         # type: () -> None
-        super(SyncPkgBsdpkg, self).upgrade()
+        super().upgrade()
 
         if synctool.lib.DRY_RUN:
             cmd = 'pkg_add -uvn'
@@ -78,9 +71,6 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
         synctool.lib.shell_command(cmd)
         synctool.lib.DRY_RUN = tmp
 
-    def clean(self):
-        # type: () -> None
-        super(SyncPkgBsdpkg, self).clean()
 
         # there is a PKG_TMPDIR but I won't touch it
         # because the man page says it defaults to /var/tmp

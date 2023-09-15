@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.main.aggr.py   WJ109
 #

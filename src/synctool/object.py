@@ -33,7 +33,7 @@ except ImportError:
 IO_SIZE = 16 * 1024
 
 
-class VNode(object):
+class VNode:
     '''base class for doing actions with directory entries'''
 
     def __init__(self, filename, statbuf, exists):
@@ -47,7 +47,8 @@ class VNode(object):
         self.stat = statbuf
         self.exists = exists
 
-    def typename(self):
+    @staticmethod
+    def typename():
         # type: () -> str
         '''return file type as human readable string'''
 
@@ -125,6 +126,7 @@ class VNode(object):
         synctool.lib.mkdir_p(basedir)
 
     def compare(self, _src_path, _dest_stat):
+#pylint: disable=no-self-use
         # type: (str, SyncStat) -> bool
         '''compare content
         Return True when same, False when different
@@ -135,8 +137,6 @@ class VNode(object):
     def create(self):
         # type: () -> None
         '''create a new entry'''
-
-        pass
 
     def fix(self):
         # type: () -> None
@@ -197,8 +197,8 @@ class VNode(object):
         verbose(dryrun_msg('  os.utime(%s, %s)' %
                            (self.name, print_timestamp(self.stat.mtime))))
         # print timestamp in other format
-        dt = datetime.datetime.fromtimestamp(self.stat.mtime)
-        time_str = dt.strftime('%Y%m%d%H%M.%S')
+        datet = datetime.datetime.fromtimestamp(self.stat.mtime)
+        time_str = datet.strftime('%Y%m%d%H%M.%S')
         unix_out('touch -t %s %s' % (time_str, self.name))
         if not synctool.lib.DRY_RUN:
             try:
@@ -217,7 +217,7 @@ class VNodeFile(VNode):
         # type: (str, SyncStat, bool, str) -> None
         '''initialize instance'''
 
-        super(VNodeFile, self).__init__(filename, statbuf, exists)
+        super().__init__(filename, statbuf, exists)
         self.src_path = src_path
 
     def typename(self):
@@ -249,7 +249,7 @@ class VNodeFile(VNode):
         Return True if the same'''
 
         try:
-            f1 = open(src_path, 'rb')
+            ffile1 = open(src_path, 'rb')
         except IOError as err:
             error('failed to open %s : %s' % (src_path, err.strerror))
             # return True because we can't fix an error in src_path
@@ -258,18 +258,18 @@ class VNodeFile(VNode):
         sum1 = hashlib.md5()
         sum2 = hashlib.md5()
 
-        with f1:
+        with ffile1:
             try:
-                f2 = open(self.name, 'rb')
+                ffile2 = open(self.name, 'rb')
             except IOError as err:
                 error('failed to open %s : %s' % (self.name, err.strerror))
                 return False
 
-            with f2:
+            with ffile2:
                 ended = False
                 while not ended and (sum1.digest() == sum2.digest()):
                     try:
-                        data1 = f1.read(IO_SIZE)
+                        data1 = ffile1.read(IO_SIZE)
                     except IOError as err:
                         error('failed to read file %s: %s' % (src_path,
                                                               err.strerror))
@@ -281,7 +281,7 @@ class VNodeFile(VNode):
                         sum1.update(data1)
 
                     try:
-                        data2 = f2.read(IO_SIZE)
+                        data2 = ffile2.read(IO_SIZE)
                     except IOError as err:
                         error('failed to read file %s: %s' % (self.name,
                                                               err.strerror))
@@ -401,7 +401,6 @@ class VNodeDir(VNode):
         '''set access and modification times'''
 
         # Note: should we raise RuntimeError here?
-        pass
 
 
 
@@ -412,7 +411,7 @@ class VNodeLink(VNode):
         # type: (str, SyncStat, bool, str) -> None
         '''initialize instance'''
 
-        super(VNodeLink, self).__init__(filename, statbuf, exists)
+        super().__init__(filename, statbuf, exists)
         self.oldpath = oldpath
 
     def typename(self):
@@ -481,6 +480,7 @@ class VNodeLink(VNode):
                 terse(TERSE_FAIL, 'owner %s' % self.name)
 
     def set_permissions(self):
+#pylint: disable=no-member
         # type: () -> None
         '''set permissions of symlink (if possible)'''
 
@@ -505,7 +505,6 @@ class VNodeLink(VNode):
         '''set access and modification times'''
 
         # Note: should we raise RuntimeError here?
-        pass
 
 
 
@@ -548,7 +547,7 @@ class VNodeChrDev(VNode):
         # type: (str, SyncStat, bool, posix.stat_result) -> None
         '''initialize instance'''
 
-        super(VNodeChrDev, self).__init__(filename, syncstat_obj, exists)
+        super().__init__(filename, syncstat_obj, exists)
         self.src_stat = src_stat
 
     def typename(self):
@@ -618,7 +617,7 @@ class VNodeBlkDev(VNode):
         # type: (str, SyncStat, bool, posix.stat_result) -> None
         '''initialize instance'''
 
-        super(VNodeBlkDev, self).__init__(filename, syncstat_obj, exists)
+        super().__init__(filename, syncstat_obj, exists)
         self.src_stat = src_stat
 
     def typename(self):
@@ -677,7 +676,7 @@ class VNodeBlkDev(VNode):
 
 
 
-class SyncObject(object):
+class SyncObject():
     '''a class holding the source path (file in the repository)
     and the destination path (target file on the system).
     The SyncObject caches any stat info
@@ -889,6 +888,7 @@ class SyncObject(object):
         os.umask(0o77)
 
     def vnode_obj(self):
+#pylint: disable=too-many-return-statements
         # type: () -> VNode
         '''create vnode object for this SyncObject'''
 
@@ -927,6 +927,7 @@ class SyncObject(object):
         return None
 
     def vnode_dest_obj(self):
+#pylint: disable=too-many-return-statements
         # type: () -> VNode
         '''create vnode object for this SyncObject's destination'''
 

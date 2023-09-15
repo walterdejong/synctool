@@ -254,17 +254,17 @@ def dryrun_msg(msg):
     if not DRY_RUN:
         return msg
 
-    l1 = len(msg) + 4
+    lmessage = len(msg) + 4
 
     add = '# dry run'
-    l2 = len(add)
+    laddition = len(add)
 
     i = 0
     while i < 4:
         # format output; align columns by steps of 20
         col = 79 + i * 20
-        if l1 + l2 <= col:
-            return msg + (' ' * (col - (l1 + l2))) + add
+        if lmessage + laddition <= col:
+            return msg + (' ' * (col - (lmessage + laddition))) + add
 
         i += 1
 
@@ -319,6 +319,7 @@ def log(msg):
 
 
 def run_with_nodename(cmd_arr, nodename):
+#pylint: disable=consider-using-with
     # type: (List[str], str) -> int
     '''run command and show output with nodename
     It will run regardless of what DRY_RUN is
@@ -338,9 +339,9 @@ def run_with_nodename(cmd_arr, nodename):
         stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return -1
 
-    f = proc.stdout
-    with f:
-        for line in f:
+    fstdout = proc.stdout
+    with fstdout:
+        for line in fstdout:
             line = line.rstrip()
 
             # if output is a log line, pass it to the master's syslog
@@ -410,6 +411,7 @@ def shell_command(cmd):
 
 
 def exec_command(cmd_arr, silent=False):
+#pylint: disable=consider-using-with
     # type: (List[str], bool) -> int
     '''run a command given in cmd_arr, regardless of DRY_RUN
     Returns: return code of execute command or -1 on error
@@ -425,7 +427,7 @@ def exec_command(cmd_arr, silent=False):
         fd_devnull = open(os.devnull, 'w')
 
     try:
-        if fd_devnull != None:
+        if fd_devnull is not None:
             ret = subprocess.call(cmd_arr, shell=False, stdout=fd_devnull,
                                   stderr=fd_devnull)
         else:
@@ -439,7 +441,7 @@ def exec_command(cmd_arr, silent=False):
     sys.stdout.flush()
     sys.stderr.flush()
 
-    if fd_devnull != None:
+    if fd_devnull is not None:
         fd_devnull.close()
 
     return ret
@@ -659,10 +661,10 @@ def path_exists(filename):
         if err.errno == errno.ENOENT:
             # No such file or directory
             return False
-        elif err.errno == errno.ENOTDIR:
+        if err.errno == errno.ENOTDIR:
             # path component is not a directory
             return False
-        elif err.errno == errno.EACCES:
+        if err.errno == errno.EACCES:
             # Permission denied: it exists, but we don't have access
             return True
 
@@ -682,8 +684,8 @@ def set_filetimes(filename, atime, mtime):
     # only mtime is shown
     verbose('  os.utime(%s, %s)' % (filename, print_timestamp(mtime)))
     # print timestamp in other format
-    dt = datetime.datetime.fromtimestamp(mtime)
-    time_str = dt.strftime('%Y%m%d%H%M.%S')
+    datet = datetime.datetime.fromtimestamp(mtime)
+    time_str = datet.strftime('%Y%m%d%H%M.%S')
     unix_out('touch -t %s %s' % (time_str, filename))
 
     # regardless of dry run
@@ -698,8 +700,8 @@ def print_timestamp(stamp):
     # type: (float) -> str
     '''Returns timestamp as string'''
 
-    dt = datetime.datetime.fromtimestamp(stamp)
-    return dt.strftime('%Y-%m-%d %H:%M:%S')
+    datet = datetime.datetime.fromtimestamp(stamp)
+    return datet.strftime('%Y-%m-%d %H:%M:%S')
 
 
 # EOB

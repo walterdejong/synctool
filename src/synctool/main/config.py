@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.main.config.py WJ109
 #
@@ -108,6 +109,7 @@ def list_all_groups():
 
 
 def list_nodes(nodelist):
+    #pylint: disable=too-many-branches
     # type: (str) -> None
     '''display node definition'''
 
@@ -200,38 +202,39 @@ def list_nodegroups(grouplist):
 
 
 def list_commands(cmds):
+    #pylint: disable=too-many-branches
     # type: (List[str]) -> None
     '''display command setting'''
 
     for cmd in cmds:
         if cmd == 'diff':
-            ok, _ = config.check_cmd_config('diff_cmd', param.DIFF_CMD)
-            if ok:
+            okay, _ = config.check_cmd_config('diff_cmd', param.DIFF_CMD)
+            if okay:
                 print(param.DIFF_CMD)
 
         if cmd == 'ping':
-            ok, _ = config.check_cmd_config('ping_cmd', param.PING_CMD)
-            if ok:
+            okay, _ = config.check_cmd_config('ping_cmd', param.PING_CMD)
+            if okay:
                 print(param.PING_CMD)
 
         elif cmd == 'ssh':
-            ok, _ = config.check_cmd_config('ssh_cmd', param.SSH_CMD)
-            if ok:
+            okay, _ = config.check_cmd_config('ssh_cmd', param.SSH_CMD)
+            if okay:
                 print(param.SSH_CMD)
 
         elif cmd == 'rsync':
-            ok, _ = config.check_cmd_config('rsync_cmd', param.RSYNC_CMD)
-            if ok:
+            okay, _ = config.check_cmd_config('rsync_cmd', param.RSYNC_CMD)
+            if okay:
                 print(param.RSYNC_CMD)
 
         elif cmd == 'synctool':
-            ok, _ = config.check_cmd_config('synctool_cmd', param.SYNCTOOL_CMD)
-            if ok:
+            okay, _ = config.check_cmd_config('synctool_cmd', param.SYNCTOOL_CMD)
+            if okay:
                 print(param.SYNCTOOL_CMD)
 
         elif cmd == 'pkg':
-            ok, _ = config.check_cmd_config('pkg_cmd', param.PKG_CMD)
-            if ok:
+            okay, _ = config.check_cmd_config('pkg_cmd', param.PKG_CMD)
+            if okay:
                 print(param.PKG_CMD)
 
         else:
@@ -270,7 +273,8 @@ def expand(nodelist):
     print()
 
 
-def set_action(a, opt):
+def set_action(act, opt):
+    #pylint: disable=global-statement
     # type: (int, str) -> None
     '''set the action to perform'''
 
@@ -282,7 +286,7 @@ def set_action(a, opt):
         error('options %s and %s can not be combined' % (ACTION_OPTION, opt))
         sys.exit(1)
 
-    ACTION = a
+    ACTION = act
     ACTION_OPTION = opt
 
 
@@ -320,6 +324,8 @@ COMMAND is a list of these: diff,ping,ssh,rsync,synctool,pkg
 
 
 def get_options():
+    #pylint: disable=global-statement
+    #pylint: disable=too-many-statements, too-many-branches
     # type: () -> None
     '''parse command-line options'''
 
@@ -450,6 +456,7 @@ def get_options():
 
 @catch_signals
 def main():
+    #pylint: disable=too-many-statements, too-many-branches
     # type: () -> None
     '''do your thing'''
 

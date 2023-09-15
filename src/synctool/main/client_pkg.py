@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.main.client_pkg.py WJ111
 #
@@ -97,6 +98,7 @@ def package_manager():
               synctool.param.PACKAGE_MANAGER)
 
     sys.exit(1)
+    #pylint: disable=unreachable
     return None     # not reached
 
 
@@ -222,13 +224,13 @@ Supported package managers are:''')
     # print list of supported package managers
     # format it at 78 characters wide
     print(' ', end=' ')
-    n = 2
+    npms = 2
     for pkg in synctool.param.KNOWN_PACKAGE_MANAGERS:
-        if n + len(pkg) + 1 <= 78:
-            n = n + len(pkg) + 1
+        if npms + len(pkg) + 1 <= 78:
+            npms = npms + len(pkg) + 1
             print(pkg, end=' ')
         else:
-            n = 2 + len(pkg) + 1
+            npms = 2 + len(pkg) + 1
             print()
             print(' ', pkg, end=' ')
 
@@ -240,6 +242,9 @@ Note that --upgrade does a dry run unless you specify --fix
 
 
 def get_options():
+    #pylint: disable=global-statement
+    #pylint: disable=too-many-branches
+    #pylint: disable=too-many-statements
     # type: () -> None
     '''parse command-line options'''
 
@@ -364,7 +369,7 @@ def get_options():
             error('options --install and --remove require a package name')
             sys.exit(1)
 
-    elif args != None and args:
+    elif args is not None and args:
         error('excessive arguments on command line')
         sys.exit(1)
 

@@ -152,6 +152,7 @@ ORIG_UMASK = 0o22    # type: int
 
 
 def init():
+#pylint: disable=global-statement
     # type() -> None
     '''detect my rootdir and set default symlink mode'''
 

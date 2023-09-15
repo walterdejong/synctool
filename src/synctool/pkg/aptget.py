@@ -26,7 +26,7 @@ class SyncPkgAptget(synctool.pkgclass.SyncPkg):
 
     def list(self, pkgs=None):
         # type: (List[str]) -> None
-        super(SyncPkgAptget, self).list(pkgs)
+        super().list(pkgs)
 
         cmd = 'dpkg -l'
         if pkgs:
@@ -36,7 +36,7 @@ class SyncPkgAptget(synctool.pkgclass.SyncPkg):
 
     def install(self, pkgs):
         # type: (List[str]) -> None
-        super(SyncPkgAptget, self).install(pkgs)
+        super().install(pkgs)
 
         os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
         cmd = 'apt-get -y install ' + ' '.join(pkgs)
@@ -44,7 +44,7 @@ class SyncPkgAptget(synctool.pkgclass.SyncPkg):
 
     def remove(self, pkgs):
         # type: (List[str]) -> None
-        super(SyncPkgAptget, self).remove(pkgs)
+        super().remove(pkgs)
 
         os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
         cmd = 'apt-get -y remove ' + ' '.join(pkgs)
@@ -52,14 +52,14 @@ class SyncPkgAptget(synctool.pkgclass.SyncPkg):
 
     def update(self):
         # type: () -> None
-        super(SyncPkgAptget, self).update()
+        super().update()
 
         os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
         synctool.lib.shell_command('apt-get update')
 
     def upgrade(self):
         # type: () -> None
-        super(SyncPkgAptget, self).upgrade()
+        super().upgrade()
 
         os.environ['DEBIAN_FRONTEND'] = 'noninteractive'
 
@@ -75,7 +75,7 @@ class SyncPkgAptget(synctool.pkgclass.SyncPkg):
 
     def clean(self):
         # type: () -> None
-        super(SyncPkgAptget, self).clean()
+        super().clean()
 
         synctool.lib.shell_command('apt-get clean')
 

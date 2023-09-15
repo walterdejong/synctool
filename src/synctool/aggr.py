@@ -1,3 +1,4 @@
+# pylint: disable=consider-using-f-string
 #
 #   synctool.aggr.py    WJ109
 #
@@ -21,11 +22,11 @@ from synctool.lib import stderr
 import synctool.range
 
 
-def aggregate(f):
+def aggregate(fresult):
     # type: (IO) -> None
     '''group together input lines that are the same'''
 
-    lines = f.readlines()
+    lines = fresult.readlines()
     if not lines:
         return
 
@@ -87,15 +88,17 @@ def run(cmd_arr):
         cmd_arr.remove('--aggregate')
 
     try:
-        f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT).stdout
+        with subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT) as pipe:
+            fresult = pipe.stdout
+
     except OSError as err:
-        stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
+        stderr("failed to run command {0}: {1}".format(cmd_arr[0],err.strerror))
         return False
 
-    with f:
-        aggregate(f)
+    with fresult:
+        aggregate(fresult)
 
     return True
 

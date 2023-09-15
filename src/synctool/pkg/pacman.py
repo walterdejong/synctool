@@ -27,7 +27,7 @@ class SyncPkgPacman(synctool.pkgclass.SyncPkg):
 
     def list(self, pkgs=None):
         # type: (List[str]) -> None
-        super(SyncPkgPacman, self).list(pkgs)
+        super().list(pkgs)
 
         cmd = 'pacman -Q'
         if pkgs:
@@ -37,27 +37,27 @@ class SyncPkgPacman(synctool.pkgclass.SyncPkg):
 
     def install(self, pkgs):
         # type: (List[str]) -> None
-        super(SyncPkgPacman, self).install(pkgs)
+        super().install(pkgs)
 
         cmd = 'pacman -S --noconfirm ' + ' '.join(pkgs)
         synctool.lib.shell_command(cmd)
 
     def remove(self, pkgs):
         # type: (List[str]) -> None
-        super(SyncPkgPacman, self).remove(pkgs)
+        super().remove(pkgs)
 
         cmd = 'pacman -Rs --noconfirm ' + ' '.join(pkgs)
         synctool.lib.shell_command(cmd)
 
     def update(self):
         # type: () -> None
-        super(SyncPkgPacman, self).update()
+        super().update()
 
         synctool.lib.shell_command('pacman -Sy --noconfirm')
 
     def upgrade(self):
         # type: () -> None
-        super(SyncPkgPacman, self).upgrade()
+        super().upgrade()
 
         if synctool.lib.DRY_RUN:
             cmd = 'pacman -Qu --noconfirm'        # query updates
@@ -71,7 +71,7 @@ class SyncPkgPacman(synctool.pkgclass.SyncPkg):
 
     def clean(self):
         # type: () -> None
-        super(SyncPkgPacman, self).clean()
+        super().clean()
 
         synctool.lib.shell_command('pacman -Scc --noconfirm')
 

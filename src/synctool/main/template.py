@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.main.template.py   WJ113
 #
@@ -33,11 +34,11 @@ def spellcheck(name):
     Returns True if OK, False if not OK
     '''
 
-    m = SPELLCHECK.match(name)
-    if not m:
+    mat = SPELLCHECK.match(name)
+    if not mat:
         return False
 
-    if m.group(0) != name:
+    if mat.group(0) != name:
         return False
 
     return True
@@ -66,17 +67,17 @@ def template(filename):
         sys.exit(-1)
 
     if filename == '-':
-        f = sys.stdin
+        fio = sys.stdin
     else:
         try:
-            f = open(filename)
+            fio = open(filename, encoding='utf-8')
         except IOError as err:
             print("%s: failed to open '%s': %s" % (PROGNAME, filename,
                                                    err.strerror))
             sys.exit(-1)
 
-    with f:
-        for line in f:
+    with fio:
+        for line in fio:
             sys.stdout.write(subst(line))
 
 
@@ -158,7 +159,7 @@ def main():
     # type: () -> None
     '''do it'''
 
-    INPUT_FILE = get_options()
-    template(INPUT_FILE)
+    infile = get_options()
+    template(infile)
 
 # EOB

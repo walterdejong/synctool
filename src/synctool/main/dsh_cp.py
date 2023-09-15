@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.main.dsh_cp.py    WJ109
 #
@@ -48,6 +49,7 @@ FILES_STR = None        # type: str
 
 
 def run_remote_copy(address_list, files):
+    #pylint: disable=too-many-branches, global-statement
     # type: (List[str], List[str]) -> None
     '''copy files[] to nodes[]'''
 
@@ -145,8 +147,8 @@ def check_cmd_config():
     # type: () -> None
     '''check whether the commands as given in synctool.conf actually exist'''
 
-    ok, param.RSYNC_CMD = config.check_cmd_config('rsync_cmd', param.RSYNC_CMD)
-    if not ok:
+    okay, param.RSYNC_CMD = config.check_cmd_config('rsync_cmd', param.RSYNC_CMD)
+    if not okay:
         sys.exit(-1)
 
 
@@ -178,6 +180,8 @@ DESTDIR may be ':' (colon) meaning the directory of the first source file
 
 
 def get_options():
+    #pylint: disable=global-statement
+    #pylint: disable=too-many-statements, too-many-branches
     # type: () -> List[str]
     '''parse command-line options'''
 

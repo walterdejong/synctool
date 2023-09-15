@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.main.dsh_ping.py   WJ111
 #
@@ -47,6 +48,7 @@ def ping_nodes(address_list):
 
 
 def ping_node(addr):
+    #pylint: disable=consider-using-with
     # type: (str) -> None
     '''ping a single node'''
 
@@ -61,15 +63,15 @@ def ping_node(addr):
     cmd_arr = shlex.split(cmd)
 
     try:
-        f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
+        fpipe = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT).stdout
     except OSError as err:
         error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return
 
-    with f:
-        for line in f:
+    with fpipe:
+        for line in fpipe:
             line = line.strip()
 
             # argh, we have to parse output here
@@ -93,7 +95,7 @@ def ping_node(addr):
 
             # some ping implementations say "hostname is alive"
             # or "hostname is unreachable"
-            elif len(arr) == 3 and arr[1] == 'is':
+            if len(arr) == 3 and arr[1] == 'is':
                 if arr[2] == 'alive':
                     packets_received = 100
 
@@ -110,8 +112,8 @@ def check_cmd_config():
     # type: () -> None
     '''check whether the commands as given in synctool.conf actually exist'''
 
-    ok, param.PING_CMD = config.check_cmd_config('ping_cmd', param.PING_CMD)
-    if not ok:
+    okay, param.PING_CMD = config.check_cmd_config('ping_cmd', param.PING_CMD)
+    if not okay:
         sys.exit(-1)
 
 
@@ -139,6 +141,8 @@ def usage():
 
 
 def get_options():
+    #pylint: disable=global-statement
+    #pylint: disable=too-many-statements, too-many-branches
     # type: () -> None
     '''parse command-line options'''
 

@@ -24,7 +24,7 @@ class SyncPkgPkg(synctool.pkgclass.SyncPkg):
 
     def list(self, pkgs=None):
         # type: (List[str]) -> None
-        super(SyncPkgPkg, self).list(pkgs)
+        super().list(pkgs)
 
         cmd = 'pkg info'
         if pkgs:
@@ -36,27 +36,27 @@ class SyncPkgPkg(synctool.pkgclass.SyncPkg):
 
     def install(self, pkgs):
         # type: (List[str]) -> None
-        super(SyncPkgPkg, self).install(pkgs)
+        super().install(pkgs)
 
         cmd = 'pkg install -y ' + ' '.join(pkgs)
         synctool.lib.shell_command(cmd)
 
     def remove(self, pkgs):
         # type: (List[str]) -> None
-        super(SyncPkgPkg, self).remove(pkgs)
+        super().remove(pkgs)
 
         cmd = 'pkg delete -y ' + ' '.join(pkgs)
         synctool.lib.shell_command(cmd)
 
     def update(self):
         # type: () -> None
-        super(SyncPkgPkg, self).update()
+        super().update()
 
         synctool.lib.shell_command('pkg update')
 
     def upgrade(self):
         # type: () -> None
-        super(SyncPkgPkg, self).upgrade()
+        super().upgrade()
 
         if synctool.lib.DRY_RUN:
             cmd = 'pkg upgrade -y -n'
@@ -70,7 +70,7 @@ class SyncPkgPkg(synctool.pkgclass.SyncPkg):
 
     def clean(self):
         # type: () -> None
-        super(SyncPkgPkg, self).clean()
+        super().clean()
 
         synctool.lib.shell_command('pkg clean -y')
 

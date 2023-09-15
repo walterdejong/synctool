@@ -1,3 +1,4 @@
+# pylint: disable=too-many-branches
 #
 #   synctool.config.py    WJ109
 #
@@ -17,7 +18,7 @@ import sys
 import socket
 
 try:
-    from typing import List, Dict, Tuple, Set, Union
+    from typing import List, Tuple, Set, Union
 except ImportError:
     pass
 
@@ -246,9 +247,9 @@ def make_all_groups():
     This is a set of all group names plus all node names
     '''
 
-    s = set(synctool.param.GROUP_DEFS.keys())
-    s |= set(synctool.param.NODES.keys())
-    return s
+    groups = set(synctool.param.GROUP_DEFS.keys())
+    groups |= set(synctool.param.NODES.keys())
+    return groups
 
 
 def get_groups(nodename):
@@ -272,18 +273,19 @@ def get_my_groups():
 
 
 def get_nodes_in_groups(groups):
+# pylint: disable=consider-using-dict-items
     # type: (Union[List[str], Set[str]]) -> Set[str]
     '''returns a set of nodes that are in a set or list of groups'''
 
-    s = set()   # type: Set[str]
+    nodeset = set()   # type: Set[str]
 
-    for g in groups:
+    for group in groups:
         for node in synctool.param.NODES:
             # NODES[node] is an ordered list (groups in order of importance)
             # so we can not do neat tricks with combining sets here ...
-            if g in synctool.param.NODES[node]:
-                s.add(node)
+            if group in synctool.param.NODES[node]:
+                nodeset.add(node)
 
-    return s
+    return nodeset
 
 # EOB

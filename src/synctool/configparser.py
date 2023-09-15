@@ -1,3 +1,6 @@
+# pylint: disable=consider-using-f-string, too-many-lines
+# pylint: disable=too-few-public-methods,too-many-return-statements
+# pylint: disable=too-many-branches
 #
 #   synctool.configparser.py    WJ111
 #
@@ -46,7 +49,7 @@ PERSIST_TIME = re.compile(r'^\d+$|'
 SYMBOLS = {}    # type: Dict[str, Symbol]
 
 
-class Symbol(object):
+class Symbol:
     '''structure that says where a symbol was first defined'''
 
     def __init__(self, name=None, filename=None, lineno=0):
@@ -73,7 +76,7 @@ def read_config_file(configfile):
     '''
 
     try:
-        f = open(configfile, 'r')
+        fconfig = open(configfile, 'r', encoding="utf-8")
     except IOError as err:
         stderr("error: failed to read config file '%s' : %s" % (configfile,
                                                                 err.strerror))
@@ -89,17 +92,17 @@ def read_config_file(configfile):
     # (backslash terminated)
 
     line = ''
-    with f:
+    with fconfig:
         while True:
-            tmp_line = f.readline()
+            tmp_line = fconfig.readline()
             if not tmp_line:
                 break
 
             lineno += 1
 
-            n = tmp_line.find('#')
-            if n >= 0:
-                tmp_line = tmp_line[:n]        # strip comment
+            nhash = tmp_line.find('#')
+            if nhash >= 0:
+                tmp_line = tmp_line[:nhash]        # strip comment
 
             tmp_line = tmp_line.strip()
             if not tmp_line:
@@ -207,7 +210,7 @@ def _config_boolean(label, value, configfile, lineno):
     if value in param.BOOLEAN_VALUE_TRUE:
         return 0, True
 
-    elif value in param.BOOLEAN_VALUE_FALSE:
+    if value in param.BOOLEAN_VALUE_FALSE:
         return 0, False
 
     stderr('%s:%d: invalid argument for %s' % (configfile, lineno, label))
@@ -222,12 +225,12 @@ def _config_integer(label, value, configfile, lineno, radix=10):
         return 1, 0
 
     try:
-        n = int(value, radix)
+        nvalue = int(value, radix)
     except ValueError:
         stderr('%s:%d: invalid argument for %s' % (configfile, lineno, label))
         return 1, 0
 
-    return 0, n
+    return 0, nvalue
 
 
 def _config_color_variant(label, value, configfile, lineno):
@@ -238,7 +241,7 @@ def _config_color_variant(label, value, configfile, lineno):
         return 1
 
     value = value.lower()
-    if value in list(synctool.lib.COLORMAP.keys()):
+    if value in synctool.lib.COLORMAP:
         param.TERSE_COLORS[label[6:]] = value
         return 0
 
@@ -272,11 +275,11 @@ def spellcheck(name):
     Returns True if OK, False if not OK
     '''
 
-    m = SPELLCHECK.match(name)
-    if not m:
+    mfound = SPELLCHECK.match(name)
+    if not mfound:
         return False
 
-    if m.group(0) != name:
+    if mfound.group(0) != name:
         return False
 
     return True
@@ -297,15 +300,15 @@ def config_tempdir(arr, configfile, lineno):
     if not check_definition(arr[0], configfile, lineno):
         return 1
 
-    d = ' '.join(arr[1:])
-    d = synctool.lib.prepare_path(d)
+    dirpath = ' '.join(arr[1:])
+    dirpath = synctool.lib.prepare_path(dirpath)
 
-    if not os.path.isabs(d):
+    if not os.path.isabs(dirpath):
         stderr("%s:%d: tempdir must be an absolute path" % (configfile,
                                                             lineno))
         return 1
 
-    param.TEMP_DIR = d
+    param.TEMP_DIR = dirpath
     return 0
 
 
@@ -341,8 +344,8 @@ def config_ssh_control_persist(arr, configfile, lineno):
 
     persist = arr[1].lower()
 
-    m = PERSIST_TIME.match(persist)
-    if not m:
+    matchp = PERSIST_TIME.match(persist)
+    if not matchp:
         stderr("%s:%d: invalid value '%s'" % (configfile, lineno, persist))
         return 1
 
@@ -420,15 +423,15 @@ def config_ignore(arr, configfile, lineno):
                "the file or directory to ignore" % (configfile, lineno))
         return 1
 
-    for fn in arr[1:]:
-        # if fn has wildcards, put it in array IGNORE_FILES_WITH_WILDCARDS
-        if (fn.find('*') >= 0 or fn.find('?') >= 0 or
-                (fn.find('[') >= 0 and fn.find(']') >= 0)):
-            if fn not in param.IGNORE_FILES_WITH_WILDCARDS:
-                param.IGNORE_FILES_WITH_WILDCARDS.append(fn)
+    for filenam in arr[1:]:
+        # if filenam has wildcards, put it in array IGNORE_FILES_WITH_WILDCARDS
+        if (filenam.find('*') >= 0 or filenam.find('?') >= 0 or
+                (filenam.find('[') >= 0 and filenam.find(']') >= 0)):
+            if filenam not in param.IGNORE_FILES_WITH_WILDCARDS:
+                param.IGNORE_FILES_WITH_WILDCARDS.append(filenam)
         else:
             # no wildcards, do a regular ignore
-            param.IGNORE_FILES.add(fn)
+            param.IGNORE_FILES.add(filenam)
 
     return 0
 
@@ -1111,7 +1114,7 @@ def expand_grouplist(grouplist):
 
             # mind that GROUP_DEFS[group] can be None
             # for any groups that have no subgroups
-            if compound_groups != None:
+            if compound_groups is not None:
                 groups.extend(compound_groups)
         else:
             # node names are treated as groups too ...

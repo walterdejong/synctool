@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.main.dsh.py    WJ109
 #
@@ -56,6 +57,7 @@ SYNC_IT = False
 
 
 def run_dsh(address_list, remote_cmd_arr):
+    #pylint: disable=global-statement
     # type: (List[str], List[str]) -> None
     '''run remote command to a set of nodes using ssh (param ssh_cmd)'''
 
@@ -175,6 +177,7 @@ def worker_ssh(addr):
 
 
 def start_multiplex(address_list):
+    #pylint: disable=global-statement
     # type: (List[str]) -> None
     '''run ssh -M to each node in address_list'''
 
@@ -192,8 +195,8 @@ def start_multiplex(address_list):
         PERSIST = param.CONTROL_PERSIST
     else:
         # spellcheck the parameter
-        m = synctool.configparser.PERSIST_TIME.match(PERSIST)
-        if not m:
+        mpar = synctool.configparser.PERSIST_TIME.match(PERSIST)
+        if not mpar:
             error("invalid persist value '%s'" % PERSIST)
             return
 
@@ -206,6 +209,7 @@ def start_multiplex(address_list):
 
 
 def control_multiplex(address_list, _ctl_cmd):
+    #pylint: disable=global-statement
     # type: (List[str], str) -> None
     '''run ssh -O ctl_cmd to each node in address_list'''
 
@@ -229,10 +233,10 @@ def _ssh_control(addr):
     '''run ssh -O CTL_CMD addr'''
 
     nodename = NODESET.get_nodename_from_address(addr)
-    ok = synctool.multiplex.control(nodename, addr, CTL_CMD)
+    okay = synctool.multiplex.control(nodename, addr, CTL_CMD)
 
     if CTL_CMD == 'check':
-        if ok:
+        if okay:
             if not synctool.lib.QUIET:
                 print('%s: ssh master running' % nodename)
         else:
@@ -240,14 +244,14 @@ def _ssh_control(addr):
 
     elif CTL_CMD == 'stop':
         if not synctool.lib.QUIET:
-            if ok:
+            if okay:
                 print('%s: ssh master stopped' % nodename)
             else:
                 print('%s: ssh master not running' % nodename)
 
     elif CTL_CMD == 'exit':
         if not synctool.lib.QUIET:
-            if ok:
+            if okay:
                 print('%s: ssh master exiting' % nodename)
             else:
                 print('%s: ssh master not running' % nodename)
@@ -259,14 +263,14 @@ def check_cmd_config():
 
     errors = 0
 
-    ok, param.SSH_CMD = config.check_cmd_config('ssh_cmd', param.SSH_CMD)
-    if not ok:
+    okay, param.SSH_CMD = config.check_cmd_config('ssh_cmd', param.SSH_CMD)
+    if not okay:
         errors += 1
 
     if not OPT_SKIP_RSYNC:
-        ok, param.RSYNC_CMD = config.check_cmd_config('rsync_cmd',
+        okay, param.RSYNC_CMD = config.check_cmd_config('rsync_cmd',
                                                       param.RSYNC_CMD)
-        if not ok:
+        if not okay:
             errors += 1
 
     if errors > 0:
@@ -306,6 +310,8 @@ CTL_CMD can be: check, stop, exit
 
 
 def get_options():
+    #pylint: disable=global-statement
+    #pylint: disable=too-many-statements, too-many-branches
     # type: () -> List[str]
     '''parse command-line options'''
 
@@ -399,7 +405,7 @@ def get_options():
             continue
 
         if opt == '-O':
-            if CTL_CMD != None:
+            if CTL_CMD is not None:
                 print("%s: only a single '-O' option can be given" % PROGNAME)
                 sys.exit(1)
 
@@ -472,11 +478,11 @@ def get_options():
         print('%s: option --persist requires option --master' % PROGNAME)
         sys.exit(1)
 
-    if OPT_MULTIPLEX and CTL_CMD != None:
+    if OPT_MULTIPLEX and CTL_CMD is not None:
         print('%s: options --master and -O can not be combined' % PROGNAME)
         sys.exit(1)
 
-    if OPT_MULTIPLEX or CTL_CMD != None:
+    if OPT_MULTIPLEX or CTL_CMD is not None:
         if args:
             print('%s: excessive arguments on command-line' % PROGNAME)
             sys.exit(1)
@@ -522,7 +528,7 @@ def main():
 
     if OPT_MULTIPLEX:
         start_multiplex(address_list)
-    elif CTL_CMD != None:
+    elif CTL_CMD is not None:
         control_multiplex(address_list, CTL_CMD)
     else:
         run_dsh(address_list, cmd_args)

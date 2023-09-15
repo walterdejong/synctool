@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.update.py    WJ110
 #
@@ -13,19 +14,22 @@
 import os
 import sys
 import datetime
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
+import urllib.error
+import urllib.parse
 import json
 
-try:
-    from typing import List, Dict, Union, Any
-except ImportError:
-    pass
+#try:
+#    from typing import List, Dict, Union, Any
+#except ImportError:
+#    pass
 
 from synctool.lib import verbose, error, stdout
 import synctool.param
 
 
-class ReleaseInfo(object):
+class ReleaseInfo:
+#pylint: disable=too-few-public-methods
     '''holds release info'''
 
     TAGS_URL = 'https://api.github.com/repos/walterdejong/synctool/tags'
@@ -39,6 +43,7 @@ class ReleaseInfo(object):
         self.url = None         # type: str
 
     def load(self):
+#pylint: disable=too-many-return-statements
         # type: () -> bool
         '''load release info from github
         Returns True on success
@@ -97,6 +102,7 @@ class ReleaseInfo(object):
 
 
 def github_api(url):
+    #pylint: disable=consider-using-with
     # mypy-bug-type: (str) -> Union[List[Dict[str, Any]], Dict[str, Any]]
     '''Access GitHub API via URL
     Returns data (list or dict) depending on GitHub API function
@@ -169,10 +175,10 @@ def make_local_filename_for_version(version):
         return filename
 
     # file already exists, add sequence number
-    n = 0
+    nseq = 0
     while True:
-        n += 1
-        filename = 'synctool-%s(%d).tar.gz' % (version, n)
+        nseq += 1
+        filename = 'synctool-%s(%d).tar.gz' % (version, nseq)
         if not os.path.isfile(filename):
             return filename
 
@@ -182,14 +188,14 @@ def print_progress(filename, totalsize, current_size):
     '''print the download progress'''
 
     percent = 100 * current_size / totalsize
-    if percent > 100:
-        percent = 100
+    percent = min(percent,100)
 
     print('\rdownloading %s ... %d%% ' % (filename, percent), end=' ')
     sys.stdout.flush()
 
 
 def download():
+    #pylint: disable=too-many-return-statements,consider-using-with
     # type: () -> bool
     '''download latest version
     Returns True on success, False on error
@@ -226,13 +232,13 @@ def download():
 
         # create download_filename
         try:
-            f = open(download_filename, 'w+b')
+            fdownld = open(download_filename, 'w+b')
         except IOError as err:
             error('failed to create file %s: %s' % (download_filename,
                                                     err.strerror))
             return False
 
-        with f:
+        with fdownld:
             print_progress(download_filename, totalsize, 0)
             download_bytes = 0
 
@@ -244,7 +250,7 @@ def download():
                 download_bytes += len(data)
                 print_progress(download_filename, totalsize, download_bytes)
 
-                f.write(data)
+                fdownld.write(data)
     finally:
         web.close()
 

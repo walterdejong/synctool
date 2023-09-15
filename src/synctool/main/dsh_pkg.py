@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.main.dsh_pkg.py    WJ111
 #
@@ -46,6 +47,7 @@ SSH_CMD_ARR = None      # type: List[str]
 
 
 def run_remote_pkg(address_list):
+    #pylint: disable=global-statement
     # type: (List[str]) -> None
     '''run synctool-pkg on the target nodes'''
 
@@ -145,12 +147,12 @@ def check_cmd_config():
 
     errors = 0
 
-    ok, param.SSH_CMD = config.check_cmd_config('ssh_cmd', param.SSH_CMD)
-    if not ok:
+    okay, param.SSH_CMD = config.check_cmd_config('ssh_cmd', param.SSH_CMD)
+    if not okay:
         errors += 1
 
-    ok, param.PKG_CMD = config.check_cmd_config('pkg_cmd', param.PKG_CMD)
-    if not ok:
+    okay, param.PKG_CMD = config.check_cmd_config('pkg_cmd', param.PKG_CMD)
+    if not okay:
         errors += 1
 
     if errors > 0:
@@ -205,13 +207,13 @@ Supported package managers are:''')
     # print list of supported package managers
     # format it at 78 characters wide
     print(' ', end=' ')
-    n = 2
+    nmgr = 2
     for pkg in param.KNOWN_PACKAGE_MANAGERS:
-        if n + len(pkg) + 1 <= 78:
-            n = n + len(pkg) + 1
+        if nmgr + len(pkg) + 1 <= 78:
+            nmgr = nmgr + len(pkg) + 1
             print(pkg, end=' ')
         else:
-            n = 2 + len(pkg) + 1
+            nmgr = 2 + len(pkg) + 1
             print()
             print(' ', pkg, end=' ')
 
@@ -223,6 +225,8 @@ Note that --upgrade does a dry run unless you specify --fix
 
 
 def get_options():
+    #pylint: disable=global-statement
+    #pylint: disable=too-many-statements, too-many-branches
     # type: () -> None
     '''parse command-line options'''
 
