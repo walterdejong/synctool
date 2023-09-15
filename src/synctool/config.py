@@ -1,4 +1,4 @@
-# pylint: disable=too-many-branches
+#pylint: disable=consider-using-f-string
 #
 #   synctool.config.py    WJ109
 #
@@ -29,6 +29,7 @@ import synctool.param
 
 
 def read_config():
+    # pylint: disable=too-many-branches
     # type: () -> None
     '''read the config file and set a bunch of globals
     Return value: none, exit the program on error

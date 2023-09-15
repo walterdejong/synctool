@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+#pylint: disable=consider-using-f-string
 #
 #   synctool_list.py    WJ114
 #
@@ -18,7 +19,9 @@ import sys
 import stat
 import pwd
 import grp
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 
 try:
     from typing import Dict
@@ -134,11 +137,11 @@ if __name__ == '__main__':
         print('usage: %s <filename>' % os.path.basename(sys.argv[0]))
         sys.exit(1)
 
-    fullpath = sys.argv[1]
+    FULLPATH = sys.argv[1]
     # strip trailing slashes
-    while len(fullpath) > 1 and fullpath[-1] == os.sep:
-        fullpath = fullpath[:-1]
+    while len(FULLPATH) > 1 and FULLPATH[-1] == os.sep:
+        FULLPATH = FULLPATH[:-1]
 
-    print_stat(fullpath)
+    print_stat(FULLPATH)
 
 # EOB

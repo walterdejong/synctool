@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.object.py    WJ110
 #
@@ -47,8 +48,7 @@ class VNode:
         self.stat = statbuf
         self.exists = exists
 
-    @staticmethod
-    def typename():
+    def typename(self):
         # type: () -> str
         '''return file type as human readable string'''
 
@@ -126,7 +126,6 @@ class VNode:
         synctool.lib.mkdir_p(basedir)
 
     def compare(self, _src_path, _dest_stat):
-#pylint: disable=no-self-use
         # type: (str, SyncStat) -> bool
         '''compare content
         Return True when same, False when different

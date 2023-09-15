@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.lib.py        WJ109
 #
@@ -424,7 +425,7 @@ def exec_command(cmd_arr, silent=False):
 
     fd_devnull = None
     if silent and not VERBOSE:
-        fd_devnull = open(os.devnull, 'w')
+        fd_devnull = open(os.devnull, 'w', encoding='utf-8')
 
     try:
         if fd_devnull is not None:
@@ -548,8 +549,7 @@ def mkdir_p(path, mode=0o700):
         error('failed to create directory %s: %s' % (path, err.strerror))
         os.umask(mask)
         return False
-    else:
-        unix_out('mkdir -p -m %04o %s' % (mode, path))
+    unix_out('mkdir -p -m %04o %s' % (mode, path))
 
     os.umask(mask)
     return True

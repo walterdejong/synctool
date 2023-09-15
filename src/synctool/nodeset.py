@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.nodeset.py        WJ111
 #
@@ -161,7 +162,7 @@ class NodeSet:
             else:
                 arr = list(ignored_nodes)
                 arr.sort()
-                ignored_str = ('ignored: ' + synctool.range.compress(arr))
+                ignored_str = 'ignored: ' + synctool.range.compress(arr)
                 if len(ignored_str) < 70:
                     warning(ignored_str)
                 else:
