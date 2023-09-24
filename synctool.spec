@@ -9,27 +9,25 @@ Name:           synctool
 License:        GPL v3 or later
 Group:		system/utility
 Summary:        synchronized config files
-Version:        6.3
-Release:        8%{dist}
+Version:        @VERSION@
+Release:        @RELEASE@%{?dist}
 BuildArch:	noarch
 URL:            https://github.com/celane/synctool
-Source0:        %{name}-%{version}.tar.gz
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
-Requires:	/usr/bin/ssh
-Requires:	python
+Source:            https://github.com/celane/synctool/releases/download/v%{version}/synctool-%{version}.tar.gz
+
+Requires:	ssh
+Requires:	python3
 BuildRequires:  discount
 BuildRequires:  python3-smartypants
 BuildRequires:  help2man
-
-
+BuildRequires:  git
+BuildRequires:  make
 
 %description
 Synchronize config files for multiple systems
 
-
-
 %prep
-%setup
+%setup 
 
 %build
 chmod a+x src/*.py
