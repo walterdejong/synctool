@@ -18,7 +18,7 @@ jobs:
       - name: Set the version
         id: version_number
         run: |
-          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Set the git source location
         id: source_loc
