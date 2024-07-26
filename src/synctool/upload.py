@@ -191,7 +191,8 @@ class RemoteStat:
         '''Returns string representation'''
 
         return ('<RemoteStat: %06o %u %s %u %s %u %r %r>' %
-                (self.mode, self.uid, self.owner, self.gid, self.group,
+                (self.mode, self.uid, self.owner.decode(),
+		 self.gid, self.group.decode(),
                  self.size, self.filename, self.linkdest))
 
 
@@ -237,7 +238,7 @@ def _remote_stat(upfile):
 
     # parse synctool_list output into array of RemoteStat info
     data = []
-    for line in out.split('\n'):
+    for line in out.split(b'\n'):
         if not line:
             continue
 

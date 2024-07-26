@@ -20,6 +20,7 @@ or just a string "node-[10].sub[20].domain.org"
 '''
 
 import re
+from functools import cmp_to_key
 
 try:
     from typing import List, Tuple, Pattern, Sequence, Any
@@ -305,7 +306,7 @@ def compress(nodelist):
         if not matnode:
             # no number in node name
             if grouped:
-                grouped.sort(_sort_compress)
+                grouped.sort(key=cmp_to_key(_sort_compress))
                 all_grouped.append(grouped[:],)
                 grouped = []
 
@@ -320,7 +321,7 @@ def compress(nodelist):
                 grouped.append((node, prefix, number, int(number), postfix),)
             else:
                 if grouped:
-                    grouped.sort(_sort_compress)
+                    grouped.sort(key=cmp_to_key(_sort_compress))
                     all_grouped.append(grouped[:],)
                     grouped = []
 
@@ -329,7 +330,7 @@ def compress(nodelist):
                 prev_postfix = postfix
 
     if grouped:
-        grouped.sort(_sort_compress)
+        grouped.sort(key=cmp_to_key(_sort_compress))
         all_grouped.append(grouped[:],)
         grouped = []
 

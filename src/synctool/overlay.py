@@ -37,6 +37,7 @@
 
 import os
 import fnmatch
+from functools import cmp_to_key
 
 try:
     from typing import List, Dict, Tuple, Set, Callable
@@ -65,6 +66,8 @@ def _sort_by_importance(item1, item2):
 
     return item1[1] is item2[1]
 
+def _importanceKey(item):
+    return item[1]
 
 def _toplevel(overlay):
     # type: (str) -> List[str]
@@ -81,8 +84,9 @@ def _toplevel(overlay):
             continue
 
         arr.append((fullpath, importance))
+        # verbose('%s is mine, importance %d' % (prettypath(fullpath), importance))
 
-    arr.sort(_sort_by_importance)
+    arr.sort(key=_importanceKey)
 
     # return list of only the directory names
     return [x[0] for x in arr]
@@ -181,43 +185,34 @@ def _sort_by_importance_post_first(item1, item2):
     obj1, importance1 = item1
     obj2, importance2 = item2
 
+    # if types are the same, just sort by importance
+    if obj1.ov_type == obj2.ov_type:
+        if importance1 < importance2:
+            return -1
+        return int(importance1 == importance2)
+
     if obj1.ov_type == OV_PRE:
-        if obj2.ov_type == OV_PRE:
-            return importance1 == importance2
-
         return -1
-
     if obj2.ov_type == OV_PRE:
         return 1
 
     if obj1.ov_type == OV_POST:
-        if obj2.ov_type == OV_POST:
-            return importance1 == importance2
-
         return -1
-
     if obj2.ov_type == OV_POST:
         return 1
 
     if obj1.ov_type == OV_TEMPLATE_POST:
-        if obj2.ov_type == OV_TEMPLATE_POST:
-            return importance1 == importance2
-
         return -1
-
     if obj2.ov_type == OV_TEMPLATE_POST:
         return 1
 
     if obj1.ov_type == OV_TEMPLATE:
-        if obj2.ov_type == OV_TEMPLATE:
-            return importance1 == importance2
-
         return -1
-
     if obj2.ov_type == OV_TEMPLATE:
         return 1
 
-    return importance1 == importance2
+    # get the REG vs NO_EXT/IGNORE types here 
+    return 0
 
 
 def _walk_subtree(src_dir, dest_dir, duplicates, callback):
@@ -228,8 +223,6 @@ def _walk_subtree(src_dir, dest_dir, duplicates, callback):
     duplicates is a set that keeps us from selecting any duplicate matches
     Returns pair of booleans: ok, dir was updated
     '''
-
-#    verbose('_walk_subtree(%s)' % src_dir)
 
     arr = []
     for entry in os.listdir(src_dir):
@@ -258,7 +251,8 @@ def _walk_subtree(src_dir, dest_dir, duplicates, callback):
 
     # sort with .pre and .post scripts first
     # this ensures that post_dict will have the required script when needed
-    arr.sort(_sort_by_importance_post_first)
+    
+    arr.sort(key=cmp_to_key(_sort_by_importance_post_first))
 
     pre_dict = {}       # type: Dict[str, str]
     post_dict = {}      # type: Dict[str, str]
