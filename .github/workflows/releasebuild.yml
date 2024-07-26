@@ -18,7 +18,7 @@ jobs:
       - name: Set the version
         id: version_number
         run: |
-          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Set the git source location
         id: source_loc
@@ -29,7 +29,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Build tar.gz
-        run: make dist
+        run: tar czf synctool-${{ env.VERSION }}.tar.gz --exclude='*.gz' *
 
       - name: Upload mock script
         uses: actions/upload-artifact@v3
