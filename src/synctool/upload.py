@@ -57,7 +57,6 @@ class UploadFile:
     def make_repos_path(self):
         # type: () -> None
         '''make $overlay repository path from elements'''
-
         if len(self.filename) > 1 and self.filename[-1] == '/':
             # strip trailing slash
             self.filename = self.filename[:-1]
@@ -384,7 +383,7 @@ def upload(upfile):
         stdout('DRY RUN, not uploading any files')
         terse(synctool.lib.TERSE_DRYRUN, 'not uploading any files')
 
-    if upfile.purge is None:
+    if upfile.purge != None:
         rsync_upload(upfile)
         return
 
