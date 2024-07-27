@@ -66,7 +66,7 @@ def _sort_by_importance(item1, item2):
 
     return item1[1] is item2[1]
 
-def _importanceKey(item):
+def _importance_key(item):
     return item[1]
 
 def _toplevel(overlay):
@@ -86,7 +86,7 @@ def _toplevel(overlay):
         arr.append((fullpath, importance))
         # verbose('%s is mine, importance %d' % (prettypath(fullpath), importance))
 
-    arr.sort(key=_importanceKey)
+    arr.sort(key=_importance_key)
 
     # return list of only the directory names
     return [x[0] for x in arr]
@@ -211,7 +211,7 @@ def _sort_by_importance_post_first(item1, item2):
     if obj2.ov_type == OV_TEMPLATE:
         return 1
 
-    # get the REG vs NO_EXT/IGNORE types here 
+    # get the REG vs NO_EXT/IGNORE types here
     return 0
 
 
@@ -251,7 +251,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, callback):
 
     # sort with .pre and .post scripts first
     # this ensures that post_dict will have the required script when needed
-    
+
     arr.sort(key=cmp_to_key(_sort_by_importance_post_first))
 
     pre_dict = {}       # type: Dict[str, str]

@@ -383,7 +383,7 @@ def upload(upfile):
         stdout('DRY RUN, not uploading any files')
         terse(synctool.lib.TERSE_DRYRUN, 'not uploading any files')
 
-    if upfile.purge != None:
+    if upfile.purge is not None:
         rsync_upload(upfile)
         return
 
