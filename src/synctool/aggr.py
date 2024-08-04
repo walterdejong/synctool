@@ -1,4 +1,3 @@
-# pylint: disable=consider-using-f-string
 #
 #   synctool.aggr.py    WJ109
 #
@@ -90,8 +89,8 @@ def run(cmd_arr):
     try:
         with subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
                               stdout=subprocess.PIPE, universal_newlines=True,
-                              stderr=subprocess.STDOUT).stdout as f:
-            aggregate(f)
+                              stderr=subprocess.STDOUT).stdout as stdout:
+            aggregate(stdout)
     except OSError as err:
         stderr("failed to run command {0}: {1}".format(cmd_arr[0],err.strerror))
         return False

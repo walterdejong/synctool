@@ -1,4 +1,3 @@
-#pylint: disable=consider-using-f-string
 #
 #   synctool.update.py    WJ110
 #

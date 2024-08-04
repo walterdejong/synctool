@@ -1,5 +1,4 @@
-# pylint: disable=consider-using-f-string, too-many-lines
-# pylint: disable=too-few-public-methods,too-many-return-statements
+# pylint: disable=too-many-return-statements
 # pylint: disable=too-many-branches
 #
 #   synctool.configparser.py    WJ111

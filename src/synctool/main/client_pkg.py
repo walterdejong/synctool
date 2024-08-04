@@ -1,4 +1,3 @@
-#pylint: disable=consider-using-f-string
 #
 #   synctool.main.client_pkg.py WJ111
 #

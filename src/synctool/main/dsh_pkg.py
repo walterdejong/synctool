@@ -1,4 +1,3 @@
-#pylint: disable=consider-using-f-string
 #
 #   synctool.main.dsh_pkg.py    WJ111
 #

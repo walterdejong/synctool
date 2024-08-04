@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-#pylint: disable=consider-using-f-string
 #
 #   synctool_list.py    WJ114
 #

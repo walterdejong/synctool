@@ -20,4 +20,4 @@ jobs:
         pip install pylint
     - name: Analysing the code with pylint
       run: |
-        pylint --disable=similarities $(git ls-files '*.py' | gawk '!/contrib/' )
+        pylint $(git ls-files '*.py' | grep -v contrib/)
