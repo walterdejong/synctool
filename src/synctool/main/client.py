@@ -292,8 +292,8 @@ def _run_rsync_purge(cmd_arr):
     if synctool.lib.VERBOSE:
         print(out)
 
-    out = out.split('\n')
-    for line in out:
+    lines = out.split('\n')
+    for line in lines:
         line = line.strip()
         if not line:
             continue
