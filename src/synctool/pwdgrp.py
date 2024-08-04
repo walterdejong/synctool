@@ -13,10 +13,7 @@
 import pwd
 import grp
 
-try:
-    from typing import Dict
-except ImportError:
-    pass
+from typing import Dict
 
 CACHE_BY_UID = {}   # type: Dict[str, str]
 CACHE_BY_GID = {}   # type: Dict[str, str]

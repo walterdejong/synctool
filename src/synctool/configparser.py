@@ -22,10 +22,7 @@ import os
 import sys
 import re
 
-try:
-    from typing import List, Dict, Tuple, Pattern
-except ImportError:
-    pass
+from typing import List, Dict, Tuple, Pattern
 
 from synctool import param
 import synctool.lib

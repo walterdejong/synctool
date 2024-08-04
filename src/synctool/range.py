@@ -21,10 +21,7 @@ or just a string "node-[10].sub[20].domain.org"
 import re
 from functools import cmp_to_key
 
-try:
-    from typing import List, Tuple, Pattern, Sequence, Any
-except ImportError:
-    pass
+from typing import List, Tuple, Pattern, Sequence, Any
 
 # a node expression may look like 'node1-[1,2,8-10/2]-mgmt'
 # or something somewhat resembling that

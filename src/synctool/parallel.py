@@ -18,10 +18,7 @@ import sys
 import errno
 import time
 
-try:
-    from typing import List, Set, Callable, Any
-except ImportError:
-    pass
+from typing import List, Set, Callable, Any
 
 from synctool.lib import error
 from synctool.main.wrapper import catch_signals

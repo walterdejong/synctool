@@ -16,10 +16,7 @@ import os
 import sys
 import socket
 
-try:
-    from typing import List, Tuple, Set, Union
-except ImportError:
-    pass
+from typing import List, Tuple, Set, Union
 
 import synctool.configparser
 import synctool.lib

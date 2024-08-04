@@ -23,10 +23,7 @@ usage:
 
 import sys
 
-try:
-    from typing import List, Dict, Set
-except ImportError:
-    pass
+from typing import List, Dict, Set
 
 from synctool import config, param
 import synctool.lib

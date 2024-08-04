@@ -210,8 +210,7 @@ def _sort_by_importance_post_first(item1, item2):
 
 def _walk_subtree(src_dir, dest_dir, duplicates, callback):
 #pylint: disable=too-many-locals,too-many-statements,too-many-branches
-    # type: (str, str, Set[str], Callable[[SyncObject,
-    # Dict[str, str], Dict[str, str]], Tuple[bool, bool]]) -> Tuple[bool, bool]
+    # type: (str, str, Set[str], Callable[[SyncObject, Dict[str, str], Dict[str, str]], Tuple[bool, bool]]) -> Tuple[bool, bool]
     '''walk subtree under overlay/group/
     duplicates is a set that keeps us from selecting any duplicate matches
     Returns pair of booleans: ok, dir was updated

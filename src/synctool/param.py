@@ -13,10 +13,7 @@
 import os
 import sys
 
-try:
-    from typing import Dict, List, Sequence, Set
-except ImportError:
-    pass
+from typing import Dict, List, Sequence, Set
 
 # Note: the release datetime should be set slightly in the future
 # in regards to when the release tag is made in git

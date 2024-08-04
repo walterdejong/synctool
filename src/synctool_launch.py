@@ -14,10 +14,7 @@
 import os
 import sys
 
-try:
-    from typing import Dict
-except ImportError:
-    pass
+from typing import Dict
 
 LAUNCH = {
     'synctool' : 'synctool_master.py',

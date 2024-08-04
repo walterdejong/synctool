@@ -10,10 +10,7 @@
 
 '''base class for synctool package managers'''
 
-try:
-    from typing import List
-except ImportError:
-    pass
+from typing import List
 
 from synctool.lib import verbose, log, dryrun_msg
 

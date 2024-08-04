@@ -18,10 +18,7 @@ import errno
 import shlex
 import syslog
 
-try:
-    from typing import List, Dict, Sequence
-except ImportError:
-    pass
+from typing import List, Dict, Sequence
 
 from synctool import param
 

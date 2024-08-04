@@ -12,10 +12,7 @@
 
 import subprocess
 
-try:
-    from typing import List, Dict, IO
-except ImportError:
-    pass
+from typing import List, Dict, IO
 
 from synctool.lib import stderr
 import synctool.range

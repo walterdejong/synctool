@@ -20,11 +20,7 @@ import urllib.request
 import urllib.parse
 import urllib.error
 
-try:
-    from typing import List, Dict, Tuple
-    from synctool.object import SyncObject
-except ImportError:
-    pass
+from typing import List, Dict, Tuple
 
 import synctool.config
 import synctool.lib
@@ -34,6 +30,8 @@ import synctool.multiplex
 import synctool.overlay
 import synctool.param
 import synctool.pwdgrp
+
+from synctool.object import SyncObject
 
 # UploadFile object, used in callback function for overlay.visit()
 GLOBAL_UPLOAD_FILE = None   # type: UploadFile

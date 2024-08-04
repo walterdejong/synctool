@@ -18,10 +18,7 @@ import getopt
 import shlex
 import tempfile
 
-try:
-    from typing import List, IO
-except ImportError:
-    pass
+from typing import List, IO
 
 from synctool import config, param
 import synctool.aggr

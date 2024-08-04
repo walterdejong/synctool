@@ -16,10 +16,7 @@ import sys
 import getopt
 import socket
 
-try:
-    from typing import List
-except ImportError:
-    pass
+from typing import List
 
 from synctool import config, param
 from synctool.lib import stderr, error

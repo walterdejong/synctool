@@ -18,11 +18,6 @@ import urllib.error
 import urllib.parse
 import json
 
-#try:
-#    from typing import List, Dict, Union, Any
-#except ImportError:
-#    pass
-
 from synctool.lib import verbose, error, stdout
 import synctool.param
 

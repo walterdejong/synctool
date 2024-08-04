@@ -15,10 +15,7 @@ import re
 import shlex
 import subprocess
 
-try:
-    from typing import List, Tuple, Pattern
-except ImportError:
-    pass
+from typing import List, Tuple, Pattern
 
 import synctool.lib
 from synctool.lib import verbose, error, warning, unix_out

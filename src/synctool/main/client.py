@@ -17,6 +17,8 @@ import shlex
 import getopt
 import subprocess
 
+from typing import List, Dict, Tuple, Callable
+
 from synctool import config, param
 import synctool.lib
 from synctool.lib import verbose, stdout, stderr, error, warning, terse
@@ -24,12 +26,7 @@ from synctool.lib import unix_out, prettypath
 from synctool.main.wrapper import catch_signals
 import synctool.overlay
 import synctool.syncstat
-
-try:
-    from typing import List, Dict, Tuple, Callable
-    from synctool.object import SyncObject
-except ImportError:
-    pass
+from synctool.object import SyncObject
 
 # hardcoded name because otherwise we get "synctool_client.py"
 PROGNAME = 'synctool-client'

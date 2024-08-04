@@ -12,10 +12,7 @@
 
 import os
 
-try:
-    from typing import List
-except ImportError:
-    pass
+from typing import List
 
 import synctool.lib
 import synctool.pkgclass

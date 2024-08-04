@@ -22,10 +22,7 @@ import urllib.request
 import urllib.parse
 import urllib.error
 
-try:
-    from typing import Dict
-except ImportError:
-    pass
+from typing import Dict
 
 # Note: do not import synctool modules here
 # They can't be found without the launcher, and this program is small anyway

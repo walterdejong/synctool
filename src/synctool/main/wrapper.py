@@ -13,10 +13,8 @@
 import errno
 import sys
 
-try:
-    from typing import Callable
-except ImportError:
-    pass
+from typing import Callable
+
 
 # decorator
 def catch_signals(func):

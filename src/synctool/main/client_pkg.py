@@ -14,11 +14,8 @@ import os
 import sys
 import getopt
 
-try:
-    from typing import List, Sequence, Tuple
-    from synctool.pkgclass import SyncPkg
-except ImportError:
-    pass
+from typing import List, Sequence, Tuple
+from synctool.pkgclass import SyncPkg
 
 import synctool.config
 import synctool.lib

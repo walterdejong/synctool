@@ -12,10 +12,7 @@
 
 '''make stdio unbuffered'''
 
-try:
-    from typing import IO, Any
-except ImportError:
-    pass
+from typing import IO, Any
 
 
 class Unbuffered:

@@ -16,6 +16,8 @@ import datetime
 import shutil
 import hashlib
 
+from typing import Dict
+
 import synctool.lib
 from synctool.lib import verbose, stdout, error, terse, unix_out, log
 from synctool.lib import dryrun_msg, prettypath, TERSE_FAIL, print_timestamp
@@ -23,7 +25,6 @@ import synctool.param
 import synctool.syncstat
 
 try:
-    from typing import Dict
     import posix
     SyncStat = synctool.syncstat.SyncStat
 except ImportError:
