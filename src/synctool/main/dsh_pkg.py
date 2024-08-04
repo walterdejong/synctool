@@ -35,11 +35,11 @@ NODESET = synctool.nodeset.NodeSet()
 
 OPT_AGGREGATE = False
 
-PASS_ARGS = None        # type: List[str]
-MASTER_OPTS = None      # type: List[str]
+PASS_ARGS = []          # type: List[str]
+MASTER_OPTS = []        # type: List[str]
 
 # ugly global helps parallelism
-SSH_CMD_ARR = None      # type: List[str]
+SSH_CMD_ARR = []        # type: List[str]
 
 
 def run_remote_pkg(address_list):
