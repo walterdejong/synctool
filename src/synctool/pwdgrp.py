@@ -70,15 +70,15 @@ def pw_uid(username):
     '''
 
     if not username:
-        raise ValueError()
+        raise ValueError('')
 
     if username in CACHE_BY_USER:
         return CACHE_BY_USER[username]
 
     try:
         pwd_entry = pwd.getpwnam(username)
-    except KeyError:
-        raise ValueError() from username
+    except KeyError as err:
+        raise ValueError(username) from err
 
     CACHE_BY_USER[username] = pwd_entry.pw_uid
     return pwd_entry.pw_uid
@@ -91,15 +91,15 @@ def grp_gid(group):
     '''
 
     if not group:
-        raise ValueError()
+        raise ValueError('')
 
     if group in CACHE_BY_GROUP:
         return CACHE_BY_GROUP[group]
 
     try:
         grp_entry = grp.getgrnam(group)
-    except KeyError:
-        raise ValueError() from group
+    except KeyError as err:
+        raise ValueError(group) from err
 
     CACHE_BY_GROUP[group] = grp_entry.gr_gid
     return grp_entry.gr_gid
