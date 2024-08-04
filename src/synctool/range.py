@@ -346,7 +346,7 @@ def compress(nodelist):
             range_str += ',' + number_str
         else:
             start = num
-            prev_number_str = None
+            prev_number_str = ''
             prev_len = len(number_str)
             in_seq = 0
             for (node, prefix, number_str, num, postfix) in arr[1:]:
