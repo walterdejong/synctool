@@ -117,8 +117,7 @@ def expand(expr):
                 raise RangeSyntaxError('syntax error in range expression') from exc
 
             if step <= 0:
-                raise RangeSyntaxError('invalid step value in range '
-                                       'expression') from exc
+                raise RangeSyntaxError('invalid step value in range expression')
             # else: pass
         else:
             step = 1
@@ -135,14 +134,14 @@ def expand(expr):
 
             try:
                 end = int(end)
-            except ValueError:
+            except ValueError as exc:
                 raise RangeSyntaxError('syntax error in range expression') from exc
 
             if start > end:
-                raise RangeSyntaxError('invalid range in range expression') from exc
+                raise RangeSyntaxError('invalid range in range expression')
 
             if end - start > 100000:
-                raise RangeSyntaxError('ignoring ridiculously large range') from exc
+                raise RangeSyntaxError('ignoring ridiculously large range')
 
             arr.extend(['%s%.*d%s' % (prefix, width, num, postfix)
                         for num in range(start, end + 1, step)])
