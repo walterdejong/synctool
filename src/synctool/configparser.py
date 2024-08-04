@@ -48,7 +48,7 @@ SYMBOLS = {}    # type: Dict[str, Symbol]
 class Symbol:
     '''structure that says where a symbol was first defined'''
 
-    def __init__(self, name=None, filename=None, lineno=0):
+    def __init__(self, name, filename='', lineno=0):
         # type: (str, str, int) -> None
         '''initialize instance'''
 
@@ -250,13 +250,13 @@ def _config_command(label, arr, short_cmd, configfile, lineno):
     '''helper for configuring rsync_cmd, ssh_cmd, synctool_cmd, etc.'''
 
     if not check_definition(label, configfile, lineno):
-        return 1, None
+        return 1, ''
 
     if len(arr) < 2:
         stderr("%s:%d: '%s' requires an argument: "
                "the '%s' command, and any appropriate switches" %
                (configfile, lineno, label, short_cmd))
-        return 1, None
+        return 1, ''
 
     # This function does not check the existence of the command
     # That is deferred until later; the client only runs diff_cmd,

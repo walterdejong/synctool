@@ -13,7 +13,7 @@
 import os
 import sys
 
-from typing import Dict, List, Sequence, Set
+from typing import Dict, List, Sequence, Set, Optional
 
 # Note: the release datetime should be set slightly in the future
 # in regards to when the release tag is made in git
@@ -99,8 +99,9 @@ IPADDRESSES = {}            # type: Dict[str, str]
 # compound groups are lists of groups, in order of importance
 #
 #   GROUP_DEFS[compound] -> [ list of groups ]
+#   GROUP_DEFS[compound] may be None
 #
-GROUP_DEFS = {}             # type: Dict[str, List[str]]
+GROUP_DEFS = {}             # type: Dict[str, Optional[List[str]]]
 
 # set of ignored groups and nodes
 IGNORE_GROUPS = set()       # type: Set[str]
