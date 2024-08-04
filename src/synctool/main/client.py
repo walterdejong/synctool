@@ -11,6 +11,7 @@
 '''synctool-client is the program that runs on the target node'''
 
 import os
+from posix import unsetenv
 import sys
 import time
 import shlex
@@ -281,7 +282,7 @@ def _run_rsync_purge(cmd_arr):
     try:
         # run rsync
         proc = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
-                                stdout=subprocess.PIPE)
+                                stdout=subprocess.PIPE, universal_newlines=True)
     except OSError as err:
         error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return
