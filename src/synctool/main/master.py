@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.main.master.py WJ109
 #
@@ -142,22 +143,22 @@ def rsync_include_filter(nodename):
     '''
 
     try:
-        (fd, filename) = tempfile.mkstemp(prefix='synctool-',
+        (fdesc, filename) = tempfile.mkstemp(prefix='synctool-',
                                           dir=param.TEMP_DIR)
     except OSError as err:
         error('failed to create temp file: %s' % err.strerror)
         sys.exit(-1)
 
     try:
-        f = os.fdopen(fd, 'w')
+        ftemp = os.fdopen(fdesc, 'w')
     except OSError as err:
         error('failed to open temp file: %s' % err.strerror)
         sys.exit(-1)
 
     # include $SYNCTOOL/var/ but exclude
     # the top overlay/ and delete/ dir
-    with f:
-        f.write('# synctool rsync filter')
+    with ftemp:
+        ftemp.write('# synctool rsync filter')
 
         # set mygroups for this nodename
         param.NODENAME = nodename
@@ -166,12 +167,12 @@ def rsync_include_filter(nodename):
         # slave nodes get a copy of the entire tree
         # all other nodes use a specific rsync filter
         if nodename not in param.SLAVES:
-            if not (_write_overlay_filter(f) and
-                    _write_delete_filter(f) and
-                    _write_purge_filter(f)):
+            if not (_write_overlay_filter(ftemp) and
+                    _write_delete_filter(ftemp) and
+                    _write_purge_filter(ftemp)):
                 # an error occurred;
                 # delete temp file and exit
-                f.close()
+                ftemp.close()
                 try:
                     os.unlink(filename)
                 except OSError:
@@ -182,7 +183,7 @@ def rsync_include_filter(nodename):
 
         # Note: sbin/*.pyc is excluded to keep major differences in
         # Python versions (on master vs. client node) from clashing
-        f.write('- /sbin/*.pyc\n'
+        ftemp.write('- /sbin/*.pyc\n'
                 '- /lib/synctool/*.pyc\n'
                 '- /lib/synctool/pkg/*.pyc\n')
 
@@ -191,58 +192,58 @@ def rsync_include_filter(nodename):
     return filename
 
 
-def _write_rsync_filter(f, overlaydir, label):
+def _write_rsync_filter(fio, overlaydir, label):
     # type: (IO, str, str) -> None
     '''helper function for writing rsync filter'''
 
-    f.write('+ /var/%s/\n' % label)
+    fio.write('+ /var/%s/\n' % label)
 
     groups = os.listdir(overlaydir)
 
     # add only the group dirs that apply
-    for g in param.MY_GROUPS:
-        if g in groups:
-            d = os.path.join(overlaydir, g)
-            if os.path.isdir(d):
-                f.write('+ /var/%s/%s/\n' % (label, g))
+    for grp in param.MY_GROUPS:
+        if grp in groups:
+            fdir = os.path.join(overlaydir, grp)
+            if os.path.isdir(fdir):
+                fio.write('+ /var/%s/%s/\n' % (label, grp))
 
-    f.write('- /var/%s/*\n' % label)
+    fio.write('- /var/%s/*\n' % label)
 
 
-def _write_overlay_filter(f):
+def _write_overlay_filter(fio):
     # type: (IO) -> bool
     '''write rsync filter rules for overlay/ tree
     Returns False on error
     '''
 
-    _write_rsync_filter(f, param.OVERLAY_DIR, 'overlay')
+    _write_rsync_filter(fio, param.OVERLAY_DIR, 'overlay')
     return True
 
 
-def _write_delete_filter(f):
+def _write_delete_filter(fio):
     # type: (IO) -> bool
     '''write rsync filter rules for delete/ tree
     Returns False on error
     '''
 
-    _write_rsync_filter(f, param.DELETE_DIR, 'delete')
+    _write_rsync_filter(fio, param.DELETE_DIR, 'delete')
     return True
 
 
-def _write_purge_filter(f):
+def _write_purge_filter(fio):
     # type: (IO) -> bool
     '''write rsync filter rules for purge/ tree
     Returns False on error
     '''
 
-    f.write('+ /var/purge/\n')
+    fio.write('+ /var/purge/\n')
 
     purge_groups = os.listdir(param.PURGE_DIR)
 
     # add only the group dirs that apply
-    for g in param.MY_GROUPS:
-        if g in purge_groups:
-            purge_root = os.path.join(param.PURGE_DIR, g)
+    for grp in param.MY_GROUPS:
+        if grp in purge_groups:
+            purge_root = os.path.join(param.PURGE_DIR, grp)
             if not os.path.isdir(purge_root):
                 continue
 
@@ -258,10 +259,10 @@ def _write_purge_filter(f):
                                'under %s/' % prettypath(purge_root))
                         return False
                 else:
-                    f.write('+ /var/purge/%s/' % g)
+                    fio.write('+ /var/purge/%s/' % grp)
                     break
 
-    f.write('- /var/purge/*\n')
+    fio.write('- /var/purge/*\n')
     return True
 
 
@@ -271,7 +272,7 @@ def make_tempdir():
 
     if not os.path.isdir(param.TEMP_DIR):
         try:
-            os.mkdir(param.TEMP_DIR, 0750)
+            os.mkdir(param.TEMP_DIR, 0o750)
         except OSError as err:
             error('failed to create tempdir %s: %s' %
                   (param.TEMP_DIR, err.strerror))
@@ -334,23 +335,23 @@ def check_cmd_config():
 #    if not ok:
 #        errors += 1
 
-    ok, param.SSH_CMD = config.check_cmd_config('ssh_cmd', param.SSH_CMD)
-    if not ok:
+    okay, param.SSH_CMD = config.check_cmd_config('ssh_cmd', param.SSH_CMD)
+    if not okay:
         errors += 1
 
     if not OPT_SKIP_RSYNC:
-        ok, param.RSYNC_CMD = config.check_cmd_config('rsync_cmd',
+        okay, param.RSYNC_CMD = config.check_cmd_config('rsync_cmd',
                                                       param.RSYNC_CMD)
-        if not ok:
+        if not okay:
             errors += 1
 
-    ok, param.SYNCTOOL_CMD = config.check_cmd_config('synctool_cmd',
+    okay, param.SYNCTOOL_CMD = config.check_cmd_config('synctool_cmd',
                                                      param.SYNCTOOL_CMD)
-    if not ok:
+    if not okay:
         errors += 1
 
-#    ok, param.PKG_CMD = config.check_cmd_config('pkg_cmd', param.PKG_CMD)
-#    if not ok:
+#    okay, param.PKG_CMD = config.check_cmd_config('pkg_cmd', param.PKG_CMD)
+#    if not okay:
 #        errors += 1
 
     if errors > 0:
@@ -370,19 +371,20 @@ def be_careful_with_getopt():
         # in some cases, but it's better to be safe than sorry
 
         if arg[:2] == '-d' and arg.find('f') > -1:
-            print "Did you mean '--diff'?"
+            print("Did you mean '--diff'?")
             sys.exit(1)
 
         if arg[:2] == '-r' and arg.find('f') > -1:
             if arg.count('e') >= 2:
-                print "Did you mean '--reference'?"
+                print("Did you mean '--reference'?")
             else:
-                print "Did you mean '--ref'?"
+                print("Did you mean '--ref'?")
             sys.exit(1)
 
 
 def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
                         opt_upload, opt_fix, opt_group):
+    #pylint: disable=too-many-arguments
     # type: (bool, bool, bool, bool, bool, bool, bool) -> None
     '''some combinations of command-line options don't make sense;
     alert the user and abort
@@ -397,7 +399,7 @@ def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
         sys.exit(1)
 
     if opt_upload and opt_group:
-        print 'option --upload and --group can not be combined'
+        print('option --upload and --group can not be combined')
         sys.exit(1)
 
     if opt_diff and (opt_single or opt_reference or opt_fix):
@@ -413,13 +415,13 @@ def usage():
     # type: () -> None
     '''print usage information'''
 
-    print 'usage: %s [options]' % PROGNAME
-    print 'options:'
-    print '  -h, --help                  Display this information'
-    print '  -c, --conf=FILE             Use this config file'
-    print ('                              (default: %s)' %
-           param.DEFAULT_CONF)
-    print '''  -n, --node=LIST             Execute only on these nodes
+    print('usage: %s [options]' % PROGNAME)
+    print('options:')
+    print('  -h, --help                  Display this information')
+    print('  -c, --conf=FILE             Use this config file')
+    print(('                              (default: %s)' %
+           param.DEFAULT_CONF))
+    print('''  -n, --node=LIST             Execute only on these nodes
   -g, --group=LIST            Execute only on these groups of nodes
   -x, --exclude=LIST          Exclude these nodes from the selected group
   -X, --exclude-group=LIST    Exclude these groups from the selection
@@ -449,10 +451,12 @@ def usage():
 
 Note that synctool does a dry run unless you specify --fix
 
-Written by Walter de Jong <walter@heiho.net> (c) 2003-2015'''
+Written by Walter de Jong <walter@heiho.net> (c) 2003-2015''')
 
 
 def get_options():
+    #pylint: disable=too-many-statements, too-many-branches
+    #pylint: disable=global-statement
     # type: () -> None
     '''parse command-line options'''
 
@@ -477,7 +481,7 @@ def get_options():
                                     'skip-rsync', 'version', 'check-update',
                                     'download'])
     except getopt.GetoptError as reason:
-        print '%s: %s' % (PROGNAME, reason)
+        print('%s: %s' % (PROGNAME, reason))
 #        usage()
         sys.exit(1)
 
@@ -538,7 +542,7 @@ def get_options():
             continue
 
         if opt == '--version':
-            print param.VERSION
+            print(param.VERSION)
             sys.exit(0)
 
     config.read_config()
@@ -631,11 +635,11 @@ def get_options():
             try:
                 param.NUM_PROC = int(arg)
             except ValueError:
-                print "option '%s' requires a numeric value" % opt
+                print("option '%s' requires a numeric value" % opt)
                 sys.exit(1)
 
             if param.NUM_PROC < 1:
-                print 'invalid value for numproc'
+                print('invalid value for numproc')
                 sys.exit(1)
 
             continue
@@ -686,30 +690,30 @@ def get_options():
 
     # do basic checks for uploading and sub options
     if opt_suffix and not opt_upload:
-        print 'option --suffix must be used in conjunction with --upload'
+        print('option --suffix must be used in conjunction with --upload')
         sys.exit(1)
 
     if opt_overlay and not opt_upload:
-        print 'option --overlay must be used in conjunction with --upload'
+        print('option --overlay must be used in conjunction with --upload')
         sys.exit(1)
 
     if opt_purge:
         if not opt_upload:
-            print 'option --purge must be used in conjunction with --upload'
+            print('option --purge must be used in conjunction with --upload')
             sys.exit(1)
 
         if opt_overlay:
-            print 'option --overlay and --purge can not be combined'
+            print('option --overlay and --purge can not be combined')
             sys.exit(1)
 
         if opt_suffix:
-            print 'option --suffix and --purge can not be combined'
+            print('option --suffix and --purge can not be combined')
             sys.exit(1)
 
     # enable logging at the master node
     PASS_ARGS.append('--masterlog')
 
-    if args != None:
+    if args is not None:
         MASTER_OPTS.extend(args)
         PASS_ARGS.extend(args)
 
@@ -719,6 +723,7 @@ def get_options():
 
 @catch_signals
 def main():
+    #pylint: disable=too-many-statements, too-many-branches
     # type: () -> None
     '''run the program'''
 
@@ -768,7 +773,7 @@ def main():
 
     address_list = NODESET.addresses()
     if not address_list:
-        print 'no valid nodes specified'
+        print('no valid nodes specified')
         sys.exit(1)
 
     if UPLOAD_FILE.filename:

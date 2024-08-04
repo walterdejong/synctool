@@ -36,7 +36,7 @@ def catch_signals(func):
             if err.errno == errno.EPIPE:    # Broken pipe
                 ret = 141                   # 128 + 13
             else:
-                print err.strerror
+                print(err.strerror)
                 sys.exit(-1)
 
         except KeyboardInterrupt:   # user pressed Ctrl-C

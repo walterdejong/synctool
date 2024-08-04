@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.pkgclass.py    WJ111
 #
@@ -18,7 +19,7 @@ except ImportError:
 from synctool.lib import verbose, log, dryrun_msg
 
 
-class SyncPkg(object):
+class SyncPkg:
     '''generic package installer class'''
 
     # You may create a new class that has this interface
@@ -29,7 +30,6 @@ class SyncPkg(object):
         # type: () -> None
         '''initialize instance'''
 
-        pass
 
     def list(self, pkgs=None):
         # type: (List[str]) -> None

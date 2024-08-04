@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.lib.py        WJ109
 #
@@ -81,7 +82,7 @@ def verbose(msg):
     '''do conditional output based on the verbose command line parameter'''
 
     if VERBOSE:
-        print msg
+        print(msg)
 
 
 def stdout(msg):
@@ -89,7 +90,7 @@ def stdout(msg):
     '''print message to stdout (unless special output mode was selected)'''
 
     if not (UNIX_CMD or param.TERSE):
-        print msg
+        print(msg)
 
 
 def stderr(msg):
@@ -98,7 +99,7 @@ def stderr(msg):
     I don't like stderr much, so it really prints to stdout
     '''
 
-    print msg
+    print(msg)
 
 
 def error(msg):
@@ -141,11 +142,11 @@ def terse(code, msg):
                 bright = ''
 
             if param.COLORIZE_FULL_LINE:
-                print '\x1b[%d%sm%s %s\x1b[0m' % (color, bright, txt, msg)
+                print('\x1b[%d%sm%s %s\x1b[0m' % (color, bright, txt, msg))
             else:
-                print '\x1b[%d%sm%s\x1b[0m %s' % (color, bright, txt, msg)
+                print('\x1b[%d%sm%s\x1b[0m %s' % (color, bright, txt, msg))
         else:
-            print TERSE_TXT[code], msg
+            print(TERSE_TXT[code], msg)
 
 
 def unix_out(msg):
@@ -153,7 +154,7 @@ def unix_out(msg):
     '''output as unix shell command'''
 
     if UNIX_CMD:
-        print msg
+        print(msg)
 
 
 def prettypath(path):
@@ -254,17 +255,17 @@ def dryrun_msg(msg):
     if not DRY_RUN:
         return msg
 
-    l1 = len(msg) + 4
+    lmessage = len(msg) + 4
 
     add = '# dry run'
-    l2 = len(add)
+    laddition = len(add)
 
     i = 0
     while i < 4:
         # format output; align columns by steps of 20
         col = 79 + i * 20
-        if l1 + l2 <= col:
-            return msg + (' ' * (col - (l1 + l2))) + add
+        if lmessage + laddition <= col:
+            return msg + (' ' * (col - (lmessage + laddition))) + add
 
         i += 1
 
@@ -313,12 +314,13 @@ def log(msg):
     if MASTERLOG:
         # print it with magic prefix,
         # synctool-master will pick it up
-        print '%synctool-log%', msg
+        print('%synctool-log%', msg)
     else:
         _masterlog(msg)
 
 
 def run_with_nodename(cmd_arr, nodename):
+#pylint: disable=consider-using-with
     # type: (List[str], str) -> int
     '''run command and show output with nodename
     It will run regardless of what DRY_RUN is
@@ -332,15 +334,15 @@ def run_with_nodename(cmd_arr, nodename):
 
     try:
         proc = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
-                                stdout=subprocess.PIPE,
+                                stdout=subprocess.PIPE, universal_newlines=True,
                                 stderr=subprocess.STDOUT)
     except OSError as err:
         stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return -1
 
-    f = proc.stdout
-    with f:
-        for line in f:
+    fstdout = proc.stdout
+    with fstdout:
+        for line in fstdout:
             line = line.rstrip()
 
             # if output is a log line, pass it to the master's syslog
@@ -352,11 +354,11 @@ def run_with_nodename(cmd_arr, nodename):
             else:
                 # pass output on; simply use 'print' rather than 'stdout()'
                 if OPT_NODENAME:
-                    print '%s: %s' % (nodename, line)
+                    print('%s: %s' % (nodename, line))
                 else:
                     # do not prepend the nodename of this node to the output
                     # if option --no-nodename was given
-                    print line
+                    print(line)
 
     proc.wait()
     if proc.returncode != 0:
@@ -410,6 +412,7 @@ def shell_command(cmd):
 
 
 def exec_command(cmd_arr, silent=False):
+#pylint: disable=consider-using-with
     # type: (List[str], bool) -> int
     '''run a command given in cmd_arr, regardless of DRY_RUN
     Returns: return code of execute command or -1 on error
@@ -422,10 +425,10 @@ def exec_command(cmd_arr, silent=False):
 
     fd_devnull = None
     if silent and not VERBOSE:
-        fd_devnull = open(os.devnull, 'w')
+        fd_devnull = open(os.devnull, 'w', encoding='utf-8')
 
     try:
-        if fd_devnull != None:
+        if fd_devnull is not None:
             ret = subprocess.call(cmd_arr, shell=False, stdout=fd_devnull,
                                   stderr=fd_devnull)
         else:
@@ -439,7 +442,7 @@ def exec_command(cmd_arr, silent=False):
     sys.stdout.flush()
     sys.stderr.flush()
 
-    if fd_devnull != None:
+    if fd_devnull is not None:
         fd_devnull.close()
 
     return ret
@@ -528,7 +531,7 @@ def search_path(cmd):
     return None
 
 
-def mkdir_p(path, mode=0700):
+def mkdir_p(path, mode=0o700):
     # type: (str, int) -> bool
     '''like mkdir -p; make directory and subdirectories
     Returns False on error, else True
@@ -546,8 +549,7 @@ def mkdir_p(path, mode=0700):
         error('failed to create directory %s: %s' % (path, err.strerror))
         os.umask(mask)
         return False
-    else:
-        unix_out('mkdir -p -m %04o %s' % (mode, path))
+    unix_out('mkdir -p -m %04o %s' % (mode, path))
 
     os.umask(mask)
     return True
@@ -659,10 +661,10 @@ def path_exists(filename):
         if err.errno == errno.ENOENT:
             # No such file or directory
             return False
-        elif err.errno == errno.ENOTDIR:
+        if err.errno == errno.ENOTDIR:
             # path component is not a directory
             return False
-        elif err.errno == errno.EACCES:
+        if err.errno == errno.EACCES:
             # Permission denied: it exists, but we don't have access
             return True
 
@@ -682,8 +684,8 @@ def set_filetimes(filename, atime, mtime):
     # only mtime is shown
     verbose('  os.utime(%s, %s)' % (filename, print_timestamp(mtime)))
     # print timestamp in other format
-    dt = datetime.datetime.fromtimestamp(mtime)
-    time_str = dt.strftime('%Y%m%d%H%M.%S')
+    datet = datetime.datetime.fromtimestamp(mtime)
+    time_str = datet.strftime('%Y%m%d%H%M.%S')
     unix_out('touch -t %s %s' % (time_str, filename))
 
     # regardless of dry run
@@ -698,8 +700,8 @@ def print_timestamp(stamp):
     # type: (float) -> str
     '''Returns timestamp as string'''
 
-    dt = datetime.datetime.fromtimestamp(stamp)
-    return dt.strftime('%Y-%m-%d %H:%M:%S')
+    datet = datetime.datetime.fromtimestamp(stamp)
+    return datet.strftime('%Y-%m-%d %H:%M:%S')
 
 
 # EOB

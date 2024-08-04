@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.main.dsh.py    WJ109
 #
@@ -56,6 +57,7 @@ SYNC_IT = False
 
 
 def run_dsh(address_list, remote_cmd_arr):
+    #pylint: disable=global-statement
     # type: (List[str], List[str]) -> None
     '''run remote command to a set of nodes using ssh (param ssh_cmd)'''
 
@@ -166,7 +168,7 @@ def worker_ssh(addr):
     # execute ssh+remote command and show output with the nodename
     if param.NUM_PROC <= 1:
         # run with -N 1 : wait on prompts, flush output
-        print nodename + ': ',
+        print(nodename + ': ', end=' ')
         synctool.lib.exec_command(ssh_cmd_arr)
     else:
         # run_with_nodename() shows the nodename, but
@@ -175,6 +177,7 @@ def worker_ssh(addr):
 
 
 def start_multiplex(address_list):
+    #pylint: disable=global-statement
     # type: (List[str]) -> None
     '''run ssh -M to each node in address_list'''
 
@@ -192,8 +195,8 @@ def start_multiplex(address_list):
         PERSIST = param.CONTROL_PERSIST
     else:
         # spellcheck the parameter
-        m = synctool.configparser.PERSIST_TIME.match(PERSIST)
-        if not m:
+        mpar = synctool.configparser.PERSIST_TIME.match(PERSIST)
+        if not mpar:
             error("invalid persist value '%s'" % PERSIST)
             return
 
@@ -201,11 +204,12 @@ def start_multiplex(address_list):
     nodes = [NODESET.get_nodename_from_address(x) for x in address_list]
 
     # make list of pairs: (addr, nodename)
-    pairs = zip(address_list, nodes)
+    pairs = list(zip(address_list, nodes))
     synctool.multiplex.setup_master(pairs, PERSIST)
 
 
 def control_multiplex(address_list, _ctl_cmd):
+    #pylint: disable=global-statement
     # type: (List[str], str) -> None
     '''run ssh -O ctl_cmd to each node in address_list'''
 
@@ -229,28 +233,28 @@ def _ssh_control(addr):
     '''run ssh -O CTL_CMD addr'''
 
     nodename = NODESET.get_nodename_from_address(addr)
-    ok = synctool.multiplex.control(nodename, addr, CTL_CMD)
+    okay = synctool.multiplex.control(nodename, addr, CTL_CMD)
 
     if CTL_CMD == 'check':
-        if ok:
+        if okay:
             if not synctool.lib.QUIET:
-                print '%s: ssh master running' % nodename
+                print('%s: ssh master running' % nodename)
         else:
-            print '%s: ssh master not running' % nodename
+            print('%s: ssh master not running' % nodename)
 
     elif CTL_CMD == 'stop':
         if not synctool.lib.QUIET:
-            if ok:
-                print '%s: ssh master stopped' % nodename
+            if okay:
+                print('%s: ssh master stopped' % nodename)
             else:
-                print '%s: ssh master not running' % nodename
+                print('%s: ssh master not running' % nodename)
 
     elif CTL_CMD == 'exit':
         if not synctool.lib.QUIET:
-            if ok:
-                print '%s: ssh master exiting' % nodename
+            if okay:
+                print('%s: ssh master exiting' % nodename)
             else:
-                print '%s: ssh master not running' % nodename
+                print('%s: ssh master not running' % nodename)
 
 
 def check_cmd_config():
@@ -259,14 +263,14 @@ def check_cmd_config():
 
     errors = 0
 
-    ok, param.SSH_CMD = config.check_cmd_config('ssh_cmd', param.SSH_CMD)
-    if not ok:
+    okay, param.SSH_CMD = config.check_cmd_config('ssh_cmd', param.SSH_CMD)
+    if not okay:
         errors += 1
 
     if not OPT_SKIP_RSYNC:
-        ok, param.RSYNC_CMD = config.check_cmd_config('rsync_cmd',
+        okay, param.RSYNC_CMD = config.check_cmd_config('rsync_cmd',
                                                       param.RSYNC_CMD)
-        if not ok:
+        if not okay:
             errors += 1
 
     if errors > 0:
@@ -277,13 +281,13 @@ def usage():
     # type: () -> None
     '''print usage information'''
 
-    print 'usage: %s [options] <remote command>' % PROGNAME
-    print 'options:'
-    print '  -h, --help                  Display this information'
-    print '  -c, --conf=FILE             Use this config file'
-    print ('                              (default: %s)' %
-           param.DEFAULT_CONF)
-    print '''  -n, --node=LIST             Execute only on these nodes
+    print('usage: %s [options] <remote command>' % PROGNAME)
+    print('options:')
+    print('  -h, --help                  Display this information')
+    print('  -c, --conf=FILE             Use this config file')
+    print(('                              (default: %s)' %
+           param.DEFAULT_CONF))
+    print('''  -n, --node=LIST             Execute only on these nodes
   -g, --group=LIST            Execute only on these groups of nodes
   -x, --exclude=LIST          Exclude these nodes from the selected group
   -X, --exclude-group=LIST    Exclude these groups from the selection
@@ -302,10 +306,12 @@ def usage():
                               (eg. when it is on a shared filesystem)
 
 CTL_CMD can be: check, stop, exit
-'''
+''')
 
 
 def get_options():
+    #pylint: disable=global-statement
+    #pylint: disable=too-many-statements, too-many-branches
     # type: () -> List[str]
     '''parse command-line options'''
 
@@ -325,7 +331,7 @@ def get_options():
                                     'no-nodename', 'unix', 'verbose',
                                     'aggregate', 'skip-rsync', 'quiet'])
     except getopt.GetoptError as reason:
-        print '%s: %s' % (PROGNAME, reason)
+        print('%s: %s' % (PROGNAME, reason))
 #        usage()
         sys.exit(1)
 
@@ -399,12 +405,12 @@ def get_options():
             continue
 
         if opt == '-O':
-            if CTL_CMD != None:
-                print "%s: only a single '-O' option can be given" % PROGNAME
+            if CTL_CMD is not None:
+                print("%s: only a single '-O' option can be given" % PROGNAME)
                 sys.exit(1)
 
             if arg not in ('check', 'stop', 'exit'):
-                print "%s: unknown control command '%s'" % (PROGNAME, arg)
+                print("%s: unknown control command '%s'" % (PROGNAME, arg))
                 sys.exit(1)
 
             CTL_CMD = arg
@@ -414,12 +420,12 @@ def get_options():
             try:
                 param.NUM_PROC = int(arg)
             except ValueError:
-                print ("%s: option '%s' requires a numeric value" %
-                       (PROGNAME, opt))
+                print(("%s: option '%s' requires a numeric value" %
+                       (PROGNAME, opt)))
                 sys.exit(1)
 
             if param.NUM_PROC < 1:
-                print '%s: invalid value for numproc' % PROGNAME
+                print('%s: invalid value for numproc' % PROGNAME)
                 sys.exit(1)
 
             continue
@@ -428,12 +434,12 @@ def get_options():
             try:
                 param.SLEEP_TIME = int(arg)
             except ValueError:
-                print ("%s: option '%s' requires a numeric value" %
-                       (PROGNAME, opt))
+                print(("%s: option '%s' requires a numeric value" %
+                       (PROGNAME, opt)))
                 sys.exit(1)
 
             if param.SLEEP_TIME < 0:
-                print '%s: invalid value for sleep time' % PROGNAME
+                print('%s: invalid value for sleep time' % PROGNAME)
                 sys.exit(1)
 
             if not param.SLEEP_TIME:
@@ -469,20 +475,20 @@ def get_options():
             continue
 
     if not OPT_MULTIPLEX and PERSIST is not None:
-        print '%s: option --persist requires option --master' % PROGNAME
+        print('%s: option --persist requires option --master' % PROGNAME)
         sys.exit(1)
 
-    if OPT_MULTIPLEX and CTL_CMD != None:
-        print '%s: options --master and -O can not be combined' % PROGNAME
+    if OPT_MULTIPLEX and CTL_CMD is not None:
+        print('%s: options --master and -O can not be combined' % PROGNAME)
         sys.exit(1)
 
-    if OPT_MULTIPLEX or CTL_CMD != None:
+    if OPT_MULTIPLEX or CTL_CMD is not None:
         if args:
-            print '%s: excessive arguments on command-line' % PROGNAME
+            print('%s: excessive arguments on command-line' % PROGNAME)
             sys.exit(1)
 
     elif not args:
-        print '%s: missing remote command' % PROGNAME
+        print('%s: missing remote command' % PROGNAME)
         sys.exit(1)
 
     if args:
@@ -522,7 +528,7 @@ def main():
 
     if OPT_MULTIPLEX:
         start_multiplex(address_list)
-    elif CTL_CMD != None:
+    elif CTL_CMD is not None:
         control_multiplex(address_list, CTL_CMD)
     else:
         run_dsh(address_list, cmd_args)

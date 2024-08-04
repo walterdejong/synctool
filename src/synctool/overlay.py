@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.overlay.py    WJ111
 #
@@ -36,6 +37,7 @@
 
 import os
 import fnmatch
+from functools import cmp_to_key
 
 try:
     from typing import List, Dict, Tuple, Set, Callable
@@ -58,16 +60,12 @@ OV_NO_EXT = 5
 OV_IGNORE = 6
 
 
-def _sort_by_importance(item1, item2):
-    # type: (Tuple[str, int], Tuple[str, int]) -> int
-    '''item is a tuple (x, importance)'''
-
-    return cmp(item1[1], item2[1])
-
-
 def _toplevel(overlay):
     # type: (str) -> List[str]
     '''Returns sorted list of fullpath directories under overlay/'''
+
+    # the tuples are (fullpath, importance)
+    # the list of paths gets sorted by importance; key=item[1]
 
     arr = []    # type: List[Tuple[str, int]]
     for entry in os.listdir(overlay):
@@ -80,8 +78,9 @@ def _toplevel(overlay):
             continue
 
         arr.append((fullpath, importance))
+        # verbose('%s is mine, importance %d' % (prettypath(fullpath), importance))
 
-    arr.sort(_sort_by_importance)
+    arr.sort(key=lambda x: x[1])
 
     # return list of only the directory names
     return [x[0] for x in arr]
@@ -96,6 +95,7 @@ def _group_all():
 
 
 def _split_extension(filename, src_dir):
+#pylint: disable=too-many-branches, too-many-return-statements
     # type: (str, str) -> Tuple[SyncObject, int]
     '''filename in the overlay tree, without leading path
     src_dir is passed for the purpose of printing error messages
@@ -152,7 +152,7 @@ def _split_extension(filename, src_dir):
         # register group-specific .pre script
         return SyncObject(filename, name2, OV_PRE), importance
 
-    elif ext == '.post':
+    if ext == '.post':
         _, ext = os.path.splitext(name2)
         if ext == '._template':
             # it's a group-specific template generator
@@ -161,13 +161,14 @@ def _split_extension(filename, src_dir):
         # register group-specific .post script
         return SyncObject(filename, name2, OV_POST), importance
 
-    elif ext == '._template':
+    if ext == '._template':
         return SyncObject(filename, name2, OV_TEMPLATE), importance
 
     return SyncObject(filename, name), importance
 
 
 def _sort_by_importance_post_first(item1, item2):
+#pylint: disable=too-many-return-statements
     # type: (Tuple[SyncObject, int], Tuple[SyncObject, int]) -> int
     '''sort by importance, but always put .post scripts first'''
 
@@ -178,53 +179,44 @@ def _sort_by_importance_post_first(item1, item2):
     obj1, importance1 = item1
     obj2, importance2 = item2
 
+    # if types are the same, just sort by importance
+    if obj1.ov_type == obj2.ov_type:
+        if importance1 < importance2:
+            return -1
+        return int(importance1 == importance2)
+
     if obj1.ov_type == OV_PRE:
-        if obj2.ov_type == OV_PRE:
-            return cmp(importance1, importance2)
-
         return -1
-
     if obj2.ov_type == OV_PRE:
         return 1
 
     if obj1.ov_type == OV_POST:
-        if obj2.ov_type == OV_POST:
-            return cmp(importance1, importance2)
-
         return -1
-
     if obj2.ov_type == OV_POST:
         return 1
 
     if obj1.ov_type == OV_TEMPLATE_POST:
-        if obj2.ov_type == OV_TEMPLATE_POST:
-            return cmp(importance1, importance2)
-
         return -1
-
     if obj2.ov_type == OV_TEMPLATE_POST:
         return 1
 
     if obj1.ov_type == OV_TEMPLATE:
-        if obj2.ov_type == OV_TEMPLATE:
-            return cmp(importance1, importance2)
-
         return -1
-
     if obj2.ov_type == OV_TEMPLATE:
         return 1
 
-    return cmp(importance1, importance2)
+    # get the REG vs NO_EXT/IGNORE types here
+    return 0
 
 
 def _walk_subtree(src_dir, dest_dir, duplicates, callback):
-    # type: (str, str, Set[str], Callable[[SyncObject, Dict[str, str], Dict[str, str]], Tuple[bool, bool]]) -> Tuple[bool, bool]
+#pylint: disable=too-many-locals,too-many-statements,too-many-branches
+    # type: (str, str, Set[str], Callable[[SyncObject,
+    # Dict[str, str], Dict[str, str]], Tuple[bool, bool]]) -> Tuple[bool, bool]
     '''walk subtree under overlay/group/
     duplicates is a set that keeps us from selecting any duplicate matches
     Returns pair of booleans: ok, dir was updated
     '''
-
-#    verbose('_walk_subtree(%s)' % src_dir)
 
     arr = []
     for entry in os.listdir(src_dir):
@@ -253,7 +245,8 @@ def _walk_subtree(src_dir, dest_dir, duplicates, callback):
 
     # sort with .pre and .post scripts first
     # this ensures that post_dict will have the required script when needed
-    arr.sort(_sort_by_importance_post_first)
+
+    arr.sort(key=cmp_to_key(_sort_by_importance_post_first))
 
     pre_dict = {}       # type: Dict[str, str]
     post_dict = {}      # type: Dict[str, str]
@@ -305,16 +298,16 @@ def _walk_subtree(src_dir, dest_dir, duplicates, callback):
                 # this will create or fix directory entry if needed
                 # a .pre script may be run
                 # a .post script should not be run
-                ok, updated = callback(obj, pre_dict, {})
-                if not ok:
+                okay, updated = callback(obj, pre_dict, {})
+                if not okay:
                     # quick exit
                     return False, dir_changed
 
             # recurse down into the directory
             # with empty pre_dict and post_dict parameters
-            ok, updated2 = _walk_subtree(obj.src_path, obj.dest_path,
+            okay, updated2 = _walk_subtree(obj.src_path, obj.dest_path,
                                          duplicates, callback)
-            if not ok:
+            if not okay:
                 # quick exit
                 return False, dir_changed
 
@@ -345,8 +338,8 @@ def _walk_subtree(src_dir, dest_dir, duplicates, callback):
 
         duplicates.add(obj.dest_path)
 
-        ok, updated = callback(obj, pre_dict, post_dict)
-        if not ok:
+        okay, updated = callback(obj, pre_dict, post_dict)
+        if not okay:
             # quick exit
             return False, dir_changed
 
@@ -360,8 +353,8 @@ def _walk_subtree(src_dir, dest_dir, duplicates, callback):
             obj.ov_type = OV_REG
             obj.make(src_dir, dest_dir)
 
-            ok, updated = callback(obj, pre_dict, post_dict)
-            if not ok:
+            okay, updated = callback(obj, pre_dict, post_dict)
+            if not okay:
                 # quick exit
                 return False, dir_changed
 
@@ -381,9 +374,9 @@ def visit(overlay, callback):
 
     duplicates = set()  # type: Set[str]
 
-    for d in _toplevel(overlay):
-        ok, _ = _walk_subtree(d, os.sep, duplicates, callback)
-        if not ok:
+    for direct in _toplevel(overlay):
+        okay, _ = _walk_subtree(direct, os.sep, duplicates, callback)
+        if not okay:
             # quick exit
             break
 

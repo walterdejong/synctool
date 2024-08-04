@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.main.client_pkg.py WJ111
 #
@@ -97,6 +98,7 @@ def package_manager():
               synctool.param.PACKAGE_MANAGER)
 
     sys.exit(1)
+    #pylint: disable=unreachable
     return None     # not reached
 
 
@@ -184,14 +186,14 @@ def there_can_be_only_one():
     # type: () -> None
     '''print usage information about actions'''
 
-    print '''Specify only one of these options:
+    print('''Specify only one of these options:
   -l, --list   [PACKAGE ...]     List installed packages
   -i, --install PACKAGE [..]     Install package
   -R, --remove  PACKAGE [..]     Uninstall package
   -u, --update                   Update the database of available packages
   -U, --upgrade                  Upgrade all outdated packages
   -C, --clean                    Cleanup caches of downloaded packages
-'''
+''')
     sys.exit(1)
 
 
@@ -199,13 +201,13 @@ def usage():
     # type: () -> None
     '''print usage information'''
 
-    print 'usage: %s [options] [package [..]]' % PROGNAME
-    print 'options:'
-    print '  -h, --help                     Display this information'
-    print '  -c, --conf=FILE                Use this config file'
-    print ('                                 (default: %s)' %
-           synctool.param.DEFAULT_CONF)
-    print '''  -l, --list   [PACKAGE ...]     List installed packages
+    print('usage: %s [options] [package [..]]' % PROGNAME)
+    print('options:')
+    print('  -h, --help                     Display this information')
+    print('  -c, --conf=FILE                Use this config file')
+    print(('                                 (default: %s)' %
+           synctool.param.DEFAULT_CONF))
+    print('''  -l, --list   [PACKAGE ...]     List installed packages
   -i, --install PACKAGE [..]     Install package
   -R, --remove  PACKAGE [..]     Uninstall package
   -u, --update                   Update the database of available packages
@@ -217,29 +219,32 @@ def usage():
       --unix                     Output actions as unix shell commands
   -m, --manager PACKAGE_MANAGER  (Force) select this package manager
 
-Supported package managers are:'''
+Supported package managers are:''')
 
     # print list of supported package managers
     # format it at 78 characters wide
-    print ' ',
-    n = 2
+    print(' ', end=' ')
+    npms = 2
     for pkg in synctool.param.KNOWN_PACKAGE_MANAGERS:
-        if n + len(pkg) + 1 <= 78:
-            n = n + len(pkg) + 1
-            print pkg,
+        if npms + len(pkg) + 1 <= 78:
+            npms = npms + len(pkg) + 1
+            print(pkg, end=' ')
         else:
-            n = 2 + len(pkg) + 1
-            print
-            print ' ', pkg,
+            npms = 2 + len(pkg) + 1
+            print()
+            print(' ', pkg, end=' ')
 
-    print '''
+    print('''
 
 The package list must be given last
 Note that --upgrade does a dry run unless you specify --fix
-'''
+''')
 
 
 def get_options():
+    #pylint: disable=global-statement
+    #pylint: disable=too-many-branches
+    #pylint: disable=too-many-statements
     # type: () -> None
     '''parse command-line options'''
 
@@ -256,7 +261,7 @@ def get_options():
                                     'cleanup', 'manager=', 'masterlog',
                                     'fix', 'verbose', 'unix', 'quiet'])
     except getopt.GetoptError as reason:
-        print '%s: %s' % (PROGNAME, reason)
+        print('%s: %s' % (PROGNAME, reason))
 #        usage()
         sys.exit(1)
 
@@ -364,7 +369,7 @@ def get_options():
             error('options --install and --remove require a package name')
             sys.exit(1)
 
-    elif args != None and args:
+    elif args is not None and args:
         error('excessive arguments on command line')
         sys.exit(1)
 

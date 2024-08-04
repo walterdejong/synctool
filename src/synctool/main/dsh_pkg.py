@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.main.dsh_pkg.py    WJ111
 #
@@ -46,6 +47,7 @@ SSH_CMD_ARR = None      # type: List[str]
 
 
 def run_remote_pkg(address_list):
+    #pylint: disable=global-statement
     # type: (List[str]) -> None
     '''run synctool-pkg on the target nodes'''
 
@@ -88,7 +90,7 @@ def worker_pkg(addr):
     # execute ssh synctool-pkg and show output with the nodename
     if param.NUM_PROC <= 1:
         # run with -N 1 : wait on prompts, flush output
-        print nodename + ': ',
+        print(nodename + ': ', end=' ')
         synctool.lib.exec_command(cmd_arr)
     else:
         # run_with_nodename() shows the nodename, but
@@ -145,12 +147,12 @@ def check_cmd_config():
 
     errors = 0
 
-    ok, param.SSH_CMD = config.check_cmd_config('ssh_cmd', param.SSH_CMD)
-    if not ok:
+    okay, param.SSH_CMD = config.check_cmd_config('ssh_cmd', param.SSH_CMD)
+    if not okay:
         errors += 1
 
-    ok, param.PKG_CMD = config.check_cmd_config('pkg_cmd', param.PKG_CMD)
-    if not ok:
+    okay, param.PKG_CMD = config.check_cmd_config('pkg_cmd', param.PKG_CMD)
+    if not okay:
         errors += 1
 
     if errors > 0:
@@ -161,13 +163,13 @@ def there_can_be_only_one():
     # type: () -> None
     '''print usage information about actions'''
 
-    print '''Specify only one of these options:
+    print('''Specify only one of these options:
   -l, --list   [PACKAGE ...]     List installed packages
   -i, --install PACKAGE [..]     Install package
   -R, --remove  PACKAGE [..]     Uninstall package
   -u, --update                   Update the database of available packages
   -U, --upgrade                  Upgrade all outdated packages
-  -C, --clean                    Cleanup caches of downloaded packages'''
+  -C, --clean                    Cleanup caches of downloaded packages''')
     sys.exit(1)
 
 
@@ -175,14 +177,14 @@ def usage():
     # type: () -> None
     '''print usage information'''
 
-    print 'usage: %s [options] [package [..]]' % PROGNAME
-    print 'options:'
-    print '  -h, --help                     Display this information'
-    print '  -c, --conf=FILE                Use this config file'
-    print ('                                 (default: %s)' %
-           param.DEFAULT_CONF)
+    print('usage: %s [options] [package [..]]' % PROGNAME)
+    print('options:')
+    print('  -h, --help                     Display this information')
+    print('  -c, --conf=FILE                Use this config file')
+    print(('                                 (default: %s)' %
+           param.DEFAULT_CONF))
 
-    print '''  -n, --node=LIST                Execute only on these nodes
+    print('''  -n, --node=LIST                Execute only on these nodes
   -g, --group=LIST               Execute only on these groups of nodes
   -x, --exclude=LIST             Exclude these nodes from the selected group
   -X, --exclude-group=LIST       Exclude these groups from the selection
@@ -200,29 +202,31 @@ def usage():
   -f, --fix                      Perform upgrade (otherwise, do dry-run)
   -m, --manager PACKAGE_MANAGER  (Force) select this package manager
 
-Supported package managers are:'''
+Supported package managers are:''')
 
     # print list of supported package managers
     # format it at 78 characters wide
-    print ' ',
-    n = 2
+    print(' ', end=' ')
+    nmgr = 2
     for pkg in param.KNOWN_PACKAGE_MANAGERS:
-        if n + len(pkg) + 1 <= 78:
-            n = n + len(pkg) + 1
-            print pkg,
+        if nmgr + len(pkg) + 1 <= 78:
+            nmgr = nmgr + len(pkg) + 1
+            print(pkg, end=' ')
         else:
-            n = 2 + len(pkg) + 1
-            print
-            print ' ', pkg,
+            nmgr = 2 + len(pkg) + 1
+            print()
+            print(' ', pkg, end=' ')
 
-    print '''
+    print('''
 
 The package list must be given last
 Note that --upgrade does a dry run unless you specify --fix
-'''
+''')
 
 
 def get_options():
+    #pylint: disable=global-statement
+    #pylint: disable=too-many-statements, too-many-branches
     # type: () -> None
     '''parse command-line options'''
 
@@ -249,7 +253,7 @@ def get_options():
                                     'numproc=', 'zzz=', 'fix', 'verbose',
                                     'quiet', 'unix', 'aggregate'])
     except getopt.GetoptError as reason:
-        print '%s: %s' % (PROGNAME, reason)
+        print('%s: %s' % (PROGNAME, reason))
 #        usage()
         sys.exit(1)
 
@@ -355,12 +359,12 @@ def get_options():
             try:
                 param.NUM_PROC = int(arg)
             except ValueError:
-                print ("%s: option '%s' requires a numeric value" %
-                       (PROGNAME, opt))
+                print(("%s: option '%s' requires a numeric value" %
+                       (PROGNAME, opt)))
                 sys.exit(1)
 
             if param.NUM_PROC < 1:
-                print '%s: invalid value for numproc' % PROGNAME
+                print('%s: invalid value for numproc' % PROGNAME)
                 sys.exit(1)
 
             continue
@@ -369,12 +373,12 @@ def get_options():
             try:
                 param.SLEEP_TIME = int(arg)
             except ValueError:
-                print ("%s: option '%s' requires a numeric value" %
-                       (PROGNAME, opt))
+                print(("%s: option '%s' requires a numeric value" %
+                       (PROGNAME, opt)))
                 sys.exit(1)
 
             if param.SLEEP_TIME < 0:
-                print '%s: invalid value for sleep time' % PROGNAME
+                print('%s: invalid value for sleep time' % PROGNAME)
                 sys.exit(1)
 
             if not param.SLEEP_TIME:
@@ -457,7 +461,7 @@ def main():
 
     address_list = NODESET.addresses()
     if not address_list:
-        print 'no valid nodes specified'
+        print('no valid nodes specified')
         sys.exit(1)
 
     run_remote_pkg(address_list)

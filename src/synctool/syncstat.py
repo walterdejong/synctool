@@ -1,3 +1,4 @@
+# pylint: disable=consider-using-f-string
 #
 #   synctool.stat.py    WJ110
 #
@@ -18,7 +19,7 @@ from synctool.lib import error
 import synctool.pwdgrp
 
 
-class SyncStat(object):
+class SyncStat:
     '''structure to hold the relevant fields of a stat() buf'''
 
     # NB. the reasoning behind keeping a subset of the statbuf is that
@@ -85,9 +86,9 @@ class SyncStat(object):
 
     def is_dir(self):
         # type: () -> bool
-        '''Returns True if it's a directory'''
+        ''' Returns True if it is a directory'''
 
-        return self.entry_exists and stat.S_ISDIR(self.mode)
+        return(self.entry_exists and stat.S_ISDIR(self.mode))
 
     def is_file(self):
         # type: () -> bool
@@ -141,7 +142,7 @@ class SyncStat(object):
         # type: () -> bool
         '''Returns True if its mode has any 'x' bit set'''
 
-        return self.entry_exists and ((self.mode & 0111) != 0)
+        return self.entry_exists and ((self.mode & 0o111) != 0)
 
     def ascii_uid(self):
         # type: () -> str

@@ -18,7 +18,7 @@ except ImportError:
     pass
 
 
-class Unbuffered(object):
+class Unbuffered:
     '''class representing an unbuffered stream'''
 
     def __init__(self, stream):

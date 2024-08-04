@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.nodeset.py        WJ111
 #
@@ -34,7 +35,7 @@ from synctool.lib import verbose, stderr, warning
 import synctool.range
 
 
-class NodeSet(object):
+class NodeSet:
     '''class representing a set of nodes
     Some methods may throw RangeSyntaxError when parsing range expressions
     '''
@@ -94,6 +95,7 @@ class NodeSet(object):
                 self.exclude_groups.add(group)
 
     def addresses(self, silent=False):
+#pylint: disable=too-many-branches
         # type: (bool) -> List[str]
         '''return list of addresses of relevant nodes'''
 
@@ -160,7 +162,7 @@ class NodeSet(object):
             else:
                 arr = list(ignored_nodes)
                 arr.sort()
-                ignored_str = ('ignored: ' + synctool.range.compress(arr))
+                ignored_str = 'ignored: ' + synctool.range.compress(arr)
                 if len(ignored_str) < 70:
                     warning(ignored_str)
                 else:

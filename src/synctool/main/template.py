@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.main.template.py   WJ113
 #
@@ -33,11 +34,11 @@ def spellcheck(name):
     Returns True if OK, False if not OK
     '''
 
-    m = SPELLCHECK.match(name)
-    if not m:
+    mat = SPELLCHECK.match(name)
+    if not mat:
         return False
 
-    if m.group(0) != name:
+    if mat.group(0) != name:
         return False
 
     return True
@@ -62,21 +63,21 @@ def template(filename):
     '''generate the output from template file'''
 
     if not filename:
-        print '%s: error: invalid filename' % PROGNAME
+        print('%s: error: invalid filename' % PROGNAME)
         sys.exit(-1)
 
     if filename == '-':
-        f = sys.stdin
+        fio = sys.stdin
     else:
         try:
-            f = open(filename)
+            fio = open(filename, encoding='utf-8')
         except IOError as err:
-            print "%s: failed to open '%s': %s" % (PROGNAME, filename,
-                                                   err.strerror)
+            print("%s: failed to open '%s': %s" % (PROGNAME, filename,
+                                                   err.strerror))
             sys.exit(-1)
 
-    with f:
-        for line in f:
+    with fio:
+        for line in fio:
             sys.stdout.write(subst(line))
 
 
@@ -84,7 +85,7 @@ def usage():
     # type: () -> None
     '''print usage information'''
 
-    print '''%s [-v VAR=VALUE] <input filename>
+    print('''%s [-v VAR=VALUE] <input filename>
 options:
   -h, --help               Display this information
   -v, --var VAR=VALUE      Set variable VAR to VALUE
@@ -92,7 +93,7 @@ options:
 synctool-template replaces all occurrences of "@VAR@" in the input text
 with "VALUE" and prints the result to stdout. VAR may be given on the
 command-line, but may also be an existing environment variable
-''' % PROGNAME
+''' % PROGNAME)
 
 
 def get_options():
@@ -108,16 +109,16 @@ def get_options():
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hv:', ['help', 'var='])
     except getopt.GetoptError as reason:
-        print '%s: %s' % (PROGNAME, reason)
+        print('%s: %s' % (PROGNAME, reason))
         usage()
         sys.exit(1)
 
     if not args:
-        print '%s: missing input filename' % PROGNAME
+        print('%s: missing input filename' % PROGNAME)
         sys.exit(1)
 
     if len(args) > 1:
-        print '%s: too many arguments' % PROGNAME
+        print('%s: too many arguments' % PROGNAME)
         sys.exit(1)
 
     for opt, optarg in opts:
@@ -129,24 +130,24 @@ def get_options():
             try:
                 (key, value) = optarg.split('=', 1)
             except ValueError:
-                print '%s: syntax error in command-line' % PROGNAME
+                print('%s: syntax error in command-line' % PROGNAME)
                 sys.exit(1)
 
             else:
                 if not spellcheck(key):
-                    print ('%s: syntax error: variables must be an '
-                           'uppercase word' % PROGNAME)
+                    print(('%s: syntax error: variables must be an '
+                           'uppercase word' % PROGNAME))
                     sys.exit(1)
 
                 # put it in the environment
                 os.environ[key] = value
 
     if not args:
-        print '%s: missing input file' % PROGNAME
+        print('%s: missing input file' % PROGNAME)
         sys.exit(1)
 
     if len(args) > 1:
-        print '%s: too many arguments' % PROGNAME
+        print('%s: too many arguments' % PROGNAME)
         sys.exit(1)
 
     # return the input filename
@@ -158,7 +159,7 @@ def main():
     # type: () -> None
     '''do it'''
 
-    INPUT_FILE = get_options()
-    template(INPUT_FILE)
+    infile = get_options()
+    template(infile)
 
 # EOB

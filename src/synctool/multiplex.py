@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.multiplex.py   WJ114
 #
@@ -70,9 +71,9 @@ def use_mux(nodename):
                     (control_path, statbuf.uid))
             return False
 
-        if statbuf.mode & 077 != 0:
+        if statbuf.mode & 0o77 != 0:
             warning('control path %s: suspicious file mode %04o' %
-                    (control_path, statbuf.mode & 0777))
+                    (control_path, statbuf.mode & 0o777))
             return False
 
         verbose('control path %s already exists' % control_path)
@@ -125,6 +126,7 @@ def ssh_args(ssh_cmd_arr, nodename):
 
 
 def setup_master(node_list, persist):
+#pylint: disable=too-many-statements,too-many-branches,consider-using-with
     # type: (List[Tuple[str, str]], str) -> bool
     '''setup master connections to all nodes in node_list
     node_list is a list of pairs: (addr, nodename)
@@ -169,9 +171,9 @@ def setup_master(node_list, persist):
                 errors += 1
                 continue
 
-            if statbuf.mode & 077 != 0:
+            if statbuf.mode & 0o77 != 0:
                 warning('control path %s: suspicious file mode %04o' %
-                        (control_path, statbuf.mode & 0777))
+                        (control_path, statbuf.mode & 0o777))
                 errors += 1
                 continue
 
@@ -198,12 +200,12 @@ def setup_master(node_list, persist):
     # print some info to the user about what's going on
     if len(procs) > 0:
         if SSH_VERSION < 56 or persist is None:
-            print '''waiting for ssh master processes to terminate
+            print('''waiting for ssh master processes to terminate
 Meanwhile, you may background this process or continue working
 in another terminal
-'''
+''')
         else:
-            print 'ssh master processes started'
+            print('ssh master processes started')
 
         for proc in procs:
             if errors > 0:
@@ -212,12 +214,13 @@ in another terminal
             proc.wait()
     else:
         if errors == 0:
-            print 'ssh master processes already running'
+            print('ssh master processes already running')
 
     return errors == 0
 
 
 def detect_ssh():
+#pylint: disable=global-statement,consider-using-with
     # type: () -> int
     '''detect ssh version
     Set global SSH_VERSION to 2-digit int number:
@@ -241,6 +244,7 @@ def detect_ssh():
     try:
         # OpenSSH may print version information on stderr
         proc = subprocess.Popen(cmd_arr, shell=False, stdout=subprocess.PIPE,
+                                universal_newlines=True,
                                 stderr=subprocess.STDOUT)
     except OSError as err:
         error('failed to execute %s: %s' % (cmd_arr[0], err.strerror))
@@ -257,12 +261,12 @@ def detect_ssh():
     verbose('ssh version string: ' + data)
 
     # data should be a single line matching "OpenSSH_... SSL ... date\n"
-    m = MATCH_SSH_VERSION.match(data)
-    if not m:
+    matchssl = MATCH_SSH_VERSION.match(data)
+    if not matchssl:
         SSH_VERSION = -1
         return SSH_VERSION
 
-    groups = m.groups()
+    groups = matchssl.groups()
     SSH_VERSION = int(groups[0]) * 10 + int(groups[1])
     verbose('SSH_VERSION: %d' % SSH_VERSION)
     return SSH_VERSION

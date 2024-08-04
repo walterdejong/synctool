@@ -1,4 +1,5 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
+#pylint: disable=consider-using-f-string
 #
 #   synctool.upload.py    WJ113
 #
@@ -16,7 +17,9 @@ import sys
 import shlex
 import stat
 import subprocess
-import urllib
+import urllib.request
+import urllib.parse
+import urllib.error
 
 try:
     from typing import List, Dict, Tuple
@@ -37,7 +40,8 @@ import synctool.pwdgrp
 GLOBAL_UPLOAD_FILE = None   # type: UploadFile
 
 
-class UploadFile(object):
+class UploadFile:
+    #pylint: disable=too-few-public-methods
     '''class that holds information on requested upload'''
 
     def __init__(self):
@@ -53,7 +57,6 @@ class UploadFile(object):
     def make_repos_path(self):
         # type: () -> None
         '''make $overlay repository path from elements'''
-
         if len(self.filename) > 1 and self.filename[-1] == '/':
             # strip trailing slash
             self.filename = self.filename[:-1]
@@ -63,9 +66,9 @@ class UploadFile(object):
             return
 
         if not self.repos_path:
-            fn = self.filename
-            if fn[0] == '/':
-                fn = fn[1:]
+            filenm = self.filename
+            if filenm[0] == '/':
+                filenm = filenm[1:]
 
             overlay_dir = self.overlay
             if not overlay_dir:
@@ -79,12 +82,12 @@ class UploadFile(object):
 
             if not self.suffix:
                 self.repos_path = os.path.join(synctool.param.OVERLAY_DIR,
-                                               overlay_dir, fn)
+                                               overlay_dir, filenm)
                 return
 
             self.repos_path = os.path.join(synctool.param.OVERLAY_DIR,
                                            overlay_dir,
-                                           fn + '._' + self.suffix)
+                                           filenm + '._' + self.suffix)
             return
 
         if self.suffix:
@@ -113,7 +116,8 @@ class UploadFile(object):
                                        self.purge) + self.filename
 
 
-class RemoteStat(object):
+class RemoteStat:
+    #pylint: disable=too-many-instance-attributes
     '''represent stat() info of a remote file'''
 
     def __init__(self, arr):
@@ -137,13 +141,13 @@ class RemoteStat(object):
         self.gid = int(arr[3])
         self.group = arr[4]
         self.size = int(arr[5])
-        self.filename = urllib.unquote(arr[6])
+        self.filename = urllib.parse.unquote(arr[6])
 
         if self.is_symlink():
             if len(arr) != 9:
                 raise ValueError()
 
-            self.linkdest = urllib.unquote(arr[8])
+            self.linkdest = urllib.parse.unquote(arr[8])
         else:
             self.linkdest = None    # type: str
 
@@ -190,7 +194,8 @@ class RemoteStat(object):
                  self.size, self.filename, self.linkdest))
 
 
-def _remote_stat(up):
+def _remote_stat(upfile):
+    #pylint: disable=consider-using-with
     # type: (UploadFile) -> List[RemoteStat]
     '''Get stat info of the remote object
     Returns array of RemoteStat data, or None on error
@@ -198,20 +203,21 @@ def _remote_stat(up):
 
     # use ssh connection multiplexing (if possible)
     cmd_arr = shlex.split(synctool.param.SSH_CMD)
-    use_multiplex = synctool.multiplex.use_mux(up.node)
+    use_multiplex = synctool.multiplex.use_mux(upfile.node)
     if use_multiplex:
-        synctool.multiplex.ssh_args(cmd_arr, up.node)
+        synctool.multiplex.ssh_args(cmd_arr, upfile.node)
 
     list_cmd = os.path.join(synctool.param.ROOTDIR, 'sbin',
                             'synctool_list.py')
-    cmd_arr.extend(['--', up.address, list_cmd, up.filename])
+    cmd_arr.extend(['--', upfile.address, list_cmd, upfile.filename])
 
-    verbose('running synctool_list %s:%s' % (up.node, up.filename))
+    verbose('running synctool_list %s:%s' % (upfile.node, upfile.filename))
     unix_out(' '.join(cmd_arr))
     try:
         proc = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
                                 stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
+                                stderr=subprocess.PIPE,
+                                universal_newlines=True)
     except OSError as err:
         error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return None
@@ -219,11 +225,11 @@ def _remote_stat(up):
     out, err_output = proc.communicate()
 
     if proc.returncode == 255:
-        error('ssh connection to %s failed' % up.node)
+        error('ssh connection to %s failed' % upfile.node)
         if err_output:
             verbose('error output: %s' % err_output)
         return None
-    elif proc.returncode == 127:
+    if proc.returncode == 127:
         error('remote list command failed')
         if err_output:
             verbose('error output: %s' % err_output)
@@ -245,7 +251,7 @@ def _remote_stat(up):
             remote_stat = RemoteStat(arr)
         except ValueError:
             error('unexpected output from synctool_list %s:%s' %
-                  (up.node, up.filename))
+                  (upfile.node, upfile.filename))
             return None
 
         verbose('remote: %r' % remote_stat)
@@ -288,15 +294,15 @@ def _makedir(path, remote_stats):
 
     # temporarily restore admin's umask
     mask = os.umask(synctool.param.ORIG_UMASK)
-    mode = remote_stats[0].mode & 0777
+    mode = remote_stats[0].mode & 0o777
     try:
         os.mkdir(path, mode)
     except OSError as err:
         error('failed to create directory %s: %s' % (path, err.strerror))
         os.umask(mask)
         return False
-    else:
-        unix_out('mkdir -p -m %04o %s' % (mode, path))
+
+    unix_out('mkdir -p -m %04o %s' % (mode, path))
 
     os.umask(mask)
 
@@ -349,81 +355,83 @@ def _upload_callback(obj, _pre_dict, _post_dict):
     return True, False
 
 
-def upload(up):
+def upload(upfile):
+    #pylint: disable=global-statement
     # type: (UploadFile) -> None
     '''copy a file from a node into the overlay/ tree'''
 
     # Note: this global is only needed because of callback fn ...
     global GLOBAL_UPLOAD_FILE
 
-    if up.filename[0] != os.sep:
+    if upfile.filename[0] != os.sep:
         error('the filename to upload must be an absolute path')
         sys.exit(-1)
 
-    if up.suffix and up.suffix not in synctool.param.ALL_GROUPS:
-        error("no such group '%s'" % up.suffix)
+    if upfile.suffix and upfile.suffix not in synctool.param.ALL_GROUPS:
+        error("no such group '%s'" % upfile.suffix)
         sys.exit(-1)
 
-    if up.overlay and up.overlay not in synctool.param.ALL_GROUPS:
-        error("no such group '%s'" % up.overlay)
+    if upfile.overlay and upfile.overlay not in synctool.param.ALL_GROUPS:
+        error("no such group '%s'" % upfile.overlay)
         sys.exit(-1)
 
-    if up.purge and up.purge not in synctool.param.ALL_GROUPS:
-        error("no such group '%s'" % up.purge)
+    if upfile.purge and upfile.purge not in synctool.param.ALL_GROUPS:
+        error("no such group '%s'" % upfile.purge)
         sys.exit(-1)
 
     if synctool.lib.DRY_RUN and not synctool.lib.QUIET:
         stdout('DRY RUN, not uploading any files')
         terse(synctool.lib.TERSE_DRYRUN, 'not uploading any files')
 
-    if up.purge != None:
-        rsync_upload(up)
+    if upfile.purge is not None:
+        rsync_upload(upfile)
         return
 
     # pretend that the current node is now the given node;
     # this is needed for find() to find the best reference for the file
     orig_nodename = synctool.param.NODENAME
-    synctool.param.NODENAME = up.node
-    synctool.config.insert_group(up.node, up.node)
+    synctool.param.NODENAME = upfile.node
+    synctool.config.insert_group(upfile.node, upfile.node)
 
     orig_my_groups = synctool.param.MY_GROUPS[:]
     synctool.param.MY_GROUPS = synctool.config.get_my_groups()
 
     # see if file is already in the repository
     # Note: ugly global is needed because of callback function
-    GLOBAL_UPLOAD_FILE = up
+    GLOBAL_UPLOAD_FILE = upfile
     synctool.overlay.visit(synctool.param.OVERLAY_DIR, _upload_callback)
-    up = GLOBAL_UPLOAD_FILE
+    upfile = GLOBAL_UPLOAD_FILE
 
     synctool.param.NODENAME = orig_nodename
     synctool.param.MY_GROUPS = orig_my_groups
 
-    rsync_upload(up)
+    rsync_upload(upfile)
 
 
-def rsync_upload(up):
+def rsync_upload(upfile):
+    #pylint: disable=too-many-branches,too-many-statements
     # type: (UploadFile) -> None
     '''upload a file/dir to $overlay/group/ or $purge/group/'''
 
-    up.make_repos_path()
+    upfile.make_repos_path()
 
     # check whether the remote entry exists
-    remote_stats = _remote_stat(up)
+    remote_stats = _remote_stat(upfile)
     if remote_stats is None:
         # error message was already printed
         return
 
     # first element in array is our 'target'
     isdir = remote_stats[0].is_dir()
-    if isdir and synctool.param.REQUIRE_EXTENSION and not up.purge:
+    if isdir and synctool.param.REQUIRE_EXTENSION and not upfile.purge:
         error('remote is a directory')
         stderr('synctool can not upload directories to $overlay '
                'when require_extension is set')
         return
 
     if isdir:
-        up.filename += os.sep
-        up.repos_path += os.sep
+        upfile.filename += os.sep
+        upfile.repos_path += os.sep
 
     # make command: rsync [-n] [-v] node:/path/ $overlay/group/path/
     cmd_arr = shlex.split(synctool.param.RSYNC_CMD)
@@ -444,17 +452,17 @@ def rsync_upload(up):
 
     # use ssh connection multiplexing (if possible)
     ssh_cmd_arr = shlex.split(synctool.param.SSH_CMD)
-    use_multiplex = synctool.multiplex.use_mux(up.node)
+    use_multiplex = synctool.multiplex.use_mux(upfile.node)
     if use_multiplex:
-        synctool.multiplex.ssh_args(ssh_cmd_arr, up.node)
+        synctool.multiplex.ssh_args(ssh_cmd_arr, upfile.node)
     cmd_arr.extend(['-e', ' '.join(ssh_cmd_arr)])
-    cmd_arr.extend(['--', up.address + ':' + up.filename, up.repos_path])
+    cmd_arr.extend(['--', upfile.address + ':' + upfile.filename, upfile.repos_path])
 
-    verbose_path = prettypath(up.repos_path)
+    verbose_path = prettypath(upfile.repos_path)
     if synctool.lib.DRY_RUN:
         stdout('would be uploaded as %s' % verbose_path)
     else:
-        dest_dir = os.path.dirname(up.repos_path)
+        dest_dir = os.path.dirname(upfile.repos_path)
         _makedir(dest_dir, remote_stats[1:])
         if not synctool.lib.path_exists(dest_dir):
             error('failed to create %s/' % dest_dir)
@@ -463,18 +471,18 @@ def rsync_upload(up):
     # for $overlay, never do rsync --delete / --delete-excluded
     # for $purge, don't use rsync --delete on single files
     # because it would (inadvertently) delete all existing files in the repos
-    if not up.purge or not isdir:
+    if not upfile.purge or not isdir:
         if '--delete' in cmd_arr:
             cmd_arr.remove('--delete')
         if '--delete-excluded' in cmd_arr:
             cmd_arr.remove('--delete-excluded')
 
-    verbose('running rsync%s%s:%s to %s' % (opts, up.node, up.filename,
+    verbose('running rsync%s%s:%s to %s' % (opts, upfile.node, upfile.filename,
                                             verbose_path))
     if not synctool.lib.DRY_RUN:
-        synctool.lib.run_with_nodename(cmd_arr, up.node)
+        synctool.lib.run_with_nodename(cmd_arr, upfile.node)
 
-        if not synctool.lib.path_exists(up.repos_path):
+        if not synctool.lib.path_exists(upfile.repos_path):
             error('upload failed')
         else:
             stdout('uploaded %s' % verbose_path)

@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.parallel.py    WJ114
 #
@@ -31,6 +32,7 @@ ALL_PIDS = set()    # type: Set[int]
 
 
 def do(func, work):
+#pylint: disable=invalid-name
     # type: (Callable[[Any], None], List[Any]) -> None
     '''run func in parallel'''
 
@@ -49,7 +51,7 @@ def do(func, work):
             part += 1
 
     # spawn pool of workers
-    for rank in xrange(num_proc):
+    for rank in range(num_proc):
         try:
             pid = os.fork()
         except OSError as err:
@@ -77,8 +79,7 @@ def worker(rank, func, work, part):
     lower = part * rank
     upper = part * (rank + 1)
     len_work = len(work)
-    if upper > len_work:
-        upper = len_work
+    upper = min(upper, len_work)
 
     # run all work items in sequence
     for item in work[lower:upper]:
@@ -89,6 +90,7 @@ def worker(rank, func, work, part):
 
 
 def join():
+#pylint: disable=global-statement
     # type: () -> None
     '''wait for parallel threads to exit'''
 
@@ -117,11 +119,11 @@ if __name__ == '__main__':
         def hello(item):
             '''print item'''
 
-            print '[%u]: hello' % os.getpid(), item
+            print('[%u]: hello' % os.getpid(), item)
             time.sleep(0.1245)
 
         synctool.param.NUM_PROC = 3
-        do(hello, range(10))
+        do(hello, list(range(10)))
 
 #    synctool.param.SLEEP_TIME = 2
     main()

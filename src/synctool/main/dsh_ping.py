@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.main.dsh_ping.py   WJ111
 #
@@ -47,6 +48,7 @@ def ping_nodes(address_list):
 
 
 def ping_node(addr):
+    #pylint: disable=consider-using-with
     # type: (str) -> None
     '''ping a single node'''
 
@@ -61,15 +63,15 @@ def ping_node(addr):
     cmd_arr = shlex.split(cmd)
 
     try:
-        f = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
+        fpipe = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT).stdout
     except OSError as err:
         error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return
 
-    with f:
-        for line in f:
+    with fpipe:
+        for line in fpipe:
             line = line.strip()
 
             # argh, we have to parse output here
@@ -93,7 +95,7 @@ def ping_node(addr):
 
             # some ping implementations say "hostname is alive"
             # or "hostname is unreachable"
-            elif len(arr) == 3 and arr[1] == 'is':
+            if len(arr) == 3 and arr[1] == 'is':
                 if arr[2] == 'alive':
                     packets_received = 100
 
@@ -101,17 +103,17 @@ def ping_node(addr):
                     packets_received = -1
 
     if packets_received > 0:
-        print '%s: up' % node
+        print('%s: up' % node)
     else:
-        print '%s: not responding' % node
+        print('%s: not responding' % node)
 
 
 def check_cmd_config():
     # type: () -> None
     '''check whether the commands as given in synctool.conf actually exist'''
 
-    ok, param.PING_CMD = config.check_cmd_config('ping_cmd', param.PING_CMD)
-    if not ok:
+    okay, param.PING_CMD = config.check_cmd_config('ping_cmd', param.PING_CMD)
+    if not okay:
         sys.exit(-1)
 
 
@@ -119,14 +121,14 @@ def usage():
     # type: () -> None
     '''print usage information'''
 
-    print 'usage: %s [options]' % PROGNAME
-    print 'options:'
-    print '  -h, --help                     Display this information'
-    print '  -c, --conf=FILE                Use this config file'
-    print ('                                 (default: %s)' %
-           param.DEFAULT_CONF)
+    print('usage: %s [options]' % PROGNAME)
+    print('options:')
+    print('  -h, --help                     Display this information')
+    print('  -c, --conf=FILE                Use this config file')
+    print(('                                 (default: %s)' %
+           param.DEFAULT_CONF))
 
-    print '''  -n, --node=LIST                Execute only on these nodes
+    print('''  -n, --node=LIST                Execute only on these nodes
   -g, --group=LIST               Execute only on these groups of nodes
   -x, --exclude=LIST             Exclude these nodes from the selected group
   -X, --exclude-group=LIST       Exclude these groups from the selection
@@ -135,10 +137,12 @@ def usage():
   -z, --zzz=NUM                  Sleep NUM seconds between each run
       --unix                     Output actions as unix shell commands
   -v, --verbose                  Be verbose
-'''
+''')
 
 
 def get_options():
+    #pylint: disable=global-statement
+    #pylint: disable=too-many-statements, too-many-branches
     # type: () -> None
     '''parse command-line options'''
 
@@ -151,7 +155,7 @@ def get_options():
                                     'aggregate', 'unix', 'quiet', 'numproc=',
                                     'zzz='])
     except getopt.GetoptError as reason:
-        print '%s: %s' % (PROGNAME, reason)
+        print('%s: %s' % (PROGNAME, reason))
 #        usage()
         sys.exit(1)
 
@@ -232,12 +236,12 @@ def get_options():
             try:
                 param.NUM_PROC = int(arg)
             except ValueError:
-                print ("%s: option '%s' requires a numeric value" %
-                       (PROGNAME, opt))
+                print(("%s: option '%s' requires a numeric value" %
+                       (PROGNAME, opt)))
                 sys.exit(1)
 
             if param.NUM_PROC < 1:
-                print '%s: invalid value for numproc' % PROGNAME
+                print('%s: invalid value for numproc' % PROGNAME)
                 sys.exit(1)
 
             continue
@@ -246,12 +250,12 @@ def get_options():
             try:
                 param.SLEEP_TIME = int(arg)
             except ValueError:
-                print ("%s: option '%s' requires a numeric value" %
-                       (PROGNAME, opt))
+                print(("%s: option '%s' requires a numeric value" %
+                       (PROGNAME, opt)))
                 sys.exit(1)
 
             if param.SLEEP_TIME < 0:
-                print '%s: invalid value for sleep time' % PROGNAME
+                print('%s: invalid value for sleep time' % PROGNAME)
                 sys.exit(1)
 
             if not param.SLEEP_TIME:
@@ -263,7 +267,7 @@ def get_options():
             continue
 
     if args:
-        print '%s: too many arguments' % PROGNAME
+        print('%s: too many arguments' % PROGNAME)
         sys.exit(1)
 
 
@@ -293,7 +297,7 @@ def main():
 
     address_list = NODESET.addresses()
     if not address_list:
-        print 'no valid nodes specified'
+        print('no valid nodes specified')
         sys.exit(1)
 
     ping_nodes(address_list)

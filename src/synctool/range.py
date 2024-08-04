@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.range.py        WJ113
 #
@@ -19,9 +20,10 @@ or just a string "node-[10].sub[20].domain.org"
 '''
 
 import re
+from functools import cmp_to_key
 
 try:
-    from typing import List, Dict, Tuple, Pattern, Set, Sequence, Any
+    from typing import List, Tuple, Pattern, Sequence, Any
 except ImportError:
     pass
 
@@ -63,7 +65,6 @@ _EXPAND_SEQ = 0     # type: int
 
 class RangeSyntaxError(Exception):
     '''node range syntax error exception'''
-    pass
 
 
 def split_nodelist(expr):
@@ -92,6 +93,7 @@ def split_nodelist(expr):
 
 
 def expand(expr):
+    #pylint: disable=too-many-branches
     # type: (str) -> List[str]
     '''expand a range expression like 'node[1-10,20]-mgmt'
     May throw RangeSyntaxError if there is a syntax error
@@ -99,11 +101,11 @@ def expand(expr):
     '''
 
     # NODE_EXPR is a global compiled regex for recognising expression
-    m = NODE_EXPR.match(expr)
-    if not m:
+    matexpr = NODE_EXPR.match(expr)
+    if not matexpr:
         raise RangeSyntaxError('syntax error in range expression')
 
-    (prefix, range_expr, postfix) = m.groups()
+    (prefix, range_expr, postfix) = matexpr.groups()
 
     # first split range expression by comma
     # then process each element
@@ -115,12 +117,12 @@ def expand(expr):
 
             try:
                 step = int(step)
-            except ValueError:
-                raise RangeSyntaxError('syntax error in range expression')
+            except ValueError as exc:
+                raise RangeSyntaxError('syntax error in range expression') from exc
 
             if step <= 0:
                 raise RangeSyntaxError('invalid step value in range '
-                                       'expression')
+                                       'expression') from exc
             # else: pass
         else:
             step = 1
@@ -132,19 +134,19 @@ def expand(expr):
 
             try:
                 start = int(start)
-            except ValueError:
-                raise RangeSyntaxError('syntax error in range expression')
+            except ValueError as exc:
+                raise RangeSyntaxError('syntax error in range expression') from exc
 
             try:
                 end = int(end)
             except ValueError:
-                raise RangeSyntaxError('syntax error in range expression')
+                raise RangeSyntaxError('syntax error in range expression') from exc
 
             if start > end:
-                raise RangeSyntaxError('invalid range in range expression')
+                raise RangeSyntaxError('invalid range in range expression') from exc
 
             if end - start > 100000:
-                raise RangeSyntaxError('ignoring ridiculously large range')
+                raise RangeSyntaxError('ignoring ridiculously large range') from exc
 
             arr.extend(['%s%.*d%s' % (prefix, width, num, postfix)
                         for num in range(start, end + 1, step)])
@@ -152,8 +154,8 @@ def expand(expr):
             width = len(elem)
             try:
                 num = int(elem)
-            except ValueError:
-                raise RangeSyntaxError('syntax error in range expression')
+            except ValueError as exc:
+                raise RangeSyntaxError('syntax error in range expression') from exc
 
             arr.append('%s%.*d%s' % (prefix, width, num, postfix))
 
@@ -161,6 +163,7 @@ def expand(expr):
 
 
 def reset_sequence():
+    #pylint: disable=global-statement
     # type: () -> None
     '''reset a sequence to zero'''
 
@@ -170,6 +173,7 @@ def reset_sequence():
 
 
 def expand_sequence(arg):
+    #pylint: disable=global-statement
     # type: (str) -> str
     '''expand a sequence that looks like '192.168.1.[100]'
     or hexidecimal IPv6 "64:b9:e8:ff:fe:c2:fd:[20]"
@@ -188,13 +192,13 @@ def expand_sequence(arg):
         _EXPAND_SEQ += 1
         return result
 
-    elif MATCH_IPv6.match(arg):
+    if MATCH_IPv6.match(arg):
         # looks like IPv6 address
         result = expand_seq(arg, 16)
         _EXPAND_SEQ += 1
         return result
 
-    elif MATCH_IPv6_v4.match(arg):
+    if MATCH_IPv6_v4.match(arg):
         # looks like IPv6:v4 address
         part_v6, part_v4 = SPLIT_IPv6_v4.split(arg)
         part_v6 = expand_seq(part_v6, 16)
@@ -218,16 +222,16 @@ def expand_seq(arg, radix=10, overflow=False):
     if '[' not in arg:
         return arg
 
-    m = MATCH_SEQ.match(arg)
-    if not m:
+    matseq = MATCH_SEQ.match(arg)
+    if not matseq:
         raise RangeSyntaxError('syntax error in numbering sequence')
 
-    (prefix, num, postfix) = m.groups()
+    (prefix, num, postfix) = matseq.groups()
     width = len(num)
     try:
         num = int(num, radix)
-    except ValueError:
-        raise RangeSyntaxError('invalid value in numbering sequence')
+    except ValueError as exc:
+        raise RangeSyntaxError('invalid value in numbering sequence') from exc
 
     num += _EXPAND_SEQ
     if num > 255 and not overflow:
@@ -247,30 +251,30 @@ def expand_seq(arg, radix=10, overflow=False):
     return result
 
 
-def _sort_compress(a, b):
+def _sort_compress(atin, btin):
     # type: (Tuple[str, str, str, int, str], Tuple[str, str, str, int, str]) -> int
     '''sorting function
-    a and b are tuples: (nodename, prefix, number_str, number, postfix)
+    atin and btin are tuples: (nodename, prefix, number_str, number, postfix)
     '''
 
-    if a[1] != b[1]:
+    if atin[1] != btin[1]:
         # sort by prefix
-        return cmp(a[1], b[1])
+        return atin[1] == btin[1]
 
-    if a[3] != b[3]:
+    if atin[3] != btin[3]:
         # sort by postfix
-        return cmp(a[3], b[3])
+        return atin[3] == btin[3]
 
-    if len(a[2]) != len(b[2]):
+    if len(atin[2]) != len(btin[2]):
         # sort by length number_str
-        return cmp(len(a[2]), len(b[2]))
+        return len(atin[2]) == len(btin[2])
 
-    if a[3] != b[3]:
+    if atin[3] != btin[3]:
         # sort by number
-        return cmp(a[3], b[3])
+        return atin[3] == btin[3]
 
     # lastly, sort by node name
-    return cmp(a[0], b[0])
+    return atin[0] == btin[0]
 
 
 def uniq(seq):
@@ -282,6 +286,8 @@ def uniq(seq):
 
 
 def compress(nodelist):
+    #pylint: disable=too-many-statements, too-many-branches
+    #pylint: disable=too-many-locals
     # type: (List[str]) -> str
     '''Return comma-separated string-list of nodes, using range syntax
 
@@ -296,11 +302,11 @@ def compress(nodelist):
     prev_prefix = prev_postfix = None
     for node in uniq(nodelist):
         # try to match a number in the nodename
-        m = COMPRESSOR.match(node)
-        if not m:
+        matnode = COMPRESSOR.match(node)
+        if not matnode:
             # no number in node name
             if grouped:
-                grouped.sort(_sort_compress)
+                grouped.sort(key=cmp_to_key(_sort_compress))
                 all_grouped.append(grouped[:],)
                 grouped = []
 
@@ -310,12 +316,12 @@ def compress(nodelist):
             prev_prefix = prev_postfix = None
         else:
             # group nodes with the same prefix and postfix together
-            prefix, number, postfix = m.groups()
+            prefix, number, postfix = matnode.groups()
             if prefix == prev_prefix and postfix == prev_postfix:
                 grouped.append((node, prefix, number, int(number), postfix),)
             else:
                 if grouped:
-                    grouped.sort(_sort_compress)
+                    grouped.sort(key=cmp_to_key(_sort_compress))
                     all_grouped.append(grouped[:],)
                     grouped = []
 
@@ -324,7 +330,7 @@ def compress(nodelist):
                 prev_postfix = postfix
 
     if grouped:
-        grouped.sort(_sort_compress)
+        grouped.sort(key=cmp_to_key(_sort_compress))
         all_grouped.append(grouped[:],)
         grouped = []
 

@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.object.py    WJ110
 #
@@ -33,7 +34,7 @@ except ImportError:
 IO_SIZE = 16 * 1024
 
 
-class VNode(object):
+class VNode:
     '''base class for doing actions with directory entries'''
 
     def __init__(self, filename, statbuf, exists):
@@ -136,8 +137,6 @@ class VNode(object):
         # type: () -> None
         '''create a new entry'''
 
-        pass
-
     def fix(self):
         # type: () -> None
         '''repair the existing entry
@@ -179,14 +178,14 @@ class VNode(object):
         '''set access permission bits equal to source'''
 
         verbose(dryrun_msg('  os.chmod(%s, %04o)' %
-                           (self.name, self.stat.mode & 07777)))
-        unix_out('chmod 0%o %s' % (self.stat.mode & 07777, self.name))
+                           (self.name, self.stat.mode & 0o7777)))
+        unix_out('chmod 0%o %s' % (self.stat.mode & 0o7777, self.name))
         if not synctool.lib.DRY_RUN:
             try:
-                os.chmod(self.name, self.stat.mode & 07777)
+                os.chmod(self.name, self.stat.mode & 0o7777)
             except OSError as err:
                 error('failed to chmod %04o %s : %s' %
-                      (self.stat.mode & 07777, self.name, err.strerror))
+                      (self.stat.mode & 0o7777, self.name, err.strerror))
                 terse(TERSE_FAIL, 'mode %s' % self.name)
 
     def set_times(self):
@@ -197,8 +196,8 @@ class VNode(object):
         verbose(dryrun_msg('  os.utime(%s, %s)' %
                            (self.name, print_timestamp(self.stat.mtime))))
         # print timestamp in other format
-        dt = datetime.datetime.fromtimestamp(self.stat.mtime)
-        time_str = dt.strftime('%Y%m%d%H%M.%S')
+        datet = datetime.datetime.fromtimestamp(self.stat.mtime)
+        time_str = datet.strftime('%Y%m%d%H%M.%S')
         unix_out('touch -t %s %s' % (time_str, self.name))
         if not synctool.lib.DRY_RUN:
             try:
@@ -217,7 +216,7 @@ class VNodeFile(VNode):
         # type: (str, SyncStat, bool, str) -> None
         '''initialize instance'''
 
-        super(VNodeFile, self).__init__(filename, statbuf, exists)
+        super().__init__(filename, statbuf, exists)
         self.src_path = src_path
 
     def typename(self):
@@ -249,7 +248,7 @@ class VNodeFile(VNode):
         Return True if the same'''
 
         try:
-            f1 = open(src_path, 'rb')
+            ffile1 = open(src_path, 'rb')
         except IOError as err:
             error('failed to open %s : %s' % (src_path, err.strerror))
             # return True because we can't fix an error in src_path
@@ -258,18 +257,18 @@ class VNodeFile(VNode):
         sum1 = hashlib.md5()
         sum2 = hashlib.md5()
 
-        with f1:
+        with ffile1:
             try:
-                f2 = open(self.name, 'rb')
+                ffile2 = open(self.name, 'rb')
             except IOError as err:
                 error('failed to open %s : %s' % (self.name, err.strerror))
                 return False
 
-            with f2:
+            with ffile2:
                 ended = False
                 while not ended and (sum1.digest() == sum2.digest()):
                     try:
-                        data1 = f1.read(IO_SIZE)
+                        data1 = ffile1.read(IO_SIZE)
                     except IOError as err:
                         error('failed to read file %s: %s' % (src_path,
                                                               err.strerror))
@@ -281,7 +280,7 @@ class VNodeFile(VNode):
                         sum1.update(data1)
 
                     try:
-                        data2 = f2.read(IO_SIZE)
+                        data2 = ffile2.read(IO_SIZE)
                     except IOError as err:
                         error('failed to read file %s: %s' % (self.name,
                                                               err.strerror))
@@ -354,7 +353,7 @@ class VNodeDir(VNode):
         terse(synctool.lib.TERSE_MKDIR, self.name)
         if not synctool.lib.DRY_RUN:
             try:
-                os.mkdir(self.name, self.stat.mode & 07777)
+                os.mkdir(self.name, self.stat.mode & 0o7777)
             except OSError as err:
                 error('failed to make directory %s : %s' % (self.name,
                                                             err.strerror))
@@ -401,7 +400,6 @@ class VNodeDir(VNode):
         '''set access and modification times'''
 
         # Note: should we raise RuntimeError here?
-        pass
 
 
 
@@ -412,7 +410,7 @@ class VNodeLink(VNode):
         # type: (str, SyncStat, bool, str) -> None
         '''initialize instance'''
 
-        super(VNodeLink, self).__init__(filename, statbuf, exists)
+        super().__init__(filename, statbuf, exists)
         self.oldpath = oldpath
 
     def typename(self):
@@ -481,6 +479,7 @@ class VNodeLink(VNode):
                 terse(TERSE_FAIL, 'owner %s' % self.name)
 
     def set_permissions(self):
+#pylint: disable=no-member
         # type: () -> None
         '''set permissions of symlink (if possible)'''
 
@@ -490,14 +489,14 @@ class VNodeLink(VNode):
             return
 
         verbose(dryrun_msg('  os.lchmod(%s, %04o)' %
-                           (self.name, self.stat.mode & 07777)))
-        unix_out('lchmod 0%o %s' % (self.stat.mode & 07777, self.name))
+                           (self.name, self.stat.mode & 0o7777)))
+        unix_out('lchmod 0%o %s' % (self.stat.mode & 0o7777, self.name))
         if not synctool.lib.DRY_RUN:
             try:
-                os.lchmod(self.name, self.stat.mode & 07777)
+                os.lchmod(self.name, self.stat.mode & 0o7777)
             except OSError as err:
                 error('failed to lchmod %04o %s : %s' %
-                      (self.stat.mode & 07777, self.name, err.strerror))
+                      (self.stat.mode & 0o7777, self.name, err.strerror))
                 terse(TERSE_FAIL, 'mode %s' % self.name)
 
     def set_times(self):
@@ -505,7 +504,6 @@ class VNodeLink(VNode):
         '''set access and modification times'''
 
         # Note: should we raise RuntimeError here?
-        pass
 
 
 
@@ -533,7 +531,7 @@ class VNodeFifo(VNode):
         terse(synctool.lib.TERSE_NEW, self.name)
         if not synctool.lib.DRY_RUN:
             try:
-                os.mkfifo(self.name, self.stat.mode & 0777)
+                os.mkfifo(self.name, self.stat.mode & 0o777)
             except OSError as err:
                 error('failed to create fifo %s : %s' % (self.name,
                                                          err.strerror))
@@ -548,7 +546,7 @@ class VNodeChrDev(VNode):
         # type: (str, SyncStat, bool, posix.stat_result) -> None
         '''initialize instance'''
 
-        super(VNodeChrDev, self).__init__(filename, syncstat_obj, exists)
+        super().__init__(filename, syncstat_obj, exists)
         self.src_stat = src_stat
 
     def typename(self):
@@ -602,7 +600,7 @@ class VNodeChrDev(VNode):
         if not synctool.lib.DRY_RUN:
             try:
                 os.mknod(self.name,
-                         (self.src_stat.st_mode & 0777) | stat.S_IFCHR,
+                         (self.src_stat.st_mode & 0o777) | stat.S_IFCHR,
                          os.makedev(major, minor))
             except OSError as err:
                 error('failed to create device %s : %s' % (self.name,
@@ -618,7 +616,7 @@ class VNodeBlkDev(VNode):
         # type: (str, SyncStat, bool, posix.stat_result) -> None
         '''initialize instance'''
 
-        super(VNodeBlkDev, self).__init__(filename, syncstat_obj, exists)
+        super().__init__(filename, syncstat_obj, exists)
         self.src_stat = src_stat
 
     def typename(self):
@@ -668,7 +666,7 @@ class VNodeBlkDev(VNode):
         if not synctool.lib.DRY_RUN:
             try:
                 os.mknod(self.name,
-                         (self.src_stat.st_mode & 0777) | stat.S_IFBLK,
+                         (self.src_stat.st_mode & 0o777) | stat.S_IFBLK,
                          os.makedev(major, minor))
             except OSError as err:
                 error('failed to create device %s : %s' % (self.name,
@@ -677,7 +675,7 @@ class VNodeBlkDev(VNode):
 
 
 
-class SyncObject(object):
+class SyncObject():
     '''a class holding the source path (file in the repository)
     and the destination path (target file on the system).
     The SyncObject caches any stat info
@@ -785,10 +783,10 @@ class SyncObject(object):
 
         if self.src_stat.mode != self.dest_stat.mode:
             stdout('%s should have mode %04o, but has %04o' %
-                   (self.dest_path, self.src_stat.mode & 07777,
-                    self.dest_stat.mode & 07777))
+                   (self.dest_path, self.src_stat.mode & 0o7777,
+                    self.dest_stat.mode & 0o7777))
             terse(synctool.lib.TERSE_MODE, ('%04o %s' %
-                                            (self.src_stat.mode & 07777,
+                                            (self.src_stat.mode & 0o7777,
                                              self.dest_path)))
             fix_action |= SyncObject.FIX_MODE
 
@@ -846,7 +844,7 @@ class SyncObject(object):
             vnode.set_owner()
 
         if fix_action & SyncObject.FIX_MODE:
-            log('set mode %04o %s' % (self.src_stat.mode & 07777,
+            log('set mode %04o %s' % (self.src_stat.mode & 0o7777,
                                       self.dest_path))
             vnode.set_permissions()
 
@@ -886,9 +884,10 @@ class SyncObject(object):
             # run in the directory where the file is
             synctool.lib.run_command_in_dir(os.path.dirname(self.dest_path),
                                             script)
-        os.umask(077)
+        os.umask(0o77)
 
     def vnode_obj(self):
+#pylint: disable=too-many-return-statements
         # type: () -> VNode
         '''create vnode object for this SyncObject'''
 
@@ -927,6 +926,7 @@ class SyncObject(object):
         return None
 
     def vnode_dest_obj(self):
+#pylint: disable=too-many-return-statements
         # type: () -> VNode
         '''create vnode object for this SyncObject's destination'''
 

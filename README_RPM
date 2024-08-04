@@ -1,0 +1,16 @@
+Build RPM with help from the git-build-rpm package:
+https://github.com/iovation/git-build-rpm
+
+To build the rpm, I cd to the 'home' directory of the package,
+and then:
+
+git build-rpm --rpm-dir /home/local/lane/rpmbuild  \
+    --dist .fc38 --spec-file=synctool.spec 
+mv /home/local/lane/rpmbuild/SRPMS/synctool* . 
+
+the --rpm-dir is to recover the .rpm files after building,
+(they get moved to the package home directory)
+and the --dist is to set the distribution name, rather than
+the long, random string that is otherwise generated.
+
+

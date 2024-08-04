@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.main.client.py WJ103
 #
@@ -44,6 +45,8 @@ SINGLE_FILES = []   # type: List[str]
 
 
 def generate_template(obj, post_dict):
+    #pylint: disable=too-many-lines, too-many-branches
+    #pylint: disable=too-many-statements, too-many-return-statements
     # type: (SyncObject, Dict[str, str]) -> bool
     '''run template .post script, generating a new file
     The script will run in the source dir (overlay tree) and
@@ -153,7 +156,7 @@ def generate_template(obj, post_dict):
             synctool.lib.set_filetimes(newname, statbuf.atime,
                                        obj.src_stat.mtime)
 
-    os.umask(077)
+    os.umask(0o77)
 
     # chdir back to original location
     # chdir to source directory
@@ -188,9 +191,9 @@ def purge_files():
 
     # find the source purge paths that we need to copy
     # scan only the group dirs that apply
-    for g in param.MY_GROUPS:
-        if g in purge_groups:
-            purge_root = os.path.join(param.PURGE_DIR, g)
+    for group in param.MY_GROUPS:
+        if group in purge_groups:
+            purge_root = os.path.join(param.PURGE_DIR, group)
             if not os.path.isdir(purge_root):
                 continue
 
@@ -269,6 +272,7 @@ def _make_rsync_purge_cmd():
 
 
 def _run_rsync_purge(cmd_arr):
+    #pylint: disable=consider-using-with
     # type: (List[str]) -> None
     '''run rsync for purging
     cmd_arr holds already prepared rsync command + arguments
@@ -289,7 +293,7 @@ def _run_rsync_purge(cmd_arr):
     out, _ = proc.communicate()
 
     if synctool.lib.VERBOSE:
-        print out
+        print(out)
 
     out = out.split('\n')
     for line in out:
@@ -421,11 +425,11 @@ def visit_purge_single(callback):
         if filepath[0] == os.sep:
             filepath = filepath[1:]
 
-        for g in param.MY_GROUPS:
-            if g not in purge_groups:
+        for group in param.MY_GROUPS:
+            if group not in purge_groups:
                 continue
 
-            src = os.path.join(param.PURGE_DIR, g, filepath)
+            src = os.path.join(param.PURGE_DIR, group, filepath)
             if synctool.lib.path_exists(src):
                 # make a SyncObject
                 obj = synctool.object.SyncObject(src, dest)
@@ -606,7 +610,7 @@ def _reference_callback(obj, _pre_dict, _post_dict):
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
         if obj.dest_path in SINGLE_FILES:
             # this template generates the file
-            print obj.print_src()
+            print(obj.print_src())
             SINGLE_FILES.remove(obj.dest_path)
             if not SINGLE_FILES:
                 return False, False
@@ -614,7 +618,7 @@ def _reference_callback(obj, _pre_dict, _post_dict):
         return True, False
 
     if _match_single(obj.dest_path):
-        print obj.print_src()
+        print(obj.print_src())
 
     if not SINGLE_FILES:
         return False, False
@@ -679,6 +683,7 @@ def diff_files():
 
 def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
                         opt_upload, opt_suffix, opt_fix):
+    #pylint: disable=too-many-arguments
     # type: (bool, bool, bool, bool, bool, bool, bool) -> None
     '''some combinations of command-line options don't make sense;
     alert the user and abort
@@ -709,8 +714,8 @@ def check_cmd_config():
     # type: () -> None
     '''check whether the commands as given in synctool.conf actually exist'''
 
-    ok, param.DIFF_CMD = config.check_cmd_config('diff_cmd', param.DIFF_CMD)
-    if not ok:
+    okay, param.DIFF_CMD = config.check_cmd_config('diff_cmd', param.DIFF_CMD)
+    if not okay:
         sys.exit(-1)
 
 
@@ -718,13 +723,13 @@ def usage():
     # type: () -> None
     '''print usage information'''
 
-    print 'usage: %s [options]' % PROGNAME
-    print 'options:'
-    print '  -h, --help            Display this information'
-    print '  -c, --conf=FILE       Use this config file'
-    print '                        (default: %s)' % param.DEFAULT_CONF
+    print('usage: %s [options]' % PROGNAME)
+    print('options:')
+    print('  -h, --help            Display this information')
+    print('  -c, --conf=FILE       Use this config file')
+    print('                        (default: %s)' % param.DEFAULT_CONF)
 
-    print '''  -d, --diff=FILE       Show diff for file
+    print('''  -d, --diff=FILE       Show diff for file
   -1, --single=PATH     Update a single file
   -r, --ref=PATH        Show which source file synctool chooses
   -e, --erase-saved     Erase *.saved backup files
@@ -741,10 +746,12 @@ def usage():
       --version         Print current version number
 
 Note that synctool does a dry run unless you specify --fix
-'''
+''')
 
 
 def get_options():
+    #pylint: disable=global-statement
+    #pylint: disable=too-many-branches,too-many-statements
     # type: () -> int
     '''parse command-line options'''
 
@@ -758,7 +765,7 @@ def get_options():
                                     'masterlog', 'node=', 'nodename=',
                                     'verbose', 'quiet', 'unix', 'version'])
     except getopt.GetoptError as reason:
-        print '%s: %s' % (PROGNAME, reason)
+        print('%s: %s' % (PROGNAME, reason))
         usage()
         sys.exit(1)
 
@@ -799,7 +806,7 @@ def get_options():
             continue
 
         if opt == '--version':
-            print param.VERSION
+            print(param.VERSION)
             sys.exit(0)
 
     # first read the config file
@@ -939,6 +946,7 @@ def get_options():
 
 @catch_signals
 def main():
+    #pylint: disable=too-many-statements, too-many-branches
     # type: () -> None
     '''run the program'''
 
@@ -966,12 +974,13 @@ def main():
                 (param.NODENAME, param.CONF_FILE))
 
     if synctool.lib.UNIX_CMD:
-        t = time.localtime(time.time())
+        localt = time.localtime(time.time())
 
         unix_out('#')
         unix_out('# script generated by synctool on '
                  '%04d/%02d/%02d %02d:%02d:%02d' %
-                 (t[0], t[1], t[2], t[3], t[4], t[5]))
+                 (localt[0], localt[1], localt[2],
+		  localt[3], localt[4], localt[5]))
         unix_out('#')
         unix_out('# my hostname: %s' % param.HOSTNAME)
         unix_out('# SYNCTOOL_NODE=%s' % param.NODENAME)
@@ -1009,7 +1018,7 @@ def main():
 
     unix_out('umask 077')
     unix_out('')
-    os.umask(077)
+    os.umask(0o77)
 
     if action == ACTION_DIFF:
         diff_files()

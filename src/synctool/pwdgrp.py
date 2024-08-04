@@ -1,3 +1,4 @@
+#pylint: disable=consider-using-f-string
 #
 #   synctool.pwdgrp.py  WJ114
 #
@@ -81,7 +82,7 @@ def pw_uid(username):
     try:
         pwd_entry = pwd.getpwnam(username)
     except KeyError:
-        raise
+        raise ValueError() from username
 
     CACHE_BY_USER[username] = pwd_entry.pw_uid
     return pwd_entry.pw_uid
@@ -102,7 +103,7 @@ def grp_gid(group):
     try:
         grp_entry = grp.getgrnam(group)
     except KeyError:
-        raise
+        raise ValueError() from group
 
     CACHE_BY_GROUP[group] = grp_entry.gr_gid
     return grp_entry.gr_gid
@@ -110,9 +111,9 @@ def grp_gid(group):
 
 # unit test
 if __name__ == '__main__':
-    print 'uid 501:   ', pw_name(501)
-    print 'gid 20:    ', grp_name(20)
-    print 'uid walter:', pw_uid('walter')
-    print 'gid staff: ', grp_gid('staff')
+    print('uid 501:   ', pw_name(501))
+    print('gid 20:    ', grp_name(20))
+    print('uid walter:', pw_uid('walter'))
+    print('gid staff: ', grp_gid('staff'))
 
 # EOB
