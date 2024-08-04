@@ -26,8 +26,7 @@ class SyncPkg:
         # type: () -> None
         '''initialize instance'''
 
-
-    def list(self, pkgs=None):
+    def show_list(self, pkgs=None):
         # type: (Optional[List[str]]) -> None
         '''output list of packages'''
 

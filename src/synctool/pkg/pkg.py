@@ -10,7 +10,7 @@
 
 '''FreeBSD pkg package manager'''
 
-from typing import List
+from typing import List, Optional
 
 import synctool.lib
 import synctool.pkgclass
@@ -19,9 +19,9 @@ import synctool.pkgclass
 class SyncPkgPkg(synctool.pkgclass.SyncPkg):
     '''package installer class for FreeBSD pkg'''
 
-    def list(self, pkgs=None):
-        # type: (List[str]) -> None
-        super().list(pkgs)
+    def show_list(self, pkgs=None):
+        # type: (Optional[List[str]]) -> None
+        super().show_list(pkgs)
 
         cmd = 'pkg info'
         if pkgs:

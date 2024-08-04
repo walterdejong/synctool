@@ -10,7 +10,7 @@
 
 '''pacman package manager (ArchLinux)'''
 
-from typing import List
+from typing import List, Optional
 
 import synctool.lib
 import synctool.pkgclass
@@ -22,9 +22,9 @@ import synctool.pkgclass
 class SyncPkgPacman(synctool.pkgclass.SyncPkg):
     '''package installer class for pacman'''
 
-    def list(self, pkgs=None):
-        # type: (List[str]) -> None
-        super().list(pkgs)
+    def show_list(self, pkgs=None):
+        # type: (Optional[List[str]]) -> None
+        super().show_list(pkgs)
 
         cmd = 'pacman -Q'
         if pkgs:

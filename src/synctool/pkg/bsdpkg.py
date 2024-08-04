@@ -14,7 +14,7 @@
 
 #import os
 
-from typing import List
+from typing import List, Optional
 
 import synctool.lib
 import synctool.pkgclass
@@ -28,9 +28,9 @@ class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
     # PKG_PATH should be set already
     # set it in the environment of the root user
 
-    def list(self, pkgs=None):
-        # type: (List[str]) -> None
-        super().list(pkgs)
+    def show_list(self, pkgs=None):
+        # type: (Optional[List[str]]) -> None
+        super().show_list(pkgs)
 
         cmd = 'pkg_info'
         if pkgs:

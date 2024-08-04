@@ -55,7 +55,11 @@ LINUX_PACKAGE_MANAGERS = (('/etc/debian_version', 'apt-get'),
 
 def package_manager():
     # type: () -> SyncPkg
-    '''return instance of SyncPkg installer class'''
+    '''return instance of SyncPkg installer class
+
+    Exits the program on error, when it fails to detect
+    the system package manager
+    '''
 
     detected = False
 
@@ -94,8 +98,6 @@ def package_manager():
               synctool.param.PACKAGE_MANAGER)
 
     sys.exit(1)
-    #pylint: disable=unreachable
-    return None     # not reached
 
 
 def detect_installer():
@@ -399,7 +401,7 @@ def main():
     pkg = package_manager()
 
     if ACTION == ACTION_LIST:
-        pkg.list(PKG_LIST)
+        pkg.show_list(PKG_LIST)
 
     elif ACTION == ACTION_INSTALL:
         pkg.install(PKG_LIST)

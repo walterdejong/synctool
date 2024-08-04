@@ -10,7 +10,7 @@
 
 '''brew package manager (Mac OS X)'''
 
-from typing import List
+from typing import List, Optional
 
 import synctool.lib
 import synctool.pkgclass
@@ -19,9 +19,9 @@ import synctool.pkgclass
 class SyncPkgBrew(synctool.pkgclass.SyncPkg):
     '''package installer class for brew'''
 
-    def list(self, pkgs=None):
-        # type: (List[str]) -> None
-        super().list(pkgs)
+    def show_list(self, pkgs=None):
+        # type: (Optional[List[str]]) -> None
+        super().show_list(pkgs)
 
         cmd = 'brew list'
         if pkgs:
