@@ -20,7 +20,7 @@ import urllib.request
 import urllib.parse
 import urllib.error
 
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 
 import synctool.config
 import synctool.lib
@@ -33,9 +33,6 @@ import synctool.pwdgrp
 
 from synctool.object import SyncObject
 
-# UploadFile object, used in callback function for overlay.visit()
-GLOBAL_UPLOAD_FILE = None   # type: UploadFile
-
 
 class UploadFile:
     #pylint: disable=too-few-public-methods
@@ -43,13 +40,13 @@ class UploadFile:
 
     def __init__(self):
         # type: () -> None
-        self.filename = None    # type: str
-        self.overlay = None     # type: str
-        self.purge = None       # type: str
-        self.suffix = None      # type: str
-        self.node = None        # type: str
-        self.address = None     # type: str
-        self.repos_path = None  # type: str
+        self.filename = ''
+        self.overlay = ''
+        self.purge = ''
+        self.suffix = ''
+        self.node = ''
+        self.address = ''
+        self.repos_path = ''
 
     def make_repos_path(self):
         # type: () -> None
@@ -146,7 +143,7 @@ class RemoteStat:
 
             self.linkdest = urllib.parse.unquote(arr[8])
         else:
-            self.linkdest = None    # type: str
+            self.linkdest = ''
 
     def is_dir(self):
         # type: () -> bool
@@ -193,7 +190,7 @@ class RemoteStat:
 
 def _remote_stat(upfile):
     #pylint: disable=consider-using-with
-    # type: (UploadFile) -> List[RemoteStat]
+    # type: (UploadFile) -> Optional[List[RemoteStat]]
     '''Get stat info of the remote object
     Returns array of RemoteStat data, or None on error
     '''
@@ -330,6 +327,10 @@ def _makedir(path, remote_stats):
     return True
 
 
+# UploadFile object, used in callback function for overlay.visit()
+GLOBAL_UPLOAD_FILE = UploadFile()
+
+
 def _upload_callback(obj, _pre_dict, _post_dict):
     # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
     '''find the overlay path for the destination in UPLOAD_FILE'''
@@ -380,7 +381,7 @@ def upload(upfile):
         stdout('DRY RUN, not uploading any files')
         terse(synctool.lib.TERSE_DRYRUN, 'not uploading any files')
 
-    if upfile.purge is not None:
+    if upfile.purge:
         rsync_upload(upfile)
         return
 
