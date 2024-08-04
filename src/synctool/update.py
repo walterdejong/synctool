@@ -180,12 +180,12 @@ def make_local_filename_for_version(version):
             return filename
 
 
-def print_progress(filename, totalsize, current_size):
+def print_progress(filename, total_size, current_size):
     # type: (str, int, int) -> None
     '''print the download progress'''
 
-    percent = 100 * current_size / totalsize
-    percent = min(percent,100)
+    percent = 100 * current_size // total_size
+    percent = min(percent, 100)
 
     print('\rdownloading %s ... %d%% ' % (filename, percent), end=' ')
     sys.stdout.flush()

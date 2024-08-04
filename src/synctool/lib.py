@@ -194,7 +194,7 @@ def terse_path(path, maxlen=55):
         arr = path.split(os.sep)
 
         while len(arr) >= 3:
-            idx = len(arr) / 2
+            idx = len(arr) // 2
             arr[idx] = '...'
             new_path = os.sep.join(arr)
 

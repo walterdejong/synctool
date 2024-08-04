@@ -42,7 +42,7 @@ def do(func, work):
         part = 1
     else:
         num_proc = synctool.param.NUM_PROC
-        part = len_work / num_proc
+        part = len_work // num_proc
         if len_work % num_proc != 0:
             part += 1
 
