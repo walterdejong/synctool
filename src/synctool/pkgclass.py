@@ -10,7 +10,7 @@
 
 '''base class for synctool package managers'''
 
-from typing import List
+from typing import List, Optional
 
 from synctool.lib import verbose, log, dryrun_msg
 
@@ -28,10 +28,10 @@ class SyncPkg:
 
 
     def list(self, pkgs=None):
-        # type: (List[str]) -> None
+        # type: (Optional[List[str]]) -> None
         '''output list of packages'''
 
-        if pkgs:
+        if pkgs is not None:
             if len(pkgs) > 1:
                 plural = 's'
             else:
