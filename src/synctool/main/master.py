@@ -45,10 +45,10 @@ OPT_AGGREGATE = False
 OPT_CHECK_UPDATE = False
 OPT_DOWNLOAD = False
 
-PASS_ARGS = None        # type: List[str]
-MASTER_OPTS = None      # type: List[str]
+PASS_ARGS = []          # type: List[str]
+MASTER_OPTS = []        # type: List[str]
 
-UPLOAD_FILE = None      # type: synctool.upload.UploadFile
+UPLOAD_FILE = synctool.upload.UploadFile()
 
 
 def run_remote_synctool(address_list):
