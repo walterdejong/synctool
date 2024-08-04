@@ -336,9 +336,9 @@ def run_with_nodename(cmd_arr, nodename):
         stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return -1
 
-    fstdout = proc.stdout
-    with fstdout:
-        for line in fstdout:
+    assert proc.stdout is not None      # this helps mypy
+    with proc.stdout:
+        for line in proc.stdout:
             line = line.rstrip()
 
             # if output is a log line, pass it to the master's syslog

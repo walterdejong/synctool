@@ -86,10 +86,12 @@ def run(cmd_arr):
     try:
         with subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
                               stdout=subprocess.PIPE, universal_newlines=True,
-                              stderr=subprocess.STDOUT).stdout as stdout:
-            aggregate(stdout)
+                              stderr=subprocess.STDOUT) as proc:
+            assert proc.stdout is not None      # this helps mypy
+            with proc.stdout:
+                aggregate(proc.stdout)
     except OSError as err:
-        stderr("failed to run command {0}: {1}".format(cmd_arr[0],err.strerror))
+        stderr("failed to run command {}: {}".format(cmd_arr[0], err.strerror))
         return False
 
     return True

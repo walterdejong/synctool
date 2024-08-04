@@ -66,6 +66,7 @@ def ping_node(addr):
         error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return
 
+    assert fpipe is not None            # this helps mypy
     with fpipe:
         for line in fpipe:
             line = line.strip()
