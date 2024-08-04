@@ -495,7 +495,7 @@ def get_options():
 
 @catch_signals
 def main():
-    # type: () -> None
+    # type: (...) -> int
     '''run the program'''
 
     param.init()
@@ -528,5 +528,6 @@ def main():
         control_multiplex(address_list, CTL_CMD)
     else:
         run_dsh(address_list, cmd_args)
+    return 0
 
 # EOB

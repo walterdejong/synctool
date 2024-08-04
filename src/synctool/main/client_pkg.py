@@ -381,7 +381,7 @@ def get_options():
 
 @catch_signals
 def main():
-    # type: () -> None
+    # type: (...) -> int
     '''run the program'''
 
     synctool.param.init()
@@ -418,5 +418,6 @@ def main():
 
     else:
         raise RuntimeError('BUG: unknown ACTION code %d' % ACTION)
+    return 0
 
 # EOB

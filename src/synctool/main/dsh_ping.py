@@ -270,7 +270,7 @@ def get_options():
 
 @catch_signals
 def main():
-    # type: () -> None
+    # type: (...) -> int
     '''run the program'''
 
     param.init()
@@ -298,5 +298,6 @@ def main():
         sys.exit(1)
 
     ping_nodes(address_list)
+    return 0
 
 # EOB

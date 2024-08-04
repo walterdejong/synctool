@@ -425,7 +425,7 @@ def get_options():
 
 @catch_signals
 def main():
-    # type: () -> None
+    # type: (...) -> int
     '''run the program'''
 
     param.init()
@@ -463,5 +463,6 @@ def main():
     run_remote_pkg(address_list)
 
     synctool.lib.closelog()
+    return 0
 
 # EOB

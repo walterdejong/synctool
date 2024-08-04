@@ -359,7 +359,7 @@ def get_options():
 
 @catch_signals
 def main():
-    # type: () -> None
+    # type: (...) -> int
     '''run the program'''
 
     param.init()
@@ -387,5 +387,6 @@ def main():
         sys.exit(1)
 
     run_remote_copy(address_list, files)
+    return 0
 
 # EOB

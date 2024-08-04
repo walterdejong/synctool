@@ -943,7 +943,7 @@ def get_options():
 @catch_signals
 def main():
     #pylint: disable=too-many-statements, too-many-branches
-    # type: () -> None
+    # type: (...) -> int
     '''run the program'''
 
     param.init()
@@ -1037,5 +1037,6 @@ def main():
         delete_files()
 
     unix_out('# EOB')
+    return 0
 
 # EOB

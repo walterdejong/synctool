@@ -720,7 +720,7 @@ def get_options():
 @catch_signals
 def main():
     #pylint: disable=too-many-statements, too-many-branches
-    # type: () -> None
+    # type: (...) -> int
     '''run the program'''
 
     param.init()
@@ -803,5 +803,6 @@ def main():
         run_remote_synctool(address_list)
 
     synctool.lib.closelog()
+    return 0
 
 # EOB

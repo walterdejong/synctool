@@ -53,10 +53,11 @@ def get_options():
 
 @catch_signals
 def main():
-    # type: () -> None
+    # type: (...) -> int
     '''run the program'''
 
     get_options()
     synctool.aggr.aggregate(sys.stdin)
+    return 0
 
 # EOB

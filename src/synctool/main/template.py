@@ -155,10 +155,11 @@ def get_options():
 
 @catch_signals
 def main():
-    # type: () -> None
+    # type: (...) -> int
     '''do it'''
 
     infile = get_options()
     template(infile)
+    return 0
 
 # EOB

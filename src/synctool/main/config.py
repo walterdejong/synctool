@@ -453,7 +453,7 @@ def get_options():
 @catch_signals
 def main():
     #pylint: disable=too-many-statements, too-many-branches
-    # type: () -> None
+    # type: (...) -> int
     '''do your thing'''
 
     param.init()
@@ -537,6 +537,6 @@ def main():
 
     else:
         raise RuntimeError('bug: unknown ACTION code %d' % ACTION)
-
+    return 0
 
 # EOB

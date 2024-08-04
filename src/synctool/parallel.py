@@ -68,7 +68,7 @@ def do(func, work):
 
 @catch_signals
 def worker(rank, func, work, part):
-    # type: (int, Callable[[Any], None], List[Any], int) -> None
+    # type: (int, Callable[[Any], None], List[Any], int) -> int
     '''run func to do part of work for parallel rank'''
 
     # determine which chunk of work to do
@@ -83,6 +83,7 @@ def worker(rank, func, work, part):
         # this is for option --zzz
         if synctool.param.SLEEP_TIME > 0:
             time.sleep(synctool.param.SLEEP_TIME)
+    return 0
 
 
 def join():
@@ -110,6 +111,7 @@ def join():
 if __name__ == '__main__':
     @catch_signals
     def main():
+        # type: (...) -> int
         '''main func'''
 
         def hello(item):
@@ -120,6 +122,7 @@ if __name__ == '__main__':
 
         synctool.param.NUM_PROC = 3
         do(hello, list(range(10)))
+        return 0
 
 #    synctool.param.SLEEP_TIME = 2
     main()
