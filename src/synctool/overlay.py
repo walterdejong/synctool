@@ -60,18 +60,12 @@ OV_NO_EXT = 5
 OV_IGNORE = 6
 
 
-def _sort_by_importance(item1, item2):
-    # type: (Tuple[str, int], Tuple[str, int]) -> int
-    '''item is a tuple (x, importance)'''
-
-    return item1[1] is item2[1]
-
-def _importance_key(item):
-    return item[1]
-
 def _toplevel(overlay):
     # type: (str) -> List[str]
     '''Returns sorted list of fullpath directories under overlay/'''
+
+    # the tuples are (fullpath, importance)
+    # the list of paths gets sorted by importance; key=item[1]
 
     arr = []    # type: List[Tuple[str, int]]
     for entry in os.listdir(overlay):
@@ -86,7 +80,7 @@ def _toplevel(overlay):
         arr.append((fullpath, importance))
         # verbose('%s is mine, importance %d' % (prettypath(fullpath), importance))
 
-    arr.sort(key=_importance_key)
+    arr.sort(key=lambda x: x[1])
 
     # return list of only the directory names
     return [x[0] for x in arr]
