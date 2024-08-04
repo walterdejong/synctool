@@ -28,13 +28,15 @@ class SyncStat:
     # Also note how I left device files (major, minor) out, they are so rare
     # that they get special treatment in object.py
 
-    def __init__(self, path=None):
+    def __init__(self, path=''):
         # type: (str) -> None
         '''initialize instance'''
 
         self.entry_exists = False
-        self.mode = self.uid = self.gid = self.size = None  # type: int
-        self.atime = self.mtime = None                      # type: int
+        self.mode = 0
+        self.uid = self.gid = -1
+        self.size = -1
+        self.atime = self.mtime = 0
         self.stat(path)
 
     def __repr__(self):
@@ -53,8 +55,10 @@ class SyncStat:
 
         if not path:
             self.entry_exists = False
-            self.mode = self.uid = self.gid = self.size = None
-            self.atime = self.mtime = None
+            self.mode = 0
+            self.uid = self.gid = -1
+            self.size = 0
+            self.atime = self.mtime = 0
             return
 
         try:
@@ -69,8 +73,10 @@ class SyncStat:
                 error('stat(%s) failed: %s' % (path, err.strerror))
 
             self.entry_exists = False
-            self.mode = self.uid = self.gid = self.size = None
-            self.atime = self.mtime = None
+            self.mode = 0
+            self.uid = self.gid = -1
+            self.size = 0
+            self.atime = self.mtime = 0
 
         else:
             self.entry_exists = True
