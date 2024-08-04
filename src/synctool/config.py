@@ -98,23 +98,23 @@ def read_config():
 
 
 def check_cmd_config(param_name, cmd):
-    # type: (str, str) -> Tuple[bool, Optional[str]]
+    # type: (str, str) -> Tuple[bool, str]
     '''check whether the command given in the config exists
     Returns (True, full pathed command) when OK,
-    and (False, None) on error
+    and (False, "") on error
     '''
 
     if not cmd:
         stderr("%s: error: parameter '%s' is missing" %
                (synctool.param.CONF_FILE, param_name))
-        return False, None
+        return False, ''
 
     arr = cmd.split()
     path = synctool.lib.search_path(arr[0])
     if not path:
         stderr("%s: error: %s '%s' not found in PATH" %
                (synctool.param.CONF_FILE, param_name, arr[0]))
-        return False, None
+        return False, ''
 
     # reassemble command with full path
     arr[0] = path
