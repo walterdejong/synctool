@@ -15,7 +15,7 @@ import sys
 import getopt
 import shlex
 
-from typing import List
+from typing import List, Optional
 
 from synctool import config, param
 import synctool.aggr
@@ -35,15 +35,15 @@ NODESET = synctool.nodeset.NodeSet()
 
 OPT_SKIP_RSYNC = False
 OPT_AGGREGATE = False
-MASTER_OPTS = None      # type: List[str]
-SSH_OPTIONS = None      # type: str
+MASTER_OPTS = []        # type: List[str]
+SSH_OPTIONS = ''        # type: str
 OPT_MULTIPLEX = False
-CTL_CMD = None          # type: str
-PERSIST = None          # type: str
+CTL_CMD = None          # type: Optional[str]
+PERSIST = None          # type: Optional[str]
 
 # ugly globals help parallelism
-SSH_CMD_ARR = None      # type: List[str]
-REMOTE_CMD_ARR = None   # type: List[str]
+SSH_CMD_ARR = []        # type: List[str]
+REMOTE_CMD_ARR = []     # type: List[str]
 
 # boolean saying whether we should sync the script to the nodes
 # before running it
@@ -211,7 +211,10 @@ def control_multiplex(address_list, _ctl_cmd):
 
     global SSH_CMD_ARR
 
+    assert CTL_CMD is not None
+
     synctool.multiplex.detect_ssh()
+    assert synctool.multiplex.SSH_VERSION is not None
     if synctool.multiplex.SSH_VERSION < 39:
         error('unsupported version of ssh')
         sys.exit(-1)
@@ -229,6 +232,7 @@ def _ssh_control(addr):
     '''run ssh -O CTL_CMD addr'''
 
     nodename = NODESET.get_nodename_from_address(addr)
+    assert CTL_CMD is not None
     okay = synctool.multiplex.control(nodename, addr, CTL_CMD)
 
     if CTL_CMD == 'check':

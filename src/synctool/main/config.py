@@ -27,11 +27,11 @@ import synctool.nodeset
 PROGNAME = 'config'
 
 ACTION = 0
-ACTION_OPTION = None    # type: str
-ARG_NODENAMES = None    # type: str
-ARG_GROUPS = None       # type: str
-ARG_CMDS = None         # type: List[str]
-ARG_EXPAND = None       # type: str
+ACTION_OPTION = ''
+ARG_NODENAMES = ''
+ARG_GROUPS = ''
+ARG_CMDS = []           # type: List[str]
+ARG_EXPAND = ''
 
 # these are enums for the "list" command-line options
 ACTION_LIST_NODES = 1
@@ -277,6 +277,8 @@ def set_action(act, opt):
     # this is a helper function for the command-line parser
 
     global ACTION, ACTION_OPTION
+
+    assert opt
 
     if ACTION > 0:
         error('options %s and %s can not be combined' % (ACTION_OPTION, opt))

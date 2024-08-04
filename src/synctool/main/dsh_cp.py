@@ -32,16 +32,16 @@ PROGNAME = 'dsh-cp'
 
 NODESET = synctool.nodeset.NodeSet()
 
-DESTDIR = None          # type: str
+DESTDIR = ''
 OPT_AGGREGATE = False
-MASTER_OPTS = None      # type: List[str]
-DSH_CP_OPTIONS = None   # type: str
+MASTER_OPTS = []        # type: List[str]
+DSH_CP_OPTIONS = ''     # type: str
 OPT_PURGE = False
 
 # ugly globals help parallelism
-DSH_CP_CMD_ARR = None   # type: List[str]
-SOURCE_LIST = None      # type: List[str]
-FILES_STR = None        # type: str
+DSH_CP_CMD_ARR = []     # type: List[str]
+SOURCE_LIST = []        # type: List[str]
+FILES_STR = ''          # type: str
 
 
 def run_remote_copy(address_list, files):
@@ -187,8 +187,8 @@ def get_options():
         usage()
         sys.exit(1)
 
-    DESTDIR = None
-    DSH_CP_OPTIONS = None
+    DESTDIR = ''
+    DSH_CP_OPTIONS = ''
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hc:n:g:x:X:o:pN:z:vqaf',

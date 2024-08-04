@@ -39,7 +39,7 @@ ACTION_CLEAN = 6
 ACTION = 0
 
 # list of packages given on the command-line
-PKG_LIST = None     # type: List[str]
+PKG_LIST = []       # type: List[str]
 
 # list of Linux package managers: (Linux release file, package manager)
 LINUX_PACKAGE_MANAGERS = (('/etc/debian_version', 'apt-get'),
