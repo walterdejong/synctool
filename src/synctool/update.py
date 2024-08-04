@@ -205,7 +205,7 @@ def download():
     try:
         web = urllib.request.urlopen(info.url)
     except urllib.error.HTTPError as err:
-        error('webserver at %s: %u %s' % (info.url, err.code, err.message))
+        error('webserver at %s: %u %s' % (info.url, err.code, err.reason))
         return False
 
     except urllib.error.URLError as err:
