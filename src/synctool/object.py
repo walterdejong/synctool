@@ -16,7 +16,7 @@ import datetime
 import shutil
 import hashlib
 
-from typing import Dict
+from typing import Dict, Optional
 
 import synctool.lib
 from synctool.lib import verbose, stdout, error, terse, unix_out, log
@@ -565,7 +565,7 @@ class VNodeChrDev(VNode):
         # dest_stat is a SyncStat object and it's useless here
         # I need a real, fresh statbuf that includes st_rdev field
         try:
-            dest_stat = os.lstat(self.name)
+            dest_stat = os.lstat(self.name)             # type: ignore
         except OSError as err:
             error('error checking %s : %s' % (self.name, err.strerror))
             return False
@@ -635,7 +635,7 @@ class VNodeBlkDev(VNode):
         # dest_stat is a SyncStat object and it's useless here
         # I need a real, fresh statbuf that includes st_rdev field
         try:
-            dest_stat = os.lstat(self.name)
+            dest_stat = os.lstat(self.name)             # type: ignore
         except OSError as err:
             error('error checking %s : %s' % (self.name, err.strerror))
             return False
@@ -702,7 +702,8 @@ class SyncObject():
         self.src_path = src_name
         self.dest_path = dest_name
         self.ov_type = ov_type
-        self.src_stat = self.dest_stat = None   # type: SyncStat
+        self.src_stat = synctool.syncstat.SyncStat()
+        self.dest_stat = synctool.syncstat.SyncStat()
         self.fix_action = SyncObject.FIX_UNDEF
 
     def make(self, src_dir, dest_dir):
@@ -718,7 +719,7 @@ class SyncObject():
         # type: () -> str
         '''pretty print my source path'''
 
-        if self.src_stat and self.src_stat.is_dir():
+        if self.src_stat.is_dir():
             return prettypath(self.src_path) + os.sep
 
         return prettypath(self.src_path)
@@ -749,12 +750,19 @@ class SyncObject():
         if src_type != dest_type:
             # entry is of a different file type
             vnode = self.vnode_obj()
+            if vnode is None:
+                # error message already printed
+                return SyncObject.FIX_UNDEF
             stdout('%s should be a %s' % (self.dest_path, vnode.typename()))
             terse(synctool.lib.TERSE_WARNING, ('wrong type %s' %
                                                self.dest_path))
             return SyncObject.FIX_TYPE
 
         vnode = self.vnode_obj()
+        if vnode is None:
+            # error message already printed
+            return SyncObject.FIX_UNDEF
+
         if not vnode.compare(self.src_path, self.dest_stat):
             # content is different; change the entire object
             log('updating %s' % self.dest_path)
@@ -813,6 +821,9 @@ class SyncObject():
             return False
 
         vnode = self.vnode_obj()
+        if vnode is None:
+            # error message was already printed
+            return False
 
         # Note that .post scripts are not run for owner/mode/time changes
 
@@ -888,8 +899,10 @@ class SyncObject():
 
     def vnode_obj(self):
 #pylint: disable=too-many-return-statements
-        # type: () -> VNode
-        '''create vnode object for this SyncObject'''
+        # type: () -> Optional[VNode]
+        '''create vnode object for this SyncObject
+        Returns the new VNode, or None on error
+        '''
 
         exists = self.dest_stat.exists()
 
@@ -927,7 +940,7 @@ class SyncObject():
 
     def vnode_dest_obj(self):
 #pylint: disable=too-many-return-statements
-        # type: () -> VNode
+        # type: () -> Optional[VNode]
         '''create vnode object for this SyncObject's destination'''
 
         exists = self.dest_stat.exists()
@@ -986,6 +999,10 @@ class SyncObject():
                   '%s (only timestamp)' % self.dest_path)
 
             vnode = self.vnode_obj()
+            if vnode is None:
+                # error message already printed
+                # no further action needed; return True
+                return True
             # leave the atime intact
             vnode.stat.atime = self.dest_stat.atime
             vnode.set_times()

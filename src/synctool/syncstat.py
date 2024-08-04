@@ -93,7 +93,7 @@ class SyncStat:
         # type: () -> bool
         ''' Returns True if it is a directory'''
 
-        return(self.entry_exists and stat.S_ISDIR(self.mode))
+        return (self.entry_exists and stat.S_ISDIR(self.mode))
 
     def is_file(self):
         # type: () -> bool

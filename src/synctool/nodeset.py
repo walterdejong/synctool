@@ -23,7 +23,7 @@ usage:
 
 import sys
 
-from typing import List, Dict, Set
+from typing import List, Dict, Set, Optional
 
 from synctool import config, param
 import synctool.lib
@@ -92,8 +92,10 @@ class NodeSet:
 
     def addresses(self, silent=False):
 #pylint: disable=too-many-branches
-        # type: (bool) -> List[str]
-        '''return list of addresses of relevant nodes'''
+        # type: (bool) -> Optional[List[str]]
+        '''return list of addresses of relevant nodes
+        or None on error
+        '''
 
         # by default, work on default_nodeset
         if not self.nodelist and not self.grouplist:
@@ -203,7 +205,7 @@ def make_default_nodeset():
             errors += 1
 
     if not errors:
-        if not nodeset.addresses(silent=True):
+        if nodeset.addresses(silent=True) is None:
             # Note: silent=True suppresses warnings about ignored nodes
             # error message already printed
             errors += 1

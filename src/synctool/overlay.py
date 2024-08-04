@@ -38,10 +38,7 @@ import os
 import fnmatch
 from functools import cmp_to_key
 
-try:
-    from typing import List, Dict, Tuple, Set, Callable
-except ImportError:
-    pass
+from typing import List, Dict, Tuple, Set, Callable, Optional
 
 import synctool.lib
 from synctool.lib import verbose, warning, terse, prettypath
@@ -95,7 +92,7 @@ def _group_all():
 
 def _split_extension(filename, src_dir):
 #pylint: disable=too-many-branches, too-many-return-statements
-    # type: (str, str) -> Tuple[SyncObject, int]
+    # type: (str, str) -> Tuple[Optional[SyncObject], int]
     '''filename in the overlay tree, without leading path
     src_dir is passed for the purpose of printing error messages
     Returns tuple: SyncObject, importance
@@ -236,7 +233,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, callback):
             continue
 
         obj, importance = _split_extension(entry, src_dir)
-        if not obj:
+        if obj is None:
             continue
 
         arr.append((obj, importance))

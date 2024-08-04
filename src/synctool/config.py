@@ -16,7 +16,7 @@ import os
 import sys
 import socket
 
-from typing import List, Tuple, Set, Union
+from typing import List, Tuple, Set, Union, Optional
 
 import synctool.configparser
 import synctool.lib
@@ -98,7 +98,7 @@ def read_config():
 
 
 def check_cmd_config(param_name, cmd):
-    # type: (str, str) -> Tuple[bool, str]
+    # type: (str, str) -> Tuple[bool, Optional[str]]
     '''check whether the command given in the config exists
     Returns (True, full pathed command) when OK,
     and (False, None) on error
@@ -107,19 +107,19 @@ def check_cmd_config(param_name, cmd):
     if not cmd:
         stderr("%s: error: parameter '%s' is missing" %
                (synctool.param.CONF_FILE, param_name))
-        return (False, None)
+        return False, None
 
     arr = cmd.split()
     path = synctool.lib.search_path(arr[0])
     if not path:
         stderr("%s: error: %s '%s' not found in PATH" %
                (synctool.param.CONF_FILE, param_name, arr[0]))
-        return (False, None)
+        return False, None
 
     # reassemble command with full path
     arr[0] = path
     cmd = ' '.join(arr)
-    return (True, cmd)
+    return True, cmd
 
 
 def init_mynodename():
@@ -181,7 +181,7 @@ def init_mynodename():
 
 
 def get_ipaddresses(name):
-    # type: (str) -> List[str]
+    # type: (str) -> Optional[List[str]]
     '''Returns list of IP addresses for DNS name
     or None on error
     '''
