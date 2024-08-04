@@ -11,7 +11,6 @@
 '''synctool-client is the program that runs on the target node'''
 
 import os
-from posix import unsetenv
 import sys
 import time
 import shlex
@@ -347,7 +346,9 @@ def overlay_files():
 
 def _delete_callback(obj, _pre_dict, post_dict):
     # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
-    '''delete files'''
+    '''delete files
+    Returns pair: True (continue), deleted
+    '''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
         return generate_template(obj, post_dict), False
@@ -365,6 +366,9 @@ def _delete_callback(obj, _pre_dict, post_dict):
 
     if obj.dest_stat.exists():
         vnode = obj.vnode_dest_obj()
+        if vnode is None:
+            # error message already printed
+            return True, False
         vnode.harddelete()
         obj.run_script(post_dict)
         return True, True
@@ -381,7 +385,9 @@ def delete_files():
 
 def _erase_saved_callback(obj, _pre_dict, post_dict):
     # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
-    '''erase *.saved backup files'''
+    '''erase *.saved backup files
+    Returns pair: True (continue), deleted
+    '''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
         return generate_template(obj, post_dict), False
@@ -393,6 +399,9 @@ def _erase_saved_callback(obj, _pre_dict, post_dict):
 
     if obj.dest_stat.exists():
         vnode = obj.vnode_dest_obj()
+        if vnode is None:
+            # error message already printed
+            return True, False
         vnode.harddelete()
         return True, True
 
