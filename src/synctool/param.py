@@ -32,28 +32,28 @@ BOOLEAN_VALUE_FALSE = ('0', 'off', 'no', 'false')   # type: Sequence[str]
 #
 # config variables
 #
-ROOTDIR = None              # type: str
-VAR_DIR = None              # type: str
+ROOTDIR = ''                # type: str
+VAR_DIR = ''                # type: str
 VAR_LEN = 0                 # type: int
-OVERLAY_DIR = None          # type: str
+OVERLAY_DIR = ''            # type: str
 OVERLAY_LEN = 0             # type: int
-DELETE_DIR = None           # type: str
+DELETE_DIR = ''             # type: str
 DELETE_LEN = 0              # type: int
-PURGE_DIR = None            # type: str
+PURGE_DIR = ''              # type: str
 PURGE_LEN = 0               # type: int
-SCRIPT_DIR = None           # type: str
+SCRIPT_DIR = ''             # type: str
 TEMP_DIR = '/tmp/synctool'  # type: str
-HOSTNAME = None             # type: str
-NODENAME = None             # type: str
+HOSTNAME = ''               # type: str
+NODENAME = ''               # type: str
 
 DIFF_CMD = 'diff -u'                                    # type: str
 PING_CMD = 'ping -q -c 1 -w 1'                          # type: str
 SSH_CMD = 'ssh -o ConnectTimeout=10 -x -q'              # type: str
 RSYNC_CMD = "rsync -ar --delete --delete-excluded -q"   # type: str
-SYNCTOOL_CMD = None                                     # type: str
-PKG_CMD = None                                          # type: str
+SYNCTOOL_CMD = ''                                       # type: str
+PKG_CMD = ''                                            # type: str
 
-PACKAGE_MANAGER = None      # type: str
+PACKAGE_MANAGER = ''        # type: str
 
 NUM_PROC = 16               # type: int
 SLEEP_TIME = 0              # type: int
@@ -77,7 +77,7 @@ IGNORE_FILES_WITH_WILDCARDS = []    # type: List[str]
 DEFAULT_NODESET = set(['all'])      # type: Set[str]
 
 # the master's fqdn hostname
-MASTER = None               # type: str
+MASTER = ''                 # type: str
 
 # set of slaves by nodename
 SLAVES = set()              # type: Set[str]
@@ -106,7 +106,7 @@ GROUP_DEFS = {}             # type: Dict[str, List[str]]
 IGNORE_GROUPS = set()       # type: Set[str]
 
 # list of my groups, ordered by importance
-MY_GROUPS = None            # type: List[str]
+MY_GROUPS = []             # type: List[str]
 
 # set of all known groups
 ALL_GROUPS = set([])        # type: Set[str]

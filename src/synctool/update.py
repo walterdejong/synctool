@@ -18,8 +18,6 @@ import urllib.error
 import urllib.parse
 import json
 
-from typing import Optional
-
 from synctool.lib import verbose, error, stdout
 import synctool.param
 
@@ -34,9 +32,9 @@ class ReleaseInfo:
         # type: () -> None
         '''initialize instance'''
 
-        self.version = None     # type: Optional[str]
-        self.datetime = None    # type: Optional[datetime.datetime]
-        self.url = None         # type: Optional[str]
+        self.version = ''
+        self.datetime = datetime.datetime(year=1970, month=1, day=1)
+        self.url = ''
 
     def load(self):
 #pylint: disable=too-many-return-statements
@@ -146,7 +144,6 @@ def check():
 
     my_time = datetime.datetime.strptime(synctool.param.RELEASE_DATETIME,
                                          '%Y-%m-%dT%H:%M:%S')
-    assert info.datetime is not None
     if info.datetime <= my_time:
         stdout('You are running the latest release of synctool')
         return False
@@ -203,11 +200,9 @@ def download():
         # error message already printed
         return False
 
-    assert info.version is not None
     download_filename = make_local_filename_for_version(info.version)
     download_bytes = 0
     try:
-        assert info.url is not None
         web = urllib.request.urlopen(info.url)
     except urllib.error.HTTPError as err:
         error('webserver at %s: %u %s' % (info.url, err.code, err.reason))

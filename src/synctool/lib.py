@@ -18,7 +18,7 @@ import errno
 import shlex
 import syslog
 
-from typing import List, Dict, Sequence
+from typing import List, Dict, Sequence, Optional
 
 from synctool import param
 
@@ -502,7 +502,7 @@ def run_command_in_dir(dest_dir, cmd):
 
 
 def search_path(cmd):
-    # type: (str) -> str
+    # type: (str) -> Optional[str]
     '''search the PATH for the location of cmd'''
 
     # maybe a full path was given
