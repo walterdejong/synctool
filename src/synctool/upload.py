@@ -190,8 +190,7 @@ class RemoteStat:
         '''Returns string representation'''
 
         return ('<RemoteStat: %06o %u %s %u %s %u %r %r>' %
-                (self.mode, self.uid, self.owner.decode(),
-		 self.gid, self.group.decode(),
+                (self.mode, self.uid, self.owner, self.gid, self.group,
                  self.size, self.filename, self.linkdest))
 
 
@@ -217,7 +216,8 @@ def _remote_stat(upfile):
     try:
         proc = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
                                 stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
+                                stderr=subprocess.PIPE,
+                                universal_newlines=True)
     except OSError as err:
         error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return None
@@ -237,7 +237,7 @@ def _remote_stat(upfile):
 
     # parse synctool_list output into array of RemoteStat info
     data = []
-    for line in out.split(b'\n'):
+    for line in out.split('\n'):
         if not line:
             continue
 
