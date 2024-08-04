@@ -254,6 +254,8 @@ do_install() {
 	makedir 700 "$INSTALL_ROOT/var"
 	echo "making $INSTALL_ROOT/var/overlay"
 	makedir 755 "$INSTALL_ROOT/var/overlay"
+	echo "making $INSTALL_ROOT/var/overlay/all"
+	makedir 755 "$INSTALL_ROOT/var/overlay/all"
 	echo "making $INSTALL_ROOT/var/delete"
 	makedir 750 "$INSTALL_ROOT/var/delete"
 	echo "making $INSTALL_ROOT/var/purge"
