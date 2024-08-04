@@ -334,7 +334,7 @@ def run_with_nodename(cmd_arr, nodename):
 
     try:
         proc = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
-                                stdout=subprocess.PIPE, text=True,
+                                stdout=subprocess.PIPE, universal_newlines=True,
                                 stderr=subprocess.STDOUT)
     except OSError as err:
         stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))

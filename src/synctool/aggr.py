@@ -89,7 +89,7 @@ def run(cmd_arr):
 
     try:
         with subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
-                stdout=subprocess.PIPE, text=True,
+                stdout=subprocess.PIPE, universal_newlines=True,
                 stderr=subprocess.STDOUT) as pipe:
             fresult = pipe.stdout
 
