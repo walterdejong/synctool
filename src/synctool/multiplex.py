@@ -15,19 +15,19 @@ import re
 import shlex
 import subprocess
 
-from typing import List, Tuple, Pattern
+from typing import List, Tuple, Pattern, Optional
 
 import synctool.lib
 from synctool.lib import verbose, error, warning, unix_out
 import synctool.param
 import synctool.syncstat
 
-SSH_VERSION = None      # type: int
+SSH_VERSION = None      # type: Optional[int]
 MATCH_SSH_VERSION = re.compile(r'^OpenSSH\_(\d+)\.(\d+)')   # type: Pattern
 
 
 def _make_control_path(nodename):
-    # type: (str) -> str
+    # type: (str) -> Optional[str]
     '''Returns a control pathname for nodename
     or None on error
     It does not create the control path; just the fullpath filename
@@ -50,7 +50,7 @@ def use_mux(nodename):
     '''
 
     control_path = _make_control_path(nodename)
-    if not control_path:
+    if control_path is None:
         # error message already printed
         return False
 
@@ -123,7 +123,7 @@ def ssh_args(ssh_cmd_arr, nodename):
 
 def setup_master(node_list, persist):
 #pylint: disable=too-many-statements,too-many-branches,consider-using-with
-    # type: (List[Tuple[str, str]], str) -> bool
+    # type: (List[Tuple[str, str]], Optional[str]) -> bool
     '''setup master connections to all nodes in node_list
     node_list is a list of pairs: (addr, nodename)
     Argument 'persist' is the SSH ControlPersist parameter
@@ -131,6 +131,7 @@ def setup_master(node_list, persist):
     '''
 
     detect_ssh()
+    assert SSH_VERSION is not None
     if SSH_VERSION < 39:
         error('unsupported version of ssh')
         return False
