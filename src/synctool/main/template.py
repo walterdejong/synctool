@@ -70,7 +70,7 @@ def template(filename):
     else:
         try:
             fio = open(filename, encoding='utf-8')
-        except IOError as err:
+        except OSError as err:
             print("%s: failed to open '%s': %s" % (PROGNAME, filename,
                                                    err.strerror))
             sys.exit(-1)

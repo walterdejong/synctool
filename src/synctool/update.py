@@ -115,7 +115,7 @@ def github_api(url):
         error('failed to access %s: %s' % (url, str(err.reason)))
         return None
 
-    except IOError as err:
+    except OSError as err:
         error('failed to access %s: %s' % (url, err.strerror))
         return None
 
@@ -212,7 +212,7 @@ def download():
         error('failed to access %s: %s' % (info.url, str(err.reason)))
         return False
 
-    except IOError as err:
+    except OSError as err:
         error('failed to access %s: %s' % (info.url, err.strerror))
         return False
 
@@ -227,7 +227,7 @@ def download():
         # create download_filename
         try:
             fdownld = open(download_filename, 'w+b')
-        except IOError as err:
+        except OSError as err:
             error('failed to create file %s: %s' % (download_filename,
                                                     err.strerror))
             return False

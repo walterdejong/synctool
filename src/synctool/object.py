@@ -249,7 +249,7 @@ class VNodeFile(VNode):
 
         try:
             ffile1 = open(src_path, 'rb')
-        except IOError as err:
+        except OSError as err:
             error('failed to open %s : %s' % (src_path, err.strerror))
             # return True because we can't fix an error in src_path
             return True
@@ -260,7 +260,7 @@ class VNodeFile(VNode):
         with ffile1:
             try:
                 ffile2 = open(self.name, 'rb')
-            except IOError as err:
+            except OSError as err:
                 error('failed to open %s : %s' % (self.name, err.strerror))
                 return False
 
@@ -269,7 +269,7 @@ class VNodeFile(VNode):
                 while not ended and (sum1.digest() == sum2.digest()):
                     try:
                         data1 = ffile1.read(IO_SIZE)
-                    except IOError as err:
+                    except OSError as err:
                         error('failed to read file %s: %s' % (src_path,
                                                               err.strerror))
                         return False
@@ -281,7 +281,7 @@ class VNodeFile(VNode):
 
                     try:
                         data2 = ffile2.read(IO_SIZE)
-                    except IOError as err:
+                    except OSError as err:
                         error('failed to read file %s: %s' % (self.name,
                                                               err.strerror))
                         return False
@@ -316,7 +316,7 @@ class VNodeFile(VNode):
             try:
                 # copy file
                 shutil.copy(self.src_path, self.name)
-            except (OSError, IOError) as err:
+            except OSError as err:
                 error('failed to copy %s to %s: %s' %
                       (prettypath(self.src_path), self.name, err.strerror))
                 terse(TERSE_FAIL, self.name)

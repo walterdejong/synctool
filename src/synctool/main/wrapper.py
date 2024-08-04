@@ -30,7 +30,7 @@ def catch_signals(func):
         ret = -1
         try:
             ret = func(*args, **kwargs)
-        except IOError as err:
+        except OSError as err:
             if err.errno == errno.EPIPE:    # Broken pipe
                 ret = 141                   # 128 + 13
             else:

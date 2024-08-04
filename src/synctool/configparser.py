@@ -73,7 +73,7 @@ def read_config_file(configfile):
 
     try:
         fconfig = open(configfile, 'r', encoding="utf-8")
-    except IOError as err:
+    except OSError as err:
         stderr("error: failed to read config file '%s' : %s" % (configfile,
                                                                 err.strerror))
         return 1
