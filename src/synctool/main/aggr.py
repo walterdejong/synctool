@@ -18,8 +18,7 @@ import synctool.aggr
 from synctool.main.wrapper import catch_signals
 
 
-def usage():
-    # type: () -> None
+def usage() -> None:
     '''print usage information'''
 
     print('''Typical use of synctool-aggr is:
@@ -31,8 +30,7 @@ and activated by the '-a' option
 ''')
 
 
-def get_options():
-    # type: () -> None
+def get_options() -> None:
     '''parse command-line options'''
 
     if len(sys.argv) <= 1:
@@ -42,7 +40,7 @@ def get_options():
         opts, _ = getopt.getopt(sys.argv[1:], 'h', ['help'])
     except getopt.GetoptError as reason:
         print('%s: %s' % (os.path.basename(sys.argv[0]), reason))
-#       usage()
+        # usage()
         sys.exit(1)
 
     for opt, _optarg in opts:
@@ -52,8 +50,7 @@ def get_options():
 
 
 @catch_signals
-def main():
-    # type: (...) -> int
+def main() -> int:
     '''run the program'''
 
     get_options()

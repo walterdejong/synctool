@@ -53,8 +53,7 @@ LINUX_PACKAGE_MANAGERS = (('/etc/debian_version', 'apt-get'),
                           ('/etc/mandrake-release', 'urpmi'))   # type: Sequence[Tuple[str, str]]
 
 
-def package_manager():
-    # type: () -> SyncPkg
+def package_manager() -> SyncPkg:
     '''return instance of SyncPkg installer class
 
     Exits the program on error, when it fails to detect
@@ -100,8 +99,7 @@ def package_manager():
     sys.exit(1)
 
 
-def detect_installer():
-    # type: () -> None
+def detect_installer() -> None:
     '''Attempt to detect the operating system and package system'''
 
     # attempt a best effort at detecting OSes for the purpose of
@@ -180,8 +178,7 @@ def detect_installer():
         warning("unknown platform '%s'" % platform)
 
 
-def there_can_be_only_one():
-    # type: () -> None
+def there_can_be_only_one() -> None:
     '''print usage information about actions'''
 
     print('''Specify only one of these options:
@@ -195,8 +192,7 @@ def there_can_be_only_one():
     sys.exit(1)
 
 
-def usage():
-    # type: () -> None
+def usage() -> None:
     '''print usage information'''
 
     print('usage: %s [options] [package [..]]' % PROGNAME)
@@ -239,12 +235,10 @@ Note that --upgrade does a dry run unless you specify --fix
 ''')
 
 
-def get_options():
-    #pylint: disable=global-statement
-    #pylint: disable=too-many-branches
-    #pylint: disable=too-many-statements
-    # type: () -> None
+def get_options() -> None:
     '''parse command-line options'''
+
+    # pylint: disable=global-statement,too-many-statements,too-many-branches
 
     global ACTION, PKG_LIST
 
@@ -260,7 +254,7 @@ def get_options():
                                     'fix', 'verbose', 'unix', 'quiet'])
     except getopt.GetoptError as reason:
         print('%s: %s' % (PROGNAME, reason))
-#        usage()
+        # usage()
         sys.exit(1)
 
     # first read the config file
@@ -274,7 +268,7 @@ def get_options():
             continue
 
     synctool.config.read_config()
-#    synctool.nodeset.make_default_nodeset()
+    # synctool.nodeset.make_default_nodeset()
 
     # then process the other options
     ACTION = 0
@@ -382,8 +376,7 @@ def get_options():
 
 
 @catch_signals
-def main():
-    # type: (...) -> int
+def main() -> int:
     '''run the program'''
 
     synctool.param.init()

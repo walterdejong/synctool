@@ -28,8 +28,7 @@ class SyncStat:
     # Also note how I left device files (major, minor) out, they are so rare
     # that they get special treatment in object.py
 
-    def __init__(self, path=''):
-        # type: (str) -> None
+    def __init__(self, path: str = '') -> None:
         '''initialize instance'''
 
         self.entry_exists = False
@@ -39,8 +38,7 @@ class SyncStat:
         self.atime = self.mtime = 0
         self.stat(path)
 
-    def __repr__(self):
-        # type: () -> str
+    def __repr__(self) -> str:
         '''return string representation'''
 
         if self.entry_exists:
@@ -49,8 +47,7 @@ class SyncStat:
 
         return '[<SyncStat>: None]'
 
-    def stat(self, path):
-        # type: (str) -> None
+    def stat(self, path: str) -> None:
         '''get the stat() information for a pathname'''
 
         if not path:
@@ -89,68 +86,57 @@ class SyncStat:
             self.atime = int(statbuf.st_atime)
             self.mtime = int(statbuf.st_mtime)
 
-    def is_dir(self):
-        # type: () -> bool
+    def is_dir(self) -> bool:
         ''' Returns True if it is a directory'''
 
         return (self.entry_exists and stat.S_ISDIR(self.mode))
 
-    def is_file(self):
-        # type: () -> bool
+    def is_file(self) -> bool:
         '''Returns True if it's a regular file'''
 
         return self.entry_exists and stat.S_ISREG(self.mode)
 
-    def is_link(self):
-        # type: () -> bool
+    def is_link(self) -> bool:
         '''Returns True if it's a symbolic link'''
 
         return self.entry_exists and stat.S_ISLNK(self.mode)
 
-    def is_fifo(self):
-        # type: () -> bool
+    def is_fifo(self) -> bool:
         '''Returns True if it's a FIFO'''
 
         return self.entry_exists and stat.S_ISFIFO(self.mode)
 
-    def is_sock(self):
-        # type: () -> bool
+    def is_sock(self) -> bool:
         '''Returns True if it's a socket file'''
 
         return self.entry_exists and stat.S_ISSOCK(self.mode)
 
-    def is_chardev(self):
-        # type: () -> bool
+    def is_chardev(self) -> bool:
         '''Returns True if it's a character device file'''
 
         return self.entry_exists and stat.S_ISCHR(self.mode)
 
-    def is_blockdev(self):
-        # type: () -> bool
+    def is_blockdev(self) -> bool:
         '''Returns True if it's a block device file'''
 
         return self.entry_exists and stat.S_ISCHR(self.mode)
 
-    def filetype(self):
-        # type: () -> int
+    def filetype(self) -> int:
         '''Returns the file type part of the mode'''
 
         return stat.S_IFMT(self.mode)
 
-    def exists(self):
-        # type: () -> bool
+    def exists(self) -> bool:
         '''Returns True if it exists'''
 
         return self.entry_exists
 
-    def is_exec(self):
-        # type: () -> bool
+    def is_exec(self) -> bool:
         '''Returns True if its mode has any 'x' bit set'''
 
         return self.entry_exists and ((self.mode & 0o111) != 0)
 
-    def ascii_uid(self):
-        # type: () -> str
+    def ascii_uid(self) -> str:
         '''Returns the username for this uid'''
 
         if not self.entry_exists:
@@ -158,8 +144,7 @@ class SyncStat:
 
         return synctool.pwdgrp.pw_name(self.uid)
 
-    def ascii_gid(self):
-        # type: () -> str
+    def ascii_gid(self) -> str:
         '''Returns the group for this gid'''
 
         if not self.entry_exists:

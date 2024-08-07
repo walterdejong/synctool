@@ -26,6 +26,7 @@ from synctool.main.wrapper import catch_signals
 import synctool.multiplex
 import synctool.nodeset
 import synctool.parallel
+import synctool.range
 import synctool.unbuffered
 
 # hardcoded name because otherwise we get "dsh.py"
@@ -52,12 +53,10 @@ REMOTE_CMD_ARR = []     # type: List[str]
 SYNC_IT = False
 
 
-def run_dsh(address_list, remote_cmd_arr):
-    #pylint: disable=global-statement
-    # type: (List[str], List[str]) -> None
+def run_dsh(address_list: List[str], remote_cmd_arr: List[str]) -> None:
     '''run remote command to a set of nodes using ssh (param ssh_cmd)'''
 
-    global SSH_CMD_ARR, REMOTE_CMD_ARR, SYNC_IT
+    global SSH_CMD_ARR, REMOTE_CMD_ARR, SYNC_IT                     # pylint: disable=global-statement
 
     # if the command is under scripts/, assume its full path
     # This is nice because scripts/ isn't likely to be in PATH
@@ -67,8 +66,7 @@ def run_dsh(address_list, remote_cmd_arr):
     if not full_path:
         # command was not found in PATH
         # look under scripts/
-        full_path = os.path.join(param.SCRIPT_DIR,
-                                 remote_cmd_arr[0])
+        full_path = os.path.join(param.SCRIPT_DIR, remote_cmd_arr[0])
         # sync the script to the node
         SYNC_IT = True
     elif (full_path[:len(param.SCRIPT_DIR)+1] ==
@@ -105,8 +103,7 @@ def run_dsh(address_list, remote_cmd_arr):
     synctool.parallel.do(worker_ssh, address_list)
 
 
-def worker_ssh(addr):
-    # type: (str) -> None
+def worker_ssh(addr: str) -> None:
     '''worker process: sync script and run ssh+command to the node'''
 
     # Note that this func even runs ssh to the local node if
@@ -172,12 +169,10 @@ def worker_ssh(addr):
         synctool.lib.run_with_nodename(ssh_cmd_arr, nodename)
 
 
-def start_multiplex(address_list):
-    #pylint: disable=global-statement
-    # type: (List[str]) -> None
+def start_multiplex(address_list: List[str]) -> None:
     '''run ssh -M to each node in address_list'''
 
-    global PERSIST
+    global PERSIST                                                  # pylint: disable=global-statement
 
     # allow this only on the master node because of security considerations
     if param.MASTER != param.HOSTNAME:
@@ -204,12 +199,10 @@ def start_multiplex(address_list):
     synctool.multiplex.setup_master(pairs, PERSIST)
 
 
-def control_multiplex(address_list, _ctl_cmd):
-    #pylint: disable=global-statement
-    # type: (List[str], str) -> None
+def control_multiplex(address_list: List[str], _ctl_cmd: str) -> None:
     '''run ssh -O ctl_cmd to each node in address_list'''
 
-    global SSH_CMD_ARR
+    global SSH_CMD_ARR                                              # pylint: disable=global-statement
 
     assert CTL_CMD is not None
 
@@ -227,8 +220,7 @@ def control_multiplex(address_list, _ctl_cmd):
     synctool.parallel.do(_ssh_control, address_list)
 
 
-def _ssh_control(addr):
-    # type: (str) -> None
+def _ssh_control(addr: str) -> None:
     '''run ssh -O CTL_CMD addr'''
 
     nodename = NODESET.get_nodename_from_address(addr)
@@ -257,8 +249,7 @@ def _ssh_control(addr):
                 print('%s: ssh master not running' % nodename)
 
 
-def check_cmd_config():
-    # type: () -> None
+def check_cmd_config() -> None:
     '''check whether the commands as given in synctool.conf actually exist'''
 
     errors = 0
@@ -268,8 +259,7 @@ def check_cmd_config():
         errors += 1
 
     if not OPT_SKIP_RSYNC:
-        okay, param.RSYNC_CMD = config.check_cmd_config('rsync_cmd',
-                                                      param.RSYNC_CMD)
+        okay, param.RSYNC_CMD = config.check_cmd_config('rsync_cmd', param.RSYNC_CMD)
         if not okay:
             errors += 1
 
@@ -277,8 +267,7 @@ def check_cmd_config():
         sys.exit(-1)
 
 
-def usage():
-    # type: () -> None
+def usage() -> None:
     '''print usage information'''
 
     print('usage: %s [options] <remote command>' % PROGNAME)
@@ -309,11 +298,10 @@ CTL_CMD can be: check, stop, exit
 ''')
 
 
-def get_options():
-    #pylint: disable=global-statement
-    #pylint: disable=too-many-statements, too-many-branches
-    # type: () -> List[str]
+def get_options() -> List[str]:
     '''parse command-line options'''
+
+    # pylint: disable=global-statement,too-many-statements,too-many-branches
 
     global MASTER_OPTS, OPT_SKIP_RSYNC, OPT_AGGREGATE, SSH_OPTIONS
     global OPT_MULTIPLEX, CTL_CMD, PERSIST
@@ -332,7 +320,7 @@ def get_options():
                                     'aggregate', 'skip-rsync', 'quiet'])
     except getopt.GetoptError as reason:
         print('%s: %s' % (PROGNAME, reason))
-#        usage()
+        # usage()
         sys.exit(1)
 
     # first read the config file
@@ -364,7 +352,7 @@ def get_options():
     check_cmd_config()
 
     # then process the other options
-    MASTER_OPTS = [sys.argv[0],]
+    MASTER_OPTS = [sys.argv[0], ]
 
     for opt, arg in opts:
         if opt:
@@ -498,14 +486,13 @@ def get_options():
 
 
 @catch_signals
-def main():
-    # type: (...) -> int
+def main() -> int:
     '''run the program'''
 
     param.init()
 
-    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout) # type: ignore
-    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr) # type: ignore
+    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)             # type: ignore
+    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)             # type: ignore
 
     try:
         cmd_args = get_options()

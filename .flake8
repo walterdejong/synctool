@@ -1,0 +1,3 @@
+[flake8]
+#ignore = W504
+max-line-length = 160

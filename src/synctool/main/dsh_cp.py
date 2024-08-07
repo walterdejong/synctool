@@ -25,6 +25,7 @@ import synctool.multiplex
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.parallel
+import synctool.range
 import synctool.unbuffered
 
 # hardcoded name because otherwise we get "dsh_cp.py"
@@ -44,12 +45,12 @@ SOURCE_LIST = []        # type: List[str]
 FILES_STR = ''          # type: str
 
 
-def run_remote_copy(address_list, files):
-    #pylint: disable=too-many-branches, global-statement
-    # type: (List[str], List[str]) -> None
+def run_remote_copy(address_list: List[str], files: List[str]) -> None:
     '''copy files[] to nodes[]'''
 
-    global DSH_CP_CMD_ARR, SOURCE_LIST, FILES_STR
+    # pylint: disable=too-many-branches
+
+    global DSH_CP_CMD_ARR, SOURCE_LIST, FILES_STR                   # pylint: disable=global-statement
 
     errs = 0
     sourcelist = []     # type: List[str]
@@ -98,8 +99,7 @@ def run_remote_copy(address_list, files):
     synctool.parallel.do(worker_dsh_cp, address_list)
 
 
-def worker_dsh_cp(addr):
-    # type: (str) -> None
+def worker_dsh_cp(addr: str) -> None:
     '''do remote copy to node'''
 
     nodename = NODESET.get_nodename_from_address(addr)
@@ -139,8 +139,7 @@ def worker_dsh_cp(addr):
         unix_out(' '.join(dsh_cp_cmd_arr) + '    # dry run')
 
 
-def check_cmd_config():
-    # type: () -> None
+def check_cmd_config() -> None:
     '''check whether the commands as given in synctool.conf actually exist'''
 
     okay, param.RSYNC_CMD = config.check_cmd_config('rsync_cmd', param.RSYNC_CMD)
@@ -148,8 +147,7 @@ def check_cmd_config():
         sys.exit(-1)
 
 
-def usage():
-    # type: () -> None
+def usage() -> None:
     '''print usage information'''
 
     print('usage: %s [options] FILE [..] DESTDIR|:' % PROGNAME)
@@ -175,13 +173,12 @@ DESTDIR may be ':' (colon) meaning the directory of the first source file
 ''')
 
 
-def get_options():
-    #pylint: disable=global-statement
-    #pylint: disable=too-many-statements, too-many-branches
-    # type: () -> List[str]
+def get_options() -> List[str]:
     '''parse command-line options'''
 
-    global DESTDIR, MASTER_OPTS, OPT_AGGREGATE, DSH_CP_OPTIONS, OPT_PURGE
+    # pylint: disable=too-many-statements,too-many-branches
+
+    global DESTDIR, MASTER_OPTS, OPT_AGGREGATE, DSH_CP_OPTIONS, OPT_PURGE       # pylint: disable=global-statement
 
     if len(sys.argv) <= 1:
         usage()
@@ -199,7 +196,7 @@ def get_options():
                                     'aggregate', 'fix'])
     except getopt.GetoptError as reason:
         print('%s: %s' % (PROGNAME, reason))
-#        usage()
+        # usage()
         sys.exit(1)
 
     # first read the config file
@@ -231,7 +228,7 @@ def get_options():
     check_cmd_config()
 
     # then process the other options
-    MASTER_OPTS = [sys.argv[0],]
+    MASTER_OPTS = [sys.argv[0], ]
 
     for opt, arg in opts:
         if opt:
@@ -358,14 +355,13 @@ def get_options():
 
 
 @catch_signals
-def main():
-    # type: (...) -> int
+def main() -> int:
     '''run the program'''
 
     param.init()
 
-    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout) # type: ignore
-    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr) # type: ignore
+    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)             # type: ignore
+    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)             # type: ignore
 
     try:
         files = get_options()

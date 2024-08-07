@@ -22,12 +22,10 @@ class SyncPkg:
     # to make a plug-in for synctool-pkg
     # And/or you may use this class as a superclass
 
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         '''initialize instance'''
 
-    def show_list(self, pkgs=None):
-        # type: (Optional[List[str]]) -> None
+    def show_list(self, pkgs: Optional[List[str]] = None) -> None:
         '''output list of packages'''
 
         if pkgs is not None:
@@ -40,8 +38,7 @@ class SyncPkg:
         else:
             verbose('list all packages')
 
-    def install(self, pkgs):
-        # type: (List[str]) -> None
+    def install(self, pkgs: List[str]) -> None:
         '''install list of packages'''
 
         if len(pkgs) > 1:
@@ -53,8 +50,7 @@ class SyncPkg:
         verbose(msg)
         log(msg)
 
-    def remove(self, pkgs):
-        # type: (List[str]) -> None
+    def remove(self, pkgs: List[str]) -> None:
         '''remove list of packages'''
 
         if len(pkgs) > 1:
@@ -66,14 +62,12 @@ class SyncPkg:
         verbose(msg)
         log(msg)
 
-    def update(self):
-        # type: () -> None
+    def update(self) -> None:
         '''update package database'''
 
         verbose('updating package database')
 
-    def upgrade(self):
-        # type: () -> None
+    def upgrade(self) -> None:
         '''upgrade packages'''
 
         msg = 'upgrading packages'
@@ -83,8 +77,7 @@ class SyncPkg:
         # don't know which packages are upgraded here, sorry
         log(msg)
 
-    def clean(self):
-        # type: () -> None
+    def clean(self) -> None:
         '''cleanup any package database caches'''
 
         verbose('cleaning up caches')

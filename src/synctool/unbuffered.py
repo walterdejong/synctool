@@ -13,19 +13,18 @@
 '''make stdio unbuffered'''
 
 from typing import IO, Any
+from types import TracebackType
 
 
 class Unbuffered:
     '''class representing an unbuffered stream'''
 
-    def __init__(self, stream):
-        # type: (IO) -> None
+    def __init__(self, stream: IO) -> None:
         '''initialize instance'''
 
         self.stream = stream
 
-    def write(self, data):
-        # type: (str) -> None
+    def write(self, data: str) -> None:
         '''unbuffered write'''
 
         self.stream.write(data)
@@ -33,40 +32,34 @@ class Unbuffered:
         if len(data) >= 1 and (data[-1] == '\n' or data[-1] == '\r'):
             self.stream.flush()
 
-    def flush(self):
-        # type: () -> None
+    def flush(self) -> None:
         '''flush output'''
 
         self.stream.flush()
 
-    def fileno(self):
-        # type: () -> int
+    def fileno(self) -> int:
         '''Returns file descriptor'''
 
         return self.stream.fileno()
 
-    def close(self):
-        # type: () -> None
+    def close(self) -> None:
         '''close the stream'''
 
         self.stream.close()
 
-    def __getattr__(self, attr):
-        # type: (str) -> Any
+    def __getattr__(self, attr: str) -> Any:
         '''Returns attribute
         Raises AttributeError if no such attribute
         '''
 
         return getattr(self.stream, attr)
 
-    def __enter__(self):
-        # type: () -> IO
+    def __enter__(self) -> IO:
         '''enter context; for Python 'with' statement'''
 
         return self.stream
 
-    def __exit__(self, the_type, value, traceback):
-        # type: (...) -> None
+    def __exit__(self, exc_type: BaseException, exc_value: BaseException, traceback: TracebackType) -> None:
         '''leave context; for Python 'with' statement'''
 
         self.stream.close()

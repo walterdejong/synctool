@@ -32,8 +32,7 @@ UID_CACHE = {}      # type: Dict[str, str]
 GID_CACHE = {}      # type: Dict[str, str]
 
 
-def print_stat(filename, top=True):
-    # type: (str, bool) -> None
+def print_stat(filename: str, top: bool = True) -> None:
     '''print directory entry and parent entries'''
 
     if top:
@@ -89,8 +88,7 @@ def print_stat(filename, top=True):
     print_stat(path, top=False)
 
 
-def uid_username(uid):
-    # type: (int) -> str
+def uid_username(uid: int) -> str:
     '''Return username for numeric uid'''
 
     s_uid = '%u' % uid
@@ -108,8 +106,7 @@ def uid_username(uid):
     return pw_entry.pw_name
 
 
-def gid_groupname(gid):
-    # type: (int) -> str
+def gid_groupname(gid: int) -> str:
     '''Return group name for numeric gid'''
 
     s_gid = '%u' % gid
@@ -125,7 +122,6 @@ def gid_groupname(gid):
 
     GID_CACHE[s_gid] = grp_entry.gr_name
     return grp_entry.gr_name
-
 
 
 if __name__ == '__main__':

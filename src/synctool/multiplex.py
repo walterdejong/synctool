@@ -26,8 +26,7 @@ SSH_VERSION = None      # type: Optional[int]
 MATCH_SSH_VERSION = re.compile(r'^OpenSSH\_(\d+)\.(\d+)')   # type: Pattern
 
 
-def _make_control_path(nodename):
-    # type: (str) -> Optional[str]
+def _make_control_path(nodename: str) -> Optional[str]:
     '''Returns a control pathname for nodename
     or None on error
     It does not create the control path; just the fullpath filename
@@ -43,8 +42,7 @@ def _make_control_path(nodename):
     return os.path.join(control_dir, nodename)
 
 
-def use_mux(nodename):
-    # type: (str) -> bool
+def use_mux(nodename: str) -> bool:
     '''Returns True if it's OK to use a master connection to node
     Otherwise returns False -> don't use multiplexing
     '''
@@ -79,8 +77,7 @@ def use_mux(nodename):
     return False
 
 
-def control(nodename, remote_addr, ctl_cmd):
-    # type: (str, str, str) -> bool
+def control(nodename: str, remote_addr: str, ctl_cmd: str) -> bool:
     '''Tell the ssh mux process the ctl_cmd
     Returns True on success, False otherwise
     '''
@@ -109,8 +106,7 @@ def control(nodename, remote_addr, ctl_cmd):
     return exitcode == 0
 
 
-def ssh_args(ssh_cmd_arr, nodename):
-    # type: (List[str], str) -> None
+def ssh_args(ssh_cmd_arr: List[str], nodename: str) -> None:
     '''add multiplexing arguments to ssh_cmd_arr'''
 
     control_path = _make_control_path(nodename)
@@ -121,14 +117,14 @@ def ssh_args(ssh_cmd_arr, nodename):
     ssh_cmd_arr.extend(['-o', 'ControlPath=' + control_path])
 
 
-def setup_master(node_list, persist):
-#pylint: disable=too-many-statements,too-many-branches,consider-using-with
-    # type: (List[Tuple[str, str]], Optional[str]) -> bool
+def setup_master(node_list: List[Tuple[str, str]], persist: Optional[str]) -> bool:
     '''setup master connections to all nodes in node_list
     node_list is a list of pairs: (addr, nodename)
     Argument 'persist' is the SSH ControlPersist parameter
     Returns True on success, False on error
     '''
+
+    # pylint: disable=too-many-statements,too-many-branches,consider-using-with
 
     detect_ssh()
     assert SSH_VERSION is not None
@@ -216,9 +212,7 @@ in another terminal
     return errors == 0
 
 
-def detect_ssh():
-#pylint: disable=global-statement,consider-using-with
-    # type: () -> int
+def detect_ssh() -> int:
     '''detect ssh version
     Set global SSH_VERSION to 2-digit int number:
     eg. version "5.6p1" -> SSH_VERSION = 56
@@ -226,6 +220,8 @@ def detect_ssh():
     Returns: SSH_VERSION
     This routine only works for OpenSSH; otherwise return -1
     '''
+
+    # pylint: disable=global-statement,consider-using-with
 
     global SSH_VERSION
 
@@ -267,7 +263,6 @@ def detect_ssh():
     SSH_VERSION = int(groups[0]) * 10 + int(groups[1])
     verbose('SSH_VERSION: %d' % SSH_VERSION)
     return SSH_VERSION
-
 
 
 if __name__ == '__main__':

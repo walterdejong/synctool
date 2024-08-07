@@ -18,30 +18,32 @@ import urllib.error
 import urllib.parse
 import json
 
+from typing import Any
+
 from synctool.lib import verbose, error, stdout
 import synctool.param
 
 
 class ReleaseInfo:
-#pylint: disable=too-few-public-methods
     '''holds release info'''
+
+    # pylint: disable=too-few-public-methods
 
     TAGS_URL = 'https://api.github.com/repos/walterdejong/synctool/tags'
 
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         '''initialize instance'''
 
         self.version = ''
         self.datetime = datetime.datetime(year=1970, month=1, day=1)
         self.url = ''
 
-    def load(self):
-#pylint: disable=too-many-return-statements
-        # type: () -> bool
+    def load(self) -> bool:
         '''load release info from github
         Returns True on success
         '''
+
+        # pylint: disable=too-many-return-statements
 
         tags = github_api(ReleaseInfo.TAGS_URL)
         if tags is None:
@@ -95,20 +97,21 @@ class ReleaseInfo:
         return True
 
 
-def github_api(url):
-    #pylint: disable=consider-using-with
-    # mypy-bug-type: (str) -> Union[List[Dict[str, Any]], Dict[str, Any]]
+def github_api(url: str) -> Any:
+    # mypy-bug-type: return Optional[Union[List[Dict[str, Any]], Dict[str, Any]]]
     '''Access GitHub API via URL
     Returns data (list or dict) depending on GitHub API function
     or None on error
     '''
+
+    # pylint: disable=consider-using-with
 
     verbose('loading URL %s' % url)
     try:
         # can not use 'with' statement with urlopen()..?
         web = urllib.request.urlopen(url)
     except urllib.error.HTTPError as err:
-        error('webserver at %s: %u %s' % (url, err.code, err.msg))
+        error('webserver at %s: %u %s' % (url, err.code, err.reason))
         return None
 
     except urllib.error.URLError as err:
@@ -130,8 +133,7 @@ def github_api(url):
     return data
 
 
-def check():
-    # type: () -> bool
+def check() -> bool:
     '''check for newer version
     It does this by looking at releases at GitHub
     Returns True if a newer version is available
@@ -153,8 +155,7 @@ def check():
     return True
 
 
-def make_local_filename_for_version(version):
-    # type: (str) -> str
+def make_local_filename_for_version(version: str) -> str:
     '''make filename for the downloaded synctool-x.y.tar.gz'''
 
     # strip tag naming scheme lead
@@ -177,8 +178,7 @@ def make_local_filename_for_version(version):
             return filename
 
 
-def print_progress(filename, total_size, current_size):
-    # type: (str, int, int) -> None
+def print_progress(filename: str, total_size: int, current_size: int) -> None:
     '''print the download progress'''
 
     percent = 100 * current_size // total_size
@@ -188,12 +188,12 @@ def print_progress(filename, total_size, current_size):
     sys.stdout.flush()
 
 
-def download():
-    #pylint: disable=too-many-return-statements,consider-using-with
-    # type: () -> bool
+def download() -> bool:
     '''download latest version
     Returns True on success, False on error
     '''
+
+    # pylint: disable=too-many-return-statements,consider-using-with
 
     info = ReleaseInfo()
     if not info.load():

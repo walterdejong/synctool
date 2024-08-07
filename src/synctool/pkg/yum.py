@@ -19,8 +19,7 @@ import synctool.pkgclass
 class SyncPkgYum(synctool.pkgclass.SyncPkg):
     '''package installer class for yum'''
 
-    def show_list(self, pkgs=None):
-        # type: (Optional[List[str]]) -> None
+    def show_list(self, pkgs: Optional[List[str]] = None) -> None:
         super().show_list(pkgs)
 
         cmd = 'yum list installed'
@@ -29,22 +28,19 @@ class SyncPkgYum(synctool.pkgclass.SyncPkg):
 
         synctool.lib.shell_command(cmd)
 
-    def install(self, pkgs):
-        # type: (List[str]) -> None
+    def install(self, pkgs: List[str]) -> None:
         super().install(pkgs)
 
         cmd = 'yum -y install ' + ' '.join(pkgs)
         synctool.lib.shell_command(cmd)
 
-    def remove(self, pkgs):
-        # type: (List[str]) -> None
+    def remove(self, pkgs: List[str]) -> None:
         super().remove(pkgs)
 
         cmd = 'yum -y remove ' + ' '.join(pkgs)
         synctool.lib.shell_command(cmd)
 
-    def update(self):
-        # type: () -> None
+    def update(self) -> None:
         super().update()
 
         # yum has no 'update' command, but will fetch a new database
@@ -53,8 +49,7 @@ class SyncPkgYum(synctool.pkgclass.SyncPkg):
         synctool.lib.shell_command('yum -y clean headers')
         synctool.lib.shell_command('yum -y clean metadata')
 
-    def upgrade(self):
-        # type: () -> None
+    def upgrade(self) -> None:
         super().upgrade()
 
         if synctool.lib.DRY_RUN:
@@ -67,8 +62,7 @@ class SyncPkgYum(synctool.pkgclass.SyncPkg):
         synctool.lib.shell_command(cmd)
         synctool.lib.DRY_RUN = tmp
 
-    def clean(self):
-        # type: () -> None
+    def clean(self) -> None:
         super().clean()
 
         synctool.lib.shell_command('yum clean packages')

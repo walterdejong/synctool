@@ -63,8 +63,7 @@ class RangeSyntaxError(Exception):
     '''node range syntax error exception'''
 
 
-def split_nodelist(expr):
-    # type: (str) -> List[str]
+def split_nodelist(expr: str) -> List[str]:
     '''split a string like 'node1,node2,node[3-6,8,10],node-x'
     May throw RangeSyntaxError if there is a syntax error
     Returns the list of elements
@@ -88,13 +87,13 @@ def split_nodelist(expr):
     return arr
 
 
-def expand(expr):
-    #pylint: disable=too-many-branches
-    # type: (str) -> List[str]
+def expand(expr: str) -> List[str]:
     '''expand a range expression like 'node[1-10,20]-mgmt'
     May throw RangeSyntaxError if there is a syntax error
     Returns list of node names
     '''
+
+    # pylint: disable=too-many-branches
 
     # NODE_EXPR is a global compiled regex for recognising expression
     matexpr = NODE_EXPR.match(expr)
@@ -157,26 +156,22 @@ def expand(expr):
     return arr
 
 
-def reset_sequence():
-    #pylint: disable=global-statement
-    # type: () -> None
+def reset_sequence() -> None:
     '''reset a sequence to zero'''
 
-    global _EXPAND_SEQ
+    global _EXPAND_SEQ                                      # pylint: disable=global-statement
 
     _EXPAND_SEQ = 0
 
 
-def expand_sequence(arg):
-    #pylint: disable=global-statement
-    # type: (str) -> str
+def expand_sequence(arg: str) -> str:
     '''expand a sequence that looks like '192.168.1.[100]'
     or hexidecimal IPv6 "64:b9:e8:ff:fe:c2:fd:[20]"
     or IPv6:v4 notation "64:b9:e8:[0a]:10.0.0.[100]"
     or just a string "node-[10].sub[20].domain.org"
     '''
 
-    global _EXPAND_SEQ
+    global _EXPAND_SEQ                                      # pylint: disable=global-statement
 
     if '[' not in arg:
         return arg
@@ -207,8 +202,7 @@ def expand_sequence(arg):
     return result
 
 
-def expand_seq(arg, radix=10, overflow=False):
-    # type: (str, int, bool) -> str
+def expand_seq(arg: str, radix: int = 10, overflow: bool = False) -> str:
     '''expand an automatic numbering sequence like "192.168.1.[200]"
     or IPv6 "64:b9:e8:ff:fe:c2:fd:[0a]" or "64:b9:e8:[0a]:10.0.0.[100]"
     or just a string "node[10].sub[20].domain.org"
@@ -246,8 +240,7 @@ def expand_seq(arg, radix=10, overflow=False):
     return result
 
 
-def _sort_compress(atin, btin):
-    # type: (Tuple[str, str, str, int, str], Tuple[str, str, str, int, str]) -> int
+def _sort_compress(atin: Tuple[str, str, str, int, str], btin: Tuple[str, str, str, int, str]) -> int:
     '''sorting function
     atin and btin are tuples: (nodename, prefix, number_str, number, postfix)
     '''
@@ -272,24 +265,22 @@ def _sort_compress(atin, btin):
     return atin[0] == btin[0]
 
 
-def uniq(seq):
-    # type: (Sequence[Any]) -> Sequence[Any]
+def uniq(seq: Sequence[Any]) -> Sequence[Any]:
     '''remove duplicates from sequence, preserving order'''
 
     unique = set(seq)
     return [x for x in seq if x in unique]
 
 
-def compress(nodelist):
-    #pylint: disable=too-many-statements, too-many-branches
-    #pylint: disable=too-many-locals
-    # type: (List[str]) -> str
+def compress(nodelist: List[str]) -> str:
     '''Return comma-separated string-list of nodes, using range syntax
 
     This is the opposite of function expand()
     It can not do step-notation but it's good at finding sequences
     like "n[1-5,7,8]"
     '''
+
+    # pylint: disable=too-many-statements, too-many-branches, too-many-locals
 
     # make all_grouped a list of lists, of grouped splitted nodenames
     all_grouped = []    # type: List[List[Tuple[str, str, str, int, str]]]
@@ -305,8 +296,8 @@ def compress(nodelist):
                 all_grouped.append(grouped[:],)
                 grouped = []
 
-            grouped = [(node, '', '0', 0, ''),]
-            all_grouped.append(grouped[:],)
+            grouped = [(node, '', '0', 0, ''), ]
+            all_grouped.append(grouped[:], )
             grouped = []
             prev_prefix = prev_postfix = None
         else:

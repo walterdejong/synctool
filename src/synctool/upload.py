@@ -35,11 +35,11 @@ from synctool.object import SyncObject
 
 
 class UploadFile:
-    #pylint: disable=too-few-public-methods
     '''class that holds information on requested upload'''
 
-    def __init__(self):
-        # type: () -> None
+    # pylint: disable=too-few-public-methods
+
+    def __init__(self) -> None:
         self.filename = ''
         self.overlay = ''
         self.purge = ''
@@ -48,8 +48,7 @@ class UploadFile:
         self.address = ''
         self.repos_path = ''
 
-    def make_repos_path(self):
-        # type: () -> None
+    def make_repos_path(self) -> None:
         '''make $overlay repository path from elements'''
         if len(self.filename) > 1 and self.filename[-1] == '/':
             # strip trailing slash
@@ -102,8 +101,7 @@ class UploadFile:
                 # reassemble the full path with up.overlay as group dir
                 self.repos_path = os.sep.join(arr)
 
-    def _make_purge_path(self):
-        # type: () -> None
+    def _make_purge_path(self) -> None:
         '''make $purge repository path from elements'''
 
         self.repos_path = os.path.join(synctool.param.PURGE_DIR,
@@ -111,11 +109,11 @@ class UploadFile:
 
 
 class RemoteStat:
-    #pylint: disable=too-many-instance-attributes
     '''represent stat() info of a remote file'''
 
-    def __init__(self, arr):
-        # type: (List[str]) -> None
+    # pylint: disable=too-many-instance-attributes
+
+    def __init__(self, arr: List[str]) -> None:
         '''initialize instance
         May throw ValueError
         '''
@@ -145,20 +143,17 @@ class RemoteStat:
         else:
             self.linkdest = ''
 
-    def is_dir(self):
-        # type: () -> bool
+    def is_dir(self) -> bool:
         '''Returns True if it's a directory'''
 
         return stat.S_ISDIR(self.mode)
 
-    def is_symlink(self):
-        # type: () -> bool
+    def is_symlink(self) -> bool:
         '''Returns True if it's a symbolic link'''
 
         return stat.S_ISLNK(self.mode)
 
-    def translate_uid(self):
-        # type: () -> int
+    def translate_uid(self) -> int:
         '''Return local numeric uid corresponding to remote owner'''
 
         try:
@@ -168,8 +163,7 @@ class RemoteStat:
 
         return local_uid
 
-    def translate_gid(self):
-        # type: () -> int
+    def translate_gid(self) -> int:
         '''Return local numeric gid corresponding to remote group'''
 
         try:
@@ -179,8 +173,7 @@ class RemoteStat:
 
         return local_gid
 
-    def __repr__(self):
-        # type: () -> str
+    def __repr__(self) -> str:
         '''Returns string representation'''
 
         return ('<RemoteStat: %06o %u %s %u %s %u %r %r>' %
@@ -188,12 +181,12 @@ class RemoteStat:
                  self.size, self.filename, self.linkdest))
 
 
-def _remote_stat(upfile):
-    #pylint: disable=consider-using-with
-    # type: (UploadFile) -> Optional[List[RemoteStat]]
+def _remote_stat(upfile: UploadFile) -> Optional[List[RemoteStat]]:
     '''Get stat info of the remote object
     Returns array of RemoteStat data, or None on error
     '''
+
+    # pylint: disable=consider-using-with
 
     # use ssh connection multiplexing (if possible)
     cmd_arr = shlex.split(synctool.param.SSH_CMD)
@@ -254,8 +247,7 @@ def _remote_stat(upfile):
     return data
 
 
-def _makedir(path, remote_stats):
-    # type: (str, List[RemoteStat]) -> bool
+def _makedir(path: str, remote_stats: List[RemoteStat]) -> bool:
     '''make directory in repository, copying over mode and ownership
     of the directories as they are on the remote side
     remote_stats is array holding stat info of the remote side
@@ -331,8 +323,7 @@ def _makedir(path, remote_stats):
 GLOBAL_UPLOAD_FILE = UploadFile()
 
 
-def _upload_callback(obj, _pre_dict, _post_dict):
-    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
+def _upload_callback(obj: SyncObject, _pre_dict: Dict[str, str], _post_dict: Dict[str, str]) -> Tuple[bool, bool]:
     '''find the overlay path for the destination in UPLOAD_FILE'''
 
     # this callback modifies the global GLOBAL_UPLOAD_FILE object
@@ -353,13 +344,11 @@ def _upload_callback(obj, _pre_dict, _post_dict):
     return True, False
 
 
-def upload(upfile):
-    #pylint: disable=global-statement
-    # type: (UploadFile) -> None
+def upload(upfile: UploadFile) -> None:
     '''copy a file from a node into the overlay/ tree'''
 
     # Note: this global is only needed because of callback fn ...
-    global GLOBAL_UPLOAD_FILE
+    global GLOBAL_UPLOAD_FILE                               # pylint: disable=global-statement
 
     if upfile.filename[0] != os.sep:
         error('the filename to upload must be an absolute path')
@@ -406,10 +395,10 @@ def upload(upfile):
     rsync_upload(upfile)
 
 
-def rsync_upload(upfile):
-    #pylint: disable=too-many-branches,too-many-statements
-    # type: (UploadFile) -> None
+def rsync_upload(upfile: UploadFile) -> None:
     '''upload a file/dir to $overlay/group/ or $purge/group/'''
+
+    # pylint: disable=too-many-branches,too-many-statements
 
     upfile.make_repos_path()
 
@@ -437,7 +426,7 @@ def rsync_upload(upfile):
     # opts is just for the 'visual aspect'; it is displayed when --verbose
     opts = ' '
     if synctool.lib.DRY_RUN:
-#        cmd_arr.append('-n')
+        # cmd_arr.append('-n')
         opts += '-n '
 
     if synctool.lib.VERBOSE:

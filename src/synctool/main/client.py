@@ -24,6 +24,7 @@ import synctool.lib
 from synctool.lib import verbose, stdout, stderr, error, warning, terse
 from synctool.lib import unix_out, prettypath
 from synctool.main.wrapper import catch_signals
+import synctool.object
 import synctool.overlay
 import synctool.syncstat
 from synctool.object import SyncObject
@@ -40,15 +41,15 @@ ACTION_REFERENCE = 3
 SINGLE_FILES = []   # type: List[str]
 
 
-def generate_template(obj, post_dict):
-    #pylint: disable=too-many-lines, too-many-branches
-    #pylint: disable=too-many-statements, too-many-return-statements
-    # type: (SyncObject, Dict[str, str]) -> bool
+def generate_template(obj: SyncObject, post_dict: Dict[str, str]) -> bool:
     '''run template .post script, generating a new file
     The script will run in the source dir (overlay tree) and
     it will run even in dry-run mode
     Returns: True or False on error
     '''
+
+    # pylint: disable=too-many-lines,too-many-branches
+    # pylint: disable=too-many-statements,too-many-return-statements
 
     # Note: this func modifies input parameter 'obj'
     # when it succesfully generates output, it will change obj's paths
@@ -178,8 +179,7 @@ def generate_template(obj, post_dict):
     return True
 
 
-def purge_files():
-    # type: () -> None
+def purge_files() -> None:
     '''run the purge function'''
 
     paths = []
@@ -229,8 +229,7 @@ def purge_files():
         _run_rsync_purge(cmd_arr)
 
 
-def _make_rsync_purge_cmd():
-    # type: () -> Tuple[List[str], str]
+def _make_rsync_purge_cmd() -> Tuple[List[str], str]:
     '''make command array for running rsync purge
     Returns pair: cmd_arr, options_string
     cmd_arr is the rsync command + arguments
@@ -267,12 +266,12 @@ def _make_rsync_purge_cmd():
     return cmd_rsync, opts
 
 
-def _run_rsync_purge(cmd_arr):
-    #pylint: disable=consider-using-with
-    # type: (List[str]) -> None
+def _run_rsync_purge(cmd_arr: List[str]) -> None:
     '''run rsync for purging
     cmd_arr holds already prepared rsync command + arguments
     '''
+
+    # pylint: disable=consider-using-with
 
     unix_out(' '.join(cmd_arr))
 
@@ -322,8 +321,7 @@ def _run_rsync_purge(cmd_arr):
             stdout('%s mismatch (purge)' % prettypath(path))
 
 
-def _overlay_callback(obj, pre_dict, post_dict):
-    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
+def _overlay_callback(obj: SyncObject, pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> Tuple[bool, bool]:
     '''compare files and run post-script if needed
     Returns pair: True (continue), updated (data or metadata)
     '''
@@ -337,15 +335,13 @@ def _overlay_callback(obj, pre_dict, post_dict):
     return True, updated
 
 
-def overlay_files():
-    # type: () -> None
+def overlay_files() -> None:
     '''run the overlay function'''
 
     synctool.overlay.visit(param.OVERLAY_DIR, _overlay_callback)
 
 
-def _delete_callback(obj, _pre_dict, post_dict):
-    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
+def _delete_callback(obj: SyncObject, _pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> Tuple[bool, bool]:
     '''delete files
     Returns pair: True (continue), deleted
     '''
@@ -355,7 +351,7 @@ def _delete_callback(obj, _pre_dict, post_dict):
 
     # don't delete directories
     if obj.src_stat.is_dir():
-#       verbose('refusing to delete directory %s' % (obj.dest_path + os.sep))
+        # verbose('refusing to delete directory %s' % (obj.dest_path + os.sep))
         return True, False
 
     if obj.dest_stat.is_dir():
@@ -376,15 +372,13 @@ def _delete_callback(obj, _pre_dict, post_dict):
     return True, False
 
 
-def delete_files():
-    # type: () -> None
+def delete_files() -> None:
     '''run the delete/ dir'''
 
     synctool.overlay.visit(param.DELETE_DIR, _delete_callback)
 
 
-def _erase_saved_callback(obj, _pre_dict, post_dict):
-    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
+def _erase_saved_callback(obj: SyncObject, _pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> Tuple[bool, bool]:
     '''erase *.saved backup files
     Returns pair: True (continue), deleted
     '''
@@ -408,16 +402,14 @@ def _erase_saved_callback(obj, _pre_dict, post_dict):
     return True, False
 
 
-def erase_saved():
-    # type: () -> None
+def erase_saved() -> None:
     '''List and delete *.saved backup files'''
 
     synctool.overlay.visit(param.OVERLAY_DIR, _erase_saved_callback)
     synctool.overlay.visit(param.DELETE_DIR, _erase_saved_callback)
 
 
-def visit_purge_single(callback):
-    # type: (Callable[[SyncObject, Dict[str, str], Dict[str, str]], Tuple[bool, bool]]) -> None
+def visit_purge_single(callback: Callable[[SyncObject, Dict[str, str], Dict[str, str]], Tuple[bool, bool]]) -> None:
     '''look in the purge/ dir for SINGLE_FILES, and call callback'''
 
     if not SINGLE_FILES:
@@ -447,8 +439,7 @@ def visit_purge_single(callback):
                 break
 
 
-def _match_single(path):
-    # type: (str) -> bool
+def _match_single(path: str) -> bool:
     '''Returns True if (terse) path is in SINGLE_FILES, else False'''
 
     if path in SINGLE_FILES:
@@ -463,8 +454,7 @@ def _match_single(path):
     return False
 
 
-def _single_overlay_callback(obj, pre_dict, post_dict):
-    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
+def _single_overlay_callback(obj: SyncObject, pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> Tuple[bool, bool]:
     '''do overlay function for single files'''
 
     if not SINGLE_FILES:
@@ -487,8 +477,7 @@ def _single_overlay_callback(obj, pre_dict, post_dict):
     return go_on, updated
 
 
-def _single_delete_callback(obj, pre_dict, post_dict):
-    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
+def _single_delete_callback(obj: SyncObject, pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> Tuple[bool, bool]:
     '''do delete function for single files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -506,8 +495,7 @@ def _single_delete_callback(obj, pre_dict, post_dict):
     return go_on, updated
 
 
-def _single_purge_callback(obj, pre_dict, post_dict):
-    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
+def _single_purge_callback(obj: SyncObject, pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> Tuple[bool, bool]:
     '''do purge function for single files'''
 
     # The same as _single_overlay_callback(), except that
@@ -540,8 +528,7 @@ def _single_purge_callback(obj, pre_dict, post_dict):
     return go_on, updated
 
 
-def single_files():
-    # type: () -> None
+def single_files() -> None:
     '''check/update a list of single files'''
 
     synctool.overlay.visit(param.OVERLAY_DIR,
@@ -562,8 +549,7 @@ def single_files():
         stderr('%s is not in the overlay tree' % filename)
 
 
-def _single_erase_saved_callback(obj, pre_dict, post_dict):
-    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
+def _single_erase_saved_callback(obj: SyncObject, pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> Tuple[bool, bool]:
     '''do 'erase saved' function for single files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -592,8 +578,7 @@ def _single_erase_saved_callback(obj, pre_dict, post_dict):
     return go_on, updated
 
 
-def single_erase_saved():
-    # type: () -> None
+def single_erase_saved() -> None:
     '''erase single backup files'''
 
     synctool.overlay.visit(param.OVERLAY_DIR,
@@ -609,8 +594,7 @@ def single_erase_saved():
         stderr('%s is not in the overlay tree' % filename)
 
 
-def _reference_callback(obj, _pre_dict, _post_dict):
-    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
+def _reference_callback(obj: SyncObject, _pre_dict: Dict[str, str], _post_dict: Dict[str, str]) -> Tuple[bool, bool]:
     '''callback for reference_files()'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -632,8 +616,7 @@ def _reference_callback(obj, _pre_dict, _post_dict):
     return True, False
 
 
-def reference_files():
-    # type: () -> None
+def reference_files() -> None:
     '''show which source file in the repository synctool uses'''
 
     synctool.overlay.visit(param.OVERLAY_DIR, _reference_callback)
@@ -645,8 +628,7 @@ def reference_files():
         stderr('%s is not in the overlay tree' % filename)
 
 
-def _exec_diff(src, dest):
-    # type: (str, str) -> None
+def _exec_diff(src: str, dest: str) -> None:
     '''execute diff_cmd to display diff between dest and src'''
 
     verbose('%s %s %s' % (param.DIFF_CMD, dest, prettypath(src)))
@@ -658,8 +640,7 @@ def _exec_diff(src, dest):
     synctool.lib.exec_command(cmd_arr)
 
 
-def _diff_callback(obj, _pre_dict, post_dict):
-    # type: (SyncObject, Dict[str, str], Dict[str, str]) -> Tuple[bool, bool]
+def _diff_callback(obj: SyncObject, _pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> Tuple[bool, bool]:
     '''callback function for doing a diff on overlay/ files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -674,8 +655,7 @@ def _diff_callback(obj, _pre_dict, post_dict):
     return True, False
 
 
-def diff_files():
-    # type: () -> None
+def diff_files() -> None:
     '''display a diff of the single files'''
 
     synctool.overlay.visit(param.OVERLAY_DIR, _diff_callback)
@@ -687,13 +667,13 @@ def diff_files():
         stderr('%s is not in the overlay tree' % filename)
 
 
-def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
-                        opt_upload, opt_suffix, opt_fix):
-    #pylint: disable=too-many-arguments
-    # type: (bool, bool, bool, bool, bool, bool, bool) -> None
+def option_combinations(opt_diff: bool, opt_single: bool, opt_reference: bool, opt_erase_saved: bool,
+                        opt_upload: bool, opt_suffix: bool, opt_fix: bool) -> None:
     '''some combinations of command-line options don't make sense;
     alert the user and abort
     '''
+
+    # pylint: disable=too-many-arguments
 
     if opt_erase_saved and (opt_diff or opt_reference or opt_upload):
         error("option --erase-saved can not be combined with other actions")
@@ -716,8 +696,7 @@ def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
         sys.exit(1)
 
 
-def check_cmd_config():
-    # type: () -> None
+def check_cmd_config() -> None:
     '''check whether the commands as given in synctool.conf actually exist'''
 
     okay, param.DIFF_CMD = config.check_cmd_config('diff_cmd', param.DIFF_CMD)
@@ -725,8 +704,7 @@ def check_cmd_config():
         sys.exit(-1)
 
 
-def usage():
-    # type: () -> None
+def usage() -> None:
     '''print usage information'''
 
     print('usage: %s [options]' % PROGNAME)
@@ -755,11 +733,10 @@ Note that synctool does a dry run unless you specify --fix
 ''')
 
 
-def get_options():
-    #pylint: disable=global-statement
-    #pylint: disable=too-many-branches,too-many-statements
-    # type: () -> int
+def get_options() -> int:
     '''parse command-line options'''
+
+    # pylint: disable=global-statement,too-many-statements,too-many-branches
 
     global SINGLE_FILES
 
@@ -817,7 +794,7 @@ def get_options():
 
     # first read the config file
     config.read_config()
-#    synctool.nodeset.make_default_nodeset()
+    # synctool.nodeset.make_default_nodeset()
     check_cmd_config()
 
     errors = 0
@@ -951,10 +928,10 @@ def get_options():
 
 
 @catch_signals
-def main():
-    #pylint: disable=too-many-statements, too-many-branches
-    # type: (...) -> int
+def main() -> int:
     '''run the program'''
+
+    # pylint: disable=too-many-statements,too-many-branches
 
     param.init()
 
@@ -984,9 +961,8 @@ def main():
 
         unix_out('#')
         unix_out('# script generated by synctool on '
-                 '%04d/%02d/%02d %02d:%02d:%02d' %
-                 (localt[0], localt[1], localt[2],
-		  localt[3], localt[4], localt[5]))
+                 '%04d/%02d/%02d %02d:%02d:%02d' % (localt[0], localt[1], localt[2],
+                                                    localt[3], localt[4], localt[5]))
         unix_out('#')
         unix_out('# my hostname: %s' % param.HOSTNAME)
         unix_out('# SYNCTOOL_NODE=%s' % param.NODENAME)

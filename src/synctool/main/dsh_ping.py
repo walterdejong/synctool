@@ -24,6 +24,7 @@ from synctool.lib import verbose, error, unix_out
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.parallel
+import synctool.range
 import synctool.unbuffered
 
 # hardcoded name because otherwise we get "dsh_ping.py"
@@ -36,17 +37,16 @@ OPT_AGGREGATE = False
 MASTER_OPTS = []    # type: List[str]
 
 
-def ping_nodes(address_list):
-    # type: (List[str]) -> None
+def ping_nodes(address_list: List[str]) -> None:
     '''ping nodes in parallel'''
 
     synctool.parallel.do(ping_node, address_list)
 
 
-def ping_node(addr):
-    #pylint: disable=consider-using-with
-    # type: (str) -> None
+def ping_node(addr: str) -> None:
     '''ping a single node'''
+
+    # pylint: disable=consider-using-with
 
     node = NODESET.get_nodename_from_address(addr)
     verbose('pinging %s' % node)
@@ -60,8 +60,8 @@ def ping_node(addr):
 
     try:
         fpipe = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT).stdout
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT).stdout
     except OSError as err:
         error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return
@@ -105,8 +105,7 @@ def ping_node(addr):
         print('%s: not responding' % node)
 
 
-def check_cmd_config():
-    # type: () -> None
+def check_cmd_config() -> None:
     '''check whether the commands as given in synctool.conf actually exist'''
 
     okay, param.PING_CMD = config.check_cmd_config('ping_cmd', param.PING_CMD)
@@ -114,8 +113,7 @@ def check_cmd_config():
         sys.exit(-1)
 
 
-def usage():
-    # type: () -> None
+def usage() -> None:
     '''print usage information'''
 
     print('usage: %s [options]' % PROGNAME)
@@ -137,13 +135,12 @@ def usage():
 ''')
 
 
-def get_options():
-    #pylint: disable=global-statement
-    #pylint: disable=too-many-statements, too-many-branches
-    # type: () -> None
+def get_options() -> None:
     '''parse command-line options'''
 
-    global MASTER_OPTS, OPT_AGGREGATE
+    # pylint: disable=too-many-statements,too-many-branches
+
+    global MASTER_OPTS, OPT_AGGREGATE                               # pylint: disable=global-statement
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:aN:qp:z:',
@@ -153,7 +150,7 @@ def get_options():
                                     'zzz='])
     except getopt.GetoptError as reason:
         print('%s: %s' % (PROGNAME, reason))
-#        usage()
+        # usage()
         sys.exit(1)
 
     # first read the config file
@@ -185,7 +182,7 @@ def get_options():
     check_cmd_config()
 
     # then process the other options
-    MASTER_OPTS = [sys.argv[0],]
+    MASTER_OPTS = [sys.argv[0], ]
 
     for opt, arg in opts:
         if opt:
@@ -269,14 +266,13 @@ def get_options():
 
 
 @catch_signals
-def main():
-    # type: (...) -> int
+def main() -> int:
     '''run the program'''
 
     param.init()
 
-    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout) # type: ignore
-    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr) # type: ignore
+    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)             # type: ignore
+    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)             # type: ignore
 
     try:
         get_options()

@@ -27,8 +27,7 @@ SPELLCHECK = re.compile(r'[A-Z_][A-Z0-9_]*')
 PATTERN = re.compile(r'\@([A-Z_][A-Z0-9_]*)\@')
 
 
-def spellcheck(name):
-    # type: (str) -> bool
+def spellcheck(name: str) -> bool:
     '''Check for valid spelling of name
     Returns True if OK, False if not OK
     '''
@@ -43,8 +42,7 @@ def spellcheck(name):
     return True
 
 
-def subst(line):
-    # type: (str) -> str
+def subst(line: str) -> str:
     '''replace all occurrences of "@VAR@" with the value,
     where VAR is any environment variable
     Returns the resulting line of text
@@ -57,8 +55,7 @@ def subst(line):
     return line
 
 
-def template(filename):
-    # type: (str) -> None
+def template(filename: str) -> None:
     '''generate the output from template file'''
 
     if not filename:
@@ -80,8 +77,7 @@ def template(filename):
             sys.stdout.write(subst(line))
 
 
-def usage():
-    # type: () -> None
+def usage() -> None:
     '''print usage information'''
 
     print('''%s [-v VAR=VALUE] <input filename>
@@ -95,8 +91,7 @@ command-line, but may also be an existing environment variable
 ''' % PROGNAME)
 
 
-def get_options():
-    # type: () -> str
+def get_options() -> str:
     '''parse command-line options
     Returns filename argument
     '''
@@ -154,8 +149,7 @@ def get_options():
 
 
 @catch_signals
-def main():
-    # type: (...) -> int
+def main() -> int:
     '''do it'''
 
     infile = get_options()

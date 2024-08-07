@@ -14,23 +14,18 @@
 import os
 import sys
 
-from typing import Dict
-
-LAUNCH = {
-    'synctool' : 'synctool_master.py',
-    'dsh' : 'dsh.py',
-    'dsh-cp' : 'dsh_cp.py',
-    'dsh-pkg' : 'dsh_pkg.py',
-    'dsh-ping' : 'dsh_ping.py',
-    'synctool-config' : 'synctool_config.py',
-    'synctool-client' : 'synctool_client.py',
-    'synctool-client-pkg' : 'synctool_client_pkg.py',
-    'synctool-template' : 'synctool_template.py'
-}   # type: Dict[str, str]
+LAUNCH = {'synctool': 'synctool_master.py',
+          'dsh': 'dsh.py',
+          'dsh-cp': 'dsh_cp.py',
+          'dsh-pkg': 'dsh_pkg.py',
+          'dsh-ping': 'dsh_ping.py',
+          'synctool-config': 'synctool_config.py',
+          'synctool-client': 'synctool_client.py',
+          'synctool-client-pkg': 'synctool_client_pkg.py',
+          'synctool-template': 'synctool_template.py'}
 
 
-def stderr(msg):
-    # type: (str) -> None
+def stderr(msg: str) -> None:
     '''print error message to stderr'''
 
     sys.stdout.flush()
@@ -38,7 +33,9 @@ def stderr(msg):
     sys.stderr.flush()
 
 
-if __name__ == '__main__':
+def scoped_main() -> None:
+    '''main program, really'''
+
     base = os.path.abspath(os.path.dirname(sys.argv[0]))
     if not base:
         stderr('launch: fatal: unable to determine my base dir')
@@ -54,7 +51,7 @@ if __name__ == '__main__':
         stderr("launch: error: unknown program '%s'" % prognam)
         sys.exit(1)
 
-    (prefix, bindir) = os.path.split(base)
+    prefix, _bindir = os.path.split(base)
     launch = os.path.join(prefix, 'sbin', LAUNCH[prognam])
     if not os.path.isfile(launch):
         stderr('launch: error: missing program %s' % launch)
@@ -74,5 +71,9 @@ if __name__ == '__main__':
 
     stderr('launch: error: failed to execute: %s' % argv[0])
     sys.exit(-1)
+
+
+if __name__ == '__main__':
+    scoped_main()
 
 # EOB

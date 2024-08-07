@@ -30,6 +30,7 @@ from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.overlay
 import synctool.parallel
+import synctool.range
 import synctool.syncstat
 import synctool.unbuffered
 import synctool.update
@@ -51,15 +52,13 @@ MASTER_OPTS = []        # type: List[str]
 UPLOAD_FILE = synctool.upload.UploadFile()
 
 
-def run_remote_synctool(address_list):
-    # type: (List[str]) -> None
+def run_remote_synctool(address_list: List[str]) -> None:
     '''run synctool on target nodes'''
 
     synctool.parallel.do(worker_synctool, address_list)
 
 
-def worker_synctool(addr):
-    # type: (str) -> None
+def worker_synctool(addr: str) -> None:
     '''run rsync of ROOTDIR to the nodes and ssh+synctool, in parallel'''
 
     nodename = NODESET.get_nodename_from_address(addr)
@@ -121,8 +120,7 @@ def worker_synctool(addr):
     synctool.lib.run_with_nodename(cmd_arr, nodename)
 
 
-def run_local_synctool():
-    # type: () -> None
+def run_local_synctool() -> None:
     '''run synctool on the master node itself'''
 
     cmd_arr = shlex.split(param.SYNCTOOL_CMD) + PASS_ARGS
@@ -131,16 +129,14 @@ def run_local_synctool():
     synctool.lib.run_with_nodename(cmd_arr, param.NODENAME)
 
 
-def rsync_include_filter(nodename):
-    # type: (str) -> str
+def rsync_include_filter(nodename: str) -> str:
     '''create temp file with rsync filter rules
     Include only those dirs that apply for this node
     Returns filename of the filter file
     '''
 
     try:
-        (fdesc, filename) = tempfile.mkstemp(prefix='synctool-',
-                                          dir=param.TEMP_DIR)
+        fdesc, filename = tempfile.mkstemp(prefix='synctool-', dir=param.TEMP_DIR)
     except OSError as err:
         error('failed to create temp file: %s' % err.strerror)
         sys.exit(-1)
@@ -180,16 +176,15 @@ def rsync_include_filter(nodename):
         # Note: sbin/*.pyc is excluded to keep major differences in
         # Python versions (on master vs. client node) from clashing
         ftemp.write('- /sbin/*.pyc\n'
-                '- /lib/synctool/*.pyc\n'
-                '- /lib/synctool/pkg/*.pyc\n')
+                    '- /lib/synctool/*.pyc\n'
+                    '- /lib/synctool/pkg/*.pyc\n')
 
     # Note: remind to delete the temp file later
 
     return filename
 
 
-def _write_rsync_filter(fio, overlaydir, label):
-    # type: (IO, str, str) -> None
+def _write_rsync_filter(fio: IO, overlaydir: str, label: str) -> None:
     '''helper function for writing rsync filter'''
 
     fio.write('+ /var/%s/\n' % label)
@@ -206,8 +201,7 @@ def _write_rsync_filter(fio, overlaydir, label):
     fio.write('- /var/%s/*\n' % label)
 
 
-def _write_overlay_filter(fio):
-    # type: (IO) -> bool
+def _write_overlay_filter(fio: IO) -> bool:
     '''write rsync filter rules for overlay/ tree
     Returns False on error
     '''
@@ -216,8 +210,7 @@ def _write_overlay_filter(fio):
     return True
 
 
-def _write_delete_filter(fio):
-    # type: (IO) -> bool
+def _write_delete_filter(fio: IO) -> bool:
     '''write rsync filter rules for delete/ tree
     Returns False on error
     '''
@@ -226,8 +219,7 @@ def _write_delete_filter(fio):
     return True
 
 
-def _write_purge_filter(fio):
-    # type: (IO) -> bool
+def _write_purge_filter(fio: IO) -> bool:
     '''write rsync filter rules for purge/ tree
     Returns False on error
     '''
@@ -262,8 +254,7 @@ def _write_purge_filter(fio):
     return True
 
 
-def make_tempdir():
-    # type: () -> None
+def make_tempdir() -> None:
     '''create temporary directory (for storing rsync filter files)'''
 
     if not os.path.isdir(param.TEMP_DIR):
@@ -275,14 +266,12 @@ def make_tempdir():
             sys.exit(-1)
 
 
-def _check_valid_overlaydirs():
-    # type: () -> bool
+def _check_valid_overlaydirs() -> bool:
     '''check that the group specific dirs are valid groups
     Returns True on OK, False on error
     '''
 
-    def _check_valid_groupdir(overlaydir, label):
-        # type: (str, str) -> bool
+    def _check_valid_groupdir(overlaydir: str, label: str) -> bool:
         '''local helper function for _check_valid_overlaydirs()'''
 
         errs = 0
@@ -314,8 +303,7 @@ def _check_valid_overlaydirs():
     return errs == 0
 
 
-def check_cmd_config():
-    # type: () -> None
+def check_cmd_config() -> None:
     '''check whether the commands as given in synctool.conf actually exist'''
 
     # pretty lame code
@@ -352,8 +340,7 @@ def check_cmd_config():
         sys.exit(1)
 
 
-def be_careful_with_getopt():
-    # type: () -> None
+def be_careful_with_getopt() -> None:
     '''check sys.argv for dangerous common typo's on the command-line'''
 
     # be extra careful with possible typo's on the command-line
@@ -376,13 +363,12 @@ def be_careful_with_getopt():
             sys.exit(1)
 
 
-def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
-                        opt_upload, opt_fix, opt_group):
-    #pylint: disable=too-many-arguments
-    # type: (bool, bool, bool, bool, bool, bool, bool) -> None
+def option_combinations(opt_diff: bool, opt_single: bool, opt_reference: bool, opt_erase_saved: bool, opt_upload: bool, opt_fix: bool, opt_group: bool) -> None:
     '''some combinations of command-line options don't make sense;
     alert the user and abort
     '''
+
+    # pylint: disable=too-many-arguments
 
     if opt_erase_saved and (opt_diff or opt_reference or opt_upload):
         error("option --erase-saved can not be combined with other actions")
@@ -405,8 +391,7 @@ def option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
         sys.exit(1)
 
 
-def usage():
-    # type: () -> None
+def usage() -> None:
     '''print usage information'''
 
     print('usage: %s [options]' % PROGNAME)
@@ -448,11 +433,10 @@ Note that synctool does a dry run unless you specify --fix
 Written by Walter de Jong <walter@heiho.net> (c) 2003-2015''')
 
 
-def get_options():
-    #pylint: disable=too-many-statements, too-many-branches
-    #pylint: disable=global-statement
-    # type: () -> None
+def get_options() -> None:
     '''parse command-line options'''
+
+    # pylint: disable=global-statement,too-many-statements,too-many-branches
 
     global PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE
     global OPT_CHECK_UPDATE, OPT_DOWNLOAD, MASTER_OPTS
@@ -476,7 +460,7 @@ def get_options():
                                     'download'])
     except getopt.GetoptError as reason:
         print('%s: %s' % (PROGNAME, reason))
-#        usage()
+        # usage()
         sys.exit(1)
 
     if args:
@@ -498,7 +482,7 @@ def get_options():
     opt_group = False
 
     PASS_ARGS = []
-    MASTER_OPTS = [sys.argv[0],]
+    MASTER_OPTS = [sys.argv[0], ]
 
     # first read the config file
     for opt, arg in opts:
@@ -716,15 +700,15 @@ def get_options():
 
 
 @catch_signals
-def main():
-    #pylint: disable=too-many-statements, too-many-branches
-    # type: (...) -> int
+def main() -> int:
     '''run the program'''
+
+    # pylint: disable=too-many-statements,too-many-branches
 
     param.init()
 
-    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout) # type: ignore
-    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr) # type: ignore
+    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)             # type: ignore
+    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)             # type: ignore
 
     try:
         get_options()

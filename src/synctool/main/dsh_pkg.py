@@ -26,6 +26,7 @@ import synctool.multiplex
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.parallel
+import synctool.range
 import synctool.unbuffered
 
 # hardcoded name because otherwise we get "dsh_pkg.py"
@@ -42,12 +43,10 @@ MASTER_OPTS = []        # type: List[str]
 SSH_CMD_ARR = []        # type: List[str]
 
 
-def run_remote_pkg(address_list):
-    #pylint: disable=global-statement
-    # type: (List[str]) -> None
+def run_remote_pkg(address_list: List[str]) -> None:
     '''run synctool-pkg on the target nodes'''
 
-    global SSH_CMD_ARR
+    global SSH_CMD_ARR                                              # pylint: disable=global-statement
 
     SSH_CMD_ARR = shlex.split(param.SSH_CMD)
     # if -N 1, force tty allocation
@@ -60,8 +59,7 @@ def run_remote_pkg(address_list):
     synctool.parallel.do(worker_pkg, address_list)
 
 
-def worker_pkg(addr):
-    # type: (str) -> None
+def worker_pkg(addr: str) -> None:
     '''runs ssh + synctool-pkg to the nodes in parallel'''
 
     nodename = NODESET.get_nodename_from_address(addr)
@@ -94,8 +92,7 @@ def worker_pkg(addr):
         synctool.lib.run_with_nodename(cmd_arr, nodename)
 
 
-def rearrange_options():
-    # type: () -> List[str]
+def rearrange_options() -> List[str]:
     '''rearrange command-line options so that getopt() behaves
     more logical for us
     '''
@@ -137,8 +134,7 @@ def rearrange_options():
     return new_argv
 
 
-def check_cmd_config():
-    # type: () -> None
+def check_cmd_config() -> None:
     '''check whether the commands as given in synctool.conf actually exist'''
 
     errors = 0
@@ -155,8 +151,7 @@ def check_cmd_config():
         sys.exit(-1)
 
 
-def there_can_be_only_one():
-    # type: () -> None
+def there_can_be_only_one() -> None:
     '''print usage information about actions'''
 
     print('''Specify only one of these options:
@@ -169,8 +164,7 @@ def there_can_be_only_one():
     sys.exit(1)
 
 
-def usage():
-    # type: () -> None
+def usage() -> None:
     '''print usage information'''
 
     print('usage: %s [options] [package [..]]' % PROGNAME)
@@ -220,13 +214,12 @@ Note that --upgrade does a dry run unless you specify --fix
 ''')
 
 
-def get_options():
-    #pylint: disable=global-statement
-    #pylint: disable=too-many-statements, too-many-branches
-    # type: () -> None
+def get_options() -> None:
     '''parse command-line options'''
 
-    global MASTER_OPTS, PASS_ARGS, OPT_AGGREGATE
+    # pylint: disable=too-many-statements,too-many-branches
+
+    global MASTER_OPTS, PASS_ARGS, OPT_AGGREGATE                    # pylint: disable=global-statement
 
     if len(sys.argv) <= 1:
         usage()
@@ -250,11 +243,11 @@ def get_options():
                                     'quiet', 'unix', 'aggregate'])
     except getopt.GetoptError as reason:
         print('%s: %s' % (PROGNAME, reason))
-#        usage()
+        # usage()
         sys.exit(1)
 
     PASS_ARGS = []
-    MASTER_OPTS = [sys.argv[0],]
+    MASTER_OPTS = [sys.argv[0], ]
 
     # first read the config file
     for opt, arg in opts:
@@ -424,14 +417,13 @@ def get_options():
 
 
 @catch_signals
-def main():
-    # type: (...) -> int
+def main() -> int:
     '''run the program'''
 
     param.init()
 
-    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout) # type: ignore
-    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr) # type: ignore
+    sys.stdout = synctool.unbuffered.Unbuffered(sys.stdout)             # type: ignore
+    sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)             # type: ignore
 
     try:
         get_options()

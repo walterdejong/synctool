@@ -17,14 +17,12 @@ from typing import Callable
 
 
 # decorator
-def catch_signals(func):
-    # type: (Callable[..., int]) -> Callable[..., int]
+def catch_signals(func: Callable[..., int]) -> Callable[..., int]:
     '''run main function
     Ctrl-C and "Broken pipe" signal will gracefully terminate the program
     '''
 
-    def wrap(*args, **kwargs):
-        # type: (...) -> int
+    def wrap(*args, **kwargs) -> int:
         '''wraps a function (catch_signals is a decorator)'''
 
         ret = -1

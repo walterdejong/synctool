@@ -13,60 +13,60 @@
 import os
 import sys
 
-from typing import Dict, List, Sequence, Set, Optional
+from typing import Dict, List, Set, Optional
 
 # Note: the release datetime should be set slightly in the future
 # in regards to when the release tag is made in git
 # For example, the next (half) hour
 # This is so that synctool --check-update will work correctly
-VERSION = '7.0-beta'                                # type: str
-RELEASE_DATETIME = '2015-08-12T22:20:00'            # type: str
+VERSION = '7.0-beta'
+RELEASE_DATETIME = '2015-08-12T22:20:00'
 
 # location of default config file on the master node
-DEFAULT_CONF = '/opt/synctool/etc/synctool.conf'    # type: str
-CONF_FILE = DEFAULT_CONF                            # type: str
+DEFAULT_CONF = '/opt/synctool/etc/synctool.conf'
+CONF_FILE = DEFAULT_CONF
 
-BOOLEAN_VALUE_TRUE = ('1', 'on', 'yes', 'true')     # type: Sequence[str]
-BOOLEAN_VALUE_FALSE = ('0', 'off', 'no', 'false')   # type: Sequence[str]
+BOOLEAN_VALUE_TRUE = ('1', 'on', 'yes', 'true')
+BOOLEAN_VALUE_FALSE = ('0', 'off', 'no', 'false')
 
 #
 # config variables
 #
-ROOTDIR = ''                # type: str
-VAR_DIR = ''                # type: str
-VAR_LEN = 0                 # type: int
-OVERLAY_DIR = ''            # type: str
-OVERLAY_LEN = 0             # type: int
-DELETE_DIR = ''             # type: str
-DELETE_LEN = 0              # type: int
-PURGE_DIR = ''              # type: str
-PURGE_LEN = 0               # type: int
-SCRIPT_DIR = ''             # type: str
-TEMP_DIR = '/tmp/synctool'  # type: str
-HOSTNAME = ''               # type: str
-NODENAME = ''               # type: str
+ROOTDIR = ''
+VAR_DIR = ''
+VAR_LEN = 0
+OVERLAY_DIR = ''
+OVERLAY_LEN = 0
+DELETE_DIR = ''
+DELETE_LEN = 0
+PURGE_DIR = ''
+PURGE_LEN = 0
+SCRIPT_DIR = ''
+TEMP_DIR = '/tmp/synctool'
+HOSTNAME = ''
+NODENAME = ''
 
-DIFF_CMD = 'diff -u'                                    # type: str
-PING_CMD = 'ping -q -c 1 -w 1'                          # type: str
-SSH_CMD = 'ssh -o ConnectTimeout=10 -x -q'              # type: str
-RSYNC_CMD = "rsync -ar --delete --delete-excluded -q"   # type: str
-SYNCTOOL_CMD = ''                                       # type: str
-PKG_CMD = ''                                            # type: str
+DIFF_CMD = 'diff -u'
+PING_CMD = 'ping -q -c 1 -w 1'
+SSH_CMD = 'ssh -o ConnectTimeout=10 -x -q'
+RSYNC_CMD = "rsync -ar --delete --delete-excluded -q"
+SYNCTOOL_CMD = ''
+PKG_CMD = ''
 
-PACKAGE_MANAGER = ''        # type: str
+PACKAGE_MANAGER = ''
 
-NUM_PROC = 16               # type: int
-SLEEP_TIME = 0              # type: int
+NUM_PROC = 16
+SLEEP_TIME = 0
 
-CONTROL_PERSIST = '1h'      # type: str
-REQUIRE_EXTENSION = True    # type: bool
-BACKUP_COPIES = True        # type: bool
-SYSLOGGING = True           # type: bool
-FULL_PATH = False           # type: bool
-TERSE = False               # type: bool
-SYNC_TIMES = False          # type: bool
-IGNORE_DOTFILES = False     # type: bool
-IGNORE_DOTDIRS = False      # type: bool
+CONTROL_PERSIST = '1h'
+REQUIRE_EXTENSION = True
+BACKUP_COPIES = True
+SYSLOGGING = True
+FULL_PATH = False
+TERSE = False
+SYNC_TIMES = False
+IGNORE_DOTFILES = False
+IGNORE_DOTDIRS = False
 IGNORE_FILES = set()                # type: Set[str]
 IGNORE_FILES_WITH_WILDCARDS = []    # type: List[str]
 
@@ -77,7 +77,7 @@ IGNORE_FILES_WITH_WILDCARDS = []    # type: List[str]
 DEFAULT_NODESET = set(['all'])      # type: Set[str]
 
 # the master's fqdn hostname
-MASTER = ''                 # type: str
+MASTER = ''
 
 # set of slaves by nodename
 SLAVES = set()              # type: Set[str]
@@ -116,43 +116,40 @@ ALL_GROUPS = set([])        # type: Set[str]
 NO_RSYNC = set()            # type: Set[str]
 
 # colorize output
-COLORIZE = True             # type: bool
-COLORIZE_FULL_LINE = False  # type: bool
-COLORIZE_BRIGHT = True      # type: bool
+COLORIZE = True
+COLORIZE_FULL_LINE = False
+COLORIZE_BRIGHT = True
 
-TERSE_COLORS = {
-    'info'   : 'default',
-    'warn'   : 'magenta',
-    'error'  : 'red',
-    'fail'   : 'red',
-    'sync'   : 'default',
-    'link'   : 'cyan',
-    'mkdir'  : 'blue',      # I'd use yellow on a black background,
-                            # blue on white
-    'rm'     : 'yellow',
-    'chown'  : 'cyan',
-    'chmod'  : 'cyan',
-    'exec'   : 'green',
-    'upload' : 'magenta',
-    'new'    : 'default',
-    'type'   : 'magenta',
-    'dryrun' : 'default',
-    'fixing' : 'default',
-    'ok'     : 'default',
-}                           # type: Dict[str, str]
+TERSE_COLORS = {'info': 'default',
+                'warn': 'magenta',
+                'error': 'red',
+                'fail': 'red',
+                'sync': 'default',
+                'link': 'cyan',
+                'mkdir': 'blue',        # I'd use yellow on a black background, blue on white
+                'rm': 'yellow',
+                'chown': 'cyan',
+                'chmod': 'cyan',
+                'exec': 'green',
+                'upload': 'magenta',
+                'new': 'default',
+                'type': 'magenta',
+                'dryrun': 'default',
+                'fixing': 'default',
+                'ok': 'default'}
 
 # list of supported package managers
 KNOWN_PACKAGE_MANAGERS = ('apt-get', 'yum', 'zypper', 'brew', 'pacman',
                           # 'urpmi', 'portage', 'port', 'swaret',
-                          'pkg', 'bsdpkg')  # type: Sequence[str]
+                          'pkg', 'bsdpkg')
 
-ORIG_UMASK = 0o22    # type: int
+ORIG_UMASK = 0o22
 
 
-def init():
-#pylint: disable=global-statement
-    # type() -> None
+def init() -> None:
     '''detect my rootdir and set default symlink mode'''
+
+    # pylint: disable=global-statement
 
     global ROOTDIR, CONF_FILE
     global VAR_DIR, VAR_LEN, OVERLAY_DIR, OVERLAY_LEN, DELETE_DIR, DELETE_LEN

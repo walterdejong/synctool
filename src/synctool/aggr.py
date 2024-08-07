@@ -18,8 +18,7 @@ from synctool.lib import stderr
 import synctool.range
 
 
-def aggregate(fresult):
-    # type: (IO) -> None
+def aggregate(fresult: IO) -> None:
     '''group together input lines that are the same'''
 
     lines = fresult.readlines()
@@ -28,7 +27,7 @@ def aggregate(fresult):
 
     lines = [x.strip() for x in lines]
 
-    output_per_node = {}    # type: Dict[str, List[str]]
+    output_per_node = {}        # type: Dict[str, List[str]]
 
     for line in lines:
         arr = line.split(':', 1)
@@ -41,7 +40,7 @@ def aggregate(fresult):
         output = arr[1]
 
         if node not in output_per_node:
-            output_per_node[node] = [output,]
+            output_per_node[node] = [output, ]
         else:
             output_per_node[node].append(output)
 
@@ -56,7 +55,7 @@ def aggregate(fresult):
 
         out = output_per_node[node]
 
-        nodelist = [node,]
+        nodelist = [node, ]
 
         for node2 in nodes[:]:
             if out == output_per_node[node2]:
@@ -69,8 +68,7 @@ def aggregate(fresult):
             print(line)
 
 
-def run(cmd_arr):
-    # type: (List[str]) -> bool
+def run(cmd_arr: List[str]) -> bool:
     '''pipe the output through the aggregator
     Returns False on error, else True
     '''

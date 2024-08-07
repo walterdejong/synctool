@@ -48,16 +48,14 @@ SYMBOLS = {}    # type: Dict[str, Symbol]
 class Symbol:
     '''structure that says where a symbol was first defined'''
 
-    def __init__(self, name, filename='', lineno=0):
-        # type: (str, str, int) -> None
+    def __init__(self, name: str, filename: str = '', lineno: int = 0) -> None:
         '''initialize instance'''
 
         self.name = name                    # not really used ...
         self.filename = filename
         self.lineno = lineno
 
-    def origin(self):
-        # type: () -> str
+    def origin(self) -> str:
         '''Returns string "filename:lineno" where the symbol was
         first defined
         '''
@@ -65,82 +63,76 @@ class Symbol:
         return '%s:%d' % (self.filename, self.lineno)
 
 
-def read_config_file(configfile):
-    # type: (str) -> int
+def read_config_file(configfile: str) -> int:
     '''read a (included) config file
     Returns 0 on success, or error count on errors
     '''
 
-    try:
-        fconfig = open(configfile, 'r', encoding="utf-8")
-    except OSError as err:
-        stderr("error: failed to read config file '%s' : %s" % (configfile,
-                                                                err.strerror))
-        return 1
-
     this_module = sys.modules['synctool.configparser']
 
-    lineno = 0
     errors = 0
 
-    # read lines from the config file
-    # variable tmp_line is used to be able to do multi-line reads
-    # (backslash terminated)
+    try:
+        with open(configfile, 'r', encoding="utf-8") as fconfig:
+            lineno = 0
 
-    line = ''
-    with fconfig:
-        while True:
-            tmp_line = fconfig.readline()
-            if not tmp_line:
-                break
+            # read lines from the config file
+            # variable tmp_line is used to be able to do multi-line reads
+            # (backslash terminated)
 
-            lineno += 1
+            line = ''
+            while True:
+                tmp_line = fconfig.readline()
+                if not tmp_line:
+                    break
 
-            nhash = tmp_line.find('#')
-            if nhash >= 0:
-                tmp_line = tmp_line[:nhash]        # strip comment
+                lineno += 1
 
-            tmp_line = tmp_line.strip()
-            if not tmp_line:
-                continue
+                nhash = tmp_line.find('#')
+                if nhash >= 0:
+                    tmp_line = tmp_line[:nhash]        # strip comment
 
-            if tmp_line[-1] == '\\':
-                tmp_line = tmp_line[:-1].strip()
+                tmp_line = tmp_line.strip()
+                if not tmp_line:
+                    continue
+
+                if tmp_line[-1] == '\\':
+                    tmp_line = tmp_line[:-1].strip()
+                    line = line + ' ' + tmp_line
+                    continue
+
                 line = line + ' ' + tmp_line
-                continue
+                tmp_line = ''
 
-            line = line + ' ' + tmp_line
-            tmp_line = ''
+                arr = line.split()
 
-            arr = line.split()
+                line = ''   # <-- line is being reset here; use arr[] from here on
 
-            line = ''   # <-- line is being reset here;
-                        # use arr[] from here on
+                if len(arr) <= 1:
+                    stderr('%s:%d: syntax error ; expected key/value pair' % (configfile, lineno))
+                    errors += 1
+                    continue
 
-            if len(arr) <= 1:
-                stderr('%s:%d: syntax error ; expected key/value pair' %
-                       (configfile, lineno))
-                errors += 1
-                continue
+                keyword = arr[0].lower()
 
-            keyword = arr[0].lower()
+                # get the parser function
+                try:
+                    func = getattr(this_module, 'config_%s' % keyword)
+                except AttributeError:
+                    stderr("%s:%d: unknown keyword '%s'" % (configfile, lineno, keyword))
+                    errors += 1
+                    continue
 
-            # get the parser function
-            try:
-                func = getattr(this_module, 'config_%s' % keyword)
-            except AttributeError:
-                stderr("%s:%d: unknown keyword '%s'" % (configfile, lineno,
-                                                        keyword))
-                errors += 1
-                continue
+                errors += func(arr, configfile, lineno)
 
-            errors += func(arr, configfile, lineno)
+        return errors
 
-    return errors
+    except OSError as err:
+        stderr("error: failed to read config file '%s' : %s" % (configfile, err.strerror))
+        return 1
 
 
-def check_definition(keyword, configfile, lineno):
-    # type: (str, str, int) -> bool
+def check_definition(keyword: str, configfile: str, lineno: int) -> bool:
     '''check whether a param was not defined earlier
     Returns False on error, True if OK
     '''
@@ -154,8 +146,7 @@ def check_definition(keyword, configfile, lineno):
     return True
 
 
-def check_node_definition(node, configfile, lineno):
-    # type: (str, str, int) -> bool
+def check_node_definition(node: str, configfile: str, lineno: int) -> bool:
     '''check whether a node was not defined earlier
     Returns False on error, True if OK
     '''
@@ -172,8 +163,7 @@ def check_node_definition(node, configfile, lineno):
     return True
 
 
-def check_group_definition(group, configfile, lineno):
-    # type: (str, str, int) -> bool
+def check_group_definition(group: str, configfile: str, lineno: int) -> bool:
     '''check whether a group was not defined earlier
     Returns False on error, True if OK
     '''
@@ -195,8 +185,7 @@ def check_group_definition(group, configfile, lineno):
 # This enables the 'include' keyword to return more than 1 error
 #
 
-def _config_boolean(label, value, configfile, lineno):
-    # type: (str, str, str, int) -> Tuple[int, bool]
+def _config_boolean(label: str, value: str, configfile: str, lineno: int) -> Tuple[int, bool]:
     '''a boolean parameter can be "true|false|yes|no|on|off|1|0"'''
 
     if not check_definition(label, configfile, lineno):
@@ -213,8 +202,7 @@ def _config_boolean(label, value, configfile, lineno):
     return 1, False
 
 
-def _config_integer(label, value, configfile, lineno, radix=10):
-    # type: (str, str, str, int, int) -> Tuple[int, int]
+def _config_integer(label: str, value: str, configfile: str, lineno: int, radix: int = 10) -> Tuple[int, int]:
     '''get numeric integer value'''
 
     if not check_definition(label, configfile, lineno):
@@ -229,8 +217,7 @@ def _config_integer(label, value, configfile, lineno, radix=10):
     return 0, nvalue
 
 
-def _config_color_variant(label, value, configfile, lineno):
-    # type: (str, str, str, int) -> int
+def _config_color_variant(label: str, value: str, configfile: str, lineno: int) -> int:
     '''set a color by name'''
 
     if not check_definition(label, configfile, lineno):
@@ -245,8 +232,7 @@ def _config_color_variant(label, value, configfile, lineno):
     return 1
 
 
-def _config_command(label, arr, short_cmd, configfile, lineno):
-    # type: (str, List[str], str, str, int) -> Tuple[int, str]
+def _config_command(label: str, arr: List[str], short_cmd: str, configfile: str, lineno: int) -> Tuple[int, str]:
     '''helper for configuring rsync_cmd, ssh_cmd, synctool_cmd, etc.'''
 
     if not check_definition(label, configfile, lineno):
@@ -265,8 +251,7 @@ def _config_command(label, arr, short_cmd, configfile, lineno):
     return 0, synctool.lib.prepare_path(' '.join(arr[1:]))
 
 
-def spellcheck(name):
-    # type: (str) -> bool
+def spellcheck(name: str) -> bool:
     '''Check for valid spelling of name
     Returns True if OK, False if not OK
     '''
@@ -281,16 +266,14 @@ def spellcheck(name):
     return True
 
 
-def config_include(arr, _configfile, _lineno):
-    # type: (List[str], str, int) -> int
+def config_include(arr: List[str], _configfile: str, _lineno: int) -> int:
     '''parse keyword: include'''
 
     # recursively read the given config file
     return read_config_file(synctool.lib.prepare_path(arr[1]))
 
 
-def config_tempdir(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_tempdir(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: tempdir'''
 
     if not check_definition(arr[0], configfile, lineno):
@@ -308,8 +291,7 @@ def config_tempdir(arr, configfile, lineno):
     return 0
 
 
-def config_package_manager(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_package_manager(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: package_manager'''
 
     if len(arr) < 2:
@@ -329,8 +311,7 @@ def config_package_manager(arr, configfile, lineno):
     return 0
 
 
-def config_ssh_control_persist(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_ssh_control_persist(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: ssh_control_persist'''
 
     if len(arr) != 2:
@@ -349,8 +330,7 @@ def config_ssh_control_persist(arr, configfile, lineno):
     return 0
 
 
-def config_require_extension(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_require_extension(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: require_extension'''
 
     err, param.REQUIRE_EXTENSION = _config_boolean('require_extension',
@@ -358,8 +338,7 @@ def config_require_extension(arr, configfile, lineno):
     return err
 
 
-def config_full_path(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_full_path(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: full_path'''
 
     err, param.FULL_PATH = _config_boolean('full_path', arr[1], configfile,
@@ -367,8 +346,7 @@ def config_full_path(arr, configfile, lineno):
     return err
 
 
-def config_backup_copies(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_backup_copies(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: backup_copies'''
 
     err, param.BACKUP_COPIES = _config_boolean('backup_copies', arr[1],
@@ -376,24 +354,23 @@ def config_backup_copies(arr, configfile, lineno):
     return err
 
 
-def config_syslogging(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_syslogging(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: syslogging'''
 
     err, param.SYSLOGGING = _config_boolean('syslogging', arr[1], configfile,
                                             lineno)
     return err
 
-def config_sync_times(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+
+def config_sync_times(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: sync_times'''
 
     err, param.SYNC_TIMES = _config_boolean('sync_times', arr[1], configfile,
                                             lineno)
     return err
 
-def config_ignore_dotfiles(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+
+def config_ignore_dotfiles(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: ignore_dotfiles'''
 
     err, param.IGNORE_DOTFILES = _config_boolean('ignore_dotfiles', arr[1],
@@ -401,8 +378,7 @@ def config_ignore_dotfiles(arr, configfile, lineno):
     return err
 
 
-def config_ignore_dotdirs(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_ignore_dotdirs(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: ignore_dotdirs'''
 
     err, param.IGNORE_DOTDIRS = _config_boolean('ignore_dotdirs', arr[1],
@@ -410,8 +386,7 @@ def config_ignore_dotdirs(arr, configfile, lineno):
     return err
 
 
-def config_ignore(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_ignore(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: ignore'''
 
     if len(arr) < 2:
@@ -432,16 +407,14 @@ def config_ignore(arr, configfile, lineno):
     return 0
 
 
-def config_terse(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_terse(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: terse'''
 
     err, param.TERSE = _config_boolean('terse', arr[1], configfile, lineno)
     return err
 
 
-def config_colorize(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_colorize(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: colorize'''
 
     err, param.COLORIZE = _config_boolean('colorize', arr[1], configfile,
@@ -449,8 +422,7 @@ def config_colorize(arr, configfile, lineno):
     return err
 
 
-def config_colorize_full_line(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_colorize_full_line(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: colorize_full_line'''
 
     err, param.COLORIZE_FULL_LINE = _config_boolean('colorize_full_line',
@@ -460,8 +432,7 @@ def config_colorize_full_line(arr, configfile, lineno):
 
 
 # nice for typo's
-def config_colorize_full_lines(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_colorize_full_lines(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: colorize_full_lines'''
 
     err, param.COLORIZE_FULL_LINE = _config_boolean('colorize_full_line',
@@ -470,8 +441,7 @@ def config_colorize_full_lines(arr, configfile, lineno):
     return err
 
 
-def config_colorize_bright(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_colorize_bright(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: colorize_bright'''
 
     err, param.COLORIZE_BRIGHT = _config_boolean('colorize_bright', arr[1],
@@ -479,8 +449,7 @@ def config_colorize_bright(arr, configfile, lineno):
     return err
 
 
-def config_colorize_bold(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_colorize_bold(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: colorize_bold'''
 
     err, param.COLORIZE_BRIGHT = _config_boolean('colorize_bold', arr[1],
@@ -488,127 +457,109 @@ def config_colorize_bold(arr, configfile, lineno):
     return err
 
 
-def config_color_info(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_color_info(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_info'''
 
     return _config_color_variant('color_info', arr[1], configfile, lineno)
 
 
-def config_color_warn(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_color_warn(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_warn'''
 
     return _config_color_variant('color_warn', arr[1], configfile, lineno)
 
 
-def config_color_error(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_color_error(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_error'''
 
     return _config_color_variant('color_error', arr[1], configfile, lineno)
 
 
-def config_color_fail(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_color_fail(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_fail'''
 
     return _config_color_variant('color_fail', arr[1], configfile, lineno)
 
 
-def config_color_sync(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_color_sync(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_sync'''
 
     return _config_color_variant('color_sync', arr[1], configfile, lineno)
 
 
-def config_color_link(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_color_link(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_link'''
 
     return _config_color_variant('color_link', arr[1], configfile, lineno)
 
 
-def config_color_mkdir(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_color_mkdir(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_mkdir'''
 
     return _config_color_variant('color_mkdir', arr[1], configfile, lineno)
 
 
-def config_color_rm(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_color_rm(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_rm'''
 
     return _config_color_variant('color_rm', arr[1], configfile, lineno)
 
 
-def config_color_chown(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_color_chown(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_chown'''
 
     return _config_color_variant('color_chown', arr[1], configfile, lineno)
 
 
-def config_color_chmod(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_color_chmod(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_chmod'''
 
     return _config_color_variant('color_chmod', arr[1], configfile, lineno)
 
 
-def config_color_exec(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_color_exec(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_exec'''
 
     return _config_color_variant('color_exec', arr[1], configfile, lineno)
 
 
-def config_color_upload(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_color_upload(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_upload'''
 
     return _config_color_variant('color_upload', arr[1], configfile, lineno)
 
 
-def config_color_new(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_color_new(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_new'''
 
     return _config_color_variant('color_new', arr[1], configfile, lineno)
 
 
-def config_color_type(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_color_type(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_type'''
 
     return _config_color_variant('color_type', arr[1], configfile, lineno)
 
 
-def config_color_dryrun(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_color_dryrun(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_dryrun'''
 
     return _config_color_variant('color_dryrun', arr[1], configfile, lineno)
 
 
-def config_color_fixing(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_color_fixing(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_fixing'''
 
     return _config_color_variant('color_fixing', arr[1], configfile, lineno)
 
 
-def config_color_ok(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_color_ok(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_ok'''
 
     return _config_color_variant('color_ok', arr[1], configfile, lineno)
 
 
-def config_default_nodeset(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_default_nodeset(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: default_nodeset'''
 
     if not check_definition(arr[0], configfile, lineno):
@@ -651,8 +602,7 @@ def config_default_nodeset(arr, configfile, lineno):
     return 0
 
 
-def config_master(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_master(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: master'''
 
     if len(arr) != 2:
@@ -664,8 +614,7 @@ def config_master(arr, configfile, lineno):
     return 0
 
 
-def config_slave(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_slave(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: slave'''
 
     if len(arr) < 2:
@@ -704,8 +653,7 @@ def config_slave(arr, configfile, lineno):
     return 0
 
 
-def config_group(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_group(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: group'''
 
     if len(arr) < 3:
@@ -758,8 +706,7 @@ def config_group(arr, configfile, lineno):
     return 0
 
 
-def config_node(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_node(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: node'''
 
     if len(arr) < 2:
@@ -865,8 +812,7 @@ def config_node(arr, configfile, lineno):
     return 0
 
 
-def _node_specifier(configfile, lineno, node, spec):
-    # type: (str, int, str, str) -> bool
+def _node_specifier(configfile: str, lineno: int, node: str, spec: str) -> bool:
     '''parse optional node specifiers like 'ipaddress:', 'rsync:' etc.
     Returns True if OK, False on error
     '''
@@ -915,8 +861,7 @@ def _node_specifier(configfile, lineno, node, spec):
     return True
 
 
-def config_ignore_node(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_ignore_node(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: ignore_node'''
 
     if len(arr) < 2:
@@ -966,8 +911,7 @@ def config_ignore_node(arr, configfile, lineno):
     return errors
 
 
-def config_ignore_group(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_ignore_group(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: ignore_group'''
 
     if len(arr) < 2:
@@ -1021,8 +965,7 @@ def config_ignore_group(arr, configfile, lineno):
     return errors
 
 
-def config_diff_cmd(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_diff_cmd(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: diff_cmd'''
 
     err, param.DIFF_CMD = _config_command('diff_cmd', arr, 'diff', configfile,
@@ -1030,8 +973,7 @@ def config_diff_cmd(arr, configfile, lineno):
     return err
 
 
-def config_ping_cmd(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_ping_cmd(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: ping_cmd'''
 
     err, param.PING_CMD = _config_command('ping_cmd', arr, 'ping', configfile,
@@ -1039,8 +981,7 @@ def config_ping_cmd(arr, configfile, lineno):
     return err
 
 
-def config_ssh_cmd(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_ssh_cmd(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: ssh_cmd'''
 
     err, param.SSH_CMD = _config_command('ssh_cmd', arr, 'ssh', configfile,
@@ -1048,8 +989,7 @@ def config_ssh_cmd(arr, configfile, lineno):
     return err
 
 
-def config_rsync_cmd(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_rsync_cmd(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: rsync_cmd'''
 
     # Note! strip_multiple_slashes() will break "rsync://" paths
@@ -1061,8 +1001,7 @@ def config_rsync_cmd(arr, configfile, lineno):
     return err
 
 
-def config_synctool_cmd(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_synctool_cmd(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: synctool_cmd'''
 
     err, param.SYNCTOOL_CMD = _config_command('synctool_cmd', arr,
@@ -1071,8 +1010,7 @@ def config_synctool_cmd(arr, configfile, lineno):
     return err
 
 
-def config_pkg_cmd(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_pkg_cmd(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: pkg_cmd'''
 
     err, param.PKG_CMD = _config_command('pkg_cmd', arr, 'synctool_pkg.py',
@@ -1080,8 +1018,7 @@ def config_pkg_cmd(arr, configfile, lineno):
     return err
 
 
-def config_num_proc(arr, configfile, lineno):
-    # type: (List[str], str, int) -> int
+def config_num_proc(arr: List[str], configfile: str, lineno: int) -> int:
     '''parse keyword: num_proc'''
 
     err, param.NUM_PROC = _config_integer('num_proc', arr[1], configfile,
@@ -1094,8 +1031,7 @@ def config_num_proc(arr, configfile, lineno):
     return err
 
 
-def expand_grouplist(grouplist):
-    # type: (List[str]) -> List[str]
+def expand_grouplist(grouplist: List[str]) -> List[str]:
     '''expand a list of (compound) groups recursively
     Returns the expanded group list
     '''

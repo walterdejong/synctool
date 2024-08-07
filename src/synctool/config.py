@@ -24,12 +24,12 @@ from synctool.lib import stderr, error
 import synctool.param
 
 
-def read_config():
-    # pylint: disable=too-many-branches
-    # type: () -> None
+def read_config() -> None:
     '''read the config file and set a bunch of globals
     Return value: none, exit the program on error
     '''
+
+    # pylint: disable=too-many-branches
 
     if not os.path.isfile(synctool.param.CONF_FILE):
         stderr("no such config file '%s'" % synctool.param.CONF_FILE)
@@ -97,8 +97,7 @@ def read_config():
         sys.exit(-1)
 
 
-def check_cmd_config(param_name, cmd):
-    # type: (str, str) -> Tuple[bool, str]
+def check_cmd_config(param_name: str, cmd: str) -> Tuple[bool, str]:
     '''check whether the command given in the config exists
     Returns (True, full pathed command) when OK,
     and (False, "") on error
@@ -122,8 +121,7 @@ def check_cmd_config(param_name, cmd):
     return True, cmd
 
 
-def init_mynodename():
-    # type: () -> None
+def init_mynodename() -> None:
     '''determine the nodename of the current host
     and initialize MY_GROUPS
     '''
@@ -180,8 +178,7 @@ def init_mynodename():
     synctool.param.MY_GROUPS = get_my_groups()
 
 
-def get_ipaddresses(name):
-    # type: (str) -> Optional[List[str]]
+def get_ipaddresses(name: str) -> Optional[List[str]]:
     '''Returns list of IP addresses for DNS name
     or None on error
     '''
@@ -207,8 +204,7 @@ def get_ipaddresses(name):
     return list(ipaddresses)
 
 
-def insert_group(node, group):
-    # type: (str, str) -> None
+def insert_group(node: str, group: str) -> None:
     '''add group to node definition'''
 
     if node in synctool.param.NODES:
@@ -221,15 +217,13 @@ def insert_group(node, group):
         synctool.param.NODES[node] = [group]
 
 
-def get_all_nodes():
-    # type: () -> List[str]
+def get_all_nodes() -> List[str]:
     '''Returns array with all node names'''
 
     return list(synctool.param.NODES.keys())
 
 
-def get_node_ipaddress(node):
-    # type: (str) -> str
+def get_node_ipaddress(node: str) -> str:
     '''Return IPaddress of node, or node name if unknown'''
 
     if node in synctool.param.IPADDRESSES:
@@ -238,8 +232,7 @@ def get_node_ipaddress(node):
     return node
 
 
-def make_all_groups():
-    # type: () -> Set[str]
+def make_all_groups() -> Set[str]:
     '''make a set of all possible groups
     This is a set of all group names plus all node names
     '''
@@ -249,8 +242,7 @@ def make_all_groups():
     return groups
 
 
-def get_groups(nodename):
-    # type: (str) -> List[str]
+def get_groups(nodename: str) -> List[str]:
     '''returns the groups for the node'''
 
     if nodename in synctool.param.NODES:
@@ -259,8 +251,7 @@ def get_groups(nodename):
     return []
 
 
-def get_my_groups():
-    # type: () -> List[str]
+def get_my_groups() -> List[str]:
     '''returns the groups for this node'''
 
     if synctool.param.NODENAME in synctool.param.NODES:
@@ -269,18 +260,16 @@ def get_my_groups():
     return []
 
 
-def get_nodes_in_groups(groups):
-# pylint: disable=consider-using-dict-items
-    # type: (Union[List[str], Set[str]]) -> Set[str]
+def get_nodes_in_groups(groups: Union[List[str], Set[str]]) -> Set[str]:
     '''returns a set of nodes that are in a set or list of groups'''
 
     nodeset = set()   # type: Set[str]
 
     for group in groups:
-        for node in synctool.param.NODES:
-            # NODES[node] is an ordered list (groups in order of importance)
+        for node, group_list in synctool.param.NODES.items():
+            # Note, group_list is ordered by importance
             # so we can not do neat tricks with combining sets here ...
-            if group in synctool.param.NODES[node]:
+            if group in group_list:
                 nodeset.add(node)
 
     return nodeset

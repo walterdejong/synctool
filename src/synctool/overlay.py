@@ -56,8 +56,7 @@ OV_NO_EXT = 5
 OV_IGNORE = 6
 
 
-def _toplevel(overlay):
-    # type: (str) -> List[str]
+def _toplevel(overlay: str) -> List[str]:
     '''Returns sorted list of fullpath directories under overlay/'''
 
     # the tuples are (fullpath, importance)
@@ -82,21 +81,20 @@ def _toplevel(overlay):
     return [x[0] for x in arr]
 
 
-def _group_all():
-    # type: () -> int
+def _group_all() -> int:
     '''Return the importance level of group 'all' '''
 
     # it is the final group in MY_GROUPS
     return len(synctool.param.MY_GROUPS) - 1
 
 
-def _split_extension(filename, src_dir):
-#pylint: disable=too-many-branches, too-many-return-statements
-    # type: (str, str) -> Tuple[Optional[SyncObject], int]
+def _split_extension(filename: str, src_dir: str) -> Tuple[Optional[SyncObject], int]:
     '''filename in the overlay tree, without leading path
     src_dir is passed for the purpose of printing error messages
     Returns tuple: SyncObject, importance
     '''
+
+    # pylint: disable=too-many-branches, too-many-return-statements
 
     (name, ext) = os.path.splitext(filename)
     if not ext:
@@ -163,10 +161,10 @@ def _split_extension(filename, src_dir):
     return SyncObject(filename, name), importance
 
 
-def _sort_by_importance_post_first(item1, item2):
-#pylint: disable=too-many-return-statements
-    # type: (Tuple[SyncObject, int], Tuple[SyncObject, int]) -> int
+def _sort_by_importance_post_first(item1: Tuple[SyncObject, int], item2: Tuple[SyncObject, int]) -> int:
     '''sort by importance, but always put .post scripts first'''
+
+    # pylint: disable=too-many-return-statements
 
     # after the .post scripts come ._template.post scripts
     # then come regular files
@@ -205,13 +203,14 @@ def _sort_by_importance_post_first(item1, item2):
     return 0
 
 
-def _walk_subtree(src_dir, dest_dir, duplicates, callback):
-#pylint: disable=too-many-locals,too-many-statements,too-many-branches
-    # type: (str, str, Set[str], Callable[[SyncObject, Dict[str, str], Dict[str, str]], Tuple[bool, bool]]) -> Tuple[bool, bool]
+def _walk_subtree(src_dir: str, dest_dir: str, duplicates: Set[str],
+                  callback: Callable[[SyncObject, Dict[str, str], Dict[str, str]], Tuple[bool, bool]]) -> Tuple[bool, bool]:
     '''walk subtree under overlay/group/
     duplicates is a set that keeps us from selecting any duplicate matches
     Returns pair of booleans: ok, dir was updated
     '''
+
+    # pylint: disable=too-many-locals,too-many-statements,too-many-branches
 
     arr = []
     for entry in os.listdir(src_dir):
@@ -301,7 +300,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, callback):
             # recurse down into the directory
             # with empty pre_dict and post_dict parameters
             okay, updated2 = _walk_subtree(obj.src_path, obj.dest_path,
-                                         duplicates, callback)
+                                           duplicates, callback)
             if not okay:
                 # quick exit
                 return False, dir_changed
@@ -359,8 +358,7 @@ def _walk_subtree(src_dir, dest_dir, duplicates, callback):
     return True, dir_changed
 
 
-def visit(overlay, callback):
-    # type: (str, Callable[[SyncObject, Dict[str, str], Dict[str, str]], Tuple[bool, bool]]) -> None
+def visit(overlay: str, callback: Callable[[SyncObject, Dict[str, str], Dict[str, str]], Tuple[bool, bool]]) -> None:
     '''visit all entries in the overlay tree
     overlay is either synctool.param.OVERLAY_DIR or synctool.param.DELETE_DIR
     callback will called with arguments: (SyncObject, pre_dict, post_dict)

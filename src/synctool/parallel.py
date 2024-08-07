@@ -27,10 +27,10 @@ import synctool.param
 ALL_PIDS = set()    # type: Set[int]
 
 
-def do(func, work):
-#pylint: disable=invalid-name
-    # type: (Callable[[Any], None], List[Any]) -> None
+def do(func: Callable[[Any], None], work: List[Any]) -> None:
     '''run func in parallel'''
+
+    # pylint: disable=invalid-name
 
     if synctool.param.SLEEP_TIME != 0:
         synctool.param.NUM_PROC = 1
@@ -67,8 +67,7 @@ def do(func, work):
 
 
 @catch_signals
-def worker(rank, func, work, part):
-    # type: (int, Callable[[Any], None], List[Any], int) -> int
+def worker(rank: int, func: Callable[[Any], None], work: List[Any], part: int) -> int:
     '''run func to do part of work for parallel rank'''
 
     # determine which chunk of work to do
@@ -86,12 +85,10 @@ def worker(rank, func, work, part):
     return 0
 
 
-def join():
-#pylint: disable=global-statement
-    # type: () -> None
+def join() -> None:
     '''wait for parallel threads to exit'''
 
-    global ALL_PIDS
+    global ALL_PIDS                                         # pylint: disable=global-statement
 
     # wait until no more child processes left
     while ALL_PIDS:
@@ -110,11 +107,10 @@ def join():
 # unit test
 if __name__ == '__main__':
     @catch_signals
-    def main():
-        # type: (...) -> int
+    def main() -> int:
         '''main func'''
 
-        def hello(item):
+        def hello(item: int) -> None:
             '''print item'''
 
             print('[%u]: hello' % os.getpid(), item)
@@ -124,7 +120,7 @@ if __name__ == '__main__':
         do(hello, list(range(10)))
         return 0
 
-#    synctool.param.SLEEP_TIME = 2
+    # synctool.param.SLEEP_TIME = 2
     main()
 
 # EOB

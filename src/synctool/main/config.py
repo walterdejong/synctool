@@ -22,6 +22,7 @@ from synctool import config, param
 from synctool.lib import stderr, error
 from synctool.main.wrapper import catch_signals
 import synctool.nodeset
+import synctool.range
 
 # hardcoded name because otherwise we get "config.py"
 PROGNAME = 'config'
@@ -58,8 +59,7 @@ OPT_IPADDRESS = False
 OPT_RSYNC = False
 
 
-def list_all_nodes():
-    # type: () -> None
+def list_all_nodes() -> None:
     '''display a list of all nodes'''
 
     nodes = config.get_all_nodes()
@@ -87,8 +87,7 @@ def list_all_nodes():
         print(node)
 
 
-def list_all_groups():
-    # type: () -> None
+def list_all_groups() -> None:
     '''display a list of all groups'''
 
     groups = list(param.GROUP_DEFS.keys())
@@ -104,10 +103,10 @@ def list_all_groups():
         print(group)
 
 
-def list_nodes(nodelist):
-    #pylint: disable=too-many-branches
-    # type: (str) -> None
+def list_nodes(nodelist: str) -> None:
     '''display node definition'''
+
+    # pylint: disable=too-many-branches
 
     nodeset = synctool.nodeset.NodeSet()
     try:
@@ -157,8 +156,7 @@ def list_nodes(nodelist):
         print(group)
 
 
-def list_nodegroups(grouplist):
-    # type: (str) -> None
+def list_nodegroups(grouplist: str) -> None:
     '''display list of nodes that are member of group'''
 
     nodeset = synctool.nodeset.NodeSet()
@@ -197,10 +195,10 @@ def list_nodegroups(grouplist):
         print(node)
 
 
-def list_commands(cmds):
-    #pylint: disable=too-many-branches
-    # type: (List[str]) -> None
+def list_commands(cmds: List[str]) -> None:
     '''display command setting'''
+
+    # pylint: disable=too-many-branches
 
     for cmd in cmds:
         if cmd == 'diff':
@@ -237,8 +235,7 @@ def list_commands(cmds):
             error("no such command '%s' available in synctool" % cmd)
 
 
-def list_dirs():
-    # type: () -> None
+def list_dirs() -> None:
     '''display directory settings'''
 
     print('rootdir', param.ROOTDIR)
@@ -248,8 +245,7 @@ def list_dirs():
     print('tempdir', param.TEMP_DIR)
 
 
-def expand(nodelist):
-    # type: (str) -> None
+def expand(nodelist: str) -> None:
     '''display expanded argument'''
 
     nodeset = synctool.nodeset.NodeSet()
@@ -269,14 +265,12 @@ def expand(nodelist):
     print()
 
 
-def set_action(act, opt):
-    #pylint: disable=global-statement
-    # type: (int, str) -> None
+def set_action(act: int, opt: str) -> None:
     '''set the action to perform'''
 
     # this is a helper function for the command-line parser
 
-    global ACTION, ACTION_OPTION
+    global ACTION, ACTION_OPTION                                    # pylint: disable=global-statement
 
     assert opt
 
@@ -288,8 +282,7 @@ def set_action(act, opt):
     ACTION_OPTION = opt
 
 
-def usage():
-    # type: () -> None
+def usage() -> None:
     '''print usage information'''
 
     print('usage: %s [options]' % PROGNAME)
@@ -321,11 +314,10 @@ COMMAND is a list of these: diff,ping,ssh,rsync,synctool,pkg
 ''')
 
 
-def get_options():
-    #pylint: disable=global-statement
-    #pylint: disable=too-many-statements, too-many-branches
-    # type: () -> None
+def get_options() -> None:
     '''parse command-line options'''
+
+    # pylint: disable=global-statement,too-many-statements,too-many-branches
 
     global ARG_NODENAMES, ARG_GROUPS, ARG_CMDS, ARG_EXPAND
     global OPT_FILTER_IGNORED, OPT_IPADDRESS, OPT_RSYNC
@@ -453,10 +445,10 @@ def get_options():
 
 
 @catch_signals
-def main():
-    #pylint: disable=too-many-statements, too-many-branches
-    # type: (...) -> int
+def main() -> int:
     '''do your thing'''
+
+    # pylint: disable=too-many-statements,too-many-branches
 
     param.init()
 

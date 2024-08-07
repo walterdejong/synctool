@@ -36,66 +36,61 @@ class NodeSet:
     Some methods may throw RangeSyntaxError when parsing range expressions
     '''
 
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         '''initialize instance'''
 
-        self.nodelist = set()       # type: Set[str]
-        self.grouplist = set()      # type: Set[str]
-        self.exclude_nodes = set()  # type: Set[str]
-        self.exclude_groups = set() # type: Set[str]
-        self.namemap = {}           # type: Dict[str, str]
+        self.nodelist = set()               # type: Set[str]
+        self.grouplist = set()              # type: Set[str]
+        self.exclude_nodes = set()          # type: Set[str]
+        self.exclude_groups = set()         # type: Set[str]
+        self.namemap = {}                   # type: Dict[str, str]
 
-    def add_node(self, nodelist):
-        # type: (str) -> None
+    def add_node(self, nodelist: str) -> None:
         '''add a node to the nodeset'''
 
-#        self.nodelist = set()
+        # self.nodelist = set()
         for node in synctool.range.split_nodelist(nodelist):
             if '[' in node:
                 self.nodelist |= set(synctool.range.expand(node))
             else:
                 self.nodelist.add(node)
 
-    def add_group(self, grouplist):
-        # type: (str) -> None
+    def add_group(self, grouplist: str) -> None:
         '''add a group to the nodeset'''
 
-#        self.grouplist = set()
+        # self.grouplist = set()
         for group in synctool.range.split_nodelist(grouplist):
             if '[' in group:
                 self.grouplist |= set(synctool.range.expand(group))
             else:
                 self.grouplist.add(group)
 
-    def exclude_node(self, nodelist):
-        # type: (str) -> None
+    def exclude_node(self, nodelist: str) -> None:
         '''remove a node from the nodeset'''
 
-#        self.exclude_nodes = set()
+        # self.exclude_nodes = set()
         for node in synctool.range.split_nodelist(nodelist):
             if '[' in node:
                 self.exclude_nodes |= set(synctool.range.expand(node))
             else:
                 self.exclude_nodes.add(node)
 
-    def exclude_group(self, grouplist):
-        # type: (str) -> None
+    def exclude_group(self, grouplist: str) -> None:
         '''remove a group from the nodeset'''
 
-#        self.exclude_groups = set()
+        # self.exclude_groups = set()
         for group in synctool.range.split_nodelist(grouplist):
             if '[' in group:
                 self.exclude_groups |= set(synctool.range.expand(group))
             else:
                 self.exclude_groups.add(group)
 
-    def addresses(self, silent=False):
-#pylint: disable=too-many-branches
-        # type: (bool) -> Optional[List[str]]
+    def addresses(self, silent: bool = False) -> Optional[List[str]]:
         '''return list of addresses of relevant nodes
         or None on error
         '''
+
+        # pylint: disable=too-many-branches
 
         # by default, work on default_nodeset
         if not self.nodelist and not self.grouplist:
@@ -171,8 +166,7 @@ class NodeSet:
 
         return addrs
 
-    def get_nodename_from_address(self, addr):
-        # type: (str) -> str
+    def get_nodename_from_address(self, addr: str) -> str:
         '''map the address back to a nodename'''
 
         if addr in self.namemap:
@@ -181,8 +175,7 @@ class NodeSet:
         return addr
 
 
-def make_default_nodeset():
-    # type: () -> None
+def make_default_nodeset() -> None:
     '''take the (temporary) DEFAULT_NODESET and expand it to
     the definitive DEFAULT_NODESET
     Return value: none, exit the program on error

@@ -15,14 +15,13 @@ import grp
 
 from typing import Dict
 
-CACHE_BY_UID = {}   # type: Dict[str, str]
-CACHE_BY_GID = {}   # type: Dict[str, str]
-CACHE_BY_USER = {}  # type: Dict[str, int]
-CACHE_BY_GROUP = {} # type: Dict[str, int]
+CACHE_BY_UID = {}       # type: Dict[str, str]
+CACHE_BY_GID = {}       # type: Dict[str, str]
+CACHE_BY_USER = {}      # type: Dict[str, int]
+CACHE_BY_GROUP = {}     # type: Dict[str, int]
 
 
-def pw_name(uid):
-    # type: (int) -> str
+def pw_name(uid: int) -> str:
     '''Returns username for uid, or "uid" when not found'''
 
     if uid < 0:
@@ -42,8 +41,7 @@ def pw_name(uid):
     return pwd_entry.pw_name
 
 
-def grp_name(gid):
-    # type: (int) -> str
+def grp_name(gid: int) -> str:
     '''Returns group for gid, or "gid" when not found'''
 
     if gid < 0:
@@ -63,8 +61,7 @@ def grp_name(gid):
     return grp_entry.gr_name
 
 
-def pw_uid(username):
-    # type: (str) -> int
+def pw_uid(username: str) -> int:
     '''Returns uid for a given username
     Throws KeyError when not found
     '''
@@ -84,8 +81,7 @@ def pw_uid(username):
     return pwd_entry.pw_uid
 
 
-def grp_gid(group):
-    # type: (str) -> int
+def grp_gid(group: str) -> int:
     '''Returns gid for a given group
     Throws KeyError when not found
     '''
