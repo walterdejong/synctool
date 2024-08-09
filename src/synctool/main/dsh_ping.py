@@ -61,7 +61,8 @@ def ping_node(addr: str) -> None:
     try:
         fpipe = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
                                  stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT).stdout
+                                 stderr=subprocess.STDOUT,
+                                 universal_newlines=True).stdout
     except OSError as err:
         error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return
@@ -70,6 +71,8 @@ def ping_node(addr: str) -> None:
     with fpipe:
         for line in fpipe:
             line = line.strip()
+            if not line:
+                continue
 
             # argh, we have to parse output here
             #
@@ -87,7 +90,6 @@ def ping_node(addr: str) -> None:
                     packets_received = int(arr[3])
                 except ValueError:
                     pass
-
                 break
 
             # some ping implementations say "hostname is alive"
@@ -95,9 +97,11 @@ def ping_node(addr: str) -> None:
             if len(arr) == 3 and arr[1] == 'is':
                 if arr[2] == 'alive':
                     packets_received = 100
+                    break
 
                 elif arr[2] == 'unreachable':
                     packets_received = -1
+                    break
 
     if packets_received > 0:
         print('%s: up' % node)
