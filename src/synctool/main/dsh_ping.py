@@ -15,7 +15,7 @@ import subprocess
 import getopt
 import shlex
 
-from typing import List
+from typing import List, Tuple
 
 from synctool import config, param
 import synctool.aggr
@@ -46,67 +46,76 @@ def ping_nodes(address_list: List[str]) -> None:
 def ping_node(addr: str) -> None:
     '''ping a single node'''
 
-    # pylint: disable=consider-using-with
-
     node = NODESET.get_nodename_from_address(addr)
     verbose('pinging %s' % node)
     unix_out('%s %s' % (param.PING_CMD, addr))
 
-    packets_received = 0
-
-    # execute ping command and show output with the nodename
-    cmd = '%s %s' % (param.PING_CMD, addr)
-    cmd_arr = shlex.split(cmd)
-
     try:
-        fpipe = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT,
-                                 universal_newlines=True).stdout
+        packets_received = 0
+
+        # execute ping command
+        cmd = '%s %s' % (param.PING_CMD, addr)
+        cmd_arr = shlex.split(cmd)
+        with subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT,
+                              universal_newlines=True) as proc:
+            assert proc.stdout is not None                          # this helps mypy
+            for line in proc.stdout:
+                packets_received, done = _parse_ping_output(line)
+                if done:
+                    break
+
+        if packets_received > 0:
+            print('%s: up' % node)
+        else:
+            print('%s: not responding' % node)
+
     except OSError as err:
         error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
-        return
 
-    assert fpipe is not None            # this helps mypy
-    with fpipe:
-        for line in fpipe:
-            line = line.strip()
-            if not line:
-                continue
 
-            # argh, we have to parse output here
-            #
-            # on BSD, ping says something like:
-            # "2 packets transmitted, 0 packets received, 100.0% packet loss"
-            #
-            # on Linux, ping says something like:
-            # "2 packets transmitted, 0 received, 100.0% packet loss, " \
-            # "time 1001ms"
+def _parse_ping_output(line: str) -> Tuple[int, bool]:
+    '''parses output of the ping command
+    Returns tuple: packets_received, found
 
-            arr = line.split()
-            if len(arr) > 3 and (arr[1] == 'packets' and
-                                 arr[2] == 'transmitted,'):
-                try:
-                    packets_received = int(arr[3])
-                except ValueError:
-                    pass
-                break
+    where 'found' indicates whether the text matched at all
+    When found is True, packets_received indicates
+    the state of the host:
+        > 0  : host is up
+        <= 0 : host is down
+    '''
 
-            # some ping implementations say "hostname is alive"
-            # or "hostname is unreachable"
-            if len(arr) == 3 and arr[1] == 'is':
-                if arr[2] == 'alive':
-                    packets_received = 100
-                    break
+    # on BSD, ping says something like:
+    # "2 packets transmitted, 0 packets received, 100.0% packet loss"
+    #
+    # on Linux, ping says something like:
+    # "2 packets transmitted, 0 received, 100.0% packet loss, " \
+    # "time 1001ms"
 
-                if arr[2] == 'unreachable':
-                    packets_received = -1
-                    break
+    line = line.strip()
+    if not line:
+        return 0, False
 
-    if packets_received > 0:
-        print('%s: up' % node)
-    else:
-        print('%s: not responding' % node)
+    arr = line.split()
+    if len(arr) > 3 and arr[1] == 'packets' and arr[2] == 'transmitted,':
+        try:
+            packets_received = int(arr[3])
+            return packets_received, True
+        except ValueError:
+            pass
+
+    # some ping implementations say "hostname is alive"
+    # or "hostname is unreachable"
+    if len(arr) == 3 and arr[1] == 'is':
+        if arr[2] == 'alive':
+            return 100, True
+
+        if arr[2] == 'unreachable':
+            return -1, True
+
+    # line not recognized
+    return 0, False
 
 
 def check_cmd_config() -> None:

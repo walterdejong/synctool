@@ -104,33 +104,27 @@ def github_api(url: str) -> Any:
     or None on error
     '''
 
-    # pylint: disable=consider-using-with
-
     verbose('loading URL %s' % url)
     try:
         # can not use 'with' statement with urlopen()..?
-        web = urllib.request.urlopen(url)
+        with urllib.request.urlopen(url) as web:
+            # parse JSON data at URL
+            data = json.load(web)
+
+        # this may be a list or a dict
+        # don't know and don't care at this point
+        return data
+
     except urllib.error.HTTPError as err:
         error('webserver at %s: %u %s' % (url, err.code, err.reason))
-        return None
 
     except urllib.error.URLError as err:
         error('failed to access %s: %s' % (url, str(err.reason)))
-        return None
 
     except OSError as err:
         error('failed to access %s: %s' % (url, err.strerror))
-        return None
 
-    try:
-        # parse JSON data at URL
-        data = json.load(web)
-    finally:
-        web.close()
-
-    # this may be a list or a dict
-    # don't know and don't care at this point
-    return data
+    return None
 
 
 def check() -> bool:

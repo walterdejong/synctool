@@ -276,15 +276,6 @@ def closelog() -> None:
     syslog.closelog()
 
 
-def _masterlog(msg: str) -> None:
-    '''log only locally (on the master node)'''
-
-    if DRY_RUN or not param.SYSLOGGING:
-        return
-
-    syslog.syslog(syslog.LOG_INFO | syslog.LOG_USER, msg)
-
-
 def log(msg: str) -> None:
     '''log message to syslog'''
 
@@ -299,13 +290,41 @@ def log(msg: str) -> None:
         _masterlog(msg)
 
 
+def _masterlog(msg: str) -> None:
+    '''log only locally (on the master node)'''
+
+    if DRY_RUN or not param.SYSLOGGING:
+        return
+
+    syslog.syslog(syslog.LOG_INFO | syslog.LOG_USER, msg)
+
+
+def _pass_output(line: str, nodename: str) -> None:
+    '''print output with nodename'''
+
+    # line may be empty; that's okay
+
+    # if output is a log line, pass it to the master's syslog
+    if line[:15] == '%synctool-log% ':
+        if line[15:] == '--':
+            pass
+        else:
+            _masterlog('%s: %s' % (nodename, line[15:]))
+    else:
+        # pass output on; simply use 'print' rather than 'stdout()'
+        if OPT_NODENAME:
+            print('%s: %s' % (nodename, line))
+        else:
+            # do not prepend the nodename of this node to the output
+            # if option --no-nodename was given
+            print(line)
+
+
 def run_with_nodename(cmd_arr: List[str], nodename: str) -> int:
     '''run command and show output with nodename
     It will run regardless of what DRY_RUN is
     Returns process return code or -1 on error
     '''
-
-    # pylint: disable=consider-using-with
 
     unix_out(' '.join(cmd_arr))
 
@@ -313,39 +332,25 @@ def run_with_nodename(cmd_arr: List[str], nodename: str) -> int:
     sys.stderr.flush()
 
     try:
-        proc = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT,
-                                universal_newlines=True)
+        with subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT,
+                              universal_newlines=True) as proc:
+            assert proc.stdout is not None                          # this helps mypy
+            for line in proc.stdout:
+                line = line.rstrip()
+                _pass_output(line, nodename)
+
+            proc.wait()
+            if proc.returncode != 0:
+                verbose('exit code %d' % proc.returncode)
+
+            return proc.returncode
+
     except OSError as err:
         stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
-        return -1
 
-    assert proc.stdout is not None      # this helps mypy
-    with proc.stdout:
-        for line in proc.stdout:
-            line = line.rstrip()
-
-            # if output is a log line, pass it to the master's syslog
-            if line[:15] == '%synctool-log% ':
-                if line[15:] == '--':
-                    pass
-                else:
-                    _masterlog('%s: %s' % (nodename, line[15:]))
-            else:
-                # pass output on; simply use 'print' rather than 'stdout()'
-                if OPT_NODENAME:
-                    print('%s: %s' % (nodename, line))
-                else:
-                    # do not prepend the nodename of this node to the output
-                    # if option --no-nodename was given
-                    print(line)
-
-    proc.wait()
-    if proc.returncode != 0:
-        verbose('exit code %d' % proc.returncode)
-
-    return proc.returncode
+    return -1
 
 
 def shell_command(cmd: str) -> int:
@@ -396,34 +401,27 @@ def exec_command(cmd_arr: List[str], silent: bool = False) -> int:
     Returns: return code of execute command or -1 on error
     '''
 
-    # pylint: disable=consider-using-with
-
     unix_out(' '.join(cmd_arr))
 
-    sys.stdout.flush()
-    sys.stderr.flush()
-
-    fd_devnull = None
-    if silent and not VERBOSE:
-        fd_devnull = open(os.devnull, 'w', encoding='utf-8')
-
     try:
-        if fd_devnull is not None:
-            ret = subprocess.call(cmd_arr, shell=False, stdout=fd_devnull,
-                                  stderr=fd_devnull)
+        sys.stdout.flush()
+        sys.stderr.flush()
+
+        if silent and not VERBOSE:
+            with open(os.devnull, 'w', encoding='utf-8') as fd_devnull:
+                ret = subprocess.call(cmd_arr, shell=False,
+                                      stdout=fd_devnull, stderr=fd_devnull)
         else:
             ret = subprocess.call(cmd_arr, shell=False)
+
+        sys.stdout.flush()
+        sys.stderr.flush()
+
+        verbose('exit code %d' % ret)
+
     except OSError as err:
         error('failed to exec %s: %s' % (cmd_arr[0], err.strerror))
         ret = -1
-    else:
-        verbose('exit code %d' % ret)
-
-    sys.stdout.flush()
-    sys.stderr.flush()
-
-    if fd_devnull is not None:
-        fd_devnull.close()
 
     return ret
 
