@@ -99,7 +99,7 @@ def ping_node(addr: str) -> None:
                     packets_received = 100
                     break
 
-                elif arr[2] == 'unreachable':
+                if arr[2] == 'unreachable':
                     packets_received = -1
                     break
 
