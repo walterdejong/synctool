@@ -58,34 +58,20 @@ def run_dsh(address_list: List[str], remote_cmd_arr: List[str]) -> None:
 
     global SSH_CMD_ARR, REMOTE_CMD_ARR, SYNC_IT                     # pylint: disable=global-statement
 
-    # if the command is under scripts/, assume its full path
-    # This is nice because scripts/ isn't likely to be in PATH
-    # It is moderately evil however, because it's not 100% correct
-    # but it's reliable enough to keep in here
-    full_path = synctool.lib.search_path(remote_cmd_arr[0])
-    if not full_path:
-        # command was not found in PATH
-        # look under scripts/
+    if os.sep not in remote_cmd_arr[0]:
+        # if the command is under scripts/, assume its full path
+        # This is nice because scripts/ isn't likely to be in PATH
+        # It is moderately evil however, because it's not 100% correct
+        # but it's reliable enough to keep in here
         full_path = os.path.join(param.SCRIPT_DIR, remote_cmd_arr[0])
+        if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
+            remote_cmd_arr[0] = full_path
+            # sync the script to the node
+            SYNC_IT = True
+
+    elif remote_cmd_arr[0][:len(param.SCRIPT_DIR)+1] == param.SCRIPT_DIR + os.sep:
         # sync the script to the node
         SYNC_IT = True
-    elif (full_path[:len(param.SCRIPT_DIR)+1] ==
-          param.SCRIPT_DIR + os.sep):
-        SYNC_IT = True
-
-    try:
-        if not (os.path.isfile(full_path) and os.access(full_path, os.X_OK)):
-            # not an executable file
-            # must be wrong, do not bother syncing it
-            # Note that syncing wrong paths with rsync --delete is dangerous
-            verbose('%s: not an executable file' % full_path)
-            SYNC_IT = False
-        else:
-            # found the command under scripts/
-            remote_cmd_arr[0] = full_path
-    except OSError as err:
-        verbose('%s: %s' % (full_path, err.strerror))
-        SYNC_IT = False
 
     SSH_CMD_ARR = shlex.split(param.SSH_CMD)
 
