@@ -41,17 +41,22 @@ ACTION = 0
 # list of packages given on the command-line
 PKG_LIST = []       # type: List[str]
 
-# list of Linux package managers: (Linux release file, package manager)
-LINUX_PACKAGE_MANAGERS = (('/etc/debian_version', 'apt-get'),
-                          ('/etc/SuSE-release', 'zypper'),
-                          ('/etc/redhat-release', 'yum'),
-                          ('/etc/arch-release', 'pacman'),
-                          ('/etc/gentoo-release', 'portage'),
+# map of /etc/os-release ID|ID_LIKE -> package manager
+PKGMGR_BY_OS_ID = {'alpine': 'apk',
+                   'arch': 'pacman',
+                   'debian': 'apt-get',
+                   'fedora': 'yum',
+                   'freebsd': 'pkg',
+                   'opensuse': 'zypper',
+                   'rhel': 'yum',
+                   'suse': 'zypper',
+                   'ubuntu': 'apt-get'}
+
+# list of other Linux package managers (that may or may not be supported yet)
+LINUX_PACKAGE_MANAGERS = (('/etc/gentoo-release', 'portage'),
                           ('/etc/slackware-version', 'swaret'),
-                          ('/etc/fedora-release', 'yum'),
                           ('/etc/yellowdog-release', 'yum'),
-                          ('/etc/mandrake-release', 'urpmi'),
-                          ('/etc/alpine-release', 'apk'))           # type: Sequence[Tuple[str, str]]
+                          ('/etc/mandrake-release', 'urpmi'))           # type: Sequence[Tuple[str, str]]
 
 
 def package_manager() -> SyncPkg:
@@ -100,6 +105,59 @@ def package_manager() -> SyncPkg:
     sys.exit(1)
 
 
+def detect_installer_from_os_release() -> str:
+    '''Attempt to detect the package manager from /etc/os-release
+    Returns the package manager string
+    Raises KeyError if unknown system
+    '''
+
+    try:
+        with open('/etc/os-release', encoding='utf-8') as file:
+            lines = file.readlines()
+
+        lineno = 0
+        for line in lines:
+            lineno += 1
+            line = line.strip()
+            if not line:
+                continue
+            if line[0] == '#':
+                continue
+
+            try:
+                var, value = line.split('=', maxsplit=1)
+            except ValueError:
+                verbose('error: /etc/os-release: error in line {}: {!r}'.format(lineno, line))
+                break
+
+            value = value.strip("'\"")
+
+            if var == 'ID':
+                try:
+                    distro = value
+                    pkgmgr = PKGMGR_BY_OS_ID[distro]
+                    verbose('os-release: {} uses package manager: {}'.format(distro, pkgmgr))
+                    return pkgmgr
+                except KeyError:
+                    # try ID_LIKE (if it is present)
+                    continue
+
+            elif var == 'ID_LIKE':
+                distro_list = value.split()
+                for distro in distro_list:
+                    try:
+                        pkgmgr = PKGMGR_BY_OS_ID[distro]
+                        verbose('os-release: {} uses package manager: {}'.format(distro, pkgmgr))
+                        return pkgmgr
+                    except KeyError:
+                        continue
+
+    except OSError as err:
+        verbose('error: /etc/os-release: {}'.format(str(err)))
+
+    raise KeyError('unable to determine package manager from /etc/os-release')
+
+
 def detect_installer() -> None:
     '''Attempt to detect the operating system and package system'''
 
@@ -119,6 +177,13 @@ def detect_installer() -> None:
     #   There are ports, fink, brew. I prefer 'brew'
     # - FreeBSD has pkg and ports
     # - Most other BSDs have pkg_add and ports
+
+    try:
+        synctool.param.PACKAGE_MANAGER = detect_installer_from_os_release()
+        return
+    except KeyError:
+        # try legacy method
+        pass
 
     platform = os.uname()[0]
 
