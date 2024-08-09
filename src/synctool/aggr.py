@@ -83,8 +83,9 @@ def run(cmd_arr: List[str]) -> bool:
 
     try:
         with subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
-                              stdout=subprocess.PIPE, universal_newlines=True,
-                              stderr=subprocess.STDOUT) as proc:
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT,
+                              universal_newlines=True) as proc:
             assert proc.stdout is not None      # this helps mypy
             with proc.stdout:
                 aggregate(proc.stdout)

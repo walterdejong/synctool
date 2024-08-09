@@ -236,9 +236,10 @@ def detect_ssh() -> int:
     unix_out(' '.join(cmd_arr))
     try:
         # OpenSSH may print version information on stderr
-        proc = subprocess.Popen(cmd_arr, shell=False, stdout=subprocess.PIPE,
-                                universal_newlines=True,
-                                stderr=subprocess.STDOUT)
+        proc = subprocess.Popen(cmd_arr, shell=False,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT,
+                                universal_newlines=True)
     except OSError as err:
         error('failed to execute %s: %s' % (cmd_arr[0], err.strerror))
         SSH_VERSION = -1

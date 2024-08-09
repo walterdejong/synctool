@@ -314,8 +314,9 @@ def run_with_nodename(cmd_arr: List[str], nodename: str) -> int:
 
     try:
         proc = subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
-                                stdout=subprocess.PIPE, universal_newlines=True,
-                                stderr=subprocess.STDOUT)
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT,
+                                universal_newlines=True)
     except OSError as err:
         stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return -1
