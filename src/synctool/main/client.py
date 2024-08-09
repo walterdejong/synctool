@@ -328,6 +328,12 @@ def _run_rsync_purge(cmd_arr: List[str]) -> None:
             stdout('%s mismatch (purge)' % prettypath(path))
 
 
+def overlay_files() -> None:
+    '''run the overlay function'''
+
+    synctool.overlay.visit(param.OVERLAY_DIR, _overlay_callback)
+
+
 def _overlay_callback(obj: SyncObject, pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> Tuple[bool, bool]:
     '''compare files and run post-script if needed
     Returns pair: True (continue), updated (data or metadata)
@@ -342,10 +348,10 @@ def _overlay_callback(obj: SyncObject, pre_dict: Dict[str, str], post_dict: Dict
     return True, updated
 
 
-def overlay_files() -> None:
-    '''run the overlay function'''
+def delete_files() -> None:
+    '''run the delete/ dir'''
 
-    synctool.overlay.visit(param.OVERLAY_DIR, _overlay_callback)
+    synctool.overlay.visit(param.DELETE_DIR, _delete_callback)
 
 
 def _delete_callback(obj: SyncObject, _pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> Tuple[bool, bool]:
@@ -379,10 +385,11 @@ def _delete_callback(obj: SyncObject, _pre_dict: Dict[str, str], post_dict: Dict
     return True, False
 
 
-def delete_files() -> None:
-    '''run the delete/ dir'''
+def erase_saved() -> None:
+    '''List and delete *.saved backup files'''
 
-    synctool.overlay.visit(param.DELETE_DIR, _delete_callback)
+    synctool.overlay.visit(param.OVERLAY_DIR, _erase_saved_callback)
+    synctool.overlay.visit(param.DELETE_DIR, _erase_saved_callback)
 
 
 def _erase_saved_callback(obj: SyncObject, _pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> Tuple[bool, bool]:
@@ -407,13 +414,6 @@ def _erase_saved_callback(obj: SyncObject, _pre_dict: Dict[str, str], post_dict:
         return True, True
 
     return True, False
-
-
-def erase_saved() -> None:
-    '''List and delete *.saved backup files'''
-
-    synctool.overlay.visit(param.OVERLAY_DIR, _erase_saved_callback)
-    synctool.overlay.visit(param.DELETE_DIR, _erase_saved_callback)
 
 
 def visit_purge_single(callback: Callable[[SyncObject, Dict[str, str], Dict[str, str]], Tuple[bool, bool]]) -> None:
@@ -934,15 +934,10 @@ def get_options() -> int:
     return action
 
 
-@catch_signals
-def main() -> int:
-    '''run the program'''
-
-    # pylint: disable=too-many-statements,too-many-branches
-
-    param.init()
-
-    action = get_options()
+def _init_node() -> None:
+    '''initialize my nodename
+    Exits the program on error
+    '''
 
     config.init_mynodename()
 
@@ -962,6 +957,10 @@ def main() -> int:
         # you can still run synctool-pkg on the client by hand
         warning('node %s is disabled in %s' %
                 (param.NODENAME, param.CONF_FILE))
+
+
+def _init_startup() -> None:
+    '''print startup messages; print dryrun message'''
 
     if synctool.lib.UNIX_CMD:
         localt = time.localtime(time.time())
@@ -1002,12 +1001,36 @@ def main() -> int:
         verbose('my hostname: %s' % param.HOSTNAME)
         verbose('rootdir: %s' % param.ROOTDIR)
 
+
+def _init_environment() -> None:
+    '''initialize environment variables
+    pre/post scripts that run under synctool will see these env vars
+    '''
+
     os.environ['SYNCTOOL_NODE'] = param.NODENAME
     os.environ['SYNCTOOL_ROOT'] = param.ROOTDIR
+
+
+def _init_umask() -> None:
+    '''set safe default umask'''
 
     unix_out('umask 077')
     unix_out('')
     os.umask(0o77)
+
+
+@catch_signals
+def main() -> int:
+    '''run the program'''
+
+    param.init()
+
+    action = get_options()
+
+    _init_node()
+    _init_startup()
+    _init_environment()
+    _init_umask()
 
     if action == ACTION_DIFF:
         diff_files()
