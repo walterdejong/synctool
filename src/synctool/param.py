@@ -139,7 +139,7 @@ TERSE_COLORS = {'info': 'default',
                 'ok': 'default'}
 
 # list of supported package managers
-KNOWN_PACKAGE_MANAGERS = ('apt-get', 'yum', 'zypper', 'brew', 'pacman',
+KNOWN_PACKAGE_MANAGERS = ('apk', 'apt-get', 'yum', 'zypper', 'brew', 'pacman',
                           # 'urpmi', 'portage', 'port', 'swaret',
                           'pkg', 'bsdpkg')
 

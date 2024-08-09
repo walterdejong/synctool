@@ -129,6 +129,7 @@ ignore .*.swp
 # You can still override this setting from the command-line when invoking
 # synctool-pkg.
 #
+#package_manager apk
 #package_manager apt-get
 #package_manager yum
 #package_manager zypper

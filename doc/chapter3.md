@@ -454,6 +454,7 @@ detect the appropriate package manager for the operating system of the node.
 If detection fails, you may force the package manager on the command-line or
 in `synctool.conf`:
 
+    #package_manager apk
     package_manager apt-get
     #package_manager yum
     #package_manager zypper

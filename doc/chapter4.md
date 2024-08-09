@@ -210,6 +210,7 @@ synctool's configuration file.
 
   Valid values for `package_manager` are:
 
+        apk
         apt-get
         yum
         zypper

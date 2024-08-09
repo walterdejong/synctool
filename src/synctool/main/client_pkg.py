@@ -50,7 +50,8 @@ LINUX_PACKAGE_MANAGERS = (('/etc/debian_version', 'apt-get'),
                           ('/etc/slackware-version', 'swaret'),
                           ('/etc/fedora-release', 'yum'),
                           ('/etc/yellowdog-release', 'yum'),
-                          ('/etc/mandrake-release', 'urpmi'))   # type: Sequence[Tuple[str, str]]
+                          ('/etc/mandrake-release', 'urpmi'),
+                          ('/etc/alpine-release', 'apk'))           # type: Sequence[Tuple[str, str]]
 
 
 def package_manager() -> SyncPkg:
