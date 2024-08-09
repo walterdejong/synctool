@@ -139,9 +139,9 @@ TERSE_COLORS = {'info': 'default',
                 'ok': 'default'}
 
 # list of supported package managers
-KNOWN_PACKAGE_MANAGERS = ('apk', 'apt-get', 'yum', 'zypper', 'brew', 'pacman',
-                          # 'urpmi', 'portage', 'port', 'swaret',
-                          'pkg', 'bsdpkg')
+KNOWN_PACKAGE_MANAGERS = ('apk', 'apt-get', 'brew', 'bsdpkg', 'dnf',
+                          'pacman', 'pkg', 'yum', 'zypper')
+# 'urpmi', 'portage', 'port', 'swaret', 'xbps', 'nix'
 
 ORIG_UMASK = 0o22
 

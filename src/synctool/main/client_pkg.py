@@ -45,10 +45,10 @@ PKG_LIST = []       # type: List[str]
 PKGMGR_BY_OS_ID = {'alpine': 'apk',
                    'arch': 'pacman',
                    'debian': 'apt-get',
-                   'fedora': 'yum',
+                   'fedora': 'dnf',
                    'freebsd': 'pkg',
                    'opensuse': 'zypper',
-                   'rhel': 'yum',
+                   'rhel': 'dnf',
                    'suse': 'zypper',
                    'ubuntu': 'apt-get'}
 
