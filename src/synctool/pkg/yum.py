@@ -46,7 +46,6 @@ class SyncPkgYum(synctool.pkgclass.SyncPkg):
         # yum has no 'update' command, but will fetch a new database
         # next time when it has no metadata
 
-        synctool.lib.shell_command('yum -y clean headers')
         synctool.lib.shell_command('yum -y clean metadata')
 
     def upgrade(self) -> None:
