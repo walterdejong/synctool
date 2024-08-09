@@ -10,8 +10,6 @@
 
 '''apk package manager (alpine Linux)'''
 
-import os
-
 from typing import List, Optional
 
 import synctool.lib
