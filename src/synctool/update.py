@@ -187,7 +187,7 @@ def download() -> bool:
     Returns True on success, False on error
     '''
 
-    # pylint: disable=too-many-return-statements,consider-using-with
+    # pylint: disable=too-many-return-statements
 
     info = ReleaseInfo()
     if not info.load():
@@ -197,58 +197,53 @@ def download() -> bool:
     download_filename = make_local_filename_for_version(info.version)
     download_bytes = 0
     try:
-        web = urllib.request.urlopen(info.url)
+        with urllib.request.urlopen(info.url) as web:
+            # get file size: Content-Length
+            try:
+                totalsize = int(web.info().getheaders('Content-Length')[0])
+            except (ValueError, KeyError, IndexError):
+                error('invalid response from webserver at %s' % info.url)
+                return False
+
+            # download the file
+            try:
+                # create download_filename
+                with open(download_filename, 'w+b') as fdownld:
+                    print_progress(download_filename, totalsize, 0)
+                    download_bytes = 0
+
+                    while True:
+                        data = web.read(4096)
+                        if not data:
+                            break
+
+                        download_bytes += len(data)
+                        print_progress(download_filename,
+                                       totalsize, download_bytes)
+                        fdownld.write(data)
+
+                if download_bytes < totalsize:
+                    print()
+                    error('failed to download %s' % info.url)
+                    return False
+
+                download_bytes += 100    # force 100% in the progress counter
+                print_progress(download_filename, totalsize, download_bytes)
+                return True
+
+            except OSError as err:
+                error('failed to write file %s: %s' % (download_filename,
+                                                       err.strerror))
+
     except urllib.error.HTTPError as err:
         error('webserver at %s: %u %s' % (info.url, err.code, err.reason))
-        return False
 
     except urllib.error.URLError as err:
         error('failed to access %s: %s' % (info.url, str(err.reason)))
-        return False
 
     except OSError as err:
         error('failed to access %s: %s' % (info.url, err.strerror))
-        return False
 
-    try:
-        # get file size: Content-Length
-        try:
-            totalsize = int(web.info().getheaders('Content-Length')[0])
-        except (ValueError, KeyError, IndexError):
-            error('invalid response from webserver at %s' % info.url)
-            return False
-
-        # create download_filename
-        try:
-            fdownld = open(download_filename, 'w+b')
-        except OSError as err:
-            error('failed to create file %s: %s' % (download_filename,
-                                                    err.strerror))
-            return False
-
-        with fdownld:
-            print_progress(download_filename, totalsize, 0)
-            download_bytes = 0
-
-            while True:
-                data = web.read(4096)
-                if not data:
-                    break
-
-                download_bytes += len(data)
-                print_progress(download_filename, totalsize, download_bytes)
-
-                fdownld.write(data)
-    finally:
-        web.close()
-
-    if download_bytes < totalsize:
-        print()
-        error('failed to download %s' % info.url)
-        return False
-
-    download_bytes += 100    # force 100% in the progress counter
-    print_progress(download_filename, totalsize, download_bytes)
-    return True
+    return False
 
 # EOB

@@ -124,7 +124,7 @@ def setup_master(node_list: List[Tuple[str, str]], persist: Optional[str]) -> bo
     Returns True on success, False on error
     '''
 
-    # pylint: disable=too-many-statements,too-many-branches,consider-using-with
+    # pylint: disable=too-many-statements,too-many-branches
 
     detect_ssh()
     assert SSH_VERSION is not None
@@ -182,6 +182,11 @@ def setup_master(node_list: List[Tuple[str, str]], persist: Optional[str]) -> bo
         # start in background
         unix_out(' '.join(cmd_arr))
         try:
+            # pylint: disable=consider-using-with
+            # Note, we can not use the with-statement here
+            # because we make a list of process pipes
+            # and the context manager would close the pipe too early
+
             proc = subprocess.Popen(cmd_arr, shell=False)
         except OSError as err:
             error('failed to execute %s: %s' % (cmd_arr[0], err.strerror))
@@ -221,32 +226,37 @@ def detect_ssh() -> int:
     This routine only works for OpenSSH; otherwise return -1
     '''
 
-    # pylint: disable=global-statement,consider-using-with
+    # pylint: disable=global-statement
 
     global SSH_VERSION
 
     if SSH_VERSION is not None:
         return SSH_VERSION
 
-    cmd_arr = shlex.split(synctool.param.SSH_CMD)
-    # only use first item: the path to the ssh command
-    cmd_arr = cmd_arr[:1]
-    cmd_arr.append('-V')
+    data = ''
 
-    unix_out(' '.join(cmd_arr))
     try:
+        cmd_arr = shlex.split(synctool.param.SSH_CMD)
+        # only use first item: the path to the ssh command
+        cmd_arr = cmd_arr[:1]
+        cmd_arr.append('-V')
+
+        unix_out(' '.join(cmd_arr))
+
         # OpenSSH may print version information on stderr
-        proc = subprocess.Popen(cmd_arr, shell=False,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT,
-                                universal_newlines=True)
+        with subprocess.Popen(cmd_arr, shell=False,
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT,
+                              universal_newlines=True) as proc:
+            # stderr was redirected to stdout
+            data, _ = proc.communicate()
+            proc.wait()
+
     except OSError as err:
         error('failed to execute %s: %s' % (cmd_arr[0], err.strerror))
         SSH_VERSION = -1
         return SSH_VERSION
 
-    # stderr was redirected to stdout
-    data, _ = proc.communicate()
     if not data:
         SSH_VERSION = -1
         return SSH_VERSION
