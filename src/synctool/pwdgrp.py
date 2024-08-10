@@ -15,10 +15,10 @@ import grp
 
 from typing import Dict
 
-CACHE_BY_UID = {}       # type: Dict[str, str]
-CACHE_BY_GID = {}       # type: Dict[str, str]
-CACHE_BY_USER = {}      # type: Dict[str, int]
-CACHE_BY_GROUP = {}     # type: Dict[str, int]
+CACHE_BY_UID: Dict[str, str] = {}
+CACHE_BY_GID: Dict[str, str] = {}
+CACHE_BY_USER: Dict[str, int] = {}
+CACHE_BY_GROUP: Dict[str, int] = {}
 
 
 def pw_name(uid: int) -> str:

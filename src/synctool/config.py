@@ -263,7 +263,7 @@ def get_my_groups() -> List[str]:
 def get_nodes_in_groups(groups: Union[List[str], Set[str]]) -> Set[str]:
     '''returns a set of nodes that are in a set or list of groups'''
 
-    nodeset = set()   # type: Set[str]
+    nodeset: Set[str] = set()
 
     for group in groups:
         for node, group_list in synctool.param.NODES.items():

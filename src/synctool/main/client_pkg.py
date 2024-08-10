@@ -14,7 +14,7 @@ import os
 import sys
 import getopt
 
-from typing import List, Sequence, Tuple
+from typing import List
 from synctool.pkgclass import SyncPkg
 
 import synctool.config
@@ -39,7 +39,7 @@ ACTION_CLEAN = 6
 ACTION = 0
 
 # list of packages given on the command-line
-PKG_LIST = []       # type: List[str]
+PKG_LIST: List[str] = []
 
 # map of /etc/os-release ID|ID_LIKE -> package manager
 PKGMGR_BY_OS_ID = {'alpine': 'apk',
@@ -56,7 +56,7 @@ PKGMGR_BY_OS_ID = {'alpine': 'apk',
 LINUX_PACKAGE_MANAGERS = (('/etc/gentoo-release', 'portage'),
                           ('/etc/slackware-version', 'swaret'),
                           ('/etc/yellowdog-release', 'yum'),
-                          ('/etc/mandrake-release', 'urpmi'))           # type: Sequence[Tuple[str, str]]
+                          ('/etc/mandrake-release', 'urpmi'))
 
 
 def package_manager() -> SyncPkg:

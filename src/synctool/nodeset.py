@@ -39,11 +39,11 @@ class NodeSet:
     def __init__(self) -> None:
         '''initialize instance'''
 
-        self.nodelist = set()               # type: Set[str]
-        self.grouplist = set()              # type: Set[str]
-        self.exclude_nodes = set()          # type: Set[str]
-        self.exclude_groups = set()         # type: Set[str]
-        self.namemap = {}                   # type: Dict[str, str]
+        self.nodelist: Set[str] = set()
+        self.grouplist: Set[str] = set()
+        self.exclude_nodes: Set[str] = set()
+        self.exclude_groups: Set[str] = set()
+        self.namemap: Dict[str, str] = {}
 
     def add_node(self, nodelist: str) -> None:
         '''add a node to the nodeset'''
@@ -126,7 +126,7 @@ class NodeSet:
         if not self.nodelist:
             return []
 
-        addrs = []  # type: List[str]
+        addrs: List[str] = []
 
         ignored_nodes = self.nodelist & param.IGNORE_GROUPS
         self.nodelist -= ignored_nodes

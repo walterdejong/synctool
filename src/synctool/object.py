@@ -308,8 +308,7 @@ class VNodeFile(VNode):
 class VNodeDir(VNode):
     '''vnode for a directory'''
 
-#    def __init__(self, filename, statbuf, exists):
-#        # type: (str, SyncStat, bool) -> None
+#    def __init__(self, filename: str, statbuf: SyncStat, exists: bool) -> None:
 #        '''initialize instance'''
 #
 #        super(VNodeDir, self).__init__(filename, statbuf, exists)
@@ -479,8 +478,7 @@ class VNodeLink(VNode):
 class VNodeFifo(VNode):
     '''vnode for a fifo'''
 
-#    def __init__(self, filename, statbuf, exists):
-#        # type: (str, SyncStat, bool) -> None
+#    def __init__(self, filename: str, statbuf: SyncStat, exists: bool) -> None:
 #        '''initialize instance'''
 #
 #        super(VNodeFifo, self).__init__(filename, statbuf, exists)

@@ -18,7 +18,7 @@ import errno
 import shlex
 import syslog
 
-from typing import List, Dict, Sequence, Optional
+from typing import List, Optional
 
 from synctool import param
 
@@ -35,7 +35,7 @@ MASTERLOG = False
 OPT_NODENAME = True
 
 MONTHS = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')     # type: Sequence[str]
+          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
 
 # enums for terse output
 TERSE_INFO = 0
@@ -58,7 +58,7 @@ TERSE_OK = 16
 
 TERSE_TXT = ('info', 'WARN', 'ERROR', 'FAIL',
              'sync', 'link', 'mkdir', 'rm', 'chown', 'chmod', 'exec',
-             'upload', 'new', 'type', 'DRYRUN', 'FIXING', 'OK')     # type: Sequence[str]
+             'upload', 'new', 'type', 'DRYRUN', 'FIXING', 'OK')
 
 COLORMAP = {'black': 30,
             'darkgray': 30,
@@ -70,7 +70,7 @@ COLORMAP = {'black': 30,
             'cyan': 36,
             'white': 37,
             'bold': 1,
-            'default': 0}   # type: Dict[str, int]
+            'default': 0}
 
 
 def verbose(msg: str) -> None:

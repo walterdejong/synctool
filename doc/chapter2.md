@@ -8,7 +8,7 @@
 -----------------------------
 synctool depends on a number of (fairly standard) programs:
 
-* [python3][1] version 3.5 or better
+* [python3][1] version 3.6 or better
 * [ssh][2], preferably OpenSSH version 5.6 or better
 * [rsync][3]
 * `ping`, or you can configure [fping][4] later

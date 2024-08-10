@@ -28,8 +28,8 @@ from typing import Dict
 # They can't be found without the launcher, and this program is small anyway
 
 # caches for usernames/groupnames by uid/gid
-UID_CACHE = {}      # type: Dict[str, str]
-GID_CACHE = {}      # type: Dict[str, str]
+UID_CACHE: Dict[str, str] = {}
+GID_CACHE: Dict[str, str] = {}
 
 
 def print_stat(filename: str, top: bool = True) -> None:

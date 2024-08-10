@@ -46,8 +46,8 @@ OPT_AGGREGATE = False
 OPT_CHECK_UPDATE = False
 OPT_DOWNLOAD = False
 
-PASS_ARGS = []          # type: List[str]
-MASTER_OPTS = []        # type: List[str]
+PASS_ARGS: List[str] = []
+MASTER_OPTS: List[str] = []
 
 UPLOAD_FILE = synctool.upload.UploadFile()
 

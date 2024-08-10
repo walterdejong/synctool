@@ -35,14 +35,14 @@ NODESET = synctool.nodeset.NodeSet()
 
 DESTDIR = ''
 OPT_AGGREGATE = False
-MASTER_OPTS = []        # type: List[str]
-DSH_CP_OPTIONS = ''     # type: str
+MASTER_OPTS: List[str] = []
+DSH_CP_OPTIONS = ''
 OPT_PURGE = False
 
 # ugly globals help parallelism
-DSH_CP_CMD_ARR = []     # type: List[str]
-SOURCE_LIST = []        # type: List[str]
-FILES_STR = ''          # type: str
+DSH_CP_CMD_ARR: List[str] = []
+SOURCE_LIST: List[str] = []
+FILES_STR = ''
 
 
 def run_remote_copy(address_list: List[str], files: List[str]) -> None:
@@ -53,7 +53,7 @@ def run_remote_copy(address_list: List[str], files: List[str]) -> None:
     global DSH_CP_CMD_ARR, SOURCE_LIST, FILES_STR                   # pylint: disable=global-statement
 
     errs = 0
-    sourcelist = []     # type: List[str]
+    sourcelist: List[str] = []
     for filename in files:
         if not filename:
             continue

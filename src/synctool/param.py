@@ -67,20 +67,20 @@ TERSE = False
 SYNC_TIMES = False
 IGNORE_DOTFILES = False
 IGNORE_DOTDIRS = False
-IGNORE_FILES = set()                # type: Set[str]
-IGNORE_FILES_WITH_WILDCARDS = []    # type: List[str]
+IGNORE_FILES: Set[str] = set()
+IGNORE_FILES_WITH_WILDCARDS: List[str] = []
 
 # default_nodeset parameter in the config file
 # warning: make_default_nodeset() is only called by commands that are
 # supposed to run on the master node
 # The client commands do not expand/set DEFAULT_NODESET
-DEFAULT_NODESET = set(['all'])      # type: Set[str]
+DEFAULT_NODESET: Set[str] = set(['all'])
 
 # the master's fqdn hostname
 MASTER = ''
 
 # set of slaves by nodename
-SLAVES = set()              # type: Set[str]
+SLAVES: Set[str] = set()
 
 # NODES is a dict of nodes
 # each node is a list of groups, ordered by importance;
@@ -88,32 +88,32 @@ SLAVES = set()              # type: Set[str]
 #
 #   NODES[node] -> [ list of groups ]
 #
-NODES = {}                  # type: Dict[str, List[str]]
+NODES: Dict[str, List[str]] = {}
 
 # dict of ipaddresses by nodename
 #
 #   IPADDRESSES[node] -> ipaddress
 #
-IPADDRESSES = {}            # type: Dict[str, str]
+IPADDRESSES: Dict[str, str] = {}
 
 # compound groups are lists of groups, in order of importance
 #
 #   GROUP_DEFS[compound] -> [ list of groups ]
 #   GROUP_DEFS[compound] may be None
 #
-GROUP_DEFS = {}             # type: Dict[str, Optional[List[str]]]
+GROUP_DEFS: Dict[str, Optional[List[str]]] = {}
 
 # set of ignored groups and nodes
-IGNORE_GROUPS = set()       # type: Set[str]
+IGNORE_GROUPS: Set[str] = set()
 
 # list of my groups, ordered by importance
-MY_GROUPS = []             # type: List[str]
+MY_GROUPS: List[str] = []
 
 # set of all known groups
-ALL_GROUPS = set([])        # type: Set[str]
+ALL_GROUPS: Set[str] = set([])
 
 # set of nodes that don't want an rsync copy
-NO_RSYNC = set()            # type: Set[str]
+NO_RSYNC: Set[str] = set()
 
 # colorize output
 COLORIZE = True

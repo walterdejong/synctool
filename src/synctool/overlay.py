@@ -62,7 +62,8 @@ def _toplevel(overlay: str) -> List[str]:
     # the tuples are (fullpath, importance)
     # the list of paths gets sorted by importance; key=item[1]
 
-    arr = []    # type: List[Tuple[str, int]]
+    arr: List[Tuple[str, int]] = []
+
     for entry in os.listdir(overlay):
         fullpath = os.path.join(overlay, entry)
         try:
@@ -242,8 +243,8 @@ def _walk_subtree(src_dir: str, dest_dir: str, duplicates: Set[str],
 
     arr.sort(key=cmp_to_key(_sort_by_importance_post_first))
 
-    pre_dict = {}       # type: Dict[str, str]
-    post_dict = {}      # type: Dict[str, str]
+    pre_dict: Dict[str, str] = {}
+    post_dict: Dict[str, str] = {}
     dir_changed = False
 
     for obj, importance in arr:
@@ -365,7 +366,7 @@ def visit(overlay: str, callback: Callable[[SyncObject, Dict[str, str], Dict[str
     callback must return a two booleans: ok, updated
     '''
 
-    duplicates = set()  # type: Set[str]
+    duplicates: Set[str] = set()
 
     for direct in _toplevel(overlay):
         okay, _ = _walk_subtree(direct, os.sep, duplicates, callback)

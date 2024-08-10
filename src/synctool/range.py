@@ -21,7 +21,7 @@ or just a string "node-[10].sub[20].domain.org"
 import re
 from functools import cmp_to_key
 
-from typing import List, Tuple, Pattern, Sequence, Any
+from typing import List, Sequence, Tuple, Any
 
 # a node expression may look like 'node1-[1,2,8-10/2]-mgmt'
 # or something somewhat resembling that
@@ -29,34 +29,34 @@ from typing import List, Tuple, Pattern, Sequence, Any
 # separated by comma's
 # The regex here is not super strict, but it suffices to split a line
 SPLIT_EXPR = re.compile(r'([a-zA-Z0-9_+-]+\[\d+[0-9,/-]*\][a-zA-Z0-9_+-]*|'
-                        r'[a-zA-Z0-9_+-]+)')    # type: Pattern
+                        r'[a-zA-Z0-9_+-]+)')
 
 # This regex is used to take apart a single node range expression
 NODE_EXPR = re.compile(r'([a-zA-Z][a-zA-Z0-9_+-]*)'
                        r'\[(\d+[0-9,/-]*)\]'
-                       r'([a-zA-Z0-9_+-]*)$')   # type: Pattern
+                       r'([a-zA-Z0-9_+-]*)$')
 
 # match sequence notation "192.168.1.[200]" or "node[10].domain.org"
 # supports hex for IPv6
-MATCH_SEQ = re.compile(r'([^[]*)\[([0-9a-f]+)\](.*)')   # type: Pattern
+MATCH_SEQ = re.compile(r'([^[]*)\[([0-9a-f]+)\](.*)')
 
 # these look pretty naive, but note that they include brackets for
 # sequence notation: automated numbering of sequences
 # It's for recognising a pattern, not for checking validity of IP addresses
-MATCH_IPv4 = re.compile(r'^[0-9\.\[\]]+$')      # type: Pattern
-MATCH_IPv6 = re.compile(r'^[0-9a-f:\[\]]+$')    # type: Pattern
-MATCH_IPv6_v4 = re.compile(r'^[0-9a-f:\[\]]+:[0-9\.\[\]]+$')        # type: Pattern
-SPLIT_IPv6_v4 = re.compile(r'(?=[0-9a-f:\[\]]+):(?=[0-9\.\[\]]+)')  # type: Pattern
+MATCH_IPv4 = re.compile(r'^[0-9\.\[\]]+$')
+MATCH_IPv6 = re.compile(r'^[0-9a-f:\[\]]+$')
+MATCH_IPv6_v4 = re.compile(r'^[0-9a-f:\[\]]+:[0-9\.\[\]]+$')
+SPLIT_IPv6_v4 = re.compile(r'(?=[0-9a-f:\[\]]+):(?=[0-9\.\[\]]+)')
 
 # this matches nodenames like "n8", "r1n8", "r1n8-mgmt"
 # and is used by compress()
 # It works like: "head,number,tail" or "prefix-number-postfix"
 COMPRESSOR = re.compile(r'^([a-zA-Z0-9_+-]*[a-zA-Z_+-]+)'
                         r'(\d+)'
-                        r'([a-zA-Z_+-]*)$')     # type: Pattern
+                        r'([a-zA-Z_+-]*)$')
 
 # state used for automatic numbering of IP ranges
-_EXPAND_SEQ = 0     # type: int
+_EXPAND_SEQ = 0
 
 
 class RangeSyntaxError(Exception):
@@ -283,9 +283,11 @@ def compress(nodelist: List[str]) -> str:
     # pylint: disable=too-many-statements, too-many-branches, too-many-locals
 
     # make all_grouped a list of lists, of grouped splitted nodenames
-    all_grouped = []    # type: List[List[Tuple[str, str, str, int, str]]]
-    grouped = []        # type: List[Tuple[str, str, str, int, str]]
+    all_grouped: List[List[Tuple[str, str, str, int, str]]] = []
+    grouped: List[Tuple[str, str, str, int, str]] = []
+
     prev_prefix = prev_postfix = None
+
     for node in uniq(nodelist):
         # try to match a number in the nodename
         matnode = COMPRESSOR.match(node)

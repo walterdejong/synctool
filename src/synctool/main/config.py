@@ -31,7 +31,7 @@ ACTION = 0
 ACTION_OPTION = ''
 ARG_NODENAMES = ''
 ARG_GROUPS = ''
-ARG_CMDS = []           # type: List[str]
+ARG_CMDS: List[str] = []
 ARG_EXPAND = ''
 
 # these are enums for the "list" command-line options
@@ -119,7 +119,7 @@ def list_nodes(nodelist: str) -> None:
         # error message already printed
         sys.exit(1)
 
-    groups = []     # type: List[str]
+    groups: List[str] = []
     for node in nodeset.nodelist:
         if OPT_IPADDRESS or OPT_RSYNC:
             out = ''

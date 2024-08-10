@@ -38,7 +38,7 @@ ACTION_DIFF = 1
 ACTION_ERASE_SAVED = 2
 ACTION_REFERENCE = 3
 
-SINGLE_FILES = []   # type: List[str]
+SINGLE_FILES: List[str] = []
 
 
 def generate_template(obj: SyncObject, post_dict: Dict[str, str]) -> bool:

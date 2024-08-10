@@ -27,7 +27,7 @@ def aggregate(fresult: IO) -> None:
 
     lines = [x.strip() for x in lines]
 
-    output_per_node = {}        # type: Dict[str, List[str]]
+    output_per_node: Dict[str, List[str]] = {}
 
     for line in lines:
         arr = line.split(':', 1)

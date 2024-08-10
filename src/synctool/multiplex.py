@@ -15,15 +15,14 @@ import re
 import shlex
 import subprocess
 
-from typing import List, Tuple, Pattern, Optional
+from typing import List, Tuple, Optional
 
 import synctool.lib
 from synctool.lib import verbose, error, warning, unix_out
 import synctool.param
 import synctool.syncstat
 
-SSH_VERSION = None      # type: Optional[int]
-MATCH_SSH_VERSION = re.compile(r'^OpenSSH\_(\d+)\.(\d+)')   # type: Pattern
+SSH_VERSION: Optional[int] = None
 
 
 def _make_control_path(nodename: str) -> Optional[str]:
@@ -215,6 +214,9 @@ in another terminal
             print('ssh master processes already running')
 
     return errors == 0
+
+
+MATCH_SSH_VERSION = re.compile(r'^OpenSSH\_(\d+)\.(\d+)')
 
 
 def detect_ssh() -> int:

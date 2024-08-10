@@ -34,7 +34,7 @@ NODESET = synctool.nodeset.NodeSet()
 
 OPT_AGGREGATE = False
 
-MASTER_OPTS = []    # type: List[str]
+MASTER_OPTS: List[str] = []
 
 
 def ping_nodes(address_list: List[str]) -> None:

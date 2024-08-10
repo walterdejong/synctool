@@ -22,27 +22,12 @@ import os
 import sys
 import re
 
-from typing import List, Dict, Tuple, Pattern
+from typing import List, Dict, Tuple
 
 from synctool import param
 import synctool.lib
 from synctool.lib import stderr
 import synctool.range
-
-# this allows alphanumeric concatenated by underscore, minus, or plus symbol
-# and no other characters
-# Valid names are: node1 node1-10 node_10_0_0_2 node1+node2
-SPELLCHECK = re.compile(r'^[a-zA-Z](?:[_+-]?[a-zA-Z0-9])*$')    # type: Pattern
-
-# this will match "60", "1h30m", "1w4d10h3m50s", "yes", etc.
-PERSIST_TIME = re.compile(r'^\d+$|'
-                          r'^(\d+[w])*(\d+[d])*(\d+[h])*(\d+[m])*(\d+[s])*$|'
-                          r'^yes$|'
-                          r'^none$')    # type: Pattern
-
-# dict of defined Symbols
-# to see if a parameter is being redefined
-SYMBOLS = {}    # type: Dict[str, Symbol]
 
 
 class Symbol:
@@ -61,6 +46,11 @@ class Symbol:
         '''
 
         return '%s:%d' % (self.filename, self.lineno)
+
+
+# dict of defined Symbols
+# to see if a parameter is being redefined
+SYMBOLS: Dict[str, Symbol] = {}
 
 
 def read_config_file(configfile: str) -> int:
@@ -251,6 +241,12 @@ def _config_command(label: str, arr: List[str], short_cmd: str, configfile: str,
     return 0, synctool.lib.prepare_path(' '.join(arr[1:]))
 
 
+# this allows alphanumeric concatenated by underscore, minus, or plus symbol
+# and no other characters
+# Valid names are: node1 node1-10 node_10_0_0_2 node1+node2
+SPELLCHECK = re.compile(r'^[a-zA-Z](?:[_+-]?[a-zA-Z0-9])*$')
+
+
 def spellcheck(name: str) -> bool:
     '''Check for valid spelling of name
     Returns True if OK, False if not OK
@@ -309,6 +305,13 @@ def config_package_manager(arr: List[str], configfile: str, lineno: int) -> int:
 
     param.PACKAGE_MANAGER = arr[1]
     return 0
+
+
+# this will match "60", "1h30m", "1w4d10h3m50s", "yes", etc.
+PERSIST_TIME = re.compile(r'^\d+$|'
+                          r'^(\d+[w])*(\d+[d])*(\d+[h])*(\d+[m])*(\d+[s])*$|'
+                          r'^yes$|'
+                          r'^none$')
 
 
 def config_ssh_control_persist(arr: List[str], configfile: str, lineno: int) -> int:
@@ -684,7 +687,7 @@ def config_group(arr: List[str], configfile: str, lineno: int) -> int:
         stderr('%s: previous definition was here' % SYMBOLS[key].origin())
         return 1
 
-    grouplist = []          # type: List[str]
+    grouplist: List[str] = []
     for grp in arr[2:]:
         # range expression syntax: 'group generator'
         if '[' in grp:
@@ -1062,7 +1065,7 @@ def expand_grouplist(grouplist: List[str]) -> List[str]:
     # this looks pretty lame ... but Python sets are not usable here;
     # sets have no order and order is important here
 
-    expanded_grouplist = []     # type: List[str]
+    expanded_grouplist: List[str] = []
     for elem in groups:
         if elem not in expanded_grouplist:
             expanded_grouplist.append(elem)

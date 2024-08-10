@@ -36,15 +36,15 @@ NODESET = synctool.nodeset.NodeSet()
 
 OPT_SKIP_RSYNC = False
 OPT_AGGREGATE = False
-MASTER_OPTS = []        # type: List[str]
-SSH_OPTIONS = ''        # type: str
+MASTER_OPTS: List[str] = []
+SSH_OPTIONS = ''
 OPT_MULTIPLEX = False
-CTL_CMD = None          # type: Optional[str]
-PERSIST = None          # type: Optional[str]
+CTL_CMD: Optional[str] = None
+PERSIST: Optional[str] = None
 
 # ugly globals help parallelism
-SSH_CMD_ARR = []        # type: List[str]
-REMOTE_CMD_ARR = []     # type: List[str]
+SSH_CMD_ARR: List[str] = []
+REMOTE_CMD_ARR: List[str] = []
 
 # boolean saying whether we should sync the script to the nodes
 # before running it

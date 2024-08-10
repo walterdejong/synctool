@@ -24,7 +24,7 @@ from synctool.lib import error
 from synctool.main.wrapper import catch_signals
 import synctool.param
 
-ALL_PIDS = set()    # type: Set[int]
+ALL_PIDS: Set[int] = set()
 
 
 def do(func: Callable[[Any], None], work: List[Any]) -> None:
