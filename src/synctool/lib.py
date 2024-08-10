@@ -210,14 +210,14 @@ def terse_match(a_terse_path: str, path: str) -> bool:
         return a_terse_path[1:] == path
 
     # match last part of the path
-    if a_terse_path[idx+4:] != path[-len(a_terse_path[idx+4:]):]:
+    if a_terse_path[idx + 4:] != path[-len(a_terse_path[idx + 4:]):]:
         return False
 
     # match first part of the path
     # Note: this is OK for destination paths, but bugged for source paths;
     # in source paths, '//' should expand to $SYNCTOOL/var/
     # (But terse_match() is used with dest paths only anyway)
-    return a_terse_path[1:idx+1] == path[:len(a_terse_path[1:idx+1])]
+    return a_terse_path[1:idx + 1] == path[:len(a_terse_path[1:idx + 1])]
 
 
 def terse_match_many(path: str, terse_path_list: List[str]) -> int:
