@@ -743,9 +743,9 @@ Note that synctool does a dry run unless you specify --fix
 def get_options() -> int:
     '''parse command-line options'''
 
-    # pylint: disable=global-statement,too-many-statements,too-many-branches
+    # pylint: disable=too-many-statements,too-many-branches
 
-    global SINGLE_FILES
+    global SINGLE_FILES                                             # pylint: disable=global-statement
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hc:d:1:r:efNFTvq',

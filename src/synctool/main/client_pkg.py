@@ -35,12 +35,6 @@ ACTION_UPDATE = 4
 ACTION_UPGRADE = 5
 ACTION_CLEAN = 6
 
-# action to perform
-ACTION = 0
-
-# list of packages given on the command-line
-PKG_LIST: List[str] = []
-
 # map of /etc/os-release ID|ID_LIKE -> package manager
 PKGMGR_BY_OS_ID = {'alpine': 'apk',
                    'arch': 'pacman',
@@ -57,6 +51,16 @@ LINUX_PACKAGE_MANAGERS = (('/etc/gentoo-release', 'portage'),
                           ('/etc/slackware-version', 'swaret'),
                           ('/etc/yellowdog-release', 'yum'),
                           ('/etc/mandrake-release', 'urpmi'))
+
+
+class Options:
+    '''represents program options'''
+
+    def __init__(self) -> None:
+        '''initialize instance'''
+
+        self.action = 0
+        self.packages: List[str] = []
 
 
 def package_manager() -> SyncPkg:
@@ -301,12 +305,10 @@ Note that --upgrade does a dry run unless you specify --fix
 ''')
 
 
-def get_options() -> None:
+def get_options() -> Options:
     '''parse command-line options'''
 
-    # pylint: disable=global-statement,too-many-statements,too-many-branches
-
-    global ACTION, PKG_LIST
+    # pylint: disable=too-many-statements,too-many-branches
 
     if len(sys.argv) <= 1:
         usage()
@@ -323,6 +325,8 @@ def get_options() -> None:
         # usage()
         sys.exit(1)
 
+    options = Options()
+
     # first read the config file
     for opt, arg in opts:
         if opt in ('-h', '--help', '-?'):
@@ -337,8 +341,6 @@ def get_options() -> None:
     # synctool.nodeset.make_default_nodeset()
 
     # then process the other options
-    ACTION = 0
-    PKG_LIST = []
 
     for opt, arg in opts:
         if opt in ('-h', '--help', '-?', '-c', '--conf'):
@@ -346,45 +348,45 @@ def get_options() -> None:
             continue
 
         if opt in ('-i', '--install'):
-            if ACTION > 0 and ACTION != ACTION_INSTALL:
+            if options.action > 0 and options.action != ACTION_INSTALL:
                 there_can_be_only_one()
 
-            ACTION = ACTION_INSTALL
+            options.action = ACTION_INSTALL
             continue
 
         if opt in ('-R', '--remove'):
-            if ACTION > 0 and ACTION != ACTION_REMOVE:
+            if options.action > 0 and options.action != ACTION_REMOVE:
                 there_can_be_only_one()
 
-            ACTION = ACTION_REMOVE
+            options.action = ACTION_REMOVE
             continue
 
         if opt in ('-l', '--list'):
-            if ACTION > 0 and ACTION != ACTION_LIST:
+            if options.action > 0 and options.action != ACTION_LIST:
                 there_can_be_only_one()
 
-            ACTION = ACTION_LIST
+            options.action = ACTION_LIST
             continue
 
         if opt in ('-u', '--update'):
-            if ACTION > 0 and ACTION != ACTION_UPDATE:
+            if options.action > 0 and options.action != ACTION_UPDATE:
                 there_can_be_only_one()
 
-            ACTION = ACTION_UPDATE
+            options.action = ACTION_UPDATE
             continue
 
         if opt in ('-U', '--upgrade'):
-            if ACTION > 0 and ACTION != ACTION_UPGRADE:
+            if options.action > 0 and options.action != ACTION_UPGRADE:
                 there_can_be_only_one()
 
-            ACTION = ACTION_UPGRADE
+            options.action = ACTION_UPGRADE
             continue
 
         if opt in ('-C', '--clean', '--cleanup'):
-            if ACTION > 0 and ACTION != ACTION_CLEAN:
+            if options.action > 0 and options.action != ACTION_CLEAN:
                 there_can_be_only_one()
 
-            ACTION = ACTION_CLEAN
+            options.action = ACTION_CLEAN
             continue
 
         if opt in ('-m', '--manager'):
@@ -416,14 +418,14 @@ def get_options() -> None:
             synctool.lib.QUIET = True
             continue
 
-    if not ACTION:
+    if not options.action:
         usage()
         sys.exit(1)
 
-    if ACTION in (ACTION_LIST, ACTION_INSTALL, ACTION_REMOVE):
-        PKG_LIST = args
+    if options.action in (ACTION_LIST, ACTION_INSTALL, ACTION_REMOVE):
+        options.packages = args
 
-        if ACTION in (ACTION_INSTALL, ACTION_REMOVE) and not args:
+        if options.action in (ACTION_INSTALL, ACTION_REMOVE) and not args:
             error('options --install and --remove require a package name')
             sys.exit(1)
 
@@ -437,8 +439,10 @@ def get_options() -> None:
     # --upgrade -f will do the upgrade
     #
     # The other actions will execute immediatly
-    if ACTION != ACTION_UPGRADE:
+    if options.action != ACTION_UPGRADE:
         synctool.lib.DRY_RUN = False
+
+    return options
 
 
 @catch_signals
@@ -447,7 +451,7 @@ def main() -> int:
 
     synctool.param.init()
 
-    get_options()
+    opts = get_options()
 
     synctool.lib.QUIET = not synctool.lib.VERBOSE
 
@@ -459,26 +463,26 @@ def main() -> int:
 
     pkg = package_manager()
 
-    if ACTION == ACTION_LIST:
-        pkg.show_list(PKG_LIST)
+    if opts.action == ACTION_LIST:
+        pkg.show_list(opts.packages)
 
-    elif ACTION == ACTION_INSTALL:
-        pkg.install(PKG_LIST)
+    elif opts.action == ACTION_INSTALL:
+        pkg.install(opts.packages)
 
-    elif ACTION == ACTION_REMOVE:
-        pkg.remove(PKG_LIST)
+    elif opts.action == ACTION_REMOVE:
+        pkg.remove(opts.packages)
 
-    elif ACTION == ACTION_UPDATE:
+    elif opts.action == ACTION_UPDATE:
         pkg.update()
 
-    elif ACTION == ACTION_UPGRADE:
+    elif opts.action == ACTION_UPGRADE:
         pkg.upgrade()
 
-    elif ACTION == ACTION_CLEAN:
+    elif opts.action == ACTION_CLEAN:
         pkg.clean()
 
     else:
-        raise RuntimeError('BUG: unknown ACTION code %d' % ACTION)
+        raise RuntimeError('BUG: unknown action code %d' % opts.action)
     return 0
 
 # EOB

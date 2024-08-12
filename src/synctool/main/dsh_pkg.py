@@ -32,15 +32,20 @@ import synctool.unbuffered
 # hardcoded name because otherwise we get "dsh_pkg.py"
 PROGNAME = 'dsh-pkg'
 
+# ugly globals in use by parallel worker
 NODESET = synctool.nodeset.NodeSet()
-
-OPT_AGGREGATE = False
-
-PASS_ARGS: List[str] = []
-MASTER_OPTS: List[str] = []
-
-# ugly global helps parallelism
 SSH_CMD_ARR: List[str] = []
+PASS_ARGS: List[str] = []
+
+
+class Options:
+    '''represents program options'''
+
+    def __init__(self) -> None:
+        '''initialize instance'''
+
+        self.aggregate = False
+        self.master_opts: List[str] = []
 
 
 def run_remote_pkg(address_list: List[str]) -> None:
@@ -214,12 +219,12 @@ Note that --upgrade does a dry run unless you specify --fix
 ''')
 
 
-def get_options() -> None:
+def get_options() -> Options:
     '''parse command-line options'''
 
     # pylint: disable=too-many-statements,too-many-branches
 
-    global MASTER_OPTS, PASS_ARGS, OPT_AGGREGATE                    # pylint: disable=global-statement
+    global PASS_ARGS                                                # pylint: disable=global-statement
 
     if len(sys.argv) <= 1:
         usage()
@@ -247,7 +252,6 @@ def get_options() -> None:
         sys.exit(1)
 
     PASS_ARGS = []
-    MASTER_OPTS = [sys.argv[0], ]
 
     # first read the config file
     for opt, arg in opts:
@@ -284,15 +288,18 @@ def get_options() -> None:
     # Note: some options are passed on to synctool-pkg on the node, while
     #       others are not. Therefore some 'continue', while others don't
 
-    action = 0
+    options = Options()
+    options.master_opts = [sys.argv[0], ]
+
+    have_action = 0
     needs_package_list = False
 
     for opt, arg in opts:
         if opt:
-            MASTER_OPTS.append(opt)
+            options.master_opts.append(opt)
 
         if arg:
-            MASTER_OPTS.append(arg)
+            options.master_opts.append(arg)
 
         if opt in ('-h', '--help', '-?', '-c', '--conf'):
             # already done
@@ -315,24 +322,24 @@ def get_options() -> None:
             continue
 
         if opt in ('-i', '--install'):
-            action += 1
+            have_action += 1
             needs_package_list = True
 
         if opt in ('-R', '--remove'):
-            action += 1
+            have_action += 1
             needs_package_list = True
 
         if opt in ('-l', '--list'):
-            action += 1
+            have_action += 1
 
         if opt in ('-u', '--update'):
-            action += 1
+            have_action += 1
 
         if opt in ('-U', '--upgrade'):
-            action += 1
+            have_action += 1
 
         if opt in ('-C', '--clean', '--cleanup'):
-            action += 1
+            have_action += 1
 
         if opt in ('-m', '--manager'):
             if arg not in param.KNOWN_PACKAGE_MANAGERS:
@@ -388,7 +395,7 @@ def get_options() -> None:
             synctool.lib.UNIX_CMD = True
 
         if opt in ('-a', '--aggregate'):
-            OPT_AGGREGATE = True
+            options.aggregate = True
             continue
 
         if opt:
@@ -401,19 +408,21 @@ def get_options() -> None:
     PASS_ARGS.append('--masterlog')
 
     if args:
-        MASTER_OPTS.extend(args)
+        options.master_opts.extend(args)
         PASS_ARGS.extend(args)
     else:
         if needs_package_list:
             error('options --install and --remove require a package name')
             sys.exit(1)
 
-    if not action:
+    if not have_action:
         usage()
         sys.exit(1)
 
-    if action > 1:
+    if have_action > 1:
         there_can_be_only_one()
+
+    return options
 
 
 @catch_signals
@@ -426,13 +435,13 @@ def main() -> int:
     sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)             # type: ignore
 
     try:
-        get_options()
+        opts = get_options()
     except synctool.range.RangeSyntaxError as err:
         error(str(err))
         sys.exit(1)
 
-    if OPT_AGGREGATE:
-        if not synctool.aggr.run(MASTER_OPTS):
+    if opts.aggregate:
+        if not synctool.aggr.run(opts.master_opts):
             sys.exit(-1)
 
         sys.exit(0)

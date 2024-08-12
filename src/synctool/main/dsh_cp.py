@@ -31,21 +31,28 @@ import synctool.unbuffered
 # hardcoded name because otherwise we get "dsh_cp.py"
 PROGNAME = 'dsh-cp'
 
+# ugly globals in use by parallel worker
 NODESET = synctool.nodeset.NodeSet()
-
-DESTDIR = ''
-OPT_AGGREGATE = False
-MASTER_OPTS: List[str] = []
-DSH_CP_OPTIONS = ''
-OPT_PURGE = False
-
-# ugly globals help parallelism
 DSH_CP_CMD_ARR: List[str] = []
 SOURCE_LIST: List[str] = []
 FILES_STR = ''
+DESTDIR = ''
 
 
-def run_remote_copy(address_list: List[str], files: List[str]) -> None:
+class Options:
+    '''represents program options and arguments'''
+
+    def __init__(self) -> None:
+        '''initialize instance'''
+
+        self.aggregate = False
+        self.master_opts: List[str] = []
+        self.files: List[str] = []
+        self.dsh_cp_options = ''
+        self.purge = False
+
+
+def run_remote_copy(address_list: List[str], files: List[str], opts: Options) -> None:
     '''copy files[] to nodes[]'''
 
     # pylint: disable=too-many-branches
@@ -77,7 +84,7 @@ def run_remote_copy(address_list: List[str], files: List[str]) -> None:
 
     DSH_CP_CMD_ARR = shlex.split(param.RSYNC_CMD)
 
-    if not OPT_PURGE:
+    if not opts.purge:
         if '--delete' in DSH_CP_CMD_ARR:
             DSH_CP_CMD_ARR.remove('--delete')
         if '--delete-excluded' in DSH_CP_CMD_ARR:
@@ -93,8 +100,8 @@ def run_remote_copy(address_list: List[str], files: List[str]) -> None:
         if '-q' not in DSH_CP_CMD_ARR and '--quiet' not in DSH_CP_CMD_ARR:
             DSH_CP_CMD_ARR.append('-q')
 
-    if DSH_CP_OPTIONS:
-        DSH_CP_CMD_ARR.extend(shlex.split(DSH_CP_OPTIONS))
+    if opts.dsh_cp_options:
+        DSH_CP_CMD_ARR.extend(shlex.split(opts.dsh_cp_options))
 
     synctool.parallel.do(worker_dsh_cp, address_list)
 
@@ -173,19 +180,18 @@ DESTDIR may be ':' (colon) meaning the directory of the first source file
 ''')
 
 
-def get_options() -> List[str]:
+def get_options() -> Options:
     '''parse command-line options'''
 
     # pylint: disable=too-many-statements,too-many-branches
 
-    global DESTDIR, MASTER_OPTS, OPT_AGGREGATE, DSH_CP_OPTIONS, OPT_PURGE       # pylint: disable=global-statement
+    global DESTDIR                                                  # pylint: disable=global-statement
 
     if len(sys.argv) <= 1:
         usage()
         sys.exit(1)
 
     DESTDIR = ''
-    DSH_CP_OPTIONS = ''
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hc:n:g:x:X:o:pN:z:vqaf',
@@ -228,13 +234,14 @@ def get_options() -> List[str]:
     check_cmd_config()
 
     # then process the other options
-    MASTER_OPTS = [sys.argv[0], ]
+    options = Options()
+    options.master_opts = [sys.argv[0], ]
 
     for opt, arg in opts:
         if opt:
-            MASTER_OPTS.append(opt)
+            options.master_opts.append(opt)
         if arg:
-            MASTER_OPTS.append(arg)
+            options.master_opts.append(arg)
 
         if opt in ('-h', '--help', '-?', '-c', '--conf'):
             # already done
@@ -257,11 +264,11 @@ def get_options() -> List[str]:
             continue
 
         if opt in ('-o', '--options'):
-            DSH_CP_OPTIONS = arg
+            options.dsh_cp_options = arg
             continue
 
         if opt in ('-p', '--purge'):
-            OPT_PURGE = True
+            options.purge = True
             continue
 
         if opt == '--no-nodename':
@@ -315,7 +322,7 @@ def get_options() -> List[str]:
             continue
 
         if opt in ('-a', '--aggregate'):
-            OPT_AGGREGATE = True
+            options.aggregate = True
             continue
 
         if opt in ('-f', '--fix'):
@@ -330,7 +337,7 @@ def get_options() -> List[str]:
         print('%s: missing destination' % PROGNAME)
         sys.exit(1)
 
-    MASTER_OPTS.extend(args)
+    options.master_opts.extend(args)
 
     DESTDIR = args.pop(-1)
 
@@ -351,7 +358,8 @@ def get_options() -> List[str]:
     if DESTDIR[-1] != os.sep:
         DESTDIR += os.sep
 
-    return args
+    options.files = args
+    return options
 
 
 @catch_signals
@@ -364,13 +372,13 @@ def main() -> int:
     sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)             # type: ignore
 
     try:
-        files = get_options()
+        opts = get_options()
     except synctool.range.RangeSyntaxError as err:
         error(str(err))
         sys.exit(1)
 
-    if OPT_AGGREGATE:
-        if not synctool.aggr.run(MASTER_OPTS):
+    if opts.aggregate:
+        if not synctool.aggr.run(opts.master_opts):
             sys.exit(-1)
 
         sys.exit(0)
@@ -382,7 +390,7 @@ def main() -> int:
         error('no valid nodes specified')
         sys.exit(1)
 
-    run_remote_copy(address_list, files)
+    run_remote_copy(address_list, opts.files, opts)
     return 0
 
 # EOB

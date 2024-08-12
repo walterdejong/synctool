@@ -24,7 +24,6 @@ from synctool.main.wrapper import catch_signals
 PROGNAME = 'synctool-template'
 
 SPELLCHECK = re.compile(r'[A-Z_][A-Z0-9_]*')
-PATTERN = re.compile(r'\@([A-Z_][A-Z0-9_]*)\@')
 
 
 def spellcheck(name: str) -> bool:
@@ -40,6 +39,9 @@ def spellcheck(name: str) -> bool:
         return False
 
     return True
+
+
+PATTERN = re.compile(r'\@([A-Z_][A-Z0-9_]*)\@')
 
 
 def subst(line: str) -> str:

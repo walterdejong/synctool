@@ -30,11 +30,18 @@ import synctool.unbuffered
 # hardcoded name because otherwise we get "dsh_ping.py"
 PROGNAME = 'dsh-ping'
 
+# ugly global in use by parallel worker
 NODESET = synctool.nodeset.NodeSet()
 
-OPT_AGGREGATE = False
 
-MASTER_OPTS: List[str] = []
+class Options:
+    '''represents program options'''
+
+    def __init__(self) -> None:
+        '''initialize instance'''
+
+        self.aggregate = False
+        self.master_opts: List[str] = []
 
 
 def ping_nodes(address_list: List[str]) -> None:
@@ -148,12 +155,10 @@ def usage() -> None:
 ''')
 
 
-def get_options() -> None:
+def get_options() -> Options:
     '''parse command-line options'''
 
     # pylint: disable=too-many-statements,too-many-branches
-
-    global MASTER_OPTS, OPT_AGGREGATE                               # pylint: disable=global-statement
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hc:vn:g:x:X:aN:qp:z:',
@@ -195,13 +200,14 @@ def get_options() -> None:
     check_cmd_config()
 
     # then process the other options
-    MASTER_OPTS = [sys.argv[0], ]
+    options = Options()
+    options.master_opts = [sys.argv[0], ]
 
     for opt, arg in opts:
         if opt:
-            MASTER_OPTS.append(opt)
+            options.master_opts.append(opt)
         if arg:
-            MASTER_OPTS.append(arg)
+            options.master_opts.append(arg)
 
         if opt in ('-h', '--help', '-?', '-c', '--conf'):
             # already done
@@ -228,7 +234,7 @@ def get_options() -> None:
             continue
 
         if opt in ('-a', '--aggregate'):
-            OPT_AGGREGATE = True
+            options.aggregate = True
             continue
 
         if opt == '--unix':
@@ -277,6 +283,8 @@ def get_options() -> None:
         print('%s: too many arguments' % PROGNAME)
         sys.exit(1)
 
+    return options
+
 
 @catch_signals
 def main() -> int:
@@ -288,13 +296,13 @@ def main() -> int:
     sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)             # type: ignore
 
     try:
-        get_options()
+        opts = get_options()
     except synctool.range.RangeSyntaxError as err:
         error(str(err))
         sys.exit(1)
 
-    if OPT_AGGREGATE:
-        if not synctool.aggr.run(MASTER_OPTS):
+    if opts.aggregate:
+        if not synctool.aggr.run(opts.master_opts):
             sys.exit(-1)
 
         sys.exit(0)

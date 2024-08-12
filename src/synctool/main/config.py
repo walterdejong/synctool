@@ -27,13 +27,6 @@ import synctool.range
 # hardcoded name because otherwise we get "config.py"
 PROGNAME = 'config'
 
-ACTION = 0
-ACTION_OPTION = ''
-ARG_NODENAMES = ''
-ARG_GROUPS = ''
-ARG_CMDS: List[str] = []
-ARG_EXPAND = ''
-
 # these are enums for the "list" command-line options
 ACTION_LIST_NODES = 1
 ACTION_LIST_GROUPS = 2
@@ -51,15 +44,40 @@ ACTION_FQDN = 13
 ACTION_EXPAND = 14
 ACTION_VERSION = 15
 
-# optional: do not list hosts/groups that are ignored
-OPT_FILTER_IGNORED = False
-# optional: list ipaddresses of the selected nodes
-OPT_IPADDRESS = False
-# optional: list rsync yes/no qualifier
-OPT_RSYNC = False
+
+class Options:
+    '''represents program options and arguments'''
+
+    def __init__(self) -> None:
+        '''initialize instance'''
+
+        self.arg_nodenames = ''
+        self.arg_groups = ''
+        self.arg_cmds: List[str] = []
+        self.arg_expand = ''
+        self.filter_ignored = False
+        self.ipaddress = False
+        self.rsync = False
+        self.action = 0
+        self.action_option_str = ''
+
+    def set_action(self, action: int, opt_str: str) -> None:
+        '''set the action to perform
+        This is a helper function for the command-line parser
+        and exits the program on error
+        '''
+
+        assert opt_str
+
+        if self.action > 0:
+            error('options %s and %s can not be combined' % (self.action_option_str, opt_str))
+            sys.exit(1)
+
+        self.action = action
+        self.action_option_str = opt_str
 
 
-def list_all_nodes() -> None:
+def list_all_nodes(opts: Options) -> None:
     '''display a list of all nodes'''
 
     nodes = config.get_all_nodes()
@@ -69,13 +87,13 @@ def list_all_nodes() -> None:
         ignored = set(config.get_groups(node))
         ignored &= param.IGNORE_GROUPS
 
-        if OPT_FILTER_IGNORED and ignored:
+        if opts.filter_ignored and ignored:
             continue
 
-        if OPT_IPADDRESS:
+        if opts.ipaddress:
             node += ' ' + config.get_node_ipaddress(node)
 
-        if OPT_RSYNC:
+        if opts.rsync:
             if node in param.NO_RSYNC:
                 node += ' no'
             else:
@@ -87,14 +105,14 @@ def list_all_nodes() -> None:
         print(node)
 
 
-def list_all_groups() -> None:
+def list_all_groups(opts: Options) -> None:
     '''display a list of all groups'''
 
     groups = list(param.GROUP_DEFS.keys())
     groups.sort()
 
     for group in groups:
-        if OPT_FILTER_IGNORED and group in param.IGNORE_GROUPS:
+        if opts.filter_ignored and group in param.IGNORE_GROUPS:
             continue
 
         if group in param.IGNORE_GROUPS:
@@ -103,7 +121,7 @@ def list_all_groups() -> None:
         print(group)
 
 
-def list_nodes(nodelist: str) -> None:
+def list_nodes(nodelist: str, opts: Options) -> None:
     '''display node definition'''
 
     # pylint: disable=too-many-branches
@@ -121,12 +139,12 @@ def list_nodes(nodelist: str) -> None:
 
     groups: List[str] = []
     for node in nodeset.nodelist:
-        if OPT_IPADDRESS or OPT_RSYNC:
+        if opts.ipaddress or opts.rsync:
             out = ''
-            if OPT_IPADDRESS:
+            if opts.ipaddress:
                 out += ' ' + config.get_node_ipaddress(node)
 
-            if OPT_RSYNC:
+            if opts.rsync:
                 if node in param.NO_RSYNC:
                     out += ' no'
                 else:
@@ -147,7 +165,7 @@ def list_nodes(nodelist: str) -> None:
 #    groups.sort()
 
     for group in groups:
-        if OPT_FILTER_IGNORED and group in param.IGNORE_GROUPS:
+        if opts.filter_ignored and group in param.IGNORE_GROUPS:
             continue
 
         if group in param.IGNORE_GROUPS:
@@ -156,7 +174,7 @@ def list_nodes(nodelist: str) -> None:
         print(group)
 
 
-def list_nodegroups(grouplist: str) -> None:
+def list_nodegroups(grouplist: str, opts: Options) -> None:
     '''display list of nodes that are member of group'''
 
     nodeset = synctool.nodeset.NodeSet()
@@ -177,13 +195,13 @@ def list_nodegroups(grouplist: str) -> None:
         ignored = set(config.get_groups(node))
         ignored &= param.IGNORE_GROUPS
 
-        if OPT_FILTER_IGNORED and ignored:
+        if opts.filter_ignored and ignored:
             continue
 
-        if OPT_IPADDRESS:
+        if opts.ipaddress:
             node += ' ' + config.get_node_ipaddress(node)
 
-        if OPT_RSYNC:
+        if opts.rsync:
             if node in param.NO_RSYNC:
                 node += ' no'
             else:
@@ -265,23 +283,6 @@ def expand(nodelist: str) -> None:
     print()
 
 
-def set_action(act: int, opt: str) -> None:
-    '''set the action to perform'''
-
-    # this is a helper function for the command-line parser
-
-    global ACTION, ACTION_OPTION                                    # pylint: disable=global-statement
-
-    assert opt
-
-    if ACTION > 0:
-        error('options %s and %s can not be combined' % (ACTION_OPTION, opt))
-        sys.exit(1)
-
-    ACTION = act
-    ACTION_OPTION = opt
-
-
 def usage() -> None:
     '''print usage information'''
 
@@ -314,13 +315,10 @@ COMMAND is a list of these: diff,ping,ssh,rsync,synctool,pkg
 ''')
 
 
-def get_options() -> None:
+def get_options() -> Options:
     '''parse command-line options'''
 
-    # pylint: disable=global-statement,too-many-statements,too-many-branches
-
-    global ARG_NODENAMES, ARG_GROUPS, ARG_CMDS, ARG_EXPAND
-    global OPT_FILTER_IGNORED, OPT_IPADDRESS, OPT_RSYNC
+    # pylint: disable=too-many-statements,too-many-branches
 
     if len(sys.argv) <= 1:
         usage()
@@ -345,6 +343,7 @@ def get_options() -> None:
         error('excessive arguments on command-line')
         sys.exit(1)
 
+    options = Options()
     errors = 0
 
     for opt, arg in opts:
@@ -357,79 +356,79 @@ def get_options() -> None:
             continue
 
         if opt in ('-l', '--list-nodes'):
-            set_action(ACTION_LIST_NODES, '--list-nodes')
+            options.set_action(ACTION_LIST_NODES, '--list-nodes')
             continue
 
         if opt in ('-L', '--list-groups'):
-            set_action(ACTION_LIST_GROUPS, '--list-groups')
+            options.set_action(ACTION_LIST_GROUPS, '--list-groups')
             continue
 
         if opt in ('-n', '--node'):
-            set_action(ACTION_NODES, '--node')
-            ARG_NODENAMES = arg
+            options.set_action(ACTION_NODES, '--node')
+            options.arg_nodenames = arg
             continue
 
         if opt in ('-g', '--group'):
-            set_action(ACTION_GROUPS, '--group')
-            ARG_GROUPS = arg
+            options.set_action(ACTION_GROUPS, '--group')
+            options.arg_groups = arg
             continue
 
         if opt in ('-i', 'ipaddress'):
-            OPT_IPADDRESS = True
+            options.ipaddress = True
             continue
 
         if opt in ('-r', '--rsync'):
-            OPT_RSYNC = True
+            options.rsync = True
             continue
 
         if opt in ('-f', '--filter-ignored'):
-            OPT_FILTER_IGNORED = True
+            options.filter_ignored = True
             continue
 
         if opt in ('-C', '--command'):
-            set_action(ACTION_CMDS, '--command')
-            ARG_CMDS = arg.split(',')
+            options.set_action(ACTION_CMDS, '--command')
+            options.arg_cmds = arg.split(',')
             continue
 
         if opt in ('-P', '--package-manager'):
-            set_action(ACTION_PKGMGR, '--package-manager')
+            options.set_action(ACTION_PKGMGR, '--package-manager')
             continue
 
         if opt in ('-N', '--numproc'):
-            set_action(ACTION_NUMPROC, '--numproc')
+            options.set_action(ACTION_NUMPROC, '--numproc')
             continue
 
         if opt in ('-d', '--list-dirs'):
-            set_action(ACTION_LIST_DIRS, '--list-dirs')
+            options.set_action(ACTION_LIST_DIRS, '--list-dirs')
             continue
 
         if opt == '--prefix':
-            set_action(ACTION_PREFIX, '--prefix')
+            options.set_action(ACTION_PREFIX, '--prefix')
             continue
 
         if opt == '--master':
-            set_action(ACTION_MASTER, '--master')
+            options.set_action(ACTION_MASTER, '--master')
             continue
 
         if opt == '--slave':
-            set_action(ACTION_SLAVE, '--slave')
+            options.set_action(ACTION_SLAVE, '--slave')
             continue
 
         if opt == '--nodename':
-            set_action(ACTION_NODENAME, '--nodename')
+            options.set_action(ACTION_NODENAME, '--nodename')
             continue
 
         if opt == '--fqdn':
-            set_action(ACTION_FQDN, '--fqdn')
+            options.set_action(ACTION_FQDN, '--fqdn')
             continue
 
         if opt in ('-x', '--expand'):
-            set_action(ACTION_EXPAND, '--expand')
-            ARG_EXPAND = arg
+            options.set_action(ACTION_EXPAND, '--expand')
+            options.arg_expand = arg
             continue
 
         if opt in ('-v', '--version'):
-            set_action(ACTION_VERSION, '--version')
+            options.set_action(ACTION_VERSION, '--version')
             continue
 
         error("unknown command line option '%s'" % opt)
@@ -439,9 +438,11 @@ def get_options() -> None:
         usage()
         sys.exit(1)
 
-    if not ACTION:
+    if not options.action:
         usage()
         sys.exit(1)
+
+    return options
 
 
 @catch_signals
@@ -452,56 +453,56 @@ def main() -> int:
 
     param.init()
 
-    get_options()
+    opts = get_options()
 
-    if ACTION == ACTION_VERSION:
+    if opts.action == ACTION_VERSION:
         print(param.VERSION)
         sys.exit(0)
 
-    if ACTION == ACTION_FQDN:
+    if opts.action == ACTION_FQDN:
         print(socket.getfqdn())
         sys.exit(0)
 
     config.read_config()
 #    synctool.nodeset.make_default_nodeset()
 
-    if ACTION == ACTION_LIST_NODES:
-        list_all_nodes()
+    if opts.action == ACTION_LIST_NODES:
+        list_all_nodes(opts)
 
-    elif ACTION == ACTION_LIST_GROUPS:
-        list_all_groups()
+    elif opts.action == ACTION_LIST_GROUPS:
+        list_all_groups(opts)
 
-    elif ACTION == ACTION_NODES:
-        if not ARG_NODENAMES:
+    elif opts.action == ACTION_NODES:
+        if not opts.arg_nodenames:
             error("option '--node' requires an argument; the node name")
             sys.exit(1)
 
-        list_nodes(ARG_NODENAMES)
+        list_nodes(opts.arg_nodenames, opts)
 
-    elif ACTION == ACTION_GROUPS:
-        if not ARG_GROUPS:
+    elif opts.action == ACTION_GROUPS:
+        if not opts.arg_groups:
             error("option '--node-group' requires an argument; "
                   "the node group name")
             sys.exit(1)
 
-        list_nodegroups(ARG_GROUPS)
+        list_nodegroups(opts.arg_groups, opts)
 
-    elif ACTION == ACTION_CMDS:
-        list_commands(ARG_CMDS)
+    elif opts.action == ACTION_CMDS:
+        list_commands(opts.arg_cmds)
 
-    elif ACTION == ACTION_PKGMGR:
+    elif opts.action == ACTION_PKGMGR:
         print(param.PACKAGE_MANAGER)
 
-    elif ACTION == ACTION_NUMPROC:
+    elif opts.action == ACTION_NUMPROC:
         print(param.NUM_PROC)
 
-    elif ACTION == ACTION_LIST_DIRS:
+    elif opts.action == ACTION_LIST_DIRS:
         list_dirs()
 
-    elif ACTION == ACTION_PREFIX:
+    elif opts.action == ACTION_PREFIX:
         print(param.ROOTDIR)
 
-    elif ACTION == ACTION_NODENAME:
+    elif opts.action == ACTION_NODENAME:
         config.init_mynodename()
 
         if not param.NODENAME:
@@ -512,10 +513,10 @@ def main() -> int:
 
         print(param.NODENAME)
 
-    elif ACTION == ACTION_MASTER:
+    elif opts.action == ACTION_MASTER:
         print(param.MASTER)
 
-    elif ACTION == ACTION_SLAVE:
+    elif opts.action == ACTION_SLAVE:
         if not param.SLAVES:
             print('(none)')
         else:
@@ -523,14 +524,14 @@ def main() -> int:
                 print(node, end=' ')
             print()
 
-    elif ACTION == ACTION_EXPAND:
-        if not ARG_EXPAND:
+    elif opts.action == ACTION_EXPAND:
+        if not opts.arg_expand:
             print('none')
         else:
-            expand(ARG_EXPAND)
+            expand(opts.arg_expand)
 
     else:
-        raise RuntimeError('bug: unknown ACTION code %d' % ACTION)
+        raise RuntimeError('bug: unknown ACTION code %d' % opts.action)
     return 0
 
 # EOB

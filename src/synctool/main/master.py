@@ -39,17 +39,23 @@ import synctool.upload
 # hardcoded name because otherwise we get "synctool_master.py"
 PROGNAME = 'synctool'
 
+# ugly globals in use by parallel worker
 NODESET = synctool.nodeset.NodeSet()
-
 OPT_SKIP_RSYNC = False
-OPT_AGGREGATE = False
-OPT_CHECK_UPDATE = False
-OPT_DOWNLOAD = False
-
 PASS_ARGS: List[str] = []
-MASTER_OPTS: List[str] = []
 
-UPLOAD_FILE = synctool.upload.UploadFile()
+
+class Options:
+    '''represents program options and arguments'''
+
+    def __init__(self) -> None:
+        '''initialize instance'''
+
+        self.aggregate = False
+        self.master_opts: List[str] = []
+        self.check_update = False
+        self.download = False
+        self.upload_file = synctool.upload.UploadFile()
 
 
 def run_remote_synctool(address_list: List[str]) -> None:
@@ -433,14 +439,12 @@ Note that synctool does a dry run unless you specify --fix
 Written by Walter de Jong <walter@heiho.net> (c) 2003-2015''')
 
 
-def get_options() -> None:
+def get_options() -> Options:
     '''parse command-line options'''
 
-    # pylint: disable=global-statement,too-many-statements,too-many-branches
+    # pylint: disable=too-many-statements,too-many-branches,too-many-locals
 
-    global PASS_ARGS, OPT_SKIP_RSYNC, OPT_AGGREGATE
-    global OPT_CHECK_UPDATE, OPT_DOWNLOAD, MASTER_OPTS
-    global UPLOAD_FILE
+    global PASS_ARGS, OPT_SKIP_RSYNC                                # pylint: disable=global-statement
 
     # check for typo's on the command-line;
     # things like "-diff" will trigger "-f" => "--fix"
@@ -467,8 +471,6 @@ def get_options() -> None:
         error('excessive arguments on command line')
         sys.exit(1)
 
-    UPLOAD_FILE = synctool.upload.UploadFile()
-
     # these are only used for checking the validity of option combinations
     opt_diff = False
     opt_single = False
@@ -482,7 +484,6 @@ def get_options() -> None:
     opt_group = False
 
     PASS_ARGS = []
-    MASTER_OPTS = [sys.argv[0], ]
 
     # first read the config file
     for opt, arg in opts:
@@ -532,12 +533,15 @@ def get_options() -> None:
     # Note: some options are passed on to synctool on the node, while
     # others are not. Therefore some 'continue', while others don't
 
+    options = Options()
+    options.master_opts = [sys.argv[0], ]
+
     for opt, arg in opts:
         if opt:
-            MASTER_OPTS.append(opt)
+            options.master_opts.append(opt)
 
         if arg:
-            MASTER_OPTS.append(arg)
+            options.master_opts.append(arg)
 
         if opt in ('-h', '--help', '-?', '-c', '--conf', '--version'):
             # already done
@@ -549,8 +553,8 @@ def get_options() -> None:
         if opt in ('-n', '--node'):
             NODESET.add_node(arg)
 
-            if not UPLOAD_FILE.node:
-                UPLOAD_FILE.node = arg
+            if not options.upload_file.node:
+                options.upload_file.node = arg
 
             continue
 
@@ -578,22 +582,22 @@ def get_options() -> None:
 
         if opt in ('-u', '--upload'):
             opt_upload = True
-            UPLOAD_FILE.filename = arg
+            options.upload_file.filename = arg
             continue
 
         if opt in ('-s', '--suffix'):
             opt_suffix = True
-            UPLOAD_FILE.suffix = arg
+            options.upload_file.suffix = arg
             continue
 
         if opt in ('-o', '--overlay'):
             opt_overlay = True
-            UPLOAD_FILE.overlay = arg
+            options.upload_file.overlay = arg
             continue
 
         if opt in ('-p', '--purge'):
             opt_purge = True
-            UPLOAD_FILE.purge = arg
+            options.upload_file.purge = arg
             continue
 
         if opt in ('-e', '--erase-saved'):
@@ -637,22 +641,23 @@ def get_options() -> None:
             param.COLORIZE = False
 
         if opt in ('-a', '--aggregate'):
-            OPT_AGGREGATE = True
+            options.aggregate = True
             continue
 
         if opt == '--unix':
             synctool.lib.UNIX_CMD = True
 
         if opt in ('-S', '--skip-rsync'):
+            # Note: OPT_SKIP_RSYNC is a global because in use by parallel worker
             OPT_SKIP_RSYNC = True
             continue
 
         if opt == '--check-update':
-            OPT_CHECK_UPDATE = True
+            options.check_update = True
             continue
 
         if opt == '--download':
-            OPT_DOWNLOAD = True
+            options.download = True
             continue
 
         if opt:
@@ -692,11 +697,12 @@ def get_options() -> None:
     PASS_ARGS.append('--masterlog')
 
     if args is not None:
-        MASTER_OPTS.extend(args)
+        options.master_opts.extend(args)
         PASS_ARGS.extend(args)
 
     option_combinations(opt_diff, opt_single, opt_reference, opt_erase_saved,
                         opt_upload, opt_fix, opt_group)
+    return options
 
 
 @catch_signals
@@ -711,27 +717,27 @@ def main() -> int:
     sys.stderr = synctool.unbuffered.Unbuffered(sys.stderr)             # type: ignore
 
     try:
-        get_options()
+        opts = get_options()
     except synctool.range.RangeSyntaxError as err:
         error(str(err))
         sys.exit(1)
 
-    if OPT_CHECK_UPDATE:
+    if opts.check_update:
         if not synctool.update.check():
             # no newer version available
             sys.exit(0)
 
         sys.exit(1)
 
-    if OPT_DOWNLOAD:
+    if opts.download:
         if not synctool.update.download():
             # download error
             sys.exit(-1)
 
         sys.exit(0)
 
-    if OPT_AGGREGATE:
-        if not synctool.aggr.run(MASTER_OPTS):
+    if opts.aggregate:
+        if not synctool.aggr.run(opts.master_opts):
             sys.exit(-1)
 
         sys.exit(0)
@@ -754,7 +760,7 @@ def main() -> int:
         print('no valid nodes specified')
         sys.exit(1)
 
-    if UPLOAD_FILE.filename:
+    if opts.upload_file.filename:
         # upload a file
         if len(address_list) != 1:
             error('option --upload can only be run on just one node')
@@ -762,8 +768,8 @@ def main() -> int:
                    'to upload from')
             sys.exit(1)
 
-        UPLOAD_FILE.address = address_list[0]
-        synctool.upload.upload(UPLOAD_FILE)
+        opts.upload_file.address = address_list[0]
+        synctool.upload.upload(opts.upload_file)
 
     else:
         # do regular synctool run
