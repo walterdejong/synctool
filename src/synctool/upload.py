@@ -158,20 +158,20 @@ class RemoteStat:
 
         try:
             local_uid = synctool.pwdgrp.pw_uid(self.owner)
+            return local_uid
         except KeyError:
+            warning('no such user {}; using uid {}'.format(self.owner, self.uid))
             return self.uid
-
-        return local_uid
 
     def translate_gid(self) -> int:
         '''Return local numeric gid corresponding to remote group'''
 
         try:
             local_gid = synctool.pwdgrp.grp_gid(self.group)
+            return local_gid
         except KeyError:
+            warning('no such group {}; using gid {}'.format(self.group, self.gid))
             return self.gid
-
-        return local_gid
 
     def __repr__(self) -> str:
         '''Returns string representation'''

@@ -63,42 +63,34 @@ def grp_name(gid: int) -> str:
 
 def pw_uid(username: str) -> int:
     '''Returns uid for a given username
-    Throws KeyError when not found
+    Raises KeyError when not found
     '''
 
     if not username:
-        raise ValueError('')
-
-    if username in CACHE_BY_USER:
-        return CACHE_BY_USER[username]
+        raise ValueError('invalid username (empty)')
 
     try:
-        pwd_entry = pwd.getpwnam(username)
-    except KeyError as err:
-        raise ValueError(username) from err
-
-    CACHE_BY_USER[username] = pwd_entry.pw_uid
-    return pwd_entry.pw_uid
+        return CACHE_BY_USER[username]
+    except KeyError:
+        pwd_entry = pwd.getpwnam(username)                  # this may raise KeyError
+        CACHE_BY_USER[username] = pwd_entry.pw_uid          # this may raise KeyError
+        return pwd_entry.pw_uid
 
 
 def grp_gid(group: str) -> int:
     '''Returns gid for a given group
-    Throws KeyError when not found
+    Raises KeyError when not found
     '''
 
     if not group:
-        raise ValueError('')
-
-    if group in CACHE_BY_GROUP:
-        return CACHE_BY_GROUP[group]
+        raise ValueError('invalid group (empty name)')
 
     try:
-        grp_entry = grp.getgrnam(group)
-    except KeyError as err:
-        raise ValueError(group) from err
-
-    CACHE_BY_GROUP[group] = grp_entry.gr_gid
-    return grp_entry.gr_gid
+        return CACHE_BY_GROUP[group]
+    except KeyError:
+        grp_entry = grp.getgrnam(group)                     # this may raise KeyError
+        CACHE_BY_GROUP[group] = grp_entry.gr_gid            # this may raise KeyError
+        return grp_entry.gr_gid
 
 
 # unit test
