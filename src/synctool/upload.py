@@ -257,6 +257,8 @@ def _makedir(path: str, remote_stats: List[RemoteStat]) -> bool:
     path component may be a symbolic link
     '''
 
+    # pylint: disable=too-many-return-statements
+
     if not path:
         error("recursion too deep")
         return False
