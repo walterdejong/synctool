@@ -257,18 +257,22 @@ def _makedir(path: str, remote_stats: List[RemoteStat]) -> bool:
     path component may be a symbolic link
     '''
 
-    if not path or not remote_stats:
+    if not path:
         error("recursion too deep")
         return False
 
     if synctool.lib.path_exists(path):
         return True
 
-    verbose('_makedir %s %r' % (path, remote_stats))
+    if not remote_stats:
+        error("recursion too deep")
+        return False
 
     # recursively make parent directory
     if not _makedir(os.path.dirname(path), remote_stats[1:]):
         return False
+
+    verbose('makedir {}'.format(path))
 
     # do a simple check against the names of the dir
     # (are we still 'in sync' with remote_stats?)
