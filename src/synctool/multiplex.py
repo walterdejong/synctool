@@ -237,14 +237,12 @@ def detect_ssh() -> int:
 
     data = ''
 
+    cmd_arr = shlex.split(synctool.param.SSH_CMD)
+    # only use first item: the path to the ssh command
+    cmd_arr = cmd_arr[:1]
+    cmd_arr.append('-V')
+    unix_out(' '.join(cmd_arr))
     try:
-        cmd_arr = shlex.split(synctool.param.SSH_CMD)
-        # only use first item: the path to the ssh command
-        cmd_arr = cmd_arr[:1]
-        cmd_arr.append('-V')
-
-        unix_out(' '.join(cmd_arr))
-
         # OpenSSH may print version information on stderr
         with subprocess.Popen(cmd_arr, shell=False,
                               stdout=subprocess.PIPE,

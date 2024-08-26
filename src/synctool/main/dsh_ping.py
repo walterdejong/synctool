@@ -57,12 +57,12 @@ def ping_node(addr: str) -> None:
     verbose('pinging %s' % node)
     unix_out('%s %s' % (param.PING_CMD, addr))
 
-    try:
-        packets_received = 0
+    packets_received = 0
 
-        # execute ping command
-        cmd = '%s %s' % (param.PING_CMD, addr)
-        cmd_arr = shlex.split(cmd)
+    # execute ping command
+    cmd = '%s %s' % (param.PING_CMD, addr)
+    cmd_arr = shlex.split(cmd)
+    try:
         with subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
                               stdout=subprocess.PIPE,
                               stderr=subprocess.STDOUT,
