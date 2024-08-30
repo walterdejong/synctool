@@ -7,7 +7,7 @@ License.
 
 Documentation is in the doc/ directory.
 Online documentation in HTML pages is available at:
-https://www.heiho.net/synctool/
+https://walterdejong.github.io/synctool/
 
 
 synctool is a tool that can help you administer your cluster of computers.
