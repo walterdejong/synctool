@@ -54,7 +54,8 @@ def main() -> int:
     '''run the program'''
 
     get_options()
-    synctool.aggr.aggregate(sys.stdin)
+    lines = sys.stdin.readlines()
+    synctool.aggr.aggregate(lines)
     return 0
 
 # EOB
