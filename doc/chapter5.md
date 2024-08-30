@@ -191,7 +191,7 @@ whether it is acceptable to run like this.
 
 5.7 Manage hosts behind a gateway
 ---------------------------------
-As synctool relies on ssh authentication you can easily manage hosts that are
+As synctool relies on SSH authentication you can easily manage hosts that are
 not directly available. Imagine this setup:
 
     synctool-master-node
@@ -215,4 +215,3 @@ Add your hosts in `synctool.conf`:
 
 Of course this requires also a proper DNS setup for your intra zone
 at `gateway.your.domain`
-

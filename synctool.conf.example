@@ -131,12 +131,13 @@ ignore .*.swp
 #
 #package_manager apk
 #package_manager apt-get
+#package_manager brew
+#package_manager bsdpkg
+#package_manager dnf
+#package_manager pacman
+#package_manager pkg
 #package_manager yum
 #package_manager zypper
-#package_manager pacman
-#package_manager brew
-#package_manager pkg
-#package_manager bsdpkg
 
 # max amount of parallel processes that synctool uses on the master node
 #num_proc 16

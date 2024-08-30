@@ -36,7 +36,7 @@ check its local copy of the repository. The client by itself will not
 synchronize with the master repository; synctool works with _server push_
 and not client pull.
 
-> Previously, synctool was located under `/var/lib/synctool/`.
+> In old times, synctool was located under `/var/lib/synctool/`.
 > It worked for me (tm), except that the Filesystem Hierarchy Standard (FHS)
 > has various things to say about it:
 >
@@ -88,8 +88,8 @@ overlay directory specific to the group `wn`.
 
 > In synctool version 5, you would configure 'overlaydir' and synctool would
 > still consider all overlay directories no matter what name the subdirectory
-> had. In synctool 6, the group is strictly enforced and the subtree is
-> synced to only those nodes that are in the group.
+> had. In synctool 6 and up, the group is strictly enforced and the subtree
+> is synced to only those nodes that are in the group.
 > Slave nodes are special; they get a full copy of the repository.
 
 To populate the repository, you can `scp` files from nodes, or you can use
@@ -456,12 +456,13 @@ in `synctool.conf`:
 
     #package_manager apk
     package_manager apt-get
+    #package_manager brew
+    #package_manager bsdpkg
+    #package_manager dnf
+    #package_manager pacman
+    #package_manager pkg
     #package_manager yum
     #package_manager zypper
-    #package_manager pacman
-    #package_manager brew
-    #package_manager pkg
-    #package_manager bsdpkg
 
 dsh-pkg knows about more platforms and package managers, but currently
 only the ones listed above are implemented and supported.
@@ -590,9 +591,8 @@ target node, `/etc/motd` is going to be fine.
 3.12 Slow updates
 -----------------
 By default, synctool addresses the nodes in parallel, and they are running
-updates concurrently. In some cases, like when doing rolling upgrades,
-you will not want to have this parallelism. There are two easy ways around
-this.
+updates concurrently. In some cases you might not want to have any
+parallelism. There are two easy ways around this;
 
     dsh --numproc=1 uptime
     dsh -p 1 uptime
@@ -604,7 +604,7 @@ The first one tells synctool (or in this case, `dsh`) to run only one
 process at a time. The second does the same thing, and sleeps for ten seconds
 after running the command.
 
-> Suppose you have a 60 node cluster, and run with `--zzz=60`.
+> Suppose you have a 60 nodes cluster, and run with `--zzz=60`.
 > You now have to wait at least one hour for the run to complete.
 
 The options `--numproc` and `--zzz` work for both `synctool` and `dsh`
@@ -639,7 +639,7 @@ then you might run:
 
 No path to the script is required; dsh will find it.
 
-> Previous versions had a `tasks/` directory under the repository and you
+> Old versions had a `tasks/` directory under the repository and you
 > could invoke synctool with the `--tasks` option. This mechanism has been
 > obsoleted by `dsh` and the `scripts/` directory.
 
