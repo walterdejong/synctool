@@ -14,7 +14,7 @@
 <h1>synctool documentation</h1>
 <br class="vtab" />
 <p>
-<em>synctool &copy; 2015 Walter de Jong &lt;walter@heiho.net&gt;</em>
+<em>synctool &copy; 2024 Walter de Jong &lt;walter@heiho.net&gt;</em>
 <br />
 <br />
 synctool comes with <strong>no warranty</strong>. synctool is
@@ -64,14 +64,7 @@ License</a>.
 5.5 Managing multiple clusters with one synctool       <br />
 5.6 Use a tiered setup for large clusters              <br />
 5.7 Manage hosts behind a gateway</p></li>
-<li><p><a href="chapter6.html">Migrating to synctool 6</a>              <br />
-6.1 Installing synctool 6                              <br />
-6.2 Configuring synctool 6                             <br />
-6.3 Updating the repository                            <br />
-6.4 Updating templates                                 <br />
-6.5 Wrapping up</p></li>
-<li><p><a href="thank_you.html">Thank you</a>                           <br />
-7.1 Fun facts</p></li>
+<li><p><a href="thank_you.html">Thank you</a>                           <br /></p></li>
 </ol>
 <br /><br /><div class="line"> </div><br /> 
 <h1>1. What is synctool</h1>
@@ -161,7 +154,7 @@ of computers. A group of computers is called a <em>cluster</em>.</p>
 <p>synctool depends on a number of (fairly standard) programs:</p>
 
 <ul>
-<li><a href="https://www.python.org/download/">python2</a> version 2.6 or better</li>
+<li><a href="https://www.python.org/download/">python3</a> version 3.6 or better</li>
 <li><a href="https://www.openssh.com/portable.html">ssh</a>, preferably OpenSSH version 5.6 or better</li>
 <li><a href="https://rsync.samba.org/">rsync</a></li>
 <li><code>ping</code>, or you can configure <a href="https://fping.org/">fping</a> later</li>
@@ -437,7 +430,7 @@ synchronize with the master repository; synctool works with <em>server push</em>
 and not client pull.</p>
 
 <blockquote>
-  <p>Previously, synctool was located under <code>/var/lib/synctool/</code>.
+  <p>In old times, synctool was located under <code>/var/lib/synctool/</code>.
 It worked for me (tm), except that the Filesystem Hierarchy Standard (FHS)
 has various things to say about it:</p>
 
@@ -496,8 +489,8 @@ repository accordingly. See also chapter 5 on Best Practices.</p>
 
 <p>In synctool version 5, you would configure &#8216;overlaydir&#8217; and synctool would
 still consider all overlay directories no matter what name the subdirectory
-had. In synctool 6, the group is strictly enforced and the subtree is
-synced to only those nodes that are in the group.
+had. In synctool 6 and up, the group is strictly enforced and the subtree
+is synced to only those nodes that are in the group.
 Slave nodes are special; they get a full copy of the repository.</p>
 </blockquote>
 
@@ -766,8 +759,8 @@ export IPADDR
 use the <code>ip addr</code> command, consult DNS or you might be able to use
 <code>synctool-config</code> to get what you need.</p>
 
-<p>The <code>synctool-template</code> command takes as input the template file (&#8220;<code>$1</code>&#8220;)
-and redirects the output to a newly generated file (&#8220;<code>$2</code>&#8220;). The &#8220;<code>$2</code>&#8221;
+<p>The <code>synctool-template</code> command takes as input the template file (&#8220;<code>$1</code>&#8221;)
+and redirects the output to a newly generated file (&#8220;<code>$2</code>&#8221;). The &#8220;<code>$2</code>&#8221;
 on the last line expands to <code>fiction.conf._nodename</code>.
 Hence, synctool generates a new config file in the repository. It does so
 even on dry runs; you can ask synctool to display a diff of <code>fiction.conf</code>
@@ -786,7 +779,7 @@ synctool-template accepts variables either from the command-line or from
 the shell environment. Like with regular <code>.post</code> scripts, the environment
 variables <code>SYNCTOOL_NODE</code> and <code>SYNCTOOL_ROOT</code> are also present here.
 However <em>unlike</em> regular <code>.post</code> scripts, template post scripts require a <code>#!</code>
-hashbang line. This is required for shell arguments (like &#8220;<code>$1</code>&#8220;, &#8220;<code>$2</code>&#8220;)
+hashbang line. This is required for shell arguments (like &#8220;<code>$1</code>&#8221;, &#8220;<code>$2</code>&#8221;)
 to work.</p>
 
 <p>Now, when you want to change the configuration, edit the template file.
@@ -894,13 +887,15 @@ detect the appropriate package manager for the operating system of the node.
 If detection fails, you may force the package manager on the command-line or
 in <code>synctool.conf</code>:</p>
 
-<pre><code>package_manager apt-get
+<pre><code>#package_manager apk
+package_manager apt-get
+#package_manager brew
+#package_manager bsdpkg
+#package_manager dnf
+#package_manager pacman
+#package_manager pkg
 #package_manager yum
 #package_manager zypper
-#package_manager pacman
-#package_manager brew
-#package_manager pkg
-#package_manager bsdpkg
 </code></pre>
 
 <p>dsh-pkg knows about more platforms and package managers, but currently
@@ -1039,9 +1034,8 @@ target node, <code>/etc/motd</code> is going to be fine.</p>
 <h2>3.12 Slow updates</h2>
 
 <p>By default, synctool addresses the nodes in parallel, and they are running
-updates concurrently. In some cases, like when doing rolling upgrades,
-you will not want to have this parallelism. There are two easy ways around
-this.</p>
+updates concurrently. In some cases you might not want to have any
+parallelism. There are two easy ways around this;</p>
 
 <pre><code>dsh --numproc=1 uptime
 dsh -p 1 uptime
@@ -1055,7 +1049,7 @@ process at a time. The second does the same thing, and sleeps for ten seconds
 after running the command.</p>
 
 <blockquote>
-  <p>Suppose you have a 60 node cluster, and run with <code>--zzz=60</code>.
+  <p>Suppose you have a 60 nodes cluster, and run with <code>--zzz=60</code>.
 You now have to wait at least one hour for the run to complete.</p>
 </blockquote>
 
@@ -1089,7 +1083,7 @@ then you might run:</p>
 <p>No path to the script is required; dsh will find it.</p>
 
 <blockquote>
-  <p>Previous versions had a <code>tasks/</code> directory under the repository and you
+  <p>Old versions had a <code>tasks/</code> directory under the repository and you
 could invoke synctool with the <code>--tasks</code> option. This mechanism has been
 obsoleted by <code>dsh</code> and the <code>scripts/</code> directory.</p>
 </blockquote>
@@ -1143,368 +1137,20 @@ See <code>man ssh_config</code> for more information on these OpenSSH options.</
 synctool&#8217;s configuration file.</p>
 
 <ul>
-<li><p><code>masterdir &lt;directory&gt;</code></p>
-
-<p><strong>obsolete</strong> This used to be the directory where <code>overlay/</code> and <code>delete/</code>
-reside. In recent versions, this directory must be under the synctool root.
-The equivalent of <code>masterdir</code> would now be <code>/opt/synctool/var/</code>.</p></li>
-<li><p><code>overlaydir &lt;directory&gt;</code></p>
-
-<p><strong>obsolete</strong> This directory is now hardcoded as <code>ROOTDIR/var/overlay/</code>.</p></li>
-<li><p><code>deletedir &lt;directory&gt;</code></p>
-
-<p><strong>obsolete</strong> This directory is now hardcoded as <code>ROOTDIR/var/delete/</code>.</p></li>
-<li><p><code>tasksdir &lt;directory&gt;</code></p>
-
-<p><strong>obsolete</strong> synctool no longer runs tasks. If you still want this
-functionality, please use <code>dsh</code> instead. You may use the <code>scriptdir</code> to
-store your (task) scripts.</p></li>
-<li><p><code>scriptdir &lt;directory&gt;</code></p>
-
-<p><strong>obsolete</strong> This directory is now hardcoded as <code>ROOTDIR/scripts/</code>.</p></li>
-<li><p><code>tempdir &lt;directory&gt;</code></p>
-
-<p>Directory where the synctool master will create temporary files.
-The default is <code>/tmp/synctool</code>. There may be only one <code>tempdir</code> defined
-and it must be an absolute path.</p></li>
-<li><p><code>symlink_mode &lt;octal number&gt;</code></p>
-
-<p><strong>obsolete</strong> synctool now handles symbolic links in the correct way.</p></li>
-<li><p><code>ssh_control_persist &lt;time|yes|none&gt;</code></p>
-
-<p>This parameter maps directly to the OpenSSH <code>ControlPersist</code>.
-It sets the default timeout for multiplexed connections, using <code>dsh -M</code>.
-This parameter may be overridden on the command-line with <code>dsh --persist</code>.
-The time argument is a string like &#8220;1h&#8221; or &#8220;1h30m&#8221;. When it is &#8220;yes&#8221;,
-there is no timeout, and it will persist indefinitely until the master
-is stopped or terminated with <code>dsh -O stop</code> or <code>dsh -O exit</code>.
-Note that OpenSSH supports <code>ControlPersist=no</code>, but synctool does not.
-It can be set to <code>none</code> to call <code>ssh</code> without <code>-o ControlPersist</code> option.
-The default timeout is 1 hour. This parameter only has effect for OpenSSH
-version 5.6 and later.</p></li>
-<li><p><code>require_extension &lt;yes/no&gt;</code></p>
-
-<p>When set to &#8216;yes&#8217;, a generic file in the repository must have the extension
-<code>'.all'</code>. When set to &#8216;no&#8217; an extension is not required and the group
-<code>all</code> is automatically implied.
-The default is <code>yes</code>.</p></li>
 <li><p><code>backup_copies &lt;yes/no&gt;</code></p>
 
 <p>When set to &#8216;yes&#8217;, synctool creates backup copies on the target nodes of
 files that it updates. These backup files will be named <code>*.saved</code>.
 The default for this parameter is <code>yes</code>.</p></li>
-<li><p><code>ignore_dotfiles &lt;yes/no&gt;</code></p>
-
-<p>Setting this to &#8216;yes&#8217; results in synctool ignoring all files in the
-repository that begin with a dot. This can be convenient like for example
-for <code>.gitignore</code>.
-The default is <code>no</code>; do not ignore dotfiles.</p></li>
-<li><p><code>ignore_dotdirs &lt;yes/no&gt;</code></p>
-
-<p>Setting this to &#8216;yes&#8217; results in synctool ignoring all directories in the
-repository that begin with a dot. This can be convenient like for example
-for <code>.svn/</code> directories.
-The default is <code>no</code>; do not ignore dotdirs.</p></li>
-<li><p><code>ignore &lt;filename or directory name&gt; [..]</code></p>
-
-<p>This parameter enables you to have synctool ignore specific files or
-directories in the repository. Multiple <code>ignore</code> definitions are allowed.
-You may put multiple filenames on a line, and you may use wildcards.
-Example:</p>
-
-<pre><code>ignore .gitignore .git .svn
-ignore .*.swp
-ignore tmp[0-9][0-9][0-9]??
-</code></pre></li>
-<li><p><code>ignore_file &lt;file name&gt;</code></p>
-
-<p><strong>obsolete</strong> Use the <code>ignore</code> keyword instead.</p></li>
-<li><p><code>ignore_files &lt;file name&gt;</code></p>
-
-<p><strong>obsolete</strong> Use the <code>ignore</code> keyword instead.</p></li>
-<li><p><code>ignore_dir &lt;directory name&gt;</code></p>
-
-<p><strong>obsolete</strong> Use the <code>ignore</code> keyword instead.</p></li>
-<li><p><code>ignore_files &lt;directory name&gt;</code></p>
-
-<p><strong>obsolete</strong> Use the <code>ignore</code> keyword instead.</p></li>
-<li><p><code>logfile &lt;filename&gt;</code></p>
-
-<p><strong>obsolete</strong> Use the <code>syslogging</code> keyword instead.</p></li>
-<li><p><code>syslogging &lt;yes/no&gt;</code></p>
-
-<p>Log any updates to syslog. Nothing is logged for dry runs.
-The default is: <code>yes</code>.</p></li>
-<li><p><code>sync_times &lt;yes/no&gt;</code></p>
-
-<p>Synchronize modification timestamps of files. Every file on the node
-will get the timestamp identical to the file in the overlay.
-Template generated files will get the timestamp of the template.</p>
-
-<p>This setting only works for files (and special files).
-Timestamps of symbolic links and directories are not managed.</p>
-
-<p>The default is: <code>no</code>.</p></li>
-<li><p><code>diff_cmd &lt;diff UNIX command&gt;</code></p>
-
-<p>Give the command and arguments to execute <code>diff</code>.
-synctool runs this command when you use the option <code>--diff</code> to see the
-differences between the file in the repository and on the target node.</p>
-
-<p>The exact location and arguments of the <code>diff</code> program are operating
-system specific; the PATH environment variable will be searched for the
-command if you do not supply a full path.</p>
-
-<p>The default is: <code>diff -u</code></p></li>
-<li><p><code>ping_cmd &lt;ping UNIX command&gt;</code></p>
-
-<p>Give the command and arguments to execute <code>ping</code>.
-<code>dsh-ping</code> uses this command to check what nodes are up and running.</p>
-
-<p>The exact location and arguments of the <code>ping</code> program are operating
-system specific; the PATH environment variable will be searched for the
-command if you do not supply a full path.</p>
-
-<p>The default is: <code>ping -q -c 1 -w 1</code> (which assumes Linux ping options)</p></li>
-<li><p><code>ssh_cmd &lt;ssh UNIX command&gt;</code></p>
-
-<p>Give the command and arguments to execute <code>ssh</code>. synctool and <code>dsh</code> use
-this command to execute remote commands on the target nodes.</p>
-
-<p>The exact location of the <code>ssh</code> program is operating system specific;
-the PATH environment variable will be searched for the command if you do
-not supply a full path.</p>
-
-<p>The default is: <code>ssh -o ConnectTimeout=10 -x -q</code></p></li>
-<li><p><code>scp_cmd &lt;scp UNIX command&gt;</code></p>
-
-<p><strong>obsolete</strong> synctool-scp uses <code>rsync</code> under the hood nowadays.</p></li>
-<li><p><code>rsync_cmd &lt;rsync UNIX command&gt;</code></p>
-
-<p>Give the command and arguments to execute <code>rsync</code>. synctool uses this
-command to distribute the repository to the target nodes.</p>
-
-<p>The exact location of the <code>rsync</code> program is operating system specific;
-the PATH environment variable will be searched for the command if you do
-not supply a full path.</p>
-
-<p>The default is: <code>rsync -ar --delete --delete-excluded -e 'ssh
--o ConnectTimeout=10 -x -q' -q</code></p>
-
-<p>synctool will automatically add another option <code>--filter</code> to this command,
-which it uses to ensure that the correct overlay directories are synced
-to the nodes. So be mindful that you can tweak the parameters of the
-<code>rsync</code> command, but you can not replace it with a different copying
-program &#8212; unless it also supports <code>rsync</code>&#8216;s filtering capabilities.</p></li>
-<li><p><code>synctool_cmd &lt;synctool UNIX command&gt;</code></p>
-
-<p>Give the command and arguments to execute <code>synctool-client</code>. synctool uses
-this command to execute synctool on the target nodes.</p>
-
-<p>The exact location of the <code>synctool-client</code> program is installation
-dependent. However, synctool looks for it under the synctool root.</p>
-
-<p>The default is: <code>$SYNCTOOL/bin/synctool-client</code></p></li>
-<li><p><code>pkg_cmd &lt;synctool-client-pkg UNIX command&gt;</code></p>
-
-<p>Give the command and arguments to execute <code>synctool-client-pkg</code>.
-dsh-pkg uses this command to do package management on the target nodes.</p>
-
-<p>The exact location of the <code>synctool-client-pkg</code> program is installation
-dependent. However, dsh-pkg looks for it under the synctool root.</p>
-
-<p>The default is: <code>$SYNCTOOL/bin/synctool-client-pkg</code></p></li>
-<li><p><code>package_manager &lt;package management system&gt;</code></p>
-
-<p>Specify the package management system that dsh-pkg must use.
-If left out, dsh-pkg will detect what package manager it should use,
-but using this parameter you can force it if detection fails.
-This setting can be overridden from the command-line when invoking
-<code>dsh-pkg</code>.</p>
-
-<p>Valid values for <code>package_manager</code> are:</p>
-
-<pre><code>apt-get
-yum
-zypper
-pacman
-brew
-pkg
-bsdpkg
-</code></pre></li>
-<li><p><code>num_proc &lt;number&gt;</code></p>
-
-<p>This specifies the maximum amount of parallel processes that synctool
-will use. For large clusters, you will want to increase this value, but mind
-that this will increase the load on your master node. Setting this value
-higher than the amount of nodes you have, has no effect.
-The default is <code>16</code>.</p>
-
-<p>For synctool, dsh, dsh-pkg and the like, option <code>--numproc</code> can be given
-to override this setting.</p></li>
-<li><p><code>full_path &lt;yes/no&gt;</code></p>
-
-<p>synctool likes to abbreviate paths to <code>$overlay/some/dir/file</code>.
-When you set this option to <code>no</code>, synctool will display the true full path
-instead of the abbreviated one.</p>
-
-<p>The default is <code>no</code>.</p></li>
-<li><p><code>default_nodeset &lt;group-or-node&gt; [..]</code></p>
-
-<p>By default, synctool will run on these nodes or groups. You can use this to
-make synctool by default work on only a subcluster rather than your whole
-hardware installation.</p>
-
-<p>The default is <code>all</code>. You may set it to <code>none</code> to make synctool not run
-on a default set of nodes at all. Example:</p>
-
-<pre><code>default_nodeset test1 test2 testnodes xtest[1-10]
-</code></pre></li>
-<li><p><code>master &lt;fqdn&gt;</code></p>
-
-<p>Indicates which node is the master, the management node from where you
-will run synctool to control the cluster. It should be set to the fully
-qualified domain name of the management host. You can get the fqdn with:</p>
-
-<pre><code>synctool-config --fqdn
-</code></pre></li>
-<li><p><code>slave &lt;nodename&gt; [..]</code></p>
-
-<p>Slave nodes get a full copy of the synctool repository. Slaves have no
-other function than that. You can not run synctool from a slave until you
-change it into a master node in the config file.</p></li>
-<li><p><code>group &lt;groupname&gt; &lt;subgroup&gt; [..]</code></p>
-
-<p>The <code>group</code> keyword defines <em>compound</em> groups. It is a means to group
-several subgroups together into a single group. If the subgroups did not
-exist yet, they are defined automatically as new, empty groups.</p>
-
-<pre><code>group wn workernode batch
-group test wn
-group g1 batch test wn
-</code></pre>
-
-<p>Group names are alphanumeric, but can have an underscore, minus, or plus
-symbol in between. The following are valid group names:</p>
-
-<pre><code>group group1 group-1 group_1 group+1 192_168_1 10 node1+node2
-group A+B+C A B C
-</code></pre></li>
-<li><p><code>node &lt;nodename&gt; &lt;group&gt; [..] [ipaddress:&lt;name, IP address, or sequence&gt;]
-[rsync:&lt;yes/no&gt;]</code></p>
-
-<p>The <code>node</code> keyword defines what groups a node is in. Multiple groups may
-be given. The order of the groups is important; the left-most group is most
-important, and the right-most group is least important. What this means is
-that if there are files in repository that have the same base filename,
-but a different group extension, synctool will pick the file that has the
-most important group extension for this node.</p>
-
-<p>Groups can be defined &#8216;on the fly&#8217;, there is no need for a group to exist
-before it can be used in a node definition.</p>
-
-<p>Node names are alphanumeric, but can have an underscore, minus, or plus
-symbol in between. The following are valid node names:</p>
-
-<pre><code>node node1 node-1 node_1 node+1 10_0_0_2 10 node1+node2
-</code></pre>
-
-<p>The <code>ipaddress</code> specifier tells synctool how to contact the node. This is
-optional; when omitted, synctool assumes the nodename can be found in DNS.
-Note that synctool nodenames need not be same as DNS names.</p>
-
-<blockquote>
-  <p>The synctool master tells the clients what node they are.
-When running synctool-client in stand-alone mode, the client tries to
-figure out by itself what node it is running on. If it fails to determine
-the nodename, you may pass option <code>--nodename</code> to force it.</p>
-</blockquote>
-
-<p>The optional <code>rsync:no</code> specifier may be used to tell synctool not
-to sync the repository to the target node. This is only convenient when
-the node has access to the repository via another way, such as a shared
-filesystem.</p>
-
-<pre><code>node node1 fs sched rack1
-node node2 login    rack1
-node node3 test     rack1 ipaddress:node8-mgmt
-node node4 batch    rack1 ipaddress:node9-mgmt rsync:no
-node node5 wn       rack1 ipaddress:node5-mgmt
-node node6 wn       rack1 ipaddress:node6-mgmt
-node node7 wn       rack1 ipaddress:node7-mgmt
-node node[20-29] wn rack2 ipaddress:node[20]-mgmt
-node node[30-39] wn rack3 ipaddress:192.168.3.[130]
-</code></pre>
-
-<p>As shown in this example, a node range may be given to define a number
-of nodes using a single definition line. The (optional) IP address may
-use the sequence notation, that numbers the IP addresses in sequence.</p></li>
-<li><p><code>ignore_node &lt;nodename&gt; [..]</code></p>
-
-<p>This tells synctool to ignore one or more nodes. You can use this if you
-want to skip this node for a while for some reason, for example because
-it is broken.</p></li>
-<li><p><code>ignore_group &lt;group&gt; [..]</code></p>
-
-<p>This tells synctool to ignore one or more groups. You can use this to
-temporarily disable the group. This can be particularly useful when doing
-software upgrades.</p></li>
-<li><p><code>on_update &lt;filename&gt; &lt;shell command&gt;</code></p>
-
-<p><strong>obsolete</strong> This mechanism is no longer available, because it doesn&#8217;t
-play nice with multi-platform setups. Please use (the more flexible and
-powerful) <code>.post</code> scripts instead.</p></li>
-<li><p><code>always_run &lt;shell command&gt;</code></p>
-
-<p><strong>obsolete</strong> This mechanism is no longer available. If you still want
-this functionality, wrap the <code>synctool_cmd</code> command with a very short
-shell script.</p>
-
-<p>Another way could be abusing the template generation mechanism in order
-to always run a certain script.</p></li>
-<li><p><code>include &lt;(local) synctool config file&gt;</code></p>
-
-<p>This keyword includes a synctool configuration file (that is possibly
-located on the target node). You can use this to give certain nodes a
-slightly different synctool configuration than others. This can be
-important, especially in setups where you are running a multitude of
-operating systems.</p>
-
-<pre><code>include /etc/synctool_local.conf
-</code></pre>
-
-<p>Another good use of this option is to clean up your configuration:</p>
-
-<pre><code>include /opt/synctool/etc/nodes.conf
-include /opt/synctool/etc/colors.conf
-</code></pre></li>
-<li><p><code>terse &lt;yes/no&gt;</code></p>
-
-<p>In terse mode, synctool shows a very brief output with paths abbreviated
-to <code>//overlay/dir/.../file</code>.
-The default is <code>no</code>.</p></li>
 <li><p><code>colorize &lt;yes/no&gt;</code></p>
 
 <p>In terse mode, synctool output can be made to show colors. Mind that this
 parameter only works when <code>terse</code> is set to <code>yes</code>.
 The default is <code>yes</code>.</p></li>
-<li><p><code>colorize_full_line &lt;yes/no&gt;</code></p>
+<li><p><code>color_info &lt;color&gt;</code></p>
 
-<p>In terse mode, synctool output can be made to show colors. This option
-colors the full output line rather than just the leading keyword.
-Mind that this parameter only works when both <code>terse</code> and <code>colorize</code>
-are enabled.
-The default is <code>no</code>.</p></li>
-<li><p><code>colorize_bright &lt;yes/no&gt;</code></p>
-
-<p>In terse mode, synctool output can be made to show colors. This option
-enables the bright/bold attribute for colors.
-Mind that this parameter only works when both <code>terse</code> and <code>colorize</code>
-are enabled.
-The default is <code>yes</code>.</p></li>
-<li><p><code>colorize_bold &lt;yes/no&gt;</code></p>
-
-<p>Same as <code>colorize_bright</code>.</p>
+<p>Specify the color for informational messages in terse mode.
+The default is <code>default</code>.</p>
 
 <p>Following are keywords to customize colors. Valid color codes are:</p>
 
@@ -1512,10 +1158,6 @@ The default is <code>yes</code>.</p></li>
 black       green     magenta    bold
 darkgray    yellow    cyan
 </code></pre></li>
-<li><p><code>color_info &lt;color&gt;</code></p>
-
-<p>Specify the color for informational messages in terse mode.
-The default is <code>default</code>.</p></li>
 <li><p><code>color_warn &lt;color&gt;</code></p>
 
 <p>Specify the color for warnings in terse mode.
@@ -1594,6 +1236,307 @@ The default is <code>default</code>.</p></li>
 <p>Specify the color for the &#8216;OK&#8217; message in terse mode.
 It occurs when files are up to date.
 The default is <code>default</code>.</p></li>
+<li><p><code>colorize_bright &lt;yes/no&gt;</code></p>
+
+<p>In terse mode, synctool output can be made to show colors. This option
+enables the bright/bold attribute for colors.
+Mind that this parameter only works when both <code>terse</code> and <code>colorize</code>
+are enabled.
+The default is <code>yes</code>.</p></li>
+<li><p><code>colorize_bold &lt;yes/no&gt;</code></p>
+
+<p>Same as <code>colorize_bright</code>.</p></li>
+<li><p><code>colorize_full_line &lt;yes/no&gt;</code></p>
+
+<p>In terse mode, synctool output can be made to show colors. This option
+colors the full output line rather than just the leading keyword.
+Mind that this parameter only works when both <code>terse</code> and <code>colorize</code>
+are enabled.
+The default is <code>no</code>.</p></li>
+<li><p><code>default_nodeset &lt;group-or-node&gt; [..]</code></p>
+
+<p>By default, synctool will run on these nodes or groups. You can use this to
+make synctool by default work on only a subcluster rather than your whole
+hardware installation.</p>
+
+<p>The default is <code>all</code>. You may set it to <code>none</code> to make synctool not run
+on a default set of nodes at all. Example:</p>
+
+<pre><code>default_nodeset test1 test2 testnodes xtest[1-10]
+</code></pre></li>
+<li><p><code>diff_cmd &lt;diff UNIX command&gt;</code></p>
+
+<p>Give the command and arguments to execute <code>diff</code>.
+synctool runs this command when you use the option <code>--diff</code> to see the
+differences between the file in the repository and on the target node.</p>
+
+<p>The exact location and arguments of the <code>diff</code> program are operating
+system specific; the PATH environment variable will be searched for the
+command if you do not supply a full path.</p>
+
+<p>The default is: <code>diff -u</code></p></li>
+<li><p><code>full_path &lt;yes/no&gt;</code></p>
+
+<p>synctool likes to abbreviate paths to <code>$overlay/some/dir/file</code>.
+When you set this option to <code>no</code>, synctool will display the true full path
+instead of the abbreviated one.</p>
+
+<p>The default is <code>no</code>.</p></li>
+<li><p><code>group &lt;groupname&gt; &lt;subgroup&gt; [..]</code></p>
+
+<p>The <code>group</code> keyword defines <em>compound</em> groups. It is a means to group
+several subgroups together into a single group. If the subgroups did not
+exist yet, they are defined automatically as new, empty groups.</p>
+
+<pre><code>group wn workernode batch
+group test wn
+group g1 batch test wn
+</code></pre>
+
+<p>Group names are alphanumeric, but can have an underscore, minus, or plus
+symbol in between. The following are valid group names:</p>
+
+<pre><code>group group1 group-1 group_1 group+1 192_168_1 10 node1+node2
+group A+B+C A B C
+</code></pre></li>
+<li><p><code>ignore &lt;filename or directory name&gt; [..]</code></p>
+
+<p>This parameter enables you to have synctool ignore specific files or
+directories in the repository. Multiple <code>ignore</code> definitions are allowed.
+You may put multiple filenames on a line, and you may use wildcards.
+Example:</p>
+
+<pre><code>ignore .gitignore .git .svn
+ignore .*.swp
+ignore tmp[0-9][0-9][0-9]??
+</code></pre></li>
+<li><p><code>ignore_dotfiles &lt;yes/no&gt;</code></p>
+
+<p>Setting this to &#8216;yes&#8217; results in synctool ignoring all files in the
+repository that begin with a dot. This can be convenient like for example
+for <code>.gitignore</code>.
+The default is <code>no</code>; do not ignore dotfiles.</p></li>
+<li><p><code>ignore_dotdirs &lt;yes/no&gt;</code></p>
+
+<p>Setting this to &#8216;yes&#8217; results in synctool ignoring all directories in the
+repository that begin with a dot. This can be convenient like for example
+for <code>.svn/</code> directories.
+The default is <code>no</code>; do not ignore dotdirs.</p></li>
+<li><p><code>ignore_group &lt;group&gt; [..]</code></p>
+
+<p>This tells synctool to ignore one or more groups. You can use this to
+temporarily disable the group. This can be particularly useful when doing
+software upgrades.</p></li>
+<li><p><code>ignore_node &lt;nodename&gt; [..]</code></p>
+
+<p>This tells synctool to ignore one or more nodes. You can use this if you
+want to skip this node for a while for some reason, for example because
+it is broken.</p></li>
+<li><p><code>include &lt;(local) synctool config file&gt;</code></p>
+
+<p>This keyword includes a synctool configuration file (that is possibly
+located on the target node). You can use this to give certain nodes a
+slightly different synctool configuration than others. This can be
+important, especially in setups where you are running a multitude of
+operating systems.</p>
+
+<pre><code>include /etc/synctool_local.conf
+</code></pre>
+
+<p>Another good use of this option is to clean up your configuration:</p>
+
+<pre><code>include /opt/synctool/etc/nodes.conf
+include /opt/synctool/etc/colors.conf
+</code></pre></li>
+<li><p><code>master &lt;fqdn&gt;</code></p>
+
+<p>Indicates which node is the master, the management node from where you
+will run synctool to control the cluster. It should be set to the fully
+qualified domain name of the management host. You can get the fqdn with:</p>
+
+<pre><code>synctool-config --fqdn
+</code></pre></li>
+<li><p><code>node &lt;nodename&gt; &lt;group&gt; [..] [ipaddress:&lt;name, IP address, or sequence&gt;]
+[rsync:&lt;yes/no&gt;]</code></p>
+
+<p>The <code>node</code> keyword defines what groups a node is in. Multiple groups may
+be given. The order of the groups is important; the left-most group is most
+important, and the right-most group is least important. What this means is
+that if there are files in repository that have the same base filename,
+but a different group extension, synctool will pick the file that has the
+most important group extension for this node.</p>
+
+<p>Groups can be defined &#8216;on the fly&#8217;, there is no need for a group to exist
+before it can be used in a node definition.</p>
+
+<p>Node names are alphanumeric, but can have an underscore, minus, or plus
+symbol in between. The following are valid node names:</p>
+
+<pre><code>node node1 node-1 node_1 node+1 10_0_0_2 10 node1+node2
+</code></pre>
+
+<p>The <code>ipaddress</code> specifier tells synctool how to contact the node. This is
+optional; when omitted, synctool assumes the nodename can be found in DNS.
+Note that synctool nodenames need not be same as DNS names.</p>
+
+<blockquote>
+  <p>The synctool master tells the clients what node they are.
+When running synctool-client in stand-alone mode, the client tries to
+figure out by itself what node it is running on. If it fails to determine
+the nodename, you may pass option <code>--nodename</code> to force it.</p>
+</blockquote>
+
+<p>The optional <code>rsync:no</code> specifier may be used to tell synctool not
+to sync the repository to the target node. This is only convenient when
+the node has access to the repository via another way, such as a shared
+filesystem.</p>
+
+<pre><code>node node1 fs sched rack1
+node node2 login    rack1
+node node3 test     rack1 ipaddress:node8-mgmt
+node node4 batch    rack1 ipaddress:node9-mgmt rsync:no
+node node5 wn       rack1 ipaddress:node5-mgmt
+node node6 wn       rack1 ipaddress:node6-mgmt
+node node7 wn       rack1 ipaddress:node7-mgmt
+node node[20-29] wn rack2 ipaddress:node[20]-mgmt
+node node[30-39] wn rack3 ipaddress:192.168.3.[130]
+</code></pre>
+
+<p>As shown in this example, a node range may be given to define a number
+of nodes using a single definition line. The (optional) IP address may
+use the sequence notation, that numbers the IP addresses in sequence.</p></li>
+<li><p><code>num_proc &lt;number&gt;</code></p>
+
+<p>This specifies the maximum amount of parallel processes that synctool
+will use. For large clusters, you will want to increase this value, but mind
+that this will increase the load on your master node. Setting this value
+higher than the amount of nodes you have, has no effect.
+The default is <code>16</code>.</p>
+
+<p>For synctool, dsh, dsh-pkg and the like, option <code>--numproc</code> can be given
+to override this setting.</p></li>
+<li><p><code>package_manager &lt;package management system&gt;</code></p>
+
+<p>Specify the package management system that dsh-pkg must use.
+If left out, dsh-pkg will detect what package manager it should use,
+but using this parameter you can force it if detection fails.
+This setting can be overridden from the command-line when invoking
+<code>dsh-pkg</code>.</p>
+
+<p>Valid values for <code>package_manager</code> are:</p>
+
+<pre><code>apk
+apt-get
+brew
+bsdpkg
+dnf
+pacman
+pkg
+yum
+zypper
+</code></pre></li>
+<li><p><code>pkg_cmd &lt;synctool-client-pkg UNIX command&gt;</code></p>
+
+<p>Give the command and arguments to execute <code>synctool-client-pkg</code>.
+dsh-pkg uses this command to do package management on the target nodes.</p>
+
+<p>The exact location of the <code>synctool-client-pkg</code> program is installation
+dependent. However, dsh-pkg looks for it under the synctool root.</p>
+
+<p>The default is: <code>$SYNCTOOL/bin/synctool-client-pkg</code></p></li>
+<li><p><code>ping_cmd &lt;ping UNIX command&gt;</code></p>
+
+<p>Give the command and arguments to execute <code>ping</code>.
+<code>dsh-ping</code> uses this command to check what nodes are up and running.</p>
+
+<p>The exact location and arguments of the <code>ping</code> program are operating
+system specific; the PATH environment variable will be searched for the
+command if you do not supply a full path.</p>
+
+<p>The default is: <code>ping -q -c 1 -w 1</code> (which assumes Linux ping options)</p></li>
+<li><p><code>require_extension &lt;yes/no&gt;</code></p>
+
+<p>When set to &#8216;yes&#8217;, a generic file in the repository must have the extension
+<code>'.all'</code>. When set to &#8216;no&#8217; an extension is not required and the group
+<code>all</code> is automatically implied.
+The default is <code>yes</code>.</p></li>
+<li><p><code>rsync_cmd &lt;rsync UNIX command&gt;</code></p>
+
+<p>Give the command and arguments to execute <code>rsync</code>. synctool uses this
+command to distribute the repository to the target nodes.</p>
+
+<p>The exact location of the <code>rsync</code> program is operating system specific;
+the PATH environment variable will be searched for the command if you do
+not supply a full path.</p>
+
+<p>The default is: <code>rsync -ar --delete --delete-excluded -e 'ssh
+-o ConnectTimeout=10 -x -q' -q</code></p>
+
+<p>synctool will automatically add another option <code>--filter</code> to this command,
+which it uses to ensure that the correct overlay directories are synced
+to the nodes. So be mindful that you can tweak the parameters of the
+<code>rsync</code> command, but you can not replace it with a different copying
+program &#8212; unless it also supports <code>rsync</code>&#8217;s filtering capabilities.</p></li>
+<li><p><code>slave &lt;nodename&gt; [..]</code></p>
+
+<p>Slave nodes get a full copy of the synctool repository. Slaves have no
+other function than that. You can not run synctool from a slave until you
+change it into a master node in the config file.</p></li>
+<li><p><code>ssh_cmd &lt;ssh UNIX command&gt;</code></p>
+
+<p>Give the command and arguments to execute <code>ssh</code>. synctool and <code>dsh</code> use
+this command to execute remote commands on the target nodes.</p>
+
+<p>The exact location of the <code>ssh</code> program is operating system specific;
+the PATH environment variable will be searched for the command if you do
+not supply a full path.</p>
+
+<p>The default is: <code>ssh -o ConnectTimeout=10 -x -q</code></p></li>
+<li><p><code>ssh_control_persist &lt;time|yes|none&gt;</code></p>
+
+<p>This parameter maps directly to the OpenSSH <code>ControlPersist</code>.
+It sets the default timeout for multiplexed connections, using <code>dsh -M</code>.
+This parameter may be overridden on the command-line with <code>dsh --persist</code>.
+The time argument is a string like &#8220;1h&#8221; or &#8220;1h30m&#8221;. When it is &#8220;yes&#8221;,
+there is no timeout, and it will persist indefinitely until the master
+is stopped or terminated with <code>dsh -O stop</code> or <code>dsh -O exit</code>.
+Note that OpenSSH supports <code>ControlPersist=no</code>, but synctool does not.
+It can be set to <code>none</code> to call <code>ssh</code> without <code>-o ControlPersist</code> option.
+The default timeout is 1 hour. This parameter only has effect for OpenSSH
+version 5.6 and later.</p></li>
+<li><p><code>sync_times &lt;yes/no&gt;</code></p>
+
+<p>Synchronize modification timestamps of files. Every file on the node
+will get the timestamp identical to the file in the overlay.
+Template generated files will get the timestamp of the template.</p>
+
+<p>This setting only works for files (and special files).
+Timestamps of symbolic links and directories are not managed.</p>
+
+<p>The default is: <code>no</code>.</p></li>
+<li><p><code>synctool_cmd &lt;synctool UNIX command&gt;</code></p>
+
+<p>Give the command and arguments to execute <code>synctool-client</code>. synctool uses
+this command to execute synctool on the target nodes.</p>
+
+<p>The exact location of the <code>synctool-client</code> program is installation
+dependent. However, synctool looks for it under the synctool root.</p>
+
+<p>The default is: <code>$SYNCTOOL/bin/synctool-client</code></p></li>
+<li><p><code>syslogging &lt;yes/no&gt;</code></p>
+
+<p>Log any updates to syslog. Nothing is logged for dry runs.
+The default is: <code>yes</code>.</p></li>
+<li><p><code>tempdir &lt;directory&gt;</code></p>
+
+<p>Directory where the synctool master will create temporary files.
+The default is <code>/tmp/synctool</code>. There may be only one <code>tempdir</code> defined
+and it must be an absolute path.</p></li>
+<li><p><code>terse &lt;yes/no&gt;</code></p>
+
+<p>In terse mode, synctool shows a very brief output with paths abbreviated
+to <code>//overlay/dir/.../file</code>.
+The default is <code>no</code>.</p></li>
 </ul>
 <br /><br /><div class="line"> </div><br /> 
 <h1>5. Best practices</h1>
@@ -1792,7 +1735,7 @@ whether it is acceptable to run like this.</p>
 
 <h2>5.7 Manage hosts behind a gateway</h2>
 
-<p>As synctool relies on ssh authentication you can easily manage hosts that are
+<p>As synctool relies on SSH authentication you can easily manage hosts that are
 not directly available. Imagine this setup:</p>
 
 <pre><code>synctool-master-node
@@ -1820,170 +1763,7 @@ node privatenode2 group1 group2 ipaddress:privatenode2.intra.your.domain
 <p>Of course this requires also a proper DNS setup for your intra zone
 at <code>gateway.your.domain</code></p>
 <br /><br /><div class="line"> </div><br /> 
-<h1>6. Migrating to synctool 6</h1>
-
-<p>This chapter may be of importance if you already are using an older version
-of synctool, and wish to upgrade to synctool 6. Everything you need to know
-is really in the previous chapters, so some sound advice: read the manual!
-Other than that, this chapter gives some pointers on how to lift your
-installation up to level 6.</p>
-
-<p>First of all, this is a big upgrade so be sure you have some time on your
-hands. It is recommended that your current synctool setup is &#8216;clean&#8217;, does
-not produce any errors, and that your cluster is &#8216;in sync&#8217; (ie. there are
-no pending changes). It is also recommended that you first read through this
-chapter (and/or the entire manual) before taking any action.</p>
-
-<p>This chapter assumes your old synctool repository is <code>/var/lib/synctool/</code>.
-The programs are under <code>/opt/synctool/</code>.</p>
-
-<h2>6.1 Installing synctool 6</h2>
-
-<p>Log on to the master node. The first step is to move the old synctool dir
-out of the way:</p>
-
-<pre><code>mv /opt/synctool /opt/synctool.old
-</code></pre>
-
-<p>Install synctool 6 as described in <a href="chapter2.html">chapter 2</a>.
-This boils down to:</p>
-
-<pre><code>./setup.sh -f
-</code></pre>
-
-<p>This installs the programs under <code>/opt/synctool/</code> and creates a new, empty
-repository under <code>/opt/synctool/var/</code>. Let&#8217;s leave it empty for now, first
-go configure synctool 6.</p>
-
-<h2>6.2 Configuring synctool 6</h2>
-
-<p>The old config file is <code>/var/lib/synctool/synctool.conf</code>. The new config
-file will be <code>/opt/synctool/etc/synctool.conf</code>, but you can&#8217;t just copy it
-in place and expect it to work. The reason is that some config parameters
-have changed; some were dropped and new ones have been added.
-The best thing to do is to take <code>/opt/synctool/etc/synctool.conf.example</code>
-and adapt it.</p>
-
-<pre><code>cd /opt/synctool/etc
-cp synctool.conf.example synctool.conf
-editor_of_choice synctool.conf
-</code></pre>
-
-<p>Fill in all the parameters the way you want them. synctool uses sensible
-defaults for most parameters; these are commented in the example config.
-You must set the <code>master_node</code>.</p>
-
-<p>Delete the obvious example groups and nodes; copy over the group and node
-definitions from your old <code>synctool.conf</code> in the <code>/var/lib/synctool/</code>
-directory.
-As shown in the example config, if your nodes are neatly numbered, the node
-config lines can be greatly shortened by using the new node range syntax.</p>
-
-<p>Comment the <code>ignore_node</code> and <code>ignore_group</code> lines or set them like they
-were in the old <code>synctool.conf</code>.</p>
-
-<p>The rest of the config file are reasonable defaults. Leave them be or change
-them to match the old <code>synctool.conf</code>.</p>
-
-<p>If you had any <code>on_update</code> lines in the old config, these must be converted
-to <code>.post</code> scripts; <code>.post</code> scripts are the only way to trigger actions on
-updates in synctool 6.</p>
-
-<p>You are now set to try out the new config with <code>synctool-config</code> and/or <code>dsh</code>.</p>
-
-<p>For more information on configuring synctool, see <a href="chapter2.html">chapter 2</a>
-and <a href="chapter4.html">chapter 4</a>.</p>
-
-<h2>6.3 Updating the repository</h2>
-
-<p>If the configuration is working, it is safe to run <code>synctool</code>. This will
-install synctool 6 on the entire cluster. But wait &#8230; the repository is
-still empty &#8230;? Indeed, and thus synctool won&#8217;t make any changes to the
-nodes &#8212; other than automatically upgrading synctool itself.</p>
-
-<p>The repository works a little different in synctool 6. In synctool 5 you
-had the option of configuring multiple overlay dirs. This was nothing more
-than logical grouping of files, synctool would sync all overlay dirs onto
-each node. In synctool 6, the overlay dir is divided by group, and nodes
-only get copy of a relevant subtree.
-Learn more about it in <a href="chapter3.html">chapter 3</a>.</p>
-
-<p>In general, you should be able to do this:</p>
-
-<ul>
-<li><p>If you had only a single overlay dir, copy the old overlay directory
-<code>/var/lib/synctool/overlay/</code> to <code>/opt/synctool/var/overlay/all/</code>
-(or <code>common/</code> &#8212; see best practices in <a href="chapter5.html">chapter 5</a>).</p></li>
-<li><p>If you had multiple overlay dirs, copy them over to
-<code>/opt/synctool/var/overlay/</code> and realize that synctool will now use them
-in a different way. Go through the list of files in the grouped overlay
-dirs and examine files tagged with extension <code>._all</code>. They should probably
-be moved elsewhere. In fact, you should pay attention to files tagged with
-an extension other than the name of the <code>overlay/group/</code> directory.</p></li>
-</ul>
-
-<p>This is the quick and dirty way. It is more safe however to carefully go
-through the old repository and copy them to the correct place in the new
-repository.</p>
-
-<p>Run synctool on a single node, see what it does. Fix any errors and iterate.
-When all is well, run synctool over groups of nodes and eventually the entire
-cluster.</p>
-
-<p>Go over the same process for the <code>delete/</code> tree.</p>
-
-<p>The <code>tasks/</code> tree no longer exists. If you have any scripts under <code>tasks/</code>,
-you may move them to <code>/opt/synctool/scripts/</code> (without group extension).
-They can now be run using <code>dsh</code>. See <a href="chapter3.html">chapter 3</a> for more
-information.</p>
-
-<p>synctool should now largely already work.</p>
-
-<h2>6.4 Updating templates</h2>
-
-<p>In older versions of synctool you could generate config files by pulling
-a trick with a template file and a <code>.post</code> script. This trick is now
-built into synctool, and it uses a <code>._template</code> file and an accompanying
-<code>._template.post</code> script. A big advantage of this new templating system is
-that you can do a proper dry run, and use <code>synctool --diff</code> to examine any
-changes made to the config file that is installed and active on the node;
-this was previously not possible with templated files.</p>
-
-<p>To adapt to the new template system, seek out any template files you have,
-and rename them to have extension <code>._template</code>. Rename the matching <code>.post</code>
-script to <code>._template.post</code>. Next, edit the <code>._template.post</code> script, and
-change it to call <code>synctool-template</code>:</p>
-
-<pre><code>/opt/synctool/bin/synctool-template "$1" &gt;"$2"
-</code></pre>
-
-<p>You should probably also set a variable to make it work.
-See <a href="chapter3.html">chapter 3</a> for more information on how to operate
-templates.</p>
-
-<p>You can use <code>dsh rm</code> or the <code>delete/</code> tree to clean up any old <code>.template</code>
-files that are still floating around in your system.</p>
-
-<h2>6.5 Wrapping up</h2>
-
-<p>The migration to synctool 6 is now finished. After a week or so, you should
-feel confident enough to delete the old repository <code>/var/lib/synctool/</code>.
-synctool 6 does not use it. The quickest way to dispose of it is:</p>
-
-<pre><code># delete old repos from cluster nodes
-dsh -g all rm -rf /var/lib/synctool
-# delete old repos from master node
-rm -rf /var/lib/synctool
-</code></pre>
-
-<p>There is more to synctool 6 than this; you might want to make use of the
-new &#8216;purge&#8217; feature, or use the new options for uploading files, or use
-<code>dsh-pkg</code> to upgrade software packages, or configure slave nodes, or go
-multi-cluster with synctool, or configure syslogging, or try out multiplexed
-connections, or &#8230;
-Read all about it in this manual.</p>
-<br /><br /><div class="line"> </div><br /> 
-<h1>7. Thank you</h1>
+<h1>6. Thank you</h1>
 
 <p>A big thanks goes out to all synctool users. You know who you are (!)
 Special thanks go to those whom I&#8217;ve had e-mail conversations with about
@@ -1998,23 +1778,6 @@ programmer who likes to contribute to the development of synctool, please
 fork the <a href="https://github.com/walterdejong/synctool">github project</a> and issue pull requests. If you don&#8217;t know how
 <code>git</code> works, patches in <code>diff -u</code> format are always welcome too. However,
 I highly recommend <code>git</code> and <a href="https://github.com/walterdejong/synctool">github</a>.</p>
-
-<h2>7.1 Fun facts</h2>
-
-<p>Some fun facts about synctool 6:</p>
-
-<ul>
-<li>synctool 6 is the 6th major release of synctool</li>
-<li>synctool 6 took over 6 months to develop and test</li>
-<li>synctool 6 has more than 600 commits over the last synctool 5</li>
-<li>synctool 6 requires at least Python version 2.6</li>
-<li>synctool 6 documentation has 7 chapters &#8230;</li>
-<li>synctool&#8217;s <code>dsh-pkg</code> supports 6 different package managers</li>
-<li>synctool is now more than 10 years old</li>
-<li>synctool encompasses more than 10,000 lines of code (including comments)</li>
-<li>synctool 6 is faster than ever</li>
-<li>synctool 6 still is easy to use</li>
-</ul>
 <br /><br /><div class="line"> </div><br /> 
 <div id="footer"> 
 <div class="line"> </div><br />

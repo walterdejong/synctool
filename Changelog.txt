@@ -1,3 +1,7 @@
+Aug 2024
+- update to python3; thanks to Charles Lane <lane@dchooz.org>
+- released as 7.0
+
 Aug 2019
 - change default interpreter to 'python2'
 

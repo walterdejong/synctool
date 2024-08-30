@@ -14,7 +14,7 @@
 <h1>synctool documentation</h1>
 <br class="vtab" />
 <p>
-<em>synctool &copy; 2015 Walter de Jong &lt;walter@heiho.net&gt;</em>
+<em>synctool &copy; 2024 Walter de Jong &lt;walter@heiho.net&gt;</em>
 <br />
 <br />
 synctool comes with <strong>no warranty</strong>. synctool is
@@ -68,7 +68,7 @@ synchronize with the master repository; synctool works with <em>server push</em>
 and not client pull.</p>
 
 <blockquote>
-  <p>Previously, synctool was located under <code>/var/lib/synctool/</code>.
+  <p>In old times, synctool was located under <code>/var/lib/synctool/</code>.
 It worked for me (tm), except that the Filesystem Hierarchy Standard (FHS)
 has various things to say about it:</p>
 
@@ -127,8 +127,8 @@ repository accordingly. See also chapter 5 on Best Practices.</p>
 
 <p>In synctool version 5, you would configure &#8216;overlaydir&#8217; and synctool would
 still consider all overlay directories no matter what name the subdirectory
-had. In synctool 6, the group is strictly enforced and the subtree is
-synced to only those nodes that are in the group.
+had. In synctool 6 and up, the group is strictly enforced and the subtree
+is synced to only those nodes that are in the group.
 Slave nodes are special; they get a full copy of the repository.</p>
 </blockquote>
 
@@ -397,8 +397,8 @@ export IPADDR
 use the <code>ip addr</code> command, consult DNS or you might be able to use
 <code>synctool-config</code> to get what you need.</p>
 
-<p>The <code>synctool-template</code> command takes as input the template file (&#8220;<code>$1</code>&#8220;)
-and redirects the output to a newly generated file (&#8220;<code>$2</code>&#8220;). The &#8220;<code>$2</code>&#8221;
+<p>The <code>synctool-template</code> command takes as input the template file (&#8220;<code>$1</code>&#8221;)
+and redirects the output to a newly generated file (&#8220;<code>$2</code>&#8221;). The &#8220;<code>$2</code>&#8221;
 on the last line expands to <code>fiction.conf._nodename</code>.
 Hence, synctool generates a new config file in the repository. It does so
 even on dry runs; you can ask synctool to display a diff of <code>fiction.conf</code>
@@ -417,7 +417,7 @@ synctool-template accepts variables either from the command-line or from
 the shell environment. Like with regular <code>.post</code> scripts, the environment
 variables <code>SYNCTOOL_NODE</code> and <code>SYNCTOOL_ROOT</code> are also present here.
 However <em>unlike</em> regular <code>.post</code> scripts, template post scripts require a <code>#!</code>
-hashbang line. This is required for shell arguments (like &#8220;<code>$1</code>&#8220;, &#8220;<code>$2</code>&#8220;)
+hashbang line. This is required for shell arguments (like &#8220;<code>$1</code>&#8221;, &#8220;<code>$2</code>&#8221;)
 to work.</p>
 
 <p>Now, when you want to change the configuration, edit the template file.
@@ -525,13 +525,15 @@ detect the appropriate package manager for the operating system of the node.
 If detection fails, you may force the package manager on the command-line or
 in <code>synctool.conf</code>:</p>
 
-<pre><code>package_manager apt-get
+<pre><code>#package_manager apk
+package_manager apt-get
+#package_manager brew
+#package_manager bsdpkg
+#package_manager dnf
+#package_manager pacman
+#package_manager pkg
 #package_manager yum
 #package_manager zypper
-#package_manager pacman
-#package_manager brew
-#package_manager pkg
-#package_manager bsdpkg
 </code></pre>
 
 <p>dsh-pkg knows about more platforms and package managers, but currently
@@ -670,9 +672,8 @@ target node, <code>/etc/motd</code> is going to be fine.</p>
 <h2>3.12 Slow updates</h2>
 
 <p>By default, synctool addresses the nodes in parallel, and they are running
-updates concurrently. In some cases, like when doing rolling upgrades,
-you will not want to have this parallelism. There are two easy ways around
-this.</p>
+updates concurrently. In some cases you might not want to have any
+parallelism. There are two easy ways around this;</p>
 
 <pre><code>dsh --numproc=1 uptime
 dsh -p 1 uptime
@@ -686,7 +687,7 @@ process at a time. The second does the same thing, and sleeps for ten seconds
 after running the command.</p>
 
 <blockquote>
-  <p>Suppose you have a 60 node cluster, and run with <code>--zzz=60</code>.
+  <p>Suppose you have a 60 nodes cluster, and run with <code>--zzz=60</code>.
 You now have to wait at least one hour for the run to complete.</p>
 </blockquote>
 
@@ -720,7 +721,7 @@ then you might run:</p>
 <p>No path to the script is required; dsh will find it.</p>
 
 <blockquote>
-  <p>Previous versions had a <code>tasks/</code> directory under the repository and you
+  <p>Old versions had a <code>tasks/</code> directory under the repository and you
 could invoke synctool with the <code>--tasks</code> option. This mechanism has been
 obsoleted by <code>dsh</code> and the <code>scripts/</code> directory.</p>
 </blockquote>
