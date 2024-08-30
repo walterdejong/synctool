@@ -132,9 +132,9 @@ def terse(code: int, msg: str) -> None:
                 bright = ''
 
             if param.COLORIZE_FULL_LINE:
-                print('\x1b[%d%sm%s %s\x1b[0m' % (color, bright, txt, msg))
+                print('\x1b[{}{}m{} {}\x1b[0m'.format(color, bright, txt, msg))
             else:
-                print('\x1b[%d%sm%s\x1b[0m %s' % (color, bright, txt, msg))
+                print('\x1b[{}{}m{}\x1b[0m {}'.format(color, bright, txt, msg))
         else:
             print(TERSE_TXT[code], msg)
 
@@ -313,7 +313,7 @@ def _pass_output(line: str, nodename: str) -> None:
     else:
         # pass output on; simply use 'print' rather than 'stdout()'
         if OPT_NODENAME:
-            print('%s: %s' % (nodename, line))
+            print('{}: {}'.format(nodename, line))
         else:
             # do not prepend the nodename of this node to the output
             # if option --no-nodename was given
@@ -332,7 +332,7 @@ def run_with_nodename(cmd_arr: List[str], nodename: str) -> int:
     sys.stderr.flush()
 
     try:
-        with subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
+        with subprocess.Popen(cmd_arr,
                               stdout=subprocess.PIPE,
                               stderr=subprocess.STDOUT,
                               universal_newlines=True) as proc:
@@ -382,9 +382,10 @@ def shell_command(cmd: str) -> int:
         sys.stderr.flush()
 
         try:
-            ret = subprocess.call(cmd, shell=True)
+            completed = subprocess.run(cmd_arr, shell=False, check=False)
+            ret = completed.returncode
         except OSError as err:
-            stderr("failed to run shell command '%s' : %s" % (prettypath(cmd),
+            stderr("failed to run shell command '%s' : %s" % (prettypath(cmdfile),
                                                               err.strerror))
             ret = -1
         else:

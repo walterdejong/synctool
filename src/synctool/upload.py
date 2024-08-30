@@ -199,32 +199,30 @@ def _remote_stat(upfile: UploadFile) -> Optional[List[RemoteStat]]:
     verbose('running synctool_list %s:%s' % (upfile.node, upfile.filename))
     unix_out(' '.join(cmd_arr))
     try:
-        with subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
-                              stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE,
-                              universal_newlines=True) as proc:
-            out, err_output = proc.communicate()
-            proc.wait()
-
-            if proc.returncode == 255:
-                error('ssh connection to %s failed' % upfile.node)
-                if err_output:
-                    verbose('error output: %s' % err_output)
-                return None
-
-            if proc.returncode == 127:
-                error('remote list command failed')
-                if err_output:
-                    verbose('error output: %s' % err_output)
-                return None
-
+        completed = subprocess.run(cmd_arr, shell=False,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,
+                                   universal_newlines=True,
+                                   check=False)
     except OSError as err:
         error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
         return None
 
+    if completed.returncode == 255:
+        error('ssh connection to %s failed' % upfile.node)
+        if completed.stderr:
+            verbose('error output: {}'.format(completed.stderr))
+        return None
+
+    if completed.returncode == 127:
+        error('remote list command failed')
+        if completed.stderr:
+            verbose('error output: {}'.format(completed.stderr))
+        return None
+
     # parse synctool_list output into array of RemoteStat info
     data = []
-    for line in out.split('\n'):
+    for line in completed.stdout.split('\n'):
         if not line:
             continue
 

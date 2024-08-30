@@ -280,18 +280,15 @@ def _run_rsync_purge(cmd_arr: List[str]) -> None:
 
     try:
         # run rsync
-        with subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
-                              stdout=subprocess.PIPE,
-                              universal_newlines=True) as proc:
-            out, _ = proc.communicate()
-            proc.wait()
-
-        if out is None:
-            error('no output from {}'.format(cmd_arr[0]))
-            return
-
+        completed = subprocess.run(cmd_arr, stdout=subprocess.PIPE,
+                                   universal_newlines=True, check=False)
     except OSError as err:
         error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
+        return
+
+    out = completed.stdout
+    if not out:
+        error('no output from {}'.format(cmd_arr[0]))
         return
 
     if synctool.lib.VERBOSE:

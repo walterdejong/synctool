@@ -186,13 +186,13 @@ def setup_master(node_list: List[Tuple[str, str]], persist: Optional[str]) -> bo
             # because we make a list of process pipes
             # and the context manager would close the pipe too early
 
-            proc = subprocess.Popen(cmd_arr, shell=False)
+            proc = subprocess.Popen(cmd_arr)
+            procs.append(proc)
+
         except OSError as err:
             error('failed to execute %s: %s' % (cmd_arr[0], err.strerror))
             errors += 1
             continue
-
-        procs.append(proc)
 
     # print some info to the user about what's going on
     if len(procs) > 0:
@@ -243,20 +243,17 @@ def detect_ssh() -> int:
     cmd_arr.append('-V')
     unix_out(' '.join(cmd_arr))
     try:
-        # OpenSSH may print version information on stderr
-        with subprocess.Popen(cmd_arr, shell=False,
-                              stdout=subprocess.PIPE,
-                              stderr=subprocess.STDOUT,
-                              universal_newlines=True) as proc:
-            # stderr was redirected to stdout
-            data, _ = proc.communicate()
-            proc.wait()
-
+        # note, OpenSSH may print version information on stderr
+        completed = subprocess.run(cmd_arr,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT,
+                                   universal_newlines=True, check=False)
     except OSError as err:
         error('failed to execute %s: %s' % (cmd_arr[0], err.strerror))
         SSH_VERSION = -1
         return SSH_VERSION
 
+    data = completed.stdout
     if not data:
         SSH_VERSION = -1
         return SSH_VERSION

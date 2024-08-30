@@ -63,7 +63,7 @@ def ping_node(addr: str) -> None:
     cmd = '%s %s' % (param.PING_CMD, addr)
     cmd_arr = shlex.split(cmd)
     try:
-        with subprocess.Popen(cmd_arr, shell=False, bufsize=4096,
+        with subprocess.Popen(cmd_arr,
                               stdout=subprocess.PIPE,
                               stderr=subprocess.STDOUT,
                               universal_newlines=True) as proc:
