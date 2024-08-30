@@ -33,4 +33,4 @@ synctool started in 2003 and has since been in use with great success,
 doing real work at big computing centers. Hopefully, it will be of
 some value to you as well.
 
-_Copyright 2015 Walter de Jong <walter@heiho.net>_
+_Copyright 2024 Walter de Jong <walter@heiho.net>_
