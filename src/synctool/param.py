@@ -19,8 +19,8 @@ from typing import Dict, List, Set, Optional
 # in regards to when the release tag is made in git
 # For example, the next (half) hour
 # This is so that synctool --check-update will work correctly
-VERSION = '7.0'
-RELEASE_DATETIME = '2024-08-30T15:00:00'
+VERSION = '7.1-beta'
+RELEASE_DATETIME = '2024-08-30T15:00:01'
 
 # location of default config file on the master node
 DEFAULT_CONF = '/opt/synctool/etc/synctool.conf'
