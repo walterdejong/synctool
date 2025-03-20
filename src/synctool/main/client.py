@@ -671,6 +671,7 @@ def diff_files() -> None:
         stderr('%s is not in the overlay tree' % filename)
 
 
+# pylint: disable=too-many-positional-arguments
 def option_combinations(opt_diff: bool, opt_single: bool, opt_reference: bool, opt_erase_saved: bool,
                         opt_upload: bool, opt_suffix: bool, opt_fix: bool) -> None:
     '''some combinations of command-line options don't make sense;

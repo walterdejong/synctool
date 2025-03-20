@@ -369,6 +369,7 @@ def be_careful_with_getopt() -> None:
             sys.exit(1)
 
 
+# pylint: disable=too-many-positional-arguments
 def option_combinations(opt_diff: bool, opt_single: bool, opt_reference: bool, opt_erase_saved: bool, opt_upload: bool, opt_fix: bool, opt_group: bool) -> None:
     '''some combinations of command-line options don't make sense;
     alert the user and abort
