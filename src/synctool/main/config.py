@@ -184,7 +184,8 @@ def list_nodegroups(grouplist: str, opts: Options) -> None:
         error(str(err))
         sys.exit(1)
 
-    if nodeset.addresses() is None:
+    addrs = nodeset.addresses()
+    if addrs is None:
         # error message already printed
         sys.exit(1)
 
@@ -192,12 +193,6 @@ def list_nodegroups(grouplist: str, opts: Options) -> None:
     arr.sort()
 
     for node in arr:
-        ignored = set(config.get_groups(node))
-        ignored &= param.IGNORE_GROUPS
-
-        if opts.filter_ignored and ignored:
-            continue
-
         if opts.ipaddress:
             node += ' ' + config.get_node_ipaddress(node)
 
@@ -206,9 +201,6 @@ def list_nodegroups(grouplist: str, opts: Options) -> None:
                 node += ' no'
             else:
                 node += ' yes'
-
-        if ignored:
-            node += ' (ignored)'
 
         print(node)
 

@@ -260,13 +260,51 @@ def get_my_groups() -> List[str]:
     return []
 
 
+def expand_groups(groups: Union[List[str], Set[str]]) -> List[str]:
+    '''groups may contain compound groups
+    Returns list of expanded groups
+    '''
+
+    # This function skips over ignored groups
+    # effectively filtering them out early on
+
+    already = set(groups)
+
+    expanded = []
+    for group in groups:
+        if group in synctool.param.IGNORE_GROUPS:
+            continue
+
+        try:
+            group_def = synctool.param.GROUP_DEFS[group]
+        except KeyError:
+            continue
+
+        expanded.append(group)
+
+        if group_def is not None:
+            for grp in group_def:
+                if grp in synctool.param.IGNORE_GROUPS:
+                    continue
+
+                if grp not in already:
+                    expanded.append(grp)
+                    already.add(grp)
+
+    return expanded
+
+
 def get_nodes_in_groups(groups: Union[List[str], Set[str]]) -> Set[str]:
     '''returns a set of nodes that are in a set or list of groups'''
 
     nodeset: Set[str] = set()
 
+    groups = expand_groups(groups)
     for group in groups:
         for node, group_list in synctool.param.NODES.items():
+            # Note, ignored nodes are still being included here;
+            # NodeSet.addresses() will filter them and issue a warning message
+
             # Note, group_list is ordered by importance
             # so we can not do neat tricks with combining sets here ...
             if group in group_list:

@@ -126,26 +126,18 @@ class NodeSet:
         if not self.nodelist:
             return []
 
-        addrs: List[str] = []
-
         ignored_nodes = self.nodelist & param.IGNORE_GROUPS
         self.nodelist -= ignored_nodes
 
         for node in self.nodelist:
             # ignoring a group results in also ignoring the node
-            my_groups = set(config.get_groups(node))
-            my_groups &= param.IGNORE_GROUPS
-            if my_groups:
+            ignored_groups = set(config.get_groups(node)) & param.IGNORE_GROUPS
+            if ignored_groups:
                 verbose('node %s is ignored due to an ignored group' % node)
                 ignored_nodes.add(node)
-                continue
 
-            addr = config.get_node_ipaddress(node)
-            self.namemap[addr] = node
-
-            # make sure we do not have duplicates
-            if addr not in addrs:
-                addrs.append(addr)
+        # again
+        self.nodelist -= ignored_nodes
 
         # print message about ignored nodes
         if not silent and ignored_nodes and not synctool.lib.QUIET:
@@ -164,7 +156,13 @@ class NodeSet:
                         for node in ignored_nodes:
                             verbose('ignored: %s' % node)
 
-        return addrs
+        # make address list from self.nodelist
+        addrs = set([])
+        for node in self.nodelist:
+            addr = config.get_node_ipaddress(node)
+            self.namemap[addr] = node
+            addrs.add(addr)
+        return list(addrs)
 
     def get_nodename_from_address(self, addr: str) -> str:
         '''map the address back to a nodename'''
