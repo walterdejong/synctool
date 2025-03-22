@@ -19,7 +19,7 @@ from typing import Dict, List, Set, Optional
 # in regards to when the release tag is made in git
 # For example, the next (half) hour
 # This is so that synctool --check-update will work correctly
-VERSION = '7.2-beta'
+VERSION = '7.1'
 RELEASE_DATETIME = '2025-03-22T12:12:12'
 
 # location of default config file on the master node
