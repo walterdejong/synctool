@@ -199,7 +199,7 @@ def get_ipaddresses(name: str) -> Optional[List[str]]:
     # or a tuple for IPv6 (address, port, flow, scope)
     for tup in addrinfo:
         sockaddr = tup[4]
-        ipaddresses.add(sockaddr[0])
+        ipaddresses.add(str(sockaddr[0]))
 
     return list(ipaddresses)
 
