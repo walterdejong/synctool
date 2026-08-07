@@ -244,7 +244,7 @@ def _walk_subtree(src_dir: str, dest_dir: str, duplicates: set[str],
     post_dict: dict[str, str] = {}
     dir_changed = False
 
-    for obj, importance in arr:
+    for obj, _importance in arr:
         obj.make(src_dir, dest_dir)
 
         if obj.ov_type == OV_PRE:

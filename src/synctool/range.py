@@ -344,7 +344,7 @@ def compress(nodelist: list[str]) -> str:
             prev_number_str = ''
             prev_len = len(number_str)
             in_seq = 0
-            for (node, prefix, number_str, num, postfix) in arr[1:]:
+            for (_node, _prefix, number_str, num, _postfix) in arr[1:]:
                 if num == start + 1 and 0 <= len(number_str) - prev_len <= 1:
                     # it's in sequence
                     in_seq += 1

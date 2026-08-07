@@ -199,7 +199,7 @@ def download() -> bool:
         with urllib.request.urlopen(info.url) as web:
             # get file size: Content-Length
             try:
-                totalsize = int(web.info().getheaders('Content-Length')[0])
+                totalsize = int(web.info().get('Content-Length', 0))
             except (ValueError, KeyError, IndexError):
                 error(f'invalid response from webserver at {info.url}')
                 return False
@@ -228,6 +228,7 @@ def download() -> bool:
 
                 download_bytes += 100    # force 100% in the progress counter
                 print_progress(download_filename, totalsize, download_bytes)
+                print()
                 return True
 
             except OSError as err:

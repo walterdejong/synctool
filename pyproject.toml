@@ -1,7 +1,7 @@
 [project]
 name = "synctool"
 # warning: the program actually uses VERSION from src/synctool/param.py
-version = "7.2"
+version = "7.2.1"
 description = "Cluster configuration management tool"
 requires-python = ">=3.7"
 dependencies = []
@@ -27,5 +27,6 @@ extend-exclude = ["contrib", "doc", "ci", "venv-39"]
 # UP032 we prefer f-strings, but not for arguments that are function or method calls
 #
 ignore = ["EXE001", "FA100", "UP032"]
+extend-select = ["B"]  # add Bugbear
 
 # EOB
