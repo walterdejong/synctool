@@ -10,24 +10,34 @@
 
 '''a SyncObject is a source file + matching destination path and attributes'''
 
-import os
-import stat
+from __future__ import annotations
+
 import datetime
-import shutil
 import hashlib
+import os
+import shutil
+import stat
 
 try:
     import posix
 except ImportError:
     pass
 
-from typing import Dict, Optional
-
 import synctool.lib
-from synctool.lib import verbose, stdout, error, terse, unix_out, log
-from synctool.lib import dryrun_msg, prettypath, TERSE_FAIL, print_timestamp
 import synctool.param
 import synctool.syncstat
+from synctool.lib import (
+    TERSE_FAIL,
+    dryrun_msg,
+    error,
+    log,
+    prettypath,
+    print_timestamp,
+    stdout,
+    terse,
+    unix_out,
+    verbose,
+)
 
 SyncStat = synctool.syncstat.SyncStat
 
@@ -61,18 +71,16 @@ class VNode:
         if ext == '.saved':
             return
 
-        verbose(dryrun_msg('saving %s as %s.saved' % (self.name, self.name)))
-        unix_out('mv %s %s.saved' % (self.name, self.name))
+        verbose(dryrun_msg(f'saving {self.name} as {self.name}.saved'))
+        unix_out(f'mv {self.name} {self.name}.saved')
 
         if not synctool.lib.DRY_RUN:
-            verbose('  os.rename(%s, %s.saved)' % (self.name, self.name))
+            verbose(f'  os.rename({self.name}, {self.name}.saved)')
             try:
-                os.rename(self.name, '%s.saved' % self.name)
+                os.rename(self.name, f'{self.name}.saved')
             except OSError as err:
-                error('failed to save %s as %s.saved : %s' % (self.name,
-                                                              self.name,
-                                                              err.strerror))
-                terse(TERSE_FAIL, 'save %s.saved' % self.name)
+                error(f'failed to save {self.name} as {self.name}.saved : {err.strerror}')
+                terse(TERSE_FAIL, f'save {self.name}.saved')
 
     def harddelete(self) -> None:
         '''delete existing entry'''
@@ -82,25 +90,25 @@ class VNode:
         else:
             not_str = ''
 
-        stdout('%sdeleting %s' % (not_str, self.name))
-        unix_out('rm %s' % self.name)
+        stdout(f'{not_str}deleting {self.name}')
+        unix_out(f'rm {self.name}')
         terse(synctool.lib.TERSE_DELETE, self.name)
 
         if not synctool.lib.DRY_RUN:
-            verbose('  os.unlink(%s)' % self.name)
+            verbose(f'  os.unlink({self.name})')
             try:
                 os.unlink(self.name)
             except OSError as err:
-                error('failed to delete %s : %s' % (self.name, err.strerror))
-                terse(TERSE_FAIL, 'delete %s' % self.name)
+                error(f'failed to delete {self.name} : {err.strerror}')
+                terse(TERSE_FAIL, f'delete {self.name}')
             else:
-                log('deleted %s' % self.name)
+                log(f'deleted {self.name}')
 
     def quiet_delete(self) -> None:
         '''silently delete existing entry; only called by fix()'''
 
         if not synctool.lib.DRY_RUN and not synctool.param.BACKUP_COPIES:
-            verbose('  os.unlink(%s)' % self.name)
+            verbose(f'  os.unlink({self.name})')
             try:
                 os.unlink(self.name)
             except OSError:
@@ -116,7 +124,7 @@ class VNode:
 
         # be a bit quiet about it
         if synctool.lib.VERBOSE or synctool.lib.UNIX_CMD:
-            verbose('making directory %s' % prettypath(basedir))
+            verbose('making directory {}'.format(prettypath(basedir)))
 
         synctool.lib.mkdir_p(basedir)
 
@@ -151,50 +159,42 @@ class VNode:
     def set_owner(self) -> None:
         '''set ownership equal to source'''
 
-        verbose(dryrun_msg('  os.chown(%s, %d, %d)' %
-                           (self.name, self.stat.uid, self.stat.gid)))
-        unix_out('chown %s.%s %s' % (self.stat.ascii_uid(),
-                                     self.stat.ascii_gid(), self.name))
+        verbose(dryrun_msg(f'  os.chown({self.name}, {self.stat.uid}, {self.stat.gid})'))
+        unix_out(f'chown {self.stat.ascii_uid()}:{self.stat.ascii_gid()} {self.name}')
         if not synctool.lib.DRY_RUN:
             try:
                 os.chown(self.name, self.stat.uid, self.stat.gid)
             except OSError as err:
-                error('failed to chown %s.%s %s : %s' %
-                      (self.stat.ascii_uid(), self.stat.ascii_gid(),
-                       self.name, err.strerror))
-                terse(TERSE_FAIL, 'owner %s' % self.name)
+                error(f'failed to chown {self.stat.ascii_uid()}:{self.stat.ascii_gid()} {self.name} : {err.strerror}')
+                terse(TERSE_FAIL, f'owner {self.name}')
 
     def set_permissions(self) -> None:
         '''set access permission bits equal to source'''
 
-        verbose(dryrun_msg('  os.chmod(%s, %04o)' %
-                           (self.name, self.stat.mode & 0o7777)))
-        unix_out('chmod 0%o %s' % (self.stat.mode & 0o7777, self.name))
+        verbose(dryrun_msg(f'  os.chmod({self.name}, {self.stat.mode & 0o7777:04o})'))
+        unix_out(f'chmod 0{self.stat.mode & 0o7777:0o} {self.name}')
         if not synctool.lib.DRY_RUN:
             try:
                 os.chmod(self.name, self.stat.mode & 0o7777)
             except OSError as err:
-                error('failed to chmod %04o %s : %s' %
-                      (self.stat.mode & 0o7777, self.name, err.strerror))
-                terse(TERSE_FAIL, 'mode %s' % self.name)
+                error(f'failed to chmod {self.stat.mode & 0o7777:04o} {self.name} : {err.strerror}')
+                terse(TERSE_FAIL, f'mode {self.name}')
 
     def set_times(self) -> None:
         '''set access and modification times'''
 
         # only mtime is shown
-        verbose(dryrun_msg('  os.utime(%s, %s)' %
-                           (self.name, print_timestamp(self.stat.mtime))))
+        verbose(dryrun_msg(f'  os.utime({self.name}, {print_timestamp(self.stat.mtime)})'))
         # print timestamp in other format
-        datet = datetime.datetime.fromtimestamp(self.stat.mtime)
+        datet = datetime.datetime.fromtimestamp(self.stat.mtime).astimezone()
         time_str = datet.strftime('%Y%m%d%H%M.%S')
-        unix_out('touch -t %s %s' % (time_str, self.name))
+        unix_out(f'touch -t {time_str} {self.name}')
         if not synctool.lib.DRY_RUN:
             try:
                 os.utime(self.name, (self.stat.atime, self.stat.mtime))
             except OSError as err:
-                error('failed to set utime on %s : %s' % (self.name,
-                                                          err.strerror))
-                terse(TERSE_FAIL, 'utime %s' % self.name)
+                error(f'failed to set utime on {self.name} : {err.strerror}')
+                terse(TERSE_FAIL, f'utime {self.name}')
 
 
 class VNodeFile(VNode):
@@ -218,11 +218,11 @@ class VNodeFile(VNode):
 
         if self.stat.size != dest_stat.size:
             if synctool.lib.DRY_RUN:
-                stdout('%s mismatch (file size)' % self.name)
+                stdout(f'{self.name} mismatch (file size)')
             else:
-                stdout('%s updated (file size mismatch)' % self.name)
+                stdout(f'{self.name} updated (file size mismatch)')
             terse(synctool.lib.TERSE_SYNC, self.name)
-            unix_out('# updating file %s' % self.name)
+            unix_out(f'# updating file {self.name}')
             return False
 
         return self._compare_checksums(src_path)
@@ -231,57 +231,53 @@ class VNodeFile(VNode):
         '''compare checksum of src_path and dest: self.name
         Return True if the same'''
 
-        try:
-            ffile1 = open(src_path, 'rb')
-        except OSError as err:
-            error('failed to open %s : %s' % (src_path, err.strerror))
-            # return True because we can't fix an error in src_path
-            return True
-
         sum1 = hashlib.md5()
         sum2 = hashlib.md5()
 
-        with ffile1:
-            try:
-                ffile2 = open(self.name, 'rb')
-            except OSError as err:
-                error('failed to open %s : %s' % (self.name, err.strerror))
+        src_is_open = False
+        this_is_open = False
+        try:
+            with open(src_path, 'rb') as ffile1:
+                src_is_open = True
+
+                with open(self.name, 'rb') as ffile2:
+                    this_is_open = True
+
+                    ended = False
+                    while not ended and (sum1.digest() == sum2.digest()):
+                        data1 = ffile1.read(IO_SIZE)
+                        data2 = ffile2.read(IO_SIZE)
+
+                        if not data1:
+                            ended = True
+                        else:
+                            sum1.update(data1)
+
+                        if not data2:
+                            ended = True
+                        else:
+                            sum2.update(data2)
+
+        except OSError as err:
+            if not src_is_open:
+                error(f'failed to open {src_path} : {err.strerror}')
+                # return True because we can't fix an error in src_path
+                return True
+
+            if not this_is_open:
+                error(f'failed to open {self.name} : {err.strerror}')
                 return False
 
-            with ffile2:
-                ended = False
-                while not ended and (sum1.digest() == sum2.digest()):
-                    try:
-                        data1 = ffile1.read(IO_SIZE)
-                    except OSError as err:
-                        error('failed to read file %s: %s' % (src_path,
-                                                              err.strerror))
-                        return False
-
-                    if not data1:
-                        ended = True
-                    else:
-                        sum1.update(data1)
-
-                    try:
-                        data2 = ffile2.read(IO_SIZE)
-                    except OSError as err:
-                        error('failed to read file %s: %s' % (self.name,
-                                                              err.strerror))
-                        return False
-
-                    if not data2:
-                        ended = True
-                    else:
-                        sum2.update(data2)
+            error(f'failed to read file {err.filename}: {err.strerror}')
+            return False
 
         if sum1.digest() != sum2.digest():
             if synctool.lib.DRY_RUN:
-                stdout('%s mismatch (MD5 checksum)' % self.name)
+                stdout(f'{self.name} mismatch (MD5 checksum)')
             else:
-                stdout('%s updated (MD5 mismatch)' % self.name)
+                stdout(f'{self.name} updated (MD5 mismatch)')
 
-            unix_out('# updating file %s' % self.name)
+            unix_out(f'# updating file {self.name}')
             terse(synctool.lib.TERSE_SYNC, self.name)
             return False
 
@@ -293,15 +289,14 @@ class VNodeFile(VNode):
         if not self.exists:
             terse(synctool.lib.TERSE_NEW, self.name)
 
-        verbose(dryrun_msg('  copy %s %s' % (self.src_path, self.name)))
-        unix_out('cp %s %s' % (self.src_path, self.name))
+        verbose(dryrun_msg(f'  copy {self.src_path} {self.name}'))
+        unix_out(f'cp {self.src_path} {self.name}')
         if not synctool.lib.DRY_RUN:
             try:
                 # copy file
                 shutil.copy(self.src_path, self.name)
             except OSError as err:
-                error('failed to copy %s to %s: %s' %
-                      (prettypath(self.src_path), self.name, err.strerror))
+                error(f'failed to copy {prettypath(self.src_path)} to {self.name}: {err.strerror}')
                 terse(TERSE_FAIL, self.name)
 
 
@@ -327,16 +322,15 @@ class VNodeDir(VNode):
             # So this is double checked for dirs that did not exist
             return
 
-        verbose(dryrun_msg('  os.mkdir(%s)' % self.name))
-        unix_out('mkdir %s' % self.name)
+        verbose(dryrun_msg(f'  os.mkdir({self.name})'))
+        unix_out(f'mkdir {self.name}')
         terse(synctool.lib.TERSE_MKDIR, self.name)
         if not synctool.lib.DRY_RUN:
             try:
                 os.mkdir(self.name, self.stat.mode & 0o7777)
             except OSError as err:
-                error('failed to make directory %s : %s' % (self.name,
-                                                            err.strerror))
-                terse(TERSE_FAIL, 'mkdir %s' % self.name)
+                error(f'failed to make directory {self.name} : {err.strerror}')
+                terse(TERSE_FAIL, f'mkdir {self.name}')
 
     def harddelete(self) -> None:
         '''delete directory'''
@@ -346,30 +340,30 @@ class VNodeDir(VNode):
         else:
             not_str = ''
 
-        stdout('%sremoving %s' % (not_str, self.name + os.sep))
-        unix_out('rmdir %s' % self.name)
+        stdout(f'{not_str}removing {self.name + os.sep}')
+        unix_out(f'rmdir {self.name}')
         terse(synctool.lib.TERSE_DELETE, self.name + os.sep)
         if not synctool.lib.DRY_RUN:
-            verbose('  os.rmdir(%s)' % self.name)
+            verbose(f'  os.rmdir({self.name})')
             try:
                 os.rmdir(self.name)
             except OSError:
                 # probably directory not empty
                 # refuse to delete dir, just move it aside
-                verbose('refusing to delete directory %s' % self.name)
+                verbose(f'refusing to delete directory {self.name}')
                 self.move_saved()
 
     def quiet_delete(self) -> None:
         '''silently delete directory; only called by fix()'''
 
         if not synctool.lib.DRY_RUN and not synctool.param.BACKUP_COPIES:
-            verbose('  os.rmdir(%s)' % self.name)
+            verbose(f'  os.rmdir({self.name})')
             try:
                 os.rmdir(self.name)
             except OSError:
                 # probably directory not empty
                 # refuse to delete dir, just move it aside
-                verbose('refusing to delete directory %s' % self.name)
+                verbose(f'refusing to delete directory {self.name}')
                 self.move_saved()
 
     def set_times(self) -> None:
@@ -401,13 +395,11 @@ class VNodeLink(VNode):
         try:
             link_to = os.readlink(self.name)
         except OSError as err:
-            error('failed to read symlink %s : %s' % (self.name,
-                                                      err.strerror))
+            error(f'failed to read symlink {self.name} : {err.strerror}')
             return False
 
         if self.oldpath != link_to:
-            stdout('%s should point to %s, but points to %s' %
-                   (self.name, self.oldpath, link_to))
+            stdout(f'{self.name} should point to {self.oldpath}, but points to {link_to}')
             terse(synctool.lib.TERSE_LINK, self.name)
             return False
 
@@ -416,17 +408,15 @@ class VNodeLink(VNode):
     def create(self) -> None:
         '''create symbolic link'''
 
-        verbose(dryrun_msg('  os.symlink(%s, %s)' % (self.oldpath,
-                                                     self.name)))
-        unix_out('ln -s %s %s' % (self.oldpath, self.name))
+        verbose(dryrun_msg(f'  os.symlink({self.oldpath}, {self.name})'))
+        unix_out(f'ln -s {self.oldpath} {self.name}')
         terse(synctool.lib.TERSE_LINK, self.name)
         if not synctool.lib.DRY_RUN:
             try:
                 os.symlink(self.oldpath, self.name)
             except OSError as err:
-                error('failed to create symlink %s -> %s : %s' %
-                      (self.name, self.oldpath, err.strerror))
-                terse(TERSE_FAIL, 'link %s' % self.name)
+                error(f'failed to create symlink {self.name} -> {self.oldpath} : {err.strerror}')
+                terse(TERSE_FAIL, f'link {self.name}')
 
     def set_owner(self) -> None:
         '''set ownership of symlink'''
@@ -435,18 +425,14 @@ class VNodeLink(VNode):
             # you never know
             return
 
-        verbose(dryrun_msg('  os.lchown(%s, %d, %d)' %
-                           (self.name, self.stat.uid, self.stat.gid)))
-        unix_out('lchown %s.%s %s' % (self.stat.ascii_uid(),
-                                      self.stat.ascii_gid(), self.name))
+        verbose(dryrun_msg(f'  os.lchown({self.name}, {self.stat.uid}, {self.stat.gid})'))
+        unix_out(f'lchown {self.stat.ascii_uid()}:{self.stat.ascii_gid()} {self.name}')
         if not synctool.lib.DRY_RUN:
             try:
                 os.lchown(self.name, self.stat.uid, self.stat.gid)
             except OSError as err:
-                error('failed to lchown %s.%s %s : %s' %
-                      (self.stat.ascii_uid(), self.stat.ascii_gid(),
-                       self.name, err.strerror))
-                terse(TERSE_FAIL, 'owner %s' % self.name)
+                error(f'failed to lchown {self.stat.ascii_uid()}:{self.stat.ascii_gid()} {self.name} : {err.strerror}')
+                terse(TERSE_FAIL, f'owner {self.name}')
 
     def set_permissions(self) -> None:
         '''set permissions of symlink (if possible)'''
@@ -458,16 +444,14 @@ class VNodeLink(VNode):
         if not hasattr(os, 'lchmod'):
             return
 
-        verbose(dryrun_msg('  os.lchmod(%s, %04o)' %
-                           (self.name, self.stat.mode & 0o7777)))
-        unix_out('lchmod 0%o %s' % (self.stat.mode & 0o7777, self.name))
+        verbose(dryrun_msg(f'  os.lchmod({self.name}, {self.stat.mode & 0o7777:04o})'))
+        unix_out(f'lchmod 0{self.stat.mode & 0o7777:0o} {self.name}')
         if not synctool.lib.DRY_RUN:
             try:
                 os.lchmod(self.name, self.stat.mode & 0o7777)           # type: ignore # pyright false positive
             except OSError as err:
-                error('failed to lchmod %04o %s : %s' %
-                      (self.stat.mode & 0o7777, self.name, err.strerror))
-                terse(TERSE_FAIL, 'mode %s' % self.name)
+                error(f'failed to lchmod {self.stat.mode & 0o7777:04o} {self.name} : {err.strerror}')
+                terse(TERSE_FAIL, f'mode {self.name}')
 
     def set_times(self) -> None:
         '''set access and modification times'''
@@ -491,16 +475,15 @@ class VNodeFifo(VNode):
     def create(self) -> None:
         '''make a fifo'''
 
-        verbose(dryrun_msg('  os.mkfifo(%s)' % self.name))
-        unix_out('mkfifo %s' % self.name)
+        verbose(dryrun_msg(f'  os.mkfifo({self.name})'))
+        unix_out(f'mkfifo {self.name}')
         terse(synctool.lib.TERSE_NEW, self.name)
         if not synctool.lib.DRY_RUN:
             try:
                 os.mkfifo(self.name, self.stat.mode & 0o777)
             except OSError as err:
-                error('failed to create fifo %s : %s' % (self.name,
-                                                         err.strerror))
-                terse(TERSE_FAIL, 'fifo %s' % self.name)
+                error(f'failed to create fifo {self.name} : {err.strerror}')
+                terse(TERSE_FAIL, f'fifo {self.name}')
 
 
 class VNodeChrDev(VNode):
@@ -529,7 +512,7 @@ class VNodeChrDev(VNode):
         try:
             dest_stat = os.lstat(self.name)             # type: ignore
         except OSError as err:
-            error('error checking %s : %s' % (self.name, err.strerror))
+            error(f'error checking {self.name} : {err.strerror}')
             return False
 
         # Note: mypy triggers false errors here
@@ -541,9 +524,8 @@ class VNodeChrDev(VNode):
         dest_major = os.major(dest_stat.st_rdev)        # type: ignore
         dest_minor = os.minor(dest_stat.st_rdev)        # type: ignore
         if src_major != dest_major or src_minor != dest_minor:
-            stdout('%s should have major,minor %d,%d but has %d,%d' %
-                   (self.name, src_major, src_minor, dest_major, dest_minor))
-            unix_out('# updating major,minor %s' % self.name)
+            stdout(f'{self.name} should have major,minor {src_major},{src_minor} but has {dest_major},{dest_minor}')
+            unix_out(f'# updating major,minor {self.name}')
             terse(synctool.lib.TERSE_SYNC, self.name)
             return False
 
@@ -554,9 +536,8 @@ class VNodeChrDev(VNode):
 
         major = os.major(self.src_stat.st_rdev)         # type: ignore
         minor = os.minor(self.src_stat.st_rdev)         # type: ignore
-        verbose(dryrun_msg('  os.mknod(%s, CHR %d,%d)' % (self.name, major,
-                                                          minor)))
-        unix_out('mknod %s c %d %d' % (self.name, major, minor))
+        verbose(dryrun_msg(f'  os.mknod({self.name}, CHR {major},{minor})'))
+        unix_out(f'mknod {self.name} c {major} {minor}')
         terse(synctool.lib.TERSE_NEW, self.name)
         if not synctool.lib.DRY_RUN:
             try:
@@ -564,9 +545,8 @@ class VNodeChrDev(VNode):
                          (self.src_stat.st_mode & 0o777) | stat.S_IFCHR,
                          os.makedev(major, minor))
             except OSError as err:
-                error('failed to create device %s : %s' % (self.name,
-                                                           err.strerror))
-                terse(TERSE_FAIL, 'device %s' % self.name)
+                error(f'failed to create device {self.name} : {err.strerror}')
+                terse(TERSE_FAIL, f'device {self.name}')
 
 
 class VNodeBlkDev(VNode):
@@ -595,7 +575,7 @@ class VNodeBlkDev(VNode):
         try:
             dest_stat = os.lstat(self.name)             # type: ignore
         except OSError as err:
-            error('error checking %s : %s' % (self.name, err.strerror))
+            error(f'error checking {self.name} : {err.strerror}')
             return False
 
         src_major = os.major(self.src_stat.st_rdev)     # type: ignore
@@ -603,9 +583,8 @@ class VNodeBlkDev(VNode):
         dest_major = os.major(dest_stat.st_rdev)        # type: ignore
         dest_minor = os.minor(dest_stat.st_rdev)        # type: ignore
         if src_major != dest_major or src_minor != dest_minor:
-            stdout('%s should have major,minor %d,%d but has %d,%d' %
-                   (self.name, src_major, src_minor, dest_major, dest_minor))
-            unix_out('# updating major,minor %s' % self.name)
+            stdout(f'{self.name} should have major,minor {src_major},{src_minor} but has {dest_major},{dest_minor}')
+            unix_out(f'# updating major,minor {self.name}')
             terse(synctool.lib.TERSE_SYNC, self.name)
             return False
 
@@ -616,9 +595,8 @@ class VNodeBlkDev(VNode):
 
         major = os.major(self.src_stat.st_rdev)          # type: ignore
         minor = os.minor(self.src_stat.st_rdev)          # type: ignore
-        verbose(dryrun_msg('  os.mknod(%s, BLK %d,%d)' % (self.name, major,
-                                                          minor)))
-        unix_out('mknod %s b %d %d' % (self.name, major, minor))
+        verbose(dryrun_msg(f'  os.mknod({self.name}, BLK {major},{minor})'))
+        unix_out(f'mknod {self.name} b {major} {minor}')
         terse(synctool.lib.TERSE_NEW, self.name)
         if not synctool.lib.DRY_RUN:
             try:
@@ -626,12 +604,11 @@ class VNodeBlkDev(VNode):
                          (self.src_stat.st_mode & 0o777) | stat.S_IFBLK,
                          os.makedev(major, minor))
             except OSError as err:
-                error('failed to create device %s : %s' % (self.name,
-                                                           err.strerror))
-                terse(TERSE_FAIL, 'device %s' % self.name)
+                error(f'failed to create device {self.name} : {err.strerror}')
+                terse(TERSE_FAIL, f'device {self.name}')
 
 
-class SyncObject():
+class SyncObject:
     '''a class holding the source path (file in the repository)
     and the destination path (target file on the system).
     The SyncObject caches any stat info
@@ -680,7 +657,7 @@ class SyncObject():
     def __repr__(self) -> str:
         '''return string representation'''
 
-        return '[<SyncObject>: (%s) (%s)]' % (self.src_path, self.dest_path)
+        return f'[<SyncObject>: ({self.src_path}) ({self.dest_path})]'
 
     def check(self) -> int:
         '''check differences between src and dest,
@@ -693,7 +670,7 @@ class SyncObject():
         vnode = None
 
         if not self.dest_stat.exists():
-            stdout('%s does not exist' % self.dest_path)
+            stdout(f'{self.dest_path} does not exist')
             return SyncObject.FIX_CREATE
 
         src_type = self.src_stat.filetype()
@@ -704,9 +681,8 @@ class SyncObject():
             if vnode is None:
                 # error message already printed
                 return SyncObject.FIX_UNDEF
-            stdout('%s should be a %s' % (self.dest_path, vnode.typename()))
-            terse(synctool.lib.TERSE_WARNING, ('wrong type %s' %
-                                               self.dest_path))
+            stdout(f'{self.dest_path} should be a {vnode.typename()}')
+            terse(synctool.lib.TERSE_WARNING, f'wrong type {self.dest_path}')
             return SyncObject.FIX_TYPE
 
         vnode = self.vnode_obj()
@@ -716,7 +692,7 @@ class SyncObject():
 
         if not vnode.compare(self.src_path, self.dest_stat):
             # content is different; change the entire object
-            log('updating %s' % self.dest_path)
+            log(f'updating {self.dest_path}')
             return SyncObject.FIX_UPDATE
 
         # check ownership and permissions and time
@@ -724,44 +700,30 @@ class SyncObject():
         fix_action = 0
         if ((self.src_stat.uid != self.dest_stat.uid) or
                 (self.src_stat.gid != self.dest_stat.gid)):
-            stdout('%s should have owner %s.%s (%d.%d), '
-                   'but has %s.%s (%d.%d)' % (self.dest_path,
-                                              self.src_stat.ascii_uid(),
-                                              self.src_stat.ascii_gid(),
-                                              self.src_stat.uid,
-                                              self.src_stat.gid,
-                                              self.dest_stat.ascii_uid(),
-                                              self.dest_stat.ascii_gid(),
-                                              self.dest_stat.uid,
-                                              self.dest_stat.gid))
-            terse(synctool.lib.TERSE_OWNER, ('%s.%s %s' %
-                                             (self.src_stat.ascii_uid(),
-                                              self.src_stat.ascii_gid(),
-                                              self.dest_path)))
+            stdout('{} should have owner {}:{} ({}:{}), but has {}:{} ({}:{})'.format(self.dest_path,
+                                                                                      self.src_stat.ascii_uid(), self.src_stat.ascii_gid(),
+                                                                                      self.src_stat.uid, self.src_stat.gid,
+                                                                                      self.dest_stat.ascii_uid(), self.dest_stat.ascii_gid(),
+                                                                                      self.dest_stat.uid, self.dest_stat.gid))
+            terse(synctool.lib.TERSE_OWNER, '{}:{} {}'.format(self.src_stat.ascii_uid(), self.src_stat.ascii_gid(), self.dest_path))
             fix_action = SyncObject.FIX_OWNER
 
         if self.src_stat.mode != self.dest_stat.mode:
-            stdout('%s should have mode %04o, but has %04o' %
-                   (self.dest_path, self.src_stat.mode & 0o7777,
-                    self.dest_stat.mode & 0o7777))
-            terse(synctool.lib.TERSE_MODE, ('%04o %s' %
-                                            (self.src_stat.mode & 0o7777,
-                                             self.dest_path)))
+            stdout(f'{self.dest_path} should have mode {self.src_stat.mode & 0o7777:04o}, but has {self.dest_stat.mode & 0o7777:04o}')
+            terse(synctool.lib.TERSE_MODE, f'{self.src_stat.mode & 0o7777:04o} {self.dest_path}')
             fix_action |= SyncObject.FIX_MODE
 
         # check times, but not for symlinks, directories
         if (synctool.param.SYNC_TIMES and
                 not self.src_stat.is_link() and not self.src_stat.is_dir() and
                 self.src_stat.mtime != self.dest_stat.mtime):
-            stdout('%s has wrong timestamp %s' %
-                   (self.dest_path, print_timestamp(self.dest_stat.mtime)))
-            terse(synctool.lib.TERSE_MODE, ('%s has wrong timestamp' %
-                                            self.dest_path))
+            stdout(f'{self.dest_path} has wrong timestamp {print_timestamp(self.dest_stat.mtime)}')
+            terse(synctool.lib.TERSE_MODE, f'{self.dest_path} has wrong timestamp')
             fix_action |= SyncObject.FIX_TIME
 
         return fix_action
 
-    def fix(self, fix_action: int, pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> bool:
+    def fix(self, fix_action: int, pre_dict: dict[str, str], post_dict: dict[str, str]) -> bool:
         '''fix differences, and run .pre/.post script if any
         Returns True if updated, else False
         '''
@@ -781,36 +743,32 @@ class SyncObject():
 
         if fix_action == SyncObject.FIX_CREATE:
             self.run_script(pre_dict)
-            log('creating %s' % self.dest_path)
+            log(f'creating {self.dest_path}')
             vnode.fix()
             need_run = True
 
         elif fix_action == SyncObject.FIX_TYPE:
             self.run_script(pre_dict)
-            log('fix type %s' % self.dest_path)
+            log(f'fix type {self.dest_path}')
             vnode.fix()
             need_run = True
 
         elif fix_action == SyncObject.FIX_UPDATE:
             self.run_script(pre_dict)
-            log('updating %s' % self.dest_path)
+            log(f'updating {self.dest_path}')
             vnode.fix()
             need_run = True
 
         elif fix_action == SyncObject.FIX_OWNER:
-            log('set owner %s.%s (%d.%d) %s' %
-                (self.src_stat.ascii_uid(), self.src_stat.ascii_gid(),
-                 self.src_stat.uid, self.src_stat.gid,
-                 self.dest_path))
+            log(f'set owner {self.src_stat.ascii_uid()}.{self.src_stat.ascii_gid()} ({self.src_stat.uid}.{self.src_stat.gid}) {self.dest_path}')
             vnode.set_owner()
 
         if fix_action & SyncObject.FIX_MODE:
-            log('set mode %04o %s' % (self.src_stat.mode & 0o7777,
-                                      self.dest_path))
+            log(f'set mode {self.src_stat.mode & 0o7777:04o} {self.dest_path}')
             vnode.set_permissions()
 
         if fix_action & SyncObject.FIX_TIME:
-            log('set time %s' % self.dest_path)
+            log(f'set time {self.dest_path}')
             # leave the atime intact
             vnode.stat.atime = self.dest_stat.atime
             vnode.set_times()
@@ -822,7 +780,7 @@ class SyncObject():
 
         return True
 
-    def run_script(self, scripts_dict: Dict[str, str]) -> None:
+    def run_script(self, scripts_dict: dict[str, str]) -> None:
         '''run a .pre/.post script, if any'''
 
         if synctool.lib.NO_POST:
@@ -846,7 +804,7 @@ class SyncObject():
                                             script)
         os.umask(0o77)
 
-    def vnode_obj(self) -> Optional[VNode]:
+    def vnode_obj(self) -> VNode | None:
         '''create vnode object for this SyncObject
         Returns the new VNode, or None on error
         '''
@@ -866,8 +824,7 @@ class SyncObject():
             try:
                 oldpath = os.readlink(self.src_path)
             except OSError as err:
-                error('failed to read symlink %s : %s' % (self.print_src(),
-                                                          err.strerror))
+                error(f'failed to read symlink {self.print_src()} : {err.strerror}')
                 terse(TERSE_FAIL, self.src_path)
                 return None
 
@@ -887,7 +844,7 @@ class SyncObject():
         # error, can not handle file type of src_path
         return None
 
-    def vnode_dest_obj(self) -> Optional[VNode]:
+    def vnode_dest_obj(self) -> VNode | None:
         '''create vnode object for this SyncObject's destination'''
 
         # pylint: disable=too-many-return-statements
@@ -905,8 +862,7 @@ class SyncObject():
             try:
                 oldpath = os.readlink(self.src_path)
             except OSError as err:
-                error('failed to read symlink %s : %s' % (self.print_src(),
-                                                          err.strerror))
+                error(f'failed to read symlink {self.print_src()} : {err.strerror}')
                 terse(TERSE_FAIL, self.src_path)
                 return None
 
@@ -942,9 +898,9 @@ class SyncObject():
         # set times, but not for symlinks, directories
         if (not self.src_stat.is_link() and not self.src_stat.is_dir() and
                 self.src_stat.mtime != self.dest_stat.mtime):
-            stdout('%s mismatch (only timestamp)' % self.dest_path)
+            stdout(f'{self.dest_path} mismatch (only timestamp)')
             terse(synctool.lib.TERSE_WARNING,
-                  '%s (only timestamp)' % self.dest_path)
+                  f'{self.dest_path} (only timestamp)')
 
             vnode = self.vnode_obj()
             if vnode is None:

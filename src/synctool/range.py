@@ -18,10 +18,12 @@ or IPv6:v4 notation "64:b9:e8:[0a]:10.0.0.[100]"
 or just a string "node-[10].sub[20].domain.org"
 '''
 
-import re
-from functools import cmp_to_key
+from __future__ import annotations
 
-from typing import List, Sequence, Tuple, Any
+import re
+from collections.abc import Sequence
+from functools import cmp_to_key
+from typing import Any
 
 # a node expression may look like 'node1-[1,2,8-10/2]-mgmt'
 # or something somewhat resembling that
@@ -63,7 +65,7 @@ class RangeSyntaxError(Exception):
     '''node range syntax error exception'''
 
 
-def split_nodelist(expr: str) -> List[str]:
+def split_nodelist(expr: str) -> list[str]:
     '''split a string like 'node1,node2,node[3-6,8,10],node-x'
     May throw RangeSyntaxError if there is a syntax error
     Returns the list of elements
@@ -87,7 +89,7 @@ def split_nodelist(expr: str) -> List[str]:
     return arr
 
 
-def expand(expr: str) -> List[str]:
+def expand(expr: str) -> list[str]:
     '''expand a range expression like 'node[1-10,20]-mgmt'
     May throw RangeSyntaxError if there is a syntax error
     Returns list of node names
@@ -142,7 +144,7 @@ def expand(expr: str) -> List[str]:
             if end - start > 100000:
                 raise RangeSyntaxError('ignoring ridiculously large range')
 
-            arr.extend(['%s%.*d%s' % (prefix, width, num, postfix)
+            arr.extend([f'{prefix}{num:0{width}d}{postfix}'
                         for num in range(start, end + 1, step)])
         else:
             width = len(elem)
@@ -151,7 +153,7 @@ def expand(expr: str) -> List[str]:
             except ValueError as exc:
                 raise RangeSyntaxError('syntax error in range expression') from exc
 
-            arr.append('%s%.*d%s' % (prefix, width, num, postfix))
+            arr.append(f'{prefix}{num:0{width}d}{postfix}')
 
     return arr
 
@@ -227,11 +229,11 @@ def expand_seq(arg: str, radix: int = 10, overflow: bool = False) -> str:
         raise RangeSyntaxError('IP address extends beyond 255')
 
     if radix == 10:
-        result = '%s%.*d%s' % (prefix, width, num, postfix)
+        result = f'{prefix}{num:0{width}d}{postfix}'
     elif radix == 16:
-        result = '%s%.*x%s' % (prefix, width, num, postfix)
+        result = f'{prefix}{num:0{width}x}{postfix}'
     else:
-        raise RuntimeError("bug: radix == %d" % radix)
+        raise RuntimeError(f'bug: radix == {radix}')
 
     if '[' in result:
         # recurse to replace all occurrences
@@ -240,7 +242,7 @@ def expand_seq(arg: str, radix: int = 10, overflow: bool = False) -> str:
     return result
 
 
-def _sort_compress(atin: Tuple[str, str, str, int, str], btin: Tuple[str, str, str, int, str]) -> int:
+def _sort_compress(atin: tuple[str, str, str, int, str], btin: tuple[str, str, str, int, str]) -> int:
     '''sorting function
     atin and btin are tuples: (nodename, prefix, number_str, number, postfix)
     '''
@@ -272,7 +274,7 @@ def uniq(seq: Sequence[Any]) -> Sequence[Any]:
     return [x for x in seq if x in unique]
 
 
-def compress(nodelist: List[str]) -> str:
+def compress(nodelist: list[str]) -> str:
     '''Return comma-separated string-list of nodes, using range syntax
 
     This is the opposite of function expand()
@@ -283,8 +285,8 @@ def compress(nodelist: List[str]) -> str:
     # pylint: disable=too-many-statements, too-many-branches, too-many-locals
 
     # make all_grouped a list of lists, of grouped splitted nodenames
-    all_grouped: List[List[Tuple[str, str, str, int, str]]] = []
-    grouped: List[Tuple[str, str, str, int, str]] = []
+    all_grouped: list[list[tuple[str, str, str, int, str]]] = []
+    grouped: list[tuple[str, str, str, int, str]] = []
 
     prev_prefix = prev_postfix = None
 

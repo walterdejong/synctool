@@ -12,8 +12,10 @@
 
 '''make stdio unbuffered'''
 
-from typing import IO, Any
+from __future__ import annotations
+
 from types import TracebackType
+from typing import IO, Any
 
 
 class Unbuffered:
@@ -59,7 +61,7 @@ class Unbuffered:
 
         return self.stream
 
-    def __exit__(self, exc_type: BaseException, exc_value: BaseException, traceback: TracebackType) -> None:
+    def __exit__(self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None) -> None:
         '''leave context; for Python 'with' statement'''
 
         self.stream.close()

@@ -10,9 +10,9 @@
 
 '''base class for synctool package managers'''
 
-from typing import List, Optional
+from __future__ import annotations
 
-from synctool.lib import verbose, log, dryrun_msg
+from synctool.lib import dryrun_msg, log, verbose
 
 
 class SyncPkg:
@@ -25,7 +25,7 @@ class SyncPkg:
     def __init__(self) -> None:
         '''initialize instance'''
 
-    def show_list(self, pkgs: Optional[List[str]] = None) -> None:
+    def show_list(self, pkgs: list[str] | None = None) -> None:
         '''output list of packages'''
 
         if pkgs is not None:
@@ -34,11 +34,11 @@ class SyncPkg:
             else:
                 plural = ''
 
-            verbose('list package%s: %s' % (plural, ' '.join(pkgs)))
+            verbose(f"list package{plural}: {' '.join(pkgs)}")
         else:
             verbose('list all packages')
 
-    def install(self, pkgs: List[str]) -> None:
+    def install(self, pkgs: list[str]) -> None:
         '''install list of packages'''
 
         if len(pkgs) > 1:
@@ -46,11 +46,11 @@ class SyncPkg:
         else:
             plural = ''
 
-        msg = 'installing package%s: %s' % (plural, ' '.join(pkgs))
+        msg = f"installing package{plural}: {' '.join(pkgs)}"
         verbose(msg)
         log(msg)
 
-    def remove(self, pkgs: List[str]) -> None:
+    def remove(self, pkgs: list[str]) -> None:
         '''remove list of packages'''
 
         if len(pkgs) > 1:
@@ -58,7 +58,7 @@ class SyncPkg:
         else:
             plural = ''
 
-        msg = 'removing package%s: %s' % (plural, ' '.join(pkgs))
+        msg = f"removing package{plural}: {' '.join(pkgs)}"
         verbose(msg)
         log(msg)
 

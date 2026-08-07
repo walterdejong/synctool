@@ -12,21 +12,18 @@
 on the target nodes
 '''
 
-import os
-import sys
+from __future__ import annotations
+
 import getopt
+import os
 import shlex
+import sys
 import tempfile
+from typing import IO
 
-from typing import List, IO
-
-from synctool import config, param
 import synctool.aggr
 import synctool.lib
-from synctool.lib import verbose, stdout, stderr, error, warning, terse
-from synctool.lib import prettypath
 import synctool.multiplex
-from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.overlay
 import synctool.parallel
@@ -35,6 +32,9 @@ import synctool.syncstat
 import synctool.unbuffered
 import synctool.update
 import synctool.upload
+from synctool import config, param
+from synctool.lib import error, prettypath, stderr, stdout, terse, verbose, warning
+from synctool.main.wrapper import catch_signals
 
 # hardcoded name because otherwise we get "synctool_master.py"
 PROGNAME = 'synctool'
@@ -42,7 +42,7 @@ PROGNAME = 'synctool'
 # ugly globals in use by parallel worker
 NODESET = synctool.nodeset.NodeSet()
 OPT_SKIP_RSYNC = False
-PASS_ARGS: List[str] = []
+PASS_ARGS: list[str] = []
 
 
 class Options:
@@ -52,13 +52,13 @@ class Options:
         '''initialize instance'''
 
         self.aggregate = False
-        self.master_opts: List[str] = []
+        self.master_opts: list[str] = []
         self.check_update = False
         self.download = False
         self.upload_file = synctool.upload.UploadFile()
 
 
-def run_remote_synctool(address_list: List[str]) -> None:
+def run_remote_synctool(address_list: list[str]) -> None:
     '''run synctool on target nodes'''
 
     synctool.parallel.do(worker_synctool, address_list)
@@ -83,26 +83,25 @@ def worker_synctool(addr: str) -> None:
     # rsync ROOTDIR/dirs/ to the node
     # if "it wants it"
     if not (OPT_SKIP_RSYNC or nodename in param.NO_RSYNC):
-        verbose('running rsync $SYNCTOOL/ to node %s' % nodename)
+        verbose(f'running rsync $SYNCTOOL/ to node {nodename}')
 
         # make rsync filter to include the correct dirs
         tmp_filename = rsync_include_filter(nodename)
 
         cmd_arr = shlex.split(param.RSYNC_CMD)
-        cmd_arr.append('--filter=. %s' % tmp_filename)
+        cmd_arr.append(f'--filter=. {tmp_filename}')
 
         # add "-e ssh_cmd" to rsync command
         cmd_arr.extend(['-e', ' '.join(ssh_cmd_arr)])
 
         cmd_arr.append('--')
-        cmd_arr.append('%s/' % param.ROOTDIR)
-        cmd_arr.append('%s:%s/' % (addr, param.ROOTDIR))
+        cmd_arr.append(f'{param.ROOTDIR}/')
+        cmd_arr.append(f'{addr}:{param.ROOTDIR}/')
 
         # double check the rsync destination
         # our filters are like playing with fire
         if not param.ROOTDIR or (param.ROOTDIR == os.sep):
-            warning('cowardly refusing to rsync with rootdir == %s' %
-                    param.ROOTDIR)
+            warning(f'cowardly refusing to rsync with rootdir == {param.ROOTDIR}')
             sys.exit(-1)
 
         synctool.lib.run_with_nodename(cmd_arr, nodename)
@@ -119,10 +118,10 @@ def worker_synctool(addr: str) -> None:
     cmd_arr.append('--')
     cmd_arr.append(addr)
     cmd_arr.extend(shlex.split(param.SYNCTOOL_CMD))
-    cmd_arr.append('--nodename=%s' % nodename)
+    cmd_arr.append(f'--nodename={nodename}')
     cmd_arr.extend(PASS_ARGS)
 
-    verbose('running synctool on node %s' % nodename)
+    verbose(f'running synctool on node {nodename}')
     synctool.lib.run_with_nodename(cmd_arr, nodename)
 
 
@@ -131,7 +130,7 @@ def run_local_synctool() -> None:
 
     cmd_arr = shlex.split(param.SYNCTOOL_CMD) + PASS_ARGS
 
-    verbose('running synctool on node %s' % param.NODENAME)
+    verbose(f'running synctool on node {param.NODENAME}')
     synctool.lib.run_with_nodename(cmd_arr, param.NODENAME)
 
 
@@ -144,13 +143,13 @@ def rsync_include_filter(nodename: str) -> str:
     try:
         fdesc, filename = tempfile.mkstemp(prefix='synctool-', dir=param.TEMP_DIR)
     except OSError as err:
-        error('failed to create temp file: %s' % err.strerror)
+        error(f'failed to create temp file: {err.strerror}')
         sys.exit(-1)
 
     try:
         ftemp = os.fdopen(fdesc, 'w')
     except OSError as err:
-        error('failed to open temp file: %s' % err.strerror)
+        error(f'failed to open temp file: {err.strerror}')
         sys.exit(-1)
 
     # include $SYNCTOOL/var/ but exclude
@@ -164,20 +163,19 @@ def rsync_include_filter(nodename: str) -> str:
 
         # slave nodes get a copy of the entire tree
         # all other nodes use a specific rsync filter
-        if nodename not in param.SLAVES:
-            if not (_write_overlay_filter(ftemp) and
-                    _write_delete_filter(ftemp) and
-                    _write_purge_filter(ftemp)):
-                # an error occurred;
-                # delete temp file and exit
-                ftemp.close()
-                try:
-                    os.unlink(filename)
-                except OSError:
-                    # silently ignore unlink error
-                    pass
+        if nodename not in param.SLAVES and not (_write_overlay_filter(ftemp) and
+                _write_delete_filter(ftemp) and
+                _write_purge_filter(ftemp)):
+            # an error occurred;
+            # delete temp file and exit
+            ftemp.close()
+            try:
+                os.unlink(filename)
+            except OSError:
+                # silently ignore unlink error
+                pass
 
-                sys.exit(-1)
+            sys.exit(-1)
 
         # Note: sbin/*.pyc is excluded to keep major differences in
         # Python versions (on master vs. client node) from clashing
@@ -193,7 +191,7 @@ def rsync_include_filter(nodename: str) -> str:
 def _write_rsync_filter(fio: IO, overlaydir: str, label: str) -> None:
     '''helper function for writing rsync filter'''
 
-    fio.write('+ /var/%s/\n' % label)
+    fio.write(f'+ /var/{label}/\n')
 
     groups = os.listdir(overlaydir)
 
@@ -202,9 +200,9 @@ def _write_rsync_filter(fio: IO, overlaydir: str, label: str) -> None:
         if grp in groups:
             fdir = os.path.join(overlaydir, grp)
             if os.path.isdir(fdir):
-                fio.write('+ /var/%s/%s/\n' % (label, grp))
+                fio.write(f'+ /var/{label}/{grp}/\n')
 
-    fio.write('- /var/%s/*\n' % label)
+    fio.write(f'- /var/{label}/*\n')
 
 
 def _write_overlay_filter(fio: IO) -> bool:
@@ -249,11 +247,11 @@ def _write_purge_filter(fio: IO) -> bool:
                     if files:
                         warning('cowardly refusing to purge the root '
                                 'directory')
-                        stderr('please remove any files directly '
-                               'under %s/' % prettypath(purge_root))
+                        stderr(f'please remove any files directly '
+                               f'under {prettypath(purge_root)}/')
                         return False
                 else:
-                    fio.write('+ /var/purge/%s/' % grp)
+                    fio.write(f'+ /var/purge/{grp}/')
                     break
 
     fio.write('- /var/purge/*\n')
@@ -267,8 +265,7 @@ def make_tempdir() -> None:
         try:
             os.mkdir(param.TEMP_DIR, 0o750)
         except OSError as err:
-            error('failed to create tempdir %s: %s' %
-                  (param.TEMP_DIR, err.strerror))
+            error(f'failed to create tempdir {param.TEMP_DIR}: {err.strerror}')
             sys.exit(-1)
 
 
@@ -285,8 +282,7 @@ def _check_valid_overlaydirs() -> bool:
         for entry in entries:
             fullpath = os.path.join(overlaydir, entry)
             if os.path.isdir(fullpath) and entry not in param.ALL_GROUPS:
-                error("$%s/%s/ exists, but there is no such group '%s'" %
-                      (label, entry, entry))
+                error(f"${label}/{entry}/ exists, but there is no such group '{entry}'")
                 errs += 1
                 continue
 
@@ -401,12 +397,11 @@ def option_combinations(opt_diff: bool, opt_single: bool, opt_reference: bool, o
 def usage() -> None:
     '''print usage information'''
 
-    print('usage: %s [options]' % PROGNAME)
+    print(f'usage: {PROGNAME} [options]')
     print('options:')
     print('  -h, --help                  Display this information')
     print('  -c, --conf=FILE             Use this config file')
-    print(('                              (default: %s)' %
-           param.DEFAULT_CONF))
+    print(f'                              (default: {param.DEFAULT_CONF})')
     print('''  -n, --node=LIST             Execute only on these nodes
   -g, --group=LIST            Execute only on these groups of nodes
   -x, --exclude=LIST          Exclude these nodes from the selected group
@@ -464,7 +459,7 @@ def get_options() -> Options:
                                     'skip-rsync', 'version', 'check-update',
                                     'download'])
     except getopt.GetoptError as reason:
-        print('%s: %s' % (PROGNAME, reason))
+        print(f'{PROGNAME}: {reason}')
         # usage()
         sys.exit(1)
 
@@ -618,7 +613,7 @@ def get_options() -> Options:
             try:
                 param.NUM_PROC = int(arg)
             except ValueError:
-                print("option '%s' requires a numeric value" % opt)
+                print(f"option '{opt}' requires a numeric value")
                 sys.exit(1)
 
             if param.NUM_PROC < 1:
@@ -746,7 +741,7 @@ def main() -> int:
     config.init_mynodename()
 
     if param.MASTER != param.HOSTNAME:
-        verbose('master %s != hostname %s' % (param.MASTER, param.HOSTNAME))
+        verbose(f'master {param.MASTER} != hostname {param.HOSTNAME}')
         error('not running on the master node')
         sys.exit(-1)
 

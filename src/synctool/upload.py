@@ -11,26 +11,33 @@
 
 '''implements upload functions for synctool-master'''
 
+from __future__ import annotations
+
 import os
-import sys
 import shlex
 import stat
 import subprocess
-import urllib.request
-import urllib.parse
+import sys
 import urllib.error
-
-from typing import List, Dict, Tuple, Optional
+import urllib.parse
+import urllib.request
 
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose, stdout, stderr, error, warning
-from synctool.lib import terse, unix_out, prettypath
 import synctool.multiplex
 import synctool.overlay
 import synctool.param
 import synctool.pwdgrp
-
+from synctool.lib import (
+    error,
+    prettypath,
+    stderr,
+    stdout,
+    terse,
+    unix_out,
+    verbose,
+    warning,
+)
 from synctool.object import SyncObject
 
 
@@ -89,7 +96,7 @@ class UploadFile:
             self.repos_path, _ = os.path.splitext(self.repos_path)
             self.repos_path += '._' + self.suffix
 
-        if self.overlay:
+        if self.overlay:  # noqa: SIM102 # nested-if statement
             # user supplied (maybe a different) overlay group dir
             # so take repos_filename apart and insert a new group dir
             if (self.repos_path[:synctool.param.OVERLAY_LEN] ==
@@ -113,7 +120,7 @@ class RemoteStat:
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, arr: List[str]) -> None:
+    def __init__(self, arr: list[str]) -> None:
         '''initialize instance
         May throw ValueError
         '''
@@ -160,7 +167,7 @@ class RemoteStat:
             local_uid = synctool.pwdgrp.pw_uid(self.owner)
             return local_uid
         except KeyError:
-            warning('no such user {}; using uid {}'.format(self.owner, self.uid))
+            warning(f'no such user {self.owner}; using uid {self.uid}')
             return self.uid
 
     def translate_gid(self) -> int:
@@ -170,18 +177,16 @@ class RemoteStat:
             local_gid = synctool.pwdgrp.grp_gid(self.group)
             return local_gid
         except KeyError:
-            warning('no such group {}; using gid {}'.format(self.group, self.gid))
+            warning(f'no such group {self.group}; using gid {self.gid}')
             return self.gid
 
     def __repr__(self) -> str:
         '''Returns string representation'''
 
-        return ('<RemoteStat: %06o %u %s %u %s %u %r %r>' %
-                (self.mode, self.uid, self.owner, self.gid, self.group,
-                 self.size, self.filename, self.linkdest))
+        return f'<RemoteStat: {self.mode:06o} {self.uid} {self.owner} {self.gid} {self.group} {self.size} {self.filename!r} {self.linkdest!r}>'
 
 
-def _remote_stat(upfile: UploadFile) -> Optional[List[RemoteStat]]:
+def _remote_stat(upfile: UploadFile) -> list[RemoteStat] | None:
     '''Get stat info of the remote object
     Returns array of RemoteStat data, or None on error
     '''
@@ -196,28 +201,27 @@ def _remote_stat(upfile: UploadFile) -> Optional[List[RemoteStat]]:
                             'synctool_list.py')
     cmd_arr.extend(['--', upfile.address, list_cmd, upfile.filename])
 
-    verbose('running synctool_list %s:%s' % (upfile.node, upfile.filename))
+    verbose(f'running synctool_list {upfile.node}:{upfile.filename}')
     unix_out(' '.join(cmd_arr))
     try:
         completed = subprocess.run(cmd_arr, shell=False,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,
-                                   universal_newlines=True,
+                                   capture_output=True,
+                                   text=True,
                                    check=False)
     except OSError as err:
-        error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
+        error(f'failed to run command {cmd_arr[0]}: {err.strerror}')
         return None
 
     if completed.returncode == 255:
-        error('ssh connection to %s failed' % upfile.node)
+        error(f'ssh connection to {upfile.node} failed')
         if completed.stderr:
-            verbose('error output: {}'.format(completed.stderr))
+            verbose(f'error output: {completed.stderr}')
         return None
 
     if completed.returncode == 127:
         error('remote list command failed')
         if completed.stderr:
-            verbose('error output: {}'.format(completed.stderr))
+            verbose(f'error output: {completed.stderr}')
         return None
 
     # parse synctool_list output into array of RemoteStat info
@@ -235,17 +239,16 @@ def _remote_stat(upfile: UploadFile) -> Optional[List[RemoteStat]]:
         try:
             remote_stat = RemoteStat(arr)
         except ValueError:
-            error('unexpected output from synctool_list %s:%s' %
-                  (upfile.node, upfile.filename))
+            error(f'unexpected output from synctool_list {upfile.node}:{upfile.filename}')
             return None
 
-        verbose('remote: %r' % remote_stat)
+        verbose(f'remote: {remote_stat!r}')
         data.append(remote_stat)
 
     return data
 
 
-def _makedir(path: str, remote_stats: List[RemoteStat]) -> bool:
+def _makedir(path: str, remote_stats: list[RemoteStat]) -> bool:
     '''make directory in repository, copying over mode and ownership
     of the directories as they are on the remote side
     remote_stats is array holding stat info of the remote side
@@ -272,7 +275,7 @@ def _makedir(path: str, remote_stats: List[RemoteStat]) -> bool:
     if not _makedir(os.path.dirname(path), remote_stats[1:]):
         return False
 
-    verbose('makedir {}'.format(path))
+    verbose(f'makedir {path}')
 
     # do a simple check against the names of the dir
     # (are we still 'in sync' with remote_stats?)
@@ -288,11 +291,11 @@ def _makedir(path: str, remote_stats: List[RemoteStat]) -> bool:
     try:
         os.mkdir(path, mode)
     except OSError as err:
-        error('failed to create directory %s: %s' % (path, err.strerror))
+        error(f'failed to create directory {path}: {err.strerror}')
         os.umask(mask)
         return False
 
-    unix_out('mkdir -p -m %04o %s' % (mode, path))
+    unix_out(f'mkdir -p -m {mode:04o} {path}')
 
     os.umask(mask)
 
@@ -301,7 +304,7 @@ def _makedir(path: str, remote_stats: List[RemoteStat]) -> bool:
     try:
         os.chmod(path, mode)
     except OSError as err:
-        warning('failed to chmod %04o %s: %s' % (mode, path, err.strerror))
+        warning(f'failed to chmod {mode:04o} {path}: {err.strerror}')
 
     # also set the owner & group
     # uid/gid are translated from remote owner/group,
@@ -316,9 +319,7 @@ def _makedir(path: str, remote_stats: List[RemoteStat]) -> bool:
     try:
         os.lchown(path, uid, gid)
     except OSError as err:
-        warning('failed to chown %s.%s %s: %s' %
-                (synctool.pwdgrp.pw_name(uid), synctool.pwdgrp.grp_name(gid),
-                 path, err.strerror))
+        warning(f'failed to chown {synctool.pwdgrp.pw_name(uid)}:{synctool.pwdgrp.grp_name(gid)} {path}: {err.strerror}')
 
     return True
 
@@ -327,7 +328,7 @@ def _makedir(path: str, remote_stats: List[RemoteStat]) -> bool:
 GLOBAL_UPLOAD_FILE = UploadFile()
 
 
-def _upload_callback(obj: SyncObject, _pre_dict: Dict[str, str], _post_dict: Dict[str, str]) -> Tuple[bool, bool]:
+def _upload_callback(obj: SyncObject, _pre_dict: dict[str, str], _post_dict: dict[str, str]) -> tuple[bool, bool]:
     '''find the overlay path for the destination in UPLOAD_FILE'''
 
     # this callback modifies the global GLOBAL_UPLOAD_FILE object
@@ -359,15 +360,15 @@ def upload(upfile: UploadFile) -> None:
         sys.exit(-1)
 
     if upfile.suffix and upfile.suffix not in synctool.param.ALL_GROUPS:
-        error("no such group '%s'" % upfile.suffix)
+        error(f"no such group '{upfile.suffix}'")
         sys.exit(-1)
 
     if upfile.overlay and upfile.overlay not in synctool.param.ALL_GROUPS:
-        error("no such group '%s'" % upfile.overlay)
+        error(f"no such group '{upfile.overlay}'")
         sys.exit(-1)
 
     if upfile.purge and upfile.purge not in synctool.param.ALL_GROUPS:
-        error("no such group '%s'" % upfile.purge)
+        error(f"no such group '{upfile.purge}'")
         sys.exit(-1)
 
     if synctool.lib.DRY_RUN and not synctool.lib.QUIET:
@@ -451,12 +452,12 @@ def rsync_upload(upfile: UploadFile) -> None:
 
     verbose_path = prettypath(upfile.repos_path)
     if synctool.lib.DRY_RUN:
-        stdout('would be uploaded as %s' % verbose_path)
+        stdout(f'would be uploaded as {verbose_path}')
     else:
         dest_dir = os.path.dirname(upfile.repos_path)
         _makedir(dest_dir, remote_stats[1:])
         if not synctool.lib.path_exists(dest_dir):
-            error('failed to create %s/' % dest_dir)
+            error(f'failed to create {dest_dir}/')
             return
 
     # for $overlay, never do rsync --delete / --delete-excluded
@@ -468,15 +469,14 @@ def rsync_upload(upfile: UploadFile) -> None:
         if '--delete-excluded' in cmd_arr:
             cmd_arr.remove('--delete-excluded')
 
-    verbose('running rsync%s%s:%s to %s' % (opts, upfile.node, upfile.filename,
-                                            verbose_path))
+    verbose(f'running rsync{opts}{upfile.node}:{upfile.filename} to {verbose_path}')
     if not synctool.lib.DRY_RUN:
         synctool.lib.run_with_nodename(cmd_arr, upfile.node)
 
         if not synctool.lib.path_exists(upfile.repos_path):
             error('upload failed')
         else:
-            stdout('uploaded %s' % verbose_path)
+            stdout(f'uploaded {verbose_path}')
     else:
         # in dry-run mode, show the command anyway
         unix_out('# dry run, rsync not performed')

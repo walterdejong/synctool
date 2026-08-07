@@ -10,18 +10,17 @@
 
 '''download the latest synctool.tar.gz'''
 
+import datetime
+import json
 import os
 import sys
-import datetime
-import urllib.request
 import urllib.error
 import urllib.parse
-import json
-
+import urllib.request
 from typing import Any
 
-from synctool.lib import verbose, error, stdout
 import synctool.param
+from synctool.lib import error, stdout, verbose
 
 
 class ReleaseInfo:
@@ -35,7 +34,7 @@ class ReleaseInfo:
         '''initialize instance'''
 
         self.version = ''
-        self.datetime = datetime.datetime(year=1970, month=1, day=1)
+        self.datetime = datetime.datetime(year=1970, month=1, day=1, tzinfo=datetime.timezone.utc)
         self.url = ''
 
     def load(self) -> bool:
@@ -86,14 +85,14 @@ class ReleaseInfo:
 
         try:
             self.datetime = datetime.datetime.strptime(date_str,
-                                                       '%Y-%m-%dT%H:%M:%S')
+                                                       '%Y-%m-%dT%H:%M:%S').replace(tzinfo=datetime.timezone.utc)
         except ValueError:
-            error("datetime format error: '%s'" % date_str)
+            error(f"datetime format error: '{date_str}'")
             return False
 
-        verbose('info.version = %s' % self.version)
-        verbose('info.datetime = %s' % str(self.datetime))
-        verbose('info.url = %s' % self.url)
+        verbose(f'info.version = {self.version}')
+        verbose(f'info.datetime = {self.datetime}')
+        verbose(f'info.url = {self.url}')
         return True
 
 
@@ -104,7 +103,7 @@ def github_api(url: str) -> Any:
     or None on error
     '''
 
-    verbose('loading URL %s' % url)
+    verbose(f'loading URL {url}')
     try:
         # can not use 'with' statement with urlopen()..?
         with urllib.request.urlopen(url) as web:
@@ -116,13 +115,13 @@ def github_api(url: str) -> Any:
         return data
 
     except urllib.error.HTTPError as err:
-        error('webserver at %s: %u %s' % (url, err.code, err.reason))
+        error(f'webserver at {url}: {err.code} {err.reason}')
 
     except urllib.error.URLError as err:
-        error('failed to access %s: %s' % (url, str(err.reason)))
+        error(f'failed to access {url}: {err.reason}')
 
     except OSError as err:
-        error('failed to access %s: %s' % (url, err.strerror))
+        error(f'failed to access {url}: {err.strerror}')
 
     return None
 
@@ -139,13 +138,13 @@ def check() -> bool:
         return False
 
     my_time = datetime.datetime.strptime(synctool.param.RELEASE_DATETIME,
-                                         '%Y-%m-%dT%H:%M:%S')
+                                         '%Y-%m-%dT%H:%M:%S').replace(tzinfo=datetime.timezone.utc)
     if info.datetime <= my_time:
         stdout('You are running the latest release of synctool')
         return False
 
-    stdout('A newer version is available: %s' % info.version)
-    stdout('released %s' % info.datetime)
+    stdout(f'A newer version is available: {info.version}')
+    stdout(f'released {info.datetime}')
     return True
 
 
@@ -158,7 +157,7 @@ def make_local_filename_for_version(version: str) -> str:
     elif version[:9] == 'synctool-':
         version = version[9:]
 
-    filename = 'synctool-%s.tar.gz' % version
+    filename = f'synctool-{version}.tar.gz'
 
     if not os.path.isfile(filename):
         return filename
@@ -167,7 +166,7 @@ def make_local_filename_for_version(version: str) -> str:
     nseq = 0
     while True:
         nseq += 1
-        filename = 'synctool-%s(%d).tar.gz' % (version, nseq)
+        filename = f'synctool-{version}({nseq}).tar.gz'
         if not os.path.isfile(filename):
             return filename
 
@@ -178,7 +177,7 @@ def print_progress(filename: str, total_size: int, current_size: int) -> None:
     percent = 100 * current_size // total_size
     percent = min(percent, 100)
 
-    print('\rdownloading %s ... %d%% ' % (filename, percent), end=' ')
+    print(f'\rdownloading {filename} ... {percent}% ', end=' ')
     sys.stdout.flush()
 
 
@@ -202,7 +201,7 @@ def download() -> bool:
             try:
                 totalsize = int(web.info().getheaders('Content-Length')[0])
             except (ValueError, KeyError, IndexError):
-                error('invalid response from webserver at %s' % info.url)
+                error(f'invalid response from webserver at {info.url}')
                 return False
 
             # download the file
@@ -224,7 +223,7 @@ def download() -> bool:
 
                 if download_bytes < totalsize:
                     print()
-                    error('failed to download %s' % info.url)
+                    error(f'failed to download {info.url}')
                     return False
 
                 download_bytes += 100    # force 100% in the progress counter
@@ -232,17 +231,16 @@ def download() -> bool:
                 return True
 
             except OSError as err:
-                error('failed to write file %s: %s' % (download_filename,
-                                                       err.strerror))
+                error(f'failed to write file {download_filename}: {err.strerror}')
 
     except urllib.error.HTTPError as err:
-        error('webserver at %s: %u %s' % (info.url, err.code, err.reason))
+        error(f'webserver at {info.url}: {err.code} {err.reason}')
 
     except urllib.error.URLError as err:
-        error('failed to access %s: %s' % (info.url, str(err.reason)))
+        error(f'failed to access {info.url}: {err.reason}')
 
     except OSError as err:
-        error('failed to access %s: %s' % (info.url, err.strerror))
+        error(f'failed to access {info.url}: {err.strerror}')
 
     return False
 

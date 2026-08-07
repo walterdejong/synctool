@@ -10,22 +10,22 @@
 
 '''multiplexing ssh connections'''
 
+from __future__ import annotations
+
 import os
 import re
 import shlex
 import subprocess
 
-from typing import List, Tuple, Optional
-
 import synctool.lib
-from synctool.lib import verbose, error, warning, unix_out
 import synctool.param
 import synctool.syncstat
+from synctool.lib import error, unix_out, verbose, warning
 
-SSH_VERSION: Optional[int] = None
+SSH_VERSION: int | None = None
 
 
-def _make_control_path(nodename: str) -> Optional[str]:
+def _make_control_path(nodename: str) -> str | None:
     '''Returns a control pathname for nodename
     or None on error
     It does not create the control path; just the fullpath filename
@@ -55,21 +55,18 @@ def use_mux(nodename: str) -> bool:
     statbuf = synctool.syncstat.SyncStat(control_path)
     if statbuf.exists():
         if not statbuf.is_sock():
-            warning('control path %s: not a socket file' %
-                    control_path)
+            warning(f'control path {control_path}: not a socket file')
             return False
 
         if statbuf.uid != os.getuid():
-            warning('control path: %s: incorrect owner uid %u' %
-                    (control_path, statbuf.uid))
+            warning(f'control path: {control_path}: incorrect owner uid {statbuf.uid}')
             return False
 
         if statbuf.mode & 0o77 != 0:
-            warning('control path %s: suspicious file mode %04o' %
-                    (control_path, statbuf.mode & 0o777))
+            warning(f'control path {control_path}: suspicious file mode {statbuf.mode & 0o777:04o}')
             return False
 
-        verbose('control path %s already exists' % control_path)
+        verbose(f'control path {control_path} already exists')
         return True
 
     verbose('there is no ssh control path')
@@ -82,14 +79,14 @@ def control(nodename: str, remote_addr: str, ctl_cmd: str) -> bool:
     '''
 
     if ctl_cmd not in ('check', 'stop', 'exit'):
-        raise RuntimeError("unsupported control command '%s'" % ctl_cmd)
+        raise RuntimeError(f"unsupported control command '{ctl_cmd}'")
 
     control_path = _make_control_path(nodename)
     if not control_path:
         # error message already printed
         return False
 
-    verbose('sending control command %s to %s' % (ctl_cmd, nodename))
+    verbose(f'sending control command {ctl_cmd} to {nodename}')
 
     cmd_arr = shlex.split(synctool.param.SSH_CMD)
     cmd_arr.extend(['-N', '-n',
@@ -105,7 +102,7 @@ def control(nodename: str, remote_addr: str, ctl_cmd: str) -> bool:
     return exitcode == 0
 
 
-def ssh_args(ssh_cmd_arr: List[str], nodename: str) -> None:
+def ssh_args(ssh_cmd_arr: list[str], nodename: str) -> None:
     '''add multiplexing arguments to ssh_cmd_arr'''
 
     control_path = _make_control_path(nodename)
@@ -116,7 +113,7 @@ def ssh_args(ssh_cmd_arr: List[str], nodename: str) -> None:
     ssh_cmd_arr.extend(['-o', 'ControlPath=' + control_path])
 
 
-def setup_master(node_list: List[Tuple[str, str]], persist: Optional[str]) -> bool:
+def setup_master(node_list: list[tuple[str, str]], persist: str | None) -> bool:
     '''setup master connections to all nodes in node_list
     node_list is a list of pairs: (addr, nodename)
     Argument 'persist' is the SSH ControlPersist parameter
@@ -153,27 +150,25 @@ def setup_master(node_list: List[Tuple[str, str]], persist: Optional[str]) -> bo
         statbuf = synctool.syncstat.SyncStat(control_path)
         if statbuf.exists():
             if not statbuf.is_sock():
-                warning('control path %s: not a socket file' % control_path)
+                warning(f'control path {control_path}: not a socket file')
                 errors += 1
                 continue
 
             if statbuf.uid != os.getuid():
-                warning('control path: %s: incorrect owner uid %u' %
-                        (control_path, statbuf.uid))
+                warning(f'control path: {control_path}: incorrect owner uid {statbuf.uid}')
                 errors += 1
                 continue
 
             if statbuf.mode & 0o77 != 0:
-                warning('control path %s: suspicious file mode %04o' %
-                        (control_path, statbuf.mode & 0o777))
+                warning(f'control path {control_path}: suspicious file mode {statbuf.mode & 0o777:04o}')
                 errors += 1
                 continue
 
-            verbose('control path %s already exists' % control_path)
+            verbose(f'control path {control_path} already exists')
             continue
 
         # start ssh in master mode to create a new control path
-        verbose('creating master control path to %s' % nodename)
+        verbose(f'creating master control path to {nodename}')
 
         cmd_arr = ssh_cmd_arr[:]
         cmd_arr.extend(['-o', 'ControlPath=' + control_path, '--', addr])
@@ -190,7 +185,7 @@ def setup_master(node_list: List[Tuple[str, str]], persist: Optional[str]) -> bo
             procs.append(proc)
 
         except OSError as err:
-            error('failed to execute %s: %s' % (cmd_arr[0], err.strerror))
+            error(f'failed to execute {cmd_arr[0]}: {err.strerror}')
             errors += 1
             continue
 
@@ -247,9 +242,9 @@ def detect_ssh() -> int:
         completed = subprocess.run(cmd_arr,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT,
-                                   universal_newlines=True, check=False)
+                                   text=True, check=False)
     except OSError as err:
-        error('failed to execute %s: %s' % (cmd_arr[0], err.strerror))
+        error(f'failed to execute {cmd_arr[0]}: {err.strerror}')
         SSH_VERSION = -1
         return SSH_VERSION
 
@@ -269,7 +264,7 @@ def detect_ssh() -> int:
 
     groups = matchssl.groups()
     SSH_VERSION = int(groups[0]) * 10 + int(groups[1])
-    verbose('SSH_VERSION: %d' % SSH_VERSION)
+    verbose(f'SSH_VERSION: {SSH_VERSION}')
     return SSH_VERSION
 
 

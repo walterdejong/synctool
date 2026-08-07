@@ -10,9 +10,9 @@
 
 '''aggregate: group together output that is the same'''
 
+import getopt
 import os
 import sys
-import getopt
 
 import synctool.aggr
 from synctool.main.wrapper import catch_signals
@@ -39,7 +39,7 @@ def get_options() -> None:
     try:
         opts, _ = getopt.getopt(sys.argv[1:], 'h', ['help'])
     except getopt.GetoptError as reason:
-        print('%s: %s' % (os.path.basename(sys.argv[0]), reason))
+        print(f'{os.path.basename(sys.argv[0])}: {reason}')
         # usage()
         sys.exit(1)
 

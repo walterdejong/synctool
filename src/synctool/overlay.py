@@ -34,17 +34,18 @@
     then the .post script is passed in the dict as well.
 '''
 
-import os
-import fnmatch
-from functools import cmp_to_key
+from __future__ import annotations
 
-from typing import List, Dict, Tuple, Set, Callable, Optional
+import fnmatch
+import os
+from functools import cmp_to_key
+from typing import Callable
 
 import synctool.lib
-from synctool.lib import verbose, warning, terse, prettypath
 import synctool.object
-from synctool.object import SyncObject
 import synctool.param
+from synctool.lib import prettypath, terse, verbose, warning
+from synctool.object import SyncObject
 
 # const enum object types
 OV_REG = 0
@@ -56,21 +57,20 @@ OV_NO_EXT = 5
 OV_IGNORE = 6
 
 
-def _toplevel(overlay: str) -> List[str]:
+def _toplevel(overlay: str) -> list[str]:
     '''Returns sorted list of fullpath directories under overlay/'''
 
     # the tuples are (fullpath, importance)
     # the list of paths gets sorted by importance; key=item[1]
 
-    arr: List[Tuple[str, int]] = []
+    arr: list[tuple[str, int]] = []
 
     for entry in os.listdir(overlay):
         fullpath = os.path.join(overlay, entry)
         try:
             importance = synctool.param.MY_GROUPS.index(entry)
         except ValueError:
-            verbose('%s/ is not one of my groups, skipping' %
-                    prettypath(fullpath))
+            verbose('{}/ is not one of my groups, skipping'.format(prettypath(fullpath)))
             continue
 
         arr.append((fullpath, importance))
@@ -89,7 +89,7 @@ def _group_all() -> int:
     return len(synctool.param.MY_GROUPS) - 1
 
 
-def _split_extension(filename: str, src_dir: str) -> Tuple[Optional[SyncObject], int]:
+def _split_extension(filename: str, src_dir: str) -> tuple[SyncObject | None, int]:
     '''filename in the overlay tree, without leading path
     src_dir is passed for the purpose of printing error messages
     Returns tuple: SyncObject, importance
@@ -130,15 +130,13 @@ def _split_extension(filename: str, src_dir: str) -> Tuple[Optional[SyncObject],
         if ext not in synctool.param.ALL_GROUPS:
             src_path = os.path.join(src_dir, filename)
             if synctool.param.TERSE:
-                terse(synctool.lib.TERSE_ERROR, ('invalid group on %s' %
-                                                 src_path))
+                terse(synctool.lib.TERSE_ERROR, f'invalid group on {src_path}')
             else:
-                warning('unknown group on %s, skipped' % prettypath(src_path))
+                warning('unknown group on {}, skipped'.format(prettypath(src_path)))
             return None, -1
 
         # it is not one of my groups
-        verbose('skipping %s, it is not one of my groups' %
-                prettypath(os.path.join(src_dir, filename)))
+        verbose('skipping {}, it is not one of my groups'.format(prettypath(os.path.join(src_dir, filename))))
         return None, -1
 
     (name2, ext) = os.path.splitext(name)
@@ -162,7 +160,7 @@ def _split_extension(filename: str, src_dir: str) -> Tuple[Optional[SyncObject],
     return SyncObject(filename, name), importance
 
 
-def _sort_by_importance_post_first(item1: Tuple[SyncObject, int], item2: Tuple[SyncObject, int]) -> int:
+def _sort_by_importance_post_first(item1: tuple[SyncObject, int], item2: tuple[SyncObject, int]) -> int:
     '''sort by importance, but always put .post scripts first'''
 
     # pylint: disable=too-many-return-statements
@@ -204,8 +202,8 @@ def _sort_by_importance_post_first(item1: Tuple[SyncObject, int], item2: Tuple[S
     return 0
 
 
-def _walk_subtree(src_dir: str, dest_dir: str, duplicates: Set[str],
-                  callback: Callable[[SyncObject, Dict[str, str], Dict[str, str]], Tuple[bool, bool]]) -> Tuple[bool, bool]:
+def _walk_subtree(src_dir: str, dest_dir: str, duplicates: set[str],
+                  callback: Callable[[SyncObject, dict[str, str], dict[str, str]], tuple[bool, bool]]) -> tuple[bool, bool]:
     '''walk subtree under overlay/group/
     duplicates is a set that keeps us from selecting any duplicate matches
     Returns pair of booleans: ok, dir was updated
@@ -216,7 +214,7 @@ def _walk_subtree(src_dir: str, dest_dir: str, duplicates: Set[str],
     arr = []
     for entry in os.listdir(src_dir):
         if entry in synctool.param.IGNORE_FILES:
-            verbose('ignoring %s' % prettypath(os.path.join(src_dir, entry)))
+            verbose('ignoring {}'.format(prettypath(os.path.join(src_dir, entry))))
             continue
 
         # check any ignored files with wildcards
@@ -225,8 +223,7 @@ def _walk_subtree(src_dir: str, dest_dir: str, duplicates: Set[str],
         for wildcard_entry in synctool.param.IGNORE_FILES_WITH_WILDCARDS:
             if fnmatch.fnmatchcase(entry, wildcard_entry):
                 wildcard_match = True
-                verbose('ignoring %s (pattern match)' %
-                        prettypath(os.path.join(src_dir, entry)))
+                verbose('ignoring {} (pattern match)'.format(prettypath(os.path.join(src_dir, entry))))
                 break
 
         if wildcard_match:
@@ -243,8 +240,8 @@ def _walk_subtree(src_dir: str, dest_dir: str, duplicates: Set[str],
 
     arr.sort(key=cmp_to_key(_sort_by_importance_post_first))
 
-    pre_dict: Dict[str, str] = {}
-    post_dict: Dict[str, str] = {}
+    pre_dict: dict[str, str] = {}
+    post_dict: dict[str, str] = {}
     dir_changed = False
 
     for obj, importance in arr:
@@ -281,7 +278,7 @@ def _walk_subtree(src_dir: str, dest_dir: str, duplicates: Set[str],
             if synctool.param.IGNORE_DOTDIRS:
                 name = os.path.basename(obj.src_path)
                 if name[0] == '.':
-                    verbose('ignoring dotdir %s' % obj.print_src())
+                    verbose(f'ignoring dotdir {obj.print_src()}')
                     continue
 
             updated = False
@@ -316,15 +313,14 @@ def _walk_subtree(src_dir: str, dest_dir: str, duplicates: Set[str],
         if synctool.param.IGNORE_DOTFILES:
             name = os.path.basename(obj.src_path)
             if name[0] == '.':
-                verbose('ignoring dotfile %s' % obj.print_src())
+                verbose(f'ignoring dotfile {obj.print_src()}')
                 continue
 
         if synctool.param.REQUIRE_EXTENSION and obj.ov_type == OV_NO_EXT:
             if synctool.param.TERSE:
-                terse(synctool.lib.TERSE_ERROR, ('no group on %s' %
-                                                 obj.src_path))
+                terse(synctool.lib.TERSE_ERROR, f'no group on {obj.src_path}')
             else:
-                warning('no group extension on %s, skipped' % obj.print_src())
+                warning(f'no group extension on {obj.print_src()}, skipped')
             continue
 
         if obj.dest_path in duplicates:
@@ -359,14 +355,14 @@ def _walk_subtree(src_dir: str, dest_dir: str, duplicates: Set[str],
     return True, dir_changed
 
 
-def visit(overlay: str, callback: Callable[[SyncObject, Dict[str, str], Dict[str, str]], Tuple[bool, bool]]) -> None:
+def visit(overlay: str, callback: Callable[[SyncObject, dict[str, str], dict[str, str]], tuple[bool, bool]]) -> None:
     '''visit all entries in the overlay tree
     overlay is either synctool.param.OVERLAY_DIR or synctool.param.DELETE_DIR
     callback will called with arguments: (SyncObject, pre_dict, post_dict)
     callback must return a two booleans: ok, updated
     '''
 
-    duplicates: Set[str] = set()
+    duplicates: set[str] = set()
 
     for direct in _toplevel(overlay):
         okay, _ = _walk_subtree(direct, os.sep, duplicates, callback)

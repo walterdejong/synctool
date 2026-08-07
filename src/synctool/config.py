@@ -12,16 +12,16 @@
 It's not the config parser ... that code is in module configparser
 '''
 
-import os
-import sys
-import socket
+from __future__ import annotations
 
-from typing import List, Tuple, Set, Union, Optional
+import os
+import socket
+import sys
 
 import synctool.configparser
 import synctool.lib
-from synctool.lib import stderr, error
 import synctool.param
+from synctool.lib import error, stderr
 
 
 def read_config() -> None:
@@ -32,22 +32,22 @@ def read_config() -> None:
     # pylint: disable=too-many-branches
 
     if not os.path.isfile(synctool.param.CONF_FILE):
-        stderr("no such config file '%s'" % synctool.param.CONF_FILE)
+        stderr(f"no such config file '{synctool.param.CONF_FILE}'")
         sys.exit(-1)
 
     errors = synctool.configparser.read_config_file(synctool.param.CONF_FILE)
 
     # overlay/ and delete/ must be under ROOTDIR
     if not os.path.isdir(synctool.param.OVERLAY_DIR):
-        error('no such directory: %s' % synctool.param.OVERLAY_DIR)
+        error(f'no such directory: {synctool.param.OVERLAY_DIR}')
         errors += 1
 
     if not os.path.isdir(synctool.param.DELETE_DIR):
-        error('no such directory: %s' % synctool.param.DELETE_DIR)
+        error(f'no such directory: {synctool.param.DELETE_DIR}')
         errors += 1
 
     if not os.path.isdir(synctool.param.PURGE_DIR):
-        error('no such directory: %s' % synctool.param.PURGE_DIR)
+        error(f'no such directory: {synctool.param.PURGE_DIR}')
         errors += 1
 
     if not synctool.param.TEMP_DIR:
@@ -71,7 +71,7 @@ def read_config() -> None:
 
     for node in synctool.param.SLAVES:
         if node not in synctool.param.NODES:
-            error("slave '%s': no such node" % node)
+            error(f"slave '{node}': no such node")
             errors += 1
 
     # implicitly add group 'all'
@@ -97,22 +97,20 @@ def read_config() -> None:
         sys.exit(-1)
 
 
-def check_cmd_config(param_name: str, cmd: str) -> Tuple[bool, str]:
+def check_cmd_config(param_name: str, cmd: str) -> tuple[bool, str]:
     '''check whether the command given in the config exists
     Returns (True, full pathed command) when OK,
     and (False, "") on error
     '''
 
     if not cmd:
-        stderr("%s: error: parameter '%s' is missing" %
-               (synctool.param.CONF_FILE, param_name))
+        stderr(f"{synctool.param.CONF_FILE}: error: parameter '{param_name}' is missing")
         return False, ''
 
     arr = cmd.split()
     path = synctool.lib.search_path(arr[0])
     if not path:
-        stderr("%s: error: %s '%s' not found in PATH" %
-               (synctool.param.CONF_FILE, param_name, arr[0]))
+        stderr(f"{synctool.param.CONF_FILE}: error: {param_name} '{arr[0]}' not found in PATH")
         return False, ''
 
     # reassemble command with full path
@@ -178,7 +176,7 @@ def init_mynodename() -> None:
     synctool.param.MY_GROUPS = get_my_groups()
 
 
-def get_ipaddresses(name: str) -> Optional[List[str]]:
+def get_ipaddresses(name: str) -> list[str] | None:
     '''Returns list of IP addresses for DNS name
     or None on error
     '''
@@ -191,7 +189,7 @@ def get_ipaddresses(name: str) -> Optional[List[str]]:
     if addrinfo is None or len(addrinfo) < 1:
         return []
 
-    ipaddresses = set([])
+    ipaddresses = set()
 
     # address info is a list of tuples:
     # [(family, socktype, proto, canonname, sockaddr), ]
@@ -217,7 +215,7 @@ def insert_group(node: str, group: str) -> None:
         synctool.param.NODES[node] = [group]
 
 
-def get_all_nodes() -> List[str]:
+def get_all_nodes() -> list[str]:
     '''Returns array with all node names'''
 
     return list(synctool.param.NODES.keys())
@@ -232,7 +230,7 @@ def get_node_ipaddress(node: str) -> str:
     return node
 
 
-def make_all_groups() -> Set[str]:
+def make_all_groups() -> set[str]:
     '''make a set of all possible groups
     This is a set of all group names plus all node names
     '''
@@ -242,7 +240,7 @@ def make_all_groups() -> Set[str]:
     return groups
 
 
-def get_groups(nodename: str) -> List[str]:
+def get_groups(nodename: str) -> list[str]:
     '''returns the groups for the node'''
 
     if nodename in synctool.param.NODES:
@@ -251,7 +249,7 @@ def get_groups(nodename: str) -> List[str]:
     return []
 
 
-def get_my_groups() -> List[str]:
+def get_my_groups() -> list[str]:
     '''returns the groups for this node'''
 
     if synctool.param.NODENAME in synctool.param.NODES:
@@ -260,7 +258,7 @@ def get_my_groups() -> List[str]:
     return []
 
 
-def expand_groups(groups: Union[List[str], Set[str]]) -> List[str]:
+def expand_groups(groups: list[str] | set[str]) -> list[str]:
     '''groups may contain compound groups
     Returns list of expanded groups
     '''
@@ -294,10 +292,10 @@ def expand_groups(groups: Union[List[str], Set[str]]) -> List[str]:
     return expanded
 
 
-def get_nodes_in_groups(groups: Union[List[str], Set[str]]) -> Set[str]:
+def get_nodes_in_groups(groups: list[str] | set[str]) -> set[str]:
     '''returns a set of nodes that are in a set or list of groups'''
 
-    nodeset: Set[str] = set()
+    nodeset: set[str] = set()
 
     groups = expand_groups(groups)
     for group in groups:

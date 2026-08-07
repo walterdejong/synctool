@@ -10,12 +10,12 @@
 
 '''a SyncStat object is a stat structure with caching'''
 
+import errno
 import os
 import stat
-import errno
 
-from synctool.lib import error
 import synctool.pwdgrp
+from synctool.lib import error
 
 
 class SyncStat:
@@ -42,8 +42,7 @@ class SyncStat:
         '''return string representation'''
 
         if self.entry_exists:
-            return '[<SyncStat>: %04o %d.%d %d]' % (self.mode, self.uid,
-                                                    self.gid, self.size)
+            return f'[<SyncStat>: {self.mode:04o} {self.uid}.{self.gid} {self.size}]'
 
         return '[<SyncStat>: None]'
 
@@ -67,7 +66,7 @@ class SyncStat:
             if err.errno != errno.ENOENT:
                 # "No such file or directory" is a valid error
                 # when the destination is missing
-                error('stat(%s) failed: %s' % (path, err.strerror))
+                error(f'stat({path}) failed: {err.strerror}')
 
             self.entry_exists = False
             self.mode = 0
@@ -130,11 +129,6 @@ class SyncStat:
         '''Returns True if it exists'''
 
         return self.entry_exists
-
-    def is_exec(self) -> bool:
-        '''Returns True if its mode has any 'x' bit set'''
-
-        return self.entry_exists and ((self.mode & 0o111) != 0)
 
     def ascii_uid(self) -> str:
         '''Returns the username for this uid'''

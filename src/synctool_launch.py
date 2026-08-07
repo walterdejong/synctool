@@ -48,18 +48,18 @@ def scoped_main() -> None:
         sys.exit(0)
 
     if prognam not in LAUNCH:
-        stderr("launch: error: unknown program '%s'" % prognam)
+        stderr(f"launch: error: unknown program '{prognam}'")
         sys.exit(1)
 
     prefix, _bindir = os.path.split(base)
     launch = os.path.join(prefix, 'sbin', LAUNCH[prognam])
     if not os.path.isfile(launch):
-        stderr('launch: error: missing program %s' % launch)
+        stderr(f'launch: error: missing program {launch}')
         sys.exit(-1)
 
     libdir = os.path.join(prefix, 'lib')
     if not os.path.isdir(libdir):
-        stderr('launch: error: no such directory: %s' % libdir)
+        stderr(f'launch: error: no such directory: {libdir}')
         sys.exit(-1)
 
     os.environ['PYTHONPATH'] = libdir
@@ -69,7 +69,7 @@ def scoped_main() -> None:
 
     os.execv(argv[0], argv)
 
-    stderr('launch: error: failed to execute: %s' % argv[0])
+    stderr(f'launch: error: failed to execute: {argv[0]}')
     sys.exit(-1)
 
 

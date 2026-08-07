@@ -10,33 +10,33 @@
 
 '''A command for invoking remote commands on the synctool nodes'''
 
-import os
-import sys
+from __future__ import annotations
+
 import getopt
+import os
 import shlex
+import sys
 
-from typing import List, Optional
-
-from synctool import config, param
 import synctool.aggr
 import synctool.configparser
 import synctool.lib
-from synctool.lib import verbose, error
-from synctool.main.wrapper import catch_signals
 import synctool.multiplex
 import synctool.nodeset
 import synctool.parallel
 import synctool.range
 import synctool.unbuffered
+from synctool import config, param
+from synctool.lib import error, verbose
+from synctool.main.wrapper import catch_signals
 
 # hardcoded name because otherwise we get "dsh.py"
 PROGNAME = 'dsh'
 
 # ugly globals in use by parallel worker
 NODESET = synctool.nodeset.NodeSet()
-SSH_CMD_ARR: List[str] = []
-REMOTE_CMD_ARR: List[str] = []
-SSH_CTL_CMD: Optional[str] = None
+SSH_CMD_ARR: list[str] = []
+REMOTE_CMD_ARR: list[str] = []
+SSH_CTL_CMD: str | None = None
 OPT_SKIP_RSYNC = False
 # boolean saying whether we should sync the script to the nodes
 # before running it
@@ -52,14 +52,14 @@ class Options:
         '''initialize instance'''
 
         self.aggregate = False
-        self.master_opts: List[str] = []
-        self.cmd_argv: List[str] = []           # command to run remote
+        self.master_opts: list[str] = []
+        self.cmd_argv: list[str] = []           # command to run remote
         self.ssh_options = ''
         self.ssh_multiplex = False
-        self.ssh_persist: Optional[str] = None
+        self.ssh_persist: str | None = None
 
 
-def run_dsh(address_list: List[str], remote_cmd_arr: List[str], ssh_options: str = '') -> None:
+def run_dsh(address_list: list[str], remote_cmd_arr: list[str], ssh_options: str = '') -> None:
     '''run remote command to a set of nodes using ssh (param ssh_cmd)'''
 
     global SSH_CMD_ARR, REMOTE_CMD_ARR, SYNC_IT                     # pylint: disable=global-statement
@@ -111,8 +111,7 @@ def worker_ssh(addr: str) -> None:
     if SYNC_IT and not (OPT_SKIP_RSYNC or nodename in param.NO_RSYNC):
         # first, sync the script to the node using rsync
         # REMOTE_CMD_ARR[0] is the full path to the cmd in SCRIPT_DIR
-        verbose('running rsync $SYNCTOOL/scripts/%s to node %s' %
-                (os.path.basename(REMOTE_CMD_ARR[0]), nodename))
+        verbose(f'running rsync $SYNCTOOL/scripts/{os.path.basename(REMOTE_CMD_ARR[0])} to node {nodename}')
 
         cmd_arr = shlex.split(param.RSYNC_CMD)
 
@@ -129,8 +128,8 @@ def worker_ssh(addr: str) -> None:
             cmd_arr.remove('--delete-excluded')
 
         cmd_arr.append('--')
-        cmd_arr.append('%s' % REMOTE_CMD_ARR[0])
-        cmd_arr.append('%s:%s' % (addr, REMOTE_CMD_ARR[0]))
+        cmd_arr.append(f'{REMOTE_CMD_ARR[0]}')
+        cmd_arr.append(f'{addr}:{REMOTE_CMD_ARR[0]}')
         synctool.lib.run_with_nodename(cmd_arr, nodename)
 
     cmd_str = ' '.join(REMOTE_CMD_ARR)
@@ -139,8 +138,7 @@ def worker_ssh(addr: str) -> None:
     # or else parallelism may screw things up
     ssh_cmd_arr = SSH_CMD_ARR[:]
 
-    verbose('running %s to %s %s' % (os.path.basename(SSH_CMD_ARR[0]),
-                                     nodename, cmd_str))
+    verbose(f'running {os.path.basename(SSH_CMD_ARR[0])} to {nodename} {cmd_str}')
 
     # add extra arguments for ssh multiplexing (if OK to use)
     if use_multiplex:
@@ -161,13 +159,12 @@ def worker_ssh(addr: str) -> None:
         synctool.lib.run_with_nodename(ssh_cmd_arr, nodename)
 
 
-def start_multiplex(address_list: List[str], ssh_persist: Optional[str] = None) -> None:
+def start_multiplex(address_list: list[str], ssh_persist: str | None = None) -> None:
     '''run ssh -M to each node in address_list'''
 
     # allow this only on the master node because of security considerations
     if param.MASTER != param.HOSTNAME:
-        verbose('master %s != hostname %s' % (param.MASTER,
-                                              param.HOSTNAME))
+        verbose(f'master {param.MASTER} != hostname {param.HOSTNAME}')
         error('not running on the master node')
         sys.exit(-1)
 
@@ -178,7 +175,7 @@ def start_multiplex(address_list: List[str], ssh_persist: Optional[str] = None) 
         # spellcheck the parameter
         mpar = synctool.configparser.PERSIST_TIME.match(ssh_persist)
         if not mpar:
-            error("invalid persist value '%s'" % ssh_persist)
+            error(f"invalid persist value '{ssh_persist}'")
             return
 
     # make list of nodenames
@@ -189,7 +186,7 @@ def start_multiplex(address_list: List[str], ssh_persist: Optional[str] = None) 
     synctool.multiplex.setup_master(pairs, ssh_persist)
 
 
-def control_multiplex(address_list: List[str], ssh_options: str = '') -> None:
+def control_multiplex(address_list: list[str], ssh_options: str = '') -> None:
     '''run ssh -O ctl_cmd to each node in address_list'''
 
     global SSH_CMD_ARR                                              # pylint: disable=global-statement
@@ -220,23 +217,22 @@ def _ssh_control(addr: str) -> None:
     if SSH_CTL_CMD == 'check':
         if okay:
             if not synctool.lib.QUIET:
-                print('%s: ssh master running' % nodename)
+                print(f'{nodename}: ssh master running')
         else:
-            print('%s: ssh master not running' % nodename)
+            print(f'{nodename}: ssh master not running')
 
     elif SSH_CTL_CMD == 'stop':
         if not synctool.lib.QUIET:
             if okay:
-                print('%s: ssh master stopped' % nodename)
+                print(f'{nodename}: ssh master stopped')
             else:
-                print('%s: ssh master not running' % nodename)
+                print(f'{nodename}: ssh master not running')
 
-    elif SSH_CTL_CMD == 'exit':
-        if not synctool.lib.QUIET:
-            if okay:
-                print('%s: ssh master exiting' % nodename)
-            else:
-                print('%s: ssh master not running' % nodename)
+    elif SSH_CTL_CMD == 'exit' and not synctool.lib.QUIET:
+        if okay:
+            print(f'{nodename}: ssh master exiting')
+        else:
+            print(f'{nodename}: ssh master not running')
 
 
 def check_cmd_config() -> None:
@@ -260,12 +256,11 @@ def check_cmd_config() -> None:
 def usage() -> None:
     '''print usage information'''
 
-    print('usage: %s [options] <remote command>' % PROGNAME)
+    print(f'usage: {PROGNAME} [options] <remote command>')
     print('options:')
     print('  -h, --help                  Display this information')
     print('  -c, --conf=FILE             Use this config file')
-    print(('                              (default: %s)' %
-           param.DEFAULT_CONF))
+    print(f'                              (default: {param.DEFAULT_CONF})')
     print('''  -n, --node=LIST             Execute only on these nodes
   -g, --group=LIST            Execute only on these groups of nodes
   -x, --exclude=LIST          Exclude these nodes from the selected group
@@ -308,7 +303,7 @@ def get_options() -> Options:
                                     'no-nodename', 'unix', 'verbose',
                                     'aggregate', 'skip-rsync', 'quiet'])
     except getopt.GetoptError as reason:
-        print('%s: %s' % (PROGNAME, reason))
+        print(f'{PROGNAME}: {reason}')
         # usage()
         sys.exit(1)
 
@@ -384,11 +379,11 @@ def get_options() -> Options:
 
         if opt == '-O':
             if SSH_CTL_CMD is not None:
-                print("%s: only a single '-O' option can be given" % PROGNAME)
+                print(f"{PROGNAME}: only a single '-O' option can be given")
                 sys.exit(1)
 
             if arg not in ('check', 'stop', 'exit'):
-                print("%s: unknown control command '%s'" % (PROGNAME, arg))
+                print(f"{PROGNAME}: unknown control command '{arg}'")
                 sys.exit(1)
 
             SSH_CTL_CMD = arg
@@ -398,12 +393,11 @@ def get_options() -> Options:
             try:
                 param.NUM_PROC = int(arg)
             except ValueError:
-                print(("%s: option '%s' requires a numeric value" %
-                       (PROGNAME, opt)))
+                print(f"{PROGNAME}: option '{opt}' requires a numeric value")
                 sys.exit(1)
 
             if param.NUM_PROC < 1:
-                print('%s: invalid value for numproc' % PROGNAME)
+                print(f'{PROGNAME}: invalid value for numproc')
                 sys.exit(1)
 
             continue
@@ -412,12 +406,11 @@ def get_options() -> Options:
             try:
                 param.SLEEP_TIME = int(arg)
             except ValueError:
-                print(("%s: option '%s' requires a numeric value" %
-                       (PROGNAME, opt)))
+                print(f"{PROGNAME}: option '{opt}' requires a numeric value")
                 sys.exit(1)
 
             if param.SLEEP_TIME < 0:
-                print('%s: invalid value for sleep time' % PROGNAME)
+                print(f'{PROGNAME}: invalid value for sleep time')
                 sys.exit(1)
 
             if not param.SLEEP_TIME:
@@ -453,20 +446,20 @@ def get_options() -> Options:
             continue
 
     if not options.ssh_multiplex and options.ssh_persist is not None:
-        print('%s: option --persist requires option --master' % PROGNAME)
+        print(f'{PROGNAME}: option --persist requires option --master')
         sys.exit(1)
 
     if options.ssh_multiplex and SSH_CTL_CMD is not None:
-        print('%s: options --master and -O can not be combined' % PROGNAME)
+        print(f'{PROGNAME}: options --master and -O can not be combined')
         sys.exit(1)
 
     if options.ssh_multiplex or SSH_CTL_CMD is not None:
         if args:
-            print('%s: excessive arguments on command-line' % PROGNAME)
+            print(f'{PROGNAME}: excessive arguments on command-line')
             sys.exit(1)
 
     elif not args:
-        print('%s: missing remote command' % PROGNAME)
+        print(f'{PROGNAME}: missing remote command')
         sys.exit(1)
 
     if args:

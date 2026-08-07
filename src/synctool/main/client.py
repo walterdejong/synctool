@@ -10,23 +10,32 @@
 
 '''synctool-client is the program that runs on the target node'''
 
+from __future__ import annotations
+
+import getopt
 import os
+import shlex
+import subprocess
 import sys
 import time
-import shlex
-import getopt
-import subprocess
+from typing import Callable
 
-from typing import List, Dict, Tuple, Callable
-
-from synctool import config, param
 import synctool.lib
-from synctool.lib import verbose, stdout, stderr, error, warning, terse
-from synctool.lib import unix_out, prettypath
-from synctool.main.wrapper import catch_signals
 import synctool.object
 import synctool.overlay
 import synctool.syncstat
+from synctool import config, param
+from synctool.lib import (
+    error,
+    prettypath,
+    stderr,
+    stdout,
+    terse,
+    unix_out,
+    verbose,
+    warning,
+)
+from synctool.main.wrapper import catch_signals
 from synctool.object import SyncObject
 
 # hardcoded name because otherwise we get "synctool_client.py"
@@ -38,10 +47,10 @@ ACTION_DIFF = 1
 ACTION_ERASE_SAVED = 2
 ACTION_REFERENCE = 3
 
-SINGLE_FILES: List[str] = []
+SINGLE_FILES: list[str] = []
 
 
-def generate_template(obj: SyncObject, post_dict: Dict[str, str]) -> bool:
+def generate_template(obj: SyncObject, post_dict: dict[str, str]) -> bool:
     '''run template .post script, generating a new file
     The script will run in the source dir (overlay tree) and
     it will run even in dry-run mode
@@ -56,16 +65,16 @@ def generate_template(obj: SyncObject, post_dict: Dict[str, str]) -> bool:
     # and it will be picked up again in overlay._walk_subtree()
 
     if synctool.lib.NO_POST:
-        verbose('skipping template generation of %s' % obj.src_path)
+        verbose(f'skipping template generation of {obj.src_path}')
         obj.ov_type = synctool.overlay.OV_IGNORE
         return True
 
     if SINGLE_FILES and obj.dest_path not in SINGLE_FILES:
-        verbose('skipping template generation of %s' % obj.src_path)
+        verbose(f'skipping template generation of {obj.src_path}')
         obj.ov_type = synctool.overlay.OV_IGNORE
         return True
 
-    verbose('generating template %s' % obj.print_src())
+    verbose(f'generating template {obj.print_src()}')
 
     src_dir = os.path.dirname(obj.src_path)
     newname = os.path.join(src_dir, os.path.basename(obj.dest_path))
@@ -73,15 +82,15 @@ def generate_template(obj: SyncObject, post_dict: Dict[str, str]) -> bool:
     # add most important extension
     newname += '._' + param.NODENAME
 
-    verbose('generating template as %s' % newname)
+    verbose(f'generating template as {newname}')
 
     statbuf = synctool.syncstat.SyncStat(newname)
     if statbuf.exists():
-        verbose('template destination %s already exists' % newname)
+        verbose(f'template destination {newname} already exists')
 
         if param.SYNC_TIMES and statbuf.mtime != obj.src_stat.mtime:
             # force the mtime of the template onto the existing output
-            verbose('forcing mtime %s => %s' % (obj.src_path, newname))
+            verbose(f'forcing mtime {obj.src_path} => {newname}')
             synctool.lib.set_filetimes(newname, statbuf.atime,
                                        obj.src_stat.mtime)
 
@@ -94,9 +103,9 @@ def generate_template(obj: SyncObject, post_dict: Dict[str, str]) -> bool:
     # get the .post script for the template file
     if template not in post_dict:
         if param.TERSE:
-            terse(synctool.lib.TERSE_ERROR, 'no .post %s' % obj.src_path)
+            terse(synctool.lib.TERSE_ERROR, f'no .post {obj.src_path}')
         else:
-            error('template generator for %s not found' % obj.src_path)
+            error(f'template generator for {obj.src_path} not found')
         return False
 
     generator = post_dict[template]
@@ -105,17 +114,16 @@ def generate_template(obj: SyncObject, post_dict: Dict[str, str]) -> bool:
     # Note: the change dir is not really needed
     # but the documentation promises that .post scripts run in
     # the dir where the new file will be put
-    verbose('  os.chdir(%s)' % src_dir)
-    unix_out('cd %s' % src_dir)
+    verbose(f'  os.chdir({src_dir})')
+    unix_out(f'cd {src_dir}')
     cwd = os.getcwd()
     try:
         os.chdir(src_dir)
     except OSError as err:
         if param.TERSE:
-            terse(synctool.lib.TERSE_ERROR, 'chdir %s' % src_dir)
+            terse(synctool.lib.TERSE_ERROR, f'chdir {src_dir}')
         else:
-            error('failed to change directory to %s: %s' % (src_dir,
-                                                            err.strerror))
+            error(f'failed to change directory to {src_dir}: {err.strerror}')
         return False
 
     # temporarily restore original umask
@@ -125,9 +133,8 @@ def generate_template(obj: SyncObject, post_dict: Dict[str, str]) -> bool:
     # run the script
     # pass template and newname as "$1" and "$2"
     cmd_arr = [generator, obj.src_path, newname]
-    verbose('  os.system(%s, %s, %s)' % (prettypath(cmd_arr[0]),
-                                         cmd_arr[1], cmd_arr[2]))
-    unix_out('# run command %s' % os.path.basename(cmd_arr[0]))
+    verbose('  os.system({}, {}, {})'.format(prettypath(cmd_arr[0]), cmd_arr[1], cmd_arr[2]))
+    unix_out('# run command {}'.format(os.path.basename(cmd_arr[0])))
 
     have_error = False
     if synctool.lib.exec_command(cmd_arr) == -1:
@@ -137,19 +144,19 @@ def generate_template(obj: SyncObject, post_dict: Dict[str, str]) -> bool:
     if not statbuf.exists():
         if not have_error:
             if param.TERSE:
-                terse(synctool.lib.TERSE_WARNING, 'no output %s' % newname)
+                terse(synctool.lib.TERSE_WARNING, f'no output {newname}')
             else:
-                warning('expected output %s was not generated' % newname)
+                warning(f'expected output {newname} was not generated')
             obj.ov_type = synctool.overlay.OV_IGNORE
         else:
             # an error message was already printed when exec() failed earlier
             # so, only when --verbose is used, print additional debug info
-            verbose('error: expected output %s was not generated' % newname)
+            verbose(f'error: expected output {newname} was not generated')
     else:
-        verbose('found generated output %s' % newname)
+        verbose(f'found generated output {newname}')
         if param.SYNC_TIMES:
             # force the mtime of the template onto the generated output
-            verbose('forcing mtime %s => %s' % (obj.src_path, newname))
+            verbose(f'forcing mtime {obj.src_path} => {newname}')
             synctool.lib.set_filetimes(newname, statbuf.atime,
                                        obj.src_stat.mtime)
 
@@ -157,16 +164,15 @@ def generate_template(obj: SyncObject, post_dict: Dict[str, str]) -> bool:
 
     # chdir back to original location
     # chdir to source directory
-    verbose('  os.chdir(%s)' % cwd)
-    unix_out('cd %s' % cwd)
+    verbose(f'  os.chdir({cwd})')
+    unix_out(f'cd {cwd}')
     try:
         os.chdir(cwd)
     except OSError as err:
         if param.TERSE:
-            terse(synctool.lib.TERSE_ERROR, 'chdir %s' % src_dir)
+            terse(synctool.lib.TERSE_ERROR, f'chdir {src_dir}')
         else:
-            error('failed to change directory to %s: %s' % (cwd,
-                                                            err.strerror))
+            error(f'failed to change directory to {cwd}: {err.strerror}')
         return False
 
     if have_error:
@@ -203,8 +209,7 @@ def purge_files() -> None:
                     # root contains files; guard against user mistakes
                     # rsync --delete would destroy the whole filesystem
                     warning('cowardly refusing to purge the root directory')
-                    stderr('please remove any files directly under %s/' %
-                           prettypath(purge_root))
+                    stderr('please remove any files directly under {}/'.format(prettypath(purge_root)))
                     return
 
                 # paths has (src_dir, dest_dir)
@@ -225,11 +230,11 @@ def purge_files() -> None:
         cmd_arr.append(src)
         cmd_arr.append(dest)
 
-        verbose('running rsync%s%s %s' % (opts_string, prettypath(src), dest))
+        verbose('running rsync{}{} {}'.format(opts_string, prettypath(src), dest))
         _run_rsync_purge(cmd_arr)
 
 
-def _make_rsync_purge_cmd() -> Tuple[List[str], str]:
+def _make_rsync_purge_cmd() -> tuple[list[str], str]:
     '''make command array for running rsync purge
     Returns pair: cmd_arr, options_string
     cmd_arr is the rsync command + arguments
@@ -266,7 +271,7 @@ def _make_rsync_purge_cmd() -> Tuple[List[str], str]:
     return cmd_rsync, opts
 
 
-def _run_rsync_purge(cmd_arr: List[str]) -> None:
+def _run_rsync_purge(cmd_arr: list[str]) -> None:
     '''run rsync for purging
     cmd_arr holds already prepared rsync command + arguments
     '''
@@ -281,14 +286,14 @@ def _run_rsync_purge(cmd_arr: List[str]) -> None:
     try:
         # run rsync
         completed = subprocess.run(cmd_arr, stdout=subprocess.PIPE,
-                                   universal_newlines=True, check=False)
+                                   text=True, check=False)
     except OSError as err:
-        error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
+        error(f'failed to run command {cmd_arr[0]}: {err.strerror}')
         return
 
     out = completed.stdout
     if not out:
-        error('no output from {}'.format(cmd_arr[0]))
+        error(f'no output from {cmd_arr[0]}')
         return
 
     if synctool.lib.VERBOSE:
@@ -320,9 +325,9 @@ def _run_rsync_purge(cmd_arr: List[str]) -> None:
             # most likely "deleting"
             msg = code[1:]
             msg = msg.strip()
-            stdout('%s %s (purge)' % (msg, prettypath(path)))
+            stdout('{} {} (purge)'.format(msg, prettypath(path)))
         else:
-            stdout('%s mismatch (purge)' % prettypath(path))
+            stdout('{} mismatch (purge)'.format(prettypath(path)))
 
 
 def overlay_files() -> None:
@@ -331,7 +336,7 @@ def overlay_files() -> None:
     synctool.overlay.visit(param.OVERLAY_DIR, _overlay_callback)
 
 
-def _overlay_callback(obj: SyncObject, pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> Tuple[bool, bool]:
+def _overlay_callback(obj: SyncObject, pre_dict: dict[str, str], post_dict: dict[str, str]) -> tuple[bool, bool]:
     '''compare files and run post-script if needed
     Returns pair: True (continue), updated (data or metadata)
     '''
@@ -339,7 +344,7 @@ def _overlay_callback(obj: SyncObject, pre_dict: Dict[str, str], post_dict: Dict
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
         return generate_template(obj, post_dict), False
 
-    verbose('checking %s' % obj.print_src())
+    verbose(f'checking {obj.print_src()}')
     fixup = obj.check()
     updated = obj.fix(fixup, pre_dict, post_dict)
     return True, updated
@@ -351,7 +356,7 @@ def delete_files() -> None:
     synctool.overlay.visit(param.DELETE_DIR, _delete_callback)
 
 
-def _delete_callback(obj: SyncObject, _pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> Tuple[bool, bool]:
+def _delete_callback(obj: SyncObject, _pre_dict: dict[str, str], post_dict: dict[str, str]) -> tuple[bool, bool]:
     '''delete files
     Returns pair: True (continue), deleted
     '''
@@ -365,10 +370,10 @@ def _delete_callback(obj: SyncObject, _pre_dict: Dict[str, str], post_dict: Dict
         return True, False
 
     if obj.dest_stat.is_dir():
-        warning('destination is a directory: %s, skipped' % obj.print_src())
+        warning(f'destination is a directory: {obj.print_src()}, skipped')
         return True, False
 
-    verbose('checking %s' % obj.print_src())
+    verbose(f'checking {obj.print_src()}')
 
     if obj.dest_stat.exists():
         vnode = obj.vnode_dest_obj()
@@ -389,7 +394,7 @@ def erase_saved() -> None:
     synctool.overlay.visit(param.DELETE_DIR, _erase_saved_callback)
 
 
-def _erase_saved_callback(obj: SyncObject, _pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> Tuple[bool, bool]:
+def _erase_saved_callback(obj: SyncObject, _pre_dict: dict[str, str], post_dict: dict[str, str]) -> tuple[bool, bool]:
     '''erase *.saved backup files
     Returns pair: True (continue), deleted
     '''
@@ -413,7 +418,7 @@ def _erase_saved_callback(obj: SyncObject, _pre_dict: Dict[str, str], post_dict:
     return True, False
 
 
-def visit_purge_single(callback: Callable[[SyncObject, Dict[str, str], Dict[str, str]], Tuple[bool, bool]]) -> None:
+def visit_purge_single(callback: Callable[[SyncObject, dict[str, str], dict[str, str]], tuple[bool, bool]]) -> None:
     '''look in the purge/ dir for SINGLE_FILES, and call callback'''
 
     if not SINGLE_FILES:
@@ -458,7 +463,7 @@ def _match_single(path: str) -> bool:
     return False
 
 
-def _single_overlay_callback(obj: SyncObject, pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> Tuple[bool, bool]:
+def _single_overlay_callback(obj: SyncObject, pre_dict: dict[str, str], post_dict: dict[str, str]) -> tuple[bool, bool]:
     '''do overlay function for single files'''
 
     if not SINGLE_FILES:
@@ -474,14 +479,14 @@ def _single_overlay_callback(obj: SyncObject, pre_dict: Dict[str, str], post_dic
     if _match_single(obj.dest_path):
         _, updated = _overlay_callback(obj, pre_dict, post_dict)
         if not updated:
-            stdout('%s is up to date' % obj.dest_path)
+            stdout(f'{obj.dest_path} is up to date')
             terse(synctool.lib.TERSE_OK, obj.dest_path)
-            unix_out('# %s is up to date\n' % obj.dest_path)
+            unix_out(f'# {obj.dest_path} is up to date\n')
 
     return go_on, updated
 
 
-def _single_delete_callback(obj: SyncObject, pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> Tuple[bool, bool]:
+def _single_delete_callback(obj: SyncObject, pre_dict: dict[str, str], post_dict: dict[str, str]) -> tuple[bool, bool]:
     '''do delete function for single files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -499,7 +504,7 @@ def _single_delete_callback(obj: SyncObject, pre_dict: Dict[str, str], post_dict
     return go_on, updated
 
 
-def _single_purge_callback(obj: SyncObject, pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> Tuple[bool, bool]:
+def _single_purge_callback(obj: SyncObject, pre_dict: dict[str, str], post_dict: dict[str, str]) -> tuple[bool, bool]:
     '''do purge function for single files'''
 
     # The same as _single_overlay_callback(), except that
@@ -519,12 +524,10 @@ def _single_purge_callback(obj: SyncObject, pre_dict: Dict[str, str], post_dict:
 
     if _match_single(obj.dest_path):
         _, updated = _overlay_callback(obj, pre_dict, post_dict)
-        if not updated:
-            if obj.check_purge_timestamp():
-                stdout('%s is up to date' % obj.dest_path)
-                terse(synctool.lib.TERSE_OK, obj.dest_path)
-                unix_out('# %s is up to date\n' % obj.dest_path)
-            # else: pass
+        if not updated and obj.check_purge_timestamp():
+            stdout(f'{obj.dest_path} is up to date')
+            terse(synctool.lib.TERSE_OK, obj.dest_path)
+            unix_out(f'# {obj.dest_path} is up to date\n')
 
         if not SINGLE_FILES:
             return False, updated
@@ -550,10 +553,10 @@ def single_files() -> None:
                                _single_delete_callback)
 
     for filename in SINGLE_FILES:
-        stderr('%s is not in the overlay tree' % filename)
+        stderr(f'{filename} is not in the overlay tree')
 
 
-def _single_erase_saved_callback(obj: SyncObject, pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> Tuple[bool, bool]:
+def _single_erase_saved_callback(obj: SyncObject, pre_dict: dict[str, str], post_dict: dict[str, str]) -> tuple[bool, bool]:
     '''do 'erase saved' function for single files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -595,10 +598,10 @@ def single_erase_saved() -> None:
                                _single_erase_saved_callback)
 
     for filename in SINGLE_FILES:
-        stderr('%s is not in the overlay tree' % filename)
+        stderr(f'{filename} is not in the overlay tree')
 
 
-def _reference_callback(obj: SyncObject, _pre_dict: Dict[str, str], _post_dict: Dict[str, str]) -> Tuple[bool, bool]:
+def _reference_callback(obj: SyncObject, _pre_dict: dict[str, str], _post_dict: dict[str, str]) -> tuple[bool, bool]:
     '''callback for reference_files()'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -629,13 +632,13 @@ def reference_files() -> None:
     visit_purge_single(_reference_callback)
 
     for filename in SINGLE_FILES:
-        stderr('%s is not in the overlay tree' % filename)
+        stderr(f'{filename} is not in the overlay tree')
 
 
 def _exec_diff(src: str, dest: str) -> None:
     '''execute diff_cmd to display diff between dest and src'''
 
-    verbose('%s %s %s' % (param.DIFF_CMD, dest, prettypath(src)))
+    verbose(f'{param.DIFF_CMD} {dest} {prettypath(src)}')
 
     cmd_arr = shlex.split(param.DIFF_CMD)
     cmd_arr.append(dest)
@@ -644,7 +647,7 @@ def _exec_diff(src: str, dest: str) -> None:
     synctool.lib.exec_command(cmd_arr)
 
 
-def _diff_callback(obj: SyncObject, _pre_dict: Dict[str, str], post_dict: Dict[str, str]) -> Tuple[bool, bool]:
+def _diff_callback(obj: SyncObject, _pre_dict: dict[str, str], post_dict: dict[str, str]) -> tuple[bool, bool]:
     '''callback function for doing a diff on overlay/ files'''
 
     if obj.ov_type == synctool.overlay.OV_TEMPLATE:
@@ -668,7 +671,7 @@ def diff_files() -> None:
     visit_purge_single(_diff_callback)
 
     for filename in SINGLE_FILES:
-        stderr('%s is not in the overlay tree' % filename)
+        stderr(f'{filename} is not in the overlay tree')
 
 
 # pylint: disable=too-many-positional-arguments
@@ -712,11 +715,11 @@ def check_cmd_config() -> None:
 def usage() -> None:
     '''print usage information'''
 
-    print('usage: %s [options]' % PROGNAME)
+    print(f'usage: {PROGNAME} [options]')
     print('options:')
     print('  -h, --help            Display this information')
     print('  -c, --conf=FILE       Use this config file')
-    print('                        (default: %s)' % param.DEFAULT_CONF)
+    print(f'                        (default: {param.DEFAULT_CONF})')
 
     print('''  -d, --diff=FILE       Show diff for file
   -1, --single=PATH     Update a single file
@@ -753,7 +756,7 @@ def get_options() -> int:
                                     'masterlog', 'node=', 'nodename=',
                                     'verbose', 'quiet', 'unix', 'version'])
     except getopt.GetoptError as reason:
-        print('%s: %s' % (PROGNAME, reason))
+        print(f'{PROGNAME}: {reason}')
         usage()
         sys.exit(1)
 
@@ -914,7 +917,7 @@ def get_options() -> int:
             action = ACTION_ERASE_SAVED
             continue
 
-        error("unknown command line option '%s'" % opt)
+        error(f"unknown command line option '{opt}'")
         errors += 1
 
     if errors:
@@ -940,21 +943,19 @@ def _init_node() -> None:
     config.init_mynodename()
 
     if not param.NODENAME:
-        error('unable to determine my nodename (hostname: %s)' %
-              param.HOSTNAME)
-        stderr('please check %s' % param.CONF_FILE)
+        error(f'unable to determine my nodename (hostname: {param.HOSTNAME})')
+        stderr(f'please check {param.CONF_FILE}')
         sys.exit(-1)
 
     if param.NODENAME not in param.NODES:
-        error("unknown node '%s'" % param.NODENAME)
-        stderr('please check %s' % param.CONF_FILE)
+        error(f"unknown node '{param.NODENAME}'")
+        stderr(f'please check {param.CONF_FILE}')
         sys.exit(-1)
 
     if param.NODENAME in param.IGNORE_GROUPS:
         # this is only a warning ...
         # you can still run synctool-pkg on the client by hand
-        warning('node %s is disabled in %s' %
-                (param.NODENAME, param.CONF_FILE))
+        warning(f'node {param.NODENAME} is disabled in {param.CONF_FILE}')
 
 
 def _init_startup() -> None:
@@ -964,13 +965,12 @@ def _init_startup() -> None:
         localt = time.localtime(time.time())
 
         unix_out('#')
-        unix_out('# script generated by synctool on '
-                 '%04d/%02d/%02d %02d:%02d:%02d' % (localt[0], localt[1], localt[2],
-                                                    localt[3], localt[4], localt[5]))
+        unix_out(f'# script generated by synctool on '
+                 f'{localt[0]:04d}/{localt[1]:02d}/{localt[2]:02d} {localt[3]:02d}:{localt[4]:02d}:{localt[5]:02d}')
         unix_out('#')
-        unix_out('# my hostname: %s' % param.HOSTNAME)
-        unix_out('# SYNCTOOL_NODE=%s' % param.NODENAME)
-        unix_out('# SYNCTOOL_ROOT=%s' % param.ROOTDIR)
+        unix_out(f'# my hostname: {param.HOSTNAME}')
+        unix_out(f'# SYNCTOOL_NODE={param.NODENAME}')
+        unix_out(f'# SYNCTOOL_ROOT={param.ROOTDIR}')
         unix_out('#')
 
         if not synctool.lib.DRY_RUN:
@@ -995,9 +995,9 @@ def _init_startup() -> None:
                 else:
                     verbose('--fix specified, applying changes')
 
-        verbose('my nodename: %s' % param.NODENAME)
-        verbose('my hostname: %s' % param.HOSTNAME)
-        verbose('rootdir: %s' % param.ROOTDIR)
+        verbose(f'my nodename: {param.NODENAME}')
+        verbose(f'my hostname: {param.HOSTNAME}')
+        verbose(f'rootdir: {param.ROOTDIR}')
 
 
 def _init_environment() -> None:

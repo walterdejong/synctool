@@ -10,7 +10,7 @@
 
 '''brew package manager (Mac OS X)'''
 
-from typing import List, Optional
+from __future__ import annotations
 
 import synctool.lib
 import synctool.pkgclass
@@ -19,7 +19,7 @@ import synctool.pkgclass
 class SyncPkgBrew(synctool.pkgclass.SyncPkg):
     '''package installer class for brew'''
 
-    def show_list(self, pkgs: Optional[List[str]] = None) -> None:
+    def show_list(self, pkgs: list[str] | None = None) -> None:
         super().show_list(pkgs)
 
         cmd = 'brew list'
@@ -28,13 +28,13 @@ class SyncPkgBrew(synctool.pkgclass.SyncPkg):
 
         synctool.lib.shell_command(cmd)
 
-    def install(self, pkgs: List[str]) -> None:
+    def install(self, pkgs: list[str]) -> None:
         super().install(pkgs)
 
         cmd = 'brew install ' + ' '.join(pkgs)
         synctool.lib.shell_command(cmd)
 
-    def remove(self, pkgs: List[str]) -> None:
+    def remove(self, pkgs: list[str]) -> None:
         super().remove(pkgs)
 
         cmd = 'brew remove ' + ' '.join(pkgs)

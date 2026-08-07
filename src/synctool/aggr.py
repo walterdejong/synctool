@@ -10,22 +10,22 @@
 
 '''aggregate: group together output that is the same'''
 
+from __future__ import annotations
+
 import subprocess
 
-from typing import List, Dict
-
-from synctool.lib import stderr
 import synctool.range
+from synctool.lib import stderr
 
 
-def aggregate(lines: List[str]) -> None:
+def aggregate(lines: list[str]) -> None:
     '''group together input lines that are the same'''
 
     lines = [x.strip() for x in lines]
     if not lines:
         return
 
-    output_per_node: Dict[str, List[str]] = {}
+    output_per_node: dict[str, list[str]] = {}
 
     for line in lines:
         arr = line.split(':', 1)
@@ -41,7 +41,7 @@ def aggregate(lines: List[str]) -> None:
         else:
             output_per_node[node].append(output)
 
-    nodes = sorted(list(output_per_node.keys()))
+    nodes = sorted(output_per_node.keys())
     while nodes:
         node = nodes.pop(0)
 
@@ -60,7 +60,7 @@ def aggregate(lines: List[str]) -> None:
             print(line)
 
 
-def run(cmd_arr: List[str]) -> bool:
+def run(cmd_arr: list[str]) -> bool:
     '''pipe the output through the aggregator
     Returns False on error, else True
     '''
@@ -76,9 +76,9 @@ def run(cmd_arr: List[str]) -> bool:
     try:
         completed = subprocess.run(cmd_arr, stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT,
-                                   universal_newlines=True, check=False)
+                                   text=True, check=False)
     except OSError as err:
-        stderr("failed to run command {}: {}".format(cmd_arr[0], err.strerror))
+        stderr(f"failed to run command {cmd_arr[0]}: {err.strerror}")
         return False
 
     if not completed.stdout:

@@ -12,17 +12,17 @@
 This program is nice for shell scripting around synctool
 '''
 
-import sys
+from __future__ import annotations
+
 import getopt
 import socket
+import sys
 
-from typing import List
-
-from synctool import config, param
-from synctool.lib import stderr, error
-from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.range
+from synctool import config, param
+from synctool.lib import error, stderr
+from synctool.main.wrapper import catch_signals
 
 # hardcoded name because otherwise we get "config.py"
 PROGNAME = 'config'
@@ -53,7 +53,7 @@ class Options:
 
         self.arg_nodenames = ''
         self.arg_groups = ''
-        self.arg_cmds: List[str] = []
+        self.arg_cmds: list[str] = []
         self.arg_expand = ''
         self.filter_ignored = False
         self.ipaddress = False
@@ -70,7 +70,7 @@ class Options:
         assert opt_str
 
         if self.action > 0:
-            error('options %s and %s can not be combined' % (self.action_option_str, opt_str))
+            error(f'options {self.action_option_str} and {opt_str} can not be combined')
             sys.exit(1)
 
         self.action = action
@@ -137,7 +137,7 @@ def list_nodes(nodelist: str, opts: Options) -> None:
         # error message already printed
         sys.exit(1)
 
-    groups: List[str] = []
+    groups: list[str] = []
     for node in nodeset.nodelist:
         if opts.ipaddress or opts.rsync:
             out = ''
@@ -205,7 +205,7 @@ def list_nodegroups(grouplist: str, opts: Options) -> None:
         print(node)
 
 
-def list_commands(cmds: List[str]) -> None:
+def list_commands(cmds: list[str]) -> None:
     '''display command setting'''
 
     # pylint: disable=too-many-branches
@@ -242,7 +242,7 @@ def list_commands(cmds: List[str]) -> None:
                 print(param.PKG_CMD)
 
         else:
-            error("no such command '%s' available in synctool" % cmd)
+            error(f"no such command '{cmd}' available in synctool")
 
 
 def list_dirs() -> None:
@@ -278,11 +278,11 @@ def expand(nodelist: str) -> None:
 def usage() -> None:
     '''print usage information'''
 
-    print('usage: %s [options]' % PROGNAME)
+    print(f'usage: {PROGNAME} [options]')
     print('options:')
     print('  -h, --help                  Display this information')
     print('  -c, --conf=FILE             Use this config file')
-    print('                              (default: %s)' % param.DEFAULT_CONF)
+    print(f'                              (default: {param.DEFAULT_CONF})')
 
     print('''  -l, --list-nodes            List all configured nodes
   -L, --list-groups           List all configured groups
@@ -326,7 +326,7 @@ def get_options() -> Options:
                                     'nodename', 'fqdn', 'expand', 'version'])
     except getopt.GetoptError as reason:
         print()
-        print('%s: %s' % (PROGNAME, reason))
+        print(f'{PROGNAME}: {reason}')
         print()
         usage()
         sys.exit(1)
@@ -423,7 +423,7 @@ def get_options() -> Options:
             options.set_action(ACTION_VERSION, '--version')
             continue
 
-        error("unknown command line option '%s'" % opt)
+        error(f"unknown command line option '{opt}'")
         errors += 1
 
     if errors:
@@ -498,9 +498,8 @@ def main() -> int:
         config.init_mynodename()
 
         if not param.NODENAME:
-            error('unable to determine my nodename (%s)' %
-                  param.HOSTNAME)
-            stderr('please check %s' % param.CONF_FILE)
+            error(f'unable to determine my nodename ({param.HOSTNAME})')
+            stderr(f'please check {param.CONF_FILE}')
             sys.exit(1)
 
         print(param.NODENAME)
@@ -523,7 +522,7 @@ def main() -> int:
             expand(opts.arg_expand)
 
     else:
-        raise RuntimeError('bug: unknown ACTION code %d' % opts.action)
+        raise RuntimeError(f'bug: unknown ACTION code {opts.action}')
     return 0
 
 # EOB

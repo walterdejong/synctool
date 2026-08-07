@@ -12,7 +12,6 @@
 
 import errno
 import sys
-
 from typing import Callable
 
 

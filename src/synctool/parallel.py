@@ -10,24 +10,24 @@
 
 '''do things in parallel. This module is very UNIX-only, sorry'''
 
+from __future__ import annotations
+
 # This module offers the same as Python's multiprocessing
 # but there are some issues with multiprocessing, so ...
-
+import errno
 import os
 import sys
-import errno
 import time
+from typing import Any, Callable
 
-from typing import List, Set, Callable, Any
-
+import synctool.param
 from synctool.lib import error
 from synctool.main.wrapper import catch_signals
-import synctool.param
 
-ALL_PIDS: Set[int] = set()
+ALL_PIDS: set[int] = set()
 
 
-def do(func: Callable[[Any], None], work: List[Any]) -> None:
+def do(func: Callable[[Any], None], work: list[Any]) -> None:
     '''run func in parallel'''
 
     # pylint: disable=invalid-name
@@ -51,7 +51,7 @@ def do(func: Callable[[Any], None], work: List[Any]) -> None:
         try:
             pid = os.fork()
         except OSError as err:
-            error('failed to fork(): %s' % err.strerror)
+            error(f'failed to fork(): {err.strerror}')
             return
 
         if pid == 0:
@@ -67,7 +67,7 @@ def do(func: Callable[[Any], None], work: List[Any]) -> None:
 
 
 @catch_signals
-def worker(rank: int, func: Callable[[Any], None], work: List[Any], part: int) -> int:
+def worker(rank: int, func: Callable[[Any], None], work: list[Any], part: int) -> int:
     '''run func to do part of work for parallel rank'''
 
     # determine which chunk of work to do
@@ -113,7 +113,7 @@ if __name__ == '__main__':
         def hello(item: int) -> None:
             '''print item'''
 
-            print('[%u]: hello' % os.getpid(), item)
+            print(f'[{os.getpid()}]: hello', item)
             time.sleep(0.1245)
 
         synctool.param.NUM_PROC = 3

@@ -10,31 +10,31 @@
 
 '''A command for copying files from master node to target nodes'''
 
-import os
-import sys
+from __future__ import annotations
+
 import getopt
+import os
 import shlex
+import sys
 
-from typing import List
-
-from synctool import config, param
 import synctool.aggr
 import synctool.lib
-from synctool.lib import stdout, error, unix_out
 import synctool.multiplex
-from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.parallel
 import synctool.range
 import synctool.unbuffered
+from synctool import config, param
+from synctool.lib import error, stdout, unix_out
+from synctool.main.wrapper import catch_signals
 
 # hardcoded name because otherwise we get "dsh_cp.py"
 PROGNAME = 'dsh-cp'
 
 # ugly globals in use by parallel worker
 NODESET = synctool.nodeset.NodeSet()
-DSH_CP_CMD_ARR: List[str] = []
-SOURCE_LIST: List[str] = []
+DSH_CP_CMD_ARR: list[str] = []
+SOURCE_LIST: list[str] = []
 FILES_STR = ''
 DESTDIR = ''
 
@@ -46,13 +46,13 @@ class Options:
         '''initialize instance'''
 
         self.aggregate = False
-        self.master_opts: List[str] = []
-        self.files: List[str] = []
+        self.master_opts: list[str] = []
+        self.files: list[str] = []
         self.dsh_cp_options = ''
         self.purge = False
 
 
-def run_remote_copy(address_list: List[str], files: List[str], opts: Options) -> None:
+def run_remote_copy(address_list: list[str], files: list[str], opts: Options) -> None:
     '''copy files[] to nodes[]'''
 
     # pylint: disable=too-many-branches
@@ -60,13 +60,13 @@ def run_remote_copy(address_list: List[str], files: List[str], opts: Options) ->
     global DSH_CP_CMD_ARR, SOURCE_LIST, FILES_STR                   # pylint: disable=global-statement
 
     errs = 0
-    sourcelist: List[str] = []
+    sourcelist: list[str] = []
     for filename in files:
         if not filename:
             continue
 
         if not synctool.lib.path_exists(filename):
-            error('no such file or directory: %s' % filename)
+            error(f'no such file or directory: {filename}')
             errs += 1
             continue
 
@@ -96,9 +96,8 @@ def run_remote_copy(address_list: List[str], files: List[str], opts: Options) ->
         if '--quiet' in DSH_CP_CMD_ARR:
             DSH_CP_CMD_ARR.remove('--quiet')
 
-    if synctool.lib.QUIET:
-        if '-q' not in DSH_CP_CMD_ARR and '--quiet' not in DSH_CP_CMD_ARR:
-            DSH_CP_CMD_ARR.append('-q')
+    if synctool.lib.QUIET and '-q' not in DSH_CP_CMD_ARR and '--quiet' not in DSH_CP_CMD_ARR:
+        DSH_CP_CMD_ARR.append('-q')
 
     if opts.dsh_cp_options:
         DSH_CP_CMD_ARR.extend(shlex.split(opts.dsh_cp_options))
@@ -131,13 +130,13 @@ def worker_dsh_cp(addr: str) -> None:
     dsh_cp_cmd_arr.extend(['-e', ' '.join(ssh_cmd_arr)])
     dsh_cp_cmd_arr.append('--')
     dsh_cp_cmd_arr.extend(SOURCE_LIST)
-    dsh_cp_cmd_arr.append('%s:%s' % (addr, DESTDIR))
+    dsh_cp_cmd_arr.append(f'{addr}:{DESTDIR}')
 
-    msg = 'copy %s to %s' % (FILES_STR, DESTDIR)
+    msg = f'copy {FILES_STR} to {DESTDIR}'
     if synctool.lib.DRY_RUN:
         msg += ' (dry run)'
     if synctool.lib.OPT_NODENAME:
-        msg = ('%s: ' % nodename) + msg
+        msg = f'{nodename}: {msg}'
     stdout(msg)
 
     if not synctool.lib.DRY_RUN:
@@ -157,11 +156,11 @@ def check_cmd_config() -> None:
 def usage() -> None:
     '''print usage information'''
 
-    print('usage: %s [options] FILE [..] DESTDIR|:' % PROGNAME)
-    print('''options:
+    print(f'usage: {PROGNAME} [options] FILE [..] DESTDIR|:')
+    print(f'''options:
   -h, --help                  Display this information
   -c, --conf=FILE             Use this config file
-                              (default: %s)''' % param.DEFAULT_CONF)
+                              (default: {param.DEFAULT_CONF})''')
     print('''  -n, --node=LIST             Execute only on these nodes
   -g, --group=LIST            Execute only on these groups of nodes
   -x, --exclude=LIST          Exclude these nodes from the selected group
@@ -201,7 +200,7 @@ def get_options() -> Options:
                                     'zzz=', 'unix', 'verbose', 'quiet',
                                     'aggregate', 'fix'])
     except getopt.GetoptError as reason:
-        print('%s: %s' % (PROGNAME, reason))
+        print(f'{PROGNAME}: {reason}')
         # usage()
         sys.exit(1)
 
@@ -279,12 +278,11 @@ def get_options() -> Options:
             try:
                 param.NUM_PROC = int(arg)
             except ValueError:
-                print(("%s: option '%s' requires a numeric value" %
-                       (PROGNAME, opt)))
+                print(f"{PROGNAME}: option '{opt}' requires a numeric value")
                 sys.exit(1)
 
             if param.NUM_PROC < 1:
-                print('%s: invalid value for numproc' % PROGNAME)
+                print(f'{PROGNAME}: invalid value for numproc')
                 sys.exit(1)
 
             continue
@@ -293,12 +291,11 @@ def get_options() -> Options:
             try:
                 param.SLEEP_TIME = int(arg)
             except ValueError:
-                print(("%s: option '%s' requires a numeric value" %
-                       (PROGNAME, opt)))
+                print(f"{PROGNAME}: option '{opt}' requires a numeric value")
                 sys.exit(1)
 
             if param.SLEEP_TIME < 0:
-                print('%s: invalid value for sleep time' % PROGNAME)
+                print(f'{PROGNAME}: invalid value for sleep time')
                 sys.exit(1)
 
             if not param.SLEEP_TIME:
@@ -330,11 +327,11 @@ def get_options() -> Options:
             continue
 
     if not args:
-        print('%s: missing file to copy' % PROGNAME)
+        print(f'{PROGNAME}: missing file to copy')
         sys.exit(1)
 
     if len(args) < 2:
-        print('%s: missing destination' % PROGNAME)
+        print(f'{PROGNAME}: missing destination')
         sys.exit(1)
 
     options.master_opts.extend(args)
@@ -351,7 +348,7 @@ def get_options() -> Options:
     # DESTDIR[0] == ':' would create "rsync to node::module"
     # which is something we don't want
     if not DESTDIR or DESTDIR[0] == ':':
-        print('%s: invalid destination' % PROGNAME)
+        print(f'{PROGNAME}: invalid destination')
         sys.exit(1)
 
     # ensure trailing slash

@@ -13,23 +13,23 @@
 This is a helper program for synctool --upload
 '''
 
-import os
-import sys
-import stat
-import pwd
-import grp
-import urllib.request
-import urllib.parse
-import urllib.error
+from __future__ import annotations
 
-from typing import Dict
+import grp
+import os
+import pwd
+import stat
+import sys
+import urllib.error
+import urllib.parse
+import urllib.request
 
 # Note: do not import synctool modules here
 # They can't be found without the launcher, and this program is small anyway
 
 # caches for usernames/groupnames by uid/gid
-UID_CACHE: Dict[str, str] = {}
-GID_CACHE: Dict[str, str] = {}
+UID_CACHE: dict[str, str] = {}
+GID_CACHE: dict[str, str] = {}
 
 
 def print_stat(filename: str, top: bool = True) -> None:
@@ -46,7 +46,7 @@ def print_stat(filename: str, top: bool = True) -> None:
     try:
         statbuf = statfunc(filename)
     except OSError as err:
-        print('error: %s: %s' % (filename, err.strerror))
+        print(f'error: {filename}: {err.strerror}')
         return
 
     owner = uid_username(statbuf.st_uid)
@@ -61,19 +61,15 @@ def print_stat(filename: str, top: bool = True) -> None:
         try:
             linkdest = os.readlink(filename)
         except OSError as err:
-            print('error: %s: %s' % (filename, err.strerror))
+            print(f'error: {filename}: {err.strerror}')
             return
 
         quoted_linkdest = urllib.parse.quote(linkdest)
 
         # Be wary that a symlink has more fields
-        print(('%06o %u %s %u %s %u %s -> %s' %
-               (statbuf.st_mode, statbuf.st_uid, owner, statbuf.st_gid, group,
-                statbuf.st_size, quoted_filename, quoted_linkdest)))
+        print(f'{statbuf.st_mode:06o} {statbuf.st_uid} {owner} {statbuf.st_gid} {group} {statbuf.st_size} {quoted_filename} -> {quoted_linkdest}')
     else:
-        print(('%06o %u %s %u %s %u %s' %
-               (statbuf.st_mode, statbuf.st_uid, owner, statbuf.st_gid, group,
-                statbuf.st_size, quoted_filename)))
+        print(f'{statbuf.st_mode:06o} {statbuf.st_uid} {owner} {statbuf.st_gid} {group} {statbuf.st_size} {quoted_filename}')
 
     path, filename = os.path.split(filename)
     if not path:
@@ -91,7 +87,7 @@ def print_stat(filename: str, top: bool = True) -> None:
 def uid_username(uid: int) -> str:
     '''Return username for numeric uid'''
 
-    s_uid = '%u' % uid
+    s_uid = f'{uid}'
     if s_uid in UID_CACHE:
         return UID_CACHE[s_uid]
 
@@ -109,7 +105,7 @@ def uid_username(uid: int) -> str:
 def gid_groupname(gid: int) -> str:
     '''Return group name for numeric gid'''
 
-    s_gid = '%u' % gid
+    s_gid = f'{gid}'
     if s_gid in GID_CACHE:
         return GID_CACHE[s_gid]
 
@@ -126,7 +122,7 @@ def gid_groupname(gid: int) -> str:
 
 if __name__ == '__main__':
     if len(sys.argv) <= 1:
-        print('usage: %s <filename>' % os.path.basename(sys.argv[0]))
+        print('usage: {} <filename>'.format(os.path.basename(sys.argv[0])))
         sys.exit(1)
 
     FULLPATH = sys.argv[1]

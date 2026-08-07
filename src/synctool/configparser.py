@@ -12,22 +12,21 @@
 
 '''config file parser'''
 
+from __future__ import annotations
+
 #
 #   To make a new keyword for the config file, simply define a
 #   function here like: def config_xxx(arr, configfile, lineno):
 #   and it will just work (magic trick with getattr(module, functionname))
 #
-
 import os
-import sys
 import re
+import sys
 
-from typing import List, Dict, Tuple
-
-from synctool import param
 import synctool.lib
-from synctool.lib import stderr
 import synctool.range
+from synctool import param
+from synctool.lib import stderr
 
 
 class Symbol:
@@ -45,12 +44,12 @@ class Symbol:
         first defined
         '''
 
-        return '%s:%d' % (self.filename, self.lineno)
+        return f'{self.filename}:{self.lineno}'
 
 
 # dict of defined Symbols
 # to see if a parameter is being redefined
-SYMBOLS: Dict[str, Symbol] = {}
+SYMBOLS: dict[str, Symbol] = {}
 
 
 def read_config_file(configfile: str) -> int:
@@ -99,7 +98,7 @@ def read_config_file(configfile: str) -> int:
                 line = ''   # <-- line is being reset here; use arr[] from here on
 
                 if len(arr) <= 1:
-                    stderr('%s:%d: syntax error ; expected key/value pair' % (configfile, lineno))
+                    stderr(f'{configfile}:{lineno}: syntax error ; expected key/value pair')
                     errors += 1
                     continue
 
@@ -107,9 +106,9 @@ def read_config_file(configfile: str) -> int:
 
                 # get the parser function
                 try:
-                    func = getattr(this_module, 'config_%s' % keyword)
+                    func = getattr(this_module, f'config_{keyword}')
                 except AttributeError:
-                    stderr("%s:%d: unknown keyword '%s'" % (configfile, lineno, keyword))
+                    stderr(f"{configfile}:{lineno}: unknown keyword '{keyword}'")
                     errors += 1
                     continue
 
@@ -118,7 +117,7 @@ def read_config_file(configfile: str) -> int:
         return errors
 
     except OSError as err:
-        stderr("error: failed to read config file '%s' : %s" % (configfile, err.strerror))
+        stderr(f"error: failed to read config file '{configfile}' : {err.strerror}")
         return 1
 
 
@@ -128,8 +127,8 @@ def check_definition(keyword: str, configfile: str, lineno: int) -> bool:
     '''
 
     if keyword in SYMBOLS:
-        stderr("%s:%d: redefinition of '%s'" % (configfile, lineno, keyword))
-        stderr("%s: previous definition was here" % SYMBOLS[keyword].origin())
+        stderr(f"{configfile}:{lineno}: redefinition of '{keyword}'")
+        stderr(f'{SYMBOLS[keyword].origin()}: previous definition was here')
         return False
 
     SYMBOLS[keyword] = Symbol(keyword, configfile, lineno)
@@ -141,12 +140,11 @@ def check_node_definition(node: str, configfile: str, lineno: int) -> bool:
     Returns False on error, True if OK
     '''
 
-    key = 'node %s' % node
+    key = f'node {node}'
 
     if key in SYMBOLS:
-        stderr("%s:%d: redefinition of node '%s'" % (configfile, lineno,
-                                                     node))
-        stderr("%s: previous definition was here" % SYMBOLS[key].origin())
+        stderr(f"{configfile}:{lineno}: redefinition of node '{node}'")
+        stderr(f'{SYMBOLS[key].origin()}: previous definition was here')
         return False
 
     SYMBOLS[key] = Symbol(node, configfile, lineno)
@@ -158,12 +156,11 @@ def check_group_definition(group: str, configfile: str, lineno: int) -> bool:
     Returns False on error, True if OK
     '''
 
-    key = 'group %s' % group
+    key = f'group {group}'
 
     if key in SYMBOLS:
-        stderr("%s:%d: redefinition of group '%s'" % (configfile, lineno,
-                                                      group))
-        stderr("%s: previous definition was here" % SYMBOLS[key].origin())
+        stderr(f"{configfile}:{lineno}: redefinition of group '{group}'")
+        stderr(f'{SYMBOLS[key].origin()}: previous definition was here')
         return False
 
     SYMBOLS[key] = Symbol(group, configfile, lineno)
@@ -175,7 +172,7 @@ def check_group_definition(group: str, configfile: str, lineno: int) -> bool:
 # This enables the 'include' keyword to return more than 1 error
 #
 
-def _config_boolean(label: str, value: str, configfile: str, lineno: int) -> Tuple[int, bool]:
+def _config_boolean(label: str, value: str, configfile: str, lineno: int) -> tuple[int, bool]:
     '''a boolean parameter can be "true|false|yes|no|on|off|1|0"'''
 
     if not check_definition(label, configfile, lineno):
@@ -188,11 +185,11 @@ def _config_boolean(label: str, value: str, configfile: str, lineno: int) -> Tup
     if value in param.BOOLEAN_VALUE_FALSE:
         return 0, False
 
-    stderr('%s:%d: invalid argument for %s' % (configfile, lineno, label))
+    stderr(f'{configfile}:{lineno}: invalid argument for {label}')
     return 1, False
 
 
-def _config_integer(label: str, value: str, configfile: str, lineno: int, radix: int = 10) -> Tuple[int, int]:
+def _config_integer(label: str, value: str, configfile: str, lineno: int, radix: int = 10) -> tuple[int, int]:
     '''get numeric integer value'''
 
     if not check_definition(label, configfile, lineno):
@@ -201,7 +198,7 @@ def _config_integer(label: str, value: str, configfile: str, lineno: int, radix:
     try:
         nvalue = int(value, radix)
     except ValueError:
-        stderr('%s:%d: invalid argument for %s' % (configfile, lineno, label))
+        stderr(f'{configfile}:{lineno}: invalid argument for {label}')
         return 1, 0
 
     return 0, nvalue
@@ -218,20 +215,19 @@ def _config_color_variant(label: str, value: str, configfile: str, lineno: int) 
         param.TERSE_COLORS[label[6:]] = value
         return 0
 
-    stderr('%s:%d: invalid argument for %s' % (configfile, lineno, label))
+    stderr(f'{configfile}:{lineno}: invalid argument for {label}')
     return 1
 
 
-def _config_command(label: str, arr: List[str], short_cmd: str, configfile: str, lineno: int) -> Tuple[int, str]:
+def _config_command(label: str, arr: list[str], short_cmd: str, configfile: str, lineno: int) -> tuple[int, str]:
     '''helper for configuring rsync_cmd, ssh_cmd, synctool_cmd, etc.'''
 
     if not check_definition(label, configfile, lineno):
         return 1, ''
 
     if len(arr) < 2:
-        stderr("%s:%d: '%s' requires an argument: "
-               "the '%s' command, and any appropriate switches" %
-               (configfile, lineno, label, short_cmd))
+        stderr(f"{configfile}:{lineno}: '{label}' requires an argument: "
+               f"the '{short_cmd}' command, and any appropriate switches")
         return 1, ''
 
     # This function does not check the existence of the command
@@ -256,20 +252,17 @@ def spellcheck(name: str) -> bool:
     if not mfound:
         return False
 
-    if mfound.group(0) != name:
-        return False
-
-    return True
+    return mfound.group(0) == name
 
 
-def config_include(arr: List[str], _configfile: str, _lineno: int) -> int:
+def config_include(arr: list[str], _configfile: str, _lineno: int) -> int:
     '''parse keyword: include'''
 
     # recursively read the given config file
     return read_config_file(synctool.lib.prepare_path(arr[1]))
 
 
-def config_tempdir(arr: List[str], configfile: str, lineno: int) -> int:
+def config_tempdir(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: tempdir'''
 
     if not check_definition(arr[0], configfile, lineno):
@@ -279,28 +272,25 @@ def config_tempdir(arr: List[str], configfile: str, lineno: int) -> int:
     dirpath = synctool.lib.prepare_path(dirpath)
 
     if not os.path.isabs(dirpath):
-        stderr("%s:%d: tempdir must be an absolute path" % (configfile,
-                                                            lineno))
+        stderr(f'{configfile}:{lineno}: tempdir must be an absolute path')
         return 1
 
     param.TEMP_DIR = dirpath
     return 0
 
 
-def config_package_manager(arr: List[str], configfile: str, lineno: int) -> int:
+def config_package_manager(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: package_manager'''
 
     if len(arr) < 2:
-        stderr("%s:%d: 'package_manager' requires an argument" %
-               (configfile, lineno))
+        stderr(f"{configfile}:{lineno}: 'package_manager' requires an argument")
         return 1
 
     if not check_definition(arr[0], configfile, lineno):
         return 1
 
     if arr[1] not in param.KNOWN_PACKAGE_MANAGERS:
-        stderr("%s:%d: unknown or unsupported package manager '%s'" %
-               (configfile, lineno, arr[1]))
+        stderr(f"{configfile}:{lineno}: unknown or unsupported package manager '{arr[1]}'")
         return 1
 
     param.PACKAGE_MANAGER = arr[1]
@@ -314,26 +304,25 @@ PERSIST_TIME = re.compile(r'^\d+$|'
                           r'^none$')
 
 
-def config_ssh_control_persist(arr: List[str], configfile: str, lineno: int) -> int:
+def config_ssh_control_persist(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: ssh_control_persist'''
 
     if len(arr) != 2:
-        stderr("%s:%d: 'ssh_control_persist' requires a single argument" %
-               (configfile, lineno))
+        stderr(f"{configfile}:{lineno}: 'ssh_control_persist' requires a single argument")
         return 1
 
     persist = arr[1].lower()
 
     matchp = PERSIST_TIME.match(persist)
     if not matchp:
-        stderr("%s:%d: invalid value '%s'" % (configfile, lineno, persist))
+        stderr(f"{configfile}:{lineno}: invalid value '{persist}'")
         return 1
 
     param.CONTROL_PERSIST = persist
     return 0
 
 
-def config_require_extension(arr: List[str], configfile: str, lineno: int) -> int:
+def config_require_extension(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: require_extension'''
 
     err, param.REQUIRE_EXTENSION = _config_boolean('require_extension',
@@ -341,7 +330,7 @@ def config_require_extension(arr: List[str], configfile: str, lineno: int) -> in
     return err
 
 
-def config_full_path(arr: List[str], configfile: str, lineno: int) -> int:
+def config_full_path(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: full_path'''
 
     err, param.FULL_PATH = _config_boolean('full_path', arr[1], configfile,
@@ -349,7 +338,7 @@ def config_full_path(arr: List[str], configfile: str, lineno: int) -> int:
     return err
 
 
-def config_backup_copies(arr: List[str], configfile: str, lineno: int) -> int:
+def config_backup_copies(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: backup_copies'''
 
     err, param.BACKUP_COPIES = _config_boolean('backup_copies', arr[1],
@@ -357,7 +346,7 @@ def config_backup_copies(arr: List[str], configfile: str, lineno: int) -> int:
     return err
 
 
-def config_syslogging(arr: List[str], configfile: str, lineno: int) -> int:
+def config_syslogging(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: syslogging'''
 
     err, param.SYSLOGGING = _config_boolean('syslogging', arr[1], configfile,
@@ -365,7 +354,7 @@ def config_syslogging(arr: List[str], configfile: str, lineno: int) -> int:
     return err
 
 
-def config_sync_times(arr: List[str], configfile: str, lineno: int) -> int:
+def config_sync_times(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: sync_times'''
 
     err, param.SYNC_TIMES = _config_boolean('sync_times', arr[1], configfile,
@@ -373,7 +362,7 @@ def config_sync_times(arr: List[str], configfile: str, lineno: int) -> int:
     return err
 
 
-def config_ignore_dotfiles(arr: List[str], configfile: str, lineno: int) -> int:
+def config_ignore_dotfiles(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: ignore_dotfiles'''
 
     err, param.IGNORE_DOTFILES = _config_boolean('ignore_dotfiles', arr[1],
@@ -381,7 +370,7 @@ def config_ignore_dotfiles(arr: List[str], configfile: str, lineno: int) -> int:
     return err
 
 
-def config_ignore_dotdirs(arr: List[str], configfile: str, lineno: int) -> int:
+def config_ignore_dotdirs(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: ignore_dotdirs'''
 
     err, param.IGNORE_DOTDIRS = _config_boolean('ignore_dotdirs', arr[1],
@@ -389,12 +378,12 @@ def config_ignore_dotdirs(arr: List[str], configfile: str, lineno: int) -> int:
     return err
 
 
-def config_ignore(arr: List[str], configfile: str, lineno: int) -> int:
+def config_ignore(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: ignore'''
 
     if len(arr) < 2:
-        stderr("%s:%d: 'ignore' requires at least 1 argument: "
-               "the file or directory to ignore" % (configfile, lineno))
+        stderr(f"{configfile}:{lineno}: 'ignore' requires at least 1 argument: "
+               f"the file or directory to ignore")
         return 1
 
     for filenam in arr[1:]:
@@ -410,14 +399,14 @@ def config_ignore(arr: List[str], configfile: str, lineno: int) -> int:
     return 0
 
 
-def config_terse(arr: List[str], configfile: str, lineno: int) -> int:
+def config_terse(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: terse'''
 
     err, param.TERSE = _config_boolean('terse', arr[1], configfile, lineno)
     return err
 
 
-def config_colorize(arr: List[str], configfile: str, lineno: int) -> int:
+def config_colorize(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: colorize'''
 
     err, param.COLORIZE = _config_boolean('colorize', arr[1], configfile,
@@ -425,7 +414,7 @@ def config_colorize(arr: List[str], configfile: str, lineno: int) -> int:
     return err
 
 
-def config_colorize_full_line(arr: List[str], configfile: str, lineno: int) -> int:
+def config_colorize_full_line(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: colorize_full_line'''
 
     err, param.COLORIZE_FULL_LINE = _config_boolean('colorize_full_line',
@@ -435,7 +424,7 @@ def config_colorize_full_line(arr: List[str], configfile: str, lineno: int) -> i
 
 
 # nice for typo's
-def config_colorize_full_lines(arr: List[str], configfile: str, lineno: int) -> int:
+def config_colorize_full_lines(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: colorize_full_lines'''
 
     err, param.COLORIZE_FULL_LINE = _config_boolean('colorize_full_line',
@@ -444,7 +433,7 @@ def config_colorize_full_lines(arr: List[str], configfile: str, lineno: int) -> 
     return err
 
 
-def config_colorize_bright(arr: List[str], configfile: str, lineno: int) -> int:
+def config_colorize_bright(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: colorize_bright'''
 
     err, param.COLORIZE_BRIGHT = _config_boolean('colorize_bright', arr[1],
@@ -452,7 +441,7 @@ def config_colorize_bright(arr: List[str], configfile: str, lineno: int) -> int:
     return err
 
 
-def config_colorize_bold(arr: List[str], configfile: str, lineno: int) -> int:
+def config_colorize_bold(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: colorize_bold'''
 
     err, param.COLORIZE_BRIGHT = _config_boolean('colorize_bold', arr[1],
@@ -460,117 +449,116 @@ def config_colorize_bold(arr: List[str], configfile: str, lineno: int) -> int:
     return err
 
 
-def config_color_info(arr: List[str], configfile: str, lineno: int) -> int:
+def config_color_info(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_info'''
 
     return _config_color_variant('color_info', arr[1], configfile, lineno)
 
 
-def config_color_warn(arr: List[str], configfile: str, lineno: int) -> int:
+def config_color_warn(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_warn'''
 
     return _config_color_variant('color_warn', arr[1], configfile, lineno)
 
 
-def config_color_error(arr: List[str], configfile: str, lineno: int) -> int:
+def config_color_error(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_error'''
 
     return _config_color_variant('color_error', arr[1], configfile, lineno)
 
 
-def config_color_fail(arr: List[str], configfile: str, lineno: int) -> int:
+def config_color_fail(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_fail'''
 
     return _config_color_variant('color_fail', arr[1], configfile, lineno)
 
 
-def config_color_sync(arr: List[str], configfile: str, lineno: int) -> int:
+def config_color_sync(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_sync'''
 
     return _config_color_variant('color_sync', arr[1], configfile, lineno)
 
 
-def config_color_link(arr: List[str], configfile: str, lineno: int) -> int:
+def config_color_link(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_link'''
 
     return _config_color_variant('color_link', arr[1], configfile, lineno)
 
 
-def config_color_mkdir(arr: List[str], configfile: str, lineno: int) -> int:
+def config_color_mkdir(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_mkdir'''
 
     return _config_color_variant('color_mkdir', arr[1], configfile, lineno)
 
 
-def config_color_rm(arr: List[str], configfile: str, lineno: int) -> int:
+def config_color_rm(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_rm'''
 
     return _config_color_variant('color_rm', arr[1], configfile, lineno)
 
 
-def config_color_chown(arr: List[str], configfile: str, lineno: int) -> int:
+def config_color_chown(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_chown'''
 
     return _config_color_variant('color_chown', arr[1], configfile, lineno)
 
 
-def config_color_chmod(arr: List[str], configfile: str, lineno: int) -> int:
+def config_color_chmod(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_chmod'''
 
     return _config_color_variant('color_chmod', arr[1], configfile, lineno)
 
 
-def config_color_exec(arr: List[str], configfile: str, lineno: int) -> int:
+def config_color_exec(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_exec'''
 
     return _config_color_variant('color_exec', arr[1], configfile, lineno)
 
 
-def config_color_upload(arr: List[str], configfile: str, lineno: int) -> int:
+def config_color_upload(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_upload'''
 
     return _config_color_variant('color_upload', arr[1], configfile, lineno)
 
 
-def config_color_new(arr: List[str], configfile: str, lineno: int) -> int:
+def config_color_new(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_new'''
 
     return _config_color_variant('color_new', arr[1], configfile, lineno)
 
 
-def config_color_type(arr: List[str], configfile: str, lineno: int) -> int:
+def config_color_type(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_type'''
 
     return _config_color_variant('color_type', arr[1], configfile, lineno)
 
 
-def config_color_dryrun(arr: List[str], configfile: str, lineno: int) -> int:
+def config_color_dryrun(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_dryrun'''
 
     return _config_color_variant('color_dryrun', arr[1], configfile, lineno)
 
 
-def config_color_fixing(arr: List[str], configfile: str, lineno: int) -> int:
+def config_color_fixing(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_fixing'''
 
     return _config_color_variant('color_fixing', arr[1], configfile, lineno)
 
 
-def config_color_ok(arr: List[str], configfile: str, lineno: int) -> int:
+def config_color_ok(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: color_ok'''
 
     return _config_color_variant('color_ok', arr[1], configfile, lineno)
 
 
-def config_default_nodeset(arr: List[str], configfile: str, lineno: int) -> int:
+def config_default_nodeset(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: default_nodeset'''
 
     if not check_definition(arr[0], configfile, lineno):
         return 1
 
     if len(arr) < 2:
-        stderr("%s:%d: 'default_nodeset' requires an argument" %
-               (configfile, lineno))
+        stderr(f"{configfile}:{lineno}: 'default_nodeset' requires an argument")
         return 1
 
     param.DEFAULT_NODESET = set()
@@ -585,13 +573,12 @@ def config_default_nodeset(arr: List[str], configfile: str, lineno: int) -> int:
 
                     param.DEFAULT_NODESET.add(expanded)
             except synctool.range.RangeSyntaxError as err:
-                stderr("%s:%d: %s" % (configfile, lineno, err))
+                stderr(f'{configfile}:{lineno}: {err}')
                 return 1
 
         else:
             if not spellcheck(elem):
-                stderr("%s:%d: invalid name '%s'" % (configfile, lineno,
-                                                     elem))
+                stderr(f"{configfile}:{lineno}: invalid name '{elem}'")
                 return 1
 
             if elem == 'none':
@@ -605,24 +592,22 @@ def config_default_nodeset(arr: List[str], configfile: str, lineno: int) -> int:
     return 0
 
 
-def config_master(arr: List[str], configfile: str, lineno: int) -> int:
+def config_master(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: master'''
 
     if len(arr) != 2:
-        stderr("%s:%d: 'master' requires one argument: the hostname" %
-               (configfile, lineno))
+        stderr(f"{configfile}:{lineno}: 'master' requires one argument: the hostname")
         return 1
 
     param.MASTER = arr[1]
     return 0
 
 
-def config_slave(arr: List[str], configfile: str, lineno: int) -> int:
+def config_slave(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: slave'''
 
     if len(arr) < 2:
-        stderr("%s:%d: 'slave' requires at least one argument: a nodename" %
-               (configfile, lineno))
+        stderr(f"{configfile}:{lineno}: 'slave' requires at least one argument: a nodename")
         return 1
 
     for node in arr[1:]:
@@ -639,62 +624,57 @@ def config_slave(arr: List[str], configfile: str, lineno: int) -> int:
                     if config_slave(expanded_arr, configfile, lineno) != 0:
                         return 1
             except synctool.range.RangeSyntaxError as err:
-                stderr("%s:%d: %s" % (configfile, lineno, err))
+                stderr(f'{configfile}:{lineno}: {err}')
                 return 1
 
             return 0
 
         if not spellcheck(node):
-            stderr("%s:%d: invalid node name '%s'" %
-                   (configfile, lineno, node))
+            stderr(f"{configfile}:{lineno}: invalid node name '{node}'")
             return 1
 
-        SYMBOLS['node %s' % node] = Symbol(node, configfile, lineno)
+        SYMBOLS[f'node {node}'] = Symbol(node, configfile, lineno)
         param.SLAVES.add(node)
 
     # check for valid nodes is made later
     return 0
 
 
-def config_group(arr: List[str], configfile: str, lineno: int) -> int:
+def config_group(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: group'''
 
     if len(arr) < 3:
-        stderr("%s:%d: 'group' requires at least 2 arguments: "
-               "the compound group name and at least 1 member group" %
-               (configfile, lineno))
+        stderr(f"{configfile}:{lineno}: 'group' requires at least 2 arguments: "
+               f"the compound group name and at least 1 member group")
         return 1
 
     group = arr[1]
 
     if not spellcheck(group):
-        stderr("%s:%d: invalid group name '%s'" %
-               (configfile, lineno, group))
+        stderr(f"{configfile}:{lineno}: invalid group name '{group}'")
         return 1
 
     if group in ('all', 'none', 'template'):
-        stderr("%s:%d: implicit group '%s' can not be redefined" %
-               (configfile, lineno, group))
+        stderr(f"{configfile}:{lineno}: implicit group '{group}' can not be redefined")
         return 1
 
     if not check_group_definition(group, configfile, lineno):
         return 1
 
-    key = 'node %s' % group
+    key = f'node {group}'
     if key in SYMBOLS:
-        stderr('%s:%d: %s was previously defined as a node' % (configfile,
-                                                               lineno, group))
-        stderr('%s: previous definition was here' % SYMBOLS[key].origin())
+        stderr(f'{configfile}:{lineno}: {group} was previously defined as a node')
+        stderr(f'{SYMBOLS[key].origin()}: previous definition was here')
         return 1
 
-    grouplist: List[str] = []
+    grouplist: list[str] = []
     for grp in arr[2:]:
         # range expression syntax: 'group generator'
         if '[' in grp:
             try:
                 grouplist.extend(synctool.range.expand(grp))
             except synctool.range.RangeSyntaxError as err:
-                stderr("%s:%d: %s" % (configfile, lineno, err))
+                stderr(f'{configfile}:{lineno}: {err}')
                 return 1
         else:
             grouplist.append(grp)
@@ -702,19 +682,17 @@ def config_group(arr: List[str], configfile: str, lineno: int) -> int:
     try:
         param.GROUP_DEFS[group] = expand_grouplist(grouplist)
     except RuntimeError:
-        stderr('%s:%d: compound groups can not contain node names' %
-               (configfile, lineno))
+        stderr(f'{configfile}:{lineno}: compound groups can not contain node names')
         return 1
 
     return 0
 
 
-def config_node(arr: List[str], configfile: str, lineno: int) -> int:
+def config_node(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: node'''
 
     if len(arr) < 2:
-        stderr("%s:%d: 'node' requires at least 1 argument: the nodename" %
-               (configfile, lineno))
+        stderr(f"{configfile}:{lineno}: 'node' requires at least 1 argument: the nodename")
         return 1
 
     node = arr[1]
@@ -735,7 +713,7 @@ def config_node(arr: List[str], configfile: str, lineno: int) -> int:
                     synctool.range.reset_sequence()
                     return 1
         except synctool.range.RangeSyntaxError as err:
-            stderr("%s:%d: %s" % (configfile, lineno, err))
+            stderr(f'{configfile}:{lineno}: {err}')
             synctool.range.reset_sequence()
             return 1
 
@@ -743,7 +721,7 @@ def config_node(arr: List[str], configfile: str, lineno: int) -> int:
         return 0
 
     if not spellcheck(node):
-        stderr("%s:%d: invalid node name '%s'" % (configfile, lineno, node))
+        stderr(f"{configfile}:{lineno}: invalid node name '{node}'")
         return 1
 
     groups = arr[2:]
@@ -752,11 +730,10 @@ def config_node(arr: List[str], configfile: str, lineno: int) -> int:
         # error message already printed
         return 1
 
-    key = 'group %s' % node
+    key = f'group {node}'
     if key in SYMBOLS:
-        stderr('%s:%d: %s was previously defined as a group' %
-               (configfile, lineno, node))
-        stderr('%s: previous definition was here' % SYMBOLS[key].origin())
+        stderr(f'{configfile}:{lineno}: {node} was previously defined as a group')
+        stderr(f'{SYMBOLS[key].origin()}: previous definition was here')
         return 1
 
     # grouplist will be the list of groups for this node
@@ -772,34 +749,28 @@ def config_node(arr: List[str], configfile: str, lineno: int) -> int:
             continue
 
         if group == 'all':
-            stderr("%s:%d: illegal to use group 'all' in node definition" %
-                   (configfile, lineno))
-            stderr("%s:%d: group 'all' automatically applies to all nodes" %
-                   (configfile, lineno))
+            stderr(f"{configfile}:{lineno}: illegal to use group 'all' in node definition")
+            stderr(f"{configfile}:{lineno}: group 'all' automatically applies to all nodes")
             return 1
 
         if group == 'none':
-            stderr("%s:%d: illegal to use group 'none' in node definition" %
-                   (configfile, lineno))
-            stderr("%s:%d: use 'ignore_node' to disable a node" %
-                   (configfile, lineno))
+            stderr(f"{configfile}:{lineno}: illegal to use group 'none' in node definition")
+            stderr(f"{configfile}:{lineno}: use 'ignore_node' to disable a node")
             return 1
 
         if group == 'template':
-            stderr("%s:%d: illegal to use group 'template' "
-                   "in node definition" % (configfile, lineno))
-            stderr("%s:%d: file extension _template is reserved for "
-                   "template files" % (configfile, lineno))
+            stderr(f"{configfile}:{lineno}: illegal to use group 'template' "
+                   f"in node definition")
+            stderr(f"{configfile}:{lineno}: file extension _template is reserved for "
+                   f"template files")
             return 1
 
         if group == node:
-            stderr("%s:%d: illegal to list '%s' as group for node %s" %
-                   (configfile, lineno, node, node))
+            stderr(f"{configfile}:{lineno}: illegal to list '{node}' as group for node {node}")
             return 1
 
         if not spellcheck(group):
-            stderr("%s:%d: invalid group name '%s'" % (configfile, lineno,
-                                                       group))
+            stderr(f"{configfile}:{lineno}: invalid group name '{group}'")
             return 1
 
         # it looks like a good group
@@ -808,8 +779,7 @@ def config_node(arr: List[str], configfile: str, lineno: int) -> int:
     try:
         param.NODES[node] = expand_grouplist(grouplist)
     except RuntimeError:
-        stderr('%s:%d: a group list can not contain node names' %
-               (configfile, lineno))
+        stderr(f'{configfile}:{lineno}: a group list can not contain node names')
         return 1
 
     return 0
@@ -822,16 +792,14 @@ def _node_specifier(configfile: str, lineno: int, node: str, spec: str) -> bool:
 
     specifier, arg = spec.split(':', 1)
     if not specifier or not arg:
-        stderr("%s:%d: syntax error in node specifier '%s'" %
-               (configfile, lineno, spec))
+        stderr(f"{configfile}:{lineno}: syntax error in node specifier '{spec}'")
         return False
 
     # got specifier, arg
 
     if specifier == 'ipaddress':
         if node in param.IPADDRESSES:
-            stderr('%s:%d: redefinition of IP address for node %s' %
-                   (configfile, lineno, node))
+            stderr(f'{configfile}:{lineno}: redefinition of IP address for node {node}')
             return False
 
         # support IP address sequence syntax
@@ -839,7 +807,7 @@ def _node_specifier(configfile: str, lineno: int, node: str, spec: str) -> bool:
             param.IPADDRESSES[node] = \
                 synctool.range.expand_sequence(arg)
         except synctool.range.RangeSyntaxError as err:
-            stderr('%s:%d: %s' % (configfile, lineno, err))
+            stderr(f'{configfile}:{lineno}: {err}')
             return False
 
     elif specifier == 'rsync':
@@ -848,28 +816,26 @@ def _node_specifier(configfile: str, lineno: int, node: str, spec: str) -> bool:
         elif arg == 'no':
             param.NO_RSYNC.add(node)
         else:
-            stderr("%s:%d: node specifier 'rsync' can have value "
-                   "'yes' or 'no'" % (configfile, lineno))
+            stderr(f"{configfile}:{lineno}: node specifier 'rsync' can have value "
+                   f"'yes' or 'no'")
             return False
 
     elif specifier in ('hostname', 'hostid'):
-        stderr("%s:%d: node specifier '%s:' is deprecated" %
-               (configfile, lineno, specifier))
+        stderr(f"{configfile}:{lineno}: node specifier '{specifier}:' is deprecated")
 
     else:
-        stderr('%s:%d: unknown node specifier %s' %
-               (configfile, lineno, specifier))
+        stderr(f'{configfile}:{lineno}: unknown node specifier {specifier}')
         return False
 
     return True
 
 
-def config_ignore_node(arr: List[str], configfile: str, lineno: int) -> int:
+def config_ignore_node(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: ignore_node'''
 
     if len(arr) < 2:
-        stderr("%s:%d: 'ignore_node' requires 1 argument: "
-               "the nodename to ignore" % (configfile, lineno))
+        stderr(f"{configfile}:{lineno}: 'ignore_node' requires 1 argument: "
+               f"the nodename to ignore")
         return 1
 
     errors = 0
@@ -889,14 +855,13 @@ def config_ignore_node(arr: List[str], configfile: str, lineno: int) -> int:
                                           lineno) != 0:
                         return 1
             except synctool.range.RangeSyntaxError as err:
-                stderr("%s:%d: %s" % (configfile, lineno, err))
+                stderr(f'{configfile}:{lineno}: {err}')
                 return 1
 
             return 0
 
         if not spellcheck(node):
-            stderr("%s:%d: invalid node name '%s'" % (configfile, lineno,
-                                                      node))
+            stderr(f"{configfile}:{lineno}: invalid node name '{node}'")
             errors += 1
             continue
 
@@ -904,8 +869,7 @@ def config_ignore_node(arr: List[str], configfile: str, lineno: int) -> int:
             continue
 
         if node in ('all', 'template'):
-            stderr("%s:%d: illegal to ignore '%s'" % (configfile, lineno,
-                                                      node))
+            stderr(f"{configfile}:{lineno}: illegal to ignore '{node}'")
             errors += 1
             continue
 
@@ -914,12 +878,11 @@ def config_ignore_node(arr: List[str], configfile: str, lineno: int) -> int:
     return errors
 
 
-def config_ignore_group(arr: List[str], configfile: str, lineno: int) -> int:
+def config_ignore_group(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: ignore_group'''
 
     if len(arr) < 2:
-        stderr("%s:%d: '%s' requires 1 argument: the groupname to ignore" %
-               (configfile, lineno, arr[0]))
+        stderr(f"{configfile}:{lineno}: '{arr[0]}' requires 1 argument: the groupname to ignore")
         return 1
 
     errors = 0
@@ -939,14 +902,13 @@ def config_ignore_group(arr: List[str], configfile: str, lineno: int) -> int:
                                            lineno) != 0:
                         return 1
             except synctool.range.RangeSyntaxError as err:
-                stderr("%s:%d: %s" % (configfile, lineno, err))
+                stderr(f'{configfile}:{lineno}: {err}')
                 return 1
 
             return 0
 
         if not spellcheck(group):
-            stderr("%s:%d: invalid group name '%s'" % (configfile, lineno,
-                                                       group))
+            stderr(f"{configfile}:{lineno}: invalid group name '{group}'")
             errors += 1
             continue
 
@@ -954,8 +916,7 @@ def config_ignore_group(arr: List[str], configfile: str, lineno: int) -> int:
             continue
 
         if group in ('all', 'template'):
-            stderr("%s:%d: illegal to ignore '%s'" % (configfile, lineno,
-                                                      group))
+            stderr(f"{configfile}:{lineno}: illegal to ignore '{group}'")
             errors += 1
             continue
 
@@ -968,7 +929,7 @@ def config_ignore_group(arr: List[str], configfile: str, lineno: int) -> int:
     return errors
 
 
-def config_diff_cmd(arr: List[str], configfile: str, lineno: int) -> int:
+def config_diff_cmd(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: diff_cmd'''
 
     err, param.DIFF_CMD = _config_command('diff_cmd', arr, 'diff', configfile,
@@ -976,7 +937,7 @@ def config_diff_cmd(arr: List[str], configfile: str, lineno: int) -> int:
     return err
 
 
-def config_ping_cmd(arr: List[str], configfile: str, lineno: int) -> int:
+def config_ping_cmd(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: ping_cmd'''
 
     err, param.PING_CMD = _config_command('ping_cmd', arr, 'ping', configfile,
@@ -984,7 +945,7 @@ def config_ping_cmd(arr: List[str], configfile: str, lineno: int) -> int:
     return err
 
 
-def config_ssh_cmd(arr: List[str], configfile: str, lineno: int) -> int:
+def config_ssh_cmd(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: ssh_cmd'''
 
     err, param.SSH_CMD = _config_command('ssh_cmd', arr, 'ssh', configfile,
@@ -992,7 +953,7 @@ def config_ssh_cmd(arr: List[str], configfile: str, lineno: int) -> int:
     return err
 
 
-def config_rsync_cmd(arr: List[str], configfile: str, lineno: int) -> int:
+def config_rsync_cmd(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: rsync_cmd'''
 
     # Note! strip_multiple_slashes() will break "rsync://" paths
@@ -1004,7 +965,7 @@ def config_rsync_cmd(arr: List[str], configfile: str, lineno: int) -> int:
     return err
 
 
-def config_synctool_cmd(arr: List[str], configfile: str, lineno: int) -> int:
+def config_synctool_cmd(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: synctool_cmd'''
 
     err, param.SYNCTOOL_CMD = _config_command('synctool_cmd', arr,
@@ -1013,7 +974,7 @@ def config_synctool_cmd(arr: List[str], configfile: str, lineno: int) -> int:
     return err
 
 
-def config_pkg_cmd(arr: List[str], configfile: str, lineno: int) -> int:
+def config_pkg_cmd(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: pkg_cmd'''
 
     err, param.PKG_CMD = _config_command('pkg_cmd', arr, 'synctool_pkg.py',
@@ -1021,20 +982,20 @@ def config_pkg_cmd(arr: List[str], configfile: str, lineno: int) -> int:
     return err
 
 
-def config_num_proc(arr: List[str], configfile: str, lineno: int) -> int:
+def config_num_proc(arr: list[str], configfile: str, lineno: int) -> int:
     '''parse keyword: num_proc'''
 
     err, param.NUM_PROC = _config_integer('num_proc', arr[1], configfile,
                                           lineno)
 
     if not err and param.NUM_PROC < 1:
-        stderr("%s:%d: invalid argument for num_proc" % (configfile, lineno))
+        stderr(f'{configfile}:{lineno}: invalid argument for num_proc')
         return 1
 
     return err
 
 
-def expand_grouplist(grouplist: List[str]) -> List[str]:
+def expand_grouplist(grouplist: list[str]) -> list[str]:
     '''expand a list of (compound) groups recursively
     Returns the expanded group list
     '''
@@ -1056,8 +1017,8 @@ def expand_grouplist(grouplist: List[str]) -> List[str]:
             # but they are special groups, and can not be in a compound group
             # just to prevent odd things from happening
             if elem in param.NODES:
-                raise RuntimeError('node %s can not be part of '
-                                   'compound group list' % elem)
+                raise RuntimeError(f'node {elem} can not be part of '
+                                   f'compound group list')
 
             param.GROUP_DEFS[elem] = None
 
@@ -1065,7 +1026,7 @@ def expand_grouplist(grouplist: List[str]) -> List[str]:
     # this looks pretty lame ... but Python sets are not usable here;
     # sets have no order and order is important here
 
-    expanded_grouplist: List[str] = []
+    expanded_grouplist: list[str] = []
     for elem in groups:
         if elem not in expanded_grouplist:
             expanded_grouplist.append(elem)

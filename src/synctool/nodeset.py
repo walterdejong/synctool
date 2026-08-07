@@ -21,14 +21,14 @@ usage:
   use nodeset.get_nodename_from_address() to get a nodename
 '''
 
+from __future__ import annotations
+
 import sys
 
-from typing import List, Dict, Set, Optional
-
-from synctool import config, param
 import synctool.lib
-from synctool.lib import verbose, stderr, warning
 import synctool.range
+from synctool import config, param
+from synctool.lib import stderr, verbose, warning
 
 
 class NodeSet:
@@ -39,11 +39,11 @@ class NodeSet:
     def __init__(self) -> None:
         '''initialize instance'''
 
-        self.nodelist: Set[str] = set()
-        self.grouplist: Set[str] = set()
-        self.exclude_nodes: Set[str] = set()
-        self.exclude_groups: Set[str] = set()
-        self.namemap: Dict[str, str] = {}
+        self.nodelist: set[str] = set()
+        self.grouplist: set[str] = set()
+        self.exclude_nodes: set[str] = set()
+        self.exclude_groups: set[str] = set()
+        self.namemap: dict[str, str] = {}
 
     def add_node(self, nodelist: str) -> None:
         '''add a node to the nodeset'''
@@ -85,7 +85,7 @@ class NodeSet:
             else:
                 self.exclude_groups.add(group)
 
-    def addresses(self, silent: bool = False) -> Optional[List[str]]:
+    def addresses(self, silent: bool = False) -> list[str] | None:
         '''return list of addresses of relevant nodes
         or None on error
         '''
@@ -108,14 +108,14 @@ class NodeSet:
             # (at least, for numbered nodes)
             arr = list(unknown)
             arr.sort()
-            stderr("no such node '%s'" % arr[0])
+            stderr(f"no such node '{arr[0]}'")
             return None
 
         # check if the groups exist at all
         unknown = ((self.grouplist | self.exclude_groups) -
                    param.ALL_GROUPS)
         for group in unknown:
-            stderr("no such group '%s'" % group)
+            stderr(f"no such group '{group}'")
             return None
 
         self.nodelist |= config.get_nodes_in_groups(self.grouplist)
@@ -133,7 +133,7 @@ class NodeSet:
             # ignoring a group results in also ignoring the node
             ignored_groups = set(config.get_groups(node)) & param.IGNORE_GROUPS
             if ignored_groups:
-                verbose('node %s is ignored due to an ignored group' % node)
+                verbose(f'node {node} is ignored due to an ignored group')
                 ignored_nodes.add(node)
 
         # again
@@ -154,10 +154,10 @@ class NodeSet:
                     warning('some nodes are ignored')
                     if synctool.lib.VERBOSE:
                         for node in ignored_nodes:
-                            verbose('ignored: %s' % node)
+                            verbose(f'ignored: {node}')
 
         # make address list from self.nodelist
-        addrs = set([])
+        addrs = set()
         for node in self.nodelist:
             addr = config.get_node_ipaddress(node)
             self.namemap[addr] = node
@@ -191,8 +191,8 @@ def make_default_nodeset() -> None:
         elif elem in param.ALL_GROUPS:
             nodeset.add_group(elem)
         else:
-            stderr("config error: unknown node or group '%s' "
-                   "in default_nodeset" % elem)
+            stderr(f"config error: unknown node or group '{elem}' "
+                   'in default_nodeset')
             errors += 1
 
     if not errors:

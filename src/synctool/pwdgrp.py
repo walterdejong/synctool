@@ -10,15 +10,15 @@
 
 '''pwd/grp functions'''
 
-import pwd
+from __future__ import annotations
+
 import grp
+import pwd
 
-from typing import Dict
-
-CACHE_BY_UID: Dict[str, str] = {}
-CACHE_BY_GID: Dict[str, str] = {}
-CACHE_BY_USER: Dict[str, int] = {}
-CACHE_BY_GROUP: Dict[str, int] = {}
+CACHE_BY_UID: dict[str, str] = {}
+CACHE_BY_GID: dict[str, str] = {}
+CACHE_BY_USER: dict[str, int] = {}
+CACHE_BY_GROUP: dict[str, int] = {}
 
 
 def pw_name(uid: int) -> str:
@@ -27,7 +27,7 @@ def pw_name(uid: int) -> str:
     if uid < 0:
         raise ValueError()
 
-    s_uid = '%u' % uid
+    s_uid = f'{uid}'
     if s_uid in CACHE_BY_UID:
         return CACHE_BY_UID[s_uid]
 
@@ -47,7 +47,7 @@ def grp_name(gid: int) -> str:
     if gid < 0:
         raise ValueError()
 
-    s_gid = '%u' % gid
+    s_gid = f'{gid}'
     if s_gid in CACHE_BY_GID:
         return CACHE_BY_GID[s_gid]
 

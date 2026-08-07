@@ -5,29 +5,31 @@
 %define __find_requires %{nil}
 Autoreq: 0
 
-Name:           synctool
-License:        GPL v3 or later
-Group:		system/utility
-Summary:        synchronized config files
-Version:        @VERSION@
-Release:        @RELEASE@%{?dist}
-BuildArch:	noarch
-URL:            https://github.com/celane/synctool
-Source:            https://github.com/celane/synctool/releases/download/v%{version}/synctool-%{version}.tar.gz
+Name:      synctool
+License:   GPL v2
+Group:     system/utility
+Summary:   Cluster configuration management tool
+Version:   @VERSION@
+Release:   @RELEASE@%{?dist}
+BuildArch: noarch
+URL:       https://github.com/walterdejong/synctool
+Source:    https://github.com/walterdejong/synctool/releases/download/v%{version}/synctool-%{version}.tar.gz
 
-Requires:	ssh
-Requires:	python3
-BuildRequires:  discount
-BuildRequires:  python3-smartypants
-BuildRequires:  help2man
-BuildRequires:  git
-BuildRequires:  make
+Requires: ssh
+Requires: python3
+BuildRequires: discount
+BuildRequires: python3-smartypants
+BuildRequires: help2man
+BuildRequires: git
+BuildRequires: make
 
 %description
-Synchronize config files for multiple systems
+synctool is for system administration of clusters of computer systems.
+It synchronizes config files across groups (or classes) of systems
+within a cluster.
 
 %prep
-%setup 
+%setup
 
 %build
 chmod a+x src/*.py
@@ -54,7 +56,7 @@ mv contrib %{buildroot}/usr/share/doc/%{name}-%{version}-%{release}/
 %clean
 
 
-%files 
+%files
 %defattr(-,root,root)
 /usr/share/man/man8/
 %docdir /usr/share/doc/%{name}-%{version}-%{release}/

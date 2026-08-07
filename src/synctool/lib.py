@@ -10,15 +10,15 @@
 
 '''common functions/variables for synctool suite programs'''
 
-import os
-import sys
-import datetime
-import subprocess
-import errno
-import shlex
-import syslog
+from __future__ import annotations
 
-from typing import List, Optional
+import datetime
+import errno
+import os
+import shlex
+import subprocess
+import sys
+import syslog
 
 from synctool import param
 
@@ -33,9 +33,6 @@ MASTERLOG = False
 # print nodename in output?
 # This option is pretty useless except in synctool-ssh it may be useful
 OPT_NODENAME = True
-
-MONTHS = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
 
 # enums for terse output
 TERSE_INFO = 0
@@ -132,9 +129,9 @@ def terse(code: int, msg: str) -> None:
                 bright = ''
 
             if param.COLORIZE_FULL_LINE:
-                print('\x1b[{}{}m{} {}\x1b[0m'.format(color, bright, txt, msg))
+                print(f'\x1b[{color}{bright}m{txt} {msg}\x1b[0m')
             else:
-                print('\x1b[{}{}m{}\x1b[0m {}'.format(color, bright, txt, msg))
+                print(f'\x1b[{color}{bright}m{txt}\x1b[0m {msg}')
         else:
             print(TERSE_TXT[code], msg)
 
@@ -220,15 +217,12 @@ def terse_match(a_terse_path: str, path: str) -> bool:
     return a_terse_path[1:idx + 1] == path[:len(a_terse_path[1:idx + 1])]
 
 
-def terse_match_many(path: str, terse_path_list: List[str]) -> int:
+def terse_match_many(path: str, terse_path_list: list[str]) -> int:
     '''Return index of first path match in list of terse paths'''
 
-    idx = 0
-    for a_terse_path in terse_path_list:
+    for idx, a_terse_path in enumerate(terse_path_list):
         if terse_match(a_terse_path, path):
             return idx
-
-        idx += 1
 
     return -1
 
@@ -309,18 +303,18 @@ def _pass_output(line: str, nodename: str) -> None:
         if line[15:] == '--':
             pass
         else:
-            _masterlog('%s: %s' % (nodename, line[15:]))
+            _masterlog(f'{nodename}: {line[15:]}')
     else:
         # pass output on; simply use 'print' rather than 'stdout()'
         if OPT_NODENAME:
-            print('{}: {}'.format(nodename, line))
+            print(f'{nodename}: {line}')
         else:
             # do not prepend the nodename of this node to the output
             # if option --no-nodename was given
             print(line)
 
 
-def run_with_nodename(cmd_arr: List[str], nodename: str) -> int:
+def run_with_nodename(cmd_arr: list[str], nodename: str) -> int:
     '''run command and show output with nodename
     It will run regardless of what DRY_RUN is
     Returns process return code or -1 on error
@@ -343,12 +337,12 @@ def run_with_nodename(cmd_arr: List[str], nodename: str) -> int:
 
             proc.wait()
             if proc.returncode != 0:
-                verbose('exit code %d' % proc.returncode)
+                verbose(f'exit code {proc.returncode}')
 
             return proc.returncode
 
     except OSError as err:
-        stderr('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
+        stderr(f'failed to run command {cmd_arr[0]}: {err.strerror}')
 
     return -1
 
@@ -369,10 +363,10 @@ def shell_command(cmd: str) -> int:
     cmdfile = cmd_arr[0]
 
     if not QUIET:
-        stdout('%srunning command %s' % (not_str, prettypath(cmd)))
+        stdout(f'{not_str}running command {prettypath(cmd)}')
 
-    verbose(dryrun_msg('  os.system(%s)' % prettypath(cmd)))
-    unix_out('# run command %s' % cmdfile)
+    verbose(dryrun_msg('  os.system({})'.format(prettypath(cmd))))
+    unix_out(f'# run command {cmdfile}')
     unix_out(cmd)
     terse(TERSE_EXEC, cmdfile)
 
@@ -385,11 +379,10 @@ def shell_command(cmd: str) -> int:
             completed = subprocess.run(cmd_arr, shell=False, check=False)
             ret = completed.returncode
         except OSError as err:
-            stderr("failed to run shell command '%s' : %s" % (prettypath(cmdfile),
-                                                              err.strerror))
+            stderr("failed to run shell command '{}' : {}".format(prettypath(cmdfile), err.strerror))
             ret = -1
         else:
-            verbose('exit code %d' % ret)
+            verbose(f'exit code {ret}')
 
         sys.stdout.flush()
         sys.stderr.flush()
@@ -397,7 +390,7 @@ def shell_command(cmd: str) -> int:
     return ret
 
 
-def exec_command(cmd_arr: List[str], silent: bool = False) -> int:
+def exec_command(cmd_arr: list[str], silent: bool = False) -> int:
     '''run a command given in cmd_arr, regardless of DRY_RUN
     Returns: return code of execute command or -1 on error
     '''
@@ -418,10 +411,10 @@ def exec_command(cmd_arr: List[str], silent: bool = False) -> int:
         sys.stdout.flush()
         sys.stderr.flush()
 
-        verbose('exit code %d' % ret)
+        verbose(f'exit code {ret}')
 
     except OSError as err:
-        error('failed to exec %s: %s' % (cmd_arr[0], err.strerror))
+        error(f'failed to exec {cmd_arr[0]}: {err.strerror}')
         ret = -1
 
     return ret
@@ -434,11 +427,11 @@ def run_command(cmd: str) -> None:
     arr = shlex.split(cmd)
     cmdfile = arr[0]
     if not os.path.isfile(cmdfile):
-        error('command %s not found' % prettypath(cmdfile))
+        error('command {} not found'.format(prettypath(cmdfile)))
         return
 
     if not os.access(cmdfile, os.X_OK):
-        error("file '%s' is not executable" % prettypath(cmdfile))
+        error("file '{}' is not executable".format(prettypath(cmdfile)))
         return
 
     # run the shell command
@@ -448,8 +441,8 @@ def run_command(cmd: str) -> None:
 def run_command_in_dir(dest_dir: str, cmd: str) -> None:
     '''change directory to dest_dir, and run the shell command'''
 
-    verbose('  os.chdir(%s)' % dest_dir)
-    unix_out('cd %s' % dest_dir)
+    verbose(f'  os.chdir({dest_dir})')
+    unix_out(f'cd {dest_dir}')
 
     cwd = os.getcwd()
 
@@ -458,31 +451,29 @@ def run_command_in_dir(dest_dir: str, cmd: str) -> None:
     if DRY_RUN:
         run_command(cmd)
 
-        verbose('  os.chdir(%s)' % cwd)
-        unix_out('cd %s' % cwd)
+        verbose(f'  os.chdir({cwd})')
+        unix_out(f'cd {cwd}')
         unix_out('')
         return
 
     try:
         os.chdir(dest_dir)
     except OSError as err:
-        error('failed to change directory to %s: %s' % (dest_dir,
-                                                        err.strerror))
+        error(f'failed to change directory to {dest_dir}: {err.strerror}')
     else:
         run_command(cmd)
 
-        verbose('  os.chdir(%s)' % cwd)
-        unix_out('cd %s' % cwd)
+        verbose(f'  os.chdir({cwd})')
+        unix_out(f'cd {cwd}')
         unix_out('')
 
         try:
             os.chdir(cwd)
         except OSError as err:
-            error('failed to change directory to %s: %s' % (cwd,
-                                                            err.strerror))
+            error(f'failed to change directory to {cwd}: {err.strerror}')
 
 
-def search_path(cmd: str) -> Optional[str]:
+def search_path(cmd: str) -> str | None:
     '''search the PATH for the location of cmd'''
 
     # maybe a full path was given
@@ -521,10 +512,10 @@ def mkdir_p(path: str, mode: int = 0o700) -> bool:
     try:
         os.makedirs(path, mode)
     except OSError as err:
-        error('failed to create directory %s: %s' % (path, err.strerror))
+        error(f'failed to create directory {path}: {err.strerror}')
         os.umask(mask)
         return False
-    unix_out('mkdir -p -m %04o %s' % (mode, path))
+    unix_out(f'mkdir -p -m {mode:04o} {path}')
 
     os.umask(mask)
     return True
@@ -578,29 +569,6 @@ def strip_path(path: str) -> str:
 
     path = strip_multiple_slashes(path)
     path = strip_trailing_slash(path)
-
-    return path
-
-
-def strip_terse_path(path: str) -> str:
-    '''strip a terse path'''
-
-    if not path:
-        return path
-
-    if not param.TERSE:
-        return strip_path(path)
-
-    # terse paths may start with two slashes
-    is_terse = len(path) >= 2 and path[:1] == '//'
-
-    path = strip_multiple_slashes(path)
-    path = strip_trailing_slash(path)
-
-    # the first slash was accidentally stripped, so restore it
-    if is_terse:
-        path = os.sep + path
-
     return path
 
 
@@ -637,7 +605,7 @@ def path_exists(filename: str) -> bool:
             # Permission denied: it exists, but we don't have access
             return True
 
-        error('stat(%s) failed: %s' % (filename, err.strerror))
+        error(f'stat({filename}) failed: {err.strerror}')
         return False
 
     return True
@@ -650,24 +618,24 @@ def set_filetimes(filename: str, atime: float, mtime: float) -> None:
     # The sync_times functionality is implemented in module object.py
 
     # only mtime is shown
-    verbose('  os.utime(%s, %s)' % (filename, print_timestamp(mtime)))
+    verbose(f'  os.utime({filename}, {print_timestamp(mtime)})')
     # print timestamp in other format
-    datet = datetime.datetime.fromtimestamp(mtime)
+    datet = datetime.datetime.fromtimestamp(mtime).astimezone()
     time_str = datet.strftime('%Y%m%d%H%M.%S')
-    unix_out('touch -t %s %s' % (time_str, filename))
+    unix_out(f'touch -t {time_str} {filename}')
 
     # regardless of dry run
     try:
         os.utime(filename, (atime, mtime))
     except OSError as err:
-        error('failed to set utime on %s : %s' % (filename, err.strerror))
-        terse(TERSE_FAIL, 'utime %s' % filename)
+        error(f'failed to set utime on {filename} : {err.strerror}')
+        terse(TERSE_FAIL, f'utime {filename}')
 
 
 def print_timestamp(stamp: float) -> str:
     '''Returns timestamp as string'''
 
-    datet = datetime.datetime.fromtimestamp(stamp)
+    datet = datetime.datetime.fromtimestamp(stamp).astimezone()
     return datet.strftime('%Y-%m-%d %H:%M:%S')
 
 

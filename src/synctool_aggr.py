@@ -16,5 +16,4 @@ import synctool.main.aggr
 if __name__ == '__main__':
     synctool.main.aggr.main()
 
-
 # EOB

@@ -1,0 +1,31 @@
+[project]
+name = "synctool"
+# warning: the program actually uses VERSION from src/synctool/param.py
+version = "7.2"
+description = "Cluster configuration management tool"
+requires-python = ">=3.7"
+dependencies = []
+
+[tool.pyright]
+exclude = [
+    "**/node_modules",
+    "**/__pycache__",
+    "contrib",
+    "doc",
+    "ci",
+    "venv-38",
+    "venv-39"
+]
+
+[tool.ruff]
+line-length = 100
+extend-exclude = ["contrib", "doc", "ci", "venv-39"]
+
+[tool.ruff.lint]
+#
+# EXE001 scripts do not have x-bit set in the source dir
+# UP032 we prefer f-strings, but not for arguments that are function or method calls
+#
+ignore = ["EXE001", "FA100", "UP032"]
+
+# EOB

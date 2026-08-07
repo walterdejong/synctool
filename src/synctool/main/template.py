@@ -13,10 +13,10 @@
 - You can do the same thing with m4 or sed, but this one is nice and easy
 '''
 
-import os
-import sys
-import re
 import getopt
+import os
+import re
+import sys
 
 from synctool.main.wrapper import catch_signals
 
@@ -35,10 +35,7 @@ def spellcheck(name: str) -> bool:
     if not mat:
         return False
 
-    if mat.group(0) != name:
-        return False
-
-    return True
+    return mat.group(0) == name
 
 
 PATTERN = re.compile(r'\@([A-Z_][A-Z0-9_]*)\@')
@@ -61,28 +58,28 @@ def template(filename: str) -> None:
     '''generate the output from template file'''
 
     if not filename:
-        print('%s: error: invalid filename' % PROGNAME)
+        print(f'{PROGNAME}: error: invalid filename')
         sys.exit(-1)
 
     if filename == '-':
-        fio = sys.stdin
+        # note: we do not use the 'with' statement here
+        # because that would close stdin afterwards
+        for line in sys.stdin:
+            sys.stdout.write(subst(line))
     else:
         try:
-            fio = open(filename, encoding='utf-8')
+            with open(filename, encoding='utf-8') as fio:
+                for line in fio:
+                    sys.stdout.write(subst(line))
         except OSError as err:
-            print("%s: failed to open '%s': %s" % (PROGNAME, filename,
-                                                   err.strerror))
+            print(f"{PROGNAME}: failed to open '{filename}': {err.strerror}")
             sys.exit(-1)
-
-    with fio:
-        for line in fio:
-            sys.stdout.write(subst(line))
 
 
 def usage() -> None:
     '''print usage information'''
 
-    print('''%s [-v VAR=VALUE] <input filename>
+    print(f'''{PROGNAME} [-v VAR=VALUE] <input filename>
 options:
   -h, --help               Display this information
   -v, --var VAR=VALUE      Set variable VAR to VALUE
@@ -90,7 +87,7 @@ options:
 synctool-template replaces all occurrences of "@VAR@" in the input text
 with "VALUE" and prints the result to stdout. VAR may be given on the
 command-line, but may also be an existing environment variable
-''' % PROGNAME)
+''')
 
 
 def get_options() -> str:
@@ -105,16 +102,16 @@ def get_options() -> str:
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hv:', ['help', 'var='])
     except getopt.GetoptError as reason:
-        print('%s: %s' % (PROGNAME, reason))
+        print(f'{PROGNAME}: {reason}')
         usage()
         sys.exit(1)
 
     if not args:
-        print('%s: missing input filename' % PROGNAME)
+        print(f'{PROGNAME}: missing input filename')
         sys.exit(1)
 
     if len(args) > 1:
-        print('%s: too many arguments' % PROGNAME)
+        print(f'{PROGNAME}: too many arguments')
         sys.exit(1)
 
     for opt, optarg in opts:
@@ -126,24 +123,24 @@ def get_options() -> str:
             try:
                 (key, value) = optarg.split('=', 1)
             except ValueError:
-                print('%s: syntax error in command-line' % PROGNAME)
+                print(f'{PROGNAME}: syntax error in command-line')
                 sys.exit(1)
 
             else:
                 if not spellcheck(key):
-                    print(('%s: syntax error: variables must be an '
-                           'uppercase word' % PROGNAME))
+                    print(f'{PROGNAME}: syntax error: variables must be an '
+                           'uppercase word')
                     sys.exit(1)
 
                 # put it in the environment
                 os.environ[key] = value
 
     if not args:
-        print('%s: missing input file' % PROGNAME)
+        print(f'{PROGNAME}: missing input file')
         sys.exit(1)
 
     if len(args) > 1:
-        print('%s: too many arguments' % PROGNAME)
+        print(f'{PROGNAME}: too many arguments')
         sys.exit(1)
 
     # return the input filename

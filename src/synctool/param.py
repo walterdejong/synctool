@@ -10,17 +10,18 @@
 
 '''parameters and global vars'''
 
+from __future__ import annotations
+
 import os
 import sys
-
-from typing import Dict, List, Set, Optional
 
 # Note: the release datetime should be set slightly in the future
 # in regards to when the release tag is made in git
 # For example, the next (half) hour
 # This is so that synctool --check-update will work correctly
-VERSION = '7.1'
-RELEASE_DATETIME = '2025-03-22T12:12:12'
+# RELEASE_DATETIME is in GMT/UTC
+VERSION = '7.2'
+RELEASE_DATETIME = '2026-08-07T21:21:21'
 
 # location of default config file on the master node
 DEFAULT_CONF = '/opt/synctool/etc/synctool.conf'
@@ -67,20 +68,20 @@ TERSE = False
 SYNC_TIMES = False
 IGNORE_DOTFILES = False
 IGNORE_DOTDIRS = False
-IGNORE_FILES: Set[str] = set()
-IGNORE_FILES_WITH_WILDCARDS: List[str] = []
+IGNORE_FILES: set[str] = set()
+IGNORE_FILES_WITH_WILDCARDS: list[str] = []
 
 # default_nodeset parameter in the config file
 # warning: make_default_nodeset() is only called by commands that are
 # supposed to run on the master node
 # The client commands do not expand/set DEFAULT_NODESET
-DEFAULT_NODESET: Set[str] = set(['all'])
+DEFAULT_NODESET: set[str] = {'all'}
 
 # the master's fqdn hostname
 MASTER = ''
 
 # set of slaves by nodename
-SLAVES: Set[str] = set()
+SLAVES: set[str] = set()
 
 # NODES is a dict of nodes
 # each node is a list of groups, ordered by importance;
@@ -88,32 +89,32 @@ SLAVES: Set[str] = set()
 #
 #   NODES[node] -> [ list of groups ]
 #
-NODES: Dict[str, List[str]] = {}
+NODES: dict[str, list[str]] = {}
 
 # dict of ipaddresses by nodename
 #
 #   IPADDRESSES[node] -> ipaddress
 #
-IPADDRESSES: Dict[str, str] = {}
+IPADDRESSES: dict[str, str] = {}
 
 # compound groups are lists of groups, in order of importance
 #
 #   GROUP_DEFS[compound] -> [ list of groups ]
 #   GROUP_DEFS[compound] may be None
 #
-GROUP_DEFS: Dict[str, Optional[List[str]]] = {}
+GROUP_DEFS: dict[str, list[str] | None] = {}
 
 # set of ignored groups and nodes
-IGNORE_GROUPS: Set[str] = set()
+IGNORE_GROUPS: set[str] = set()
 
 # list of my groups, ordered by importance
-MY_GROUPS: List[str] = []
+MY_GROUPS: list[str] = []
 
 # set of all known groups
-ALL_GROUPS: Set[str] = set([])
+ALL_GROUPS: set[str] = set()
 
 # set of nodes that don't want an rsync copy
-NO_RSYNC: Set[str] = set()
+NO_RSYNC: set[str] = set()
 
 # colorize output
 COLORIZE = True

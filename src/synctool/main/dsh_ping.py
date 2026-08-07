@@ -10,22 +10,22 @@
 
 '''ping the synctool nodes'''
 
-import sys
-import subprocess
+from __future__ import annotations
+
 import getopt
 import shlex
+import subprocess
+import sys
 
-from typing import List, Tuple
-
-from synctool import config, param
 import synctool.aggr
 import synctool.lib
-from synctool.lib import verbose, error, unix_out
-from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.parallel
 import synctool.range
 import synctool.unbuffered
+from synctool import config, param
+from synctool.lib import error, unix_out, verbose
+from synctool.main.wrapper import catch_signals
 
 # hardcoded name because otherwise we get "dsh_ping.py"
 PROGNAME = 'dsh-ping'
@@ -41,10 +41,10 @@ class Options:
         '''initialize instance'''
 
         self.aggregate = False
-        self.master_opts: List[str] = []
+        self.master_opts: list[str] = []
 
 
-def ping_nodes(address_list: List[str]) -> None:
+def ping_nodes(address_list: list[str]) -> None:
     '''ping nodes in parallel'''
 
     synctool.parallel.do(ping_node, address_list)
@@ -54,13 +54,13 @@ def ping_node(addr: str) -> None:
     '''ping a single node'''
 
     node = NODESET.get_nodename_from_address(addr)
-    verbose('pinging %s' % node)
-    unix_out('%s %s' % (param.PING_CMD, addr))
+    verbose(f'pinging {node}')
+    unix_out(f'{param.PING_CMD} {addr}')
 
     packets_received = 0
 
     # execute ping command
-    cmd = '%s %s' % (param.PING_CMD, addr)
+    cmd = f'{param.PING_CMD} {addr}'
     cmd_arr = shlex.split(cmd)
     try:
         with subprocess.Popen(cmd_arr,
@@ -74,15 +74,15 @@ def ping_node(addr: str) -> None:
                     break
 
         if packets_received > 0:
-            print('%s: up' % node)
+            print(f'{node}: up')
         else:
-            print('%s: not responding' % node)
+            print(f'{node}: not responding')
 
     except OSError as err:
-        error('failed to run command %s: %s' % (cmd_arr[0], err.strerror))
+        error(f'failed to run command {cmd_arr[0]}: {err.strerror}')
 
 
-def _parse_ping_output(line: str) -> Tuple[int, bool]:
+def _parse_ping_output(line: str) -> tuple[int, bool]:
     '''parses output of the ping command
     Returns tuple: packets_received, found
 
@@ -136,12 +136,11 @@ def check_cmd_config() -> None:
 def usage() -> None:
     '''print usage information'''
 
-    print('usage: %s [options]' % PROGNAME)
+    print(f'usage: {PROGNAME} [options]')
     print('options:')
     print('  -h, --help                     Display this information')
     print('  -c, --conf=FILE                Use this config file')
-    print(('                                 (default: %s)' %
-           param.DEFAULT_CONF))
+    print(f'                                 (default: {param.DEFAULT_CONF})')
 
     print('''  -n, --node=LIST                Execute only on these nodes
   -g, --group=LIST               Execute only on these groups of nodes
@@ -167,7 +166,7 @@ def get_options() -> Options:
                                     'aggregate', 'unix', 'quiet', 'numproc=',
                                     'zzz='])
     except getopt.GetoptError as reason:
-        print('%s: %s' % (PROGNAME, reason))
+        print(f'{PROGNAME}: {reason}')
         # usage()
         sys.exit(1)
 
@@ -249,12 +248,11 @@ def get_options() -> Options:
             try:
                 param.NUM_PROC = int(arg)
             except ValueError:
-                print(("%s: option '%s' requires a numeric value" %
-                       (PROGNAME, opt)))
+                print(f"{PROGNAME}: option '{opt}' requires a numeric value")
                 sys.exit(1)
 
             if param.NUM_PROC < 1:
-                print('%s: invalid value for numproc' % PROGNAME)
+                print(f'{PROGNAME}: invalid value for numproc')
                 sys.exit(1)
 
             continue
@@ -263,12 +261,11 @@ def get_options() -> Options:
             try:
                 param.SLEEP_TIME = int(arg)
             except ValueError:
-                print(("%s: option '%s' requires a numeric value" %
-                       (PROGNAME, opt)))
+                print(f"{PROGNAME}: option '{opt}' requires a numeric value")
                 sys.exit(1)
 
             if param.SLEEP_TIME < 0:
-                print('%s: invalid value for sleep time' % PROGNAME)
+                print(f'{PROGNAME}: invalid value for sleep time')
                 sys.exit(1)
 
             if not param.SLEEP_TIME:
@@ -280,7 +277,7 @@ def get_options() -> Options:
             continue
 
     if args:
-        print('%s: too many arguments' % PROGNAME)
+        print(f'{PROGNAME}: too many arguments')
         sys.exit(1)
 
     return options

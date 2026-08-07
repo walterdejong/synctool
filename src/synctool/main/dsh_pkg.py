@@ -12,30 +12,30 @@
 on the target nodes
 '''
 
-import sys
+from __future__ import annotations
+
 import getopt
 import shlex
+import sys
 
-from typing import List
-
-from synctool import config, param
 import synctool.aggr
 import synctool.lib
-from synctool.lib import verbose, error
 import synctool.multiplex
-from synctool.main.wrapper import catch_signals
 import synctool.nodeset
 import synctool.parallel
 import synctool.range
 import synctool.unbuffered
+from synctool import config, param
+from synctool.lib import error, verbose
+from synctool.main.wrapper import catch_signals
 
 # hardcoded name because otherwise we get "dsh_pkg.py"
 PROGNAME = 'dsh-pkg'
 
 # ugly globals in use by parallel worker
 NODESET = synctool.nodeset.NodeSet()
-SSH_CMD_ARR: List[str] = []
-PASS_ARGS: List[str] = []
+SSH_CMD_ARR: list[str] = []
+PASS_ARGS: list[str] = []
 
 
 class Options:
@@ -45,10 +45,10 @@ class Options:
         '''initialize instance'''
 
         self.aggregate = False
-        self.master_opts: List[str] = []
+        self.master_opts: list[str] = []
 
 
-def run_remote_pkg(address_list: List[str]) -> None:
+def run_remote_pkg(address_list: list[str]) -> None:
     '''run synctool-pkg on the target nodes'''
 
     global SSH_CMD_ARR                                              # pylint: disable=global-statement
@@ -84,7 +84,7 @@ def worker_pkg(addr: str) -> None:
     cmd_arr.extend(shlex.split(param.PKG_CMD))
     cmd_arr.extend(PASS_ARGS)
 
-    verbose('running synctool-pkg on node %s' % nodename)
+    verbose(f'running synctool-pkg on node {nodename}')
 
     # execute ssh synctool-pkg and show output with the nodename
     if param.NUM_PROC <= 1:
@@ -97,7 +97,7 @@ def worker_pkg(addr: str) -> None:
         synctool.lib.run_with_nodename(cmd_arr, nodename)
 
 
-def rearrange_options() -> List[str]:
+def rearrange_options() -> list[str]:
     '''rearrange command-line options so that getopt() behaves
     more logical for us
     '''
@@ -172,12 +172,11 @@ def there_can_be_only_one() -> None:
 def usage() -> None:
     '''print usage information'''
 
-    print('usage: %s [options] [package [..]]' % PROGNAME)
+    print(f'usage: {PROGNAME} [options] [package [..]]')
     print('options:')
     print('  -h, --help                     Display this information')
     print('  -c, --conf=FILE                Use this config file')
-    print(('                                 (default: %s)' %
-           param.DEFAULT_CONF))
+    print(f'                                 (default: {param.DEFAULT_CONF})')
 
     print('''  -n, --node=LIST                Execute only on these nodes
   -g, --group=LIST               Execute only on these groups of nodes
@@ -247,7 +246,7 @@ def get_options() -> Options:
                                     'numproc=', 'zzz=', 'fix', 'verbose',
                                     'quiet', 'unix', 'aggregate'])
     except getopt.GetoptError as reason:
-        print('%s: %s' % (PROGNAME, reason))
+        print(f'{PROGNAME}: {reason}')
         # usage()
         sys.exit(1)
 
@@ -343,7 +342,7 @@ def get_options() -> Options:
 
         if opt in ('-m', '--manager'):
             if arg not in param.KNOWN_PACKAGE_MANAGERS:
-                error("unknown or unsupported package manager '%s'" % arg)
+                error(f"unknown or unsupported package manager '{arg}'")
                 sys.exit(1)
 
             param.PACKAGE_MANAGER = arg
@@ -355,12 +354,11 @@ def get_options() -> Options:
             try:
                 param.NUM_PROC = int(arg)
             except ValueError:
-                print(("%s: option '%s' requires a numeric value" %
-                       (PROGNAME, opt)))
+                print(f"{PROGNAME}: option '{opt}' requires a numeric value")
                 sys.exit(1)
 
             if param.NUM_PROC < 1:
-                print('%s: invalid value for numproc' % PROGNAME)
+                print(f'{PROGNAME}: invalid value for numproc')
                 sys.exit(1)
 
             continue
@@ -369,12 +367,11 @@ def get_options() -> Options:
             try:
                 param.SLEEP_TIME = int(arg)
             except ValueError:
-                print(("%s: option '%s' requires a numeric value" %
-                       (PROGNAME, opt)))
+                print(f"{PROGNAME}: option '{opt}' requires a numeric value")
                 sys.exit(1)
 
             if param.SLEEP_TIME < 0:
-                print('%s: invalid value for sleep time' % PROGNAME)
+                print(f'{PROGNAME}: invalid value for sleep time')
                 sys.exit(1)
 
             if not param.SLEEP_TIME:
@@ -449,8 +446,7 @@ def main() -> int:
     config.init_mynodename()
 
     if param.MASTER != param.HOSTNAME:
-        verbose('master %s != hostname %s' % (param.MASTER,
-                                              param.HOSTNAME))
+        verbose(f'master {param.MASTER} != hostname {param.HOSTNAME}')
         error('not running on the master node')
         sys.exit(-1)
 

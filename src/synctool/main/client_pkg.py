@@ -10,19 +10,17 @@
 
 '''synctool package manager. It runs on the client node'''
 
+import getopt
 import os
 import sys
-import getopt
-
-from typing import List
-from synctool.pkgclass import SyncPkg
 
 import synctool.config
 import synctool.lib
-from synctool.lib import verbose, stderr, error, warning
-from synctool.main.wrapper import catch_signals
 import synctool.param
 import synctool.syncstat
+from synctool.lib import error, stderr, verbose, warning
+from synctool.main.wrapper import catch_signals
+from synctool.pkgclass import SyncPkg
 
 # hardcoded name because otherwise we get "synctool_pkg.py"
 PROGNAME = 'synctool-client-pkg'
@@ -60,7 +58,7 @@ class Options:
         '''initialize instance'''
 
         self.action = 0
-        self.packages: List[str] = []
+        self.packages: list[str] = []
 
 
 def package_manager() -> SyncPkg:
@@ -87,24 +85,22 @@ def package_manager() -> SyncPkg:
             short_mgr = mgr.replace('-', '')
 
             # load the module
-            module = __import__('synctool.pkg.%s' % short_mgr)
+            module = __import__(f'synctool.pkg.{short_mgr}')
 
             # step through module hierarchy
-            module = getattr(module, 'pkg')
+            module = module.pkg
             module = getattr(module, short_mgr)
 
             # find the package manager class
-            pkgclass = getattr(module, 'SyncPkg%s' % short_mgr.capitalize())
+            pkgclass = getattr(module, f'SyncPkg{short_mgr.capitalize()}')
 
             # instantiate the class
             return pkgclass()
 
     if detected:
-        error('package manager %s is not supported yet' %
-              synctool.param.PACKAGE_MANAGER)
+        error(f'package manager {synctool.param.PACKAGE_MANAGER} is not supported yet')
     else:
-        error("unknown package manager defined: '%s'" %
-              synctool.param.PACKAGE_MANAGER)
+        error(f"unknown package manager defined: '{synctool.param.PACKAGE_MANAGER}'")
 
     sys.exit(1)
 
@@ -131,7 +127,7 @@ def detect_installer_from_os_release() -> str:
             try:
                 var, value = line.split('=', maxsplit=1)
             except ValueError:
-                verbose('error: /etc/os-release: error in line {}: {!r}'.format(lineno, line))
+                verbose(f'error: /etc/os-release: error in line {lineno}: {line!r}')
                 break
 
             value = value.strip("'\"")
@@ -140,7 +136,7 @@ def detect_installer_from_os_release() -> str:
                 try:
                     distro = value
                     pkgmgr = PKGMGR_BY_OS_ID[distro]
-                    verbose('os-release: {} uses package manager: {}'.format(distro, pkgmgr))
+                    verbose(f'os-release: {distro} uses package manager: {pkgmgr}')
                     return pkgmgr
                 except KeyError:
                     # try ID_LIKE (if it is present)
@@ -151,13 +147,13 @@ def detect_installer_from_os_release() -> str:
                 for distro in distro_list:
                     try:
                         pkgmgr = PKGMGR_BY_OS_ID[distro]
-                        verbose('os-release: {} uses package manager: {}'.format(distro, pkgmgr))
+                        verbose(f'os-release: {distro} uses package manager: {pkgmgr}')
                         return pkgmgr
                     except KeyError:
                         continue
 
     except OSError as err:
-        verbose('error: /etc/os-release: {}'.format(str(err)))
+        verbose(f'error: /etc/os-release: {err}')
 
     raise KeyError('unable to determine package manager from /etc/os-release')
 
@@ -202,8 +198,8 @@ def detect_installer() -> None:
         for (release_file, pkgmgr) in LINUX_PACKAGE_MANAGERS:
             stat.stat(release_file)
             if stat.exists():
-                verbose('detected %s' % release_file)
-                verbose('choosing package manager %s' % pkgmgr)
+                verbose(f'detected {release_file}')
+                verbose(f'choosing package manager {pkgmgr}')
                 synctool.param.PACKAGE_MANAGER = pkgmgr
                 return
 
@@ -222,7 +218,7 @@ def detect_installer() -> None:
         synctool.param.PACKAGE_MANAGER = 'pkg'
 
     elif platform in ('NetBSD', 'OpenBSD'):
-        verbose('detected platform %s' % platform)
+        verbose(f'detected platform {platform}')
 
         # choose bsdpkg
         # I know there are ports, but you can 'make' those easily in *BSD
@@ -237,15 +233,14 @@ def detect_installer() -> None:
 
     elif platform in ('4.4BSD', '4.3bsd', 'BSD/OS', 'SunOS', 'AIX', 'OSF1',
                       'HP-UX', 'HI-UX', 'IRIX', 'UNICOS', 'UNICOS/mp',
-                      'ConvexOS', 'Minix', 'Windows_95', 'Windows_NT',
-                      'CYGWIN', 'MinGW', 'LynxOS', 'UNIX_System_V', 'BeOS',
-                      'TOPS-10', 'TOPS-20'):
-        verbose('detected platform %s' % platform)
-        warning('synctool package management under %s is not yet supported' %
-                platform)
+                       'ConvexOS', 'Minix', 'Windows_95', 'Windows_NT',
+                       'CYGWIN', 'MinGW', 'LynxOS', 'UNIX_System_V', 'BeOS',
+                       'TOPS-10', 'TOPS-20'):
+        verbose(f'detected platform {platform}')
+        warning(f'synctool package management under {platform} is not yet supported')
 
     else:
-        warning("unknown platform '%s'" % platform)
+        warning(f"unknown platform '{platform}'")
 
 
 def there_can_be_only_one() -> None:
@@ -265,12 +260,11 @@ def there_can_be_only_one() -> None:
 def usage() -> None:
     '''print usage information'''
 
-    print('usage: %s [options] [package [..]]' % PROGNAME)
+    print(f'usage: {PROGNAME} [options] [package [..]]')
     print('options:')
     print('  -h, --help                     Display this information')
     print('  -c, --conf=FILE                Use this config file')
-    print(('                                 (default: %s)' %
-           synctool.param.DEFAULT_CONF))
+    print(f'                                 (default: {synctool.param.DEFAULT_CONF})')
     print('''  -l, --list   [PACKAGE ...]     List installed packages
   -i, --install PACKAGE [..]     Install package
   -R, --remove  PACKAGE [..]     Uninstall package
@@ -321,7 +315,7 @@ def get_options() -> Options:
                                     'cleanup', 'manager=', 'masterlog',
                                     'fix', 'verbose', 'unix', 'quiet'])
     except getopt.GetoptError as reason:
-        print('%s: %s' % (PROGNAME, reason))
+        print(f'{PROGNAME}: {reason}')
         # usage()
         sys.exit(1)
 
@@ -391,7 +385,7 @@ def get_options() -> Options:
 
         if opt in ('-m', '--manager'):
             if arg not in synctool.param.KNOWN_PACKAGE_MANAGERS:
-                error("unknown or unsupported package manager '%s'" % arg)
+                error(f"unknown or unsupported package manager '{arg}'")
                 sys.exit(1)
 
             synctool.param.PACKAGE_MANAGER = arg
@@ -458,8 +452,7 @@ def main() -> int:
     if synctool.param.NODENAME in synctool.param.IGNORE_GROUPS:
         # this is only a warning ...
         # you can still run synctool-pkg on the client by hand
-        warning('warning: node %s is disabled in the config file' %
-                synctool.param.NODENAME)
+        warning(f'warning: node {synctool.param.NODENAME} is disabled in the config file')
 
     pkg = package_manager()
 
@@ -482,7 +475,7 @@ def main() -> int:
         pkg.clean()
 
     else:
-        raise RuntimeError('BUG: unknown action code %d' % opts.action)
+        raise RuntimeError(f'BUG: unknown action code {opts.action}')
     return 0
 
 # EOB
