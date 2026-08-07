@@ -20,8 +20,8 @@ import sys
 # For example, the next (half) hour
 # This is so that synctool --check-update will work correctly
 # RELEASE_DATETIME is in GMT/UTC
-VERSION = '7.2.1'
-RELEASE_DATETIME = '2026-08-07T21:21:21'
+VERSION = '7.2.2'
+RELEASE_DATETIME = '2026-08-07T22:22:22'
 
 # location of default config file on the master node
 DEFAULT_CONF = '/opt/synctool/etc/synctool.conf'

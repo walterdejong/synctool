@@ -174,6 +174,8 @@ def make_local_filename_for_version(version: str) -> str:
 def print_progress(filename: str, total_size: int, current_size: int) -> None:
     '''print the download progress'''
 
+    if total_size <= 0:
+        total_size = 1
     percent = 100 * current_size // total_size
     percent = min(percent, 100)
 
@@ -200,6 +202,8 @@ def download() -> bool:
             # get file size: Content-Length
             try:
                 totalsize = int(web.info().get('Content-Length', 0))
+                if totalsize <= 0:
+                    raise ValueError
             except (ValueError, KeyError, IndexError):
                 error(f'invalid response from webserver at {info.url}')
                 return False
