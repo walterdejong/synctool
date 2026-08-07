@@ -128,8 +128,7 @@ def get_options() -> str:
 
             else:
                 if not spellcheck(key):
-                    print(f'{PROGNAME}: syntax error: variables must be an '
-                           'uppercase word')
+                    print(f'{PROGNAME}: syntax error: variables must be an uppercase word')
                     sys.exit(1)
 
                 # put it in the environment

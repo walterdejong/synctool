@@ -18,6 +18,7 @@ import synctool.pkgclass
 # I no longer have an ArchLinux system to test this on,
 # but here it goes ... :P
 
+
 class SyncPkgPacman(synctool.pkgclass.SyncPkg):
     '''package installer class for pacman'''
 

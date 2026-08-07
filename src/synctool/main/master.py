@@ -164,8 +164,8 @@ def rsync_include_filter(nodename: str) -> str:
         # slave nodes get a copy of the entire tree
         # all other nodes use a specific rsync filter
         if nodename not in param.SLAVES and not (_write_overlay_filter(ftemp) and
-                _write_delete_filter(ftemp) and
-                _write_purge_filter(ftemp)):
+                                                 _write_delete_filter(ftemp) and
+                                                 _write_purge_filter(ftemp)):
             # an error occurred;
             # delete temp file and exit
             ftemp.close()

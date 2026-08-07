@@ -18,6 +18,7 @@ import synctool.pkgclass
 
 # I have no access to *BSD machines so here goes nothing ...
 
+
 class SyncPkgBsdpkg(synctool.pkgclass.SyncPkg):
     '''package installer class for BSD pkg_add and family'''
 

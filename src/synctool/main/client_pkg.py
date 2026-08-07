@@ -233,9 +233,9 @@ def detect_installer() -> None:
 
     elif platform in ('4.4BSD', '4.3bsd', 'BSD/OS', 'SunOS', 'AIX', 'OSF1',
                       'HP-UX', 'HI-UX', 'IRIX', 'UNICOS', 'UNICOS/mp',
-                       'ConvexOS', 'Minix', 'Windows_95', 'Windows_NT',
-                       'CYGWIN', 'MinGW', 'LynxOS', 'UNIX_System_V', 'BeOS',
-                       'TOPS-10', 'TOPS-20'):
+                      'ConvexOS', 'Minix', 'Windows_95', 'Windows_NT',
+                      'CYGWIN', 'MinGW', 'LynxOS', 'UNIX_System_V', 'BeOS',
+                      'TOPS-10', 'TOPS-20'):
         verbose(f'detected platform {platform}')
         warning(f'synctool package management under {platform} is not yet supported')
 
