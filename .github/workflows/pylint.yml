@@ -1,10 +1,11 @@
-name: Pylint check
+name: Code quality checks
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   lint:
@@ -14,9 +15,6 @@ jobs:
       image: python:3.11-slim
 
     steps:
-    - name: git clone
-      uses: actions/checkout@v4
-
     - name: install deps
       run: |
         apt-get update
@@ -28,8 +26,14 @@ jobs:
         fi
         pip install pylint ruff pyright
 
+    - name: git clone
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+
     - name: pylint
       run: |
+        git config --global --add safe.directory '*'
         pylint $(git ls-files '*.py' |grep -v contrib)
 
     - name: ruff check
@@ -38,5 +42,6 @@ jobs:
 
     - name: pyright
       run: |
+        git config --global --add safe.directory '*'
         pyright $(git ls-files '*.py' |grep -v contrib)
 

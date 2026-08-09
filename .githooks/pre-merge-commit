@@ -1,0 +1,45 @@
+#! /bin/sh
+
+if [ ! -z "$VIRTUAL_ENV" ]
+then
+    echo "error: VIRTUAL_ENV not set" >&2
+    exit 11
+fi
+
+ruff check .
+if [ $? -ne 0 ]
+then
+    echo "error: ruff check failed" >&2
+    exit 21
+else
+    echo "ruff check: ok"
+fi
+
+pyright $(git ls-files '*.py' | grep -v contrib)
+if [ $? -ne 0 ]
+then
+    echo "error: pyright check failed" >&2
+    exit 31
+else
+    echo "pyright check: ok"
+fi
+
+pylint $(git ls-files '*.py' | grep -v contrib)
+if [ $? -ne 0 ]
+then
+    echo "error: pylint check failed" >&2
+    exit 41
+else
+    echo "pylint check: ok"
+fi
+
+flake8 $(git ls-files '*.py' | grep -v contrib)
+if [ $? -ne 0 ]
+then
+    echo "error: flake8 check failed" >&2
+    exit 51
+else
+    echo "flake8 check: ok"
+fi
+
+# EOB
