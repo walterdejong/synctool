@@ -1,23 +1,42 @@
-name: Pylint
+name: Pylint check
 
-on: [push]
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.9", "3.10"]
+
+    container:
+      image: python:3.11-slim
+
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: git clone
+      uses: actions/checkout@v4
+
+    - name: install deps
       run: |
+        apt-get update
+        apt-get install -y --no-install-recommends python3-pip git libatomic1
         python -m pip install --upgrade pip
-        pip install pylint
-    - name: Analysing the code with pylint
+        if [ -f requirements.txt ]
+        then
+            pip install -r requirements.txt
+        fi
+        pip install pylint ruff pyright
+
+    - name: pylint
       run: |
-        pylint $(git ls-files '*.py' | grep -v contrib/)
+        pylint $(git ls-files '*.py' |grep -v contrib)
+
+    - name: ruff check
+      run: |
+        ruff check .
+
+    - name: pyright
+      run: |
+        pyright $(git ls-files '*.py' |grep -v contrib)
+
