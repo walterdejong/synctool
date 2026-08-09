@@ -1,6 +1,6 @@
 #! /bin/sh
 
-if [ ! -z "$VIRTUAL_ENV" ]
+if [ -z "$VIRTUAL_ENV" ]
 then
     echo "error: VIRTUAL_ENV not set" >&2
     exit 11
