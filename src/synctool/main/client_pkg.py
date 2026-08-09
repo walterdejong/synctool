@@ -58,7 +58,7 @@ class Options:
         '''initialize instance'''
 
         self.action = 0
-        self.packages: list[str] = []       # pylint: disable=unsubscriptable-object # pylint bug, really
+        self.packages: list = []    # list[str] really, but issues with older mypy, pylint
 
 
 def package_manager() -> SyncPkg:
