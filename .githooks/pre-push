@@ -1,5 +1,7 @@
 #! /bin/sh
 
+echo "running .githooks/pre-push"
+
 if [ -z "$VIRTUAL_ENV" ]
 then
     echo "error: VIRTUAL_ENV is not set" >&2
@@ -12,7 +14,7 @@ then
     echo "error: ruff check failed" >&2
     exit 21
 else
-    echo "ruff check: ok"
+    echo ":: ruff check: ok"
 fi
 
 pyright $(git ls-files '*.py' | grep -v contrib)
@@ -21,7 +23,7 @@ then
     echo "error: pyright check failed" >&2
     exit 31
 else
-    echo "pyright check: ok"
+    echo ":: pyright check: ok"
 fi
 
 mypy $(git ls-files '*.py' | grep -v contrib)
@@ -30,7 +32,7 @@ then
     echo "error: mypy check failed" >&2
     exit 41
 else
-    echo "mypy check: ok"
+    echo ":: mypy check: ok"
 fi
 
 pylint $(git ls-files '*.py' | grep -v contrib)
@@ -39,7 +41,7 @@ then
     echo "error: pylint check failed" >&2
     exit 51
 else
-    echo "pylint check: ok"
+    echo ":: pylint check: ok"
 fi
 
 flake8 $(git ls-files '*.py' | grep -v contrib)
@@ -48,7 +50,7 @@ then
     echo "error: flake8 check failed" >&2
     exit 61
 else
-    echo "flake8 check: ok"
+    echo ":: flake8 check: ok"
 fi
 
 # EOB
