@@ -1,3 +1,8 @@
+Aug 2026
+- massive code cleanup; modern typing, f-strings, and then some
+- still Python 3.7+ backwards compatible
+- released as 7.2.x
+
 Aug 2024
 - update to python3; thanks to Charles Lane <lane@dchooz.org>
 - released as 7.0
